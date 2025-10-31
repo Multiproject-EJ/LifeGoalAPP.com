@@ -199,6 +199,236 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.goal-workspace {
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.goal-workspace__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.goal-workspace__header h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+}
+
+.goal-workspace__header p {
+  margin: 0;
+  color: #334155;
+  max-width: 48ch;
+}
+
+.goal-workspace__refresh {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.goal-workspace__refresh:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+  opacity: 0.75;
+}
+
+.goal-workspace__refresh:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
+}
+
+.goal-workspace__status {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.goal-workspace__status--warning {
+  background: rgba(234, 179, 8, 0.1);
+  color: #92400e;
+}
+
+.goal-workspace__status--error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+}
+
+.goal-workspace__grid {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+}
+
+.goal-form {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  display: grid;
+  gap: 1rem;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+}
+
+.goal-form h3 {
+  margin: 0;
+}
+
+.goal-form__field {
+  display: grid;
+  gap: 0.4rem;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.goal-form__field input,
+.goal-form__field textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.goal-form__field textarea {
+  min-height: 120px;
+}
+
+.goal-form__submit {
+  justify-self: start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #22c55e, #3b82f6);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.goal-form__submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(34, 197, 94, 0.25);
+}
+
+.goal-form__submit:disabled {
+  cursor: progress;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.goal-list {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  display: grid;
+  gap: 1.25rem;
+  min-height: 100%;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+}
+
+.goal-list__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.goal-list__header h3 {
+  margin: 0;
+}
+
+.goal-list__meta {
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.goal-list__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.goal-card {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background: #f8fafc;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.goal-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.goal-card__header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.goal-card__date {
+  color: #0369a1;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.goal-card p {
+  margin: 0;
+  color: #334155;
+}
+
+.goal-card__footer {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.goal-list__status {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: rgba(34, 197, 94, 0.12);
+  color: #047857;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+@media (min-width: 720px) {
+  .goal-workspace__header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .goal-workspace__header p {
+    max-width: 56ch;
+  }
+}
+
+@media (min-width: 900px) {
+  .goal-workspace__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  .goal-card__header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
 .supabase-auth__action:disabled {
   opacity: 0.7;
   cursor: not-allowed;

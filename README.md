@@ -11,6 +11,7 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Stub goal and habit data-access helpers with Supabase queries.
   - [x] Connect Supabase auth UI to Supabase-hosted instance and handle onboarding flows.
 - [ ] **Phase 3 – Core Features**: Implement goals, habits, dashboard, vision board, and check-ins experiences.
+  - [x] Launch the Goals & Habits workspace with Supabase-backed goal capture and status overview.
 - [ ] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
@@ -97,6 +98,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 
 ## Latest Update
 
+- Introduced a Goals & Habits workspace that lets authenticated users capture new goals, review upcoming target dates, and
+  refresh live data from Supabase.
 - Expanded the Supabase authentication center with sign-in, sign-up, magic-link, and password-reset flows. Added a guided
   onboarding card so freshly confirmed users can set a display name and mark onboarding complete before creating their first
   goal.
