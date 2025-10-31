@@ -102,6 +102,142 @@ body {
   color: #475569;
 }
 
+.supabase-auth {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 20px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.supabase-auth__header h2 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.supabase-auth__header p {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.75);
+}
+
+.supabase-auth__content {
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 16px;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.supabase-auth__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.supabase-auth__field {
+  display: grid;
+  gap: 0.35rem;
+  color: rgba(248, 250, 252, 0.85);
+  font-weight: 500;
+}
+
+.supabase-auth__field input {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+}
+
+.supabase-auth__field input::placeholder {
+  color: rgba(248, 250, 252, 0.45);
+}
+
+.supabase-auth__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.supabase-auth__action {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #22d3ee, #6366f1);
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.supabase-auth__action:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.supabase-auth__action:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(34, 211, 238, 0.35);
+}
+
+.supabase-auth__toggle {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: rgba(248, 250, 252, 0.85);
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.supabase-auth__toggle:hover {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.supabase-auth__session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.supabase-auth__label {
+  display: block;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(248, 250, 252, 0.6);
+}
+
+.supabase-auth__status {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(248, 250, 252, 0.75);
+}
+
+.supabase-auth__status--success {
+  color: #4ade80;
+}
+
+.supabase-auth__status--error {
+  color: #f87171;
+}
+
+.supabase-auth__hint {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.supabase-auth__hint code {
+  background: rgba(15, 23, 42, 0.75);
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  color: #f8fafc;
+}
+
 @media (max-width: 600px) {
   body {
     align-items: flex-start;
@@ -110,5 +246,10 @@ body {
 
   .app-shell {
     border-radius: 18px;
+  }
+
+  .supabase-auth__session {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

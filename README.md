@@ -6,6 +6,10 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 
 - [x] **Phase 1 – App Shell Setup**: Bootstrap Vite + React TypeScript project, add initial styling, register a service worker, and ship the base PWA manifest & icons.
 - [ ] **Phase 2 – Supabase Integration**: Configure Supabase project, surface environment variables, and scaffold authentication/data helpers.
+  - [x] Document Supabase environment variables and ship typed client factory.
+  - [x] Provide reusable auth provider with sign-in/out helpers.
+  - [x] Stub goal and habit data-access helpers with Supabase queries.
+  - [ ] Connect Supabase auth UI to Supabase-hosted instance and handle onboarding flows.
 - [ ] **Phase 3 – Core Features**: Implement goals, habits, dashboard, vision board, and check-ins experiences.
 - [ ] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
 
