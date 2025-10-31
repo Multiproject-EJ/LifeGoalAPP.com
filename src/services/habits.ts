@@ -9,6 +9,14 @@ type HabitUpdate = Database['public']['Tables']['habits']['Update'];
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
 type HabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
 
+export type HabitWithGoal = HabitRow & {
+  goal: {
+    id: string;
+    title: string;
+    target_date: string | null;
+  } | null;
+};
+
 type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
@@ -17,6 +25,16 @@ type ServiceResponse<T> = {
 export async function fetchHabitsByGoal(goalId: string): Promise<ServiceResponse<HabitRow[]>> {
   const supabase = getSupabaseClient();
   return supabase.from('habits').select('*').eq('goal_id', goalId).order('name');
+}
+
+export async function fetchHabitsForUser(userId: string): Promise<ServiceResponse<HabitWithGoal[]>> {
+  const supabase = getSupabaseClient();
+  return supabase
+    .from('habits')
+    .select('id, goal_id, name, frequency, schedule, goal:goals(id, title, target_date)')
+    .eq('goals.user_id', userId)
+    .order('name')
+    .returns<HabitWithGoal[]>();
 }
 
 export async function upsertHabit(payload: HabitInsert | HabitUpdate): Promise<ServiceResponse<HabitRow>> {
@@ -63,4 +81,16 @@ export async function clearHabitCompletion(
 
 export function buildSchedulePayload(schedule: Record<string, Json>): Json {
   return schedule as Json;
+}
+
+export async function fetchHabitLogsForDate(
+  date: string,
+  habitIds: string[],
+): Promise<ServiceResponse<HabitLogRow[]>> {
+  if (!habitIds.length) {
+    return { data: [], error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  return supabase.from('habit_logs').select('*').eq('date', date).in('habit_id', habitIds);
 }
