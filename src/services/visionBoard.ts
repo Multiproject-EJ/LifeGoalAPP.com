@@ -20,7 +20,8 @@ export async function fetchVisionImages(userId: string): Promise<ServiceResponse
     .from('vision_images')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .returns<VisionImageRow[]>();
 
   return { data: response.data, error: response.error };
 }
@@ -69,7 +70,12 @@ export async function uploadVisionImage({
     caption: caption?.trim() ? caption.trim() : null,
   };
 
-  const { data, error } = await supabase.from('vision_images').insert(payload).select().single();
+  const { data, error } = await supabase
+    .from('vision_images')
+    .insert(payload)
+    .select()
+    .returns<VisionImageRow>()
+    .single();
 
   if (error) {
     return { data: null, error };

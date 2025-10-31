@@ -24,7 +24,12 @@ type ServiceResponse<T> = {
 
 export async function fetchHabitsByGoal(goalId: string): Promise<ServiceResponse<HabitRow[]>> {
   const supabase = getSupabaseClient();
-  return supabase.from('habits').select('*').eq('goal_id', goalId).order('name');
+  return supabase
+    .from('habits')
+    .select('*')
+    .eq('goal_id', goalId)
+    .order('name')
+    .returns<HabitRow[]>();
 }
 
 export async function fetchHabitsForUser(userId: string): Promise<ServiceResponse<HabitWithGoal[]>> {
@@ -41,8 +46,9 @@ export async function upsertHabit(payload: HabitInsert | HabitUpdate): Promise<S
   const supabase = getSupabaseClient();
   return supabase
     .from('habits')
-    .upsert(payload, { onConflict: 'id' })
+    .upsert(payload as HabitInsert, { onConflict: 'id' })
     .select()
+    .returns<HabitRow>()
     .single();
 }
 
@@ -53,6 +59,7 @@ export async function deleteHabit(id: string): Promise<ServiceResponse<HabitRow>
     .delete()
     .eq('id', id)
     .select()
+    .returns<HabitRow>()
     .single();
 }
 
@@ -62,6 +69,7 @@ export async function logHabitCompletion(payload: HabitLogInsert): Promise<Servi
     .from('habit_logs')
     .insert(payload)
     .select()
+    .returns<HabitLogRow>()
     .single();
 }
 
@@ -76,6 +84,7 @@ export async function clearHabitCompletion(
     .eq('habit_id', habitId)
     .eq('date', date)
     .select()
+    .returns<HabitLogRow>()
     .single();
 }
 
@@ -92,7 +101,12 @@ export async function fetchHabitLogsForDate(
   }
 
   const supabase = getSupabaseClient();
-  return supabase.from('habit_logs').select('*').eq('date', date).in('habit_id', habitIds);
+  return supabase
+    .from('habit_logs')
+    .select('*')
+    .eq('date', date)
+    .in('habit_id', habitIds)
+    .returns<HabitLogRow[]>();
 }
 
 export async function fetchHabitLogsForRange(
@@ -110,5 +124,6 @@ export async function fetchHabitLogsForRange(
     .select('*')
     .in('habit_id', habitIds)
     .gte('date', startDate)
-    .lte('date', endDate);
+    .lte('date', endDate)
+    .returns<HabitLogRow[]>();
 }

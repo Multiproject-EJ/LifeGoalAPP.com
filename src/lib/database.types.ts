@@ -34,6 +34,7 @@ export interface Database {
           created_at?: string;
           target_date?: string | null;
         };
+        Relationships: [];
       };
       habits: {
         Row: {
@@ -57,6 +58,7 @@ export interface Database {
           frequency?: string;
           schedule?: Json | null;
         };
+        Relationships: [];
       };
       habit_logs: {
         Row: {
@@ -77,6 +79,7 @@ export interface Database {
           date?: string;
           completed?: boolean;
         };
+        Relationships: [];
       };
       vision_images: {
         Row: {
@@ -100,6 +103,7 @@ export interface Database {
           caption?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       checkins: {
         Row: {
@@ -120,7 +124,12 @@ export interface Database {
           date?: string;
           scores?: Json;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
