@@ -23,7 +23,8 @@ const initialDraft: GoalDraft = {
 };
 
 export function GoalWorkspace({ session }: GoalWorkspaceProps) {
-  const { isConfigured } = useSupabaseAuth();
+  const { isConfigured, mode } = useSupabaseAuth();
+  const isDemoMode = mode === 'demo';
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -141,7 +142,12 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         </button>
       </header>
 
-      {!isConfigured ? (
+      {isDemoMode ? (
+        <p className="goal-workspace__status goal-workspace__status--info">
+          You&apos;re working with demo Supabase data stored locally. Capture goals freely and connect Supabase later to sync
+          them to the cloud.
+        </p>
+      ) : !isConfigured ? (
         <p className="goal-workspace__status goal-workspace__status--warning">
           Add your Supabase credentials to <code>.env.local</code> to load and persist goals. Until then, you can plan
           offline, but nothing will sync yet.
@@ -188,7 +194,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
           <div className="goal-list__header">
             <h3>Active goals</h3>
             <span className="goal-list__meta">
-              {!isConfigured
+              {!isConfigured && !isDemoMode
                 ? 'Connect Supabase to sync your goals.'
                 : goals.length === 0
                   ? hasLoadedOnce

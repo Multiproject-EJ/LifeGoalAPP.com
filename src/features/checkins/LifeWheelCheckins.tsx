@@ -143,7 +143,8 @@ function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
 }
 
 export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
-  const { isConfigured } = useSupabaseAuth();
+  const { isConfigured, mode } = useSupabaseAuth();
+  const isDemoMode = mode === 'demo';
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -154,7 +155,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
 
   const loadCheckins = useCallback(async () => {
-    if (!isConfigured) {
+    if (!isConfigured && !isDemoMode) {
       setCheckins([]);
       setSelectedCheckinId(null);
       return;
@@ -181,21 +182,21 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     } finally {
       setLoading(false);
     }
-  }, [isConfigured, session.user.id]);
+  }, [isConfigured, isDemoMode, session.user.id]);
 
   useEffect(() => {
-    if (!session || !isConfigured) {
+    if (!session || (!isConfigured && !isDemoMode)) {
       return;
     }
     void loadCheckins();
-  }, [session?.user?.id, isConfigured, loadCheckins]);
+  }, [session?.user?.id, isConfigured, isDemoMode, loadCheckins]);
 
   useEffect(() => {
-    if (!isConfigured) {
+    if (!isConfigured && !isDemoMode) {
       setCheckins([]);
       setSelectedCheckinId(null);
     }
-  }, [isConfigured]);
+  }, [isConfigured, isDemoMode]);
 
   useEffect(() => {
     if (checkins.length === 0) {
@@ -241,7 +242,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
       return;
     }
 
-    if (!isConfigured) {
+    if (!isConfigured && !isDemoMode) {
       setErrorMessage('Supabase credentials are missing. Update your environment variables to continue.');
       return;
     }
@@ -308,13 +309,18 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
           type="button"
           className="life-wheel__refresh"
           onClick={() => void loadCheckins()}
-          disabled={loading || !isConfigured}
+          disabled={loading || (!isConfigured && !isDemoMode)}
         >
           {loading ? 'Refreshing…' : 'Refresh history'}
         </button>
       </header>
 
-      {!isConfigured ? (
+      {isDemoMode ? (
+        <p className="life-wheel__status life-wheel__status--info">
+          Life wheel entries are stored locally in demo mode. Connect Supabase when you&apos;re ready to sync check-ins across
+          devices.
+        </p>
+      ) : !isConfigured ? (
         <p className="life-wheel__status life-wheel__status--warning">
           Add your Supabase credentials so we can sync your check-ins across devices. Until then your entries stay local.
         </p>

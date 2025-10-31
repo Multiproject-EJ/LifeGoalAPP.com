@@ -1,6 +1,18 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
+import {
+  DEMO_USER_ID,
+  clearDemoHabitCompletion,
+  getDemoGoals,
+  getDemoHabitLogsForDate,
+  getDemoHabitLogsForRange,
+  getDemoHabitsByGoal,
+  getDemoHabitsForUser,
+  logDemoHabitCompletion,
+  removeDemoHabit,
+  upsertDemoHabit,
+} from './demoData';
 
 type HabitRow = Database['public']['Tables']['habits']['Row'];
 type HabitInsert = Database['public']['Tables']['habits']['Insert'];
@@ -23,6 +35,10 @@ type ServiceResponse<T> = {
 };
 
 export async function fetchHabitsByGoal(goalId: string): Promise<ServiceResponse<HabitRow[]>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: getDemoHabitsByGoal(goalId), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('habits')
@@ -33,6 +49,19 @@ export async function fetchHabitsByGoal(goalId: string): Promise<ServiceResponse
 }
 
 export async function fetchHabitsForUser(userId: string): Promise<ServiceResponse<HabitWithGoal[]>> {
+  if (!hasSupabaseCredentials()) {
+    const habits = getDemoHabitsForUser(userId || DEMO_USER_ID);
+    const goals = getDemoGoals(userId || DEMO_USER_ID);
+    const goalMap = new Map(
+      goals.map((goal) => [goal.id, { id: goal.id, title: goal.title, target_date: goal.target_date }]),
+    );
+    const result = habits.map((habit) => ({
+      ...habit,
+      goal: goalMap.get(habit.goal_id) ?? null,
+    }));
+    return { data: result, error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('habits')
@@ -43,6 +72,10 @@ export async function fetchHabitsForUser(userId: string): Promise<ServiceRespons
 }
 
 export async function upsertHabit(payload: HabitInsert | HabitUpdate): Promise<ServiceResponse<HabitRow>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: upsertDemoHabit(payload), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('habits')
@@ -53,6 +86,10 @@ export async function upsertHabit(payload: HabitInsert | HabitUpdate): Promise<S
 }
 
 export async function deleteHabit(id: string): Promise<ServiceResponse<HabitRow>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: removeDemoHabit(id), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('habits')
@@ -64,6 +101,10 @@ export async function deleteHabit(id: string): Promise<ServiceResponse<HabitRow>
 }
 
 export async function logHabitCompletion(payload: HabitLogInsert): Promise<ServiceResponse<HabitLogRow>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: logDemoHabitCompletion(payload), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('habit_logs')
@@ -77,6 +118,10 @@ export async function clearHabitCompletion(
   habitId: string,
   date: string,
 ): Promise<ServiceResponse<HabitLogRow>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: clearDemoHabitCompletion(habitId, date), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('habit_logs')
@@ -100,6 +145,10 @@ export async function fetchHabitLogsForDate(
     return { data: [], error: null };
   }
 
+  if (!hasSupabaseCredentials()) {
+    return { data: getDemoHabitLogsForDate(date, habitIds), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('habit_logs')
@@ -116,6 +165,10 @@ export async function fetchHabitLogsForRange(
 ): Promise<ServiceResponse<HabitLogRow[]>> {
   if (!habitIds.length) {
     return { data: [], error: null };
+  }
+
+  if (!hasSupabaseCredentials()) {
+    return { data: getDemoHabitLogsForRange(habitIds, startDate, endDate), error: null };
   }
 
   const supabase = getSupabaseClient();
