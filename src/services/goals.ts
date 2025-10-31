@@ -13,7 +13,11 @@ type ServiceResponse<T> = {
 
 export async function fetchGoals(): Promise<ServiceResponse<GoalRow[]>> {
   const supabase = getSupabaseClient();
-  return supabase.from('goals').select('*').order('created_at', { ascending: false });
+  return supabase
+    .from('goals')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .returns<GoalRow[]>();
 }
 
 export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<GoalRow>> {
@@ -22,6 +26,7 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
     .from('goals')
     .insert(payload)
     .select()
+    .returns<GoalRow>()
     .single();
 }
 
@@ -32,6 +37,7 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
     .update(payload)
     .eq('id', id)
     .select()
+    .returns<GoalRow>()
     .single();
 }
 

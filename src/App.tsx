@@ -5,6 +5,7 @@ import { GoalWorkspace } from './features/goals';
 import { DailyHabitTracker } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
+import { LifeWheelCheckins } from './features/checkins';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -313,6 +314,7 @@ export default function App() {
           <DailyHabitTracker session={session} />
           <ProgressDashboard session={session} />
           <VisionBoard session={session} />
+          <LifeWheelCheckins session={session} />
         </>
       ) : null}
     </main>
