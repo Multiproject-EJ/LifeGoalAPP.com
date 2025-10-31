@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
-import { fetchGoals, insertGoal } from '../../services/goals';
+import { deleteGoal, fetchGoals, insertGoal, updateGoal } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -28,9 +28,15 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [draft, setDraft] = useState<GoalDraft>(initialDraft);
   const [saving, setSaving] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<GoalDraft>(initialDraft);
+  const [updatingGoalId, setUpdatingGoalId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -41,10 +47,13 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
 
     setLoading(true);
     setErrorMessage(null);
+    setStatusMessage(null);
     try {
       const { data, error } = await fetchGoals();
       if (error) throw error;
       setGoals(data ?? []);
+      setEditingGoalId(null);
+      setPendingDeleteId(null);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Unable to load goals. Try again in a moment.',
@@ -66,6 +75,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     if (!isConfigured) {
       setGoals([]);
       setHasLoadedOnce(false);
+      setEditingGoalId(null);
+      setPendingDeleteId(null);
     }
   }, [isConfigured]);
 
@@ -79,8 +90,16 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       setDraft((current) => ({ ...current, [field]: event.target.value }));
     };
 
+  const handleEditDraftChange = (field: keyof GoalDraft) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = event.target.value;
+      setEditDraft((current) => ({ ...current, [field]: value }));
+    };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    setStatusMessage(null);
 
     if (!session) {
       setErrorMessage('You need to be signed in to create a goal.');
@@ -100,6 +119,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
 
     setSaving(true);
     setErrorMessage(null);
+    setStatusMessage(null);
 
     try {
       const payload = {
@@ -115,10 +135,134 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         setGoals((current) => [data, ...current]);
       }
       setDraft(initialDraft);
+      setStatusMessage('Goal saved.');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to save your goal.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const beginEditingGoal = (goal: GoalRow) => {
+    setEditingGoalId(goal.id);
+    setPendingDeleteId(null);
+    setErrorMessage(null);
+    setStatusMessage(null);
+    setEditDraft({
+      title: goal.title ?? '',
+      description: goal.description ?? '',
+      targetDate: goal.target_date ? goal.target_date.slice(0, 10) : '',
+    });
+  };
+
+  const cancelEditingGoal = () => {
+    setEditingGoalId(null);
+    setEditDraft(initialDraft);
+  };
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    setStatusMessage(null);
+
+    if (!session || !editingGoalId) {
+      setErrorMessage('You need to be signed in to update a goal.');
+      return;
+    }
+
+    if (!isConfigured) {
+      setErrorMessage('Supabase credentials are not configured. Add them to continue.');
+      return;
+    }
+
+    const title = editDraft.title.trim();
+    if (!title) {
+      setErrorMessage('Name your goal before saving changes.');
+      return;
+    }
+
+    setUpdatingGoalId(editingGoalId);
+    setErrorMessage(null);
+    setStatusMessage(null);
+
+    try {
+      const payload: Database['public']['Tables']['goals']['Update'] = {
+        title,
+        description: editDraft.description.trim() || null,
+        target_date: editDraft.targetDate || null,
+      };
+
+      const { data, error } = await updateGoal(editingGoalId, payload);
+      if (error) throw error;
+
+      setGoals((current) =>
+        current.map((goal) => {
+          if (goal.id !== editingGoalId) return goal;
+          if (data) return data;
+          return {
+            ...goal,
+            ...payload,
+          } satisfies GoalRow;
+        }),
+      );
+
+      setStatusMessage('Goal updated.');
+      setEditingGoalId(null);
+      setEditDraft(initialDraft);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to update the goal.');
+    } finally {
+      setUpdatingGoalId(null);
+    }
+  };
+
+  const requestDeleteGoal = (goalId: string) => {
+    setPendingDeleteId(goalId);
+    setEditingGoalId((current) => {
+      if (current === goalId) {
+        setEditDraft(initialDraft);
+        return null;
+      }
+      return current;
+    });
+    setErrorMessage(null);
+    setStatusMessage(null);
+  };
+
+  const cancelDeleteGoal = () => {
+    setPendingDeleteId(null);
+  };
+
+  const confirmDeleteGoal = async (goalId: string) => {
+    if (!session) {
+      setErrorMessage('You need to be signed in to remove a goal.');
+      return;
+    }
+
+    if (!isConfigured) {
+      setErrorMessage('Supabase credentials are not configured. Add them to continue.');
+      return;
+    }
+
+    setDeletingGoalId(goalId);
+    setErrorMessage(null);
+    setStatusMessage(null);
+
+    try {
+      const { error } = await deleteGoal(goalId);
+      if (error) throw error;
+
+      setGoals((current) => current.filter((goal) => goal.id !== goalId));
+      setStatusMessage('Goal removed.');
+      if (editingGoalId === goalId) {
+        setEditingGoalId(null);
+        setEditDraft(initialDraft);
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the goal right now.');
+    } finally {
+      setDeletingGoalId(null);
+      setPendingDeleteId(null);
     }
   };
 
@@ -154,7 +298,12 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         </p>
       ) : null}
 
-      {errorMessage && <p className="goal-workspace__status goal-workspace__status--error">{errorMessage}</p>}
+      {statusMessage ? (
+        <p className="goal-workspace__status goal-workspace__status--success">{statusMessage}</p>
+      ) : null}
+      {errorMessage ? (
+        <p className="goal-workspace__status goal-workspace__status--error">{errorMessage}</p>
+      ) : null}
 
       <div className="goal-workspace__grid">
         <form className="goal-form" onSubmit={handleSubmit}>
@@ -205,20 +354,115 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
           </div>
 
           <ul className="goal-list__items">
-            {goals.map((goal) => (
-              <li key={goal.id} className="goal-card">
-                <div className="goal-card__header">
-                  <h4>{goal.title}</h4>
-                  <span className="goal-card__date">
-                    {goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date set'}
-                  </span>
-                </div>
-                {goal.description ? <p>{goal.description}</p> : null}
-                <footer className="goal-card__footer">
-                  <span>Created {formatRelativeDate(goal.created_at)}</span>
-                </footer>
-              </li>
-            ))}
+            {goals.map((goal) => {
+              const isEditing = editingGoalId === goal.id;
+              const isPendingDelete = pendingDeleteId === goal.id;
+              const isUpdating = updatingGoalId === goal.id;
+              const isDeleting = deletingGoalId === goal.id;
+              return (
+                <li key={goal.id} className="goal-card">
+                  {isEditing ? (
+                    <form className="goal-card__editor" onSubmit={handleEditSubmit}>
+                      <h4>Edit goal</h4>
+                      <label className="goal-card__field">
+                        <span>Goal title</span>
+                        <input
+                          type="text"
+                          value={editDraft.title}
+                          onChange={handleEditDraftChange('title')}
+                          required
+                        />
+                      </label>
+                      <label className="goal-card__field">
+                        <span>Why it matters</span>
+                        <textarea
+                          value={editDraft.description}
+                          onChange={handleEditDraftChange('description')}
+                          rows={3}
+                        />
+                      </label>
+                      <label className="goal-card__field">
+                        <span>Target date</span>
+                        <input
+                          type="date"
+                          value={editDraft.targetDate}
+                          onChange={handleEditDraftChange('targetDate')}
+                        />
+                      </label>
+                      <div className="goal-card__editor-actions">
+                        <button
+                          type="submit"
+                          className="goal-card__button goal-card__button--primary"
+                          disabled={isUpdating}
+                        >
+                          {isUpdating ? 'Saving…' : 'Save changes'}
+                        </button>
+                        <button
+                          type="button"
+                          className="goal-card__button goal-card__button--ghost"
+                          onClick={cancelEditingGoal}
+                          disabled={isUpdating}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="goal-card__header">
+                        <h4>{goal.title}</h4>
+                        <span className="goal-card__date">
+                          {goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date set'}
+                        </span>
+                      </div>
+                      {goal.description ? <p>{goal.description}</p> : null}
+                      <footer className="goal-card__footer">
+                        <span>Created {formatRelativeDate(goal.created_at)}</span>
+                        <div className="goal-card__actions">
+                          {isPendingDelete ? (
+                            <>
+                              <button
+                                type="button"
+                                className="goal-card__button goal-card__button--danger"
+                                onClick={() => void confirmDeleteGoal(goal.id)}
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? 'Removing…' : 'Confirm delete'}
+                              </button>
+                              <button
+                                type="button"
+                                className="goal-card__button goal-card__button--ghost"
+                                onClick={cancelDeleteGoal}
+                                disabled={isDeleting}
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                className="goal-card__button goal-card__button--primary"
+                                onClick={() => beginEditingGoal(goal)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className="goal-card__button goal-card__button--danger"
+                                onClick={() => requestDeleteGoal(goal.id)}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </footer>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
 
           {goals.length > 0 && completedGoals.length > 0 ? (

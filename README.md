@@ -16,6 +16,8 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Ship the Dashboard & Calendar view with habit completion analytics and upcoming goal milestones.
   - [x] Curate the Vision Board with Supabase Storage uploads, gallery sorting controls, and entry deletion.
   - [x] Launch the Life Wheel Check-ins with Supabase-backed history and radar visualizations.
+  - [x] Enable inline goal editing and deletion so Supabase and demo workspaces stay in sync.
+  - [ ] Layer in goal progress notes and status tags for weekly reviews.
 - [x] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
   - [x] Harden Supabase data reads with a network-first cache in the service worker for resilient offline reloads.
   - [x] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
@@ -130,6 +132,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   goal.
 - Shipped a daily habit tracker that loads a user’s scheduled habits, syncs completion state with Supabase, and lets them log
   progress even after refreshing the page.
+- Added inline goal editing and deletion controls so teams can refine plans without leaving the workspace, whether in demo or
+  Supabase-backed mode.
 - Debuted a progress dashboard that visualizes weekly habit completion rates, a monthly calendar heatmap, and the next goal
   milestones so teams can monitor momentum at a glance.
 - Introduced a Vision Board workspace that uploads imagery to Supabase Storage, persists captions, lets teams sort the gallery,
