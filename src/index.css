@@ -698,6 +698,101 @@ body.under-construction-open {
   color: #475569;
 }
 
+.goal-reflection-journal__trend-card {
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.45), rgba(221, 214, 254, 0.25));
+  padding: 1.25rem 1.4rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.goal-reflection-journal__trend-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.goal-reflection-journal__trend-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.goal-reflection-journal__trend-header p {
+  margin: 0;
+  color: #1e293b;
+  max-width: 38ch;
+}
+
+.goal-reflection-journal__trend-chart {
+  width: 100%;
+}
+
+.goal-reflection-journal__trend-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.goal-reflection-journal__trend-gridline {
+  stroke: rgba(148, 163, 184, 0.35);
+  stroke-dasharray: 4 6;
+}
+
+.goal-reflection-journal__trend-axis-label {
+  font-size: 0.75rem;
+  fill: #475569;
+  text-anchor: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-reflection-journal__trend-baseline {
+  stroke: rgba(15, 23, 42, 0.25);
+  stroke-width: 1;
+}
+
+.goal-reflection-journal__trend-point circle:last-child {
+  filter: drop-shadow(0 3px 8px rgba(37, 99, 235, 0.25));
+}
+
+.goal-reflection-journal__trend-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem 1.25rem;
+}
+
+.goal-reflection-journal__trend-legend li {
+  display: grid;
+  gap: 0.2rem;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.25);
+}
+
+.goal-reflection-journal__trend-month {
+  font-weight: 600;
+}
+
+.goal-reflection-journal__trend-average {
+  font-size: 1.15rem;
+  color: #1d4ed8;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-reflection-journal__trend-count {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.goal-reflection-journal__trend-empty {
+  margin: 0;
+  color: #475569;
+}
+
 .goal-reflection-journal__list {
   list-style: none;
   margin: 0;
@@ -2477,6 +2572,18 @@ body.under-construction-open {
 
   .goal-reflection-journal__delete {
     align-self: flex-start;
+  }
+
+  .goal-reflection-journal__trend-card {
+    padding: 1rem 1.1rem;
+  }
+
+  .goal-reflection-journal__trend-header p {
+    max-width: unset;
+  }
+
+  .goal-reflection-journal__trend-legend {
+    grid-template-columns: 1fr;
   }
 }
 
