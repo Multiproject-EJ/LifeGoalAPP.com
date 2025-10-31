@@ -28,8 +28,8 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
   - [x] Deliver configurable push notification subscriptions for habit reminders and check-in nudges.
 - [ ] **Phase 5 – Reflection & Coaching Enhancements**: Transform weekly insights into coaching-ready action plans.
-  - [x] Launch the Goal Reflection Journal with confidence scoring and highlight/challenge capture.
-  - [ ] Generate AI-assisted follow-up prompts from recent reflections.
+- [x] Launch the Goal Reflection Journal with confidence scoring and highlight/challenge capture.
+  - [x] Generate AI-assisted follow-up prompts from recent reflections.
   - [x] Chart confidence trends across months so teams can spot momentum shifts per goal.
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
@@ -158,6 +158,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   help teams reflect on momentum shifts.
 - Realigned life wheel categories with the Supabase schema and introduced a trend insights card that highlights gains,
   dips, and steady areas between the latest check-ins.
+- Activated AI-assisted follow-up prompts that translate recent reflections into coaching-ready action plans, with a
+  Supabase Edge Function hook and a Supabase-aligned demo fallback for local development.
 - Hardened offline habit logging with a service-worker-powered background sync queue that stores Supabase writes when
   disconnected, replays them once back online, and notifies users from the habit tracker when syncing succeeds or needs more
   time.
