@@ -1,7 +1,7 @@
 import { Dispatch, FormEvent, MouseEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
-import { GoalWorkspace } from './features/goals';
+import { GoalReflectionJournal, GoalWorkspace } from './features/goals';
 import { DailyHabitTracker } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
@@ -362,6 +362,7 @@ export default function App() {
         <>
           <NotificationPreferences session={session} />
           <GoalWorkspace session={session} />
+          <GoalReflectionJournal session={session} />
           <DailyHabitTracker session={session} />
           <ProgressDashboard session={session} />
           <VisionBoard session={session} />

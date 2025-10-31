@@ -20,6 +20,9 @@ export type CheckinUpdate = Database['public']['Tables']['checkins']['Update'];
 export type NotificationPreferencesRow = Database['public']['Tables']['notification_preferences']['Row'];
 export type NotificationPreferencesInsert = Database['public']['Tables']['notification_preferences']['Insert'];
 export type NotificationPreferencesUpdate = Database['public']['Tables']['notification_preferences']['Update'];
+export type GoalReflectionRow = Database['public']['Tables']['goal_reflections']['Row'];
+export type GoalReflectionInsert = Database['public']['Tables']['goal_reflections']['Insert'];
+export type GoalReflectionUpdate = Database['public']['Tables']['goal_reflections']['Update'];
 
 export const DEMO_USER_ID = 'demo-user-0001';
 export const DEMO_USER_EMAIL = 'demo@lifegoalapp.com';
@@ -34,6 +37,7 @@ type DemoState = {
   visionImages: VisionImageRow[];
   checkins: CheckinRow[];
   notificationPreferences: NotificationPreferencesRow | null;
+  goalReflections: GoalReflectionRow[];
 };
 
 type StructuredCloneFn = <T>(value: T) => T;
@@ -100,6 +104,7 @@ const defaultState: DemoState = {
   visionImages: [],
   checkins: [],
   notificationPreferences: null,
+  goalReflections: [],
 };
 
 // Populate habits and dependent tables once goals exist so references align.
@@ -232,6 +237,40 @@ const defaultState: DemoState = {
     created_at: iso(new Date(today.getFullYear(), today.getMonth() - 2, 12)),
     updated_at: iso(new Date(today.getFullYear(), today.getMonth(), 2)),
   };
+
+  defaultState.goalReflections = [
+    {
+      id: createId('reflection'),
+      goal_id: goalLaunch.id,
+      user_id: DEMO_USER_ID,
+      entry_date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)).slice(0, 10),
+      confidence: 4,
+      highlight:
+        'Completed onboarding playbook recordings and received strong feedback from the first beta captain.',
+      challenge: 'Need to coordinate calendar slots with three testers who have limited availability this week.',
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)),
+    },
+    {
+      id: createId('reflection'),
+      goal_id: goalLaunch.id,
+      user_id: DEMO_USER_ID,
+      entry_date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)).slice(0, 10),
+      confidence: 5,
+      highlight: 'Shipped revised habit tracker walkthrough and booked 5 new intro calls.',
+      challenge: 'Document follow-up questions so we can convert interest into active beta signups.',
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)),
+    },
+    {
+      id: createId('reflection'),
+      goal_id: goalVision.id,
+      user_id: DEMO_USER_ID,
+      entry_date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 8)).slice(0, 10),
+      confidence: 3,
+      highlight: 'Gathered quotes for printing the updated vision board and drafted storytelling script.',
+      challenge: 'Still missing imagery for the community impact section and facilitator backup.',
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 8)),
+    },
+  ];
 })();
 
 function normalizeGoalRow(goal: GoalRow): GoalRow {
@@ -268,6 +307,7 @@ function loadState(): DemoState {
       checkins: parsed.checkins ?? clone(defaultState.checkins),
       notificationPreferences:
         parsed.notificationPreferences ?? clone(defaultState.notificationPreferences),
+      goalReflections: parsed.goalReflections ?? clone(defaultState.goalReflections),
     } satisfies DemoState;
   } catch (error) {
     console.warn('Unable to parse demo data state, falling back to defaults.', error);
@@ -356,7 +396,8 @@ export function removeDemoGoal(id: string): GoalRow | null {
     const habits = current.habits.filter((habit) => habit.goal_id !== id);
     const habitIds = new Set(habits.map((habit) => habit.id));
     const habitLogs = current.habitLogs.filter((log) => habitIds.has(log.habit_id));
-    return { ...current, goals, habits, habitLogs };
+    const goalReflections = current.goalReflections.filter((reflection) => reflection.goal_id !== id);
+    return { ...current, goals, habits, habitLogs, goalReflections };
   });
   return removed ? clone(normalizeGoalRow(removed)) : null;
 }
@@ -612,4 +653,67 @@ export async function fileToDataUrl(file: File | Blob): Promise<string> {
 export function resetDemoState() {
   state = clone(defaultState);
   persist();
+}
+
+export function getDemoGoalReflections(goalId: string): GoalReflectionRow[] {
+  return clone(
+    state.goalReflections
+      .filter((reflection) => reflection.goal_id === goalId)
+      .sort((a, b) => (a.entry_date > b.entry_date ? -1 : a.entry_date < b.entry_date ? 1 : 0)),
+  );
+}
+
+export function addDemoGoalReflection(payload: GoalReflectionInsert): GoalReflectionRow {
+  const record: GoalReflectionRow = {
+    id: payload.id ?? createId('reflection'),
+    goal_id: payload.goal_id,
+    user_id: payload.user_id,
+    entry_date: payload.entry_date,
+    confidence: payload.confidence ?? null,
+    highlight: payload.highlight ?? null,
+    challenge: payload.challenge ?? null,
+    created_at: payload.created_at ?? new Date().toISOString(),
+  };
+
+  updateState((current) => ({ ...current, goalReflections: [record, ...current.goalReflections] }));
+  return clone(record);
+}
+
+export function updateDemoGoalReflection(
+  id: string,
+  payload: GoalReflectionUpdate,
+): GoalReflectionRow | null {
+  let updated: GoalReflectionRow | null = null;
+  updateState((current) => {
+    const goalReflections = current.goalReflections.map((reflection) => {
+      if (reflection.id !== id) return reflection;
+      updated = {
+        ...reflection,
+        ...payload,
+        entry_date: payload.entry_date ?? reflection.entry_date,
+        confidence: payload.confidence ?? reflection.confidence,
+        highlight: payload.highlight ?? reflection.highlight,
+        challenge: payload.challenge ?? reflection.challenge,
+        created_at: payload.created_at ?? reflection.created_at,
+      };
+      return updated;
+    });
+    return { ...current, goalReflections };
+  });
+  return updated ? clone(updated) : null;
+}
+
+export function removeDemoGoalReflection(id: string): GoalReflectionRow | null {
+  let removed: GoalReflectionRow | null = null;
+  updateState((current) => {
+    const goalReflections = current.goalReflections.filter((reflection) => {
+      if (reflection.id === id) {
+        removed = reflection;
+        return false;
+      }
+      return true;
+    });
+    return { ...current, goalReflections };
+  });
+  return removed ? clone(removed) : null;
 }
