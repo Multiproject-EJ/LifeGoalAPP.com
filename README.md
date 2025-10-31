@@ -16,9 +16,9 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Ship the Dashboard & Calendar view with habit completion analytics and upcoming goal milestones.
   - [x] Curate the Vision Board with Supabase Storage uploads, gallery sorting controls, and entry deletion.
   - [x] Launch the Life Wheel Check-ins with Supabase-backed history and radar visualizations.
-- [ ] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
+- [x] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
   - [x] Harden Supabase data reads with a network-first cache in the service worker for resilient offline reloads.
-  - [ ] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
+  - [x] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
   - [ ] Deliver configurable push notification subscriptions for habit reminders and check-in nudges.
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
@@ -118,6 +118,9 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   and removes entries that are no longer relevant.
 - Rolled out Life Wheel check-ins with Supabase-backed history, a balanced radar chart visual, and quick score presets to
   help teams reflect on momentum shifts.
+- Hardened offline habit logging with a service-worker-powered background sync queue that stores Supabase writes when
+  disconnected, replays them once back online, and notifies users from the habit tracker when syncing succeeds or needs more
+  time.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.
