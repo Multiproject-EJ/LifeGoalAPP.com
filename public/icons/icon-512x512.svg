@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LifeGoalApp logo">
+  <defs>
+    <linearGradient id="gradient-512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="#0f172a" />
+  <path d="M160 340l90-110 66 66 96-150" fill="none" stroke="url(#gradient-512)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="384" cy="160" r="36" fill="#fbbf24" />
+</svg>

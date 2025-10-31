@@ -2,9 +2,35 @@
 
 LifeGoalApp will be delivered as a progressive web application (PWA) powered by Supabase. The mobile-first experience will offer an app-like interface, while desktop users get an expanded dashboard with richer insights.
 
+## Phase Progress
+
+- [x] **Phase 1 – App Shell Setup**: Bootstrap Vite + React TypeScript project, add initial styling, register a service worker, and ship the base PWA manifest & icons.
+- [ ] **Phase 2 – Supabase Integration**: Configure Supabase project, surface environment variables, and scaffold authentication/data helpers.
+- [ ] **Phase 3 – Core Features**: Implement goals, habits, dashboard, vision board, and check-ins experiences.
+- [ ] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
+
+> Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
+
+## Getting Started (Phase 1)
+
+### Prerequisites
+- Node.js 18+
+- npm 9+
+
+### Installation & Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+The development server opens at `http://localhost:5173`. The service worker only registers in production builds; use `npm run build && npm run preview` to test the offline caching strategy locally.
+
+Environment variables for Supabase (introduced in Phase 2) live in `.env.local`; see `.env.example` for the required keys.
+
 ## Architecture Overview
-- **Framework**: Modern JavaScript framework with PWA support (React, Next.js, Vue, etc.) using responsive design to tailor layouts for mobile and desktop.
-- **PWA Fundamentals**: Include `manifest.json`, register a service worker, and implement install prompts for an app-like UX.
+- **Framework**: Modern JavaScript framework with PWA support (React + Vite) using responsive design to tailor layouts for mobile and desktop.
+- **PWA Fundamentals**: Includes `manifest.webmanifest`, registers a service worker, and implements install prompts for an app-like UX.
 - **Backend**: Supabase provides Auth, Postgres database, REST APIs, and Storage. Environment variables supply the Supabase URL and anon key.
 - **Security**: Enable Row-Level Security (RLS) on every table so users only access their own records.
 
@@ -57,7 +83,7 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 - Notifications appear even when the PWA is closed.
 
 ## Development Workflow
-1. Initialize repo with framework scaffolding, manifest, and service worker.
+1. Initialize repo with framework scaffolding, manifest, and service worker. ✅
 2. Configure Supabase project, tables, and RLS policies.
 3. Integrate Supabase auth session handling in the client.
 4. Build UI components for each feature area (forms, dashboards, charts, galleries).
