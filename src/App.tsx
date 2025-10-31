@@ -1,6 +1,7 @@
 import { Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
+import { GoalWorkspace } from './features/goals';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -302,6 +303,8 @@ export default function App() {
           Update your <code>.env.local</code> with Supabase credentials to enable authentication and database helpers.
         </p>
       </section>
+
+      {session && isOnboardingComplete ? <GoalWorkspace session={session} /> : null}
     </main>
   );
 }
