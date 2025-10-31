@@ -18,9 +18,10 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Curate the Vision Board with Supabase Storage uploads, gallery sorting controls, and entry deletion.
   - [x] Launch the Life Wheel Check-ins with Supabase-backed history and radar visualizations.
   - [x] Enable inline goal editing and deletion so Supabase and demo workspaces stay in sync.
-  - [x] Layer in goal progress notes and status tags for weekly reviews.
-  - [x] Surface a goal health snapshot on the dashboard that highlights at-risk work and recent wins.
-  - [x] Draft a weekly focus digest that turns goal health insights into next-step recommendations.
+- [x] Layer in goal progress notes and status tags for weekly reviews.
+- [x] Surface a goal health snapshot on the dashboard that highlights at-risk work and recent wins.
+- [x] Draft a weekly focus digest that turns goal health insights into next-step recommendations.
+- [x] Add quick goal status filters in the workspace so teams can zero in on wins, risks, or off-track work.
 - [x] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
   - [x] Harden Supabase data reads with a network-first cache in the service worker for resilient offline reloads.
   - [x] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
@@ -158,6 +159,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   surfaces the latest progress notes directly from demo or Supabase data.
 - Drafted a weekly focus digest that surfaces prioritized next steps, momentum boosts, and celebration prompts based on
   goal health in either Supabase or demo mode so weekly planning always has actionable guidance.
+- Delivered goal status filters in the Goals & Habits workspace, complete with counts, so it’s easy to isolate on-track,
+  at-risk, off-track, or achieved milestones when prioritizing weekly action.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.
