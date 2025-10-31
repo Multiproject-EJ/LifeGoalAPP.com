@@ -8,6 +8,10 @@ import {
   insertGoalReflection,
   type GoalReflectionRow,
 } from '../../services/goalReflections';
+import {
+  generateFollowUpPrompts,
+  type FollowUpPrompt,
+} from '../../services/reflectionPrompts';
 import type { Database } from '../../lib/database.types';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -138,7 +142,7 @@ function buildConfidenceTrend(reflections: GoalReflectionRow[]): ConfidenceTrend
     })
     .sort((a, b) => a.monthStart.getTime() - b.monthStart.getTime());
 
-  const latest = points.at(-1);
+  const latest = points.length > 0 ? points[points.length - 1] : undefined;
   if (!latest) {
     return null;
   }
@@ -248,6 +252,10 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [prompts, setPrompts] = useState<FollowUpPrompt[]>([]);
+  const [promptSource, setPromptSource] = useState<'supabase' | 'demo' | null>(null);
+  const [loadingPrompts, setLoadingPrompts] = useState(false);
+  const [promptError, setPromptError] = useState<string | null>(null);
 
   const [entryDate, setEntryDate] = useState<string>(getTodayISO());
   const [confidence, setConfidence] = useState<number>(4);
@@ -308,11 +316,17 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
     async (goalId: string) => {
       if (!goalId) {
         setReflections([]);
+        setPrompts([]);
+        setPromptSource(null);
+        setPromptError(null);
         return;
       }
 
       if (!session || (!isConfigured && !isDemoMode)) {
         setReflections([]);
+        setPrompts([]);
+        setPromptSource(null);
+        setPromptError(null);
         return;
       }
 
@@ -329,6 +343,9 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
             : 'Unable to load your reflection history. Please try again shortly.',
         );
         setReflections([]);
+        setPrompts([]);
+        setPromptSource(null);
+        setPromptError(null);
       } finally {
         setLoadingReflections(false);
       }
@@ -341,6 +358,9 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
     if (!isConfigured && !isDemoMode) {
       setGoals([]);
       setReflections([]);
+      setPrompts([]);
+      setPromptSource(null);
+      setPromptError(null);
       setSelectedGoalId('');
       return;
     }
@@ -350,6 +370,9 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
   useEffect(() => {
     if (!selectedGoalId) {
       setReflections([]);
+      setPrompts([]);
+      setPromptSource(null);
+      setPromptError(null);
       return;
     }
     void loadReflections(selectedGoalId);
@@ -444,6 +467,51 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
       setDeletingId(null);
     }
   };
+
+  useEffect(() => {
+    if (!selectedGoalId || reflections.length === 0) {
+      setPrompts([]);
+      setPromptSource(null);
+      setPromptError(null);
+      setLoadingPrompts(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingPrompts(true);
+    setPromptError(null);
+
+    const goalTitle = selectedGoal?.title;
+
+    void (async () => {
+      try {
+        const { data, source } = await generateFollowUpPrompts(
+          selectedGoalId,
+          goalTitle,
+          reflections,
+        );
+        if (cancelled) return;
+        setPrompts(data ?? []);
+        setPromptSource(source);
+      } catch (error) {
+        if (cancelled) return;
+        setPrompts([]);
+        setPromptSource(null);
+        setPromptError(
+          error instanceof Error
+            ? error.message
+            : 'Unable to translate reflections into prompts right now.',
+        );
+      } finally {
+        if (cancelled) return;
+        setLoadingPrompts(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedGoalId, reflections, selectedGoal?.title]);
 
   const confidenceDescription = confidenceMeta[confidence]?.description ?? '';
 
@@ -668,6 +736,54 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
                   Log at least one reflection per month to unlock the confidence trendline.
                 </p>
               )}
+            </article>
+
+            <article className="goal-reflection-journal__prompts-card">
+              <header className="goal-reflection-journal__prompts-header">
+                <h4>AI-assisted follow-up prompts</h4>
+                <p>
+                  Turn your latest reflections into next-step coaching experiments that keep the goal moving.
+                </p>
+              </header>
+
+              {promptError ? (
+                <p className="goal-reflection-journal__prompts-status goal-reflection-journal__prompts-status--error">
+                  {promptError}
+                </p>
+              ) : null}
+
+              {loadingPrompts ? (
+                <p className="goal-reflection-journal__prompts-status">Generating tailored prompts…</p>
+              ) : prompts.length > 0 ? (
+                <ul className="goal-reflection-journal__prompts-list">
+                  {prompts.map((prompt) => (
+                    <li
+                      key={prompt.id}
+                      className={`goal-reflection-journal__prompt goal-reflection-journal__prompt--${prompt.confidenceSignal}`}
+                    >
+                      <span className="goal-reflection-journal__prompt-focus">{prompt.focus}</span>
+                      <h5>{prompt.title}</h5>
+                      <p>{prompt.summary}</p>
+                      <ol>
+                        {prompt.actions.map((action, index) => (
+                          <li key={index}>{action}</li>
+                        ))}
+                      </ol>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="goal-reflection-journal__prompts-status">
+                  Add a new reflection to unlock tailored next steps for your weekly review.
+                </p>
+              )}
+
+              {promptSource === 'demo' ? (
+                <p className="goal-reflection-journal__prompts-footnote">
+                  Prompts are generated locally so you can iterate without Supabase. Connect your Supabase Edge Function
+                  named <code>generate-reflection-prompts</code> to power AI-authored guidance for your team.
+                </p>
+              ) : null}
             </article>
 
             {loadingReflections ? (
