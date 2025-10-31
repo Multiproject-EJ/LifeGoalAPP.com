@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FormEvent, MouseEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace } from './features/goals';
@@ -10,6 +10,8 @@ import { NotificationPreferences } from './features/notifications';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
+
+const CONSTRUCTION_STORAGE_KEY = 'lifeGoalApp:constructionDismissed';
 
 const phaseChecklist = [
   {
@@ -56,6 +58,29 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
+  const [showUnderConstruction, setShowUnderConstruction] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasDismissed = window.localStorage.getItem(CONSTRUCTION_STORAGE_KEY);
+    if (hasDismissed) {
+      setShowUnderConstruction(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const { body } = document;
+    if (!body) return;
+    if (showUnderConstruction) {
+      body.classList.add('under-construction-open');
+    } else {
+      body.classList.remove('under-construction-open');
+    }
+    return () => {
+      body.classList.remove('under-construction-open');
+    };
+  }, [showUnderConstruction]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -75,6 +100,14 @@ export default function App() {
     installPromptEvent.prompt();
     await installPromptEvent.userChoice;
     setInstallPromptEvent(null);
+  };
+
+  const handleConstructionContinue = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    setShowUnderConstruction(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(CONSTRUCTION_STORAGE_KEY, '1');
+    }
   };
 
   useEffect(() => {
@@ -159,7 +192,8 @@ export default function App() {
   const isDemoMode = mode === 'demo';
 
   return (
-    <main className="app-shell">
+    <>
+      <main className={`app-shell ${showUnderConstruction ? 'app-shell--obscured' : ''}`} aria-hidden={showUnderConstruction}>
       <header className="app-shell__header">
         <h1>LifeGoalApp</h1>
         <p className="tagline">Design a smoother path to your goals.</p>
@@ -334,7 +368,75 @@ export default function App() {
           <LifeWheelCheckins session={session} />
         </>
       ) : null}
-    </main>
+      </main>
+      {showUnderConstruction && (
+        <div
+          className="under-construction-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="under-construction-title"
+          aria-describedby="under-construction-message"
+        >
+          <div className="under-construction__dialog">
+            <svg className="under-construction__icon" aria-hidden="true" viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="coneGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#facc15" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+                <linearGradient id="stripeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#fde68a" />
+                  <stop offset="100%" stopColor="#facc15" />
+                </linearGradient>
+              </defs>
+              <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path
+                  d="M18 98h84l-30-78a6 6 0 0 0-5.6-3.9H53.6a6 6 0 0 0-5.6 3.9z"
+                  fill="url(#coneGradient)"
+                  stroke="#7c2d12"
+                  strokeWidth="4"
+                />
+                <path
+                  d="M42 72h36"
+                  stroke="#f8fafc"
+                  strokeWidth="8"
+                  strokeLinecap="square"
+                  opacity="0.85"
+                />
+                <path
+                  d="M36 90h48"
+                  stroke="#f8fafc"
+                  strokeWidth="6"
+                  strokeLinecap="square"
+                  opacity="0.7"
+                />
+                <rect
+                  x="32"
+                  y="30"
+                  width="56"
+                  height="24"
+                  rx="4"
+                  fill="url(#stripeGradient)"
+                  stroke="#f97316"
+                  strokeWidth="3"
+                  transform="rotate(-10 60 42)"
+                  opacity="0.6"
+                />
+              </g>
+            </svg>
+            <h2 id="under-construction-title" className="under-construction__title">
+              Site under construction
+            </h2>
+            <p id="under-construction-message" className="under-construction__message">
+              We&apos;re still wiring up the experience. Take a moment to explore the roadmap below while we finish the build.
+            </p>
+            <a href="#" className="under-construction__continue" onClick={handleConstructionContinue}>
+              Continue to site
+            </a>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
