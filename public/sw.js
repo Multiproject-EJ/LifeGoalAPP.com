@@ -333,3 +333,61 @@ self.addEventListener('message', (event) => {
     );
   }
 });
+
+self.addEventListener('push', (event) => {
+  const defaultTitle = 'LifeGoalApp Reminder';
+  const defaultBody = 'Stay on track with your goals today.';
+  let data = {};
+
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (error) {
+      data = { title: defaultTitle, body: event.data.text() || defaultBody };
+    }
+  }
+
+  const title = data.title || defaultTitle;
+  const options = {
+    body: data.body || defaultBody,
+    icon: '/icons/icon-192x192.svg',
+    badge: '/icons/icon-192x192.svg',
+    data: data.data || {},
+    actions: data.actions || undefined,
+    tag: data.tag || undefined,
+    renotify: data.renotify || false,
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
+
+  event.waitUntil(
+    (async () => {
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of clientList) {
+        if ('focus' in client) {
+          await client.focus();
+          if ('navigate' in client && targetUrl) {
+            await client.navigate(targetUrl);
+          }
+          return;
+        }
+      }
+      if (self.clients.openWindow) {
+        await self.clients.openWindow(targetUrl);
+      }
+    })()
+  );
+});
+
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    notifyClients('PUSH_SUBSCRIPTION_EXPIRED').catch((error) => {
+      console.error('Failed to broadcast push subscription expiration.', error);
+    })
+  );
+});

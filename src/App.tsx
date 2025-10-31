@@ -6,6 +6,7 @@ import { DailyHabitTracker } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
+import { NotificationPreferences } from './features/notifications';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -310,6 +311,7 @@ export default function App() {
 
       {session && isOnboardingComplete ? (
         <>
+          <NotificationPreferences session={session} />
           <GoalWorkspace session={session} />
           <DailyHabitTracker session={session} />
           <ProgressDashboard session={session} />
