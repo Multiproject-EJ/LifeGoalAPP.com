@@ -126,6 +126,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      notification_preferences: {
+        Row: {
+          user_id: string;
+          habit_reminders_enabled: boolean;
+          habit_reminder_time: string | null;
+          checkin_nudges_enabled: boolean;
+          timezone: string | null;
+          subscription: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          habit_reminders_enabled?: boolean;
+          habit_reminder_time?: string | null;
+          checkin_nudges_enabled?: boolean;
+          timezone?: string | null;
+          subscription?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          habit_reminders_enabled?: boolean;
+          habit_reminder_time?: string | null;
+          checkin_nudges_enabled?: boolean;
+          timezone?: string | null;
+          subscription?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

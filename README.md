@@ -19,7 +19,7 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 - [x] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
   - [x] Harden Supabase data reads with a network-first cache in the service worker for resilient offline reloads.
   - [x] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
-  - [ ] Deliver configurable push notification subscriptions for habit reminders and check-in nudges.
+  - [x] Deliver configurable push notification subscriptions for habit reminders and check-in nudges.
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
 
@@ -38,7 +38,8 @@ npm run dev
 
 The development server opens at `http://localhost:5173`. The service worker only registers in production builds; use `npm run build && npm run preview` to test the offline caching strategy locally.
 
-Environment variables for Supabase (introduced in Phase 2) live in `.env.local`; see `.env.example` for the required keys.
+Environment variables for Supabase (introduced in Phase 2) live in `.env.local`; see `.env.example` for the required keys. In
+Phase 4, add your public VAPID key as `VITE_VAPID_PUBLIC_KEY` so the client can request push subscriptions.
 
 ## Architecture Overview
 - **Framework**: Modern JavaScript framework with PWA support (React + Vite) using responsive design to tailor layouts for mobile and desktop.
@@ -128,6 +129,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 - Hardened offline habit logging with a service-worker-powered background sync queue that stores Supabase writes when
   disconnected, replays them once back online, and notifies users from the habit tracker when syncing succeeds or needs more
   time.
+- Debuted configurable push notification preferences so authenticated users can opt into habit reminders and life wheel
+  check-in nudges, store their time zone and preferred reminder time, and manage their push subscription via the PWA.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.
