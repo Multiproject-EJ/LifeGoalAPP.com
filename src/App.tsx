@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace } from './features/goals';
 import { DailyHabitTracker } from './features/habits';
+import { ProgressDashboard } from './features/dashboard';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -309,6 +310,7 @@ export default function App() {
         <>
           <GoalWorkspace session={session} />
           <DailyHabitTracker session={session} />
+          <ProgressDashboard session={session} />
         </>
       ) : null}
     </main>

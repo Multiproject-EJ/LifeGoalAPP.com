@@ -94,3 +94,21 @@ export async function fetchHabitLogsForDate(
   const supabase = getSupabaseClient();
   return supabase.from('habit_logs').select('*').eq('date', date).in('habit_id', habitIds);
 }
+
+export async function fetchHabitLogsForRange(
+  habitIds: string[],
+  startDate: string,
+  endDate: string,
+): Promise<ServiceResponse<HabitLogRow[]>> {
+  if (!habitIds.length) {
+    return { data: [], error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  return supabase
+    .from('habit_logs')
+    .select('*')
+    .in('habit_id', habitIds)
+    .gte('date', startDate)
+    .lte('date', endDate);
+}
