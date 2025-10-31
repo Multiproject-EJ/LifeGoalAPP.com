@@ -1,6 +1,13 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import {
+  DEMO_USER_ID,
+  addDemoGoal,
+  getDemoGoals,
+  removeDemoGoal,
+  updateDemoGoal,
+} from './demoData';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type GoalInsert = Database['public']['Tables']['goals']['Insert'];
@@ -12,6 +19,10 @@ type ServiceResponse<T> = {
 };
 
 export async function fetchGoals(): Promise<ServiceResponse<GoalRow[]>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: getDemoGoals(DEMO_USER_ID), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('goals')
@@ -21,6 +32,10 @@ export async function fetchGoals(): Promise<ServiceResponse<GoalRow[]>> {
 }
 
 export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<GoalRow>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: addDemoGoal(payload), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('goals')
@@ -31,6 +46,11 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
 }
 
 export async function updateGoal(id: string, payload: GoalUpdate): Promise<ServiceResponse<GoalRow>> {
+  if (!hasSupabaseCredentials()) {
+    const record = updateDemoGoal(id, payload);
+    return { data: record, error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('goals')
@@ -42,6 +62,11 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
 }
 
 export async function deleteGoal(id: string): Promise<ServiceResponse<GoalRow>> {
+  if (!hasSupabaseCredentials()) {
+    const removed = removeDemoGoal(id);
+    return { data: removed, error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('goals')

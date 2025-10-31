@@ -1,6 +1,12 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
+import {
+  DEMO_USER_ID,
+  clearDemoNotificationPreferences,
+  getDemoNotificationPreferences,
+  upsertDemoNotificationPreferences,
+} from './demoData';
 
 export type NotificationPreferencesRow = Database['public']['Tables']['notification_preferences']['Row'];
 export type NotificationPreferencesInsert = Database['public']['Tables']['notification_preferences']['Insert'];
@@ -25,6 +31,10 @@ function serializeSubscription(subscription: PushSubscriptionJSON | null): Json 
 }
 
 export async function fetchNotificationPreferences(userId: string): Promise<ServiceResponse<NotificationPreferencesRow>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: getDemoNotificationPreferences(userId || DEMO_USER_ID), error: null };
+  }
+
   const supabase = getSupabaseClient();
   return supabase
     .from('notification_preferences')
@@ -37,6 +47,18 @@ export async function upsertNotificationPreferences(
   userId: string,
   payload: NotificationPreferencePayload,
 ): Promise<ServiceResponse<NotificationPreferencesRow>> {
+  if (!hasSupabaseCredentials()) {
+    const record: NotificationPreferencesInsert = {
+      user_id: userId || DEMO_USER_ID,
+      habit_reminders_enabled: payload.habitRemindersEnabled,
+      habit_reminder_time: payload.reminderTime,
+      checkin_nudges_enabled: payload.checkinNudgesEnabled,
+      timezone: payload.timezone,
+      subscription: serializeSubscription(payload.subscription),
+    };
+    return { data: upsertDemoNotificationPreferences(userId || DEMO_USER_ID, record), error: null };
+  }
+
   const supabase = getSupabaseClient();
   const record: NotificationPreferencesInsert = {
     user_id: userId,
@@ -57,6 +79,13 @@ export async function upsertNotificationPreferences(
 export async function disableNotificationPreferences(
   userId: string,
 ): Promise<ServiceResponse<NotificationPreferencesRow>> {
+  if (!hasSupabaseCredentials()) {
+    return {
+      data: clearDemoNotificationPreferences(userId || DEMO_USER_ID),
+      error: null,
+    };
+  }
+
   const supabase = getSupabaseClient();
   const record: NotificationPreferencesUpdate = {
     habit_reminders_enabled: false,

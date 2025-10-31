@@ -1,6 +1,13 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import {
+  DEMO_USER_ID,
+  addDemoVisionImage,
+  fileToDataUrl,
+  getDemoVisionImages,
+  removeDemoVisionImage,
+} from './demoData';
 
 export const VISION_BOARD_BUCKET = 'vision-board';
 
@@ -15,6 +22,10 @@ type ServiceResponse<T> = {
 };
 
 export async function fetchVisionImages(userId: string): Promise<ServiceResponse<VisionImageRow[]>> {
+  if (!hasSupabaseCredentials()) {
+    return { data: getDemoVisionImages(userId || DEMO_USER_ID), error: null };
+  }
+
   const supabase = getSupabaseClient();
   const response = await supabase
     .from('vision_images')
@@ -27,6 +38,10 @@ export async function fetchVisionImages(userId: string): Promise<ServiceResponse
 }
 
 export function getVisionImagePublicUrl(path: string): string {
+  if (!hasSupabaseCredentials()) {
+    return path;
+  }
+
   const supabase = getSupabaseClient();
   const { data } = supabase.storage.from(VISION_BOARD_BUCKET).getPublicUrl(path);
   return data.publicUrl;
@@ -45,6 +60,20 @@ export async function uploadVisionImage({
   fileName,
   caption,
 }: UploadPayload): Promise<ServiceResponse<VisionImageRow>> {
+  if (!hasSupabaseCredentials()) {
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const record = addDemoVisionImage({
+        user_id: userId || DEMO_USER_ID,
+        image_path: dataUrl,
+        caption: caption?.trim() ? caption.trim() : null,
+      });
+      return { data: record, error: null };
+    } catch (error) {
+      return { data: null, error: error instanceof Error ? error : new Error('Unable to store vision image.') };
+    }
+  }
+
   const supabase = getSupabaseClient();
 
   const fileExtension = fileName.split('.').pop()?.toLowerCase() ?? 'jpeg';
@@ -85,6 +114,11 @@ export async function uploadVisionImage({
 }
 
 export async function deleteVisionImage(record: VisionImageRow): Promise<ServiceError> {
+  if (!hasSupabaseCredentials()) {
+    removeDemoVisionImage(record.id);
+    return null;
+  }
+
   const supabase = getSupabaseClient();
 
   const { error: deleteError } = await supabase.from('vision_images').delete().eq('id', record.id);

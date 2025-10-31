@@ -41,6 +41,16 @@ The development server opens at `http://localhost:5173`. The service worker only
 Environment variables for Supabase (introduced in Phase 2) live in `.env.local`; see `.env.example` for the required keys. In
 Phase 4, add your public VAPID key as `VITE_VAPID_PUBLIC_KEY` so the client can request push subscriptions.
 
+### Supabase Demo Mode
+
+If `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are not configured the PWA now boots in a demo mode that mirrors the
+Supabase schema with locally persisted sample data. The demo session signs in as `demo@lifegoalapp.com` and seeds goals,
+habits, vision board imagery, notification preferences, and life wheel check-ins.
+
+- Data is stored in `localStorage` (`lifegoalapp-demo-db-v1`) so edits survive page refreshes while you iterate on the UI.
+- Vision board uploads fall back to in-browser Data URLs when Supabase Storage is unavailable.
+- Connect your Supabase credentials at any time to switch from demo storage to your live project without code changes.
+
 ## Architecture Overview
 - **Framework**: Modern JavaScript framework with PWA support (React + Vite) using responsive design to tailor layouts for mobile and desktop.
 - **PWA Fundamentals**: Includes `manifest.webmanifest`, registers a service worker, and implements install prompts for an app-like UX.
@@ -131,6 +141,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   time.
 - Debuted configurable push notification preferences so authenticated users can opt into habit reminders and life wheel
   check-in nudges, store their time zone and preferred reminder time, and manage their push subscription via the PWA.
+- Added a Supabase-aligned demo dataset fallback so the full workspace works offline with seeded goals, habits, check-ins,
+  notifications, and a locally persisted vision board until real Supabase credentials are provided.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.

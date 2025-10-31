@@ -7,6 +7,7 @@ import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
+import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -39,6 +40,7 @@ export default function App() {
     session,
     initializing,
     isConfigured,
+    mode,
     signInWithOtp,
     signInWithPassword,
     signUpWithPassword,
@@ -154,6 +156,8 @@ export default function App() {
     }
   };
 
+  const isDemoMode = mode === 'demo';
+
   return (
     <main className="app-shell">
       <header className="app-shell__header">
@@ -188,7 +192,9 @@ export default function App() {
         </div>
 
         <div className="supabase-auth__content">
-          {initializing ? (
+          {isDemoMode ? (
+            <DemoModePanel />
+          ) : initializing ? (
             <p className="supabase-auth__status">Loading session…</p>
           ) : !isConfigured ? (
             <p className="supabase-auth__status supabase-auth__status--error">
@@ -291,7 +297,7 @@ export default function App() {
           {authError && <p className="supabase-auth__status supabase-auth__status--error">{authError}</p>}
         </div>
 
-        {session && (
+        {session && !isDemoMode && (
           <OnboardingCard
             session={session}
             displayName={displayName}
@@ -305,7 +311,16 @@ export default function App() {
         )}
 
         <p className="supabase-auth__hint">
-          Update your <code>.env.local</code> with Supabase credentials to enable authentication and database helpers.
+          {isDemoMode ? (
+            <>
+              You&apos;re exploring the LifeGoal workspace with demo Supabase data stored locally. Connect your own Supabase
+              project in <code>.env.local</code> whenever you&apos;re ready to sync real accounts.
+            </>
+          ) : (
+            <>
+              Update your <code>.env.local</code> with Supabase credentials to enable authentication and database helpers.
+            </>
+          )}
         </p>
       </section>
 
@@ -333,6 +348,24 @@ function SignedInPanel({ session, onSignOut }: { session: Session; onSignOut: ()
       <button type="button" className="supabase-auth__action" onClick={onSignOut}>
         Sign out
       </button>
+    </div>
+  );
+}
+
+function DemoModePanel() {
+  return (
+    <div className="supabase-auth__demo">
+      <div className="supabase-auth__session">
+        <div>
+          <span className="supabase-auth__label">Demo mode active</span>
+          <strong>{DEMO_USER_NAME}</strong>
+          <span className="supabase-auth__demo-email">{DEMO_USER_EMAIL}</span>
+        </div>
+      </div>
+      <p className="supabase-auth__status supabase-auth__status--info">
+        Changes are stored locally using demo Supabase-like data structures. Connect your Supabase project to sync with the
+        cloud.
+      </p>
     </div>
   );
 }
