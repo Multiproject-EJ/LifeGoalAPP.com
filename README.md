@@ -30,7 +30,7 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 - [ ] **Phase 5 – Reflection & Coaching Enhancements**: Transform weekly insights into coaching-ready action plans.
   - [x] Launch the Goal Reflection Journal with confidence scoring and highlight/challenge capture.
   - [ ] Generate AI-assisted follow-up prompts from recent reflections.
-  - [ ] Chart confidence trends across months so teams can spot momentum shifts per goal.
+  - [x] Chart confidence trends across months so teams can spot momentum shifts per goal.
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
 
@@ -177,6 +177,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   at-risk, off-track, or achieved milestones when prioritizing weekly action.
 - Introduced a Goal Reflection Journal that stores weekly highlights, challenges, and confidence scores with Supabase and
   demo parity to power future coaching prompts and trend analytics.
+- Charted monthly confidence trends inside the reflection journal with a Supabase-aligned fallback dataset so teams can
+  spot wins, dips, and steady momentum before adding live credentials.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.

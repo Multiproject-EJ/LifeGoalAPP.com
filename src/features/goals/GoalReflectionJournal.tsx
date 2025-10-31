@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchGoals } from '../../services/goals';
@@ -33,6 +33,45 @@ const confidenceMeta = CONFIDENCE_OPTIONS.reduce<Record<number, ConfidenceOption
   return acc;
 }, {});
 
+const monthFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  year: 'numeric',
+});
+
+type ConfidenceTrendPoint = {
+  label: string;
+  monthKey: string;
+  monthStart: Date;
+  average: number;
+  entryCount: number;
+};
+
+type ConfidenceTrend = {
+  points: ConfidenceTrendPoint[];
+  summary: string;
+};
+
+type TrendChartPoint = {
+  cx: number;
+  cy: number;
+  label: string;
+  average: number;
+};
+
+type TrendChartGeometry = {
+  width: number;
+  height: number;
+  path: string;
+  areaPath: string;
+  points: TrendChartPoint[];
+  baselineY: number;
+  yTicks: { value: number; y: number }[];
+};
+
+const TREND_CHART_WIDTH = 640;
+const TREND_CHART_HEIGHT = 260;
+const TREND_CHART_PADDING = 48;
+
 function formatDateLabel(isoDate: string): string {
   const parsed = new Date(isoDate);
   if (Number.isNaN(parsed.getTime())) {
@@ -51,6 +90,146 @@ function formatConfidence(value: number | null): string {
   }
   const option = confidenceMeta[value];
   return `${value}/5 · ${option.label}`;
+}
+
+function normalizeConfidence(value: number | null): number | null {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return null;
+  }
+  const clamped = Math.min(5, Math.max(1, value));
+  return Math.round(clamped * 10) / 10;
+}
+
+function buildConfidenceTrend(reflections: GoalReflectionRow[]): ConfidenceTrend | null {
+  const groups = new Map<string, { monthStart: Date; confidences: number[] }>();
+
+  for (const reflection of reflections) {
+    if (!reflection.entry_date) continue;
+    const entryDate = new Date(reflection.entry_date);
+    if (Number.isNaN(entryDate.getTime())) continue;
+    const monthStart = new Date(entryDate.getFullYear(), entryDate.getMonth(), 1);
+    const monthKey = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+    const confidence = normalizeConfidence(reflection.confidence ?? null);
+    if (confidence === null) continue;
+
+    const existing = groups.get(monthKey);
+    if (existing) {
+      existing.confidences.push(confidence);
+    } else {
+      groups.set(monthKey, { monthStart, confidences: [confidence] });
+    }
+  }
+
+  if (groups.size === 0) {
+    return null;
+  }
+
+  const points: ConfidenceTrendPoint[] = Array.from(groups.entries())
+    .map(([monthKey, group]) => {
+      const total = group.confidences.reduce((sum, value) => sum + value, 0);
+      const average = Number((total / group.confidences.length).toFixed(2));
+      return {
+        label: monthFormatter.format(group.monthStart),
+        monthKey,
+        monthStart: group.monthStart,
+        average,
+        entryCount: group.confidences.length,
+      } satisfies ConfidenceTrendPoint;
+    })
+    .sort((a, b) => a.monthStart.getTime() - b.monthStart.getTime());
+
+  const latest = points.at(-1);
+  if (!latest) {
+    return null;
+  }
+
+  const previous = points.length > 1 ? points[points.length - 2] : null;
+  const summary = previous
+    ? createTrendSummary(latest, previous)
+    : `Confidence is averaging ${latest.average.toFixed(1)} this month. Add more reflections to build your trendline.`;
+
+  return { points, summary } satisfies ConfidenceTrend;
+}
+
+function createTrendSummary(latest: ConfidenceTrendPoint, previous: ConfidenceTrendPoint): string {
+  const delta = Number((latest.average - previous.average).toFixed(1));
+  if (Math.abs(delta) < 0.05) {
+    return `Confidence held steady at ${latest.average.toFixed(1)} from ${previous.label} to ${latest.label}.`;
+  }
+
+  const direction = delta > 0 ? 'climbed' : 'dipped';
+  return `Confidence ${direction} ${formatSignedDelta(delta)} between ${previous.label} and ${latest.label}.`;
+}
+
+function formatSignedDelta(value: number, fractionDigits = 1): string {
+  const rounded = Math.abs(value).toFixed(fractionDigits);
+  return `${value > 0 ? '+' : '−'}${rounded}`;
+}
+
+function buildTrendChart(points: ConfidenceTrendPoint[]): TrendChartGeometry | null {
+  if (points.length === 0) {
+    return null;
+  }
+
+  const width = TREND_CHART_WIDTH;
+  const height = TREND_CHART_HEIGHT;
+  const padding = TREND_CHART_PADDING;
+  const innerWidth = width - padding * 2;
+  const innerHeight = height - padding * 2;
+  const baselineY = height - padding;
+
+  const xPositions = points.map((_, index) => {
+    if (points.length === 1) {
+      return padding + innerWidth / 2;
+    }
+    return padding + (index / (points.length - 1)) * innerWidth;
+  });
+
+  const yPositions = points.map((point) => {
+    const ratio = (point.average - 1) / 4;
+    return baselineY - ratio * innerHeight;
+  });
+
+  const linePath = xPositions
+    .map((x, index) => {
+      const y = yPositions[index];
+      const command = index === 0 ? 'M' : 'L';
+      return `${command}${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+
+  const startX = xPositions[0];
+  const endX = xPositions[xPositions.length - 1];
+  const areaPath = [`M${startX.toFixed(2)},${baselineY.toFixed(2)}`]
+    .concat(
+      xPositions.map((x, index) => `L${x.toFixed(2)},${yPositions[index].toFixed(2)}`),
+      `L${endX.toFixed(2)},${baselineY.toFixed(2)}`,
+      'Z',
+    )
+    .join(' ');
+
+  const chartPoints: TrendChartPoint[] = points.map((point, index) => ({
+    cx: Number(xPositions[index].toFixed(2)),
+    cy: Number(yPositions[index].toFixed(2)),
+    label: point.label,
+    average: Number(point.average.toFixed(1)),
+  }));
+
+  const yTicks = [5, 4, 3, 2, 1].map((value) => {
+    const ratio = (value - 1) / 4;
+    const y = baselineY - ratio * innerHeight;
+    return { value, y: Number(y.toFixed(2)) };
+  });
+
+  return {
+    width,
+    height,
+    path: linePath,
+    areaPath,
+    points: chartPoints,
+    baselineY,
+    yTicks,
+  } satisfies TrendChartGeometry;
 }
 
 function getTodayISO(): string {
@@ -74,10 +253,17 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
   const [confidence, setConfidence] = useState<number>(4);
   const [highlight, setHighlight] = useState('');
   const [challenge, setChallenge] = useState('');
+  const trendTitleId = useId();
 
   const selectedGoal = useMemo(
     () => goals.find((goal) => goal.id === selectedGoalId) ?? null,
     [goals, selectedGoalId],
+  );
+
+  const confidenceTrend = useMemo(() => buildConfidenceTrend(reflections), [reflections]);
+  const trendChart = useMemo(
+    () => (confidenceTrend ? buildTrendChart(confidenceTrend.points) : null),
+    [confidenceTrend],
   );
 
   const loadGoals = useCallback(async () => {
@@ -389,6 +575,100 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
                   : 'Select a goal to view its reflection history.'}
               </p>
             </div>
+
+            <article className="goal-reflection-journal__trend-card">
+              <header className="goal-reflection-journal__trend-header">
+                <h4>Confidence trendline</h4>
+                <p>
+                  {loadingReflections
+                    ? 'Crunching confidence history…'
+                    : confidenceTrend?.summary ??
+                      'Log reflections each month to reveal how confidence shifts over time.'}
+                </p>
+              </header>
+
+              {loadingReflections ? (
+                <p className="goal-reflection-journal__trend-empty">Loading trend…</p>
+              ) : confidenceTrend && trendChart ? (
+                <>
+                  <figure className="goal-reflection-journal__trend-chart">
+                    <svg
+                      viewBox={`0 0 ${trendChart.width} ${trendChart.height}`}
+                      role="img"
+                      aria-labelledby={trendTitleId}
+                    >
+                      <title id={trendTitleId}>Confidence trendline</title>
+                      <desc>
+                        Monthly average confidence scores for {selectedGoal?.title ?? 'the selected goal'}.
+                      </desc>
+                      <defs>
+                        <linearGradient id={`${trendTitleId}-gradient`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <g className="goal-reflection-journal__trend-grid">
+                        {trendChart.yTicks.map((tick) => (
+                          <g key={tick.value}>
+                            <line
+                              x1={TREND_CHART_PADDING}
+                              x2={trendChart.width - TREND_CHART_PADDING}
+                              y1={tick.y}
+                              y2={tick.y}
+                              className="goal-reflection-journal__trend-gridline"
+                            />
+                            <text
+                              x={TREND_CHART_PADDING - 14}
+                              y={tick.y + 4}
+                              className="goal-reflection-journal__trend-axis-label"
+                            >
+                              {tick.value}
+                            </text>
+                          </g>
+                        ))}
+                      </g>
+                      <path d={trendChart.areaPath} fill={`url(#${trendTitleId}-gradient)`} />
+                      <path
+                        d={trendChart.path}
+                        fill="none"
+                        stroke="#2563eb"
+                        strokeWidth={3}
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                      />
+                      {trendChart.points.map((point) => (
+                        <g key={point.label} className="goal-reflection-journal__trend-point">
+                          <circle cx={point.cx} cy={point.cy} r={10} fill="none" stroke="#bfdbfe" strokeWidth={2} />
+                          <circle cx={point.cx} cy={point.cy} r={6} fill="#2563eb" />
+                        </g>
+                      ))}
+                      <line
+                        x1={TREND_CHART_PADDING}
+                        x2={trendChart.width - TREND_CHART_PADDING}
+                        y1={trendChart.baselineY}
+                        y2={trendChart.baselineY}
+                        className="goal-reflection-journal__trend-baseline"
+                      />
+                    </svg>
+                  </figure>
+                  <ul className="goal-reflection-journal__trend-legend">
+                    {confidenceTrend.points.map((point) => (
+                      <li key={point.monthKey}>
+                        <span className="goal-reflection-journal__trend-month">{point.label}</span>
+                        <strong className="goal-reflection-journal__trend-average">{point.average.toFixed(1)}</strong>
+                        <span className="goal-reflection-journal__trend-count">
+                          {point.entryCount === 1 ? '1 entry' : `${point.entryCount} entries`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="goal-reflection-journal__trend-empty">
+                  Log at least one reflection per month to unlock the confidence trendline.
+                </p>
+              )}
+            </article>
 
             {loadingReflections ? (
               <p className="goal-reflection-journal__empty">Loading reflections…</p>
