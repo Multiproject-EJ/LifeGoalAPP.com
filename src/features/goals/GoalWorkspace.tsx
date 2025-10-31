@@ -5,7 +5,9 @@ import { deleteGoal, fetchGoals, insertGoal, updateGoal } from '../../services/g
 import type { Database } from '../../lib/database.types';
 import {
   DEFAULT_GOAL_STATUS,
+  GOAL_STATUS_META,
   GOAL_STATUS_OPTIONS,
+  GOAL_STATUS_ORDER,
   type GoalStatusTag,
   normalizeGoalStatus,
 } from './goalStatus';
@@ -27,6 +29,8 @@ type GoalDraft = {
 const STATUS_OPTIONS = GOAL_STATUS_OPTIONS;
 
 const defaultStatusTag: GoalStatusTag = DEFAULT_GOAL_STATUS;
+
+type GoalStatusFilter = 'all' | GoalStatusTag;
 
 const initialDraft: GoalDraft = {
   title: '',
@@ -51,6 +55,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const [updatingGoalId, setUpdatingGoalId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<GoalStatusFilter>('all');
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -94,10 +99,75 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     }
   }, [isConfigured]);
 
+  const goalStatusCounts = useMemo(() => {
+    const base = GOAL_STATUS_ORDER.reduce<Record<GoalStatusTag, number>>((acc, status) => {
+      acc[status] = 0;
+      return acc;
+    }, {} as Record<GoalStatusTag, number>);
+
+    return goals.reduce<Record<GoalStatusTag, number>>((acc, goal) => {
+      const status = normalizeGoalStatus(goal.status_tag);
+      acc[status] = (acc[status] ?? 0) + 1;
+      return acc;
+    }, base);
+  }, [goals]);
+
+  const filteredGoals = useMemo(() => {
+    if (statusFilter === 'all') {
+      return goals;
+    }
+    return goals.filter((goal) => normalizeGoalStatus(goal.status_tag) === statusFilter);
+  }, [goals, statusFilter]);
+
   const completedGoals = useMemo(
-    () => goals.filter((goal) => Boolean(goal.target_date && new Date(goal.target_date) < new Date())),
-    [goals],
+    () =>
+      filteredGoals.filter((goal) => Boolean(goal.target_date && new Date(goal.target_date).getTime() < Date.now())),
+    [filteredGoals],
   );
+
+  const totalGoals = goals.length;
+  const filterOptions = useMemo(
+    () =>
+      [
+        {
+          value: 'all' as GoalStatusFilter,
+          label: 'All statuses',
+          count: totalGoals,
+          description: 'View every goal in this workspace.',
+        },
+        ...GOAL_STATUS_ORDER.map((value) => ({
+          value,
+          label: GOAL_STATUS_META[value].label,
+          count: goalStatusCounts[value] ?? 0,
+          description: GOAL_STATUS_META[value].description,
+        })),
+      ],
+    [goalStatusCounts, totalGoals],
+  );
+
+  const listMeta = useMemo(() => {
+    if (!isConfigured && !isDemoMode) {
+      return 'Connect Supabase to sync your goals.';
+    }
+
+    if (totalGoals === 0) {
+      return hasLoadedOnce ? 'No goals yet—start by capturing your first big win.' : 'Loading goals…';
+    }
+
+    if (statusFilter === 'all') {
+      return `${totalGoals} goal${totalGoals === 1 ? '' : 's'} in flight`;
+    }
+
+    const label = GOAL_STATUS_META[statusFilter].label.toLowerCase();
+    return `Showing ${filteredGoals.length} of ${totalGoals} goal${totalGoals === 1 ? '' : 's'} marked ${label}.`;
+  }, [
+    filteredGoals.length,
+    hasLoadedOnce,
+    isConfigured,
+    isDemoMode,
+    statusFilter,
+    totalGoals,
+  ]);
 
   const handleDraftChange = (field: keyof GoalDraft) =>
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -386,19 +456,28 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         <div className="goal-list">
           <div className="goal-list__header">
             <h3>Active goals</h3>
-            <span className="goal-list__meta">
-              {!isConfigured && !isDemoMode
-                ? 'Connect Supabase to sync your goals.'
-                : goals.length === 0
-                  ? hasLoadedOnce
-                    ? 'No goals yet—start by capturing your first big win.'
-                    : 'Loading goals…'
-                  : `${goals.length} goal${goals.length === 1 ? '' : 's'} in flight`}
-            </span>
+            <span className="goal-list__meta">{listMeta}</span>
           </div>
 
+          {totalGoals > 0 ? (
+            <div className="goal-list__filters" role="group" aria-label="Filter goals by status">
+              {filterOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`goal-list__filter ${statusFilter === option.value ? 'goal-list__filter--active' : ''}`}
+                  onClick={() => setStatusFilter(option.value)}
+                  aria-pressed={statusFilter === option.value}
+                >
+                  <span className="goal-list__filter-label">{option.label}</span>
+                  <span className="goal-list__filter-count">{option.count}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           <ul className="goal-list__items">
-            {goals.map((goal) => {
+            {filteredGoals.map((goal) => {
               const isEditing = editingGoalId === goal.id;
               const isPendingDelete = pendingDeleteId === goal.id;
               const isUpdating = updatingGoalId === goal.id;
@@ -546,9 +625,17 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
             })}
           </ul>
 
-          {goals.length > 0 && completedGoals.length > 0 ? (
+          {filteredGoals.length === 0 && totalGoals > 0 ? (
+            <p className="goal-list__empty">
+              {statusFilter === 'all'
+                ? 'No goals match the current filters.'
+                : GOAL_STATUS_META[statusFilter].empty}
+            </p>
+          ) : null}
+
+          {filteredGoals.length > 0 && completedGoals.length > 0 ? (
             <p className="goal-list__status">
-              {completedGoals.length === goals.length
+              {completedGoals.length === filteredGoals.length
                 ? 'Every goal here has passed its target date—time to celebrate and set the next milestone!'
                 : `${completedGoals.length} goal${completedGoals.length === 1 ? ' has' : 's have'} crossed the target date.`}
             </p>
