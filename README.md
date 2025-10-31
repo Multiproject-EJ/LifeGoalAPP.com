@@ -103,6 +103,13 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 6. Test offline behavior and responsiveness on mobile/desktop.
 7. Deploy over HTTPS (Vercel, Netlify, etc.), using production Supabase credentials.
 
+## Deployment
+
+- Pushes to the `main` branch automatically trigger the **Deploy static site** workflow.
+- The workflow installs dependencies, builds the Vite project, and publishes the `dist/` directory to the `gh-pages` branch via `peaceiris/actions-gh-pages`.
+- GitHub Pages serves the freshly built assets from that branch, keeping the production site (including `lifegoalapp.com`) in sync with the repository.
+- If you need to redeploy without new commits, run the workflow manually from the **Actions** tab using the **Run workflow** button.
+
 ## Latest Update
 
 - Introduced a Goals & Habits workspace that lets authenticated users capture new goals, review upcoming target dates, and
