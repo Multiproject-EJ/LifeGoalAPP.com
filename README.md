@@ -5,11 +5,11 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 ## Phase Progress
 
 - [x] **Phase 1 – App Shell Setup**: Bootstrap Vite + React TypeScript project, add initial styling, register a service worker, and ship the base PWA manifest & icons.
-- [ ] **Phase 2 – Supabase Integration**: Configure Supabase project, surface environment variables, and scaffold authentication/data helpers.
+- [x] **Phase 2 – Supabase Integration**: Configure Supabase project, surface environment variables, and scaffold authentication/data helpers.
   - [x] Document Supabase environment variables and ship typed client factory.
   - [x] Provide reusable auth provider with sign-in/out helpers.
   - [x] Stub goal and habit data-access helpers with Supabase queries.
-  - [ ] Connect Supabase auth UI to Supabase-hosted instance and handle onboarding flows.
+  - [x] Connect Supabase auth UI to Supabase-hosted instance and handle onboarding flows.
 - [ ] **Phase 3 – Core Features**: Implement goals, habits, dashboard, vision board, and check-ins experiences.
 - [ ] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
 
@@ -94,6 +94,12 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 5. Implement offline caching, background sync, and push subscription handling.
 6. Test offline behavior and responsiveness on mobile/desktop.
 7. Deploy over HTTPS (Vercel, Netlify, etc.), using production Supabase credentials.
+
+## Latest Update
+
+- Expanded the Supabase authentication center with sign-in, sign-up, magic-link, and password-reset flows. Added a guided
+  onboarding card so freshly confirmed users can set a display name and mark onboarding complete before creating their first
+  goal.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.
