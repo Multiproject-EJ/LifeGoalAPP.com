@@ -13,6 +13,7 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 - [ ] **Phase 3 – Core Features**: Implement goals, habits, dashboard, vision board, and check-ins experiences.
   - [x] Launch the Goals & Habits workspace with Supabase-backed goal capture and status overview.
   - [x] Deliver the Daily Habit Tracker with Supabase-backed completion toggles and a refreshable daily checklist.
+  - [x] Surface habit streak insights (current + longest) in the daily tracker with a Supabase-aligned demo fallback.
   - [x] Ship the Dashboard & Calendar view with habit completion analytics and upcoming goal milestones.
   - [x] Curate the Vision Board with Supabase Storage uploads, gallery sorting controls, and entry deletion.
   - [x] Launch the Life Wheel Check-ins with Supabase-backed history and radar visualizations.
@@ -149,6 +150,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   notifications, and a locally persisted vision board until real Supabase credentials are provided.
 - Layered in weekly goal progress notes and status tags so reviews surface On Track, At Risk, Off Track, and Achieved
   states with notes synced across Supabase and the local demo store.
+- Highlighted current and longest habit streaks in the daily tracker, complete with rest-day context and demo data parity
+  so developers can iterate without live Supabase credentials.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.
