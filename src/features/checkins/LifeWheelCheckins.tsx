@@ -10,7 +10,22 @@ type LifeWheelCheckinsProps = {
   session: Session;
 };
 
-type CheckinScores = Record<string, number>;
+const LIFE_WHEEL_CATEGORIES = [
+  { key: 'health', label: 'Health' },
+  { key: 'relationships', label: 'Relationships' },
+  { key: 'career', label: 'Career' },
+  { key: 'personal_growth', label: 'Personal growth' },
+  { key: 'fun', label: 'Fun' },
+  { key: 'finances', label: 'Finances' },
+  { key: 'giving_back', label: 'Giving back' },
+  { key: 'environment', label: 'Environment' },
+] as const;
+
+type LifeWheelCategory = (typeof LIFE_WHEEL_CATEGORIES)[number];
+
+type LifeWheelCategoryKey = LifeWheelCategory['key'];
+
+type CheckinScores = Record<LifeWheelCategoryKey, number>;
 
 type RadarGeometry = {
   polygonPoints: string;
@@ -25,17 +40,6 @@ type RadarGeometry = {
     baseline: 'middle' | 'text-after-edge' | 'text-before-edge';
   }[];
 };
-
-const LIFE_WHEEL_CATEGORIES = [
-  { key: 'health', label: 'Health' },
-  { key: 'career', label: 'Career' },
-  { key: 'finances', label: 'Finances' },
-  { key: 'relationships', label: 'Relationships' },
-  { key: 'growth', label: 'Growth' },
-  { key: 'fun', label: 'Fun' },
-  { key: 'environment', label: 'Environment' },
-  { key: 'spirit', label: 'Spirit' },
-] as const;
 
 const MAX_SCORE = 10;
 const RADAR_SIZE = 320;
@@ -55,7 +59,7 @@ function createDefaultScores(): CheckinScores {
   return LIFE_WHEEL_CATEGORIES.reduce<CheckinScores>((acc, category) => {
     acc[category.key] = 5;
     return acc;
-  }, {});
+  }, {} as CheckinScores);
 }
 
 function parseCheckinScores(scores: CheckinRow['scores']): CheckinScores {
@@ -78,6 +82,87 @@ function clampScore(value: number): number {
 function calculateAverage(scores: CheckinScores): number {
   const total = LIFE_WHEEL_CATEGORIES.reduce((sum, category) => sum + (scores[category.key] ?? 0), 0);
   return Number((total / LIFE_WHEEL_CATEGORIES.length).toFixed(1));
+}
+
+type TrendDelta = {
+  key: LifeWheelCategoryKey;
+  label: string;
+  delta: number;
+  latest: number;
+  previous: number;
+};
+
+type TrendInsights = {
+  previousLabel: string;
+  latestAverage: number;
+  previousAverage: number;
+  averageDelta: number;
+  averageDirection: 'up' | 'down' | 'steady';
+  improvements: TrendDelta[];
+  declines: TrendDelta[];
+  stableCount: number;
+};
+
+function createTrendInsights(checkins: CheckinRow[]): TrendInsights | null {
+  if (checkins.length < 2) {
+    return null;
+  }
+
+  const [latest, previous] = checkins;
+  const latestScores = parseCheckinScores(latest.scores);
+  const previousScores = parseCheckinScores(previous.scores);
+
+  const deltas = LIFE_WHEEL_CATEGORIES.map<TrendDelta>((category) => {
+    const latestValue = clampScore(latestScores[category.key] ?? 0);
+    const previousValue = clampScore(previousScores[category.key] ?? 0);
+    return {
+      key: category.key,
+      label: category.label,
+      delta: latestValue - previousValue,
+      latest: latestValue,
+      previous: previousValue,
+    };
+  });
+
+  const improvements = deltas
+    .filter((item) => item.delta > 0)
+    .sort((a, b) => b.delta - a.delta)
+    .slice(0, 3);
+
+  const declines = deltas
+    .filter((item) => item.delta < 0)
+    .sort((a, b) => a.delta - b.delta)
+    .slice(0, 3);
+
+  const stableCount = deltas.filter((item) => item.delta === 0).length;
+
+  const latestAverage = calculateAverage(latestScores);
+  const previousAverage = calculateAverage(previousScores);
+  const rawAverageDelta = Number((latestAverage - previousAverage).toFixed(1));
+  const averageDelta = Math.abs(rawAverageDelta) < 0.05 ? 0 : rawAverageDelta;
+  const averageDirection = averageDelta > 0 ? 'up' : averageDelta < 0 ? 'down' : 'steady';
+
+  return {
+    previousLabel: dateFormatter.format(new Date(previous.date)),
+    latestAverage,
+    previousAverage,
+    averageDelta,
+    averageDirection,
+    improvements,
+    declines,
+    stableCount,
+  };
+}
+
+function formatSignedInteger(value: number): string {
+  if (value === 0) return '0';
+  return `${value > 0 ? '+' : '−'}${Math.abs(value)}`;
+}
+
+function formatSignedDecimal(value: number, fractionDigits = 1): string {
+  if (Math.abs(value) < 0.05) return '0';
+  const rounded = Math.abs(value).toFixed(fractionDigits);
+  return `${value > 0 ? '+' : '−'}${rounded}`;
 }
 
 function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
@@ -226,7 +311,9 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     return selectedScores ? calculateAverage(selectedScores) : 0;
   }, [selectedScores]);
 
-  const handleScoreChange = (categoryKey: (typeof LIFE_WHEEL_CATEGORIES)[number]['key']) =>
+  const trendInsights = useMemo(() => createTrendInsights(checkins), [checkins]);
+
+  const handleScoreChange = (categoryKey: LifeWheelCategoryKey) =>
     (event: ChangeEvent<HTMLInputElement>) => {
       const value = clampScore(Number(event.target.value));
       setFormScores((current) => ({ ...current, [categoryKey]: value }));
@@ -403,6 +490,77 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                 })}
               </ul>
             )}
+          </div>
+
+          <div className="life-wheel__insights">
+            <div className="life-wheel__insights-header">
+              <h3>Trend insights</h3>
+              <p>
+                {trendInsights
+                  ? trendInsights.averageDirection === 'steady'
+                    ? `Overall balance held steady compared to ${trendInsights.previousLabel}.`
+                    : `Overall balance ${
+                        trendInsights.averageDirection === 'up' ? 'improved' : 'dipped'
+                      } by ${formatSignedDecimal(trendInsights.averageDelta)} points compared to ${
+                        trendInsights.previousLabel
+                      }.`
+                  : 'Log at least two check-ins to unlock week-over-week highlights.'}
+              </p>
+            </div>
+
+            {trendInsights ? (
+              <>
+                <p className="life-wheel__insights-meta">
+                  Latest average <strong>{trendInsights.latestAverage.toFixed(1)}</strong>/10 • Previous{' '}
+                  <strong>{trendInsights.previousAverage.toFixed(1)}</strong>/10
+                </p>
+                <div className="life-wheel__insight-cards">
+                  <section className="life-wheel__insight-card life-wheel__insight-card--lift">
+                    <h4>Where you gained momentum</h4>
+                    {trendInsights.improvements.length > 0 ? (
+                      <ul className="life-wheel__insight-list">
+                        {trendInsights.improvements.map((item) => (
+                          <li key={item.key}>
+                            <span className="life-wheel__insight-label">{item.label}</span>
+                            <span className="life-wheel__insight-delta life-wheel__insight-delta--positive">
+                              {formatSignedInteger(item.delta)}
+                            </span>
+                            <span className="life-wheel__insight-score">Now {item.latest}/10</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="life-wheel__insight-empty">No gains yet—celebrate a win with your next check-in.</p>
+                    )}
+                  </section>
+
+                  <section className="life-wheel__insight-card life-wheel__insight-card--dip">
+                    <h4>Where to focus next</h4>
+                    {trendInsights.declines.length > 0 ? (
+                      <ul className="life-wheel__insight-list">
+                        {trendInsights.declines.map((item) => (
+                          <li key={item.key}>
+                            <span className="life-wheel__insight-label">{item.label}</span>
+                            <span className="life-wheel__insight-delta life-wheel__insight-delta--negative">
+                              {formatSignedInteger(item.delta)}
+                            </span>
+                            <span className="life-wheel__insight-score">Now {item.latest}/10</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="life-wheel__insight-empty">No dips detected—keep nurturing these areas.</p>
+                    )}
+                  </section>
+                </div>
+                {trendInsights.stableCount > 0 ? (
+                  <p className="life-wheel__insights-stable">
+                    {trendInsights.stableCount} {trendInsights.stableCount === 1 ? 'area' : 'areas'} held steady. Consistency
+                    counts.
+                  </p>
+                ) : null}
+              </>
+            ) : null}
           </div>
         </div>
 

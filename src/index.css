@@ -2058,6 +2058,126 @@ body.under-construction-open {
   font-weight: 600;
 }
 
+.life-wheel__insights {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  display: grid;
+  gap: 1.25rem;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+}
+
+.life-wheel__insights-header h3 {
+  margin: 0 0 0.5rem;
+}
+
+.life-wheel__insights-header p {
+  margin: 0;
+  color: #475569;
+}
+
+.life-wheel__insights-meta {
+  margin: 0;
+  color: #334155;
+  font-size: 0.95rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.life-wheel__insight-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.life-wheel__insight-card {
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: grid;
+  gap: 0.85rem;
+  background: white;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.life-wheel__insight-card h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.life-wheel__insight-card--lift {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(134, 239, 172, 0.32));
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.life-wheel__insight-card--dip {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.12), rgba(252, 165, 165, 0.32));
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.life-wheel__insight-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.life-wheel__insight-list li {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.life-wheel__insight-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.life-wheel__insight-delta {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.life-wheel__insight-delta--positive {
+  color: #15803d;
+}
+
+.life-wheel__insight-delta--negative {
+  color: #b91c1c;
+}
+
+.life-wheel__insight-score {
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.life-wheel__insight-empty {
+  margin: 0;
+  color: #475569;
+}
+
+.life-wheel__insights-stable {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  .life-wheel__insights {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+  }
+
+  .life-wheel__insight-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 720px) {
   .vision-board__header {
     flex-direction: column;
