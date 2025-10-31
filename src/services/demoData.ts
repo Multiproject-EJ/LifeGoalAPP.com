@@ -69,6 +69,9 @@ const defaultState: DemoState = {
       description: 'Invite 25 early adopters, gather feedback, and iterate on the habit tracker experience.',
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 2, 4)),
       target_date: iso(new Date(today.getFullYear(), today.getMonth() + 1, 15)),
+      progress_notes:
+        'Beta content is finalized. Scheduling 1:1 kickoff calls next week and preparing support docs for onboarding.',
+      status_tag: 'on_track',
     },
     {
       id: createId('goal'),
@@ -77,6 +80,19 @@ const defaultState: DemoState = {
       description: 'Collect inspiring imagery, craft narrative captions, and share with accountability partners.',
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 12)),
       target_date: iso(new Date(today.getFullYear(), today.getMonth() + 2, 1)),
+      progress_notes:
+        'Gathered 60% of imagery, but workshop facilitation partner is double-booked. Need a backup facilitator.',
+      status_tag: 'off_track',
+    },
+    {
+      id: createId('goal'),
+      user_id: DEMO_USER_ID,
+      title: 'Archive the pilot insights playbook',
+      description: 'Synthesize interviews, share top 10 learnings, and distribute the retrospective deck to the team.',
+      created_at: iso(new Date(today.getFullYear(), today.getMonth() - 3, 22)),
+      target_date: iso(new Date(today.getFullYear(), today.getMonth() - 1, 30)),
+      progress_notes: 'Deliverables shipped! Scheduling a celebration retro and exporting learnings to Notion.',
+      status_tag: 'achieved',
     },
   ],
   habits: [],
@@ -218,6 +234,20 @@ const defaultState: DemoState = {
   };
 })();
 
+function normalizeGoalRow(goal: GoalRow): GoalRow {
+  let statusTag = goal.status_tag ?? 'on_track';
+  if (statusTag === 'blocked' || statusTag === 'off-track') {
+    statusTag = 'off_track';
+  }
+  return {
+    ...goal,
+    description: goal.description ?? null,
+    target_date: goal.target_date ?? null,
+    progress_notes: goal.progress_notes ?? null,
+    status_tag: statusTag,
+  };
+}
+
 function loadState(): DemoState {
   if (typeof window === 'undefined') {
     return clone(defaultState);
@@ -229,8 +259,9 @@ function loadState(): DemoState {
       return clone(defaultState);
     }
     const parsed = JSON.parse(raw) as Partial<DemoState>;
+    const goals = (parsed.goals ?? clone(defaultState.goals)).map(normalizeGoalRow);
     return {
-      goals: parsed.goals ?? clone(defaultState.goals),
+      goals,
       habits: parsed.habits ?? clone(defaultState.habits),
       habitLogs: parsed.habitLogs ?? clone(defaultState.habitLogs),
       visionImages: parsed.visionImages ?? clone(defaultState.visionImages),
@@ -271,18 +302,22 @@ function sortByDateDesc<T extends { created_at?: string | null; date?: string | 
 }
 
 export function getDemoGoals(userId: string): GoalRow[] {
-  return clone(sortByDateDesc(state.goals.filter((goal) => goal.user_id === userId)));
+  return clone(
+    sortByDateDesc(state.goals.filter((goal) => goal.user_id === userId).map(normalizeGoalRow)),
+  );
 }
 
 export function addDemoGoal(payload: GoalInsert): GoalRow {
-  const record: GoalRow = {
+  const record = normalizeGoalRow({
     id: payload.id ?? createId('goal'),
     user_id: payload.user_id,
     title: payload.title,
     description: payload.description ?? null,
     created_at: payload.created_at ?? new Date().toISOString(),
     target_date: payload.target_date ?? null,
-  };
+    progress_notes: payload.progress_notes ?? null,
+    status_tag: payload.status_tag ?? null,
+  });
 
   updateState((current) => ({ ...current, goals: [record, ...current.goals] }));
   return clone(record);
@@ -293,12 +328,14 @@ export function updateDemoGoal(id: string, payload: GoalUpdate): GoalRow | null 
   updateState((current) => {
     const goals = current.goals.map((goal) => {
       if (goal.id !== id) return goal;
-      updated = {
+      updated = normalizeGoalRow({
         ...goal,
         ...payload,
         description: payload.description ?? goal.description,
         target_date: payload.target_date ?? goal.target_date,
-      };
+        progress_notes: payload.progress_notes ?? goal.progress_notes,
+        status_tag: payload.status_tag ?? goal.status_tag,
+      });
       return updated;
     });
     return { ...current, goals };
@@ -321,7 +358,7 @@ export function removeDemoGoal(id: string): GoalRow | null {
     const habitLogs = current.habitLogs.filter((log) => habitIds.has(log.habit_id));
     return { ...current, goals, habits, habitLogs };
   });
-  return removed ? clone(removed) : null;
+  return removed ? clone(normalizeGoalRow(removed)) : null;
 }
 
 export function getDemoHabitsByGoal(goalId: string): HabitRow[] {

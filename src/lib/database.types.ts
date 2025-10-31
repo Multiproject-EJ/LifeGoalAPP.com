@@ -17,6 +17,8 @@ export interface Database {
           description: string | null;
           created_at: string;
           target_date: string | null;
+          progress_notes: string | null;
+          status_tag: string | null;
         };
         Insert: {
           id?: string;
@@ -25,6 +27,8 @@ export interface Database {
           description?: string | null;
           created_at?: string;
           target_date?: string | null;
+          progress_notes?: string | null;
+          status_tag?: string | null;
         };
         Update: {
           id?: string;
@@ -33,6 +37,8 @@ export interface Database {
           description?: string | null;
           created_at?: string;
           target_date?: string | null;
+          progress_notes?: string | null;
+          status_tag?: string | null;
         };
         Relationships: [];
       };

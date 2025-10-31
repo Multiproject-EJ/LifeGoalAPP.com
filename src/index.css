@@ -301,7 +301,8 @@ body {
 }
 
 .goal-form__field input,
-.goal-form__field textarea {
+.goal-form__field textarea,
+.goal-form__field select {
   border-radius: 12px;
   border: 1px solid rgba(148, 163, 184, 0.6);
   padding: 0.65rem 0.85rem;
@@ -310,8 +311,21 @@ body {
   resize: vertical;
 }
 
+.goal-form__field select {
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
 .goal-form__field textarea {
   min-height: 120px;
+}
+
+.goal-form__hint {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 400;
+  display: block;
+  line-height: 1.35;
 }
 
 .goal-form__submit {
@@ -381,7 +395,13 @@ body {
 
 .goal-card__header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.goal-card__title {
+  display: grid;
   gap: 0.25rem;
 }
 
@@ -399,6 +419,71 @@ body {
 .goal-card p {
   margin: 0;
   color: #334155;
+}
+
+.goal-status {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.goal-status--on_track {
+  background: rgba(34, 197, 94, 0.18);
+  color: #047857;
+}
+
+.goal-status--at_risk {
+  background: rgba(250, 204, 21, 0.18);
+  color: #b45309;
+}
+
+.goal-status--off_track {
+  background: rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
+}
+
+.goal-status--achieved {
+  background: rgba(59, 130, 246, 0.18);
+  color: #1d4ed8;
+}
+
+.goal-card__notes {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.12);
+  font-size: 0.95rem;
+}
+
+.goal-card__notes h5 {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #0f172a;
+}
+
+.goal-card__notes p {
+  margin: 0;
+  color: #1e293b;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.goal-card__notes--empty {
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+  background: rgba(241, 245, 249, 0.6);
+  color: #475569;
+}
+
+.goal-card__notes--empty p {
+  color: inherit;
+  font-style: italic;
 }
 
 .goal-card__footer {
@@ -479,7 +564,8 @@ body {
 }
 
 .goal-card__field input,
-.goal-card__field textarea {
+.goal-card__field textarea,
+.goal-card__field select {
   border-radius: 12px;
   border: 1px solid rgba(148, 163, 184, 0.6);
   padding: 0.6rem 0.85rem;
@@ -488,8 +574,21 @@ body {
   resize: vertical;
 }
 
+.goal-card__field select {
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
 .goal-card__field textarea {
   min-height: 96px;
+}
+
+.goal-card__hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 400;
+  display: block;
+  line-height: 1.35;
 }
 
 .goal-card__editor-actions {
