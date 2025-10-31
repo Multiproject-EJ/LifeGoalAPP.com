@@ -48,6 +48,36 @@ type GoalStatusSummary = {
   examples: Partial<Record<GoalStatusTag, GoalStatusExample>>;
 };
 
+const FOCUS_TONE_META = {
+  stabilize: {
+    label: 'Stabilize',
+  },
+  boost: {
+    label: 'Boost',
+  },
+  celebrate: {
+    label: 'Celebrate',
+  },
+} as const;
+
+type FocusTone = keyof typeof FOCUS_TONE_META;
+
+type FocusAction = {
+  id: string;
+  tone: FocusTone;
+  status: GoalStatusTag;
+  title: string;
+  summary: string;
+  note?: string;
+};
+
+type WeeklyFocusDigest = {
+  intro: string;
+  headline: string;
+  actions: FocusAction[];
+  emptyMessage: string;
+};
+
 function formatISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -258,6 +288,11 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
     return 'Everything is trending smoothly—keep showing up for your rituals.';
   }, [goalStatusSummary]);
 
+  const focusDigest = useMemo(
+    () => createWeeklyFocusDigest(goals, today),
+    [goals, today],
+  );
+
   return (
     <section className="progress-dashboard">
       <header className="progress-dashboard__header">
@@ -302,6 +337,42 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
         </div>
       ) : (
         <div className="progress-dashboard__grid">
+          <article className="progress-card progress-card--digest">
+            <header>
+              <h3>Weekly focus digest</h3>
+              <p>{focusDigest.intro}</p>
+              {focusDigest.headline ? (
+                <p className="focus-digest__headline">{focusDigest.headline}</p>
+              ) : null}
+            </header>
+            {focusDigest.actions.length === 0 ? (
+              <p className="progress-card__empty">{focusDigest.emptyMessage}</p>
+            ) : (
+              <ul className="focus-digest__actions">
+                {focusDigest.actions.map((action) => (
+                  <li
+                    key={action.id}
+                    className={`focus-digest__action focus-digest__action--${action.tone}`}
+                  >
+                    <div className="focus-digest__meta">
+                      <span className={`goal-status goal-status--${action.status}`}>
+                        {GOAL_STATUS_META[action.status].label}
+                      </span>
+                      <span className={`focus-digest__tone focus-digest__tone--${action.tone}`}>
+                        {FOCUS_TONE_META[action.tone].label}
+                      </span>
+                    </div>
+                    <p className="focus-digest__action-title">{action.title}</p>
+                    <p className="focus-digest__action-summary">{action.summary}</p>
+                    {action.note ? (
+                      <p className="focus-digest__action-note">{action.note}</p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+
           <article className="progress-card progress-card--summary">
             <header>
               <h3>This week&apos;s momentum</h3>
@@ -459,4 +530,254 @@ function formatReadableDate(isoDate: string): string {
     month: 'short',
     day: 'numeric',
   });
+}
+
+type RelativeUnit = 'day' | 'week' | 'month';
+
+type TargetContext = {
+  relative: string;
+  readable: string;
+  isPast: boolean;
+};
+
+function getGoalTargetContext(goal: GoalRow, reference: Date): TargetContext | null {
+  if (!goal.target_date) {
+    return null;
+  }
+
+  const target = new Date(goal.target_date);
+  if (Number.isNaN(target.getTime())) {
+    return null;
+  }
+
+  const startOfDay = (date: Date) => {
+    const copy = new Date(date);
+    copy.setHours(0, 0, 0, 0);
+    return copy;
+  };
+
+  const today = startOfDay(reference).getTime();
+  const targetTime = startOfDay(target).getTime();
+  const diffMs = targetTime - today;
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  const absDays = Math.abs(diffDays);
+
+  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+
+  let unit: RelativeUnit = 'day';
+  let value = diffDays;
+
+  if (absDays >= 60) {
+    unit = 'month';
+    value = Math.round(diffDays / 30);
+  } else if (absDays >= 14) {
+    unit = 'week';
+    value = Math.round(diffDays / 7);
+  }
+
+  return {
+    relative: formatter.format(value, unit),
+    readable: formatReadableDate(goal.target_date),
+    isPast: diffDays < 0,
+  };
+}
+
+function resolveGoalTimestamp(goal: GoalRow): number {
+  if (goal.target_date) {
+    const target = new Date(goal.target_date).getTime();
+    if (!Number.isNaN(target)) {
+      return target;
+    }
+  }
+
+  if (goal.created_at) {
+    const created = new Date(goal.created_at).getTime();
+    if (!Number.isNaN(created)) {
+      return created;
+    }
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
+function compareGoalsByUrgency(a: GoalRow, b: GoalRow): number {
+  const aTime = resolveGoalTimestamp(a);
+  const bTime = resolveGoalTimestamp(b);
+
+  if (!Number.isFinite(aTime) && !Number.isFinite(bTime)) {
+    return 0;
+  }
+
+  if (!Number.isFinite(aTime)) {
+    return 1;
+  }
+
+  if (!Number.isFinite(bTime)) {
+    return -1;
+  }
+
+  return aTime - bTime;
+}
+
+function pickMostRecentGoal(goals: GoalRow[]): GoalRow | null {
+  if (goals.length === 0) {
+    return null;
+  }
+
+  return goals
+    .slice()
+    .sort((a, b) => {
+      const aTime = resolveGoalTimestamp(a);
+      const bTime = resolveGoalTimestamp(b);
+
+      if (Number.isFinite(bTime) && Number.isFinite(aTime)) {
+        return bTime - aTime;
+      }
+
+      if (Number.isFinite(bTime)) {
+        return -1;
+      }
+
+      if (Number.isFinite(aTime)) {
+        return 1;
+      }
+
+      return 0;
+    })[0];
+}
+
+function buildFocusAction(
+  goal: GoalRow,
+  status: GoalStatusTag,
+  tone: FocusTone,
+  reference: Date,
+): FocusAction {
+  const title = goal.title?.trim() || 'Untitled goal';
+  const noteSnippet = summarizeNote(goal.progress_notes ?? '');
+  const context = getGoalTargetContext(goal, reference);
+
+  let summary: string;
+
+  if (status === 'off_track') {
+    if (context) {
+      summary = context.isPast
+        ? `Target date was ${context.relative} (${context.readable}). Plan a reset and log next steps.`
+        : `Target date is ${context.relative} (${context.readable}). Rebuild the plan and confirm support.`;
+    } else {
+      summary = 'Define a new checkpoint and list the blockers so you can tackle them head-on.';
+    }
+  } else if (status === 'at_risk') {
+    if (context) {
+      summary = `Protect momentum before ${context.relative} (${context.readable}) by booking time for the next milestone.`;
+    } else {
+      summary = 'Schedule a working session and capture the next milestone to keep things moving.';
+    }
+  } else if (status === 'achieved') {
+    if (context) {
+      summary = `Celebrate the win and share highlights from ${context.readable}.`;
+    } else {
+      summary = 'Celebrate the win and document what made it successful for future projects.';
+    }
+  } else {
+    if (context) {
+      summary = `Lock in your next micro-win ${context.relative} (${context.readable}) so progress stays steady.`;
+    } else {
+      summary = 'Capture the very next action and set a target date to keep momentum focused.';
+    }
+  }
+
+  return {
+    id: goal.id,
+    tone,
+    status,
+    title,
+    summary,
+    note: noteSnippet ? `Latest note: ${noteSnippet}` : undefined,
+  };
+}
+
+function createWeeklyFocusDigest(goals: GoalRow[], reference: Date): WeeklyFocusDigest {
+  if (goals.length === 0) {
+    return {
+      intro: 'Use this digest to plan your weekly sprint once goals are in place.',
+      headline: '',
+      actions: [],
+      emptyMessage: 'Add your first goal to unlock personalized focus prompts.',
+    } satisfies WeeklyFocusDigest;
+  }
+
+  const normalized = goals.map((goal) => ({
+    goal,
+    status: normalizeGoalStatus(goal.status_tag),
+  }));
+
+  const offTrack = normalized.filter((entry) => entry.status === 'off_track').map((entry) => entry.goal);
+  const atRisk = normalized.filter((entry) => entry.status === 'at_risk').map((entry) => entry.goal);
+  const onTrack = normalized.filter((entry) => entry.status === 'on_track').map((entry) => entry.goal);
+  const achieved = normalized.filter((entry) => entry.status === 'achieved').map((entry) => entry.goal);
+
+  const flaggedCount = offTrack.length + atRisk.length;
+  const totalGoals = normalized.length;
+
+  let intro: string;
+  let headline: string;
+
+  if (flaggedCount > 0) {
+    intro = `You have ${flaggedCount} goal${flaggedCount === 1 ? '' : 's'} that need attention this week.`;
+    headline =
+      offTrack.length > 0
+        ? 'Stabilize off-track goals first, then boost the ones losing momentum.'
+        : 'Give at-risk goals a boost so they stay out of the danger zone.';
+  } else if (onTrack.length > 0) {
+    intro = `All ${totalGoals === 1 ? 'goal is' : 'goals are'} currently on track.`;
+    headline = 'Lock in the next milestone while energy is high.';
+  } else {
+    intro = 'Wins are rolling in—capture what worked and plan the next adventure.';
+    headline = 'Celebrate progress and choose the next big focus.';
+  }
+
+  const actions: FocusAction[] = [];
+
+  const urgentOffTrack = offTrack
+    .slice()
+    .sort((a, b) => compareGoalsByUrgency(a, b));
+  for (const goal of urgentOffTrack.slice(0, 2)) {
+    actions.push(buildFocusAction(goal, 'off_track', 'stabilize', reference));
+  }
+
+  if (actions.length < 3) {
+    const urgentAtRisk = atRisk
+      .slice()
+      .sort((a, b) => compareGoalsByUrgency(a, b));
+    for (const goal of urgentAtRisk.slice(0, 3 - actions.length)) {
+      actions.push(buildFocusAction(goal, 'at_risk', 'boost', reference));
+    }
+  }
+
+  if (actions.length < 3 && onTrack.length > 0) {
+    const focused = onTrack
+      .slice()
+      .sort((a, b) => compareGoalsByUrgency(a, b))[0];
+    if (focused) {
+      actions.push(buildFocusAction(focused, 'on_track', 'boost', reference));
+    }
+  }
+
+  if (actions.length < 3 && achieved.length > 0) {
+    const recentWin = pickMostRecentGoal(achieved);
+    if (recentWin) {
+      actions.push(buildFocusAction(recentWin, 'achieved', 'celebrate', reference));
+    }
+  }
+
+  const emptyMessage = flaggedCount > 0
+    ? 'Once these goals are stabilized we will suggest the next set of focus moves here.'
+    : 'Capture new goals or progress notes to unlock personalized focus ideas.';
+
+  return {
+    intro,
+    headline,
+    actions,
+    emptyMessage,
+  } satisfies WeeklyFocusDigest;
 }
