@@ -8,6 +8,12 @@ import {
   type HabitWithGoal,
 } from '../../services/habits';
 import type { Database } from '../../lib/database.types';
+import {
+  GOAL_STATUS_META,
+  GOAL_STATUS_ORDER,
+  type GoalStatusTag,
+  normalizeGoalStatus,
+} from '../goals/goalStatus';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
@@ -27,6 +33,19 @@ type WeeklySnapshot = {
   date: string;
   label: string;
   completions: number;
+};
+
+type GoalStatusExample = {
+  title: string;
+  note: string | null;
+};
+
+type GoalStatusSummary = {
+  counts: Record<GoalStatusTag, number>;
+  total: number;
+  activeTotal: number;
+  flagged: number;
+  examples: Partial<Record<GoalStatusTag, GoalStatusExample>>;
 };
 
 function formatISODate(date: Date): string {
@@ -180,6 +199,65 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
       .slice(0, 4);
   }, [goals, today]);
 
+  const goalStatusSummary = useMemo<GoalStatusSummary>(() => {
+    const counts: Record<GoalStatusTag, number> = {
+      on_track: 0,
+      at_risk: 0,
+      off_track: 0,
+      achieved: 0,
+    };
+    const examples: GoalStatusSummary['examples'] = {};
+
+    for (const goal of goals) {
+      const status = normalizeGoalStatus(goal.status_tag);
+      counts[status] += 1;
+
+      const title = goal.title?.trim() || 'Untitled goal';
+      const trimmedNote = goal.progress_notes?.trim() ?? '';
+      const note = trimmedNote ? trimmedNote : null;
+      const existing = examples[status];
+
+      if (!existing || (note && !existing.note)) {
+        examples[status] = { title, note };
+      }
+    }
+
+    const total = GOAL_STATUS_ORDER.reduce((sum, status) => sum + counts[status], 0);
+    const activeTotal = total - counts.achieved;
+    const flagged = counts.at_risk + counts.off_track;
+
+    return { counts, total, activeTotal, flagged, examples };
+  }, [goals]);
+
+  const goalStatusMessage = useMemo(() => {
+    const { total, flagged, counts } = goalStatusSummary;
+
+    if (total === 0) {
+      return 'Add your first goal to start tracking progress health.';
+    }
+
+    if (flagged > 0) {
+      if (counts.off_track > 0) {
+        const count = counts.off_track;
+        return `${count} goal${count === 1 ? ' is' : 's are'} off track. Use the latest notes to plan a reset.`;
+      }
+
+      const count = counts.at_risk;
+      return `${count} goal${count === 1 ? ' needs' : 's need'} a boost this week to stay on track.`;
+    }
+
+    if (counts.achieved > 0 && counts.achieved === total) {
+      return 'All of your goals here are achieved—time to dream up the next milestone!';
+    }
+
+    if (counts.achieved > 0) {
+      const count = counts.achieved;
+      return `Celebrate ${count} recent ${count === 1 ? 'win' : 'wins'} while keeping the rest in motion.`;
+    }
+
+    return 'Everything is trending smoothly—keep showing up for your rituals.';
+  }, [goalStatusSummary]);
+
   return (
     <section className="progress-dashboard">
       <header className="progress-dashboard__header">
@@ -247,6 +325,66 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             </ul>
           </article>
 
+          <article className="progress-card progress-card--statuses">
+            <header>
+              <h3>Goal health snapshot</h3>
+              <p>{goalStatusMessage}</p>
+            </header>
+            {goalStatusSummary.total === 0 ? (
+              <p className="progress-card__empty">Add at least one goal to see the health breakdown.</p>
+            ) : (
+              <ul className="progress-status-list">
+                {GOAL_STATUS_ORDER.map((status) => {
+                  const count = goalStatusSummary.counts[status];
+                  const percent =
+                    goalStatusSummary.total > 0
+                      ? Math.round((count / goalStatusSummary.total) * 100)
+                      : 0;
+                  const meta = GOAL_STATUS_META[status];
+                  const example = goalStatusSummary.examples[status];
+                  const noteSnippet = example?.note ? summarizeNote(example.note) : '';
+                  const hasNote = Boolean(noteSnippet);
+
+                  return (
+                    <li key={status} className={`progress-status progress-status--${status}`}>
+                      <div className="progress-status__label">
+                        <span className={`goal-status goal-status--${status}`}>{meta.label}</span>
+                        <span className="progress-status__count">
+                          {count} {count === 1 ? 'goal' : 'goals'}
+                          <span className="progress-status__percent">({percent}%)</span>
+                        </span>
+                      </div>
+                      <div
+                        className="progress-status__bar"
+                        role="progressbar"
+                        aria-valuenow={percent}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <span
+                          className={`progress-status__bar-fill progress-status__bar-fill--${status}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      {hasNote ? (
+                        <div className="progress-status__note">
+                          <span className="progress-status__note-title">
+                            {example?.title ?? meta.label}
+                          </span>
+                          <span className="progress-status__note-text">{noteSnippet}</span>
+                        </div>
+                      ) : (
+                        <p className="progress-status__description">
+                          {count === 0 ? meta.empty : meta.description}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </article>
+
           <article className="progress-card progress-card--calendar">
             <header>
               <h3>{today.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</h3>
@@ -302,6 +440,17 @@ function getDensityLevel(count: number): 0 | 1 | 2 | 3 | 4 {
   if (count === 2) return 2;
   if (count <= 4) return 3;
   return 4;
+}
+
+function summarizeNote(note: string, maxLength = 160): string {
+  const condensed = note.replace(/\s+/g, ' ').trim();
+  if (!condensed) {
+    return '';
+  }
+  if (condensed.length <= maxLength) {
+    return condensed;
+  }
+  return `${condensed.slice(0, Math.max(0, maxLength - 1))}…`;
 }
 
 function formatReadableDate(isoDate: string): string {

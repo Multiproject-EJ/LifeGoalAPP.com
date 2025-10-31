@@ -3,21 +3,18 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { deleteGoal, fetchGoals, insertGoal, updateGoal } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
+import {
+  DEFAULT_GOAL_STATUS,
+  GOAL_STATUS_OPTIONS,
+  type GoalStatusTag,
+  normalizeGoalStatus,
+} from './goalStatus';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
 type GoalWorkspaceProps = {
   session: Session;
 };
-
-type GoalStatusTag = 'on_track' | 'at_risk' | 'off_track' | 'achieved';
-
-const STATUS_OPTIONS: { value: GoalStatusTag; label: string; description: string }[] = [
-  { value: 'on_track', label: 'On track', description: 'Progress is moving smoothly with no blockers.' },
-  { value: 'at_risk', label: 'At risk', description: 'Momentum is slowing down and needs attention.' },
-  { value: 'off_track', label: 'Off track', description: 'Major blockers or misses require a reset or new plan.' },
-  { value: 'achieved', label: 'Achieved', description: 'The goal has been completed—celebrate the win!' },
-];
 
 type GoalDraft = {
   title: string;
@@ -27,7 +24,9 @@ type GoalDraft = {
   statusTag: GoalStatusTag;
 };
 
-const defaultStatusTag: GoalStatusTag = 'on_track';
+const STATUS_OPTIONS = GOAL_STATUS_OPTIONS;
+
+const defaultStatusTag: GoalStatusTag = DEFAULT_GOAL_STATUS;
 
 const initialDraft: GoalDraft = {
   title: '',
@@ -170,7 +169,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       description: goal.description ?? '',
       targetDate: goal.target_date ? goal.target_date.slice(0, 10) : '',
       progressNotes: goal.progress_notes ?? '',
-      statusTag: normalizeStatusTag(goal.status_tag),
+      statusTag: normalizeGoalStatus(goal.status_tag),
     });
   };
 
@@ -483,7 +482,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
                             {goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date set'}
                           </span>
                         </div>
-                        <span className={`goal-status goal-status--${normalizeStatusTag(goal.status_tag)}`}>
+                        <span className={`goal-status goal-status--${normalizeGoalStatus(goal.status_tag)}`}>
                           {getStatusLabel(goal.status_tag)}
                         </span>
                       </div>
@@ -572,18 +571,8 @@ function formatDate(value: string) {
   });
 }
 
-function normalizeStatusTag(value: string | null | undefined): GoalStatusTag {
-  if (value === 'at_risk' || value === 'achieved') {
-    return value;
-  }
-  if (value === 'off_track' || value === 'blocked' || value === 'off-track') {
-    return 'off_track';
-  }
-  return 'on_track';
-}
-
 function getStatusLabel(value: string | null | undefined): string {
-  const normalized = normalizeStatusTag(value);
+  const normalized = normalizeGoalStatus(value);
   const match = STATUS_OPTIONS.find((option) => option.value === normalized);
   return match?.label ?? 'On track';
 }
