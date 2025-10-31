@@ -10,16 +10,31 @@ type GoalWorkspaceProps = {
   session: Session;
 };
 
+type GoalStatusTag = 'on_track' | 'at_risk' | 'off_track' | 'achieved';
+
+const STATUS_OPTIONS: { value: GoalStatusTag; label: string; description: string }[] = [
+  { value: 'on_track', label: 'On track', description: 'Progress is moving smoothly with no blockers.' },
+  { value: 'at_risk', label: 'At risk', description: 'Momentum is slowing down and needs attention.' },
+  { value: 'off_track', label: 'Off track', description: 'Major blockers or misses require a reset or new plan.' },
+  { value: 'achieved', label: 'Achieved', description: 'The goal has been completed—celebrate the win!' },
+];
+
 type GoalDraft = {
   title: string;
   description: string;
   targetDate: string;
+  progressNotes: string;
+  statusTag: GoalStatusTag;
 };
+
+const defaultStatusTag: GoalStatusTag = 'on_track';
 
 const initialDraft: GoalDraft = {
   title: '',
   description: '',
   targetDate: '',
+  progressNotes: '',
+  statusTag: defaultStatusTag,
 };
 
 export function GoalWorkspace({ session }: GoalWorkspaceProps) {
@@ -86,12 +101,12 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   );
 
   const handleDraftChange = (field: keyof GoalDraft) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       setDraft((current) => ({ ...current, [field]: event.target.value }));
     };
 
   const handleEditDraftChange = (field: keyof GoalDraft) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const value = event.target.value;
       setEditDraft((current) => ({ ...current, [field]: value }));
     };
@@ -127,6 +142,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         description: draft.description.trim() || null,
         target_date: draft.targetDate ? draft.targetDate : null,
         user_id: session.user.id,
+        progress_notes: draft.progressNotes.trim() || null,
+        status_tag: draft.statusTag,
       } satisfies Database['public']['Tables']['goals']['Insert'];
 
       const { data, error } = await insertGoal(payload);
@@ -152,6 +169,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       title: goal.title ?? '',
       description: goal.description ?? '',
       targetDate: goal.target_date ? goal.target_date.slice(0, 10) : '',
+      progressNotes: goal.progress_notes ?? '',
+      statusTag: normalizeStatusTag(goal.status_tag),
     });
   };
 
@@ -190,6 +209,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         title,
         description: editDraft.description.trim() || null,
         target_date: editDraft.targetDate || null,
+        progress_notes: editDraft.progressNotes.trim() || null,
+        status_tag: editDraft.statusTag,
       };
 
       const { data, error } = await updateGoal(editingGoalId, payload);
@@ -334,6 +355,30 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
             <input type="date" value={draft.targetDate} onChange={handleDraftChange('targetDate')} />
           </label>
 
+          <label className="goal-form__field">
+            <span>Status for weekly review</span>
+            <select value={draft.statusTag} onChange={handleDraftChange('statusTag')}>
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <small className="goal-form__hint">
+              {getStatusDescription(draft.statusTag)}
+            </small>
+          </label>
+
+          <label className="goal-form__field">
+            <span>Weekly progress notes</span>
+            <textarea
+              value={draft.progressNotes}
+              onChange={handleDraftChange('progressNotes')}
+              placeholder="Capture highlights, blockers, or next actions for your next review."
+              rows={4}
+            />
+          </label>
+
           <button type="submit" className="goal-form__submit" disabled={saving}>
             {saving ? 'Saving…' : 'Save goal'}
           </button>
@@ -389,6 +434,28 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
                           onChange={handleEditDraftChange('targetDate')}
                         />
                       </label>
+                      <label className="goal-card__field">
+                        <span>Status for weekly review</span>
+                        <select value={editDraft.statusTag} onChange={handleEditDraftChange('statusTag')}>
+                          {STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <small className="goal-card__hint">
+                          {getStatusDescription(editDraft.statusTag)}
+                        </small>
+                      </label>
+                      <label className="goal-card__field">
+                        <span>Weekly progress notes</span>
+                        <textarea
+                          value={editDraft.progressNotes}
+                          onChange={handleEditDraftChange('progressNotes')}
+                          rows={3}
+                          placeholder="Summarize learnings, blockers, or wins."
+                        />
+                      </label>
                       <div className="goal-card__editor-actions">
                         <button
                           type="submit"
@@ -410,12 +477,27 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
                   ) : (
                     <>
                       <div className="goal-card__header">
-                        <h4>{goal.title}</h4>
-                        <span className="goal-card__date">
-                          {goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date set'}
+                        <div className="goal-card__title">
+                          <h4>{goal.title}</h4>
+                          <span className="goal-card__date">
+                            {goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date set'}
+                          </span>
+                        </div>
+                        <span className={`goal-status goal-status--${normalizeStatusTag(goal.status_tag)}`}>
+                          {getStatusLabel(goal.status_tag)}
                         </span>
                       </div>
                       {goal.description ? <p>{goal.description}</p> : null}
+                      {goal.progress_notes ? (
+                        <div className="goal-card__notes">
+                          <h5>Weekly notes</h5>
+                          <p>{goal.progress_notes}</p>
+                        </div>
+                      ) : (
+                        <div className="goal-card__notes goal-card__notes--empty">
+                          <p>Use weekly notes to track wins and surface blockers for your next review.</p>
+                        </div>
+                      )}
                       <footer className="goal-card__footer">
                         <span>Created {formatRelativeDate(goal.created_at)}</span>
                         <div className="goal-card__actions">
@@ -488,6 +570,27 @@ function formatDate(value: string) {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+function normalizeStatusTag(value: string | null | undefined): GoalStatusTag {
+  if (value === 'at_risk' || value === 'achieved') {
+    return value;
+  }
+  if (value === 'off_track' || value === 'blocked' || value === 'off-track') {
+    return 'off_track';
+  }
+  return 'on_track';
+}
+
+function getStatusLabel(value: string | null | undefined): string {
+  const normalized = normalizeStatusTag(value);
+  const match = STATUS_OPTIONS.find((option) => option.value === normalized);
+  return match?.label ?? 'On track';
+}
+
+function getStatusDescription(value: GoalStatusTag): string {
+  const match = STATUS_OPTIONS.find((option) => option.value === value);
+  return match?.description ?? '';
 }
 
 function formatRelativeDate(value: string) {
