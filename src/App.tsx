@@ -2,6 +2,7 @@ import { Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } fro
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace } from './features/goals';
+import { DailyHabitTracker } from './features/habits';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -304,7 +305,12 @@ export default function App() {
         </p>
       </section>
 
-      {session && isOnboardingComplete ? <GoalWorkspace session={session} /> : null}
+      {session && isOnboardingComplete ? (
+        <>
+          <GoalWorkspace session={session} />
+          <DailyHabitTracker session={session} />
+        </>
+      ) : null}
     </main>
   );
 }
