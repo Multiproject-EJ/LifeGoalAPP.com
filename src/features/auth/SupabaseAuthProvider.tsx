@@ -1,13 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { Session, SignInWithPasswordCredentials } from '@supabase/supabase-js';
+import type {
+  Session,
+  SignInWithPasswordCredentials,
+  SignUpWithPasswordCredentials,
+} from '@supabase/supabase-js';
 import { getSupabaseClient, hasSupabaseCredentials, type TypedSupabaseClient } from '../../lib/supabaseClient';
 
 type AuthContextValue = {
   session: Session | null;
   initializing: boolean;
   isConfigured: boolean;
+  client: TypedSupabaseClient | null;
   signInWithPassword: (credentials: SignInWithPasswordCredentials) => Promise<void>;
+  signUpWithPassword: (credentials: SignUpWithPasswordCredentials) => Promise<void>;
   signInWithOtp: (email: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -79,6 +86,17 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     if (error) throw error;
   }, [supabase, supabaseError]);
 
+  const signUpWithPassword = useCallback(
+    async (credentials: SignUpWithPasswordCredentials) => {
+      if (!supabase) {
+        throw supabaseError ?? new Error('Supabase credentials are not configured.');
+      }
+      const { error } = await supabase.auth.signUp(credentials);
+      if (error) throw error;
+    },
+    [supabase, supabaseError],
+  );
+
   const signInWithOtp = useCallback(async (email: string) => {
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
@@ -86,6 +104,17 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     const { error } = await supabase.auth.signInWithOtp({ email });
     if (error) throw error;
   }, [supabase, supabaseError]);
+
+  const sendPasswordReset = useCallback(
+    async (email: string) => {
+      if (!supabase) {
+        throw supabaseError ?? new Error('Supabase credentials are not configured.');
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+    },
+    [supabase, supabaseError],
+  );
 
   const signOut = useCallback(async () => {
     if (!supabase) {
@@ -96,8 +125,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   }, [supabase, supabaseError]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, initializing, isConfigured: Boolean(supabase), signInWithPassword, signInWithOtp, signOut }),
-    [session, initializing, supabase, signInWithPassword, signInWithOtp, signOut],
+    () => ({
+      session,
+      initializing,
+      isConfigured: Boolean(supabase),
+      client: supabase,
+      signInWithPassword,
+      signUpWithPassword,
+      signInWithOtp,
+      sendPasswordReset,
+      signOut,
+    }),
+    [session, initializing, supabase, signInWithPassword, signUpWithPassword, signInWithOtp, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
