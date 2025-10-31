@@ -23,6 +23,9 @@ type HabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
 
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
 
+const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatically once you reconnect.';
+const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
+
 export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
@@ -91,6 +94,61 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
       setCompletions({});
     }
   }, [isConfigured]);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (!data || typeof data !== 'object') {
+        return;
+      }
+
+      const { type, detail } = data as { type?: string; detail?: { pending?: number } };
+      if (type === 'SUPABASE_WRITE_QUEUED') {
+        setErrorMessage(OFFLINE_SYNC_MESSAGE);
+      } else if (type === 'SUPABASE_QUEUE_FLUSHED') {
+        setErrorMessage((current) => {
+          if (!current) return null;
+          return current === OFFLINE_SYNC_MESSAGE || current === QUEUE_RETRY_MESSAGE ? null : current;
+        });
+        if (detail?.pending === 0) {
+          void refreshHabits();
+        }
+      } else if (type === 'SUPABASE_QUEUE_REPLAY_FAILED') {
+        setErrorMessage(QUEUE_RETRY_MESSAGE);
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleMessage);
+    };
+  }, [refreshHabits]);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
+    const handleOnline = () => {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          registration.active?.postMessage({ type: 'PROCESS_SUPABASE_QUEUE' });
+        })
+        .catch(() => undefined);
+    };
+
+    window.addEventListener('online', handleOnline);
+    handleOnline();
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
 
   const toggleHabit = async (habit: HabitWithGoal) => {
     if (!session) {
