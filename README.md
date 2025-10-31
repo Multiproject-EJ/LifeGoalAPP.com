@@ -20,7 +20,7 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Enable inline goal editing and deletion so Supabase and demo workspaces stay in sync.
   - [x] Layer in goal progress notes and status tags for weekly reviews.
   - [x] Surface a goal health snapshot on the dashboard that highlights at-risk work and recent wins.
-  - [ ] Draft a weekly focus digest that turns goal health insights into next-step recommendations.
+  - [x] Draft a weekly focus digest that turns goal health insights into next-step recommendations.
 - [x] **Phase 4 – Offline & Push Enhancements**: Harden offline caching, background sync, and push notification flows.
   - [x] Harden Supabase data reads with a network-first cache in the service worker for resilient offline reloads.
   - [x] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
@@ -156,6 +156,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   so developers can iterate without live Supabase credentials.
 - Added a goal health snapshot card to the dashboard that visualizes status distribution, calls out at-risk items, and
   surfaces the latest progress notes directly from demo or Supabase data.
+- Drafted a weekly focus digest that surfaces prioritized next steps, momentum boosts, and celebration prompts based on
+  goal health in either Supabase or demo mode so weekly planning always has actionable guidance.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.
