@@ -520,6 +520,279 @@ body.under-construction-open {
   color: #1d4ed8;
 }
 
+.goal-reflection-journal {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(236, 72, 153, 0.08));
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.goal-reflection-journal__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.goal-reflection-journal__header h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+}
+
+.goal-reflection-journal__header p {
+  margin: 0;
+  color: #334155;
+  max-width: 56ch;
+}
+
+.goal-reflection-journal__goal-picker {
+  display: grid;
+  gap: 0.35rem;
+  align-self: flex-start;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.goal-reflection-journal__goal-picker select {
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.goal-reflection-journal__goal-picker select:focus-visible {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.goal-reflection-journal__status {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.goal-reflection-journal__status--info {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+
+.goal-reflection-journal__status--warning {
+  background: rgba(234, 179, 8, 0.12);
+  color: #92400e;
+}
+
+.goal-reflection-journal__status--success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+}
+
+.goal-reflection-journal__status--error {
+  background: rgba(239, 68, 68, 0.14);
+  color: #991b1b;
+}
+
+.goal-reflection-journal__layout {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 1.75rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.goal-reflection-journal__form {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  display: grid;
+  gap: 1rem;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+}
+
+.goal-reflection-journal__form h3 {
+  margin: 0;
+}
+
+.goal-reflection-journal__field {
+  display: grid;
+  gap: 0.4rem;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.goal-reflection-journal__field input,
+.goal-reflection-journal__field textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #ffffff;
+  resize: vertical;
+}
+
+.goal-reflection-journal__field input[type='range'] {
+  padding: 0;
+}
+
+.goal-reflection-journal__confidence {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.goal-reflection-journal__confidence strong {
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.goal-reflection-journal__submit {
+  justify-self: start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #ec4899, #6366f1);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.goal-reflection-journal__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.goal-reflection-journal__submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(236, 72, 153, 0.25);
+}
+
+.goal-reflection-journal__history {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  display: grid;
+  gap: 1rem;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+}
+
+.goal-reflection-journal__history-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.goal-reflection-journal__history-header h3 {
+  margin: 0;
+}
+
+.goal-reflection-journal__history-header p {
+  margin: 0;
+  color: #475569;
+}
+
+.goal-reflection-journal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.goal-reflection-journal__item {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background: #f8fafc;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.goal-reflection-journal__item header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.goal-reflection-journal__item h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.goal-reflection-journal__confidence-label {
+  margin: 0;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.goal-reflection-journal__confidence-description {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.goal-reflection-journal__delete {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: rgba(254, 226, 226, 0.8);
+  color: #b91c1c;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.goal-reflection-journal__delete:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.goal-reflection-journal__delete:not(:disabled):hover {
+  transform: translateY(-1px);
+  background: rgba(254, 202, 202, 0.9);
+}
+
+.goal-reflection-journal__note {
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.goal-reflection-journal__note h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.goal-reflection-journal__note p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.goal-reflection-journal__note--challenge {
+  background: rgba(236, 72, 153, 0.08);
+}
+
+.goal-reflection-journal__empty {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.15);
+  color: #334155;
+  font-weight: 500;
+}
+
 .goal-card__notes {
   display: grid;
   gap: 0.4rem;
@@ -2175,6 +2448,35 @@ body.under-construction-open {
 
   .life-wheel__insight-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .goal-reflection-journal__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-reflection-journal__goal-picker {
+    width: 100%;
+  }
+
+  .goal-reflection-journal__goal-picker select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .goal-reflection-journal {
+    padding: clamp(1.1rem, 4vw, 1.5rem);
+  }
+
+  .goal-reflection-journal__item header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .goal-reflection-journal__delete {
+    align-self: flex-start;
   }
 }
 

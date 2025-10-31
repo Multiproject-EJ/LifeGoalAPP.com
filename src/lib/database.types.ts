@@ -42,6 +42,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      goal_reflections: {
+        Row: {
+          id: string;
+          goal_id: string;
+          user_id: string;
+          entry_date: string;
+          confidence: number | null;
+          highlight: string | null;
+          challenge: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          goal_id: string;
+          user_id: string;
+          entry_date: string;
+          confidence?: number | null;
+          highlight?: string | null;
+          challenge?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          goal_id?: string;
+          user_id?: string;
+          entry_date?: string;
+          confidence?: number | null;
+          highlight?: string | null;
+          challenge?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       habits: {
         Row: {
           id: string;

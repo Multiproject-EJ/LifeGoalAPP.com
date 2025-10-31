@@ -10,7 +10,7 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Provide reusable auth provider with sign-in/out helpers.
   - [x] Stub goal and habit data-access helpers with Supabase queries.
   - [x] Connect Supabase auth UI to Supabase-hosted instance and handle onboarding flows.
-- [ ] **Phase 3 – Core Features**: Implement goals, habits, dashboard, vision board, and check-ins experiences.
+- [x] **Phase 3 – Core Features**: Implement goals, habits, dashboard, vision board, and check-ins experiences.
   - [x] Launch the Goals & Habits workspace with Supabase-backed goal capture and status overview.
   - [x] Deliver the Daily Habit Tracker with Supabase-backed completion toggles and a refreshable daily checklist.
   - [x] Surface habit streak insights (current + longest) in the daily tracker with a Supabase-aligned demo fallback.
@@ -27,6 +27,10 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
   - [x] Harden Supabase data reads with a network-first cache in the service worker for resilient offline reloads.
   - [x] Queue Supabase write operations with Background Sync so habit updates persist after reconnection.
   - [x] Deliver configurable push notification subscriptions for habit reminders and check-in nudges.
+- [ ] **Phase 5 – Reflection & Coaching Enhancements**: Transform weekly insights into coaching-ready action plans.
+  - [x] Launch the Goal Reflection Journal with confidence scoring and highlight/challenge capture.
+  - [ ] Generate AI-assisted follow-up prompts from recent reflections.
+  - [ ] Chart confidence trends across months so teams can spot momentum shifts per goal.
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
 
@@ -55,6 +59,7 @@ Supabase schema with locally persisted sample data. The demo session signs in as
 habits, vision board imagery, notification preferences, and life wheel check-ins.
 
 - Data is stored in `localStorage` (`lifegoalapp-demo-db-v1`) so edits survive page refreshes while you iterate on the UI.
+- Goal reflections mirror the Supabase journal schema so confidence scores and notes persist locally.
 - Vision board uploads fall back to in-browser Data URLs when Supabase Storage is unavailable.
 - Connect your Supabase credentials at any time to switch from demo storage to your live project without code changes.
 
@@ -72,6 +77,7 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 | `goals` | Store user goals | `id`, `user_id`, `title`, `description`, `created_at`, `target_date` |
 | `habits` | Habits linked to goals | `id`, `goal_id`, `name`, `frequency`, `schedule` |
 | `habit_logs` | Daily habit completion | `id`, `habit_id`, `date`, `completed` |
+| `goal_reflections` | Weekly reflection journal entries | `id`, `goal_id`, `user_id`, `entry_date`, `confidence`, `highlight`, `challenge`, `created_at` |
 | `vision_images` | Vision board entries | `id`, `user_id`, `image_path`, `caption`, `created_at` |
 | `checkins` | Life wheel check-ins | `id`, `user_id`, `date`, `scores` (JSON) |
 
@@ -101,6 +107,11 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 - Present questionnaire for rating life categories 1–10.
 - Persist responses in `checkins` and visualize with a radar chart.
 - Show historical trends over time.
+
+### 6. Goal Reflection Journal
+- Capture weekly highlights, challenges, and confidence scores tied to each goal.
+- Persist reflections in `goal_reflections` so coaching notes sync across devices.
+- Lay the groundwork for AI-assisted prompts and long-range confidence analytics.
 
 ## Offline & Sync Strategy
 - Service worker caches the application shell and static assets (cache-first or network-first).
@@ -164,6 +175,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   goal health in either Supabase or demo mode so weekly planning always has actionable guidance.
 - Delivered goal status filters in the Goals & Habits workspace, complete with counts, so it’s easy to isolate on-track,
   at-risk, off-track, or achieved milestones when prioritizing weekly action.
+- Introduced a Goal Reflection Journal that stores weekly highlights, challenges, and confidence scores with Supabase and
+  demo parity to power future coaching prompts and trend analytics.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.
