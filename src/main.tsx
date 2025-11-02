@@ -5,6 +5,12 @@ import './index.css';
 import { registerServiceWorker } from './registerServiceWorker.ts';
 import { SupabaseAuthProvider } from './features/auth/SupabaseAuthProvider.tsx';
 
+if (typeof window !== 'undefined') {
+  window.__LifeGoalAppDebugger?.log('Initializing React root.', {
+    mode: import.meta.env.MODE,
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <SupabaseAuthProvider>
@@ -12,6 +18,12 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     </SupabaseAuthProvider>
   </React.StrictMode>
 );
+
+if (typeof window !== 'undefined') {
+  window.__LifeGoalAppDebugger?.log('React root rendered successfully.', {
+    strictMode: true,
+  });
+}
 
 if (import.meta.env.PROD) {
   registerServiceWorker();
