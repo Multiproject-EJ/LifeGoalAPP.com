@@ -66,7 +66,7 @@ function createDemoSession(): Session {
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
   const mode: AuthProviderMode = hasSupabaseCredentials() ? 'supabase' : 'demo';
 
-  const [session, setSession] = useState<Session | null>(mode === 'demo' ? createDemoSession() : null);
+  const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(mode === 'supabase');
   const [supabaseError, setSupabaseError] = useState<Error | null>(null);
   const [supabase, setSupabase] = useState<TypedSupabaseClient | null>(null);
@@ -75,7 +75,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     if (mode === 'demo') {
       setSupabase(null);
       setSupabaseError(null);
-      setSession(createDemoSession());
+      setSession(null);
       setInitializing(false);
       return;
     }
@@ -151,10 +151,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   );
 
   const signInWithOtp = useCallback(async (email: string) => {
-    if (mode === 'demo') {
-      setSession(createDemoSession());
-      return;
-    }
+      if (mode === 'demo') {
+        setSession(createDemoSession());
+        return;
+      }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
@@ -178,7 +178,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const signOut = useCallback(async () => {
     if (mode === 'demo') {
-      setSession(createDemoSession());
+      setSession(null);
       return;
     }
     if (!supabase) {

@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, MouseEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalReflectionJournal, GoalWorkspace } from './features/goals';
@@ -11,29 +11,19 @@ import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
-const CONSTRUCTION_STORAGE_KEY = 'lifeGoalApp:constructionDismissed';
-
-const phaseChecklist = [
+const marketingHighlights = [
   {
-    title: 'Phase 1: App Shell Setup',
-    description:
-      'Bootstrap React + Vite project, add PWA manifest, and register a service worker for offline caching.',
+    title: 'Map your next milestone',
+    description: 'Capture goals with timelines, context, and status tags so your vision is always clear.',
   },
   {
-    title: 'Phase 2: Supabase Integration',
-    description:
-      'Configure Supabase project credentials, initialize client, and scaffold database interactions.',
+    title: 'Build resilient habits',
+    description: 'Pair daily rituals with each goal and review streaks to stay accountable.',
   },
   {
-    title: 'Phase 3: Core Features',
-    description:
-      'Implement goal management, daily habit tracker, dashboard analytics, vision board, and check-ins.',
+    title: 'Reflect and recalibrate',
+    description: 'Journal wins, inspect dashboards, and course-correct with confidence.',
   },
-  {
-    title: 'Phase 4: Offline & Push Enhancements',
-    description:
-      'Finalize background sync, offline caching strategies, and push notification workflows.',
-  }
 ];
 
 export default function App() {
@@ -49,6 +39,7 @@ export default function App() {
     sendPasswordReset,
     signOut,
   } = useSupabaseAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -58,36 +49,17 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [showUnderConstruction, setShowUnderConstruction] = useState(true);
-  const [constructionEmail, setConstructionEmail] = useState('');
-  const [constructionMessage, setConstructionMessage] = useState<string | null>(null);
-  const [constructionError, setConstructionError] = useState<string | null>(null);
+
+  const isDemoMode = mode === 'demo';
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const hasDismissed = window.localStorage.getItem(CONSTRUCTION_STORAGE_KEY);
-    if (hasDismissed) {
-      setShowUnderConstruction(false);
+    if (!session) {
+      setDisplayName('');
+      setProfileSaving(false);
+      return;
     }
-    const storedEmail = window.localStorage.getItem('lifeGoalApp:constructionEmail');
-    if (storedEmail) {
-      setConstructionEmail(storedEmail);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const { body } = document;
-    if (!body) return;
-    if (showUnderConstruction) {
-      body.classList.add('under-construction-open');
-    } else {
-      body.classList.remove('under-construction-open');
-    }
-    return () => {
-      body.classList.remove('under-construction-open');
-    };
-  }, [showUnderConstruction]);
+    setDisplayName((session.user.user_metadata?.full_name as string | undefined) ?? '');
+  }, [session]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -101,59 +73,6 @@ export default function App() {
       window.removeEventListener('beforeinstallprompt', handler);
     };
   }, []);
-
-  const handleInstallClick = async () => {
-    if (!installPromptEvent) return;
-    installPromptEvent.prompt();
-    await installPromptEvent.userChoice;
-    setInstallPromptEvent(null);
-  };
-
-  const closeConstructionOverlay = () => {
-    setShowUnderConstruction(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(CONSTRUCTION_STORAGE_KEY, '1');
-    }
-  };
-
-  const handleConstructionContinue = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    closeConstructionOverlay();
-  };
-
-  const handleConstructionSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setConstructionMessage(null);
-    setConstructionError(null);
-
-    const nextEmail = constructionEmail.trim();
-    if (!nextEmail) {
-      setConstructionError('Enter your email address so we know where to send the update.');
-      return;
-    }
-
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(nextEmail)) {
-      setConstructionError('That email address looks a little off. Try again?');
-      return;
-    }
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('lifeGoalApp:constructionEmail', nextEmail);
-    }
-
-    setConstructionMessage("Thanks! We'll reach out as soon as the build is ready.");
-    setConstructionEmail('');
-  };
-
-  useEffect(() => {
-    if (!session) {
-      setDisplayName('');
-      setProfileSaving(false);
-      return;
-    }
-    setDisplayName((session.user.user_metadata?.full_name as string | undefined) ?? '');
-  }, [session]);
 
   const isOnboardingComplete = useMemo(() => {
     if (!session) return false;
@@ -207,12 +126,26 @@ export default function App() {
         await sendPasswordReset(email);
         setAuthMessage('Password reset instructions are on their way to your inbox.');
       }
-      } catch (error) {
-        setAuthError(error instanceof Error ? error.message : 'Unable to complete the request.');
-      } finally {
-        setSubmitting(false);
-      }
-    };
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Unable to complete the request.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDemoSignIn = async () => {
+    setAuthMessage(null);
+    setAuthError(null);
+    setSubmitting(true);
+    try {
+      await signInWithPassword({ email: DEMO_USER_EMAIL, password: 'demo-password' });
+      setAuthMessage('Signed in to the demo workspace.');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Unable to sign in right now.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSignOut = async () => {
     setAuthError(null);
@@ -220,152 +153,208 @@ export default function App() {
     try {
       await signOut();
       setAuthMessage('Signed out.');
+      setEmail('');
+      setPassword('');
+      setFullName('');
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Unable to sign out.');
     }
   };
 
-  const isDemoMode = mode === 'demo';
+  const handleInstallClick = async () => {
+    if (!installPromptEvent) return;
+    installPromptEvent.prompt();
+    await installPromptEvent.userChoice;
+    setInstallPromptEvent(null);
+  };
+
+  const statusElements = (
+    <>
+      {authMessage && (
+        <p className="supabase-auth__status supabase-auth__status--success">{authMessage}</p>
+      )}
+      {authError && <p className="supabase-auth__status supabase-auth__status--error">{authError}</p>}
+    </>
+  );
+
+  if (!session) {
+    return (
+      <div className="app">
+        <div className="auth-layout">
+          <section className="auth-hero">
+            <span className="auth-hero__badge">Live product preview</span>
+            <h1>LifeGoalApp</h1>
+            <p className="auth-hero__lead">Design a calmer path to your goals with guided rituals and insights.</p>
+            <ul className="auth-hero__list">
+              {marketingHighlights.map((item) => (
+                <li key={item.title}>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="auth-panel">
+            <div className="auth-card">
+              <header className="auth-card__header">
+                <h2>{isDemoMode ? 'Explore the demo workspace' : 'Sign in to continue'}</h2>
+                <p>
+                  {isDemoMode
+                    ? 'Use the ready-to-go LifeGoal demo account to see the product in action.'
+                    : 'Connect your Supabase project credentials to unlock the full workspace.'}
+                </p>
+              </header>
+
+              <div className="auth-card__body">
+                {initializing ? (
+                  <p className="supabase-auth__status supabase-auth__status--info">Loading session…</p>
+                ) : isDemoMode ? (
+                  <>
+                    <button
+                      type="button"
+                      className="supabase-auth__action auth-card__primary"
+                      onClick={handleDemoSignIn}
+                      disabled={submitting}
+                    >
+                      {submitting ? 'Signing in…' : 'Continue with the demo account'}
+                    </button>
+                    <p className="auth-card__hint">
+                      We&apos;ll sign you in as <strong>{DEMO_USER_NAME}</strong> (<code>{DEMO_USER_EMAIL}</code>). Your
+                      changes stay on this device.
+                    </p>
+                  </>
+                ) : !isConfigured ? (
+                  <p className="supabase-auth__status supabase-auth__status--error">
+                    Supabase credentials are not configured. Update your environment variables to enable authentication.
+                  </p>
+                ) : (
+                  <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
+                    <div className="supabase-auth__modes" role="tablist" aria-label="Authentication mode">
+                      <button
+                        type="button"
+                        className={`supabase-auth__mode ${authMode === 'password' ? 'supabase-auth__mode--active' : ''}`}
+                        onClick={() => setAuthMode('password')}
+                      >
+                        Sign in
+                      </button>
+                      <button
+                        type="button"
+                        className={`supabase-auth__mode ${authMode === 'signup' ? 'supabase-auth__mode--active' : ''}`}
+                        onClick={() => setAuthMode('signup')}
+                      >
+                        Create account
+                      </button>
+                      <button
+                        type="button"
+                        className={`supabase-auth__mode ${authMode === 'magic' ? 'supabase-auth__mode--active' : ''}`}
+                        onClick={() => setAuthMode('magic')}
+                      >
+                        Magic link
+                      </button>
+                      <button
+                        type="button"
+                        className={`supabase-auth__mode ${authMode === 'reset' ? 'supabase-auth__mode--active' : ''}`}
+                        onClick={() => setAuthMode('reset')}
+                      >
+                        Reset password
+                      </button>
+                    </div>
+
+                    <label className="supabase-auth__field">
+                      <span>Email</span>
+                      <input
+                        type="email"
+                        name="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        required
+                      />
+                    </label>
+
+                    {(authMode === 'password' || authMode === 'signup') && (
+                      <label className="supabase-auth__field">
+                        <span>Password</span>
+                        <input
+                          type="password"
+                          name="password"
+                          value={password}
+                          onChange={(event) => setPassword(event.target.value)}
+                          placeholder="••••••••"
+                          autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
+                          required={authMode === 'signup'}
+                        />
+                      </label>
+                    )}
+
+                    {authMode === 'signup' && (
+                      <label className="supabase-auth__field">
+                        <span>Your name</span>
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={fullName}
+                          onChange={(event) => setFullName(event.target.value)}
+                          placeholder="Jordan Goalsetter"
+                          autoComplete="name"
+                          required
+                        />
+                      </label>
+                    )}
+
+                    <div className="supabase-auth__actions">
+                      <button type="submit" className="supabase-auth__action" disabled={submitting}>
+                        {submitting
+                          ? 'Sending…'
+                          : authMode === 'password'
+                            ? 'Sign in'
+                            : authMode === 'signup'
+                              ? 'Create account'
+                              : authMode === 'magic'
+                                ? 'Send magic link'
+                                : 'Send reset link'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {statusElements}
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  const userDisplay = displayName || (session.user.user_metadata?.full_name as string | undefined) || session.user.email;
 
   return (
-    <>
-      <main className={`app-shell ${showUnderConstruction ? 'app-shell--obscured' : ''}`} aria-hidden={showUnderConstruction}>
-      <header className="app-shell__header">
-        <h1>LifeGoalApp</h1>
-        <p className="tagline">Design a smoother path to your goals.</p>
-        {installPromptEvent && (
-          <button className="install-button" onClick={handleInstallClick}>
-            Install App
-          </button>
-        )}
+    <div className="app app--workspace">
+      <header className="workspace-header">
+        <div className="workspace-header__brand">
+          <span className="workspace-header__title">LifeGoalApp</span>
+          <span className="workspace-header__subtitle">Guided goals, habits, and reflections</span>
+        </div>
+        <div className="workspace-header__actions">
+          {installPromptEvent && (
+            <button className="workspace-header__install" onClick={handleInstallClick}>
+              Install app
+            </button>
+          )}
+          <div className="workspace-header__user">
+            <span>{userDisplay}</span>
+            <button type="button" className="workspace-header__signout" onClick={handleSignOut}>
+              Sign out
+            </button>
+          </div>
+        </div>
       </header>
 
-      <section className="phase-list">
-        <h2>Development Roadmap</h2>
-        <p className="phase-list__intro">
-          We&apos;re building the LifeGoalApp in iterative phases to make sure every feature feels polished and purposeful.
-        </p>
-        <ol>
-          {phaseChecklist.map((item) => (
-            <li key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="supabase-auth">
-        <div className="supabase-auth__header">
-          <h2>Supabase Authentication</h2>
-          <p>Connect your Supabase project to start persisting goals and habits.</p>
-        </div>
-
-        <div className="supabase-auth__content">
-          {isDemoMode ? (
-            <DemoModePanel />
-          ) : initializing ? (
-            <p className="supabase-auth__status">Loading session…</p>
-          ) : !isConfigured ? (
-            <p className="supabase-auth__status supabase-auth__status--error">
-              Supabase credentials are not configured. Update your environment variables to enable authentication.
-            </p>
-          ) : session ? (
-            <SignedInPanel session={session} onSignOut={handleSignOut} />
-          ) : (
-            <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
-              <div className="supabase-auth__modes" role="tablist" aria-label="Authentication mode">
-                <button
-                  type="button"
-                  className={`supabase-auth__mode ${authMode === 'password' ? 'supabase-auth__mode--active' : ''}`}
-                  onClick={() => setAuthMode('password')}
-                >
-                  Sign in
-                </button>
-                <button
-                  type="button"
-                  className={`supabase-auth__mode ${authMode === 'signup' ? 'supabase-auth__mode--active' : ''}`}
-                  onClick={() => setAuthMode('signup')}
-                >
-                  Create account
-                </button>
-                <button
-                  type="button"
-                  className={`supabase-auth__mode ${authMode === 'magic' ? 'supabase-auth__mode--active' : ''}`}
-                  onClick={() => setAuthMode('magic')}
-                >
-                  Magic link
-                </button>
-                <button
-                  type="button"
-                  className={`supabase-auth__mode ${authMode === 'reset' ? 'supabase-auth__mode--active' : ''}`}
-                  onClick={() => setAuthMode('reset')}
-                >
-                  Reset password
-                </button>
-              </div>
-              <label className="supabase-auth__field">
-                <span>Email</span>
-                <input
-                  type="email"
-                  name="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  required
-                />
-              </label>
-
-              {(authMode === 'password' || authMode === 'signup') && (
-                <label className="supabase-auth__field">
-                  <span>Password</span>
-                  <input
-                    type="password"
-                    name="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="••••••••"
-                    autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
-                    required={authMode === 'signup'}
-                  />
-                </label>
-              )}
-
-              {authMode === 'signup' && (
-                <label className="supabase-auth__field">
-                  <span>Your name</span>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    placeholder="Jordan Goalsetter"
-                    autoComplete="name"
-                    required
-                  />
-                </label>
-              )}
-
-              <div className="supabase-auth__actions">
-                <button type="submit" className="supabase-auth__action" disabled={submitting}>
-                  {submitting
-                    ? 'Sending…'
-                    : authMode === 'password'
-                      ? 'Sign in'
-                      : authMode === 'signup'
-                        ? 'Create account'
-                        : authMode === 'magic'
-                          ? 'Send magic link'
-                          : 'Send reset link'}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {authMessage && <p className="supabase-auth__status supabase-auth__status--success">{authMessage}</p>}
-          {authError && <p className="supabase-auth__status supabase-auth__status--error">{authError}</p>}
-        </div>
+      <main className="workspace-main">
+        {statusElements}
 
         {session && !isDemoMode && (
           <OnboardingCard
@@ -380,169 +369,22 @@ export default function App() {
           />
         )}
 
-        <p className="supabase-auth__hint">
-          {isDemoMode ? (
-            <>
-              You&apos;re exploring the LifeGoal workspace with demo Supabase data stored locally. Connect your own Supabase
-              project in <code>.env.local</code> whenever you&apos;re ready to sync real accounts.
-            </>
-          ) : (
-            <>
-              Update your <code>.env.local</code> with Supabase credentials to enable authentication and database helpers.
-            </>
-          )}
-        </p>
-      </section>
-
-      {session && isOnboardingComplete ? (
-        <>
-          <NotificationPreferences session={session} />
-          <GoalWorkspace session={session} />
-          <GoalReflectionJournal session={session} />
-          <DailyHabitTracker session={session} />
-          <ProgressDashboard session={session} />
-          <VisionBoard session={session} />
-          <LifeWheelCheckins session={session} />
-        </>
-      ) : null}
-      </main>
-      {showUnderConstruction && (
-        <div
-          className="under-construction-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="under-construction-title"
-          aria-describedby="under-construction-message"
-        >
-          <div className="under-construction__dialog">
-            <svg className="under-construction__icon" aria-hidden="true" viewBox="0 0 120 120">
-              <defs>
-                <linearGradient id="coneGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#facc15" />
-                  <stop offset="100%" stopColor="#f97316" />
-                </linearGradient>
-                <linearGradient id="stripeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#fde68a" />
-                  <stop offset="100%" stopColor="#facc15" />
-                </linearGradient>
-              </defs>
-              <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path
-                  d="M18 98h84l-30-78a6 6 0 0 0-5.6-3.9H53.6a6 6 0 0 0-5.6 3.9z"
-                  fill="url(#coneGradient)"
-                  stroke="#7c2d12"
-                  strokeWidth="4"
-                />
-                <path
-                  d="M42 72h36"
-                  stroke="#f8fafc"
-                  strokeWidth="8"
-                  strokeLinecap="square"
-                  opacity="0.85"
-                />
-                <path
-                  d="M36 90h48"
-                  stroke="#f8fafc"
-                  strokeWidth="6"
-                  strokeLinecap="square"
-                  opacity="0.7"
-                />
-                <rect
-                  x="32"
-                  y="30"
-                  width="56"
-                  height="24"
-                  rx="4"
-                  fill="url(#stripeGradient)"
-                  stroke="#f97316"
-                  strokeWidth="3"
-                  transform="rotate(-10 60 42)"
-                  opacity="0.6"
-                />
-              </g>
-            </svg>
-            <h2 id="under-construction-title" className="under-construction__title">
-              Site under construction
-            </h2>
-            <p id="under-construction-message" className="under-construction__message">
-              We&apos;re still wiring up the experience. Take a moment to explore the roadmap below while we finish the build.
-            </p>
-            <div className="under-construction__badge" aria-hidden="true">
-              <span className="under-construction__badge-icon" role="img">
-                🚧
-              </span>
-              <span className="under-construction__badge-text">Work in progress</span>
-            </div>
-            <form className="under-construction__form" onSubmit={handleConstructionSubmit}>
-              <label htmlFor="construction-email" className="under-construction__label">
-                Leave your email and we&apos;ll invite you when the build is ready
-              </label>
-              <div className="under-construction__input-group">
-                <input
-                  id="construction-email"
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  value={constructionEmail}
-                  onChange={(event) => setConstructionEmail(event.target.value)}
-                  className="under-construction__input"
-                />
-                <button type="submit" className="under-construction__submit">
-                  Notify me
-                </button>
-              </div>
-              {constructionMessage ? (
-                <p className="under-construction__status under-construction__status--success">{constructionMessage}</p>
-              ) : null}
-              {constructionError ? (
-                <p className="under-construction__status under-construction__status--error">{constructionError}</p>
-              ) : null}
-            </form>
-            <a href="#" className="under-construction__continue" onClick={handleConstructionContinue}>
-              Continue to site
-            </a>
-            <button
-              type="button"
-              className="under-construction__secret-enter"
-              onClick={closeConstructionOverlay}
-              aria-label="Enter the LifeGoal app"
-            />
+        {isOnboardingComplete ? (
+          <div className="workspace-content">
+            <NotificationPreferences session={session} />
+            <GoalWorkspace session={session} />
+            <GoalReflectionJournal session={session} />
+            <DailyHabitTracker session={session} />
+            <ProgressDashboard session={session} />
+            <VisionBoard session={session} />
+            <LifeWheelCheckins session={session} />
           </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function SignedInPanel({ session, onSignOut }: { session: Session; onSignOut: () => void }) {
-  return (
-    <div className="supabase-auth__session">
-      <div>
-        <span className="supabase-auth__label">Signed in as</span>
-        <strong>{session.user.email}</strong>
-      </div>
-      <button type="button" className="supabase-auth__action" onClick={onSignOut}>
-        Sign out
-      </button>
-    </div>
-  );
-}
-
-function DemoModePanel() {
-  return (
-    <div className="supabase-auth__demo">
-      <div className="supabase-auth__session">
-        <div>
-          <span className="supabase-auth__label">Demo mode active</span>
-          <strong>{DEMO_USER_NAME}</strong>
-          <span className="supabase-auth__demo-email">{DEMO_USER_EMAIL}</span>
-        </div>
-      </div>
-      <p className="supabase-auth__status supabase-auth__status--info">
-        Changes are stored locally using demo Supabase-like data structures. Connect your Supabase project to sync with the
-        cloud.
-      </p>
+        ) : (
+          <p className="workspace-onboarding-hint">
+            Finish onboarding to unlock the goal workspace and habit trackers.
+          </p>
+        )}
+      </main>
     </div>
   );
 }
