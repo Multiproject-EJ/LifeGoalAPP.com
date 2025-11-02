@@ -2,6 +2,11 @@
 
 LifeGoalApp will be delivered as a progressive web application (PWA) powered by Supabase. The mobile-first experience will offer an app-like interface, while desktop users get an expanded dashboard with richer insights.
 
+## Live Development Preview
+
+- `LifeGoalAPP.com` now serves the Vite build "live for development purposes" so stakeholders can track progress as we iterate.
+- Visitors land on a polished "site under construction" overlay that includes roadmap context, an email notify form, and a hidden continue button for internal walkthroughs.
+
 ## Phase Progress
 
 - [x] **Phase 1 – App Shell Setup**: Bootstrap Vite + React TypeScript project, add initial styling, register a service worker, and ship the base PWA manifest & icons.
@@ -181,6 +186,7 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   demo parity to power future coaching prompts and trend analytics.
 - Charted monthly confidence trends inside the reflection journal with a Supabase-aligned fallback dataset so teams can
   spot wins, dips, and steady momentum before adding live credentials.
+- Added a development-only under construction overlay to the public domain with an email capture form, work-in-progress badge, glass blur effect, and a tucked-away continue button for internal walkthroughs.
 
 ## References
 - MDN Web Docs: PWAs, Service Workers, Background Sync, Push API.

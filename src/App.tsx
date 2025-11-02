@@ -59,12 +59,19 @@ export default function App() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [showUnderConstruction, setShowUnderConstruction] = useState(true);
+  const [constructionEmail, setConstructionEmail] = useState('');
+  const [constructionMessage, setConstructionMessage] = useState<string | null>(null);
+  const [constructionError, setConstructionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const hasDismissed = window.localStorage.getItem(CONSTRUCTION_STORAGE_KEY);
     if (hasDismissed) {
       setShowUnderConstruction(false);
+    }
+    const storedEmail = window.localStorage.getItem('lifeGoalApp:constructionEmail');
+    if (storedEmail) {
+      setConstructionEmail(storedEmail);
     }
   }, []);
 
@@ -102,12 +109,41 @@ export default function App() {
     setInstallPromptEvent(null);
   };
 
-  const handleConstructionContinue = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
+  const closeConstructionOverlay = () => {
     setShowUnderConstruction(false);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(CONSTRUCTION_STORAGE_KEY, '1');
     }
+  };
+
+  const handleConstructionContinue = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    closeConstructionOverlay();
+  };
+
+  const handleConstructionSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setConstructionMessage(null);
+    setConstructionError(null);
+
+    const nextEmail = constructionEmail.trim();
+    if (!nextEmail) {
+      setConstructionError('Enter your email address so we know where to send the update.');
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(nextEmail)) {
+      setConstructionError('That email address looks a little off. Try again?');
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('lifeGoalApp:constructionEmail', nextEmail);
+    }
+
+    setConstructionMessage("Thanks! We'll reach out as soon as the build is ready.");
+    setConstructionEmail('');
   };
 
   useEffect(() => {
@@ -431,9 +467,47 @@ export default function App() {
             <p id="under-construction-message" className="under-construction__message">
               We&apos;re still wiring up the experience. Take a moment to explore the roadmap below while we finish the build.
             </p>
+            <div className="under-construction__badge" aria-hidden="true">
+              <span className="under-construction__badge-icon" role="img">
+                🚧
+              </span>
+              <span className="under-construction__badge-text">Work in progress</span>
+            </div>
+            <form className="under-construction__form" onSubmit={handleConstructionSubmit}>
+              <label htmlFor="construction-email" className="under-construction__label">
+                Leave your email and we&apos;ll invite you when the build is ready
+              </label>
+              <div className="under-construction__input-group">
+                <input
+                  id="construction-email"
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={constructionEmail}
+                  onChange={(event) => setConstructionEmail(event.target.value)}
+                  className="under-construction__input"
+                />
+                <button type="submit" className="under-construction__submit">
+                  Notify me
+                </button>
+              </div>
+              {constructionMessage ? (
+                <p className="under-construction__status under-construction__status--success">{constructionMessage}</p>
+              ) : null}
+              {constructionError ? (
+                <p className="under-construction__status under-construction__status--error">{constructionError}</p>
+              ) : null}
+            </form>
             <a href="#" className="under-construction__continue" onClick={handleConstructionContinue}>
               Continue to site
             </a>
+            <button
+              type="button"
+              className="under-construction__secret-enter"
+              onClick={closeConstructionOverlay}
+              aria-label="Enter the LifeGoal app"
+            />
           </div>
         </div>
       )}
