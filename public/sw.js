@@ -1,13 +1,12 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const SHELL_CACHE = `lifegoalapp-shell-${CACHE_VERSION}`;
 const DATA_CACHE = `lifegoalapp-data-${CACHE_VERSION}`;
 const APP_SHELL = [
-  '/',
-  '/index.html',
   '/manifest.webmanifest',
   '/icons/icon-192x192.svg',
   '/icons/icon-512x512.svg'
 ];
+const DOCUMENT_FALLBACKS = ['/', '/index.html'];
 
 const SUPABASE_HOST_MATCHER = /supabase\.(co|in)$/;
 const SUPABASE_SYNC_TAG = 'lifegoalapp-supabase-sync';
@@ -213,10 +212,21 @@ async function handleSupabaseWrite(request) {
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(SHELL_CACHE)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(SHELL_CACHE);
+      const cacheBuster = `?v=${CACHE_VERSION}-${Date.now()}`;
+      const documentRequest = new Request(`/index.html${cacheBuster}`, { cache: 'reload' });
+      const documentResponse = await fetch(documentRequest);
+
+      await cache.put('/index.html', documentResponse.clone());
+      await cache.put('/', documentResponse.clone());
+
+      if (APP_SHELL.length) {
+        await cache.addAll(APP_SHELL);
+      }
+
+      await self.skipWaiting();
+    })()
   );
 });
 
@@ -307,6 +317,36 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (requestUrl.origin === self.location.origin) {
+    if (event.request.mode === 'navigate' || DOCUMENT_FALLBACKS.includes(requestUrl.pathname)) {
+      event.respondWith(
+        (async () => {
+          try {
+            const networkResponse = await fetch(event.request, { cache: 'reload' });
+            const cache = await caches.open(SHELL_CACHE);
+
+            await cache.put(event.request, networkResponse.clone());
+            await cache.put('/index.html', networkResponse.clone());
+            await cache.put('/', networkResponse.clone());
+
+            return networkResponse;
+          } catch (error) {
+            const cache = await caches.open(SHELL_CACHE);
+            const cachedResponse =
+              (await cache.match(event.request)) ||
+              (await cache.match('/index.html')) ||
+              (await cache.match('/'));
+
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+
+            throw error;
+          }
+        })()
+      );
+      return;
+    }
+
     cacheAppShell(event);
     return;
   }
