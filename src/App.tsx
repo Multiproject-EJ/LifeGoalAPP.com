@@ -26,6 +26,45 @@ const marketingHighlights = [
   },
 ];
 
+type WorkspaceNavItem = {
+  id: string;
+  label: string;
+  summary: string;
+};
+
+const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
+  {
+    id: 'home',
+    label: 'Home',
+    summary: 'Review upcoming milestones and daily focus in a unified home view.',
+  },
+  {
+    id: 'planning',
+    label: 'Planning',
+    summary: 'Strategic planning tools will help you break down long-term goals.',
+  },
+  {
+    id: 'rituals',
+    label: 'Rituals',
+    summary: 'Build ritual templates to support habits with repeatable routines.',
+  },
+  {
+    id: 'insights',
+    label: 'Insights',
+    summary: 'Track analytics, progress streaks, and reflections in one place.',
+  },
+  {
+    id: 'support',
+    label: 'Support',
+    summary: 'Get guidance, resources, and templates to accelerate your journey.',
+  },
+  {
+    id: 'goals',
+    label: 'Goals & Habits',
+    summary: 'Access the full goals, habits, and reflection workspace.',
+  },
+];
+
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
@@ -49,6 +88,9 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
+  const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(
+    WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1].id,
+  );
 
   const isDemoMode = mode === 'demo';
 
@@ -329,62 +371,122 @@ export default function App() {
     );
   }
 
-  const userDisplay = displayName || (session.user.user_metadata?.full_name as string | undefined) || session.user.email;
+  const userDisplay =
+    displayName || (session.user.user_metadata?.full_name as string | undefined) || session.user.email;
+  const userInitial = (userDisplay || '').trim().charAt(0).toUpperCase() || 'U';
+  const activeWorkspaceItem =
+    WORKSPACE_NAV_ITEMS.find((item) => item.id === activeWorkspaceNav) ??
+    WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1];
 
   return (
     <div className="app app--workspace">
-      <header className="workspace-header">
-        <div className="workspace-header__brand">
-          <span className="workspace-header__title">LifeGoalApp</span>
-          <span className="workspace-header__subtitle">Guided goals, habits, and reflections</span>
-        </div>
-        <div className="workspace-header__actions">
-          {installPromptEvent && (
-            <button className="workspace-header__install" onClick={handleInstallClick}>
-              Install app
-            </button>
-          )}
-          <div className="workspace-header__user">
-            <span>{userDisplay}</span>
-            <button type="button" className="workspace-header__signout" onClick={handleSignOut}>
+      <div className="workspace-shell">
+        <aside className="workspace-sidebar" aria-label="Workspace navigation">
+          <div className="workspace-sidebar__profile">
+            <div className="workspace-avatar" aria-hidden="true">
+              {userInitial}
+            </div>
+            <div className="workspace-sidebar__profile-text">
+              <span className="workspace-sidebar__welcome">
+                {isDemoMode ? 'Demo creator' : 'Welcome back'}
+              </span>
+              <span className="workspace-sidebar__name">{userDisplay}</span>
+            </div>
+          </div>
+
+          <nav className="workspace-sidebar__nav">
+            {WORKSPACE_NAV_ITEMS.map((item) => {
+              const isActive = activeWorkspaceNav === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`workspace-sidebar__nav-button ${
+                    isActive ? 'workspace-sidebar__nav-button--active' : ''
+                  }`}
+                  onClick={() => setActiveWorkspaceNav(item.id)}
+                  aria-pressed={isActive}
+                >
+                  <span className="workspace-sidebar__nav-label">{item.label}</span>
+                  <span className="workspace-sidebar__nav-summary">{item.summary}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="workspace-sidebar__actions">
+            {installPromptEvent && (
+              <button type="button" className="workspace-sidebar__install" onClick={handleInstallClick}>
+                Install app
+              </button>
+            )}
+            <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
               Sign out
             </button>
           </div>
-        </div>
-      </header>
+        </aside>
 
-      <main className="workspace-main">
-        {statusElements}
+        <main className="workspace-main">
+          {(authMessage || authError) && <div className="workspace-status">{statusElements}</div>}
 
-        {session && !isDemoMode && (
-          <OnboardingCard
-            session={session}
-            displayName={displayName}
-            setDisplayName={setDisplayName}
-            profileSaving={profileSaving}
-            setProfileSaving={setProfileSaving}
-            setAuthMessage={setAuthMessage}
-            setAuthError={setAuthError}
-            isOnboardingComplete={isOnboardingComplete}
-          />
-        )}
+          <section
+            className={`workspace-stage ${
+              activeWorkspaceNav === 'goals' ? 'workspace-stage--detail' : 'workspace-stage--placeholder'
+            }`}
+            aria-live="polite"
+          >
+            <header className="workspace-stage__header">
+              <h1>{activeWorkspaceItem.label}</h1>
+              <p>{activeWorkspaceItem.summary}</p>
+            </header>
 
-        {isOnboardingComplete ? (
-          <div className="workspace-content">
-            <NotificationPreferences session={session} />
-            <GoalWorkspace session={session} />
-            <GoalReflectionJournal session={session} />
-            <DailyHabitTracker session={session} />
-            <ProgressDashboard session={session} />
-            <VisionBoard session={session} />
-            <LifeWheelCheckins session={session} />
-          </div>
-        ) : (
-          <p className="workspace-onboarding-hint">
-            Finish onboarding to unlock the goal workspace and habit trackers.
-          </p>
-        )}
-      </main>
+            <div className="workspace-stage__body">
+              {activeWorkspaceNav === 'goals' ? (
+                <>
+                  {session && !isDemoMode && (
+                    <OnboardingCard
+                      session={session}
+                      displayName={displayName}
+                      setDisplayName={setDisplayName}
+                      profileSaving={profileSaving}
+                      setProfileSaving={setProfileSaving}
+                      setAuthMessage={setAuthMessage}
+                      setAuthError={setAuthError}
+                      isOnboardingComplete={isOnboardingComplete}
+                    />
+                  )}
+
+                  {isOnboardingComplete ? (
+                    <div className="workspace-content">
+                      <NotificationPreferences session={session} />
+                      <GoalWorkspace session={session} />
+                      <GoalReflectionJournal session={session} />
+                      <DailyHabitTracker session={session} />
+                      <ProgressDashboard session={session} />
+                      <VisionBoard session={session} />
+                      <LifeWheelCheckins session={session} />
+                    </div>
+                  ) : (
+                    <p className="workspace-onboarding-hint">
+                      Finish onboarding to unlock the goal workspace and habit trackers.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="workspace-stage__placeholder">
+                  <div className="workspace-stage__placeholder-content">
+                    <h2>{activeWorkspaceItem.label}</h2>
+                    <p>{activeWorkspaceItem.summary}</p>
+                    <p className="workspace-stage__placeholder-hint">
+                      Select "Goals &amp; Habits" to access the full workspace preview.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
