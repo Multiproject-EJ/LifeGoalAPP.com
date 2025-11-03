@@ -35,33 +35,48 @@ type WorkspaceNavItem = {
 const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'home',
-    label: 'Home',
-    summary: 'Review upcoming milestones and daily focus in a unified home view.',
+    label: 'Dashboard',
+    summary: 'Review upcoming milestones and daily focus from a unified dashboard.',
   },
   {
     id: 'planning',
-    label: 'Planning',
-    summary: 'Strategic planning tools will help you break down long-term goals.',
+    label: "Today's Habits & Routines",
+    summary: 'Check in on the rituals that keep today on track.',
   },
   {
     id: 'rituals',
-    label: 'Rituals',
-    summary: 'Build ritual templates to support habits with repeatable routines.',
+    label: 'Wellbeing Wheel Check-in',
+    summary: 'Reflect on your wellbeing balance with a quick wheel check-in.',
   },
   {
     id: 'insights',
-    label: 'Insights',
-    summary: 'Track analytics, progress streaks, and reflections in one place.',
+    label: 'Vision Board',
+    summary: 'Stay inspired with highlights from your evolving vision board.',
   },
   {
     id: 'support',
-    label: 'Support',
-    summary: 'Get guidance, resources, and templates to accelerate your journey.',
+    label: 'Life Goals',
+    summary: 'Review your long-term goals and celebrate progress milestones.',
   },
   {
     id: 'goals',
-    label: 'Goals & Habits',
-    summary: 'Access the full goals, habits, and reflection workspace.',
+    label: 'Placeholder Content',
+    summary: 'Preview placeholder content for upcoming workspace modules.',
+  },
+  {
+    id: 'setup-habits',
+    label: 'Set Up Habits',
+    summary: 'Create or refine the habits that support your life goals.',
+  },
+  {
+    id: 'setup-goals',
+    label: 'Set Up Goals',
+    summary: 'Define clear, motivating goals to guide your next steps.',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    summary: 'Adjust preferences and configure your workspace experience.',
   },
 ];
 
