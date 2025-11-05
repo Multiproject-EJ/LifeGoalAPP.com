@@ -34,6 +34,11 @@ type WorkspaceNavItem = {
 
 const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
+    id: 'goals',
+    label: 'Placeholder Content',
+    summary: 'Preview placeholder content for upcoming workspace modules.',
+  },
+  {
     id: 'home',
     label: 'Dashboard',
     summary: 'Review upcoming milestones and daily focus from a unified dashboard.',
@@ -57,11 +62,6 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     id: 'support',
     label: 'Life Goals',
     summary: 'Review your long-term goals and celebrate progress milestones.',
-  },
-  {
-    id: 'goals',
-    label: 'Placeholder Content',
-    summary: 'Preview placeholder content for upcoming workspace modules.',
   },
   {
     id: 'setup-habits',
