@@ -8,6 +8,7 @@ import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
+import { ThemeToggle } from './components/ThemeToggle';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -430,6 +431,7 @@ export default function App() {
           </nav>
 
           <div className="workspace-sidebar__actions">
+            <ThemeToggle />
             {installPromptEvent && (
               <button type="button" className="workspace-sidebar__install" onClick={handleInstallClick}>
                 Install app
