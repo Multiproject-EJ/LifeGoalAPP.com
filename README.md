@@ -39,6 +39,10 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
 
+## Troubleshooting
+
+Having issues? Check the [Common Error Database](./docs/common-errors/README.md) for solutions to frequently encountered problems.
+
 ## Getting Started (Phase 1)
 
 ### Prerequisites
