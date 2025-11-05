@@ -457,6 +457,93 @@ export default function App() {
     WORKSPACE_NAV_ITEMS.find((item) => item.id === activeWorkspaceNav) ??
     WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1];
 
+  const renderWorkspaceSection = () => {
+    if (activeWorkspaceNav === 'goals') {
+      return (
+        <>
+          {session && !isDemoMode && (
+            <OnboardingCard
+              session={session}
+              displayName={displayName}
+              setDisplayName={setDisplayName}
+              profileSaving={profileSaving}
+              setProfileSaving={setProfileSaving}
+              setAuthMessage={setAuthMessage}
+              setAuthError={setAuthError}
+              isOnboardingComplete={isOnboardingComplete}
+            />
+          )}
+
+          {isOnboardingComplete ? (
+            <div className="workspace-content">
+              <ProgressDashboard session={session} />
+              <GoalWorkspace session={session} />
+              <GoalReflectionJournal session={session} />
+              <DailyHabitTracker session={session} />
+              <VisionBoard session={session} />
+              <LifeWheelCheckins session={session} />
+            </div>
+          ) : (
+            <p className="workspace-onboarding-hint">
+              Finish onboarding to unlock the goal workspace and habit trackers.
+            </p>
+          )}
+        </>
+      );
+    }
+
+    if (activeWorkspaceNav === 'settings') {
+      return (
+        <div className="workspace-content">
+          <NotificationPreferences session={session} />
+        </div>
+      );
+    }
+
+    if (!isOnboardingComplete) {
+      return (
+        <p className="workspace-onboarding-hint">
+          Finish onboarding to unlock this area.
+        </p>
+      );
+    }
+
+    switch (activeWorkspaceNav) {
+      case 'planning':
+        return (
+          <div className="workspace-content">
+            <DailyHabitTracker session={session} />
+          </div>
+        );
+      case 'rituals':
+        return (
+          <div className="workspace-content">
+            <LifeWheelCheckins session={session} />
+            <GoalReflectionJournal session={session} />
+            <VisionBoard session={session} />
+          </div>
+        );
+      case 'setup-goals':
+        return (
+          <div className="workspace-content">
+            <GoalWorkspace session={session} />
+          </div>
+        );
+      default:
+        return (
+          <div className="workspace-stage__placeholder">
+            <div className="workspace-stage__placeholder-content">
+              <h2>{activeWorkspaceItem.label}</h2>
+              <p>{activeWorkspaceItem.summary}</p>
+              <p className="workspace-stage__placeholder-hint">
+                Select "Goals &amp; Habits" to access the full workspace preview.
+              </p>
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="app app--workspace">
       <div className="workspace-shell">
@@ -520,50 +607,7 @@ export default function App() {
               <p>{activeWorkspaceItem.summary}</p>
             </header>
 
-            <div className="workspace-stage__body">
-              {activeWorkspaceNav === 'goals' ? (
-                <>
-                  {session && !isDemoMode && (
-                    <OnboardingCard
-                      session={session}
-                      displayName={displayName}
-                      setDisplayName={setDisplayName}
-                      profileSaving={profileSaving}
-                      setProfileSaving={setProfileSaving}
-                      setAuthMessage={setAuthMessage}
-                      setAuthError={setAuthError}
-                      isOnboardingComplete={isOnboardingComplete}
-                    />
-                  )}
-
-                  {isOnboardingComplete ? (
-                    <div className="workspace-content">
-                      <NotificationPreferences session={session} />
-                      <GoalWorkspace session={session} />
-                      <GoalReflectionJournal session={session} />
-                      <DailyHabitTracker session={session} />
-                      <ProgressDashboard session={session} />
-                      <VisionBoard session={session} />
-                      <LifeWheelCheckins session={session} />
-                    </div>
-                  ) : (
-                    <p className="workspace-onboarding-hint">
-                      Finish onboarding to unlock the goal workspace and habit trackers.
-                    </p>
-                  )}
-                </>
-              ) : (
-                <div className="workspace-stage__placeholder">
-                  <div className="workspace-stage__placeholder-content">
-                    <h2>{activeWorkspaceItem.label}</h2>
-                    <p>{activeWorkspaceItem.summary}</p>
-                    <p className="workspace-stage__placeholder-hint">
-                      Select "Goals &amp; Habits" to access the full workspace preview.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <div className="workspace-stage__body">{renderWorkspaceSection()}</div>
           </section>
         </main>
       </div>
