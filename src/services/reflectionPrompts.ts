@@ -1,5 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { GoalReflectionRow } from './goalReflections';
 
 export type FollowUpPrompt = {
@@ -49,7 +49,7 @@ export async function generateFollowUpPrompts(
     return { data: [], error: null, source: 'demo' };
   }
 
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: buildDemoFollowUpPrompts(goalId, goalTitle, reflections), error: null, source: 'demo' };
   }
 

@@ -241,8 +241,8 @@ function getTodayISO(): string {
 }
 
 export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
-  const { isConfigured, mode } = useSupabaseAuth();
-  const isDemoMode = mode === 'demo';
+  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
+  const isDemoExperience = mode === 'demo' || !isAuthenticated;
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [reflections, setReflections] = useState<GoalReflectionRow[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
@@ -275,7 +275,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
   );
 
   const loadGoals = useCallback(async () => {
-    if (!session || (!isConfigured && !isDemoMode)) {
+    if (!isConfigured) {
       setGoals([]);
       setSelectedGoalId('');
       return;
@@ -310,7 +310,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
     } finally {
       setLoadingGoals(false);
     }
-  }, [session, isConfigured, isDemoMode]);
+  }, [session, isConfigured, isDemoExperience]);
 
   const loadReflections = useCallback(
     async (goalId: string) => {
@@ -322,7 +322,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
         return;
       }
 
-      if (!session || (!isConfigured && !isDemoMode)) {
+      if (!isConfigured) {
         setReflections([]);
         setPrompts([]);
         setPromptSource(null);
@@ -350,12 +350,11 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
         setLoadingReflections(false);
       }
     },
-    [session, isConfigured, isDemoMode],
+    [session, isConfigured, isDemoExperience],
   );
 
   useEffect(() => {
-    if (!session) return;
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setGoals([]);
       setReflections([]);
       setPrompts([]);
@@ -365,7 +364,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
       return;
     }
     void loadGoals();
-  }, [session?.user?.id, isConfigured, isDemoMode, loadGoals]);
+  }, [session?.user?.id, isConfigured, isDemoExperience, loadGoals]);
 
   useEffect(() => {
     if (!selectedGoalId) {
@@ -388,12 +387,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!session) {
-      setStatus({ kind: 'error', message: 'Sign in to journal your goal reflections.' });
-      return;
-    }
-
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setStatus({ kind: 'error', message: 'Connect Supabase to save reflections.' });
       return;
     }
@@ -443,7 +437,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
   };
 
   const handleDelete = async (reflection: GoalReflectionRow) => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setStatus({ kind: 'error', message: 'Connect Supabase to manage saved reflections.' });
       return;
     }
@@ -541,7 +535,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
         ) : null}
       </header>
 
-      {isDemoMode ? (
+      {isDemoExperience ? (
         <p className="goal-reflection-journal__status goal-reflection-journal__status--info">
           Reflections are stored locally while you explore the demo workspace. Add Supabase credentials to sync
           journal entries across devices.
@@ -565,7 +559,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
         <p className="goal-reflection-journal__status goal-reflection-journal__status--error">{errorMessage}</p>
       ) : null}
 
-      {!isConfigured && !isDemoMode ? (
+      {!isConfigured && !isDemoExperience ? (
         <p className="goal-reflection-journal__empty">
           Add your Supabase credentials to unlock the reflection journal and keep weekly reviews in sync.
         </p>
