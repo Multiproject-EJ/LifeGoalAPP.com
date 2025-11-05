@@ -282,8 +282,8 @@ function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
 }
 
 export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
-  const { isConfigured, mode } = useSupabaseAuth();
-  const isDemoMode = mode === 'demo';
+  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
+  const isDemoExperience = mode === 'demo' || !isAuthenticated;
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -301,7 +301,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const [customNote, setCustomNote] = useState('');
 
   const loadCheckins = useCallback(async () => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setCheckins([]);
       setSelectedCheckinId(null);
       return;
@@ -328,21 +328,21 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     } finally {
       setLoading(false);
     }
-  }, [isConfigured, isDemoMode, session.user.id]);
+  }, [isConfigured, isDemoExperience, session.user.id]);
 
   useEffect(() => {
-    if (!session || (!isConfigured && !isDemoMode)) {
+    if (!isConfigured) {
       return;
     }
     void loadCheckins();
-  }, [session?.user?.id, isConfigured, isDemoMode, loadCheckins]);
+  }, [session?.user?.id, isConfigured, isDemoExperience, loadCheckins]);
 
   useEffect(() => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setCheckins([]);
       setSelectedCheckinId(null);
     }
-  }, [isConfigured, isDemoMode]);
+  }, [isConfigured, isDemoExperience]);
 
   useEffect(() => {
     if (checkins.length === 0) {
@@ -390,7 +390,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
       return;
     }
 
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are missing. Update your environment variables to continue.');
       return;
     }
@@ -690,13 +690,13 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
           type="button"
           className="life-wheel__refresh"
           onClick={() => void loadCheckins()}
-          disabled={loading || (!isConfigured && !isDemoMode)}
+          disabled={loading || (!isConfigured && !isDemoExperience)}
         >
           {loading ? 'Refreshing…' : 'Refresh history'}
         </button>
       </header>
 
-      {isDemoMode ? (
+      {isDemoExperience ? (
         <p className="life-wheel__status life-wheel__status--info">
           Life wheel entries are stored locally in demo mode. Connect Supabase when you&apos;re ready to sync check-ins across
           devices.
@@ -715,7 +715,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
           type="button"
           className="life-wheel__start-questionnaire"
           onClick={startQuestionnaire}
-          disabled={!isConfigured && !isDemoMode}
+          disabled={!isConfigured && !isDemoExperience}
         >
           Start New Wellbeing Check-in
         </button>

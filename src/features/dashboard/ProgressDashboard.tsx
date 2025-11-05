@@ -123,8 +123,8 @@ function buildWeeklySnapshot(reference: Date, completions: Record<string, number
 }
 
 export function ProgressDashboard({ session }: ProgressDashboardProps) {
-  const { isConfigured, mode } = useSupabaseAuth();
-  const isDemoMode = mode === 'demo';
+  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
+  const isDemoExperience = mode === 'demo' || !isAuthenticated;
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [logs, setLogs] = useState<HabitLogRow[]>([]);
@@ -135,7 +135,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBoundaries(today), [today]);
 
   const refreshDashboard = useCallback(async () => {
-    if (!session || (!isConfigured && !isDemoMode)) {
+    if (!session || (!isConfigured && !isDemoExperience)) {
       setGoals([]);
       setHabits([]);
       setLogs([]);
@@ -180,22 +180,22 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
     } finally {
       setLoading(false);
     }
-  }, [session, isConfigured, isDemoMode, monthStart, monthEnd]);
+  }, [session, isConfigured, isDemoExperience, monthStart, monthEnd]);
 
   useEffect(() => {
-    if (!session || (!isConfigured && !isDemoMode)) {
+    if (!isConfigured) {
       return;
     }
     void refreshDashboard();
-  }, [session?.user?.id, isConfigured, isDemoMode, refreshDashboard]);
+  }, [session?.user?.id, isConfigured, isDemoExperience, refreshDashboard]);
 
   useEffect(() => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setGoals([]);
       setHabits([]);
       setLogs([]);
     }
-  }, [isConfigured, isDemoMode]);
+  }, [isConfigured, isDemoExperience]);
 
   const completionMap = useMemo(() => {
     return logs.reduce<Record<string, number>>((acc, log) => {
@@ -306,13 +306,13 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
           type="button"
           className="progress-dashboard__refresh"
           onClick={() => void refreshDashboard()}
-          disabled={loading || (!isConfigured && !isDemoMode)}
+          disabled={loading || (!isConfigured && !isDemoExperience)}
         >
           {loading ? 'Refreshing…' : 'Refresh insights'}
         </button>
       </header>
 
-      {isDemoMode ? (
+      {isDemoExperience ? (
         <p className="progress-dashboard__status progress-dashboard__status--info">
           Dashboard metrics are generated from demo data stored locally. Connect Supabase to analyze real habit completions
           and goal milestones.

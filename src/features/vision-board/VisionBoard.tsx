@@ -22,8 +22,8 @@ type VisionImage = VisionImageRow & { publicUrl: string };
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
 export function VisionBoard({ session }: VisionBoardProps) {
-  const { isConfigured, mode } = useSupabaseAuth();
-  const isDemoMode = mode === 'demo';
+  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
+  const isDemoExperience = mode === 'demo' || !isAuthenticated;
   const [images, setImages] = useState<VisionImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const loadImages = useCallback(async () => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setImages([]);
       setHasLoadedOnce(false);
       return;
@@ -57,21 +57,21 @@ export function VisionBoard({ session }: VisionBoardProps) {
       setHasLoadedOnce(true);
       setLoading(false);
     }
-  }, [isConfigured, isDemoMode, session.user.id]);
+  }, [isConfigured, isDemoExperience, session.user.id]);
 
   useEffect(() => {
-    if (!session || (!isConfigured && !isDemoMode)) {
+    if (!session || (!isConfigured && !isDemoExperience)) {
       return;
     }
     loadImages();
-  }, [session?.user?.id, isConfigured, isDemoMode, loadImages]);
+  }, [session?.user?.id, isConfigured, isDemoExperience, loadImages]);
 
   useEffect(() => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setImages([]);
       setHasLoadedOnce(false);
     }
-  }, [isConfigured, isDemoMode]);
+  }, [isConfigured, isDemoExperience]);
 
   const sortedImages = useMemo(() => {
     const copy = [...images];
@@ -99,7 +99,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
       return;
     }
 
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are missing. Update your environment variables to continue.');
       return;
     }
@@ -146,7 +146,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
   };
 
   const handleDelete = async (record: VisionImage) => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Connect Supabase to remove items from your vision board.');
       return;
     }
@@ -188,7 +188,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
         </div>
       </header>
 
-      {isDemoMode ? (
+      {isDemoExperience ? (
         <p className="vision-board__status vision-board__status--info">
           Vision board uploads are stored locally while you explore the demo workspace. Connect Supabase storage to keep a
           cloud-synced gallery.
@@ -210,7 +210,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            disabled={(!isConfigured && !isDemoMode) || uploading}
+            disabled={(!isConfigured && !isDemoExperience) || uploading}
             required
           />
           <span className="vision-board__hint">PNG, JPG, or WEBP up to 5MB.</span>
@@ -223,20 +223,20 @@ export function VisionBoard({ session }: VisionBoardProps) {
             value={captionDraft}
             onChange={(event) => setCaptionDraft(event.target.value)}
             placeholder="Describe why this image matters"
-            disabled={(!isConfigured && !isDemoMode) || uploading}
+            disabled={(!isConfigured && !isDemoExperience) || uploading}
           />
         </div>
         <button
           type="submit"
           className="vision-board__submit"
-          disabled={uploading || (!isConfigured && !isDemoMode)}
+          disabled={uploading || (!isConfigured && !isDemoExperience)}
         >
           {uploading ? 'Uploading…' : 'Add to board'}
         </button>
       </form>
 
       <div className="vision-board__grid" role="list">
-        {!isConfigured && !isDemoMode ? (
+        {!isConfigured && !isDemoExperience ? (
           <p className="vision-board__empty">Connect Supabase to sync your gallery.</p>
         ) : loading && !hasLoadedOnce ? (
           <p className="vision-board__empty">Loading your inspiration…</p>
@@ -258,7 +258,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
                   type="button"
                   onClick={() => handleDelete(image)}
                   className="vision-board__delete"
-                  disabled={!isConfigured && !isDemoMode}
+                  disabled={!isConfigured && !isDemoExperience}
                 >
                   Remove
                 </button>

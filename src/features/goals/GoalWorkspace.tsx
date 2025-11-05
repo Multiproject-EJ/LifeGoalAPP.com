@@ -41,8 +41,8 @@ const initialDraft: GoalDraft = {
 };
 
 export function GoalWorkspace({ session }: GoalWorkspaceProps) {
-  const { isConfigured, mode } = useSupabaseAuth();
-  const isDemoMode = mode === 'demo';
+  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
+  const isDemoExperience = mode === 'demo' || !isAuthenticated;
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -84,7 +84,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   }, [isConfigured]);
 
   useEffect(() => {
-    if (!session || !isConfigured) {
+    if (!isConfigured) {
       return;
     }
     refreshGoals();
@@ -146,7 +146,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   );
 
   const listMeta = useMemo(() => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       return 'Connect Supabase to sync your goals.';
     }
 
@@ -164,7 +164,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     filteredGoals.length,
     hasLoadedOnce,
     isConfigured,
-    isDemoMode,
+    isDemoExperience,
     statusFilter,
     totalGoals,
   ]);
@@ -184,11 +184,6 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     event.preventDefault();
 
     setStatusMessage(null);
-
-    if (!session) {
-      setErrorMessage('You need to be signed in to create a goal.');
-      return;
-    }
 
     if (!isConfigured) {
       setErrorMessage('Supabase credentials are not configured. Add them to continue.');
@@ -221,7 +216,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         setGoals((current) => [data, ...current]);
       }
       setDraft(initialDraft);
-      setStatusMessage('Goal saved.');
+      setStatusMessage(isDemoExperience ? 'Goal saved to demo data.' : 'Goal saved.');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to save your goal.');
     } finally {
@@ -253,8 +248,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
 
     setStatusMessage(null);
 
-    if (!session || !editingGoalId) {
-      setErrorMessage('You need to be signed in to update a goal.');
+    if (!editingGoalId) {
+      setErrorMessage('Select a goal to update before saving changes.');
       return;
     }
 
@@ -296,7 +291,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         }),
       );
 
-      setStatusMessage('Goal updated.');
+      setStatusMessage(isDemoExperience ? 'Goal updated in demo data.' : 'Goal updated.');
       setEditingGoalId(null);
       setEditDraft(initialDraft);
     } catch (error) {
@@ -324,11 +319,6 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   };
 
   const confirmDeleteGoal = async (goalId: string) => {
-    if (!session) {
-      setErrorMessage('You need to be signed in to remove a goal.');
-      return;
-    }
-
     if (!isConfigured) {
       setErrorMessage('Supabase credentials are not configured. Add them to continue.');
       return;
@@ -343,7 +333,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       if (error) throw error;
 
       setGoals((current) => current.filter((goal) => goal.id !== goalId));
-      setStatusMessage('Goal removed.');
+      setStatusMessage(isDemoExperience ? 'Goal removed from demo data.' : 'Goal removed.');
       if (editingGoalId === goalId) {
         setEditingGoalId(null);
         setEditDraft(initialDraft);
@@ -376,7 +366,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         </button>
       </header>
 
-      {isDemoMode ? (
+      {isDemoExperience ? (
         <p className="goal-workspace__status goal-workspace__status--info">
           You&apos;re working with demo Supabase data stored locally. Capture goals freely and connect Supabase later to sync
           them to the cloud.

@@ -1,5 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
 import {
   DEMO_USER_ID,
@@ -31,7 +31,7 @@ function serializeSubscription(subscription: PushSubscriptionJSON | null): Json 
 }
 
 export async function fetchNotificationPreferences(userId: string): Promise<ServiceResponse<NotificationPreferencesRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: getDemoNotificationPreferences(userId || DEMO_USER_ID), error: null };
   }
 
@@ -47,7 +47,7 @@ export async function upsertNotificationPreferences(
   userId: string,
   payload: NotificationPreferencePayload,
 ): Promise<ServiceResponse<NotificationPreferencesRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     const record: NotificationPreferencesInsert = {
       user_id: userId || DEMO_USER_ID,
       habit_reminders_enabled: payload.habitRemindersEnabled,
@@ -79,7 +79,7 @@ export async function upsertNotificationPreferences(
 export async function disableNotificationPreferences(
   userId: string,
 ): Promise<ServiceResponse<NotificationPreferencesRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return {
       data: clearDemoNotificationPreferences(userId || DEMO_USER_ID),
       error: null,

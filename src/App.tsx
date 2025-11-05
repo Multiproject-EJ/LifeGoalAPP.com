@@ -8,6 +8,7 @@ import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
+import { createDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
@@ -64,9 +65,10 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
-    session,
+    session: supabaseSession,
     initializing,
     isConfigured,
+    isAuthenticated,
     mode,
     signInWithOtp,
     signInWithPassword,
@@ -87,22 +89,20 @@ export default function App() {
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(
     WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1].id,
   );
-  const [notifyEmail, setNotifyEmail] = useState('');
-  const [notifyMessage, setNotifyMessage] = useState<string | null>(null);
-  const [notifyError, setNotifyError] = useState<string | null>(null);
-  const [notifySubmitting, setNotifySubmitting] = useState(false);
   const [showAuthPanel, setShowAuthPanel] = useState(false);
 
   const isDemoMode = mode === 'demo';
 
+  const activeSession = useMemo(() => supabaseSession ?? createDemoSession(), [supabaseSession]);
+
   useEffect(() => {
-    if (!session) {
-      setDisplayName('');
+    if (!supabaseSession) {
+      setDisplayName((activeSession.user.user_metadata?.full_name as string | undefined) ?? '');
       setProfileSaving(false);
       return;
     }
-    setDisplayName((session.user.user_metadata?.full_name as string | undefined) ?? '');
-  }, [session]);
+    setDisplayName((supabaseSession.user.user_metadata?.full_name as string | undefined) ?? '');
+  }, [supabaseSession, activeSession]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -118,9 +118,8 @@ export default function App() {
   }, []);
 
   const isOnboardingComplete = useMemo(() => {
-    if (!session) return false;
-    return Boolean(session.user.user_metadata?.onboarding_complete);
-  }, [session]);
+    return Boolean(activeSession.user.user_metadata?.onboarding_complete);
+  }, [activeSession]);
 
   const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -189,25 +188,6 @@ export default function App() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleNotifySubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setNotifyError(null);
-    setNotifyMessage(null);
-
-    if (!notifyEmail.trim()) {
-      setNotifyError('Enter an email address so we can reach out.');
-      return;
-    }
-
-    setNotifySubmitting(true);
-
-    setTimeout(() => {
-      setNotifySubmitting(false);
-      setNotifyMessage("Thanks! We'll be in touch soon.");
-      setNotifyEmail('');
-    }, 600);
   };
 
   const handleSignOut = async () => {
@@ -370,100 +350,26 @@ export default function App() {
     </div>
   );
 
-  if (!session) {
-    return (
-      <div className="app app--preview">
-        <div className="preview-backdrop" aria-hidden="true">
-          <div className="preview-backdrop__orb preview-backdrop__orb--one" />
-          <div className="preview-backdrop__orb preview-backdrop__orb--two" />
-          <div className="preview-backdrop__orb preview-backdrop__orb--three" />
-        </div>
-
-        <div className="preview-window">
-          <div className="preview-window__media" aria-hidden="true">
-            <div className="preview-window__image" />
-          </div>
-
-          <div className="preview-window__content">
-            <span className="preview-window__badge">Under construction</span>
-            <h1>LifeGoalApp is getting a glow-up</h1>
-            <p>
-              We&apos;re rebuilding the experience with calmer flows, guided rituals, and deeper insights. Leave your email
-              to hear when the new workspace opens up.
-            </p>
-
-            <form className="preview-window__form" onSubmit={handleNotifySubmit}>
-              <label className="preview-window__field">
-                <span className="sr-only">Email address</span>
-                <input
-                  type="email"
-                  name="notifyEmail"
-                  value={notifyEmail}
-                  onChange={(event) => {
-                    setNotifyEmail(event.target.value);
-                    if (notifyMessage) setNotifyMessage(null);
-                    if (notifyError) setNotifyError(null);
-                  }}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  required
-                />
-              </label>
-              <button type="submit" className="supabase-auth__action preview-window__submit" disabled={notifySubmitting}>
-                {notifySubmitting ? 'Saving…' : 'Notify me'}
-              </button>
-            </form>
-
-            {notifyMessage && (
-              <p className="preview-window__status preview-window__status--success">{notifyMessage}</p>
-            )}
-            {notifyError && (
-              <p className="preview-window__status preview-window__status--error">{notifyError}</p>
-            )}
-
-            <div className="preview-window__actions">
-              <button
-                type="button"
-                className="supabase-auth__action preview-window__primary"
-                onClick={handleDemoSignIn}
-                disabled={submitting}
-              >
-                {submitting ? 'Opening…' : 'Peek at the current build'}
-              </button>
-              <button
-                type="button"
-                className="preview-window__link"
-                onClick={() => setShowAuthPanel((value) => !value)}
-              >
-                {showAuthPanel ? 'Hide sign-in options' : 'Already collaborating? Sign in'}
-              </button>
-            </div>
-
-            {!showAuthPanel && (authMessage || authError) && (
-              <div className="preview-window__status-group">{statusElements}</div>
-            )}
-
-            {showAuthPanel && <div className="preview-window__drawer">{renderAuthPanel()}</div>}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const userDisplay =
-    displayName || (session.user.user_metadata?.full_name as string | undefined) || session.user.email;
+    displayName ||
+    (activeSession.user.user_metadata?.full_name as string | undefined) ||
+    activeSession.user.email;
   const userInitial = (userDisplay || '').trim().charAt(0).toUpperCase() || 'U';
   const activeWorkspaceItem =
     WORKSPACE_NAV_ITEMS.find((item) => item.id === activeWorkspaceNav) ??
     WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1];
 
+  const isDemoExperience = isDemoMode || !isAuthenticated;
+  const isOnboardingGateActive = !isDemoExperience;
+  const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
+
   const renderWorkspaceSection = () => {
     if (activeWorkspaceNav === 'goals') {
       return (
         <>
-          {session && !isDemoMode && (
+          {isOnboardingGateActive && (
             <OnboardingCard
-              session={session}
+              session={activeSession}
               displayName={displayName}
               setDisplayName={setDisplayName}
               profileSaving={profileSaving}
@@ -474,14 +380,14 @@ export default function App() {
             />
           )}
 
-          {isOnboardingComplete ? (
+          {canAccessWorkspace ? (
             <div className="workspace-content">
-              <ProgressDashboard session={session} />
-              <GoalWorkspace session={session} />
-              <GoalReflectionJournal session={session} />
-              <DailyHabitTracker session={session} />
-              <VisionBoard session={session} />
-              <LifeWheelCheckins session={session} />
+              <ProgressDashboard session={activeSession} />
+              <GoalWorkspace session={activeSession} />
+              <GoalReflectionJournal session={activeSession} />
+              <DailyHabitTracker session={activeSession} />
+              <VisionBoard session={activeSession} />
+              <LifeWheelCheckins session={activeSession} />
             </div>
           ) : (
             <p className="workspace-onboarding-hint">
@@ -495,12 +401,12 @@ export default function App() {
     if (activeWorkspaceNav === 'settings') {
       return (
         <div className="workspace-content">
-          <NotificationPreferences session={session} />
+          <NotificationPreferences session={activeSession} />
         </div>
       );
     }
 
-    if (!isOnboardingComplete) {
+    if (!canAccessWorkspace) {
       return (
         <p className="workspace-onboarding-hint">
           Finish onboarding to unlock this area.
@@ -512,27 +418,40 @@ export default function App() {
       case 'planning':
         return (
           <div className="workspace-content">
-            <DailyHabitTracker session={session} />
+            <DailyHabitTracker session={activeSession} />
           </div>
         );
       case 'rituals':
         return (
           <div className="workspace-content">
-            <LifeWheelCheckins session={session} />
-            <GoalReflectionJournal session={session} />
-            <VisionBoard session={session} />
+            <LifeWheelCheckins session={activeSession} />
+            <GoalReflectionJournal session={activeSession} />
+            <VisionBoard session={activeSession} />
           </div>
         );
       case 'insights':
         return (
           <div className="workspace-content">
-            <VisionBoard session={session} />
+            <VisionBoard session={activeSession} />
+          </div>
+        );
+      case 'support':
+        return (
+          <div className="workspace-content">
+            <GoalWorkspace session={activeSession} />
+          </div>
+        );
+      case 'setup-habits':
+        return (
+          <div className="workspace-content">
+            <GoalWorkspace session={activeSession} />
+            <DailyHabitTracker session={activeSession} />
           </div>
         );
       case 'setup-goals':
         return (
           <div className="workspace-content">
-            <GoalWorkspace session={session} />
+            <GoalWorkspace session={activeSession} />
           </div>
         );
       default:
@@ -560,7 +479,7 @@ export default function App() {
             </div>
             <div className="workspace-sidebar__profile-text">
               <span className="workspace-sidebar__welcome">
-                {isDemoMode ? 'Demo creator' : 'Welcome back'}
+                {isDemoExperience ? 'Demo creator' : 'Welcome back'}
               </span>
               <span className="workspace-sidebar__name">{userDisplay}</span>
             </div>
@@ -593,14 +512,46 @@ export default function App() {
                 Install app
               </button>
             )}
-            <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
-              Sign out
-            </button>
+            {isAuthenticated ? (
+              <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
+                Sign out
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="workspace-sidebar__signout"
+                onClick={() => setShowAuthPanel((value) => !value)}
+              >
+                {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
+              </button>
+            )}
           </div>
         </aside>
 
         <main className="workspace-main">
-          {(authMessage || authError) && <div className="workspace-status">{statusElements}</div>}
+          {(!isAuthenticated || authMessage || authError) && (
+            <div className="workspace-status">
+              {!isAuthenticated && (
+                <p className="workspace-status__message">
+                  You’re exploring demo data. Sign in to sync with your Supabase project.
+                </p>
+              )}
+              {statusElements}
+              {!isAuthenticated && (
+                <button
+                  type="button"
+                  className="supabase-auth__action workspace-status__cta"
+                  onClick={() => setShowAuthPanel(true)}
+                >
+                  Connect Supabase
+                </button>
+              )}
+            </div>
+          )}
+
+          {showAuthPanel && (
+            <div className="workspace-auth-panel">{renderAuthPanel()}</div>
+          )}
 
           <section
             className={`workspace-stage ${

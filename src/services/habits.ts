@@ -1,5 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
 import {
   DEMO_USER_ID,
@@ -35,7 +35,7 @@ type ServiceResponse<T> = {
 };
 
 export async function fetchHabitsByGoal(goalId: string): Promise<ServiceResponse<HabitRow[]>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: getDemoHabitsByGoal(goalId), error: null };
   }
 
@@ -49,7 +49,7 @@ export async function fetchHabitsByGoal(goalId: string): Promise<ServiceResponse
 }
 
 export async function fetchHabitsForUser(userId: string): Promise<ServiceResponse<HabitWithGoal[]>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     const habits = getDemoHabitsForUser(userId || DEMO_USER_ID);
     const goals = getDemoGoals(userId || DEMO_USER_ID);
     const goalMap = new Map(
@@ -72,7 +72,7 @@ export async function fetchHabitsForUser(userId: string): Promise<ServiceRespons
 }
 
 export async function upsertHabit(payload: HabitInsert | HabitUpdate): Promise<ServiceResponse<HabitRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: upsertDemoHabit(payload), error: null };
   }
 
@@ -86,7 +86,7 @@ export async function upsertHabit(payload: HabitInsert | HabitUpdate): Promise<S
 }
 
 export async function deleteHabit(id: string): Promise<ServiceResponse<HabitRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: removeDemoHabit(id), error: null };
   }
 
@@ -101,7 +101,7 @@ export async function deleteHabit(id: string): Promise<ServiceResponse<HabitRow>
 }
 
 export async function logHabitCompletion(payload: HabitLogInsert): Promise<ServiceResponse<HabitLogRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: logDemoHabitCompletion(payload), error: null };
   }
 
@@ -118,7 +118,7 @@ export async function clearHabitCompletion(
   habitId: string,
   date: string,
 ): Promise<ServiceResponse<HabitLogRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: clearDemoHabitCompletion(habitId, date), error: null };
   }
 
@@ -145,7 +145,7 @@ export async function fetchHabitLogsForDate(
     return { data: [], error: null };
   }
 
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: getDemoHabitLogsForDate(date, habitIds), error: null };
   }
 
@@ -167,7 +167,7 @@ export async function fetchHabitLogsForRange(
     return { data: [], error: null };
   }
 
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: getDemoHabitLogsForRange(habitIds, startDate, endDate), error: null };
   }
 
