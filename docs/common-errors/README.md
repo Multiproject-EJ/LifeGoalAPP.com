@@ -99,6 +99,9 @@ When you fix an issue:
 - Update solutions if better approaches are discovered
 - Keep the Error Index table sorted by ID
 
+## Verification
+After deploying fixes, use the [Verification Checklist](./verification-checklist.md) to confirm everything is working correctly.
+
 ## Resources
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [GitHub Pages Documentation](https://docs.github.com/en/pages)
