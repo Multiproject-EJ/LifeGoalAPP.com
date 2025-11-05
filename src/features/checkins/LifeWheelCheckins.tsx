@@ -11,14 +11,14 @@ type LifeWheelCheckinsProps = {
 };
 
 const LIFE_WHEEL_CATEGORIES = [
-  { key: 'health', label: 'Health' },
-  { key: 'relationships', label: 'Relationships' },
-  { key: 'career', label: 'Career' },
-  { key: 'personal_growth', label: 'Personal growth' },
-  { key: 'fun', label: 'Fun' },
-  { key: 'finances', label: 'Finances' },
-  { key: 'giving_back', label: 'Giving back' },
-  { key: 'environment', label: 'Environment' },
+  { key: 'spirituality_community', label: 'Spirituality & Community' },
+  { key: 'finance_wealth', label: 'Finance & Wealth' },
+  { key: 'love_relations', label: 'Love & Relations' },
+  { key: 'fun_creativity', label: 'Fun & Creativity' },
+  { key: 'career_development', label: 'Career & Self Development' },
+  { key: 'health_fitness', label: 'Health & Fitness' },
+  { key: 'family_friends', label: 'Family & Friends' },
+  { key: 'living_spaces', label: 'Living Spaces' },
 ] as const;
 
 type LifeWheelCategory = (typeof LIFE_WHEEL_CATEGORIES)[number];
@@ -26,6 +26,54 @@ type LifeWheelCategory = (typeof LIFE_WHEEL_CATEGORIES)[number];
 type LifeWheelCategoryKey = LifeWheelCategory['key'];
 
 type CheckinScores = Record<LifeWheelCategoryKey, number>;
+
+type Question = {
+  id: string;
+  categoryKey: LifeWheelCategoryKey;
+  text: string;
+  imageNumber: number;
+};
+
+type QuestionAnswer = {
+  questionId: string;
+  score: number; // 1-3
+  customNote: string;
+};
+
+const QUESTIONS: Question[] = [
+  // Spirituality & Community
+  { id: 'q1', categoryKey: 'spirituality_community', text: 'How connected do you feel to your spiritual or community practices?', imageNumber: 1 },
+  { id: 'q2', categoryKey: 'spirituality_community', text: 'How often do you engage in activities that nurture your sense of purpose?', imageNumber: 2 },
+  { id: 'q3', categoryKey: 'spirituality_community', text: 'How supported do you feel by your community or spiritual circle?', imageNumber: 3 },
+  // Finance & Wealth
+  { id: 'q4', categoryKey: 'finance_wealth', text: 'How satisfied are you with your current financial situation?', imageNumber: 4 },
+  { id: 'q5', categoryKey: 'finance_wealth', text: 'How well are you managing your savings and investments?', imageNumber: 5 },
+  { id: 'q6', categoryKey: 'finance_wealth', text: 'How confident do you feel about your financial future?', imageNumber: 6 },
+  // Love & Relations
+  { id: 'q7', categoryKey: 'love_relations', text: 'How fulfilling is your romantic relationship or dating life?', imageNumber: 7 },
+  { id: 'q8', categoryKey: 'love_relations', text: 'How well do you communicate with your romantic partner?', imageNumber: 8 },
+  { id: 'q9', categoryKey: 'love_relations', text: 'How much quality time do you spend with your loved one?', imageNumber: 9 },
+  // Fun & Creativity
+  { id: 'q10', categoryKey: 'fun_creativity', text: 'How much time do you dedicate to hobbies and creative pursuits?', imageNumber: 10 },
+  { id: 'q11', categoryKey: 'fun_creativity', text: 'How often do you engage in activities that bring you joy?', imageNumber: 11 },
+  { id: 'q12', categoryKey: 'fun_creativity', text: 'How satisfied are you with your work-life balance for fun activities?', imageNumber: 12 },
+  // Career & Self Development
+  { id: 'q13', categoryKey: 'career_development', text: 'How satisfied are you with your career progress?', imageNumber: 13 },
+  { id: 'q14', categoryKey: 'career_development', text: 'How much are you learning and growing in your professional life?', imageNumber: 14 },
+  { id: 'q15', categoryKey: 'career_development', text: 'How aligned is your work with your personal goals?', imageNumber: 15 },
+  // Health & Fitness
+  { id: 'q16', categoryKey: 'health_fitness', text: 'How would you rate your overall physical health?', imageNumber: 16 },
+  { id: 'q17', categoryKey: 'health_fitness', text: 'How consistent are you with exercise and movement?', imageNumber: 17 },
+  { id: 'q18', categoryKey: 'health_fitness', text: 'How well are you taking care of your nutrition and sleep?', imageNumber: 18 },
+  // Family & Friends
+  { id: 'q19', categoryKey: 'family_friends', text: 'How strong is your connection with family members?', imageNumber: 19 },
+  { id: 'q20', categoryKey: 'family_friends', text: 'How often do you spend quality time with friends?', imageNumber: 20 },
+  { id: 'q21', categoryKey: 'family_friends', text: 'How supported do you feel by your family and friends?', imageNumber: 21 },
+  // Living Spaces
+  { id: 'q22', categoryKey: 'living_spaces', text: 'How comfortable and organized is your living environment?', imageNumber: 22 },
+  { id: 'q23', categoryKey: 'living_spaces', text: 'How much does your home reflect your personality and values?', imageNumber: 23 },
+  { id: 'q24', categoryKey: 'living_spaces', text: 'How satisfied are you with your current living situation?', imageNumber: 24 },
+];
 
 type RadarGeometry = {
   polygonPoints: string;
@@ -165,6 +213,12 @@ function formatSignedDecimal(value: number, fractionDigits = 1): string {
   return `${value > 0 ? '+' : '−'}${rounded}`;
 }
 
+function scaleQuestionScoreToWheel(questionScore: number): number {
+  // Scale from 1-3 (question score) to 0-10 (wheel score)
+  // 1 (Not Well) -> 0, 2 (Okay) -> 5, 3 (Excellent) -> 10
+  return Math.round((questionScore - 1) * 5);
+}
+
 function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
   const center = RADAR_SIZE / 2;
   const radius = center - 36;
@@ -238,6 +292,13 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const [formDate, setFormDate] = useState(() => formatISODate(new Date()));
   const [formScores, setFormScores] = useState<CheckinScores>(() => createDefaultScores());
   const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
+  
+  // Questionnaire state
+  const [isInQuestionnaireMode, setIsInQuestionnaireMode] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Map<string, QuestionAnswer>>(new Map());
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [customNote, setCustomNote] = useState('');
 
   const loadCheckins = useCallback(async () => {
     if (!isConfigured && !isDemoMode) {
@@ -382,14 +443,247 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     setFormScores(parseCheckinScores(checkins[0].scores));
   };
 
+  const startQuestionnaire = () => {
+    setIsInQuestionnaireMode(true);
+    setCurrentQuestionIndex(0);
+    setAnswers(new Map());
+    setSelectedOption(null);
+    setCustomNote('');
+    setFormScores(createDefaultScores());
+  };
+
+  const handleAnswerSubmit = () => {
+    if (selectedOption === null) return;
+    
+    const currentQuestion = QUESTIONS[currentQuestionIndex];
+    const answer: QuestionAnswer = {
+      questionId: currentQuestion.id,
+      score: selectedOption,
+      customNote: customNote.trim(),
+    };
+    
+    const newAnswers = new Map(answers);
+    newAnswers.set(currentQuestion.id, answer);
+    setAnswers(newAnswers);
+    
+    // Update scores for the radar chart
+    const categoryAnswers = QUESTIONS
+      .filter(q => q.categoryKey === currentQuestion.categoryKey)
+      .map(q => newAnswers.get(q.id)?.score || 0)
+      .filter(score => score > 0);
+    
+    if (categoryAnswers.length > 0) {
+      const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
+      const scaledScore = scaleQuestionScoreToWheel(avgScore);
+      setFormScores(current => ({
+        ...current,
+        [currentQuestion.categoryKey]: scaledScore,
+      }));
+    }
+    
+    // Move to next question or finish
+    if (currentQuestionIndex < QUESTIONS.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setSelectedOption(null);
+      setCustomNote('');
+    } else {
+      // Questionnaire complete, save the check-in
+      saveQuestionnaireResults(newAnswers);
+    }
+  };
+
+  const saveQuestionnaireResults = async (finalAnswers: Map<string, QuestionAnswer>) => {
+    setSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const finalScores = createDefaultScores();
+      
+      // Calculate final scores for each category
+      LIFE_WHEEL_CATEGORIES.forEach(category => {
+        const categoryQuestions = QUESTIONS.filter(q => q.categoryKey === category.key);
+        const categoryAnswers = categoryQuestions
+          .map(q => finalAnswers.get(q.id)?.score || 0)
+          .filter(score => score > 0);
+        
+        if (categoryAnswers.length > 0) {
+          const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
+          finalScores[category.key] = scaleQuestionScoreToWheel(avgScore);
+        }
+      });
+
+      const { data, error } = await insertCheckin({
+        user_id: session.user.id,
+        date: formDate,
+        scores: finalScores,
+      });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setCheckins(current => {
+          const next = [data, ...current];
+          return next.sort((a, b) => b.date.localeCompare(a.date));
+        });
+        setSelectedCheckinId(data.id);
+      }
+      
+      setSuccessMessage('Wellbeing check-in completed! Your life wheel has been updated.');
+      setIsInQuestionnaireMode(false);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to save your check-in.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Calculate current progress scores for the radar chart
+  const currentProgressScores = useMemo(() => {
+    if (!isInQuestionnaireMode) return null;
+    
+    const progressScores = createDefaultScores();
+    LIFE_WHEEL_CATEGORIES.forEach(category => {
+      const categoryQuestions = QUESTIONS.filter(q => q.categoryKey === category.key);
+      const categoryAnswers = categoryQuestions
+        .map(q => answers.get(q.id)?.score || 0)
+        .filter(score => score > 0);
+      
+      if (categoryAnswers.length > 0) {
+        const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
+        progressScores[category.key] = scaleQuestionScoreToWheel(avgScore);
+      }
+    });
+    
+    return progressScores;
+  }, [isInQuestionnaireMode, answers]);
+
+  const progressRadarGeometry = useMemo(() => {
+    return currentProgressScores ? buildRadarGeometry(currentProgressScores) : null;
+  }, [currentProgressScores]);
+
+  // Render questionnaire mode
+  if (isInQuestionnaireMode) {
+    const currentQuestion = QUESTIONS[currentQuestionIndex];
+    const progress = ((currentQuestionIndex + 1) / QUESTIONS.length) * 100;
+    
+    return (
+      <section className="life-wheel life-wheel--questionnaire">
+        <div className="questionnaire-container">
+          <div className="questionnaire-progress">
+            <div className="questionnaire-progress__bar" style={{ width: `${progress}%` }} />
+            <span className="questionnaire-progress__text">
+              Question {currentQuestionIndex + 1} of {QUESTIONS.length}
+            </span>
+          </div>
+
+          <div className="questionnaire-content" key={currentQuestion.id}>
+            <div className="questionnaire-image">
+              {currentQuestion.imageNumber}
+            </div>
+            
+            <h3 className="questionnaire-question">{currentQuestion.text}</h3>
+            
+            <div className="questionnaire-options">
+              <button
+                type="button"
+                className={`questionnaire-option ${selectedOption === 1 ? 'questionnaire-option--selected' : ''}`}
+                onClick={() => setSelectedOption(1)}
+              >
+                <span className="questionnaire-option__label">Not Well</span>
+                <span className="questionnaire-option__score">1</span>
+              </button>
+              <button
+                type="button"
+                className={`questionnaire-option ${selectedOption === 2 ? 'questionnaire-option--selected' : ''}`}
+                onClick={() => setSelectedOption(2)}
+              >
+                <span className="questionnaire-option__label">Okay</span>
+                <span className="questionnaire-option__score">2</span>
+              </button>
+              <button
+                type="button"
+                className={`questionnaire-option ${selectedOption === 3 ? 'questionnaire-option--selected' : ''}`}
+                onClick={() => setSelectedOption(3)}
+              >
+                <span className="questionnaire-option__label">Excellent</span>
+                <span className="questionnaire-option__score">3</span>
+              </button>
+            </div>
+
+            <div className="questionnaire-note">
+              <label htmlFor="custom-note">Add your thoughts (optional)</label>
+              <textarea
+                id="custom-note"
+                value={customNote}
+                onChange={(e) => setCustomNote(e.target.value)}
+                placeholder="Share any additional insights about this area of your life..."
+                rows={3}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="questionnaire-submit"
+              onClick={handleAnswerSubmit}
+              disabled={selectedOption === null || submitting}
+            >
+              {submitting ? 'Saving...' : currentQuestionIndex === QUESTIONS.length - 1 ? 'Complete Check-in' : 'Next Question'}
+            </button>
+          </div>
+
+          <div className="questionnaire-wheel">
+            <h4>Your Life Wheel</h4>
+            {progressRadarGeometry ? (
+              <svg
+                className="life-wheel__radar"
+                viewBox={`0 0 ${RADAR_SIZE} ${RADAR_SIZE}`}
+                role="img"
+                aria-label="Your life wheel progress"
+              >
+                <g className="life-wheel__radar-grid">
+                  {progressRadarGeometry.levelPolygons.map((level) => (
+                    <polygon key={level.ratio} points={level.points} />
+                  ))}
+                </g>
+                <g className="life-wheel__radar-axes">
+                  {progressRadarGeometry.axes.map((axis) => (
+                    <line key={axis.key} x1={axis.x1} y1={axis.y1} x2={axis.x2} y2={axis.y2} />
+                  ))}
+                </g>
+                <polygon className="life-wheel__radar-shape" points={progressRadarGeometry.polygonPoints} />
+                <g className="life-wheel__radar-labels">
+                  {progressRadarGeometry.labels.map((label) => (
+                    <text
+                      key={label.key}
+                      x={label.x}
+                      y={label.y}
+                      textAnchor={label.anchor}
+                      dominantBaseline={label.baseline}
+                    >
+                      {label.text}
+                    </text>
+                  ))}
+                </g>
+              </svg>
+            ) : (
+              <div className="life-wheel__empty">
+                <p>Your wheel will appear as you answer questions</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="life-wheel">
       <header className="life-wheel__header">
         <div>
-          <h2>Life wheel check-ins</h2>
+          <h2>Wellbeing Wheel Check-in</h2>
           <p>
-            Capture how balanced your life feels across core categories, then watch the radar chart surface your highs and
-            lows over time.
+            Take a calming questionnaire to reflect on your wellbeing across 8 life categories.
           </p>
         </div>
         <button
@@ -415,6 +709,17 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
       {errorMessage && <p className="life-wheel__status life-wheel__status--error">{errorMessage}</p>}
       {successMessage && <p className="life-wheel__status life-wheel__status--success">{successMessage}</p>}
+
+      <div className="life-wheel__start-section">
+        <button
+          type="button"
+          className="life-wheel__start-questionnaire"
+          onClick={startQuestionnaire}
+          disabled={!isConfigured && !isDemoMode}
+        >
+          Start New Wellbeing Check-in
+        </button>
+      </div>
 
       <div className="life-wheel__grid">
         <div className="life-wheel__panel life-wheel__panel--chart">
