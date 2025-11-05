@@ -523,6 +523,12 @@ export default function App() {
             <VisionBoard session={session} />
           </div>
         );
+      case 'insights':
+        return (
+          <div className="workspace-content">
+            <VisionBoard session={session} />
+          </div>
+        );
       case 'setup-goals':
         return (
           <div className="workspace-content">
