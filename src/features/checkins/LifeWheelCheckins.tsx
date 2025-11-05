@@ -213,6 +213,12 @@ function formatSignedDecimal(value: number, fractionDigits = 1): string {
   return `${value > 0 ? '+' : '−'}${rounded}`;
 }
 
+function scaleQuestionScoreToWheel(questionScore: number): number {
+  // Scale from 1-3 (question score) to 0-10 (wheel score)
+  // 1 (Not Well) -> 0, 2 (Okay) -> 5, 3 (Excellent) -> 10
+  return Math.round((questionScore - 1) * 5);
+}
+
 function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
   const center = RADAR_SIZE / 2;
   const radius = center - 36;
@@ -468,8 +474,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     
     if (categoryAnswers.length > 0) {
       const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
-      // Scale from 1-3 to 0-10
-      const scaledScore = Math.round((avgScore - 1) * 5);
+      const scaledScore = scaleQuestionScoreToWheel(avgScore);
       setFormScores(current => ({
         ...current,
         [currentQuestion.categoryKey]: scaledScore,
@@ -504,8 +509,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         
         if (categoryAnswers.length > 0) {
           const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
-          // Scale from 1-3 to 0-10
-          finalScores[category.key] = Math.round((avgScore - 1) * 5);
+          finalScores[category.key] = scaleQuestionScoreToWheel(avgScore);
         }
       });
 
@@ -547,7 +551,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
       
       if (categoryAnswers.length > 0) {
         const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
-        progressScores[category.key] = Math.round((avgScore - 1) * 5);
+        progressScores[category.key] = scaleQuestionScoreToWheel(avgScore);
       }
     });
     
@@ -679,7 +683,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         <div>
           <h2>Wellbeing Wheel Check-in</h2>
           <p>
-            Take a calming questionnaire to reflect on your wellbeing across 8 life categories
+            Take a calming questionnaire to reflect on your wellbeing across 8 life categories.
           </p>
         </div>
         <button
