@@ -1,3 +1,6 @@
+import './index.css';
+import './themes.css';
+
 const DEBUG_STORAGE_KEY = 'lifeGoalApp:debug';
 const bootStartedAt = new Date().toISOString();
 
