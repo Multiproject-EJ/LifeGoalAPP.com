@@ -36,11 +36,6 @@ type WorkspaceNavItem = {
 const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'goals',
-    label: 'Placeholder Content',
-    summary: 'Preview placeholder content for upcoming workspace modules.',
-  },
-  {
-    id: 'home',
     label: 'Dashboard',
     summary: 'Review upcoming milestones and daily focus from a unified dashboard.',
   },
