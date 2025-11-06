@@ -73,6 +73,7 @@ export default function App() {
     signInWithOtp,
     signInWithPassword,
     signUpWithPassword,
+    signInWithGoogle,
     sendPasswordReset,
     signOut,
   } = useSupabaseAuth();
@@ -190,6 +191,20 @@ export default function App() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setAuthMessage(null);
+    setAuthError(null);
+    setSubmitting(true);
+    try {
+      await signInWithGoogle();
+      setAuthMessage('Redirecting to Google…');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Unable to open Google sign-in.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSignOut = async () => {
     setAuthError(null);
     setAuthMessage(null);
@@ -254,12 +269,46 @@ export default function App() {
             Supabase credentials are not configured. Update your environment variables to enable authentication.
           </p>
         ) : (
-          <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
-            <div className="supabase-auth__modes" role="tablist" aria-label="Authentication mode">
+          <>
+            <div className="supabase-auth__social">
               <button
                 type="button"
-                className={`supabase-auth__mode ${authMode === 'password' ? 'supabase-auth__mode--active' : ''}`}
-                onClick={() => setAuthMode('password')}
+                className="supabase-auth__action supabase-auth__action--google"
+                onClick={handleGoogleSignIn}
+                disabled={submitting}
+              >
+                <svg aria-hidden="true" viewBox="0 0 533.5 544.3">
+                  <path
+                    fill="#EA4335"
+                    d="M533.5 278.4c0-18.5-1.5-37-4.7-54.7H272v103.5h147.2c-6.3 34.2-25.3 63.1-54 82.4v68h87.2c51.1-47.1 81.1-116.5 81.1-199.2z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M272 544.3c73.3 0 135-24.3 180-66.1l-87.2-68c-24.2 16.3-55.3 26-92.8 26-71 0-131.2-47.9-152.8-112.1H29.4v70.5c44.6 88.2 136.4 149.7 242.6 149.7z"
+                  />
+                  <path
+                    fill="#4A90E2"
+                    d="M119.2 324.1c-10.3-30.6-10.3-63.3 0-93.9V159.7H29.4c-42.4 84.7-42.4 183 0 267.7l89.8-70.5z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M272 106.5c39.9-.6 78.1 14.5 107.4 42.5l80.2-80.2C405.9 24 343.9-.1 272 0 165.8 0 74 61.5 29.4 149.7l89.8 70.5C140.8 154.9 201 107 272 106.5z"
+                  />
+                </svg>
+                {submitting ? 'Opening Google…' : 'Continue with Google'}
+              </button>
+            </div>
+
+            <div className="supabase-auth__divider">
+              <span>Or continue with email</span>
+            </div>
+
+            <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
+              <div className="supabase-auth__modes" role="tablist" aria-label="Authentication mode">
+                <button
+                  type="button"
+                  className={`supabase-auth__mode ${authMode === 'password' ? 'supabase-auth__mode--active' : ''}`}
+                  onClick={() => setAuthMode('password')}
               >
                 Sign in
               </button>
@@ -342,7 +391,8 @@ export default function App() {
                         : 'Send reset link'}
               </button>
             </div>
-          </form>
+            </form>
+          </>
         )}
 
         {statusElements}

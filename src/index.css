@@ -767,6 +767,11 @@ body {
   flex-wrap: wrap;
 }
 
+.supabase-auth__social {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .supabase-auth__action {
   border: none;
   border-radius: 999px;
@@ -776,6 +781,47 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.supabase-auth__action--google {
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.supabase-auth__action--google svg {
+  width: 18px;
+  height: 18px;
+}
+
+.supabase-auth__action--google:not(:disabled):hover {
+  background: #f8fafc;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+}
+
+.supabase-auth__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.supabase-auth__divider::before,
+.supabase-auth__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.4);
 }
 
 @media (max-width: 1200px) {

@@ -16,11 +16,14 @@ type AuthContextValue = {
   signInWithPassword: (credentials: SignInWithPasswordCredentials) => Promise<void>;
   signUpWithPassword: (credentials: SignUpWithPasswordCredentials) => Promise<void>;
   signInWithOtp: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const GOOGLE_REDIRECT_URL = 'https://www.lifegoalapp.com/auth/callback';
 
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
   const mode: AuthProviderMode = hasSupabaseCredentials() ? 'supabase' : 'demo';
@@ -116,16 +119,37 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     [mode, supabase, supabaseError],
   );
 
-  const signInWithOtp = useCallback(async (email: string) => {
+  const signInWithOtp = useCallback(
+    async (email: string) => {
       if (mode === 'demo') {
         setSession(createDemoSession());
         setSupabaseSession(null);
         return;
       }
+      if (!supabase) {
+        throw supabaseError ?? new Error('Supabase credentials are not configured.');
+      }
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) throw error;
+    },
+    [mode, supabase, supabaseError],
+  );
+
+  const signInWithGoogle = useCallback(async () => {
+    if (mode === 'demo') {
+      setSession(createDemoSession());
+      setSupabaseSession(null);
+      return;
+    }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: GOOGLE_REDIRECT_URL,
+      },
+    });
     if (error) throw error;
   }, [mode, supabase, supabaseError]);
 
@@ -167,6 +191,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       signInWithPassword,
       signUpWithPassword,
       signInWithOtp,
+      signInWithGoogle,
       sendPasswordReset,
       signOut,
     }),
@@ -178,6 +203,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       signInWithPassword,
       signUpWithPassword,
       signInWithOtp,
+      signInWithGoogle,
       sendPasswordReset,
       signOut,
     ],
