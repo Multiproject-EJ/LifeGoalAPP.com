@@ -1,0 +1,41 @@
+{
+  "phases":[
+    {"title":"Phase 0 — Bootstrap","items":[
+      {"id":"0-auth","label":"Protect Vision Board tab with Supabase Auth","status":"todo"},
+      {"id":"0-sql","label":"Run 0101 + 0102 + 0103 migrations","status":"todo"},
+      {"id":"0-bucket","label":"Create private Storage bucket 'vision'","status":"todo"}
+    ]},
+    {"title":"Phase 1 — Boards & Add Media","items":[
+      {"id":"1-board","label":"Board selector (create Vision/Focus) + theme","status":"todo"},
+      {"id":"1-sections","label":"Add/edit/reorder sections","status":"todo"},
+      {"id":"1-add","label":"Add card: upload / paste URL / text-only","status":"todo"},
+      {"id":"1-meta","label":"Edit card meta: title/affirm/tags/color/size/favorite","status":"todo"},
+      {"id":"1-link","label":"Link to Habit now; Goal placeholder","status":"todo"}
+    ]},
+    {"title":"Phase 2 — Canvas","items":[
+      {"id":"2-grid","label":"Drag-drop reorder; move across sections; sizes S/M/L/XL","status":"todo"},
+      {"id":"2-filter","label":"Filter by tag/color/section/favorites","status":"todo"}
+    ]},
+    {"title":"Phase 3 — Prompts & Mantra","items":[
+      {"id":"3-packs","label":"Prompt chips insert into text cards","status":"todo"},
+      {"id":"3-daily","label":"Daily Mantra highlight","status":"todo"}
+    ]},
+    {"title":"Phase 4 — Story","items":[
+      {"id":"4-fs","label":"Fullscreen slideshow (interval/shuffle)","status":"todo"},
+      {"id":"4-push","label":"Daily Spotlight subscribe + test","status":"todo"}
+    ]},
+    {"title":"Phase 5 — Gratitude & Mood","items":[
+      {"id":"5-checkin","label":"Daily mood (1–5) + gratitude note","status":"todo"},
+      {"id":"5-streak","label":"Check-in streak & gentle nudges","status":"todo"}
+    ]},
+    {"title":"Phase 6 — Sharing","items":[
+      {"id":"6-share","label":"Create/disable share link (slug)","status":"todo"},
+      {"id":"6-visibility","label":"Per-card visible_in_share toggle","status":"todo"}
+    ]},
+    {"title":"Phase 7 — Polish","items":[
+      {"id":"7-thumb","label":"Signed + transform URLs for thumbnails","status":"todo"},
+      {"id":"7-offline","label":"Offline queue for edits/uploads","status":"todo"},
+      {"id":"7-celebrate","label":"Confetti on celebrate hook","status":"todo"}
+    ]}
+  ]
+}

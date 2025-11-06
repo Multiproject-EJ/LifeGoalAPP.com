@@ -377,26 +377,55 @@ self.addEventListener('message', (event) => {
 self.addEventListener('push', (event) => {
   const defaultTitle = 'LifeGoalApp Reminder';
   const defaultBody = 'Stay on track with your goals today.';
-  let data = {};
+  let payload = {};
+  let fallbackText = '';
 
   if (event.data) {
     try {
-      data = event.data.json();
+      payload = event.data.json() || {};
     } catch (error) {
-      data = { title: defaultTitle, body: event.data.text() || defaultBody };
+      fallbackText = event.data.text?.() || '';
     }
   }
 
-  const title = data.title || defaultTitle;
-  const options = {
-    body: data.body || defaultBody,
-    icon: '/icons/icon-192x192.svg',
-    badge: '/icons/icon-192x192.svg',
-    data: data.data || {},
-    actions: data.actions || undefined,
-    tag: data.tag || undefined,
-    renotify: data.renotify || false,
+  if (!payload || typeof payload !== 'object') {
+    payload = {};
+  }
+
+  if (fallbackText && !payload.body) {
+    payload.body = fallbackText;
+  }
+
+  const title = payload.title || defaultTitle;
+  const body = payload.body || defaultBody;
+  const data = {
+    ...(payload.data || {}),
   };
+
+  const tag = payload.tag || (payload.data && payload.data.tag);
+  const topic = payload.topic || (payload.data && payload.data.topic);
+  const spotlightTag = tag === 'vision-spotlight' || topic === 'vision-spotlight';
+  const resolvedUrl = payload.url || (payload.data && payload.data.url);
+  if (resolvedUrl) {
+    data.url = resolvedUrl;
+  } else if (spotlightTag && !data.url) {
+    data.url = '/#vision';
+  }
+
+  const options = {
+    body,
+    icon: payload.icon || '/icons/icon-192x192.svg',
+    badge: payload.badge || '/icons/icon-192x192.svg',
+    image: payload.image,
+    data,
+    actions: payload.actions || undefined,
+    tag: payload.tag || undefined,
+    renotify: Boolean(payload.renotify),
+  };
+
+  if (payload.requireInteraction != null) {
+    options.requireInteraction = Boolean(payload.requireInteraction);
+  }
 
   event.waitUntil(self.registration.showNotification(title, options));
 });

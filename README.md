@@ -176,6 +176,8 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
   check-in nudges, store their time zone and preferred reminder time, and manage their push subscription via the PWA.
 - Added a Supabase-aligned demo dataset fallback so the full workspace works offline with seeded goals, habits, check-ins,
   notifications, and a locally persisted vision board until real Supabase credentials are provided.
+- Bootstrapped a Supabase-authenticated Vision Board tab with the new scaffolded canvas, prompts, and build checklist ready for
+  the next implementation phases.
 - Layered in weekly goal progress notes and status tags so reviews surface On Track, At Risk, Off Track, and Achieved
   states with notes synced across Supabase and the local demo store.
 - Highlighted current and longest habit streaks in the daily tracker, complete with rest-day context and demo data parity
