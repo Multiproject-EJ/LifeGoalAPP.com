@@ -1,22 +1,33 @@
 -- ========================================================
 -- DEMO DATA FOR HABITS MODULE
 -- Run this AFTER running migrations 0001-0003
--- Replace 'YOUR_USER_ID_HERE' with your actual user ID from auth.users
+-- Replace 'YOUR_EMAIL_HERE' with your actual email address
 -- ========================================================
 
--- First, find your user ID:
--- SELECT id FROM auth.users WHERE email = 'your-email@example.com';
+-- To use this script:
+-- 1. Replace 'YOUR_EMAIL_HERE' below with your email
+-- 2. Run this entire script in Supabase SQL Editor
+-- The script will automatically find your user ID from your email
 
--- Set your user ID variable (PostgreSQL)
--- Replace this with your actual UUID
 DO $$
 DECLARE
-  demo_user_id uuid := 'YOUR_USER_ID_HERE'; -- REPLACE THIS!
+  demo_user_id uuid;
+  demo_email text := 'YOUR_EMAIL_HERE'; -- REPLACE THIS WITH YOUR EMAIL!
   habit1_id uuid;
   habit2_id uuid;
   habit3_id uuid;
   challenge_id uuid;
 BEGIN
+
+  -- Find user ID from email
+  SELECT id INTO demo_user_id FROM auth.users WHERE email = demo_email;
+  
+  -- Validate user exists
+  IF demo_user_id IS NULL THEN
+    RAISE EXCEPTION 'User with email % not found. Please update demo_email variable with your actual email.', demo_email;
+  END IF;
+
+  RAISE NOTICE 'Found user ID: % for email: %', demo_user_id, demo_email;
 
   -- Insert profile
   INSERT INTO public.profiles (user_id, display_name, tz)
@@ -138,5 +149,5 @@ SELECT
 FROM habits_v2 h
 LEFT JOIN habit_logs_v2 l ON l.habit_id = h.id
 LEFT JOIN v_habit_streaks s ON s.habit_id = h.id
-WHERE h.user_id = 'YOUR_USER_ID_HERE' -- REPLACE THIS!
+WHERE h.user_id = (SELECT id FROM auth.users WHERE email = 'YOUR_EMAIL_HERE') -- REPLACE THIS!
 GROUP BY h.id, h.title, h.emoji, h.type, h.schedule, s.current_streak, s.best_streak;
