@@ -1,0 +1,53 @@
+{
+  "phases": [
+    {
+      "title": "Phase 0 — Bootstrap",
+      "items": [
+        {"id":"0-env","label":"Supabase client wired + SW/manifest linked","status":"done"},
+        {"id":"0-auth","label":"Protect 'Set Up Habits' with Supabase Auth","status":"done"},
+        {"id":"0-sql","label":"Run 0001 + 0002 + 0003 migrations","status":"todo"}
+      ]
+    },
+    {
+      "title": "Phase 1 — Create Habit",
+      "items": [
+        {"id":"1-wizard","label":"3-step wizard (Basics → Schedule → Targets & Reminders)","status":"todo"},
+        {"id":"1-templates","label":"Template gallery with prefill","status":"todo"}
+      ]
+    },
+    {
+      "title": "Phase 2 — Active Habits",
+      "items": [
+        {"id":"2-today","label":"Active list with quick Done/Skip/Stepper/Timer","status":"todo"},
+        {"id":"2-logs","label":"Insert logs; boolean dedupe per day","status":"todo"}
+      ]
+    },
+    {
+      "title": "Phase 3 — Insights",
+      "items": [
+        {"id":"3-heatmap","label":"31-day mini heatmap + success % + streaks","status":"todo"}
+      ]
+    },
+    {
+      "title": "Phase 4 — Notifications",
+      "items": [
+        {"id":"4-push","label":"Web Push subscribe + service worker actions","status":"todo"},
+        {"id":"4-edge","label":"Edge cron sends reminders with Done/Skip","status":"todo"}
+      ]
+    },
+    {
+      "title": "Phase 5 — Challenges",
+      "items": [
+        {"id":"5-challenge-create","label":"Create & join challenges; link a habit (optional)","status":"todo"},
+        {"id":"5-leaderboard","label":"Leaderboard (count or sum) from v_challenge_scores","status":"todo"}
+      ]
+    },
+    {
+      "title": "Phase 6 — Auto-Progression",
+      "items": [
+        {"id":"6-autoprog-ui","label":"UI to enable & tune auto-progression per habit","status":"todo"},
+        {"id":"6-autoprog-cron","label":"Edge daily job adjusts schedule JSON","status":"done"}
+      ]
+    }
+  ]
+}

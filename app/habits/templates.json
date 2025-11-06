@@ -1,0 +1,114 @@
+[
+  {
+    "title": "Hydrate (8 glasses)",
+    "emoji": "💧",
+    "type": "quantity",
+    "target_num": 8,
+    "target_unit": "glasses",
+    "schedule": { "mode": "daily" },
+    "allow_skip": true,
+    "reminders": ["09:00", "15:00", "20:00"]
+  },
+  {
+    "title": "Read 20 minutes",
+    "emoji": "📚",
+    "type": "duration",
+    "target_num": 20,
+    "target_unit": "min",
+    "schedule": { "mode": "daily" },
+    "allow_skip": true,
+    "reminders": ["21:00"]
+  },
+  {
+    "title": "Walk 6,000 steps",
+    "emoji": "🚶",
+    "type": "quantity",
+    "target_num": 6000,
+    "target_unit": "steps",
+    "schedule": { "mode": "daily" },
+    "allow_skip": true,
+    "reminders": ["17:00"]
+  },
+  {
+    "title": "Stretch 5 minutes",
+    "emoji": "🧘",
+    "type": "duration",
+    "target_num": 5,
+    "target_unit": "min",
+    "schedule": { "mode": "specific_days", "days": [1, 3, 5] },
+    "allow_skip": true,
+    "reminders": ["07:00"]
+  },
+  {
+    "title": "Meditate 10 minutes",
+    "emoji": "🧠",
+    "type": "duration",
+    "target_num": 10,
+    "target_unit": "min",
+    "schedule": { "mode": "daily" },
+    "allow_skip": true,
+    "reminders": ["07:30"]
+  },
+  {
+    "title": "Write 500 words",
+    "emoji": "✍️",
+    "type": "quantity",
+    "target_num": 500,
+    "target_unit": "words",
+    "schedule": { "mode": "times_per_week", "value": 5 },
+    "allow_skip": true,
+    "reminders": ["10:00"]
+  },
+  {
+    "title": "Learn 20 minutes",
+    "emoji": "🎓",
+    "type": "duration",
+    "target_num": 20,
+    "target_unit": "min",
+    "schedule": { "mode": "daily" },
+    "allow_skip": true,
+    "reminders": ["19:00"]
+  },
+  {
+    "title": "Floss teeth",
+    "emoji": "🦷",
+    "type": "boolean",
+    "schedule": { "mode": "daily" },
+    "allow_skip": false,
+    "reminders": ["22:00"]
+  },
+  {
+    "title": "Gratitude journal",
+    "emoji": "🙏",
+    "type": "boolean",
+    "schedule": { "mode": "daily" },
+    "allow_skip": true,
+    "reminders": ["21:30"]
+  },
+  {
+    "title": "No sugar today",
+    "emoji": "🚫",
+    "type": "boolean",
+    "schedule": { "mode": "times_per_week", "value": 5 },
+    "allow_skip": true,
+    "reminders": []
+  },
+  {
+    "title": "Sleep before 23:00",
+    "emoji": "😴",
+    "type": "boolean",
+    "schedule": { "mode": "specific_days", "days": [0, 1, 2, 3, 4] },
+    "allow_skip": false,
+    "reminders": ["22:30"]
+  },
+  {
+    "title": "Tidy 10 minutes",
+    "emoji": "🧹",
+    "type": "duration",
+    "target_num": 10,
+    "target_unit": "min",
+    "schedule": { "mode": "every_n_days", "value": 2 },
+    "allow_skip": true,
+    "reminders": ["18:00"]
+  }
+]

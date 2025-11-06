@@ -1,0 +1,310 @@
+/* ========================================================
+   HABITS MODULE STYLES
+   Modern, mobile-first design for comprehensive habits system
+   ======================================================== */
+
+#habits-root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Section headers */
+#habits-root section {
+  margin-bottom: 2.5rem;
+}
+
+#habits-root section > h2 {
+  position: sticky;
+  top: 0;
+  background: var(--bg-color, #fff);
+  z-index: 10;
+  padding: 1rem 0;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-bottom: 2px solid var(--border-color, #e5e7eb);
+}
+
+/* Cards */
+.habit-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.habit-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--secondary-bg, #f3f4f6);
+  color: var(--text-color, #1f2937);
+  border: 1px solid var(--border-color, #e5e7eb);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-hover, #e5e7eb);
+}
+
+/* Form elements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-color, #1f2937);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--input-bg, #fff);
+  color: var(--text-color, #1f2937);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Wizard steps */
+.wizard-steps {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.wizard-step {
+  flex: 1;
+  max-width: 200px;
+  padding: 1rem;
+  text-align: center;
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  background: var(--card-bg, #fff);
+  transition: all 0.2s ease;
+}
+
+.wizard-step.active {
+  border-color: var(--primary-color, #3b82f6);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.wizard-step.completed {
+  border-color: var(--success-color, #10b981);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+/* Template gallery */
+.template-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.template-card {
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.template-card:hover {
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+}
+
+.template-emoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.template-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.template-meta {
+  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+}
+
+/* Heatmap */
+.heatmap-container {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.heatmap-canvas {
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.stat-card {
+  padding: 1rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color, #3b82f6);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+  margin-top: 0.25rem;
+}
+
+/* Leaderboard */
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.leaderboard-table th {
+  background: var(--secondary-bg, #f3f4f6);
+  font-weight: 600;
+}
+
+.leaderboard-rank {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color, #3b82f6);
+}
+
+/* Build checklist */
+#habits-build-status {
+  position: sticky;
+  top: 80px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.checklist-phase {
+  margin-bottom: 1.5rem;
+}
+
+.checklist-phase-title {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--text-color, #1f2937);
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.checklist-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.checklist-item.done {
+  color: var(--text-muted, #6b7280);
+  text-decoration: line-through;
+}
+
+/* Empty states */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  #habits-root {
+    padding: 0.5rem;
+  }
+
+  .template-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .wizard-steps {
+    flex-direction: column;
+  }
+
+  .wizard-step {
+    max-width: none;
+  }
+}
