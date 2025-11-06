@@ -1,0 +1,39 @@
+.auth-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1000}
+.auth-modal.open{display:flex}
+.auth-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+.auth-card{position:relative;z-index:1;width:min(92vw,420px);border-radius:16px;padding:24px 22px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.2);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.auth-close{position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:26px;cursor:pointer;line-height:1}
+h2{margin:0 0 6px;font-size:22px}
+.auth-sub{margin:0 0 16px;color:#555}
+.btn{width:100%;border:0;border-radius:10px;padding:12px 14px;font-weight:600;cursor:pointer}
+.btn-google{display:flex;gap:10px;align-items:center;justify-content:center;background:#fff;border:1px solid #e0e0e0}
+.btn-primary{background:#111;color:#fff}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:#888}
+.auth-divider:before,.auth-divider:after{content:"";flex:1;height:1px;background:#eee}
+.auth-form label{display:block;font-size:13px;margin:10px 0 6px;color:#333}
+.auth-form input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd}
+.auth-actions{margin-top:12px}
+.auth-hint{font-size:12px;color:#777;margin:10px 0 0}
+.auth-msg{margin-top:12px;color:#0a7;min-height:1em}
+@media (prefers-color-scheme: dark){
+  .auth-card{background:#161616;color:#eaeaea;border:1px solid #2a2a2a}
+  .btn-google{background:#1b1b1b;border-color:#2a2a2a;color:#eaeaea}
+  .btn-primary{background:#eaeaea;color:#111}
+  .auth-form input{background:#111;border-color:#333;color:#eaeaea}
+}
+
+.site-auth-header{position:sticky;top:0;z-index:900;backdrop-filter:blur(10px);background-color:rgba(15,23,42,.85);color:#fff;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.site-auth-header__inner{margin:0 auto;max-width:1100px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.site-auth-header__brand{font-weight:700;font-size:1.1rem;color:inherit;text-decoration:none}
+.site-auth-header__actions{display:flex;align-items:center;gap:12px}
+.site-auth-header__actions .btn{width:auto;padding:10px 16px;border-radius:999px}
+.site-auth-header__actions .btn-link{background:transparent;color:inherit;border:1px solid rgba(255,255,255,.3)}
+.site-auth-header__actions[hidden]{display:none}
+#accountControls{display:flex;align-items:center;gap:12px}
+#accountControls[hidden]{display:none}
+#accountName{font-weight:600}
+@media (max-width:600px){
+  .site-auth-header__inner{flex-direction:column;align-items:flex-start}
+  .site-auth-header__actions{width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .site-auth-header__actions .btn{flex:1 1 auto;width:auto}
+}
