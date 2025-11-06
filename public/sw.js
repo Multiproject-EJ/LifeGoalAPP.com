@@ -403,6 +403,43 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
+  // Handle habit reminder actions (done/skip)
+  if (event.action === 'done' || event.action === 'skip') {
+    const notificationData = event.notification.data || {};
+    const habitId = notificationData.habit_id;
+    const supabaseUrl = notificationData.supabase_url;
+    const authToken = notificationData.auth_token;
+
+    if (habitId && supabaseUrl && authToken) {
+      event.waitUntil(
+        (async () => {
+          try {
+            const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/log`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`,
+              },
+              body: JSON.stringify({
+                habit_id: habitId,
+                done: event.action === 'done',
+              }),
+            });
+
+            if (!response.ok) {
+              console.error('Failed to log habit from notification:', await response.text());
+            }
+          } catch (error) {
+            console.error('Error logging habit from notification:', error);
+          }
+        })()
+      );
+      return;
+    }
+  }
+
+  // Default notification click behavior
   const targetUrl = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
 
   event.waitUntil(
