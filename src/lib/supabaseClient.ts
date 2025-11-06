@@ -1,11 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
 let cachedClient: SupabaseClient<Database> | null = null;
+let activeSession: Session | null = null;
 
 export function hasSupabaseCredentials(): boolean {
   return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+}
+
+export function setSupabaseSession(session: Session | null): void {
+  activeSession = session;
+}
+
+export function hasActiveSupabaseSession(): boolean {
+  return Boolean(activeSession);
+}
+
+export function canUseSupabaseData(): boolean {
+  return hasSupabaseCredentials() && hasActiveSupabaseSession();
+}
+
+export function getActiveSupabaseSession(): Session | null {
+  return activeSession;
 }
 
 export function getSupabaseClient(): SupabaseClient<Database> {

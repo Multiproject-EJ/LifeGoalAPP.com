@@ -57,8 +57,8 @@ function mapRowToState(row: NotificationPreferencesRow | null, fallbackTimezone:
 }
 
 export function NotificationPreferences({ session }: Props) {
-  const { mode } = useSupabaseAuth();
-  const isDemoMode = mode === 'demo';
+  const { mode, isAuthenticated } = useSupabaseAuth();
+  const isDemoExperience = mode === 'demo' || !isAuthenticated;
   const fallbackTimezone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
       return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
@@ -274,7 +274,7 @@ export function NotificationPreferences({ session }: Props) {
         </p>
       </header>
 
-      {isDemoMode && (
+      {isDemoExperience && (
         <p className="notification-preferences__message notification-preferences__message--info">
           Demo mode stores notification preferences locally. Connect Supabase and configure web push credentials to deliver
           reminders across your devices.

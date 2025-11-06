@@ -36,8 +36,8 @@ const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatical
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
 
 export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
-  const { isConfigured, mode } = useSupabaseAuth();
-  const isDemoMode = mode === 'demo';
+  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
+  const isDemoExperience = mode === 'demo' || !isAuthenticated;
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
 
   const refreshHabits = useCallback(async () => {
-    if (!session || (!isConfigured && !isDemoMode)) {
+    if (!isConfigured) {
       setHabits([]);
       setCompletions({});
       setHabitInsights({});
@@ -109,23 +109,23 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
     } finally {
       setLoading(false);
     }
-  }, [session, isConfigured, isDemoMode]);
+  }, [session, isConfigured, isDemoExperience]);
 
   useEffect(() => {
-    if (!session || (!isConfigured && !isDemoMode)) {
+    if (!isConfigured) {
       return;
     }
     void refreshHabits();
-  }, [session?.user?.id, isConfigured, isDemoMode, refreshHabits]);
+  }, [session?.user?.id, isConfigured, isDemoExperience, refreshHabits]);
 
   useEffect(() => {
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setHabits([]);
       setCompletions({});
       setHabitInsights({});
       setHistoricalLogs([]);
     }
-  }, [isConfigured, isDemoMode]);
+  }, [isConfigured, isDemoExperience]);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) {
@@ -183,11 +183,7 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
   }, []);
 
   const toggleHabit = async (habit: HabitWithGoal) => {
-    if (!session) {
-      setErrorMessage('You need to be signed in to update habits.');
-      return;
-    }
-    if (!isConfigured && !isDemoMode) {
+    if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
       return;
     }
@@ -251,13 +247,13 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
           type="button"
           className="habit-tracker__refresh"
           onClick={() => void refreshHabits()}
-          disabled={loading || (!isConfigured && !isDemoMode)}
+          disabled={loading || (!isConfigured && !isDemoExperience)}
         >
           {loading ? 'Refreshing…' : 'Refresh habits'}
         </button>
       </header>
 
-      {isDemoMode ? (
+      {isDemoExperience ? (
         <p className="habit-tracker__status habit-tracker__status--info">
           Habit progress updates are stored locally in demo mode. Connect Supabase to sync completions across devices.
         </p>

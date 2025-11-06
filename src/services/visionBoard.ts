@@ -1,5 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
   DEMO_USER_ID,
@@ -22,7 +22,7 @@ type ServiceResponse<T> = {
 };
 
 export async function fetchVisionImages(userId: string): Promise<ServiceResponse<VisionImageRow[]>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: getDemoVisionImages(userId || DEMO_USER_ID), error: null };
   }
 
@@ -38,7 +38,7 @@ export async function fetchVisionImages(userId: string): Promise<ServiceResponse
 }
 
 export function getVisionImagePublicUrl(path: string): string {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return path;
   }
 
@@ -60,7 +60,7 @@ export async function uploadVisionImage({
   fileName,
   caption,
 }: UploadPayload): Promise<ServiceResponse<VisionImageRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     try {
       const dataUrl = await fileToDataUrl(file);
       const record = addDemoVisionImage({
@@ -114,7 +114,7 @@ export async function uploadVisionImage({
 }
 
 export async function deleteVisionImage(record: VisionImageRow): Promise<ServiceError> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     removeDemoVisionImage(record.id);
     return null;
   }

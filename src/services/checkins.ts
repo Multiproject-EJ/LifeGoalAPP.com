@@ -1,5 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { DEMO_USER_ID, addDemoCheckin, getDemoCheckins, updateDemoCheckin } from './demoData';
 
@@ -16,7 +16,7 @@ export async function fetchCheckinsForUser(
   userId: string,
   limit = 12,
 ): Promise<ServiceResponse<CheckinRow[]>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: getDemoCheckins(userId || DEMO_USER_ID, limit), error: null };
   }
 
@@ -31,7 +31,7 @@ export async function fetchCheckinsForUser(
 }
 
 export async function insertCheckin(payload: CheckinInsert): Promise<ServiceResponse<CheckinRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: addDemoCheckin(payload), error: null };
   }
 
@@ -45,7 +45,7 @@ export async function insertCheckin(payload: CheckinInsert): Promise<ServiceResp
 }
 
 export async function updateCheckin(id: string, payload: CheckinUpdate): Promise<ServiceResponse<CheckinRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: updateDemoCheckin(id, payload), error: null };
   }
 

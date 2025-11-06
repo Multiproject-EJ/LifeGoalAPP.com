@@ -1,12 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type {
-  Session,
-  SignInWithPasswordCredentials,
-  SignUpWithPasswordCredentials,
-  User,
-} from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials, type TypedSupabaseClient } from '../../lib/supabaseClient';
-import { DEMO_USER_EMAIL, DEMO_USER_ID, DEMO_USER_NAME } from '../../services/demoData';
+import type { Session, SignInWithPasswordCredentials, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
+import { getSupabaseClient, hasSupabaseCredentials, setSupabaseSession, type TypedSupabaseClient } from '../../lib/supabaseClient';
+import { DEMO_USER_EMAIL, DEMO_USER_NAME } from '../../services/demoData';
+import { createDemoSession } from '../../services/demoSession';
 
 type AuthProviderMode = 'supabase' | 'demo';
 
@@ -14,6 +10,7 @@ type AuthContextValue = {
   session: Session | null;
   initializing: boolean;
   isConfigured: boolean;
+  isAuthenticated: boolean;
   mode: AuthProviderMode;
   client: TypedSupabaseClient | null;
   signInWithPassword: (credentials: SignInWithPasswordCredentials) => Promise<void>;
@@ -24,44 +21,6 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-function createDemoSession(): Session {
-  const isoNow = new Date().toISOString();
-  const unixNow = Math.floor(Date.now() / 1000);
-  const demoUser: User = {
-    id: DEMO_USER_ID,
-    app_metadata: { provider: 'demo', providers: ['demo'] },
-    user_metadata: { full_name: DEMO_USER_NAME, onboarding_complete: true },
-    aud: 'authenticated',
-    confirmation_sent_at: isoNow,
-    confirmed_at: isoNow,
-    created_at: isoNow,
-    email: DEMO_USER_EMAIL,
-    email_confirmed_at: isoNow,
-    factors: [],
-    identities: [],
-    invited_at: isoNow,
-    last_sign_in_at: isoNow,
-    phone: '',
-    phone_confirmed_at: null,
-    recovery_sent_at: isoNow,
-    role: 'authenticated',
-    updated_at: isoNow,
-    raw_app_meta_data: { provider: 'demo', providers: ['demo'] },
-    raw_user_meta_data: { full_name: DEMO_USER_NAME, onboarding_complete: true },
-  } as unknown as User;
-
-  return {
-    access_token: 'demo-access-token',
-    refresh_token: 'demo-refresh-token',
-    token_type: 'bearer',
-    user: demoUser,
-    expires_in: 3600,
-    expires_at: unixNow + 3600,
-    provider_refresh_token: null,
-    provider_token: null,
-  } as Session;
-}
 
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
   const mode: AuthProviderMode = hasSupabaseCredentials() ? 'supabase' : 'demo';
@@ -76,6 +35,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setSupabase(null);
       setSupabaseError(null);
       setSession(null);
+      setSupabaseSession(null);
       setInitializing(false);
       return;
     }
@@ -103,7 +63,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       .getSession()
       .then(({ data }) => {
         if (!isMounted) return;
-        setSession(data.session ?? null);
+        const nextSession = data.session ?? null;
+        setSession(nextSession);
+        setSupabaseSession(nextSession);
       })
       .finally(() => {
         if (isMounted) {
@@ -114,7 +76,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession ?? null);
+      const normalizedSession = nextSession ?? null;
+      setSession(normalizedSession);
+      setSupabaseSession(normalizedSession);
     });
 
     return () => {
@@ -126,6 +90,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const signInWithPassword = useCallback(async (credentials: SignInWithPasswordCredentials) => {
     if (mode === 'demo') {
       setSession(createDemoSession());
+      setSupabaseSession(null);
       return;
     }
     if (!supabase) {
@@ -139,6 +104,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     async (credentials: SignUpWithPasswordCredentials) => {
       if (mode === 'demo') {
         setSession(createDemoSession());
+        setSupabaseSession(null);
         return;
       }
       if (!supabase) {
@@ -153,6 +119,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const signInWithOtp = useCallback(async (email: string) => {
       if (mode === 'demo') {
         setSession(createDemoSession());
+        setSupabaseSession(null);
         return;
       }
     if (!supabase) {
@@ -179,6 +146,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const signOut = useCallback(async () => {
     if (mode === 'demo') {
       setSession(null);
+      setSupabaseSession(null);
       return;
     }
     if (!supabase) {
@@ -193,6 +161,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       session,
       initializing,
       isConfigured: mode === 'demo' ? true : Boolean(supabase),
+      isAuthenticated: Boolean(session),
       mode,
       client: supabase,
       signInWithPassword,

@@ -1,5 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials } from '../lib/supabaseClient';
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import {
   addDemoGoalReflection,
   getDemoGoalReflections,
@@ -20,7 +20,7 @@ type ServiceResponse<T> = {
 export async function fetchGoalReflections(
   goalId: string,
 ): Promise<ServiceResponse<GoalReflectionRow[]>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: getDemoGoalReflections(goalId), error: null };
   }
 
@@ -37,7 +37,7 @@ export async function fetchGoalReflections(
 export async function insertGoalReflection(
   payload: GoalReflectionInsert,
 ): Promise<ServiceResponse<GoalReflectionRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: addDemoGoalReflection(payload), error: null };
   }
 
@@ -54,7 +54,7 @@ export async function updateGoalReflection(
   id: string,
   payload: GoalReflectionUpdate,
 ): Promise<ServiceResponse<GoalReflectionRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: updateDemoGoalReflection(id, payload), error: null };
   }
 
@@ -71,7 +71,7 @@ export async function updateGoalReflection(
 export async function deleteGoalReflection(
   id: string,
 ): Promise<ServiceResponse<GoalReflectionRow>> {
-  if (!hasSupabaseCredentials()) {
+  if (!canUseSupabaseData()) {
     return { data: removeDemoGoalReflection(id), error: null };
   }
 
