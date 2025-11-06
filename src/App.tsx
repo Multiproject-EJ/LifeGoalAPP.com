@@ -2,7 +2,7 @@ import { Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } fro
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalReflectionJournal, GoalWorkspace } from './features/goals';
-import { DailyHabitTracker } from './features/habits';
+import { DailyHabitTracker, HabitsModule } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
@@ -444,8 +444,7 @@ export default function App() {
       case 'setup-habits':
         return (
           <div className="workspace-content">
-            <GoalWorkspace session={activeSession} />
-            <DailyHabitTracker session={activeSession} />
+            <HabitsModule session={activeSession} />
           </div>
         );
       case 'setup-goals':
