@@ -1,0 +1,8 @@
+/* import order */
+@import './components.css';
+@import './utilities.css';
+
+/* optional: thin scrollbars */
+*{ scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+::-webkit-scrollbar{ height:8px; width:8px; }
+::-webkit-scrollbar-thumb{ background: var(--surface-strong); border-radius: var(--radius-pill); }

@@ -1,0 +1,70 @@
+/* Design tokens that work with existing bright-sky and dark-glass themes */
+:root,
+[data-theme='bright-sky'] {
+  /* spacing scale (8px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+
+  /* radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* timing */
+  --fast: 150ms;
+  --normal: 220ms;
+  --slow: 360ms;
+
+  /* typography */
+  --font-ui: Inter, Roboto, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 24px;
+
+  /* Bright Sky theme - reference existing color variables from themes.css */
+  /* These tokens provide simpler names for components while maintaining theme consistency */
+  --bg: var(--color-bg-main);
+  --surface: var(--color-surface-glass);
+  --surface-strong: var(--color-surface-primary);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border: var(--color-border-primary);
+  --accent: var(--color-primary);
+  --success: #32c48d;
+  --warn: #f9a825;
+  --error: #e53935;
+
+  /* shadows - use existing shadow variables */
+  --shadow-1: var(--shadow-sm);
+  --shadow-2: var(--shadow-md);
+  --shadow-glow: 0 0 0 1px rgba(255,255,255,.06);
+
+  /* translucency for glass effect */
+  --glass-blur: 14px;
+  --glass-sat: 120%;
+}
+
+/* Dark Glass theme */
+[data-theme='dark-glass'] {
+  /* Reference existing dark theme variables */
+  --bg: var(--color-bg-main);
+  --surface: var(--color-surface-glass);
+  --surface-strong: var(--color-surface-primary);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border: var(--color-border-primary);
+  --accent: var(--color-primary);
+  
+  --shadow-1: var(--shadow-sm);
+  --shadow-2: var(--shadow-md);
+  --shadow-glow: 0 0 0 1px rgba(255,255,255,.04);
+}

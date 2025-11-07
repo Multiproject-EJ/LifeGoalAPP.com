@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LifeGoalApp - Design System Static Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- Static demo imports both stylesheets for standalone viewing -->
+  <!-- In the React app, these are imported via JavaScript modules -->
+  <link rel="stylesheet" href="/src/themes.css">
+  <link rel="stylesheet" href="/src/styles/theme.css">
+  <style>
+    .demo-theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .demo-note {
+      padding: var(--space-4);
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 4px solid var(--color-primary);
+      border-radius: var(--radius-sm);
+      margin: var(--space-4) 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-note container">
+    <strong>📝 Static Demo Note:</strong> This HTML file is for demonstration only. 
+    The React app imports styles via JavaScript modules and uses <code>ThemeContext.tsx</code> for theme management.
+  </div>
+
+  <button class="btn btn--ghost demo-theme-toggle" onclick="toggleDemoTheme()">
+    🌙 Toggle Theme
+  </button>
+
+  <header class="navbar glass">
+    <div class="brand">LifeGoalApp</div>
+    <div class="actions">
+      <span class="muted" style="font-size: 0.85rem;">Design System Demo</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Glassmorphic Design System</h1>
+    <p class="muted">Component library with bright-sky and dark-glass theme support.</p>
+
+    <div class="grid">
+      <section class="card glass">
+        <div class="card__header">
+          <img src="/public/assets/icons/target.svg" width="20" alt="">
+          <div class="card__title">Goals</div>
+          <span class="card__meta right">3 active</span>
+        </div>
+        <p class="muted">Track progress toward your biggest outcomes.</p>
+        <div class="mt-4">
+          <button class="btn btn--primary">Open Goals</button>
+          <button class="btn btn--ghost">+ Add Goal</button>
+        </div>
+      </section>
+
+      <section class="card glass">
+        <div class="card__header">
+          <img src="/public/assets/icons/check.svg" width="20" alt="">
+          <div class="card__title">Habits</div>
+          <span class="card__meta right">Today: 5</span>
+        </div>
+        <p class="muted">Daily habits help build long-term success.</p>
+        <div class="mt-4">
+          <button class="btn btn--ghost">Manage Habits</button>
+        </div>
+      </section>
+
+      <section class="card glass">
+        <div class="card__header">
+          <img src="/public/assets/icons/eye.svg" width="20" alt="">
+          <div class="card__title">Vision Board</div>
+          <button class="btn btn--ghost right">+ Add Image</button>
+        </div>
+        <div class="row">
+          <div class="glass center" style="width:32%; aspect-ratio:1; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--accent), var(--success));">
+            <span style="font-size: 2rem;">🎯</span>
+          </div>
+          <div class="glass center" style="width:32%; aspect-ratio:1; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--success), var(--warn));">
+            <span style="font-size: 2rem;">⭐</span>
+          </div>
+          <div class="glass center" style="width:32%; aspect-ratio:1; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--warn), var(--error));">
+            <span style="font-size: 2rem;">💪</span>
+          </div>
+        </div>
+        <div class="mt-4">
+          <button class="btn btn--primary">Open Vision Board</button>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="mt-4">Component Examples</h2>
+    
+    <h3>Tabs</h3>
+    <nav class="tabs">
+      <button class="tab" aria-selected="true">All</button>
+      <button class="tab" aria-selected="false">Active</button>
+      <button class="tab" aria-selected="false">Completed</button>
+    </nav>
+
+    <h3 class="mt-4">Cards with Badges</h3>
+    <div class="grid mt-4">
+      <div class="card glass">
+        <h3>Launch New Product</h3>
+        <p class="muted">Complete market research and finalize product specs.</p>
+        <div class="row">
+          <span class="badge badge--success">On Track</span>
+          <span class="muted right">Due: Dec 31, 2024</span>
+        </div>
+      </div>
+      <div class="card glass">
+        <h3>Learn Spanish</h3>
+        <p class="muted">Practice 30 minutes daily with language app.</p>
+        <div class="row">
+          <span class="badge badge--accent">Active</span>
+          <span class="muted right">Due: Mar 15, 2025</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glass mt-4">
+      <h3>React Integration Guide</h3>
+      <p class="muted">In your React components:</p>
+      <pre style="background: var(--color-bg-secondary); padding: var(--space-3); border-radius: var(--radius-sm); overflow-x: auto;"><code>import { useTheme } from './contexts/ThemeContext';
+
+function MyComponent() {
+  const { theme, toggleTheme } = useTheme();
+  
+  return (
+    &lt;section className="card glass"&gt;
+      &lt;div className="card__header"&gt;
+        &lt;div className="card__title"&gt;Title&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;p className="muted"&gt;Content&lt;/p&gt;
+    &lt;/section&gt;
+  );
+}</code></pre>
+      <ul style="margin: var(--space-3) 0; padding-left: var(--space-5); color: var(--text-muted);">
+        <li>Use <code>ThemeToggle</code> component instead of HTML button</li>
+        <li>Access theme via <code>useTheme()</code> hook</li>
+        <li>Themes: <code>'bright-sky'</code> and <code>'dark-glass'</code></li>
+        <li>Apply component classes to your JSX elements</li>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    // Simple theme toggle for static demo only
+    function toggleDemoTheme() {
+      const root = document.documentElement;
+      const current = root.getAttribute('data-theme');
+      const next = current === 'dark-glass' ? 'bright-sky' : 'dark-glass';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('demo-theme', next);
+    }
+    
+    // Initialize theme from localStorage or default to bright-sky
+    const savedTheme = localStorage.getItem('demo-theme') || 'bright-sky';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</body>
+</html>

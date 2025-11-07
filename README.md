@@ -39,6 +39,30 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
 
+## Design System
+
+LifeGoalApp features a modern glassmorphic design system with light/dark themes and reusable components.
+
+- 📖 **Developer Guide**: See [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) for component documentation and usage examples
+- 📋 **Implementation Plan**: See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for step-by-step migration checklist
+- 🎨 **Example Page**: Check [/examples/dashboard-example.html](./examples/dashboard-example.html) for a working demo
+
+### Key Features
+- **Glassmorphic UI**: Frosted glass surfaces with backdrop blur effects
+- **Light/Dark Themes**: Automatic theme detection with manual toggle
+- **Responsive Grid**: Mobile-first design (1 col → 2 cols → 3 cols)
+- **Reusable Components**: Cards, buttons, toggles, tabs, modals, and more
+- **Interactive Widgets**: Draggable dashboard cards with smooth animations
+- **Accessibility**: WCAG AA compliant with keyboard navigation support
+
+### Quick Start
+Add to your HTML page:
+```html
+<link rel="stylesheet" href="/src/styles/theme.css">
+<script defer src="/src/scripts/ui-theme.js"></script>
+<script defer src="/src/scripts/ui-components.js"></script>
+```
+
 ## Troubleshooting
 
 Having issues? Check the [Common Error Database](./docs/common-errors/README.md) for solutions to frequently encountered problems.
