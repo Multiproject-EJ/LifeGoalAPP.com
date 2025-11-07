@@ -2,27 +2,39 @@
 
 ## Overview
 
-This design system provides a futuristic, glassmorphic UI with light/dark themes and modular components. It uses plain CSS variables and minimal JavaScript (no frameworks required).
+This design system provides a futuristic, glassmorphic UI with light/dark themes and modular components. It integrates seamlessly with the existing React + TypeScript application and theme system.
 
 ## Quick Start
 
-### 1. Add to your HTML page
+### 1. The design system is already integrated
 
-```html
-<head>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="/src/styles/theme.css">
-  <script defer src="/src/scripts/ui-theme.js"></script>
-  <script defer src="/src/scripts/ui-components.js"></script>
-</head>
+The theme system uses:
+- **React ThemeContext** (`src/contexts/ThemeContext.tsx`) for theme management
+- **ThemeToggle component** (`src/components/ThemeToggle.tsx`) for UI toggle
+- Theme names: `'bright-sky'` (light) and `'dark-glass'` (dark)
+- LocalStorage key: `'lifegoal-theme'`
+
+### 2. Import the design system styles
+
+In your React component or main entry:
+```typescript
+import '/src/styles/theme.css';
 ```
 
-### 2. Add theme toggle button
+The styles are already imported in the main app, so you can use the component classes immediately.
 
-```html
-<button class="btn btn--ghost" data-action="toggle-theme">
-  <span>🌙</span> Light / Dark
-</button>
+### 3. Use the theme toggle
+
+```tsx
+import { ThemeToggle } from './components/ThemeToggle';
+
+function MyComponent() {
+  return (
+    <header>
+      <ThemeToggle />
+    </header>
+  );
+}
 ```
 
 ## Components
@@ -211,27 +223,104 @@ All design tokens are available as CSS variables:
 
 ## Theme System
 
-The theme system automatically detects the user's preferred color scheme and allows manual toggling.
+The theme system is React-based and automatically integrates with the design system tokens.
+
+### Theme Names
+- **`bright-sky`** - Light theme (default)
+- **`dark-glass`** - Dark theme with glassmorphic effects
+
+### Using Themes in React
+
+```tsx
+import { useTheme } from './contexts/ThemeContext';
+
+function MyComponent() {
+  const { theme, toggleTheme, setTheme } = useTheme();
+  
+  return (
+    <div>
+      <p>Current theme: {theme}</p>
+      <button onClick={toggleTheme}>Toggle Theme</button>
+      {/* Or set specific theme */}
+      <button onClick={() => setTheme('dark-glass')}>Dark Mode</button>
+    </div>
+  );
+}
+```
 
 ### Theme Persistence
-- Theme preference is saved to localStorage as `lga-theme`
-- Respects `prefers-color-scheme` on first visit
-- Toggle with `data-action="toggle-theme"` on any element
+- Theme preference is saved to localStorage as `lifegoal-theme`
+- Respects user's choice across sessions
+- Applied to `:root[data-theme="..."]` attribute
 
-### Dark Theme
-Add `[data-theme="dark"]` to the root element to activate dark mode. This happens automatically when toggled or based on system preference.
+### CSS Variables
+The design system tokens automatically adapt to the current theme:
+- `--bg`, `--surface`, `--text` change based on `bright-sky` vs `dark-glass`
+- Component styles use these tokens for automatic theme support
 
 ## Interactive Features
 
-### Draggable Cards
-Cards with `data-draggable draggable="true"` inside a `[data-grid]` container are automatically draggable.
+### React Components
 
-### Toggle Switches
-Toggles with class `.toggle` automatically respond to clicks and update their `data-on` attribute.
+The design system is designed to work with React components. For interactive features like drag & drop, modals, and toggles, implement them as React components using the design system's CSS classes.
 
-### Modals
-- Use `data-open="#modal-id"` to open a modal
-- Use `data-close="#modal-id"` to close a modal
+### Example: Modal in React
+
+```tsx
+import { useState } from 'react';
+
+function MyModal() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <>
+      <button className="btn btn--primary" onClick={() => setIsOpen(true)}>
+        Open Modal
+      </button>
+      
+      {isOpen && (
+        <div className="modal" open>
+          <div className="modal-backdrop" onClick={() => setIsOpen(false)} />
+          <section className="modal__panel card glass">
+            <h2>Modal Title</h2>
+            <div className="modal__actions">
+              <button className="btn btn--ghost" onClick={() => setIsOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn btn--primary">Save</button>
+            </div>
+          </section>
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+### Example: Toggle Component
+
+```tsx
+import { useState } from 'react';
+
+function ToggleSwitch({ label }: { label: string }) {
+  const [isOn, setIsOn] = useState(false);
+  
+  return (
+    <div className="row">
+      <button
+        className="toggle"
+        role="switch"
+        aria-label={label}
+        aria-checked={isOn}
+        data-on={isOn.toString()}
+        onClick={() => setIsOn(!isOn)}
+      >
+        <span className="toggle__thumb" />
+      </button>
+      <span>{label}</span>
+    </div>
+  );
+}
 
 ## Migration Checklist
 

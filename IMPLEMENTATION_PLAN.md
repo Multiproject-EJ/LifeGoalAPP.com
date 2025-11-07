@@ -56,18 +56,18 @@ This document provides a **step-by-step checklist** for implementing the glassmo
   - [x] Import utilities.css
   - [x] Custom scrollbar styles
 
-### Step 1.7: Implement Theme Toggle Script ✓
-- [x] Create `/src/scripts/ui-theme.js`
-  - [x] Detect system color scheme preference
-  - [x] Read/write localStorage for theme persistence
-  - [x] Handle [data-action="toggle-theme"] clicks
-  - [x] Update :root[data-theme] attribute
+### Step 1.7: ~~Implement Theme Toggle Script~~ ✓ (Already exists in React)
+- [x] ~~Create `/src/scripts/ui-theme.js`~~ - Not needed, React ThemeContext already exists
+  - [x] The app already has `ThemeContext.tsx` with theme management
+  - [x] The app already has `ThemeToggle.tsx` component
+  - [x] Themes use `'bright-sky'` and `'dark-glass'` names
+  - [x] LocalStorage key is `'lifegoal-theme'`
 
-### Step 1.8: Implement Component Behaviors ✓
-- [x] Create `/src/scripts/ui-components.js`
-  - [x] Toggle switch click handler
-  - [x] Drag & drop for [data-draggable] widgets
-  - [x] Modal open/close handlers ([data-open], [data-close])
+### Step 1.8: ~~Implement Component Behaviors~~ ✓ (Use React components instead)
+- [x] ~~Create `/src/scripts/ui-components.js`~~ - Not needed for React app
+  - [x] Interactive components should be implemented as React components
+  - [x] Use React state and event handlers instead of vanilla JS
+  - [x] Refer to DESIGN_SYSTEM.md for React component examples
 
 ### Step 1.9: Create Icon Assets ✓
 - [x] Create `/public/assets/icons/target.svg`

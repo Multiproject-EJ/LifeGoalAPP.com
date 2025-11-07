@@ -6,9 +6,7 @@ body {
   margin:0;
   font-family: var(--font-ui);
   color: var(--text);
-  background: radial-gradient(1200px 800px at 20% -10%, #1a6c7a22, transparent),
-              radial-gradient(900px 700px at 120% 30%, #4350ff14, transparent),
-              var(--bg);
+  background: var(--color-bg-body, var(--bg));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -29,7 +27,7 @@ h1{ font-size: var(--fs-xl); } h2{ font-size: var(--fs-lg); } p{ margin:0 0 var(
 /* a11y focus */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
 
-/* glass surface */
+/* glass surface - enhanced glassmorphism effect */
 .glass {
   background: var(--surface);
   backdrop-filter: saturate(var(--glass-sat)) blur(var(--glass-blur));

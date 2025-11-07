@@ -3,32 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LifeGoalApp - Dashboard Example</title>
+  <title>LifeGoalApp - Design System Example (Static Demo)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="/src/styles/theme.css">
-  <script defer src="/src/scripts/ui-theme.js"></script>
-  <script defer src="/src/scripts/ui-components.js"></script>
+  <link rel="stylesheet" href="/src/themes.css">
+  <style>
+    .demo-theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
-  <!-- Navigation -->
+  <button class="btn btn--ghost demo-theme-toggle" onclick="toggleDemoTheme()">
+    🌙 Toggle Theme
+  </button>
+
   <header class="navbar glass">
     <div class="brand">LifeGoalApp</div>
     <div class="actions">
-      <button class="btn btn--ghost" data-action="toggle-theme">🌙 Light / Dark</button>
-      <button class="btn btn--primary" data-open="#modal-add-goal">+ Add Goal</button>
+      <span class="muted" style="font-size: 0.85rem;">Static Demo - React app uses ThemeToggle component</span>
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="container">
-    <h1>Dashboard</h1>
-    <p class="muted">Track your goals, habits, and vision.</p>
+    <h1>Glassmorphic Design System Demo</h1>
+    <p class="muted">Futuristic UI with bright-sky and dark-glass themes. This is a static demo - the actual app uses React components.</p>
 
-    <!-- Draggable Widget Grid -->
-    <div class="grid" data-grid>
-      
-      <!-- Goals Widget -->
-      <section class="card glass" data-draggable draggable="true" aria-label="Goals">
+    <div class="grid">
+      <section class="card glass">
         <div class="card__header">
           <img src="/public/assets/icons/target.svg" width="20" alt="">
           <div class="card__title">Goals</div>
@@ -36,37 +41,24 @@
         </div>
         <p class="muted">Track progress toward your biggest outcomes.</p>
         <div class="mt-4">
-          <a class="btn btn--primary" href="/goals">Open Goals</a>
-          <button class="btn btn--ghost" data-open="#modal-add-goal">+ Add Goal</button>
+          <button class="btn btn--primary">Open Goals</button>
+          <button class="btn btn--ghost">+ Add Goal</button>
         </div>
       </section>
 
-      <!-- Habits Widget -->
-      <section class="card glass" data-draggable draggable="true" aria-label="Habits">
+      <section class="card glass">
         <div class="card__header">
           <img src="/public/assets/icons/check.svg" width="20" alt="">
           <div class="card__title">Habits</div>
           <span class="card__meta right">Today: 5</span>
         </div>
-        <div class="row">
-          <div class="toggle" role="switch" aria-label="Drink Water" data-on="true">
-            <span class="toggle__thumb"></span>
-          </div>
-          <span>Drink Water</span>
-        </div>
-        <div class="row mt-4">
-          <div class="toggle" role="switch" aria-label="Read 20 min" data-on="false">
-            <span class="toggle__thumb"></span>
-          </div>
-          <span>Read 20 min</span>
-        </div>
+        <p class="muted">Daily habits help build long-term success.</p>
         <div class="mt-4">
-          <a class="btn btn--ghost" href="/habits">Manage Habits</a>
+          <button class="btn btn--ghost">Manage Habits</button>
         </div>
       </section>
 
-      <!-- Vision Board Widget -->
-      <section class="card glass" data-draggable draggable="true" aria-label="Vision Board">
+      <section class="card glass">
         <div class="card__header">
           <img src="/public/assets/icons/eye.svg" width="20" alt="">
           <div class="card__title">Vision Board</div>
@@ -74,23 +66,21 @@
         </div>
         <div class="row">
           <div class="glass center" style="width:32%; aspect-ratio:1; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--accent), var(--success));">
-            <span style="font-size: 2rem;">��</span>
+            <span style="font-size: 2rem;">🎯</span>
           </div>
           <div class="glass center" style="width:32%; aspect-ratio:1; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--success), var(--warn));">
-            <span style="font-size: 2rem;">🌟</span>
+            <span style="font-size: 2rem;">⭐</span>
           </div>
           <div class="glass center" style="width:32%; aspect-ratio:1; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--warn), var(--error));">
             <span style="font-size: 2rem;">💪</span>
           </div>
         </div>
         <div class="mt-4">
-          <a class="btn btn--primary" href="/vision">Open Vision Board</a>
+          <button class="btn btn--primary">Open Vision Board</button>
         </div>
       </section>
-
     </div>
 
-    <!-- Tabs Example -->
     <h2 class="mt-4">Goals Overview</h2>
     <nav class="tabs">
       <button class="tab" aria-selected="true">All</button>
@@ -116,27 +106,30 @@
         </div>
       </div>
     </div>
+
+    <div class="mt-4" style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-md); border: 1px solid var(--border);">
+      <h3>Note about React Integration</h3>
+      <p class="muted">This is a static HTML demo showing the component classes. In the actual React app:</p>
+      <ul style="margin: var(--space-3) 0; padding-left: var(--space-5); color: var(--text-muted);">
+        <li>Use <code>ThemeToggle</code> component from <code>src/components/ThemeToggle.tsx</code></li>
+        <li>Access theme via <code>useTheme()</code> hook from <code>src/contexts/ThemeContext.tsx</code></li>
+        <li>Themes are <code>'bright-sky'</code> (light) and <code>'dark-glass'</code> (dark)</li>
+        <li>Build interactive components with React state and event handlers</li>
+      </ul>
+    </div>
   </main>
 
-  <!-- Modal Example -->
-  <div class="modal" id="modal-add-goal">
-    <div class="modal-backdrop" data-close="#modal-add-goal"></div>
-    <section class="modal__panel card glass">
-      <h2 class="card__title">Add New Goal</h2>
-      <label class="mt-4" style="display:grid; gap:8px;">
-        <span style="font-weight:600;">Goal Name</span>
-        <input class="w-full glass" style="padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border); background:var(--surface);" placeholder="Enter your goal..." />
-      </label>
-      <label class="mt-4" style="display:grid; gap:8px;">
-        <span style="font-weight:600;">Target Date</span>
-        <input type="date" class="w-full glass" style="padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border); background:var(--surface);" />
-      </label>
-      <div class="modal__actions">
-        <button class="btn btn--ghost" data-close="#modal-add-goal">Cancel</button>
-        <button class="btn btn--primary">Save Goal</button>
-      </div>
-    </section>
-  </div>
-
+  <script>
+    function toggleDemoTheme() {
+      const root = document.documentElement;
+      const current = root.getAttribute('data-theme');
+      const next = current === 'dark-glass' ? 'bright-sky' : 'dark-glass';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('demo-theme', next);
+    }
+    
+    const savedTheme = localStorage.getItem('demo-theme') || 'bright-sky';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </body>
 </html>
