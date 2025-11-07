@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LifeGoalApp - Design System Example (Static Demo)</title>
+  <title>LifeGoalApp - Design System Static Demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="/src/styles/theme.css">
+  <!-- Static demo imports both stylesheets for standalone viewing -->
+  <!-- In the React app, these are imported via JavaScript modules -->
   <link rel="stylesheet" href="/src/themes.css">
+  <link rel="stylesheet" href="/src/styles/theme.css">
   <style>
     .demo-theme-toggle {
       position: fixed;
@@ -14,9 +16,21 @@
       right: 20px;
       z-index: 1000;
     }
+    .demo-note {
+      padding: var(--space-4);
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 4px solid var(--color-primary);
+      border-radius: var(--radius-sm);
+      margin: var(--space-4) 0;
+    }
   </style>
 </head>
 <body>
+  <div class="demo-note container">
+    <strong>📝 Static Demo Note:</strong> This HTML file is for demonstration only. 
+    The React app imports styles via JavaScript modules and uses <code>ThemeContext.tsx</code> for theme management.
+  </div>
+
   <button class="btn btn--ghost demo-theme-toggle" onclick="toggleDemoTheme()">
     🌙 Toggle Theme
   </button>
@@ -24,13 +38,13 @@
   <header class="navbar glass">
     <div class="brand">LifeGoalApp</div>
     <div class="actions">
-      <span class="muted" style="font-size: 0.85rem;">Static Demo - React app uses ThemeToggle component</span>
+      <span class="muted" style="font-size: 0.85rem;">Design System Demo</span>
     </div>
   </header>
 
   <main class="container">
-    <h1>Glassmorphic Design System Demo</h1>
-    <p class="muted">Futuristic UI with bright-sky and dark-glass themes. This is a static demo - the actual app uses React components.</p>
+    <h1>Glassmorphic Design System</h1>
+    <p class="muted">Component library with bright-sky and dark-glass theme support.</p>
 
     <div class="grid">
       <section class="card glass">
@@ -81,13 +95,16 @@
       </section>
     </div>
 
-    <h2 class="mt-4">Goals Overview</h2>
+    <h2 class="mt-4">Component Examples</h2>
+    
+    <h3>Tabs</h3>
     <nav class="tabs">
       <button class="tab" aria-selected="true">All</button>
       <button class="tab" aria-selected="false">Active</button>
       <button class="tab" aria-selected="false">Completed</button>
     </nav>
 
+    <h3 class="mt-4">Cards with Badges</h3>
     <div class="grid mt-4">
       <div class="card glass">
         <h3>Launch New Product</h3>
@@ -107,19 +124,34 @@
       </div>
     </div>
 
-    <div class="mt-4" style="padding: var(--space-4); background: var(--surface); border-radius: var(--radius-md); border: 1px solid var(--border);">
-      <h3>Note about React Integration</h3>
-      <p class="muted">This is a static HTML demo showing the component classes. In the actual React app:</p>
+    <div class="card glass mt-4">
+      <h3>React Integration Guide</h3>
+      <p class="muted">In your React components:</p>
+      <pre style="background: var(--color-bg-secondary); padding: var(--space-3); border-radius: var(--radius-sm); overflow-x: auto;"><code>import { useTheme } from './contexts/ThemeContext';
+
+function MyComponent() {
+  const { theme, toggleTheme } = useTheme();
+  
+  return (
+    &lt;section className="card glass"&gt;
+      &lt;div className="card__header"&gt;
+        &lt;div className="card__title"&gt;Title&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;p className="muted"&gt;Content&lt;/p&gt;
+    &lt;/section&gt;
+  );
+}</code></pre>
       <ul style="margin: var(--space-3) 0; padding-left: var(--space-5); color: var(--text-muted);">
-        <li>Use <code>ThemeToggle</code> component from <code>src/components/ThemeToggle.tsx</code></li>
-        <li>Access theme via <code>useTheme()</code> hook from <code>src/contexts/ThemeContext.tsx</code></li>
-        <li>Themes are <code>'bright-sky'</code> (light) and <code>'dark-glass'</code> (dark)</li>
-        <li>Build interactive components with React state and event handlers</li>
+        <li>Use <code>ThemeToggle</code> component instead of HTML button</li>
+        <li>Access theme via <code>useTheme()</code> hook</li>
+        <li>Themes: <code>'bright-sky'</code> and <code>'dark-glass'</code></li>
+        <li>Apply component classes to your JSX elements</li>
       </ul>
     </div>
   </main>
 
   <script>
+    // Simple theme toggle for static demo only
     function toggleDemoTheme() {
       const root = document.documentElement;
       const current = root.getAttribute('data-theme');
@@ -128,6 +160,7 @@
       localStorage.setItem('demo-theme', next);
     }
     
+    // Initialize theme from localStorage or default to bright-sky
     const savedTheme = localStorage.getItem('demo-theme') || 'bright-sky';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>

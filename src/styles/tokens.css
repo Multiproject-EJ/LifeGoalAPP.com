@@ -30,21 +30,22 @@
   --fs-lg: 20px;
   --fs-xl: 24px;
 
-  /* Bright Sky theme - use existing color variables from themes.css */
-  --bg: var(--color-bg-main, #ffffff);
-  --surface: var(--color-surface-glass, rgba(255,255,255,.85));
-  --surface-strong: var(--color-surface-primary, rgba(255,255,255,.98));
-  --text: var(--color-text-primary, #0f172a);
-  --text-muted: var(--color-text-muted, #64748b);
-  --border: var(--color-border-primary, rgba(148, 163, 184, 0.3));
-  --accent: var(--color-primary, #3b82f6);
+  /* Bright Sky theme - reference existing color variables from themes.css */
+  /* These tokens provide simpler names for components while maintaining theme consistency */
+  --bg: var(--color-bg-main);
+  --surface: var(--color-surface-glass);
+  --surface-strong: var(--color-surface-primary);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border: var(--color-border-primary);
+  --accent: var(--color-primary);
   --success: #32c48d;
   --warn: #f9a825;
   --error: #e53935;
 
   /* shadows - use existing shadow variables */
-  --shadow-1: var(--shadow-sm, 0 15px 30px rgba(15, 23, 42, 0.08));
-  --shadow-2: var(--shadow-md, 0 28px 55px rgba(15, 23, 42, 0.14));
+  --shadow-1: var(--shadow-sm);
+  --shadow-2: var(--shadow-md);
   --shadow-glow: 0 0 0 1px rgba(255,255,255,.06);
 
   /* translucency for glass effect */
@@ -54,15 +55,16 @@
 
 /* Dark Glass theme */
 [data-theme='dark-glass'] {
-  --bg: var(--color-bg-main, #0f172a);
-  --surface: var(--color-surface-glass, rgba(30, 41, 59, 0.65));
-  --surface-strong: var(--color-surface-primary, rgba(30, 41, 59, 0.85));
-  --text: var(--color-text-primary, #f8fafc);
-  --text-muted: var(--color-text-muted, #94a3b8);
-  --border: var(--color-border-primary, rgba(148, 163, 184, 0.25));
-  --accent: var(--color-primary, #60a5fa);
+  /* Reference existing dark theme variables */
+  --bg: var(--color-bg-main);
+  --surface: var(--color-surface-glass);
+  --surface-strong: var(--color-surface-primary);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border: var(--color-border-primary);
+  --accent: var(--color-primary);
   
-  --shadow-1: var(--shadow-sm, 0 6px 18px rgba(0,0,0,.55));
-  --shadow-2: var(--shadow-md, 0 18px 40px rgba(0,0,0,.65));
+  --shadow-1: var(--shadow-sm);
+  --shadow-2: var(--shadow-md);
   --shadow-glow: 0 0 0 1px rgba(255,255,255,.04);
 }
