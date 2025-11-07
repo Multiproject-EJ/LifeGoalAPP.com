@@ -73,6 +73,27 @@ Glass-style cards with hover effects:
 </nav>
 ```
 
+### Badges
+
+Status badges with color variants:
+
+```html
+<!-- Default badge -->
+<span class="badge">Default</span>
+
+<!-- Success badge -->
+<span class="badge badge--success">On Track</span>
+
+<!-- Warning badge -->
+<span class="badge badge--warn">At Risk</span>
+
+<!-- Error badge -->
+<span class="badge badge--error">Overdue</span>
+
+<!-- Accent badge -->
+<span class="badge badge--accent">Active</span>
+```
+
 ### Navigation Bar
 
 ```html

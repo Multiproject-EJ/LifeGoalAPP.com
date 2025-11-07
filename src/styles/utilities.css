@@ -3,6 +3,6 @@
 .right { margin-left:auto; }
 .muted { color: var(--text-muted); }
 .center { display:grid; place-items:center; }
-.mt-4{ margin-top: var(--space-4); }
-.mb-4{ margin-bottom: var(--space-4); }
+.mt-4 { margin-top: var(--space-4); }
+.mb-4 { margin-bottom: var(--space-4); }
 .w-full { width:100%; }

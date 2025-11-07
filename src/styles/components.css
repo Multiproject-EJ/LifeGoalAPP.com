@@ -50,3 +50,17 @@
 }
 .modal[open] .modal__panel { transform: translateY(0) scale(1); opacity:1; }
 .modal__actions { display:flex; gap: var(--space-3); justify-content:flex-end; margin-top: var(--space-4); }
+
+/* BADGE */
+.badge {
+  display:inline-flex; align-items:center; padding: 4px 10px;
+  border-radius: var(--radius-pill); font-size: var(--fs-xs);
+  font-weight:600; letter-spacing:0.02em; text-transform:uppercase;
+  background: var(--surface-strong); color: var(--text);
+  border: 1px solid var(--border);
+}
+.badge--success { background: rgba(50, 196, 141, 0.15); color: var(--success); border-color: var(--success); }
+.badge--warn { background: rgba(249, 168, 37, 0.15); color: var(--warn); border-color: var(--warn); }
+.badge--error { background: rgba(229, 57, 53, 0.15); color: var(--error); border-color: var(--error); }
+.badge--accent { background: rgba(0, 188, 212, 0.15); color: var(--accent); border-color: var(--accent); }
+
