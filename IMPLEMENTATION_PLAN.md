@@ -85,13 +85,13 @@ This document provides a **step-by-step checklist** for implementing the glassmo
 Now that the foundation is complete, we'll update existing pages to use the new design system.
 
 ### Step 2.1: Update index.html (Root Landing Page)
-- [ ] Open `/index.html`
-- [ ] Add theme.css in `<head>`: `<link rel="stylesheet" href="/src/styles/theme.css">`
-- [ ] Add ui-theme.js: `<script defer src="/src/scripts/ui-theme.js"></script>`
-- [ ] Add ui-components.js: `<script defer src="/src/scripts/ui-components.js"></script>`
-- [ ] Update header to use `.navbar .glass` structure
-- [ ] Add theme toggle button with `data-action="toggle-theme"`
-- [ ] Wrap content in `.container`
+- [x] Open `/index.html`
+- [x] Add theme.css in `<head>`: `<link rel="stylesheet" href="/src/styles/theme.css">`
+- [x] Add ui-theme.js: `<script defer src="/src/scripts/ui-theme.js"></script>`
+- [x] Add ui-components.js: `<script defer src="/src/scripts/ui-components.js"></script>`
+- [x] Update header to use `.navbar .glass` structure
+- [x] Add theme toggle button with `data-action="toggle-theme"`
+- [x] Wrap content in `.container`
 - [ ] Test both light and dark themes
 - [ ] Verify responsive behavior on mobile
 
