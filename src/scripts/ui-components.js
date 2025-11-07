@@ -1,101 +1,66 @@
-const createModalController = () => {
-  const resolveTarget = (trigger, attribute) => {
-    if (!trigger) return null;
-    const selector = trigger.getAttribute(attribute);
-    if (!selector) return null;
-    try {
-      return document.querySelector(selector);
-    } catch (error) {
-      console.warn('LifeGoalApp: Invalid selector in', attribute, selector, error);
-      return null;
-    }
+// Toggle switch behavior for declarative toggles that are not controlled by React.
+document.addEventListener('click', (event) => {
+  const toggle = event.target.closest('.toggle');
+  if (!toggle) return;
+  if (toggle.dataset.controlled === 'react') return;
+  const current = toggle.dataset.on === 'true';
+  toggle.dataset.on = current ? 'false' : 'true';
+});
+
+// Simple HTML5 drag & drop for widgets with [data-draggable] inside [data-grid]
+(() => {
+  let dragEl;
+  let placeholder;
+
+  const grids = document.querySelectorAll('[data-grid]');
+  if (grids.length === 0) return;
+
+  const createPlaceholder = (height) => {
+    const el = document.createElement('div');
+    el.style.height = `${height}px`;
+    el.className = 'card glass drag-placeholder';
+    el.style.opacity = '0.25';
+    return el;
   };
 
-  const openModal = (modal) => {
-    if (!modal) return;
-    if (modal instanceof HTMLDialogElement) {
-      if (!modal.open) {
-        modal.showModal();
-      }
-      return;
-    }
-    modal.setAttribute('open', '');
-    modal.classList.add('is-open');
-    modal.removeAttribute('aria-hidden');
-  };
-
-  const closeModal = (modal) => {
-    if (!modal) return;
-    if (modal instanceof HTMLDialogElement) {
-      if (modal.open) {
-        modal.close();
-      }
-      return;
-    }
-    modal.removeAttribute('open');
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-  };
-
-  document.addEventListener('click', (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-
-    const openTrigger = target.closest('[data-open]');
-    if (openTrigger) {
-      const modal = resolveTarget(openTrigger, 'data-open');
-      openModal(modal);
-      return;
-    }
-
-    const closeTrigger = target.closest('[data-close]');
-    if (closeTrigger) {
-      const modal = resolveTarget(closeTrigger, 'data-close');
-      closeModal(modal);
-      return;
-    }
-
-    const activeModal = document.querySelector('.modal.is-open, dialog[open]');
-    if (activeModal && target instanceof HTMLElement) {
-      if (target.dataset.dismiss === 'backdrop') {
-        closeModal(activeModal);
-      }
-    }
-  });
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') return;
-    const modal = document.querySelector('.modal.is-open, dialog[open]');
-    if (!modal) return;
-    event.preventDefault();
-    closeModal(modal);
-  });
-};
-
-const enhanceDraggables = () => {
-  const draggableSelector = '[data-draggable]';
-  const draggableItems = document.querySelectorAll(draggableSelector);
-  draggableItems.forEach((item) => {
-    if (!(item instanceof HTMLElement)) return;
-    if (!item.hasAttribute('draggable')) {
-      item.setAttribute('draggable', 'true');
-    }
-    item.addEventListener('dragstart', () => {
-      item.classList.add('is-dragging');
+  grids.forEach((grid) => {
+    grid.addEventListener('dragstart', (event) => {
+      const card = event.target.closest('[data-draggable]');
+      if (!card) return;
+      dragEl = card;
+      placeholder = createPlaceholder(card.offsetHeight);
+      card.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => {
+        card.style.visibility = 'hidden';
+      });
     });
-    item.addEventListener('dragend', () => {
-      item.classList.remove('is-dragging');
+
+    grid.addEventListener('dragend', () => {
+      if (!dragEl) return;
+      dragEl.classList.remove('dragging');
+      dragEl.style.visibility = '';
+      placeholder?.remove();
+      dragEl = undefined;
+      placeholder = undefined;
+    });
+
+    grid.addEventListener('dragover', (event) => {
+      if (!dragEl) return;
+      event.preventDefault();
+      const siblings = Array.from(grid.querySelectorAll('[data-draggable]:not(.dragging)'));
+      const after = siblings.find((element) => event.clientY <= element.getBoundingClientRect().top + element.offsetHeight / 2);
+      if (placeholder && !placeholder.isConnected) {
+        grid.insertBefore(placeholder, after ?? null);
+      } else if (placeholder && after && placeholder !== after) {
+        grid.insertBefore(placeholder, after);
+      }
+    });
+
+    grid.addEventListener('drop', (event) => {
+      event.preventDefault();
+      if (!dragEl) return;
+      grid.insertBefore(dragEl, placeholder ?? null);
     });
   });
-};
-
-const initComponents = () => {
-  createModalController();
-  enhanceDraggables();
-};
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initComponents, { once: true });
-} else {
-  initComponents();
-}
+})();

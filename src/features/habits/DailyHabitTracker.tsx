@@ -237,7 +237,7 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
   };
 
   return (
-    <section className="habit-tracker">
+    <section className="habit-tracker card glass" data-draggable draggable="true">
       <header className="habit-tracker__header">
         <div>
           <h2>Today&apos;s habit tracker</h2>
@@ -245,7 +245,7 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
         </div>
         <button
           type="button"
-          className="habit-tracker__refresh"
+          className="btn btn--ghost habit-tracker__refresh"
           onClick={() => void refreshHabits()}
           disabled={loading || (!isConfigured && !isDemoExperience)}
         >
@@ -290,7 +290,7 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
               : 'Today is a rest day for this habit.';
             const lastCompletedText = formatLastCompleted(lastCompletedOn, today);
             return (
-              <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''}`}>
+              <li key={habit.id} className={`habit-card glass ${isCompleted ? 'habit-card--completed' : ''}`}>
                 <div className="habit-card__content">
                   <div>
                     <h3>{habit.name}</h3>
@@ -299,14 +299,25 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
                     </p>
                     <p className="habit-card__meta">{formatHabitMeta(habit.frequency, habit.schedule)}</p>
                   </div>
-                  <button
-                    type="button"
-                    className={`habit-card__toggle ${isCompleted ? 'habit-card__toggle--active' : ''}`}
-                    onClick={() => void toggleHabit(habit)}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? 'Saving…' : isCompleted ? 'Mark incomplete' : 'Mark complete'}
-                  </button>
+                  <div className="habit-card__controls">
+                    <button
+                      type="button"
+                      className="toggle"
+                      data-controlled="react"
+                      data-on={isCompleted ? 'true' : 'false'}
+                      aria-pressed={isCompleted}
+                      onClick={() => void toggleHabit(habit)}
+                      disabled={isSaving}
+                    >
+                      <span className="toggle__thumb" />
+                      <span className="sr-only">
+                        {isCompleted ? `Mark ${habit.name} incomplete` : `Mark ${habit.name} complete`}
+                      </span>
+                    </button>
+                    <span className="habit-card__toggle-label">
+                      {isSaving ? 'Saving…' : isCompleted ? 'Completed' : 'Tap to complete'}
+                    </span>
+                  </div>
                 </div>
                 <footer className="habit-card__footer">
                   <div className="habit-card__streaks">

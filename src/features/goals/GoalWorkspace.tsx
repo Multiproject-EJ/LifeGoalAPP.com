@@ -347,7 +347,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   };
 
   return (
-    <section className="goal-workspace">
+    <section className="goal-workspace card glass" data-draggable draggable="true">
       <header className="goal-workspace__header">
         <div>
           <h2>Goals &amp; Habits workspace</h2>
@@ -358,7 +358,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         </div>
         <button
           type="button"
-          className="goal-workspace__refresh"
+          className="btn btn--ghost goal-workspace__refresh"
           onClick={refreshGoals}
           disabled={loading || !isConfigured}
         >
@@ -386,7 +386,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       ) : null}
 
       <div className="goal-workspace__grid">
-        <form className="goal-form" onSubmit={handleSubmit}>
+        <form className="goal-form card glass" onSubmit={handleSubmit}>
           <h3>Capture a new goal</h3>
           <label className="goal-form__field">
             <span>Goal title</span>
@@ -438,12 +438,12 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
             />
           </label>
 
-          <button type="submit" className="goal-form__submit" disabled={saving}>
+          <button type="submit" className="btn btn--primary goal-form__submit" disabled={saving}>
             {saving ? 'Saving…' : 'Save goal'}
           </button>
         </form>
 
-        <div className="goal-list">
+        <div className="goal-list card glass">
           <div className="goal-list__header">
             <h3>Active goals</h3>
             <span className="goal-list__meta">{listMeta}</span>
@@ -473,7 +473,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
               const isUpdating = updatingGoalId === goal.id;
               const isDeleting = deletingGoalId === goal.id;
               return (
-                <li key={goal.id} className="goal-card">
+                <li key={goal.id} className="goal-card card glass">
                   {isEditing ? (
                     <form className="goal-card__editor" onSubmit={handleEditSubmit}>
                       <h4>Edit goal</h4>
