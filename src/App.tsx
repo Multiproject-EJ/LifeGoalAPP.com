@@ -236,7 +236,7 @@ export default function App() {
   );
 
   const renderAuthPanel = () => (
-    <div className="auth-card">
+    <div className="auth-card card glass">
       <header className="auth-card__header">
         <h2>{isDemoMode ? 'Peek behind the curtain' : 'Sign in to your workspace'}</h2>
         <p>
@@ -414,6 +414,8 @@ export default function App() {
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
 
   const renderWorkspaceSection = () => {
+    const gridClassName = 'workspace-content grid';
+
     if (activeWorkspaceNav === 'goals') {
       return (
         <>
@@ -431,7 +433,7 @@ export default function App() {
           )}
 
           {canAccessWorkspace ? (
-            <div className="workspace-content">
+            <div className={gridClassName} data-grid>
               <ProgressDashboard session={activeSession} />
               <GoalWorkspace session={activeSession} />
               <GoalReflectionJournal session={activeSession} />
@@ -450,30 +452,26 @@ export default function App() {
 
     if (activeWorkspaceNav === 'settings') {
       return (
-        <div className="workspace-content">
+        <div className={gridClassName} data-grid>
           <NotificationPreferences session={activeSession} />
         </div>
       );
     }
 
     if (!canAccessWorkspace) {
-      return (
-        <p className="workspace-onboarding-hint">
-          Finish onboarding to unlock this area.
-        </p>
-      );
+      return <p className="workspace-onboarding-hint">Finish onboarding to unlock this area.</p>;
     }
 
     switch (activeWorkspaceNav) {
       case 'planning':
         return (
-          <div className="workspace-content">
+          <div className={gridClassName} data-grid>
             <DailyHabitTracker session={activeSession} />
           </div>
         );
       case 'rituals':
         return (
-          <div className="workspace-content">
+          <div className={gridClassName} data-grid>
             <LifeWheelCheckins session={activeSession} />
             <GoalReflectionJournal session={activeSession} />
             <VisionBoard session={activeSession} />
@@ -481,31 +479,31 @@ export default function App() {
         );
       case 'insights':
         return (
-          <div className="workspace-content">
+          <div className={gridClassName} data-grid>
             <VisionBoard session={activeSession} />
           </div>
         );
       case 'support':
         return (
-          <div className="workspace-content">
+          <div className={gridClassName} data-grid>
             <GoalWorkspace session={activeSession} />
           </div>
         );
       case 'setup-habits':
         return (
-          <div className="workspace-content">
+          <div className={gridClassName} data-grid>
             <HabitsModule session={activeSession} />
           </div>
         );
       case 'setup-goals':
         return (
-          <div className="workspace-content">
+          <div className={gridClassName} data-grid>
             <GoalWorkspace session={activeSession} />
           </div>
         );
       default:
         return (
-          <div className="workspace-stage__placeholder">
+          <div className="workspace-stage__placeholder card glass">
             <div className="workspace-stage__placeholder-content">
               <h2>{activeWorkspaceItem.label}</h2>
               <p>{activeWorkspaceItem.summary}</p>
@@ -519,104 +517,98 @@ export default function App() {
   };
 
   return (
-    <div className="app app--workspace">
-      <div className="workspace-shell">
-        <aside className="workspace-sidebar" aria-label="Workspace navigation">
-          <div className="workspace-sidebar__profile">
-            <div className="workspace-avatar" aria-hidden="true">
+    <div className="app-shell">
+      <header className="navbar glass">
+        <div className="brand">LifeGoalApp</div>
+        <div className="actions">
+          <div className="user-pill glass">
+            <div className="user-pill__avatar" aria-hidden>
               {userInitial}
             </div>
-            <div className="workspace-sidebar__profile-text">
-              <span className="workspace-sidebar__welcome">
-                {isDemoExperience ? 'Demo creator' : 'Welcome back'}
-              </span>
-              <span className="workspace-sidebar__name">{userDisplay}</span>
+            <div className="user-pill__meta">
+              <span className="user-pill__label">{isDemoExperience ? 'Demo creator' : 'Signed in as'}</span>
+              <span className="user-pill__name">{userDisplay}</span>
             </div>
           </div>
+          <ThemeToggle />
+          {installPromptEvent && (
+            <button type="button" className="btn btn--ghost" onClick={handleInstallClick}>
+              Install app
+            </button>
+          )}
+          {isAuthenticated ? (
+            <button type="button" className="btn btn--ghost" onClick={handleSignOut}>
+              Sign out
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => setShowAuthPanel((value) => !value)}
+            >
+              {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
+            </button>
+          )}
+        </div>
+      </header>
 
-          <nav className="workspace-sidebar__nav">
-            {WORKSPACE_NAV_ITEMS.map((item) => {
-              const isActive = activeWorkspaceNav === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`workspace-sidebar__nav-button ${
-                    isActive ? 'workspace-sidebar__nav-button--active' : ''
-                  }`}
-                  onClick={() => setActiveWorkspaceNav(item.id)}
-                  aria-pressed={isActive}
-                >
-                  <span className="workspace-sidebar__nav-label">{item.label}</span>
-                  <span className="workspace-sidebar__nav-summary">{item.summary}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="workspace-sidebar__actions">
-            <ThemeToggle />
-            {installPromptEvent && (
-              <button type="button" className="workspace-sidebar__install" onClick={handleInstallClick}>
-                Install app
-              </button>
+      <main className="app-main">
+        {(!isAuthenticated || authMessage || authError) && (
+          <section className="workspace-status glass">
+            {!isAuthenticated && (
+              <p className="workspace-status__message">
+                You’re exploring demo data. Sign in to sync with your Supabase project.
+              </p>
             )}
-            {isAuthenticated ? (
-              <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
-                Sign out
-              </button>
-            ) : (
+            {statusElements}
+            {!isAuthenticated && (
               <button
                 type="button"
-                className="workspace-sidebar__signout"
-                onClick={() => setShowAuthPanel((value) => !value)}
+                className="supabase-auth__action workspace-status__cta"
+                onClick={() => setShowAuthPanel(true)}
               >
-                {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
+                Connect Supabase
               </button>
             )}
-          </div>
-        </aside>
-
-        <main className="workspace-main">
-          {(!isAuthenticated || authMessage || authError) && (
-            <div className="workspace-status">
-              {!isAuthenticated && (
-                <p className="workspace-status__message">
-                  You’re exploring demo data. Sign in to sync with your Supabase project.
-                </p>
-              )}
-              {statusElements}
-              {!isAuthenticated && (
-                <button
-                  type="button"
-                  className="supabase-auth__action workspace-status__cta"
-                  onClick={() => setShowAuthPanel(true)}
-                >
-                  Connect Supabase
-                </button>
-              )}
-            </div>
-          )}
-
-          {showAuthPanel && (
-            <div className="workspace-auth-panel">{renderAuthPanel()}</div>
-          )}
-
-          <section
-            className={`workspace-stage ${
-              activeWorkspaceNav === 'goals' ? 'workspace-stage--detail' : 'workspace-stage--placeholder'
-            }`}
-            aria-live="polite"
-          >
-            <header className="workspace-stage__header">
-              <h1>{activeWorkspaceItem.label}</h1>
-              <p>{activeWorkspaceItem.summary}</p>
-            </header>
-
-            <div className="workspace-stage__body">{renderWorkspaceSection()}</div>
           </section>
-        </main>
-      </div>
+        )}
+
+        {showAuthPanel && (
+          <section className="container workspace-auth">{renderAuthPanel()}</section>
+        )}
+
+        <nav className="workspace-nav">
+          <div className="container">
+            <div className="tabs glass" role="tablist" aria-label="Workspace navigation">
+              {WORKSPACE_NAV_ITEMS.map((item) => {
+                const isActive = activeWorkspaceNav === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="tab"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActiveWorkspaceNav(item.id)}
+                  >
+                    <span className="tab__label">{item.label}</span>
+                    <span className="tab__summary">{item.summary}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </nav>
+
+        <section className="container workspace-stage" aria-live="polite">
+          <header className="workspace-stage__header glass">
+            <h1>{activeWorkspaceItem.label}</h1>
+            <p>{activeWorkspaceItem.summary}</p>
+          </header>
+
+          <div className="workspace-stage__body">{renderWorkspaceSection()}</div>
+        </section>
+      </main>
     </div>
   );
 }
@@ -674,7 +666,7 @@ function OnboardingCard({
   };
 
   return (
-    <div className="supabase-onboarding">
+    <div className="supabase-onboarding card glass">
       <header className="supabase-onboarding__header">
         <h3>{isOnboardingComplete ? 'You’re all set 🎉' : 'Finish onboarding'}</h3>
         <p>

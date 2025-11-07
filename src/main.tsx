@@ -1,9 +1,11 @@
+import './index.css';
+import './styles/theme.css';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { registerServiceWorker } from './registerServiceWorker.ts';
 import { SupabaseAuthProvider } from './features/auth/SupabaseAuthProvider.tsx';
-import { ThemeProvider } from './contexts/ThemeContext.tsx';
 
 if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {
@@ -13,12 +15,10 @@ if (typeof window !== 'undefined') {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <SupabaseAuthProvider>
-        <App />
-      </SupabaseAuthProvider>
-    </ThemeProvider>
-  </React.StrictMode>
+    <SupabaseAuthProvider>
+      <App />
+    </SupabaseAuthProvider>
+  </React.StrictMode>,
 );
 
 if (typeof window !== 'undefined') {

@@ -568,7 +568,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     const progress = ((currentQuestionIndex + 1) / QUESTIONS.length) * 100;
     
     return (
-      <section className="life-wheel life-wheel--questionnaire">
+      <section className="life-wheel card glass life-wheel--questionnaire" data-draggable draggable="true">
         <div className="questionnaire-container">
           <div className="questionnaire-progress">
             <div className="questionnaire-progress__bar" style={{ width: `${progress}%` }} />
@@ -678,7 +678,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   }
 
   return (
-    <section className="life-wheel">
+      <section className="life-wheel card glass" data-draggable draggable="true">
       <header className="life-wheel__header">
         <div>
           <h2>Wellbeing Wheel Check-in</h2>
@@ -688,7 +688,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         </div>
         <button
           type="button"
-          className="life-wheel__refresh"
+          className="btn btn--ghost life-wheel__refresh"
           onClick={() => void loadCheckins()}
           disabled={loading || (!isConfigured && !isDemoExperience)}
         >
@@ -713,7 +713,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
       <div className="life-wheel__start-section">
         <button
           type="button"
-          className="life-wheel__start-questionnaire"
+          className="btn btn--primary life-wheel__start-questionnaire"
           onClick={startQuestionnaire}
           disabled={!isConfigured && !isDemoExperience}
         >
