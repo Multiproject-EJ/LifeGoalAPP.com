@@ -1,0 +1,260 @@
+# LifeGoalApp Design System - Developer Guide
+
+## Overview
+
+This design system provides a futuristic, glassmorphic UI with light/dark themes and modular components. It uses plain CSS variables and minimal JavaScript (no frameworks required).
+
+## Quick Start
+
+### 1. Add to your HTML page
+
+```html
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="/src/styles/theme.css">
+  <script defer src="/src/scripts/ui-theme.js"></script>
+  <script defer src="/src/scripts/ui-components.js"></script>
+</head>
+```
+
+### 2. Add theme toggle button
+
+```html
+<button class="btn btn--ghost" data-action="toggle-theme">
+  <span>🌙</span> Light / Dark
+</button>
+```
+
+## Components
+
+### Cards
+
+Glass-style cards with hover effects:
+
+```html
+<section class="card glass">
+  <div class="card__header">
+    <img src="/public/assets/icons/target.svg" width="20" alt="">
+    <div class="card__title">Card Title</div>
+    <span class="card__meta right">Meta info</span>
+  </div>
+  <p class="muted">Card content goes here.</p>
+</section>
+```
+
+### Buttons
+
+```html
+<!-- Primary button -->
+<button class="btn btn--primary">Save</button>
+
+<!-- Ghost button -->
+<button class="btn btn--ghost">Cancel</button>
+```
+
+### Toggle Switch
+
+```html
+<div class="row">
+  <div class="toggle" role="switch" aria-label="Feature name" data-on="true">
+    <span class="toggle__thumb"></span>
+  </div>
+  <span>Toggle label</span>
+</div>
+```
+
+### Tabs
+
+```html
+<nav class="tabs">
+  <button class="tab" aria-selected="true">All</button>
+  <button class="tab" aria-selected="false">Active</button>
+  <button class="tab" aria-selected="false">Completed</button>
+</nav>
+```
+
+### Navigation Bar
+
+```html
+<header class="navbar glass">
+  <div class="brand">LifegoalApp</div>
+  <div class="actions">
+    <button class="btn btn--ghost" data-action="toggle-theme">Light / Dark</button>
+    <a class="btn btn--primary" href="/app/new">Add</a>
+  </div>
+</header>
+```
+
+### Modal
+
+```html
+<div class="modal" id="modal-example">
+  <div class="modal-backdrop" data-close="#modal-example"></div>
+  <section class="modal__panel card glass">
+    <h2 class="card__title">Modal Title</h2>
+    <p>Modal content...</p>
+    <div class="modal__actions">
+      <button class="btn btn--ghost" data-close="#modal-example">Cancel</button>
+      <button class="btn btn--primary">Save</button>
+    </div>
+  </section>
+</div>
+
+<!-- Button to open modal -->
+<button class="btn btn--primary" data-open="#modal-example">Open Modal</button>
+```
+
+## Layouts
+
+### Container & Grid
+
+```html
+<main class="container">
+  <div class="grid" data-grid>
+    <section class="card glass" data-draggable draggable="true">
+      <!-- Card content -->
+    </section>
+    <section class="card glass" data-draggable draggable="true">
+      <!-- Card content -->
+    </section>
+    <section class="card glass" data-draggable draggable="true">
+      <!-- Card content -->
+    </section>
+  </div>
+</main>
+```
+
+The grid automatically adjusts:
+- Mobile (< 768px): 1 column
+- Tablet (768px - 1119px): 2 columns
+- Desktop (≥ 1120px): 3 columns
+
+## Utility Classes
+
+```html
+<!-- Spacing -->
+<div class="mt-4">Margin top</div>
+<div class="mb-4">Margin bottom</div>
+
+<!-- Layout helpers -->
+<div class="row">Flex row with gap</div>
+<div class="center">Centered grid</div>
+<div class="right">Pushed to right</div>
+
+<!-- Width -->
+<input class="w-full" type="text">
+
+<!-- Text -->
+<span class="muted">Muted text</span>
+
+<!-- Visibility -->
+<div class="hidden">Hidden element</div>
+```
+
+## Design Tokens
+
+All design tokens are available as CSS variables:
+
+### Spacing
+- `--space-1` through `--space-8` (4px to 48px)
+
+### Border Radius
+- `--radius-sm`: 8px
+- `--radius-md`: 12px
+- `--radius-lg`: 20px
+- `--radius-pill`: 999px
+
+### Colors
+- `--bg`: Background color
+- `--surface`: Glass surface
+- `--surface-strong`: Stronger glass surface
+- `--text`: Primary text
+- `--text-muted`: Muted text
+- `--border`: Border color
+- `--accent`: Accent color (teal-blue)
+- `--success`, `--warn`, `--error`: Status colors
+
+### Shadows
+- `--shadow-1`: Small elevation
+- `--shadow-2`: Large elevation
+- `--shadow-glow`: Glow effect
+
+### Timing
+- `--fast`: 150ms
+- `--normal`: 220ms
+- `--slow`: 360ms
+
+### Typography
+- `--font-ui`: UI font stack
+- `--fs-xs` through `--fs-xl`: Font sizes
+
+## Theme System
+
+The theme system automatically detects the user's preferred color scheme and allows manual toggling.
+
+### Theme Persistence
+- Theme preference is saved to localStorage as `lga-theme`
+- Respects `prefers-color-scheme` on first visit
+- Toggle with `data-action="toggle-theme"` on any element
+
+### Dark Theme
+Add `[data-theme="dark"]` to the root element to activate dark mode. This happens automatically when toggled or based on system preference.
+
+## Interactive Features
+
+### Draggable Cards
+Cards with `data-draggable draggable="true"` inside a `[data-grid]` container are automatically draggable.
+
+### Toggle Switches
+Toggles with class `.toggle` automatically respond to clicks and update their `data-on` attribute.
+
+### Modals
+- Use `data-open="#modal-id"` to open a modal
+- Use `data-close="#modal-id"` to close a modal
+
+## Migration Checklist
+
+When updating existing pages:
+
+1. ✅ Wrap main content with `.container`
+2. ✅ Convert feature blocks to `.card glass` with appropriate headers
+3. ✅ Replace binary controls with `.toggle` components
+4. ✅ Use `.grid` for widget layouts
+5. ✅ Replace custom modals with `.modal` structure
+6. ✅ Add theme toggle button to navigation
+7. ✅ Ensure interactive elements have adequate hit areas (min 44px)
+8. ✅ Keep existing JS functionality; only update classes/markup
+
+## Browser Support
+
+- Modern browsers with CSS custom properties support
+- Backdrop filter for glass effect (graceful degradation on older browsers)
+- ES6+ JavaScript (defer script loading)
+
+## Accessibility
+
+- Keyboard navigation supported on all interactive elements
+- `:focus-visible` styles for keyboard users
+- ARIA attributes recommended for complex components
+- Color contrast meets WCAG AA standards in both themes
+- Minimum 44px touch targets for mobile
+
+## Performance
+
+- CSS variables for instant theme switching
+- Minimal JavaScript (< 3KB combined)
+- No external dependencies
+- Optimized animations using `transform` and `opacity`
+
+## Examples
+
+See the `/examples` directory for full page templates:
+- Dashboard with draggable widgets
+- Goals page with tabs and filters
+- Habits page with toggles
+- Vision board gallery
+- Modal examples
+
+## Support
+
+For issues or questions, please refer to the main project documentation or create an issue in the repository.
