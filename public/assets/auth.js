@@ -1,4 +1,4 @@
-import { supabase } from './supaClient.js';
+import { supabase, REDIRECT_TO } from './supaClient.js';
 
 const modal = document.getElementById('authModal');
 const btnOpen = document.getElementById('btnSignIn') || document.querySelector('[data-auth-open]');
@@ -7,7 +7,7 @@ const btnGoogle = document.getElementById('googleSignIn');
 const formEmail = document.getElementById('emailForm');
 const emailInput = document.getElementById('authEmail');
 const msg = document.getElementById('authMsg');
-const redirectTo = 'https://www.lifegoalapp.com/auth/callback';
+const redirectTo = REDIRECT_TO;
 const accountControls = document.getElementById('accountControls');
 const accountName = document.getElementById('accountName');
 const btnSignOut = document.getElementById('btnSignOut');
