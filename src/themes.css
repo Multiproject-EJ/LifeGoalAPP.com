@@ -501,3 +501,206 @@ a,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================
+   ADDITIONAL PREMIUM ENHANCEMENTS
+   ============================================ */
+
+/* Enhanced workspace navigation buttons with premium gradients */
+.workspace-sidebar__nav-button--active {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: var(--shadow-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.15);
+  }
+}
+
+/* Premium button gradients for dark theme */
+[data-theme='dark-glass'] .workspace-sidebar__install {
+  background: linear-gradient(135deg, #06b6d4, #a855f7);
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark-glass'] .workspace-sidebar__install:hover {
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark-glass'] .workspace-sidebar__signout {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark-glass'] .workspace-sidebar__signout:hover {
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Enhanced avatar with gradient border */
+.workspace-avatar {
+  position: relative;
+  background: linear-gradient(135deg, #06b6d4, #a855f7);
+}
+
+.workspace-avatar::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #06b6d4, #a855f7);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.5;
+  filter: blur(8px);
+}
+
+[data-theme='bright-sky'] .workspace-avatar {
+  background: linear-gradient(135deg, #0ea5e9, #a855f7);
+}
+
+/* Premium goal status badges with glass effect */
+.goal-status {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Enhanced form submit buttons */
+.goal-form__submit,
+.life-wheel__primary,
+.vision-board__submit {
+  position: relative;
+  overflow: hidden;
+}
+
+.goal-form__submit::after,
+.life-wheel__primary::after,
+.vision-board__submit::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.goal-form__submit:active::after,
+.life-wheel__primary:active::after,
+.vision-board__submit:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Dark theme button gradients */
+[data-theme='dark-glass'] .goal-form__submit {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+[data-theme='dark-glass'] .life-wheel__primary {
+  background: linear-gradient(135deg, #06b6d4, #a855f7);
+}
+
+[data-theme='dark-glass'] .vision-board__submit {
+  background: linear-gradient(135deg, #3b82f6, #a855f7);
+}
+
+/* Light theme button gradients */
+[data-theme='bright-sky'] .goal-form__submit {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+[data-theme='bright-sky'] .life-wheel__primary {
+  background: linear-gradient(135deg, #0ea5e9, #a855f7);
+}
+
+[data-theme='bright-sky'] .vision-board__submit {
+  background: linear-gradient(135deg, #3b82f6, #a855f7);
+}
+
+/* Enhanced notification badges */
+.badge {
+  backdrop-filter: blur(8px) saturate(150%);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+}
+
+/* Improved glass effect for auth modal */
+.auth-modal {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.auth-backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Enhanced questionnaire cards */
+.questionnaire-content,
+.questionnaire-wheel {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--color-border-primary);
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, 
+    var(--color-surface-glass) 0%, 
+    var(--color-surface-primary) 50%, 
+    var(--color-surface-glass) 100%);
+  background-size: 1000px 100%;
+}
+
+/* Enhanced habit cards */
+.habit-card {
+  background: var(--color-surface-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.habit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.habit-card:hover::before {
+  left: 100%;
+}
+
+/* Premium glow effects for interactive elements */
+[data-theme='dark-glass'] .workspace-sidebar__nav-button:hover,
+[data-theme='dark-glass'] .goal-card:hover,
+[data-theme='dark-glass'] .habit-card:hover {
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient text for headings in dark theme */
+[data-theme='dark-glass'] .workspace-stage__header h1,
+[data-theme='dark-glass'] .goal-workspace__header h2 {
+  background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

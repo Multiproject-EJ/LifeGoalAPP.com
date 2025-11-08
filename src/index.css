@@ -5,6 +5,11 @@
   font-weight: 400;
   color: #0f172a;
   background-color: #f1f5f9;
+  
+  /* Enhanced font smoothing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 * {
@@ -20,6 +25,34 @@ body,
 body {
   background: radial-gradient(circle at top, #e0f2fe, #f8fafc 62%);
   color: #0f172a;
+  overflow-x: hidden;
+}
+
+/* Premium scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary, rgba(0, 0, 0, 0.05));
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--color-primary, #06b6d4), var(--color-accent-purple, #a855f7));
+  border-radius: 10px;
+  border: 2px solid var(--color-bg-secondary, rgba(0, 0, 0, 0.05));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--color-primary-dark, #0891b2), var(--color-accent-purple, #a855f7));
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary, #06b6d4) var(--color-bg-secondary, rgba(0, 0, 0, 0.05));
 }
 
 .sr-only {
@@ -39,6 +72,32 @@ body {
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, rgba(226, 232, 240, 0.25) 0%, rgba(255, 255, 255, 0.9) 45%, #ffffff 100%);
+}
+
+/* Enhanced container with max-width */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+}
+
+/* Improved focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-primary, #06b6d4);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection styling */
+::selection {
+  background: var(--color-primary, #06b6d4);
+  color: white;
+}
+
+::-moz-selection {
+  background: var(--color-primary, #06b6d4);
+  color: white;
 }
 
 .auth-layout {
