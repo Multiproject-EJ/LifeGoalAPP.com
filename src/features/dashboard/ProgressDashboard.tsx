@@ -294,7 +294,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
   );
 
   return (
-    <section className="progress-dashboard card glass" data-draggable draggable="true">
+    <section className="progress-dashboard">
       <header className="progress-dashboard__header">
         <div>
           <h2>Progress dashboard</h2>
@@ -304,7 +304,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
         </div>
         <button
           type="button"
-          className="btn btn--ghost progress-dashboard__refresh"
+          className="progress-dashboard__refresh"
           onClick={() => void refreshDashboard()}
           disabled={loading || (!isConfigured && !isDemoExperience)}
         >
@@ -337,7 +337,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
         </div>
       ) : (
         <div className="progress-dashboard__grid">
-          <article className="progress-card card glass progress-card--digest">
+          <article className="progress-card progress-card--digest">
             <header>
               <h3>Weekly focus digest</h3>
               <p>{focusDigest.intro}</p>
@@ -373,7 +373,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             )}
           </article>
 
-          <article className="progress-card card glass progress-card--summary">
+          <article className="progress-card progress-card--summary">
             <header>
               <h3>This week&apos;s momentum</h3>
               <p>
@@ -396,7 +396,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             </ul>
           </article>
 
-          <article className="progress-card card glass progress-card--statuses">
+          <article className="progress-card progress-card--statuses">
             <header>
               <h3>Goal health snapshot</h3>
               <p>{goalStatusMessage}</p>
@@ -456,7 +456,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             )}
           </article>
 
-          <article className="progress-card card glass progress-card--calendar">
+          <article className="progress-card progress-card--calendar">
             <header>
               <h3>{today.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</h3>
               <p>Each dot represents habits you completed on that day.</p>
@@ -481,7 +481,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             </div>
           </article>
 
-          <article className="progress-card card glass progress-card--goals">
+          <article className="progress-card progress-card--goals">
             <header>
               <h3>Upcoming goal milestones</h3>
               <p>Stay ahead of deadlines by keeping these target dates in focus.</p>

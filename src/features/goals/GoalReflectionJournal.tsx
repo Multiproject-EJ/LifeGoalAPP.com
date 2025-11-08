@@ -512,7 +512,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
   const canJournal = useMemo(() => goals.length > 0 && Boolean(selectedGoalId), [goals, selectedGoalId]);
 
   return (
-    <section className="goal-reflection-journal card glass" data-draggable draggable="true">
+    <section className="goal-reflection-journal">
       <header className="goal-reflection-journal__header">
         <div>
           <h2>Goal reflection journal</h2>
@@ -569,7 +569,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
         </p>
       ) : (
         <div className="goal-reflection-journal__layout">
-          <form className="goal-reflection-journal__form card glass" onSubmit={handleSubmit}>
+          <form className="goal-reflection-journal__form" onSubmit={handleSubmit}>
             <h3>Log a reflection</h3>
             <label className="goal-reflection-journal__field">
               <span>Date</span>
@@ -621,14 +621,14 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
             </label>
             <button
               type="submit"
-              className="btn btn--primary goal-reflection-journal__submit"
+              className="goal-reflection-journal__submit"
               disabled={!canJournal || saving}
             >
               {saving ? 'Saving…' : 'Save reflection'}
             </button>
           </form>
 
-          <div className="goal-reflection-journal__history card glass">
+          <div className="goal-reflection-journal__history">
             <div className="goal-reflection-journal__history-header">
               <h3>Reflection history</h3>
               <p>
@@ -638,7 +638,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
               </p>
             </div>
 
-            <article className="goal-reflection-journal__trend-card card glass">
+            <article className="goal-reflection-journal__trend-card">
               <header className="goal-reflection-journal__trend-header">
                 <h4>Confidence trendline</h4>
                 <p>
@@ -732,7 +732,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
               )}
             </article>
 
-            <article className="goal-reflection-journal__prompts-card card glass">
+            <article className="goal-reflection-journal__prompts-card">
               <header className="goal-reflection-journal__prompts-header">
                 <h4>AI-assisted follow-up prompts</h4>
                 <p>
@@ -792,7 +792,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
                   const confidenceLabel = formatConfidence(reflection.confidence);
                   const option = reflection.confidence ? confidenceMeta[reflection.confidence] : undefined;
                   return (
-                  <li key={reflection.id} className="goal-reflection-journal__item card glass">
+                    <li key={reflection.id} className="goal-reflection-journal__item">
                       <header>
                         <div>
                           <h4>{formatDateLabel(reflection.entry_date)}</h4>
@@ -804,7 +804,7 @@ export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
                         <button
                           type="button"
                           onClick={() => void handleDelete(reflection)}
-                          className="btn btn--ghost goal-reflection-journal__delete"
+                          className="goal-reflection-journal__delete"
                           disabled={deletingId === reflection.id || saving}
                         >
                           {deletingId === reflection.id ? 'Removing…' : 'Delete'}

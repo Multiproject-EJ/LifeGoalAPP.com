@@ -5,184 +5,273 @@ type HabitsModuleProps = {
   session: Session;
 };
 
-const FEATURE_CARDS = [
-  {
-    emoji: '🧙',
-    title: '3-step wizard',
-    description: 'Capture basics, schedule, and reminders in a streamlined flow.',
-  },
-  {
-    emoji: '📋',
-    title: 'Curated templates',
-    description: 'Jumpstart with prebuilt routines for meditation, hydration, focus, and more.',
-  },
-  {
-    emoji: '✅',
-    title: 'Smart tracking',
-    description: 'Support boolean, quantity, and duration habits with streak awareness.',
-  },
-  {
-    emoji: '🔥',
-    title: 'Insights & streaks',
-    description: 'Visualize 31-day heatmaps, rolling success rates, and best streaks.',
-  },
-  {
-    emoji: '🔔',
-    title: 'Web push reminders',
-    description: 'Send contextual nudges with quick complete/skip actions.',
-  },
-  {
-    emoji: '🏆',
-    title: 'Challenges',
-    description: 'Invite friends, compete on leaderboards, and share progress.',
-  },
-  {
-    emoji: '📈',
-    title: 'Auto-progression',
-    description: 'Automate difficulty adjustments after sustaining success rates.',
-  },
-  {
-    emoji: '💾',
-    title: 'Offline support',
-    description: 'Queue habit logs offline and sync them instantly when you reconnect.',
-  },
-];
-
-const NEXT_STEPS = [
-  {
-    title: 'Run SQL migrations',
-    detail: 'Execute 0001-0003 in supabase/migrations to create habits tables and triggers.',
-  },
-  {
-    title: 'Generate VAPID keys',
-    detail: 'Run `npx web-push generate-vapid-keys` and store keys in Supabase plus .env.',
-  },
-  {
-    title: 'Deploy edge functions',
-    detail: 'Publish `send-reminders` and `auto-progression` to orchestrate push delivery.',
-  },
-  {
-    title: 'Load optional demo data',
-    detail: 'Populate sample habits via supabase/migrations/demo_data.sql after replacing YOUR_USER_ID_HERE.',
-  },
-];
-
-const RESOURCE_LINKS = [
-  {
-    href: '/supabase/functions/send-reminders.ts',
-    title: 'Edge function • send-reminders',
-    description: 'Schedules push notifications for habits due today.',
-  },
-  {
-    href: '/supabase/functions/auto-progression.ts',
-    title: 'Edge function • auto-progression',
-    description: 'Increments targets when streak and success metrics are met.',
-  },
-  {
-    href: '/supabase/migrations',
-    title: 'SQL migrations',
-    description: 'Review schema definitions for habits, logs, and challenges.',
-  },
-  {
-    href: '/app/habits/README.md',
-    title: 'Habits module README',
-    description: 'Integration notes, architecture decisions, and customization tips.',
-  },
-];
-
-export function HabitsModule({ session: _session }: HabitsModuleProps) {
+export function HabitsModule({ session }: HabitsModuleProps) {
   const [showInstructions, setShowInstructions] = useState(true);
 
   return (
-    <section className="habits-module card glass" data-draggable draggable="true">
-      <header className="habits-module__hero">
-        <div>
-          <span className="habits-module__badge">Habits workspace</span>
-          <h2>Comprehensive habits system</h2>
-          <p>
-            Install the vanilla module or port it to React to unlock habit templates, auto-progression, and real-time
-            insights across your teams.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="btn btn--ghost habits-module__toggle"
-          onClick={() => setShowInstructions((value) => !value)}
-        >
-          {showInstructions ? 'Hide setup checklist' : 'Show setup checklist'}
-        </button>
-      </header>
+    <div className="habits-module-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <div style={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+        color: 'white',
+        padding: '3rem 2rem',
+        borderRadius: '16px',
+        marginBottom: '2rem',
+        boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
+      }}>
+        <h1 style={{ margin: '0 0 1rem 0', fontSize: '2.5rem', fontWeight: '800' }}>
+          🎯 Comprehensive Habits System
+        </h1>
+        <p style={{ margin: 0, fontSize: '1.125rem', opacity: 0.95 }}>
+          A complete habit tracking module with templates, challenges, auto-progression, and more!
+        </p>
+      </div>
 
       {showInstructions && (
-        <div className="habits-module__panel card glass">
-          <div className="habits-module__panel-header">
-            <h3>Start here</h3>
-            <p>
-              The habits module ships with database migrations, web push edge functions, and a full vanilla implementation in
-              <code>/app/habits/</code>.
-            </p>
+        <div style={{
+          background: '#f8fafc',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '2rem',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.5rem' }}>✨ Setup Instructions</h2>
+            <button
+              onClick={() => setShowInstructions(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                opacity: 0.6
+              }}
+            >
+              ×
+            </button>
           </div>
-          <ol className="habits-module__steps">
-            {NEXT_STEPS.map((step) => (
-              <li key={step.title}>
-                <strong>{step.title}</strong>
-                <span>{step.detail}</span>
+
+          <div style={{ fontSize: '1rem', lineHeight: '1.75' }}>
+            <p><strong>🚀 The comprehensive habits module has been created!</strong></p>
+            
+            <p>All the code and SQL migrations are ready in your repository:</p>
+            
+            <ul style={{ marginLeft: '1.5rem' }}>
+              <li><code>/supabase/migrations/</code> - Database schema (0001-0003)</li>
+              <li><code>/supabase/functions/</code> - Edge Functions for reminders & auto-progression</li>
+              <li><code>/app/habits/</code> - Complete vanilla JS/HTML/CSS implementation</li>
+            </ul>
+
+            <h3 style={{ marginTop: '1.5rem', marginBottom: '0.75rem' }}>📋 Next Steps:</h3>
+            
+            <ol style={{ marginLeft: '1.5rem' }}>
+              <li>
+                <strong>Run SQL Migrations:</strong> Open Supabase SQL Editor and run:
+                <ul style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
+                  <li><code>supabase/migrations/0001_habits_core.sql</code></li>
+                  <li><code>supabase/migrations/0002_push.sql</code></li>
+                  <li><code>supabase/migrations/0003_challenges_autoprog.sql</code></li>
+                </ul>
               </li>
-            ))}
-          </ol>
-          <p className="habits-module__note">
-            Documentation lives in <code>/app/habits/README.md</code> with architecture diagrams and API contracts.
-          </p>
+              
+              <li style={{ marginTop: '1rem' }}>
+                <strong>Generate VAPID Keys:</strong>
+                <pre style={{ 
+                  background: '#1e293b', 
+                  color: '#e2e8f0', 
+                  padding: '0.75rem', 
+                  borderRadius: '6px',
+                  overflow: 'auto',
+                  marginTop: '0.5rem'
+                }}>npx web-push generate-vapid-keys</pre>
+              </li>
+              
+              <li style={{ marginTop: '1rem' }}>
+                <strong>Set Environment Variables:</strong>
+                <ul style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
+                  <li><code>VITE_VAPID_PUBLIC_KEY=your-public-key</code></li>
+                  <li>Add to Supabase Edge Functions secrets: <code>VAPID_PRIVATE_KEY</code></li>
+                </ul>
+              </li>
+              
+              <li style={{ marginTop: '1rem' }}>
+                <strong>Deploy Edge Functions:</strong>
+                <pre style={{ 
+                  background: '#1e293b', 
+                  color: '#e2e8f0', 
+                  padding: '0.75rem', 
+                  borderRadius: '6px',
+                  overflow: 'auto',
+                  marginTop: '0.5rem'
+                }}>supabase functions deploy send-reminders{'\n'}supabase functions deploy auto-progression</pre>
+              </li>
+              
+              <li style={{ marginTop: '1rem' }}>
+                <strong>Load Demo Data (Optional):</strong>
+                <br />
+                Run <code>supabase/migrations/demo_data.sql</code> after replacing <code>YOUR_USER_ID_HERE</code> with your user ID
+              </li>
+            </ol>
+
+            <div style={{
+              background: '#eff6ff',
+              border: '1px solid #93c5fd',
+              borderRadius: '8px',
+              padding: '1rem',
+              marginTop: '1.5rem'
+            }}>
+              <strong>📚 Documentation:</strong> See <code>/app/habits/README.md</code> for detailed setup instructions,
+              SQL patch guide, and architecture notes.
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="habits-module__features grid">
-        {FEATURE_CARDS.map((feature) => (
-          <article key={feature.title} className="card glass habits-module__feature" data-draggable="false">
-            <header className="habits-module__feature-header">
-              <span className="habits-module__feature-emoji" aria-hidden>
-                {feature.emoji}
-              </span>
-              <h4>{feature.title}</h4>
-            </header>
-            <p>{feature.description}</p>
-          </article>
-        ))}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        <FeatureCard 
+          emoji="🧙"
+          title="3-Step Wizard"
+          description="Create habits with an intuitive wizard: Basics → Schedule → Targets & Reminders"
+        />
+        <FeatureCard 
+          emoji="📋"
+          title="12 Templates"
+          description="Pre-filled templates for common habits: meditation, hydration, reading, and more"
+        />
+        <FeatureCard 
+          emoji="✅"
+          title="Smart Tracking"
+          description="Boolean (done/not done), Quantity (with stepper), and Duration (with timer) types"
+        />
+        <FeatureCard 
+          emoji="🔥"
+          title="Streaks & Insights"
+          description="31-day heatmap, success rates (7/30/90 days), current & best streaks"
+        />
+        <FeatureCard 
+          emoji="🔔"
+          title="Web Push Reminders"
+          description="Smart notifications with quick Done/Skip action buttons"
+        />
+        <FeatureCard 
+          emoji="🏆"
+          title="Challenges"
+          description="Create challenges, invite friends, compete on leaderboards"
+        />
+        <FeatureCard 
+          emoji="📈"
+          title="Auto-Progression"
+          description="Automatically increase difficulty when you hit success rate targets"
+        />
+        <FeatureCard 
+          emoji="💾"
+          title="Offline Support"
+          description="Queue habit logs when offline, auto-sync when back online"
+        />
       </div>
 
-      <div className="habits-module__callouts">
-        <section className="card glass habits-module__callout">
-          <h3>Implementation status</h3>
-          <p>
-            The vanilla module is production ready. Integrate it by serving <code>/app/habits/</code> on its own route or
-            gradually port the components into React for native rendering.
-          </p>
-          <ul>
-            <li>Option 1: mount the vanilla bundle at <code>/habits</code> for an instant preview.</li>
-            <li>Option 2: port UI and state machines to React for long-term maintainability.</li>
-          </ul>
-        </section>
-        <section className="card glass habits-module__callout">
-          <h3>Integration quick wins</h3>
-          <ul>
-            <li>Add a link from the dashboard to launch the habits workspace.</li>
-            <li>Pipe habit log events into the Progress dashboard for streak analytics.</li>
-            <li>Share notification preferences with the push reminder edge functions.</li>
-          </ul>
-        </section>
+      <div style={{
+        background: '#fef2f2',
+        border: '2px solid #fecaca',
+        borderRadius: '12px',
+        padding: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        <h3 style={{ margin: '0 0 1rem 0', color: '#991b1b' }}>⚠️ Implementation Status</h3>
+        <p style={{ margin: 0, lineHeight: '1.75' }}>
+          The habits module is built as a standalone vanilla JavaScript system in <code>/app/habits/</code>.
+          To fully integrate it into this React app, you have two options:
+        </p>
+        <ul style={{ marginLeft: '1.5rem', marginTop: '1rem' }}>
+          <li>
+            <strong>Option 1:</strong> Create a separate route (e.g., <code>/habits</code>) that serves the vanilla JS version
+          </li>
+          <li>
+            <strong>Option 2:</strong> Port the components to React (recommended for long-term maintenance)
+          </li>
+        </ul>
       </div>
 
-      <div className="habits-module__resources">
-        <h3>Key resources</h3>
-        <div className="habits-module__links">
-          {RESOURCE_LINKS.map((link) => (
-            <a key={link.title} className="habits-module__link card glass" href={link.href} target="_blank" rel="noreferrer">
-              <strong>{link.title}</strong>
-              <p>{link.description}</p>
-            </a>
-          ))}
+      <div style={{
+        background: 'white',
+        border: '2px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '2rem'
+      }}>
+        <h2 style={{ marginTop: 0 }}>📦 What's Included</h2>
+        
+        <div style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '0.75rem' }}>SQL Migrations</h3>
+          <ul style={{ marginLeft: '1.5rem', lineHeight: '1.75' }}>
+            <li><code>habits_v2</code> table with emoji, type (boolean/quantity/duration), schedule JSON, auto-progression config</li>
+            <li><code>habit_logs_v2</code> with value field for quantity/duration tracking</li>
+            <li><code>habit_reminders</code> with time, days, and geo fields</li>
+            <li><code>push_subscriptions</code> for Web Push endpoints</li>
+            <li><code>habit_challenges</code> and <code>habit_challenge_members</code> for social features</li>
+            <li><code>v_habit_streaks</code> view for calculating current and best streaks</li>
+            <li><code>v_challenge_scores</code> view for leaderboards</li>
+          </ul>
+        </div>
+
+        <div style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '0.75rem' }}>Edge Functions</h3>
+          <ul style={{ marginLeft: '1.5rem', lineHeight: '1.75' }}>
+            <li><strong>send-reminders:</strong> Handles Web Push subscriptions, sends notifications, logs habit completions from notification actions</li>
+            <li><strong>auto-progression:</strong> Daily cron job to analyze success rates and adjust habit schedules automatically</li>
+          </ul>
+        </div>
+
+        <div style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '0.75rem' }}>Frontend Files</h3>
+          <ul style={{ marginLeft: '1.5rem', lineHeight: '1.75' }}>
+            <li><code>habits.js</code> - Main logic with wizard, active habits, insights, challenges</li>
+            <li><code>habits.css</code> - Modern, mobile-first styles</li>
+            <li><code>templates.json</code> - 12 curated habit templates</li>
+            <li><code>buildplan.json</code> - Implementation checklist</li>
+            <li><code>BuildChecklist.js</code> - On-page progress tracker</li>
+            <li><code>README.md</code> - Complete documentation</li>
+          </ul>
         </div>
       </div>
-    </section>
+
+      <div style={{
+        marginTop: '2rem',
+        padding: '1.5rem',
+        background: '#f0fdf4',
+        border: '2px solid #86efac',
+        borderRadius: '12px',
+        textAlign: 'center'
+      }}>
+        <p style={{ margin: 0, fontSize: '1.125rem' }}>
+          <strong>✅ All code has been generated and committed to the repository!</strong>
+        </p>
+        <p style={{ margin: '0.5rem 0 0 0', color: '#15803d' }}>
+          Follow the setup steps above to enable the full habits experience.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function FeatureCard({ emoji, title, description }: { emoji: string; title: string; description: string }) {
+  return (
+    <div style={{
+      background: 'white',
+      border: '1px solid #e2e8f0',
+      borderRadius: '12px',
+      padding: '1.5rem',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      transition: 'all 0.2s ease'
+    }}>
+      <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>{emoji}</div>
+      <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem' }}>{title}</h3>
+      <p style={{ margin: 0, color: '#64748b', fontSize: '0.9375rem', lineHeight: '1.6' }}>
+        {description}
+      </p>
+    </div>
   );
 }

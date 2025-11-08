@@ -1,4 +1,6 @@
-:root {
+/* Design tokens that work with existing bright-sky and dark-glass themes */
+:root,
+[data-theme='bright-sky'] {
   /* spacing scale (8px base) */
   --space-1: 4px;
   --space-2: 8px;
@@ -15,59 +17,54 @@
   --radius-lg: 20px;
   --radius-pill: 999px;
 
-  /* shadow/elevation */
-  --shadow-1: 0 4px 12px rgba(0, 0, 0, 0.18);
-  --shadow-2: 0 10px 30px rgba(0, 0, 0, 0.28);
-  --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06);
-
   /* timing */
   --fast: 150ms;
   --normal: 220ms;
   --slow: 360ms;
 
   /* typography */
-  --font-ui: 'Inter', Roboto, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-ui: Inter, Roboto, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
   --fs-xs: 12px;
   --fs-sm: 14px;
   --fs-md: 16px;
   --fs-lg: 20px;
-  --fs-xl: 28px;
-  --fs-2xl: 34px;
+  --fs-xl: 24px;
 
-  /* LIGHT theme defaults (overridden in [data-theme="dark"]) */
-  --bg: #f7f7f9;
-  --surface: rgba(255, 255, 255, 0.72);
-  --surface-strong: rgba(255, 255, 255, 0.9);
-  --surface-subtle: rgba(255, 255, 255, 0.55);
-  --text: #1f1f22;
-  --text-muted: #5b5f67;
-  --text-on-accent: #ffffff;
-  --border: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.15);
-  --accent: #00bcd4;
-  --accent-strong: #0096ad;
+  /* Bright Sky theme - reference existing color variables from themes.css */
+  /* These tokens provide simpler names for components while maintaining theme consistency */
+  --bg: var(--color-bg-main);
+  --surface: var(--color-surface-glass);
+  --surface-strong: var(--color-surface-primary);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border: var(--color-border-primary);
+  --accent: var(--color-primary);
   --success: #32c48d;
   --warn: #f9a825;
   --error: #e53935;
 
-  /* translucency */
+  /* shadows - use existing shadow variables */
+  --shadow-1: var(--shadow-sm);
+  --shadow-2: var(--shadow-md);
+  --shadow-glow: 0 0 0 1px rgba(255,255,255,.06);
+
+  /* translucency for glass effect */
   --glass-blur: 14px;
   --glass-sat: 120%;
 }
 
-:root[data-theme='dark'] {
-  --bg: #121214;
-  --surface: rgba(255, 255, 255, 0.08);
-  --surface-strong: rgba(255, 255, 255, 0.12);
-  --surface-subtle: rgba(255, 255, 255, 0.05);
-  --text: #e8e8ea;
-  --text-muted: #b3b3b9;
-  --text-on-accent: #0b0b0d;
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --accent: #00cbe6;
-  --accent-strong: #00a2bd;
-  --shadow-1: 0 6px 18px rgba(0, 0, 0, 0.55);
-  --shadow-2: 0 18px 40px rgba(0, 0, 0, 0.65);
-  --shadow-glow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+/* Dark Glass theme */
+[data-theme='dark-glass'] {
+  /* Reference existing dark theme variables */
+  --bg: var(--color-bg-main);
+  --surface: var(--color-surface-glass);
+  --surface-strong: var(--color-surface-primary);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border: var(--color-border-primary);
+  --accent: var(--color-primary);
+  
+  --shadow-1: var(--shadow-sm);
+  --shadow-2: var(--shadow-md);
+  --shadow-glow: 0 0 0 1px rgba(255,255,255,.04);
 }

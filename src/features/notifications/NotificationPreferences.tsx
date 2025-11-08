@@ -265,7 +265,7 @@ export function NotificationPreferences({ session }: Props) {
   };
 
   return (
-    <section className="notification-preferences card glass" data-draggable draggable="true">
+    <section className="notification-preferences">
       <header className="notification-preferences__header">
         <h2>Habit &amp; Check-in Notifications</h2>
         <p>
@@ -289,7 +289,7 @@ export function NotificationPreferences({ session }: Props) {
           mobile.
         </p>
       ) : (
-        <div className="notification-preferences__card card glass">
+        <div className="notification-preferences__card">
           <div className="notification-preferences__status-row">
             <span className="notification-preferences__label">Permission</span>
             <span className={`notification-preferences__permission notification-preferences__permission--${permission}`}>
@@ -309,7 +309,7 @@ export function NotificationPreferences({ session }: Props) {
           {!isReady ? (
             <button
               type="button"
-              className="btn btn--primary notification-preferences__action"
+              className="notification-preferences__action"
               onClick={handleEnableNotifications}
               disabled={saving}
             >
@@ -373,7 +373,7 @@ export function NotificationPreferences({ session }: Props) {
 
               <button
                 type="button"
-                className="btn btn--ghost notification-preferences__action notification-preferences__action--secondary"
+                className="notification-preferences__action notification-preferences__action--secondary"
                 onClick={handleDisableNotifications}
                 disabled={saving}
               >
