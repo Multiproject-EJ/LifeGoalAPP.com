@@ -1,8 +1,8 @@
-.hidden { display: none !important; }
-.row { display: flex; align-items: center; gap: var(--space-3); }
-.right { margin-left: auto; }
+.hidden { display:none !important; }
+.row { display:flex; align-items:center; gap: var(--space-3); }
+.right { margin-left:auto; }
 .muted { color: var(--text-muted); }
-.center { display: grid; place-items: center; }
+.center { display:grid; place-items:center; }
 .mt-4 { margin-top: var(--space-4); }
 .mb-4 { margin-bottom: var(--space-4); }
-.w-full { width: 100%; }
+.w-full { width:100%; }

@@ -165,7 +165,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
   };
 
   return (
-    <section className="vision-board card glass" data-draggable draggable="true">
+    <section className="vision-board">
       <header className="vision-board__header">
         <div>
           <h2>Vision board</h2>
@@ -228,7 +228,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
         </div>
         <button
           type="submit"
-          className="btn btn--primary vision-board__submit"
+          className="vision-board__submit"
           disabled={uploading || (!isConfigured && !isDemoExperience)}
         >
           {uploading ? 'Uploading…' : 'Add to board'}
