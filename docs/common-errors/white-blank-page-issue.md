@@ -9,13 +9,10 @@ November 5, 2025
 ## Symptom
 When visiting https://lifegoalapp.com/, the site displays a completely white/blank page instead of the expected LifeGoalApp interface.
 
-## Root Cause History
-This incident has occurred multiple times, each with a different underlying cause.
-
-### ERROR-001 · November 5, 2025 — Invalid GitHub Pages workflow configuration
+## Root Cause
 The GitHub Actions deployment workflow contained an invalid configuration that prevented proper deployment to GitHub Pages.
 
-#### Technical Details
+### Technical Details
 The `.github/workflows/deploy.yml` file had an invalid parameter in the deploy step:
 
 ```yaml
@@ -31,12 +28,9 @@ The `actions/deploy-pages@v4` action does **not** accept a `cname` parameter. Th
 2. Stale/old content remaining on the server
 3. Deployment errors that weren't immediately obvious
 
-### ERROR-002 · November 7, 2025 — Theme bootstrap crashed when storage was unavailable
-Browsers that block `localStorage` access (Safari Private Browsing, aggressive tracker blockers, some enterprise builds) threw a `DOMException` inside `src/scripts/ui-theme.js`. The script previously called `localStorage.getItem` / `setItem` without guards. Because this script executes before the React bundle is imported, the exception prevented the application from mounting and resulted in a blank page.
-
 ## Solution
 
-### Fix for ERROR-001
+### The Fix
 Remove the invalid `cname` parameter from the deploy step in `.github/workflows/deploy.yml`:
 
 ```yaml
@@ -45,41 +39,6 @@ Remove the invalid `cname` parameter from the deploy step in `.github/workflows/
   uses: actions/deploy-pages@v4
   # No 'with' section needed - the action handles everything automatically
 ```
-
-### Fix for ERROR-002
-Wrap theme preference persistence in safe accessors so the script no longer throws when storage is blocked:
-
-```js
-const safeStorage = (() => {
-  try {
-    return window.localStorage;
-  } catch (error) {
-    console.warn('Theme preference storage is unavailable.', error);
-    return null;
-  }
-})();
-
-const getStoredTheme = () => {
-  if (!safeStorage) return null;
-  try {
-    return safeStorage.getItem('lga-theme');
-  } catch (error) {
-    console.warn('Unable to read stored theme preference.', error);
-    return null;
-  }
-};
-
-const setStoredTheme = (value) => {
-  if (!safeStorage) return;
-  try {
-    safeStorage.setItem('lga-theme', value);
-  } catch (error) {
-    console.warn('Unable to persist theme preference.', error);
-  }
-};
-```
-
-These helpers are used by `src/scripts/ui-theme.js` to apply and store theme preferences without blocking the rest of the bundle.
 
 ### How Custom Domain Works Correctly
 The custom domain (lifegoalapp.com) is configured through the `CNAME` file, which is:
@@ -91,7 +50,7 @@ The custom domain (lifegoalapp.com) is configured through the `CNAME` file, whic
 ### Verification Steps
 After deploying the fix:
 
-1. **Check GitHub Actions**:
+1. **Check GitHub Actions**: 
    - Navigate to the Actions tab in GitHub
    - Verify the "Deploy static site" workflow completes successfully
    - Check for green checkmarks on both "build" and "deploy" jobs
@@ -107,11 +66,6 @@ After deploying the fix:
    - Verify that CSS and JS files load successfully (status 200)
    - Look for `/assets/index-*.css` and `/assets/index-*.js` files
 
-4. **Validate Storage-Safe Bootstrapping**:
-   - Open the site in a browser session where storage access is blocked (Safari Private Browsing or Chrome with third-party cookies disabled)
-   - Confirm the page renders instead of throwing `DOMException: The operation is insecure.`
-   - Check the console for the fallback warning `Theme preference storage is unavailable.` instead of uncaught errors
-
 ## Prevention
 
 ### Pre-deployment Checklist
@@ -125,7 +79,6 @@ After deploying the fix:
 1. Set up GitHub Actions notifications for failed workflows
 2. Add a basic uptime monitor for lifegoalapp.com (e.g., UptimeRobot, StatusCake)
 3. Implement a simple health check endpoint that returns the build version
-4. Add automated smoke tests that run the production bundle with storage disabled to catch regressions.
 
 ## Related Issues
 This issue has occurred multiple times according to the problem statement. Common causes include:
@@ -134,7 +87,6 @@ This issue has occurred multiple times according to the problem statement. Commo
 - Build failures that weren't noticed
 - Permission issues with GitHub Pages deployment
 - DNS configuration problems (separate from this issue)
-- Front-end bootstrapping errors that halt rendering before React mounts
 
 ## Additional Notes
 
@@ -149,7 +101,6 @@ If the site still shows a blank page after this fix, check:
 3. **Browser Cache**: Clear browser cache or try in incognito/private mode
 4. **Build Errors**: Check if the build step in GitHub Actions is actually succeeding
 5. **JavaScript Errors**: Open browser console and check for errors that might prevent React from rendering
-6. **Service Worker Cache**: If the service worker is still serving stale assets, run `navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()))` in the console and hard refresh.
 
 ### Build Process Overview
 ```
@@ -166,8 +117,7 @@ The dist folder contains:
 - `icons/` - App icons
 
 ## Resolution Date
-- November 5, 2025 (ERROR-001)
-- November 7, 2025 (ERROR-002)
+November 5, 2025
 
 ## Status
 ✅ **RESOLVED** - Fix deployed and verified
