@@ -1,4 +1,4 @@
-import { supabase } from './supaClient.js';
+import { supabase, REDIRECT_TO } from './supaClient.js';
 
 const modal = document.getElementById('authModal');
 const btnOpen = document.getElementById('btnSignIn') || document.querySelector('[data-auth-open]');
@@ -7,10 +7,6 @@ const btnGoogle = document.getElementById('googleSignIn');
 const formEmail = document.getElementById('emailForm');
 const emailInput = document.getElementById('authEmail');
 const msg = document.getElementById('authMsg');
-const DEFAULT_CALLBACK_PATH = '/auth/callback';
-const redirectTo =
-  (typeof window !== 'undefined' && window.__LIFEGOAL_SUPABASE_REDIRECT_URL__) ||
-  `${window.location.origin}${DEFAULT_CALLBACK_PATH}`;
 const accountControls = document.getElementById('accountControls');
 const accountName = document.getElementById('accountName');
 const btnSignOut = document.getElementById('btnSignOut');
@@ -103,7 +99,10 @@ modal && modal.addEventListener('click', (event) => {
 // Google OAuth
 btnGoogle?.addEventListener('click', async () => {
   if (msg) msg.textContent = 'Opening Google…';
-  await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: REDIRECT_TO },
+  });
 });
 
 // Magic link
@@ -114,7 +113,7 @@ formEmail?.addEventListener('submit', async (event) => {
   if (msg) msg.textContent = 'Sending link…';
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: redirectTo },
+    options: { emailRedirectTo: REDIRECT_TO },
   });
   if (msg) {
     msg.textContent = error ? `Error: ${error.message}` : 'Check your email for a sign-in link.';
