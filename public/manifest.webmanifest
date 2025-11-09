@@ -1,12 +1,12 @@
 {
   "name": "LifeGoalApp",
   "short_name": "LifeGoals",
-  "description": "A smooth progressive web app for setting goals, tracking habits, and visualizing progress.",
+  "description": "A premium progressive web app for setting goals, tracking habits, and visualizing progress with beautiful glass morphism design.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
   "icons": [
     {
       "src": "/icons/icon-192x192.svg",
