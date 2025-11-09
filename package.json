@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:supabase-client": "node scripts/generate-supa-client.mjs",
+    "predev": "npm run generate:supabase-client",
+    "prebuild": "npm run generate:supabase-client"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
