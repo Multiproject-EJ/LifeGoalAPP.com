@@ -4,6 +4,7 @@ import type { Database } from './database.types';
 
 let cachedClient: SupabaseClient<Database> | null = null;
 let activeSession: Session | null = null;
+const DEFAULT_AUTH_CALLBACK_PATH = '/auth/callback';
 
 export function hasSupabaseCredentials(): boolean {
   return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
@@ -48,3 +49,14 @@ export function getSupabaseClient(): SupabaseClient<Database> {
 }
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
+
+export function getSupabaseRedirectUrl(): string | null {
+  const configuredRedirect = import.meta.env.VITE_SUPABASE_REDIRECT_URL?.trim();
+  if (configuredRedirect) {
+    return configuredRedirect;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}${DEFAULT_AUTH_CALLBACK_PATH}`;
+  }
+  return null;
+}

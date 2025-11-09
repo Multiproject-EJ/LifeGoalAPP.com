@@ -1,6 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session, SignInWithPasswordCredentials, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
-import { getSupabaseClient, hasSupabaseCredentials, setSupabaseSession, type TypedSupabaseClient } from '../../lib/supabaseClient';
+import {
+  getSupabaseClient,
+  getSupabaseRedirectUrl,
+  hasSupabaseCredentials,
+  setSupabaseSession,
+  type TypedSupabaseClient,
+} from '../../lib/supabaseClient';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from '../../services/demoData';
 import { createDemoSession } from '../../services/demoSession';
 
@@ -22,8 +28,6 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-const GOOGLE_REDIRECT_URL = 'https://www.lifegoalapp.com/auth/callback';
 
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
   const mode: AuthProviderMode = hasSupabaseCredentials() ? 'supabase' : 'demo';
@@ -144,11 +148,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
+    const redirectTo = getSupabaseRedirectUrl();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: GOOGLE_REDIRECT_URL,
-      },
+      ...(redirectTo ? { options: { redirectTo } } : {}),
     });
     if (error) throw error;
   }, [mode, supabase, supabaseError]);

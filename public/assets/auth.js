@@ -7,7 +7,10 @@ const btnGoogle = document.getElementById('googleSignIn');
 const formEmail = document.getElementById('emailForm');
 const emailInput = document.getElementById('authEmail');
 const msg = document.getElementById('authMsg');
-const redirectTo = 'https://www.lifegoalapp.com/auth/callback';
+const DEFAULT_CALLBACK_PATH = '/auth/callback';
+const redirectTo =
+  (typeof window !== 'undefined' && window.__LIFEGOAL_SUPABASE_REDIRECT_URL__) ||
+  `${window.location.origin}${DEFAULT_CALLBACK_PATH}`;
 const accountControls = document.getElementById('accountControls');
 const accountName = document.getElementById('accountName');
 const btnSignOut = document.getElementById('btnSignOut');
