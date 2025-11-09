@@ -1,4 +1,4 @@
-import { supabase } from './supaClient.js';
+import { supabase, getSupabaseRedirectUrl } from './supaClient.js';
 
 const modal = document.getElementById('authModal');
 const btnOpen = document.getElementById('btnSignIn') || document.querySelector('[data-auth-open]');
@@ -9,8 +9,10 @@ const emailInput = document.getElementById('authEmail');
 const msg = document.getElementById('authMsg');
 const DEFAULT_CALLBACK_PATH = '/auth/callback';
 const redirectTo =
-  (typeof window !== 'undefined' && window.__LIFEGOAL_SUPABASE_REDIRECT_URL__) ||
-  `${window.location.origin}${DEFAULT_CALLBACK_PATH}`;
+  getSupabaseRedirectUrl() ||
+  (typeof window !== 'undefined' && window.location?.origin
+    ? `${window.location.origin}${DEFAULT_CALLBACK_PATH}`
+    : null);
 const accountControls = document.getElementById('accountControls');
 const accountName = document.getElementById('accountName');
 const btnSignOut = document.getElementById('btnSignOut');
@@ -114,7 +116,7 @@ formEmail?.addEventListener('submit', async (event) => {
   if (msg) msg.textContent = 'Sending link…';
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: redirectTo },
+    options: { emailRedirectTo: redirectTo ?? undefined },
   });
   if (msg) {
     msg.textContent = error ? `Error: ${error.message}` : 'Check your email for a sign-in link.';
