@@ -1,50 +1,20 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Signing you in…</title>
-    <style>
-      body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;background:#0f172a;color:#e2e8f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;min-height:100vh;margin:0;padding:1.5rem;text-align:center}
-      .status{font-size:1.25rem}
-      .error{max-width:32rem;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.4);color:#fecaca;padding:1rem 1.25rem;border-radius:.75rem;box-shadow:0 1rem 2.5rem rgba(0,0,0,.35)}
-      .hidden{display:none}
-    </style>
-  </head>
-  <body>
-    <div class="status" id="status">Signing you in…</div>
-    <div class="error hidden" id="error"></div>
-    <script type="module">
-      import { supabase } from "/assets/supaClient.js";
-      const statusEl = document.getElementById('status');
-      const errorEl = document.getElementById('error');
+<html>
+<body>Signing you in…</body>
+<script type="module">
+  import { supabase } from "/assets/supaClient.js";
 
-      const params = new URLSearchParams(window.location.search);
-      const authError = params.get('error');
-      const errorDescription = params.get('error_description');
+  // Wait for Supabase session (Google login completes here)
+  const { data } = await supabase.auth.getSession();
 
-      if (authError || errorDescription) {
-        const message = [authError, errorDescription].filter(Boolean).join(': ');
-        statusEl.textContent = 'Something went wrong during sign in.';
-        errorEl.textContent = message || 'An unknown authentication error occurred.';
-        errorEl.classList.remove('hidden');
-      }
+  // If user is signed in, redirect to dashboard (or home if no dashboard exists yet)
+  if (data?.session) {
+    window.location.replace("/dashboard");
+  }
 
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Supabase auth.getSession error:', error);
-      }
-      if (data?.session) {
-        location.replace('/dashboard');
-      }
-      const { error: authListenerError } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session) {
-          location.replace('/dashboard');
-        }
-      });
-      if (authListenerError) {
-        console.error('Supabase onAuthStateChange error:', authListenerError);
-      }
-    </script>
-  </body>
+  // Also listen in case the session appears slightly later
+  supabase.auth.onAuthStateChange((_e, session) => {
+    if (session) window.location.replace("/dashboard");
+  });
+</script>
 </html>
