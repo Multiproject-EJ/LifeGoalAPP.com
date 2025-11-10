@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FormEvent, ReactNode, SetStateAction, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalReflectionJournal, GoalWorkspace } from './features/goals';
@@ -17,6 +17,7 @@ type WorkspaceNavItem = {
   id: string;
   label: string;
   summary: string;
+  icon: ReactNode;
 };
 
 const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
@@ -24,41 +25,49 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     id: 'goals',
     label: 'Dashboard',
     summary: 'Review upcoming milestones and daily focus from a unified dashboard.',
+    icon: '📊',
   },
   {
     id: 'planning',
     label: "Today's Habits & Routines",
     summary: 'Check in on the rituals that keep today on track.',
+    icon: '✅',
   },
   {
     id: 'rituals',
     label: 'Wellbeing Wheel Check-in',
     summary: 'Reflect on your wellbeing balance with a quick wheel check-in.',
+    icon: '🧭',
   },
   {
     id: 'insights',
     label: 'Vision Board',
     summary: 'Stay inspired with highlights from your evolving vision board.',
+    icon: '🖼️',
   },
   {
     id: 'support',
     label: 'Life Goals',
     summary: 'Review your long-term goals and celebrate progress milestones.',
+    icon: '🎯',
   },
   {
     id: 'setup-habits',
     label: 'Set Up Habits',
     summary: 'Create or refine the habits that support your life goals.',
+    icon: '🔁',
   },
   {
     id: 'setup-goals',
     label: 'Set Up Goals',
     summary: 'Define clear, motivating goals to guide your next steps.',
+    icon: '🛠️',
   },
   {
     id: 'settings',
     label: 'Settings',
     summary: 'Adjust preferences and configure your workspace experience.',
+    icon: '⚙️',
   },
 ];
 
@@ -546,9 +555,14 @@ export default function App() {
                   }`}
                   onClick={() => setActiveWorkspaceNav(item.id)}
                   aria-pressed={isActive}
+                  aria-label={item.label}
+                  title={`${item.label} • ${item.summary}`}
                 >
-                  <span className="workspace-sidebar__nav-label">{item.label}</span>
-                  <span className="workspace-sidebar__nav-summary">{item.summary}</span>
+                  <span className="workspace-sidebar__nav-icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
+                  <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
                 </button>
               );
             })}
