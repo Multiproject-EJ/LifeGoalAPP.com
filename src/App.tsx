@@ -94,6 +94,7 @@ export default function App() {
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [authEntry, setAuthEntry] = useState<'options' | 'email'>('options');
   const [profileSaving, setProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(
@@ -189,9 +190,11 @@ export default function App() {
     if (isAuthenticated) {
       setActiveWorkspaceNav('settings');
       setShowAuthPanel(false);
+      setAuthEntry('options');
       return;
     }
     setShowAuthPanel(true);
+    setAuthEntry('options');
   };
 
   const handleDemoSignIn = async () => {
@@ -199,6 +202,7 @@ export default function App() {
     setAuthError(null);
     setSubmitting(true);
     setShowAuthPanel(false);
+    setAuthEntry('options');
     try {
       await signInWithPassword({ email: DEMO_USER_EMAIL, password: 'demo-password' });
       setAuthMessage('Signed in to the demo workspace.');
@@ -267,151 +271,166 @@ export default function App() {
       <div className="auth-card__body">
         {initializing ? (
           <p className="supabase-auth__status supabase-auth__status--info">Loading session…</p>
-        ) : isDemoMode ? (
-          <>
-            <button
-              type="button"
-              className="supabase-auth__action auth-card__primary"
-              onClick={handleDemoSignIn}
-              disabled={submitting}
-            >
-              {submitting ? 'Signing in…' : 'Continue with the demo account'}
-            </button>
-            <p className="auth-card__hint">
-              We&apos;ll sign you in as <strong>{DEMO_USER_NAME}</strong> (<code>{DEMO_USER_EMAIL}</code>). Your
-              changes stay on this device.
-            </p>
-          </>
-        ) : !isConfigured ? (
-          <p className="supabase-auth__status supabase-auth__status--error">
-            Supabase credentials are not configured. Update your environment variables to enable authentication.
-          </p>
         ) : (
           <>
-            <div className="supabase-auth__social">
+            <div className="auth-card__options" role="list">
               <button
                 type="button"
-                className="supabase-auth__action supabase-auth__action--google"
-                onClick={handleGoogleSignIn}
+                role="listitem"
+                className="auth-option auth-option--demo"
+                onClick={handleDemoSignIn}
                 disabled={submitting}
               >
-                <svg aria-hidden="true" viewBox="0 0 533.5 544.3">
-                  <path
-                    fill="#EA4335"
-                    d="M533.5 278.4c0-18.5-1.5-37-4.7-54.7H272v103.5h147.2c-6.3 34.2-25.3 63.1-54 82.4v68h87.2c51.1-47.1 81.1-116.5 81.1-199.2z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M272 544.3c73.3 0 135-24.3 180-66.1l-87.2-68c-24.2 16.3-55.3 26-92.8 26-71 0-131.2-47.9-152.8-112.1H29.4v70.5c44.6 88.2 136.4 149.7 242.6 149.7z"
-                  />
-                  <path
-                    fill="#4A90E2"
-                    d="M119.2 324.1c-10.3-30.6-10.3-63.3 0-93.9V159.7H29.4c-42.4 84.7-42.4 183 0 267.7l89.8-70.5z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M272 106.5c39.9-.6 78.1 14.5 107.4 42.5l80.2-80.2C405.9 24 343.9-.1 272 0 165.8 0 74 61.5 29.4 149.7l89.8 70.5C140.8 154.9 201 107 272 106.5z"
-                  />
-                </svg>
-                {submitting ? 'Opening Google…' : 'Continue with Google'}
+                <span className="auth-option__eyebrow">Instant tour</span>
+                <span className="auth-option__title">Explore the demo workspace</span>
+                <span className="auth-option__subtitle">
+                  Sign in as <strong>{DEMO_USER_NAME}</strong> and keep your changes on this device.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                role="listitem"
+                className="auth-option auth-option--google"
+                onClick={handleGoogleSignIn}
+                disabled={submitting || !isConfigured}
+              >
+                <span className="auth-option__eyebrow">Fastest sync</span>
+                <span className="auth-option__title">Continue with Google</span>
+                <span className="auth-option__subtitle">Connect your Supabase project using Google OAuth.</span>
+              </button>
+
+              <button
+                type="button"
+                role="listitem"
+                className={`auth-option auth-option--email ${authEntry === 'email' ? 'auth-option--active' : ''}`}
+                onClick={() => setAuthEntry('email')}
+                disabled={submitting || !isConfigured}
+              >
+                <span className="auth-option__eyebrow">Flexible access</span>
+                <span className="auth-option__title">Use email + password or magic link</span>
+                <span className="auth-option__subtitle">
+                  Prefer classic credentials? Continue with email-based sign-in or sign-up.
+                </span>
               </button>
             </div>
 
-            <div className="supabase-auth__divider">
-              <span>Or continue with email</span>
-            </div>
+            {authEntry === 'email' ? (
+              <div className="auth-card__email">
+                <div className="auth-card__email-header">
+                  <h3>Email sign-in</h3>
+                  <button
+                    type="button"
+                    className="supabase-auth__toggle"
+                    onClick={() => setAuthEntry('options')}
+                  >
+                    Choose a different option
+                  </button>
+                </div>
 
-            <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
-              <div className="supabase-auth__modes" role="tablist" aria-label="Authentication mode">
-                <button
-                  type="button"
-                  className={`supabase-auth__mode ${authMode === 'password' ? 'supabase-auth__mode--active' : ''}`}
-                  onClick={() => setAuthMode('password')}
-              >
-                Sign in
-              </button>
-              <button
-                type="button"
-                className={`supabase-auth__mode ${authMode === 'signup' ? 'supabase-auth__mode--active' : ''}`}
-                onClick={() => setAuthMode('signup')}
-              >
-                Create account
-              </button>
-              <button
-                type="button"
-                className={`supabase-auth__mode ${authMode === 'magic' ? 'supabase-auth__mode--active' : ''}`}
-                onClick={() => setAuthMode('magic')}
-              >
-                Magic link
-              </button>
-              <button
-                type="button"
-                className={`supabase-auth__mode ${authMode === 'reset' ? 'supabase-auth__mode--active' : ''}`}
-                onClick={() => setAuthMode('reset')}
-              >
-                Reset password
-              </button>
-            </div>
+                <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
+                  <div className="supabase-auth__modes" role="tablist" aria-label="Authentication mode">
+                    <button
+                      type="button"
+                      className={`supabase-auth__mode ${authMode === 'password' ? 'supabase-auth__mode--active' : ''}`}
+                      onClick={() => setAuthMode('password')}
+                    >
+                      Sign in
+                    </button>
+                    <button
+                      type="button"
+                      className={`supabase-auth__mode ${authMode === 'signup' ? 'supabase-auth__mode--active' : ''}`}
+                      onClick={() => setAuthMode('signup')}
+                    >
+                      Create account
+                    </button>
+                    <button
+                      type="button"
+                      className={`supabase-auth__mode ${authMode === 'magic' ? 'supabase-auth__mode--active' : ''}`}
+                      onClick={() => setAuthMode('magic')}
+                    >
+                      Magic link
+                    </button>
+                    <button
+                      type="button"
+                      className={`supabase-auth__mode ${authMode === 'reset' ? 'supabase-auth__mode--active' : ''}`}
+                      onClick={() => setAuthMode('reset')}
+                    >
+                      Reset password
+                    </button>
+                  </div>
 
-            <label className="supabase-auth__field">
-              <span>Email</span>
-              <input
-                type="email"
-                name="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-                required
-              />
-            </label>
+                  <label className="supabase-auth__field">
+                    <span>Email</span>
+                    <input
+                      type="email"
+                      name="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                    />
+                  </label>
 
-            {(authMode === 'password' || authMode === 'signup') && (
-              <label className="supabase-auth__field">
-                <span>Password</span>
-                <input
-                  type="password"
-                  name="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
-                  required={authMode === 'signup'}
-                />
-              </label>
+                  {(authMode === 'password' || authMode === 'signup') && (
+                    <label className="supabase-auth__field">
+                      <span>Password</span>
+                      <input
+                        type="password"
+                        name="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="••••••••"
+                        autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
+                        required={authMode === 'signup'}
+                      />
+                    </label>
+                  )}
+
+                  {authMode === 'signup' && (
+                    <label className="supabase-auth__field">
+                      <span>Your name</span>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                        placeholder="Jordan Goalsetter"
+                        autoComplete="name"
+                        required
+                      />
+                    </label>
+                  )}
+
+                  <div className="supabase-auth__actions">
+                    <button type="submit" className="supabase-auth__action" disabled={submitting}>
+                      {submitting
+                        ? 'Sending…'
+                        : authMode === 'password'
+                          ? 'Sign in'
+                          : authMode === 'signup'
+                            ? 'Create account'
+                            : authMode === 'magic'
+                              ? 'Send magic link'
+                              : 'Send reset link'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <p className="auth-card__hint auth-card__hint--muted">
+                Prefer email access? Choose the third option to reveal the full sign-in and sign-up form.
+              </p>
             )}
-
-            {authMode === 'signup' && (
-              <label className="supabase-auth__field">
-                <span>Your name</span>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
-                  placeholder="Jordan Goalsetter"
-                  autoComplete="name"
-                  required
-                />
-              </label>
-            )}
-
-            <div className="supabase-auth__actions">
-              <button type="submit" className="supabase-auth__action" disabled={submitting}>
-                {submitting
-                  ? 'Sending…'
-                  : authMode === 'password'
-                    ? 'Sign in'
-                    : authMode === 'signup'
-                      ? 'Create account'
-                      : authMode === 'magic'
-                        ? 'Send magic link'
-                        : 'Send reset link'}
-              </button>
-            </div>
-            </form>
           </>
         )}
+
+        {!isConfigured ? (
+          <p className="supabase-auth__status supabase-auth__status--error">
+            Supabase credentials are not configured. Update your environment variables to enable live authentication.
+          </p>
+        ) : null}
 
         {statusElements}
       </div>

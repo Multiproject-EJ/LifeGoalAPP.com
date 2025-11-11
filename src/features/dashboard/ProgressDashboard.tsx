@@ -78,6 +78,14 @@ type WeeklyFocusDigest = {
   emptyMessage: string;
 };
 
+type UrgentTaskNote = {
+  id: string;
+  title: string;
+  detail: string;
+  dueLabel: string;
+  accent: 'sunrise' | 'ocean';
+};
+
 function formatISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -293,6 +301,26 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
     [goals, today],
   );
 
+  const urgentTasks = useMemo<UrgentTaskNote[]>(
+    () => [
+      {
+        id: 'client-sync',
+        title: 'Client strategy sync',
+        detail: 'Finalize the talking points and share the deck before the call.',
+        dueLabel: 'Today · 2:30 PM',
+        accent: 'sunrise',
+      },
+      {
+        id: 'habit-journal',
+        title: 'Evening reflection',
+        detail: 'Log your top three wins and note one improvement for tomorrow.',
+        dueLabel: 'Tonight · 9:00 PM',
+        accent: 'ocean',
+      },
+    ],
+    [],
+  );
+
   return (
     <section className="progress-dashboard">
       <header className="progress-dashboard__header">
@@ -311,6 +339,25 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
           {loading ? 'Refreshing…' : 'Refresh insights'}
         </button>
       </header>
+
+      <section className="urgent-tasks" aria-label="Urgent tasks">
+        <div className="urgent-tasks__header">
+          <h3>Urgent tasks</h3>
+          <p>Pin a couple of sticky notes to spotlight what needs your focus first.</p>
+        </div>
+        <div className="urgent-tasks__board">
+          {urgentTasks.map((task) => (
+            <article key={task.id} className={`sticky-note sticky-note--${task.accent}`}>
+              <span className="sticky-note__pin" aria-hidden="true" />
+              <h4>{task.title}</h4>
+              <p>{task.detail}</p>
+              <p className="sticky-note__due">
+                <strong>Due</strong> {task.dueLabel}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
 
       {isDemoExperience ? (
         <p className="progress-dashboard__status progress-dashboard__status--info">
