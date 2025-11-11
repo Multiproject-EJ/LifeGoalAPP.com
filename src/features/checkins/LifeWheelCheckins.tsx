@@ -10,7 +10,7 @@ type LifeWheelCheckinsProps = {
   session: Session;
 };
 
-const LIFE_WHEEL_CATEGORIES = [
+export const LIFE_WHEEL_CATEGORIES = [
   { key: 'spirituality_community', label: 'Spirituality & Community' },
   { key: 'finance_wealth', label: 'Finance & Wealth' },
   { key: 'love_relations', label: 'Love & Relations' },

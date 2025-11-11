@@ -843,6 +843,24 @@ body {
   scrollbar-gutter: stable both-edges;
 }
 
+.workspace-main__mobile-cta {
+  align-self: flex-start;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.workspace-main__mobile-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+}
+
 .workspace-status {
   display: grid;
   gap: 0.5rem;
@@ -2274,6 +2292,99 @@ body {
   gap: 1rem;
 }
 
+.habit-tracker--compact {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.habit-tracker--compact .habit-tracker__refresh {
+  align-self: stretch;
+  font-size: 0.95rem;
+}
+
+.habit-tracker--compact .habit-tracker__header h2 {
+  font-size: 1.5rem;
+}
+
+.habit-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.habit-checklist__item {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.habit-checklist__item--completed {
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow: 0 10px 18px rgba(34, 197, 94, 0.15);
+}
+
+.habit-checklist__item--rest {
+  opacity: 0.85;
+}
+
+.habit-checklist__label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.habit-checklist__checkbox {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: #14b8a6;
+  margin-top: 0.2rem;
+}
+
+.habit-checklist__details {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.habit-checklist__name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.habit-checklist__meta {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.habit-checklist__meta--secondary {
+  color: #64748b;
+}
+
+.habit-checklist__note {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.habit-checklist__note--rest {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.habit-checklist__saving {
+  font-size: 0.85rem;
+  color: #0ea5e9;
+  font-weight: 500;
+}
+
 .habit-card {
   background: #ffffff;
   border-radius: 16px;
@@ -2585,6 +2696,101 @@ body {
   box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
   display: grid;
   gap: 1rem;
+}
+
+.progress-card--habit-create {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(129, 140, 248, 0.12));
+  border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+.habit-create-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.habit-create-form__row {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 600px) {
+  .habit-create-form__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.habit-create-form__field {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.habit-create-form__field span {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.habit-create-form__field input,
+.habit-create-form__field select {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.habit-create-form__field select:disabled,
+.habit-create-form__field input:disabled {
+  background: rgba(241, 245, 249, 0.7);
+  cursor: not-allowed;
+}
+
+.habit-create-form__status {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+}
+
+.habit-create-form__status--success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #047857;
+}
+
+.habit-create-form__status--error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.habit-create-form__submit {
+  justify-self: flex-start;
+  border-radius: 999px;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habit-create-form__submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.habit-create-form__submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(99, 102, 241, 0.25);
+}
+
+.habit-create-form__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #334155;
 }
 
 .progress-card header h3 {
@@ -4311,4 +4517,104 @@ body {
 
 .notification-preferences__inline input[type='text']::placeholder {
   color: rgba(100, 116, 139, 0.8);
+}
+
+.mobile-habit-home {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 35%, #f8fafc 100%);
+  padding: clamp(1.25rem, 6vw, 2.25rem);
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.mobile-habit-home__header {
+  display: grid;
+  gap: 0.75rem;
+  color: rgba(248, 250, 252, 0.95);
+}
+
+.mobile-habit-home__header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 2.6rem);
+  font-weight: 800;
+}
+
+.mobile-habit-home__header p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.mobile-habit-home .habit-tracker {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+}
+
+.mobile-habit-home__nav {
+  background: rgba(248, 250, 252, 0.95);
+  border-radius: 20px;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  display: grid;
+  gap: 1rem;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+}
+
+.mobile-habit-home__nav h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.mobile-habit-home__nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mobile-habit-home__nav-item {
+  margin: 0;
+}
+
+.mobile-habit-home__nav-button {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-habit-home__nav-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.15);
+}
+
+.mobile-habit-home__nav-icon {
+  font-size: 1.4rem;
+}
+
+.mobile-habit-home__nav-text {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.mobile-habit-home__nav-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.mobile-habit-home__nav-summary {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.4;
 }

@@ -1,19 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchGoals } from '../../services/goals';
 import {
+  buildSchedulePayload,
   fetchHabitLogsForRange,
   fetchHabitsForUser,
   type HabitWithGoal,
+  upsertHabit,
 } from '../../services/habits';
-import type { Database } from '../../lib/database.types';
+import type { Database, Json } from '../../lib/database.types';
 import {
   GOAL_STATUS_META,
   GOAL_STATUS_ORDER,
   type GoalStatusTag,
   normalizeGoalStatus,
 } from '../goals/goalStatus';
+import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
@@ -138,9 +141,22 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
   const [logs, setLogs] = useState<HabitLogRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [newHabitName, setNewHabitName] = useState('');
+  const [selectedGoalId, setSelectedGoalId] = useState('');
+  const [selectedDomainKey, setSelectedDomainKey] = useState<string>(
+    LIFE_WHEEL_CATEGORIES[0]?.key ?? '',
+  );
+  const [habitFormMessage, setHabitFormMessage] = useState<string | null>(null);
+  const [habitFormError, setHabitFormError] = useState<string | null>(null);
+  const [creatingHabit, setCreatingHabit] = useState(false);
 
   const today = useMemo(() => new Date(), []);
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBoundaries(today), [today]);
+  const nameFieldId = useId();
+  const domainFieldId = useId();
+  const goalFieldId = useId();
+  const canCreateHabits = isConfigured || isDemoExperience;
+  const hasGoals = goals.length > 0;
 
   const refreshDashboard = useCallback(async () => {
     if (!session || (!isConfigured && !isDemoExperience)) {
@@ -204,6 +220,68 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
       setLogs([]);
     }
   }, [isConfigured, isDemoExperience]);
+
+  useEffect(() => {
+    if (selectedGoalId || goals.length === 0) {
+      return;
+    }
+    setSelectedGoalId(goals[0]?.id ?? '');
+  }, [goals, selectedGoalId]);
+
+  const handleHabitCreate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setHabitFormMessage(null);
+    setHabitFormError(null);
+
+    if (!canCreateHabits) {
+      setHabitFormError('Connect Supabase to create new habits from the dashboard.');
+      return;
+    }
+
+    const trimmedName = newHabitName.trim();
+    if (!trimmedName) {
+      setHabitFormError('Name your habit to save it.');
+      return;
+    }
+
+    if (!selectedGoalId) {
+      setHabitFormError('Choose a goal so we can attach this habit to your life wheel focus.');
+      return;
+    }
+
+    setCreatingHabit(true);
+
+    try {
+      const domain = LIFE_WHEEL_CATEGORIES.find((entry) => entry.key === selectedDomainKey) ?? null;
+      const scheduleRecord: Record<string, Json> = { type: 'daily' };
+      if (domain) {
+        scheduleRecord.life_wheel_domain = { key: domain.key, label: domain.label } as Json;
+      } else if (selectedDomainKey) {
+        scheduleRecord.life_wheel_domain = { key: selectedDomainKey } as Json;
+      }
+
+      const { error } = await upsertHabit({
+        goal_id: selectedGoalId,
+        name: trimmedName,
+        frequency: 'daily',
+        schedule: buildSchedulePayload(scheduleRecord),
+      });
+
+      if (error) throw error;
+
+      setHabitFormMessage('Habit added to your daily checklist.');
+      setNewHabitName('');
+      setSelectedGoalId('');
+      setSelectedDomainKey(LIFE_WHEEL_CATEGORIES[0]?.key ?? '');
+      await refreshDashboard();
+    } catch (error) {
+      setHabitFormError(
+        error instanceof Error ? error.message : 'Unable to save the habit. Please try again shortly.',
+      );
+    } finally {
+      setCreatingHabit(false);
+    }
+  };
 
   const completionMap = useMemo(() => {
     return logs.reduce<Record<string, number>>((acc, log) => {
@@ -384,6 +462,92 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
         </div>
       ) : (
         <div className="progress-dashboard__grid">
+          <article className="progress-card progress-card--habit-create">
+            <header>
+              <h3>Capture a new daily habit</h3>
+              <p>Align a fresh ritual with your life wheel so it appears on today&apos;s checklist.</p>
+            </header>
+            <form className="habit-create-form" onSubmit={handleHabitCreate}>
+              <label className="habit-create-form__field" htmlFor={nameFieldId}>
+                <span>Habit name</span>
+                <input
+                  id={nameFieldId}
+                  type="text"
+                  value={newHabitName}
+                  onChange={(event) => setNewHabitName(event.target.value)}
+                  placeholder="Evening wind-down ritual"
+                  autoComplete="off"
+                  disabled={!canCreateHabits}
+                />
+              </label>
+
+              <div className="habit-create-form__row">
+                <label className="habit-create-form__field" htmlFor={domainFieldId}>
+                  <span>Life wheel focus</span>
+                  <select
+                    id={domainFieldId}
+                    value={selectedDomainKey}
+                    onChange={(event) => setSelectedDomainKey(event.target.value)}
+                    disabled={!canCreateHabits}
+                  >
+                    {LIFE_WHEEL_CATEGORIES.map((category) => (
+                      <option key={category.key} value={category.key}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="habit-create-form__field" htmlFor={goalFieldId}>
+                  <span>Attach to goal</span>
+                  <select
+                    id={goalFieldId}
+                    value={selectedGoalId}
+                    onChange={(event) => setSelectedGoalId(event.target.value)}
+                    disabled={!canCreateHabits || !hasGoals}
+                  >
+                    <option value="" disabled>
+                      {hasGoals ? 'Choose a goal' : 'No goals yet'}
+                    </option>
+                    {goals.map((goal) => (
+                      <option key={goal.id} value={goal.id}>
+                        {goal.title ?? 'Untitled goal'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {habitFormMessage ? (
+                <p className="habit-create-form__status habit-create-form__status--success">
+                  {habitFormMessage}
+                </p>
+              ) : null}
+              {habitFormError ? (
+                <p className="habit-create-form__status habit-create-form__status--error">{habitFormError}</p>
+              ) : null}
+
+              <button
+                type="submit"
+                className="habit-create-form__submit"
+                disabled={creatingHabit || !canCreateHabits || !hasGoals}
+              >
+                {creatingHabit ? 'Saving…' : 'Add daily habit'}
+              </button>
+            </form>
+
+            {!canCreateHabits ? (
+              <p className="habit-create-form__hint">
+                Connect Supabase or explore demo mode to create habits from the dashboard.
+              </p>
+            ) : null}
+            {canCreateHabits && !hasGoals ? (
+              <p className="habit-create-form__hint">
+                Create a goal first to anchor your new habit to your life wheel.
+              </p>
+            ) : null}
+          </article>
+
           <article className="progress-card progress-card--digest">
             <header>
               <h3>Weekly focus digest</h3>

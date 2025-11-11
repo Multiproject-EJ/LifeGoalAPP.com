@@ -10,8 +10,11 @@ import {
 } from '../../services/habits';
 import type { Database, Json } from '../../lib/database.types';
 
+type DailyHabitTrackerVariant = 'full' | 'compact';
+
 type DailyHabitTrackerProps = {
   session: Session;
+  variant?: DailyHabitTrackerVariant;
 };
 
 type HabitCompletionState = {
@@ -35,9 +38,10 @@ const STREAK_LOOKBACK_DAYS = 60;
 const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatically once you reconnect.';
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
 
-export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
+export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrackerProps) {
   const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
   const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const isCompact = variant === 'compact';
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -236,12 +240,70 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
     }
   };
 
+  const renderCompactList = () => (
+    <ul className="habit-checklist">
+      {habits.map((habit) => {
+        const state = completions[habit.id];
+        const isCompleted = Boolean(state?.completed);
+        const isSaving = Boolean(saving[habit.id]);
+        const insight = habitInsights[habit.id];
+        const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, today);
+        const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? today : null);
+        const lastCompletedText = formatLastCompleted(lastCompletedOn, today);
+        const domainMeta = extractLifeWheelDomain(habit.schedule);
+        const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
+        const goalLabel = habit.goal?.title ?? 'Unassigned goal';
+
+        return (
+          <li
+            key={habit.id}
+            className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
+              isCompleted ? 'habit-checklist__item--completed' : ''
+            }`}
+          >
+            <label className="habit-checklist__label">
+              <input
+                type="checkbox"
+                className="habit-checklist__checkbox"
+                checked={isCompleted}
+                onChange={() => void toggleHabit(habit)}
+                disabled={isSaving || (!scheduledToday && !isCompleted)}
+              />
+              <span className="habit-checklist__details">
+                <span className="habit-checklist__name">{habit.name}</span>
+                <span className="habit-checklist__meta">
+                  {domainLabel ? `Life wheel: ${domainLabel}` : `Goal: ${goalLabel}`}
+                </span>
+                {domainLabel && habit.goal?.title ? (
+                  <span className="habit-checklist__meta habit-checklist__meta--secondary">
+                    Goal: {habit.goal.title}
+                  </span>
+                ) : null}
+                {lastCompletedText ? (
+                  <span className="habit-checklist__note">{lastCompletedText}</span>
+                ) : null}
+                {!scheduledToday ? (
+                  <span className="habit-checklist__note habit-checklist__note--rest">Rest day</span>
+                ) : null}
+              </span>
+            </label>
+            {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
   return (
-    <section className="habit-tracker">
+    <section className={`habit-tracker ${isCompact ? 'habit-tracker--compact' : ''}`}>
       <header className="habit-tracker__header">
         <div>
-          <h2>Today&apos;s habit tracker</h2>
-          <p>Log your progress for {formatDateLabel(today)} so nothing slips through the cracks.</p>
+          <h2>{isCompact ? "Today's habits" : "Today's habit tracker"}</h2>
+          <p>
+            {isCompact
+              ? 'Check off the rituals that keep your life wheel balanced today.'
+              : `Log your progress for ${formatDateLabel(today)} so nothing slips through the cracks.`}
+          </p>
         </div>
         <button
           type="button"
@@ -249,7 +311,7 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
           onClick={() => void refreshHabits()}
           disabled={loading || (!isConfigured && !isDemoExperience)}
         >
-          {loading ? 'Refreshing…' : 'Refresh habits'}
+          {loading ? 'Refreshing…' : isCompact ? 'Refresh list' : 'Refresh habits'}
         </button>
       </header>
 
@@ -272,6 +334,8 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
             Once you add habits to your goals, they will appear here so you can check in daily and keep your streak alive.
           </p>
         </div>
+      ) : isCompact ? (
+        renderCompactList()
       ) : (
         <ul className="habit-tracker__list">
           {habits.map((habit) => {
@@ -331,6 +395,52 @@ export function DailyHabitTracker({ session }: DailyHabitTrackerProps) {
       )}
     </section>
   );
+}
+
+type LifeWheelDomainMeta = { key: string | null; label: string | null };
+
+function extractLifeWheelDomain(schedule: Json | null): LifeWheelDomainMeta | null {
+  if (!schedule || typeof schedule !== 'object') {
+    return null;
+  }
+
+  const value = schedule as Record<string, Json>;
+  const domain = value.life_wheel_domain;
+
+  if (!domain) {
+    return null;
+  }
+
+  if (typeof domain === 'string') {
+    return { key: domain, label: null };
+  }
+
+  if (typeof domain === 'object' && domain !== null) {
+    const domainValue = domain as Record<string, Json>;
+    const key = typeof domainValue.key === 'string' ? (domainValue.key as string) : null;
+    const label = typeof domainValue.label === 'string' ? (domainValue.label as string) : null;
+    if (key || label) {
+      return { key, label };
+    }
+  }
+
+  return null;
+}
+
+function formatLifeWheelDomainLabel(domain: LifeWheelDomainMeta): string | null {
+  if (domain.label) {
+    return domain.label;
+  }
+
+  if (domain.key) {
+    return domain.key
+      .split('_')
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  return null;
 }
 
 function formatHabitMeta(frequency: string, schedule: Json | null) {
