@@ -19,6 +19,10 @@ export interface Database {
           target_date: string | null;
           progress_notes: string | null;
           status_tag: string | null;
+          life_wheel_category: string | null;
+          start_date: string | null;
+          timing_notes: string | null;
+          estimated_duration_days: number | null;
         };
         Insert: {
           id?: string;
@@ -29,6 +33,10 @@ export interface Database {
           target_date?: string | null;
           progress_notes?: string | null;
           status_tag?: string | null;
+          life_wheel_category?: string | null;
+          start_date?: string | null;
+          timing_notes?: string | null;
+          estimated_duration_days?: number | null;
         };
         Update: {
           id?: string;
@@ -39,6 +47,10 @@ export interface Database {
           target_date?: string | null;
           progress_notes?: string | null;
           status_tag?: string | null;
+          life_wheel_category?: string | null;
+          start_date?: string | null;
+          timing_notes?: string | null;
+          estimated_duration_days?: number | null;
         };
         Relationships: [];
       };
@@ -195,6 +207,117 @@ export interface Database {
           subscription?: Json | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      life_goal_steps: {
+        Row: {
+          id: string;
+          goal_id: string;
+          step_order: number;
+          title: string;
+          description: string | null;
+          completed: boolean;
+          completed_at: string | null;
+          due_date: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          goal_id: string;
+          step_order?: number;
+          title: string;
+          description?: string | null;
+          completed?: boolean;
+          completed_at?: string | null;
+          due_date?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          goal_id?: string;
+          step_order?: number;
+          title?: string;
+          description?: string | null;
+          completed?: boolean;
+          completed_at?: string | null;
+          due_date?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      life_goal_substeps: {
+        Row: {
+          id: string;
+          step_id: string;
+          substep_order: number;
+          title: string;
+          completed: boolean;
+          completed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          step_id: string;
+          substep_order?: number;
+          title: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          step_id?: string;
+          substep_order?: number;
+          title?: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      life_goal_alerts: {
+        Row: {
+          id: string;
+          goal_id: string;
+          user_id: string;
+          alert_type: string;
+          alert_time: string;
+          title: string;
+          message: string | null;
+          sent: boolean;
+          sent_at: string | null;
+          repeat_pattern: string | null;
+          enabled: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          goal_id: string;
+          user_id: string;
+          alert_type: string;
+          alert_time: string;
+          title: string;
+          message?: string | null;
+          sent?: boolean;
+          sent_at?: string | null;
+          repeat_pattern?: string | null;
+          enabled?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          goal_id?: string;
+          user_id?: string;
+          alert_type?: string;
+          alert_time?: string;
+          title?: string;
+          message?: string | null;
+          sent?: boolean;
+          sent_at?: string | null;
+          repeat_pattern?: string | null;
+          enabled?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };

@@ -76,6 +76,10 @@ const defaultState: DemoState = {
       progress_notes:
         'Beta content is finalized. Scheduling 1:1 kickoff calls next week and preparing support docs for onboarding.',
       status_tag: 'on_track',
+      life_wheel_category: null,
+      start_date: null,
+      timing_notes: null,
+      estimated_duration_days: null,
     },
     {
       id: createId('goal'),
@@ -87,6 +91,10 @@ const defaultState: DemoState = {
       progress_notes:
         'Gathered 60% of imagery, but workshop facilitation partner is double-booked. Need a backup facilitator.',
       status_tag: 'off_track',
+      life_wheel_category: null,
+      start_date: null,
+      timing_notes: null,
+      estimated_duration_days: null,
     },
     {
       id: createId('goal'),
@@ -97,6 +105,10 @@ const defaultState: DemoState = {
       target_date: iso(new Date(today.getFullYear(), today.getMonth() - 1, 30)),
       progress_notes: 'Deliverables shipped! Scheduling a celebration retro and exporting learnings to Notion.',
       status_tag: 'achieved',
+      life_wheel_category: null,
+      start_date: null,
+      timing_notes: null,
+      estimated_duration_days: null,
     },
   ],
   habits: [],
@@ -698,6 +710,10 @@ export function addDemoGoal(payload: GoalInsert): GoalRow {
     target_date: payload.target_date ?? null,
     progress_notes: payload.progress_notes ?? null,
     status_tag: payload.status_tag ?? null,
+    life_wheel_category: payload.life_wheel_category ?? null,
+    start_date: payload.start_date ?? null,
+    timing_notes: payload.timing_notes ?? null,
+    estimated_duration_days: payload.estimated_duration_days ?? null,
   });
 
   updateState((current) => ({ ...current, goals: [record, ...current.goals] }));
@@ -716,6 +732,10 @@ export function updateDemoGoal(id: string, payload: GoalUpdate): GoalRow | null 
         target_date: payload.target_date ?? goal.target_date,
         progress_notes: payload.progress_notes ?? goal.progress_notes,
         status_tag: payload.status_tag ?? goal.status_tag,
+        life_wheel_category: payload.life_wheel_category ?? goal.life_wheel_category,
+        start_date: payload.start_date ?? goal.start_date,
+        timing_notes: payload.timing_notes ?? goal.timing_notes,
+        estimated_duration_days: payload.estimated_duration_days ?? goal.estimated_duration_days,
       });
       return updated;
     });

@@ -4937,3 +4937,649 @@ body {
   color: #475569;
   line-height: 1.4;
 }
+
+/* =====================================================
+   LIFE GOALS SECTION
+   ===================================================== */
+
+.life-goals-section {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.life-goals-section__header {
+  margin-bottom: 2rem;
+}
+
+.life-goals-section__header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.life-goals-section__header p {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.life-goals-section__status {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.life-goals-section__status--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.life-goals-section__status--success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.life-goals-section__interactive {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .life-goals-section__interactive {
+    grid-template-columns: 1fr;
+  }
+}
+
+.life-goals-section__wheel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.life-goals-section__info {
+  min-height: 400px;
+}
+
+/* =====================================================
+   INTERACTIVE LIFE WHEEL
+   ===================================================== */
+
+.interactive-life-wheel {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.interactive-life-wheel__svg {
+  width: 100%;
+  height: auto;
+}
+
+.interactive-life-wheel__grid polygon {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.3);
+  stroke-width: 1;
+}
+
+.interactive-life-wheel__axes line {
+  stroke: rgba(148, 163, 184, 0.4);
+  stroke-width: 1.5;
+}
+
+.interactive-life-wheel__slice {
+  fill: rgba(59, 130, 246, 0.1);
+  stroke: rgba(59, 130, 246, 0.3);
+  stroke-width: 2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.interactive-life-wheel__slice:hover,
+.interactive-life-wheel__slice--hovered {
+  fill: rgba(59, 130, 246, 0.25);
+  stroke: rgba(59, 130, 246, 0.6);
+  stroke-width: 3;
+}
+
+.interactive-life-wheel__slice--selected {
+  fill: rgba(59, 130, 246, 0.4);
+  stroke: rgba(59, 130, 246, 0.8);
+  stroke-width: 3;
+}
+
+.interactive-life-wheel__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  fill: #1e293b;
+  user-select: none;
+}
+
+/* =====================================================
+   CATEGORY INFO CARD
+   ===================================================== */
+
+.category-info-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.category-info-card--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 400px;
+  color: #64748b;
+}
+
+.category-info-card--empty .category-info-card__icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.category-info-card__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.category-info-card__icon {
+  font-size: 2.5rem;
+}
+
+.category-info-card__header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.category-info-card__description {
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.category-info-card__examples {
+  margin-bottom: 2rem;
+}
+
+.category-info-card__examples h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+}
+
+.category-info-card__examples ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-info-card__examples li {
+  padding: 0.75rem 1rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-left: 3px solid rgba(59, 130, 246, 0.4);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.category-info-card__action {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.category-info-card__action:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(37, 99, 235, 0.3);
+}
+
+.category-info-card__action:active {
+  transform: translateY(0);
+}
+
+/* =====================================================
+   LIFE GOAL INPUT DIALOG
+   ===================================================== */
+
+.life-goal-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.life-goal-dialog {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.life-goal-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.life-goal-dialog__header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.life-goal-dialog__close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.life-goal-dialog__close:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: #0f172a;
+}
+
+.life-goal-dialog__tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  overflow-x: auto;
+}
+
+.life-goal-dialog__tab {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.life-goal-dialog__tab:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.life-goal-dialog__tab--active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-color: #2563eb;
+}
+
+.life-goal-dialog__form {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.life-goal-dialog__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.life-goal-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.life-goal-dialog__field span {
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.life-goal-dialog__field input,
+.life-goal-dialog__field textarea,
+.life-goal-dialog__field select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #0f172a;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.life-goal-dialog__field input:focus,
+.life-goal-dialog__field textarea:focus,
+.life-goal-dialog__field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.life-goal-dialog__hint {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+.life-goal-dialog__steps-form,
+.life-goal-dialog__alert-form {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.life-goal-dialog__steps-form h3,
+.life-goal-dialog__alert-form h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1rem;
+}
+
+.life-goal-dialog__substeps {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.life-goal-dialog__substeps h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.75rem;
+}
+
+.life-goal-dialog__substep-input {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.life-goal-dialog__substep-input input {
+  flex: 1;
+}
+
+.life-goal-dialog__substep-input button {
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.life-goal-dialog__substep-input button:hover {
+  background: #2563eb;
+}
+
+.life-goal-dialog__substep-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.life-goal-dialog__substep-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.life-goal-dialog__substep-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.life-goal-dialog__substep-list button {
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.life-goal-dialog__substep-list button:hover {
+  background: #dc2626;
+}
+
+.life-goal-dialog__add-step,
+.life-goal-dialog__add-alert {
+  padding: 0.75rem 1.5rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.life-goal-dialog__add-step:hover,
+.life-goal-dialog__add-alert:hover {
+  background: #059669;
+}
+
+.life-goal-dialog__add-step:disabled,
+.life-goal-dialog__add-alert:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.life-goal-dialog__steps-list,
+.life-goal-dialog__alerts-list {
+  margin-top: 2rem;
+}
+
+.life-goal-dialog__steps-list h3,
+.life-goal-dialog__alerts-list h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1rem;
+}
+
+.life-goal-dialog__steps-list ul,
+.life-goal-dialog__alerts-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.life-goal-dialog__step-item,
+.life-goal-dialog__alert-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.life-goal-dialog__step-header,
+.life-goal-dialog__alert-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.life-goal-dialog__step-number {
+  font-weight: 700;
+  color: #3b82f6;
+  font-size: 1.25rem;
+}
+
+.life-goal-dialog__step-header strong,
+.life-goal-dialog__alert-header strong {
+  flex: 1;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.life-goal-dialog__alert-type {
+  padding: 0.25rem 0.75rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.life-goal-dialog__step-header button,
+.life-goal-dialog__alert-header button {
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.life-goal-dialog__step-header button:hover,
+.life-goal-dialog__alert-header button:hover {
+  background: #dc2626;
+}
+
+.life-goal-dialog__step-item p {
+  color: #64748b;
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.life-goal-dialog__step-date,
+.life-goal-dialog__alert-time {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.life-goal-dialog__step-substeps {
+  list-style: disc;
+  padding-left: 2rem;
+  margin-top: 0.75rem;
+}
+
+.life-goal-dialog__step-substeps li {
+  color: #475569;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.life-goal-dialog__actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.life-goal-dialog__cancel,
+.life-goal-dialog__save {
+  flex: 1;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.life-goal-dialog__cancel {
+  background: white;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.life-goal-dialog__cancel:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.life-goal-dialog__save {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.life-goal-dialog__save:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(37, 99, 235, 0.3);
+}
+
+.life-goal-dialog__save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
