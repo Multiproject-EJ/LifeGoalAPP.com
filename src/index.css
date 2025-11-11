@@ -596,7 +596,7 @@ body {
   top: var(--workspace-shell-padding);
   align-self: start;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
   justify-items: center;
   gap: clamp(1rem, 3vw, 1.6rem);
   padding: clamp(1.25rem, 3vw, 1.75rem);
@@ -624,6 +624,45 @@ body {
 .workspace-sidebar > * {
   position: relative;
   z-index: 1;
+}
+
+.workspace-sidebar__masthead {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.workspace-sidebar__brand {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.workspace-sidebar__brand:focus-visible,
+.workspace-sidebar__brand:hover {
+  transform: scale(1.05);
+  outline: none;
+}
+
+.workspace-sidebar__masthead-actions {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.workspace-sidebar__masthead-toggle,
+.workspace-sidebar__masthead-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.workspace-sidebar__masthead-button {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
 }
 
 .workspace-sidebar__profile {
@@ -692,13 +731,17 @@ body {
   background: rgba(15, 23, 42, 0.48);
   color: rgba(248, 250, 252, 0.95);
   display: grid;
-  place-items: center;
+  justify-items: center;
+  align-content: center;
+  gap: 0.25rem;
+  padding: 0.35rem;
   cursor: pointer;
   transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease,
     filter 0.25s ease, opacity 0.25s ease;
   backdrop-filter: blur(18px);
   opacity: 0.8;
   filter: saturate(0.8);
+  text-decoration: none;
 }
 
 .workspace-sidebar__nav-button:hover,
@@ -725,6 +768,23 @@ body {
 .workspace-sidebar__nav-icon {
   font-size: clamp(1.35rem, 2.6vw, 1.75rem);
   line-height: 1;
+}
+
+.workspace-sidebar__nav-text {
+  font-size: 0.62rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.workspace-sidebar__nav-button:hover .workspace-sidebar__nav-text,
+.workspace-sidebar__nav-button:focus-visible .workspace-sidebar__nav-text {
+  color: rgba(248, 250, 252, 0.95);
+}
+
+.workspace-sidebar__nav-button--active .workspace-sidebar__nav-text {
+  color: #0f172a;
 }
 
 .workspace-sidebar__actions {
@@ -783,19 +843,20 @@ body {
 }
 
 .workspace-sidebar .theme-toggle {
-  width: clamp(52px, 6vw, 60px);
-  height: clamp(52px, 6vw, 60px);
-  padding: 0;
+  width: 100%;
+  height: auto;
+  padding: 0.65rem 1rem;
   border-radius: 18px;
   justify-content: center;
 }
 
 .workspace-sidebar .theme-toggle__label {
-  display: none;
+  display: inline;
+  font-size: 0.85rem;
 }
 
 .workspace-sidebar .theme-toggle__icon {
-  font-size: 1.35rem;
+  font-size: 1.1rem;
 }
 
 .workspace-sidebar__install,
@@ -1112,11 +1173,24 @@ body {
     width: 100%;
     height: auto;
     min-height: unset;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto auto auto;
     grid-template-columns: minmax(0, 1fr);
     justify-items: stretch;
     padding: clamp(1.5rem, 5vw, 2rem);
     gap: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .workspace-sidebar__masthead {
+    justify-items: flex-start;
+    text-align: left;
+  }
+
+  .workspace-sidebar__masthead-actions {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .workspace-sidebar__masthead-button {
+    font-size: 0.75rem;
   }
 
   .workspace-sidebar__profile {
@@ -1141,7 +1215,7 @@ body {
   .workspace-sidebar__actions {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     justify-items: stretch;
     gap: 0.75rem;
   }
@@ -1181,6 +1255,15 @@ body {
 
   .workspace-sidebar {
     padding: clamp(1.25rem, 6vw, 1.75rem);
+  }
+
+  .workspace-sidebar__masthead {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .workspace-sidebar__masthead-actions {
+    grid-template-columns: 1fr;
   }
 
   .workspace-sidebar__nav {

@@ -19,6 +19,7 @@ type WorkspaceNavItem = {
   label: string;
   summary: string;
   icon: ReactNode;
+  shortLabel: string;
 };
 
 const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
@@ -27,48 +28,56 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     label: 'Dashboard',
     summary: 'Review upcoming milestones and daily focus from a unified dashboard.',
     icon: '📊',
+    shortLabel: 'HOME',
   },
   {
     id: 'planning',
     label: "Today's Habits & Routines",
     summary: 'Check in on the rituals that keep today on track.',
     icon: '✅',
+    shortLabel: 'TODAY',
   },
   {
     id: 'rituals',
     label: 'Wellbeing Wheel Check-in',
     summary: 'Reflect on your wellbeing balance with a quick wheel check-in.',
     icon: '🧭',
+    shortLabel: 'BALANCE',
   },
   {
     id: 'insights',
     label: 'Vision Board',
     summary: 'Stay inspired with highlights from your evolving vision board.',
     icon: '🖼️',
+    shortLabel: 'VISION',
   },
   {
     id: 'support',
     label: 'Life Goals',
     summary: 'Review your long-term goals and celebrate progress milestones.',
     icon: '🎯',
+    shortLabel: 'GOALS',
   },
   {
     id: 'setup-habits',
     label: 'Set Up Habits',
     summary: 'Create or refine the habits that support your life goals.',
     icon: '🔁',
+    shortLabel: 'HABITS',
   },
   {
     id: 'setup-goals',
     label: 'Set Up Goals',
     summary: 'Define clear, motivating goals to guide your next steps.',
     icon: '🛠️',
+    shortLabel: 'PLANS',
   },
   {
     id: 'settings',
     label: 'Settings',
     summary: 'Adjust preferences and configure your workspace experience.',
     icon: '⚙️',
+    shortLabel: 'PREFS',
   },
 ];
 
@@ -585,6 +594,32 @@ export default function App() {
     <div className="app app--workspace">
       <div className="workspace-shell">
         <aside className="workspace-sidebar" aria-label="Workspace navigation">
+          <div className="workspace-sidebar__masthead">
+            <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
+              LifeGoalApp
+            </a>
+            <div className="workspace-sidebar__masthead-actions">
+              <ThemeToggle className="btn btn--ghost workspace-sidebar__masthead-toggle" />
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  className="btn btn--primary workspace-sidebar__masthead-button"
+                  onClick={handleSignOut}
+                >
+                  Sign out
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn--primary workspace-sidebar__masthead-button"
+                  onClick={() => setShowAuthPanel((value) => !value)}
+                >
+                  {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="workspace-sidebar__profile">
             <div className="workspace-avatar" aria-hidden="true">
               {userInitial}
@@ -616,6 +651,9 @@ export default function App() {
                     <span className="workspace-sidebar__nav-icon" aria-hidden="true">
                       {item.icon}
                     </span>
+                    <span className="workspace-sidebar__nav-text" aria-hidden="true">
+                      {item.shortLabel}
+                    </span>
                     <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
                     <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
                   </button>
@@ -625,23 +663,9 @@ export default function App() {
           </nav>
 
           <div className="workspace-sidebar__actions">
-            <ThemeToggle />
             {installPromptEvent && (
               <button type="button" className="workspace-sidebar__install" onClick={handleInstallClick}>
                 Install app
-              </button>
-            )}
-            {isAuthenticated ? (
-              <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
-                Sign out
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="workspace-sidebar__signout"
-                onClick={() => setShowAuthPanel((value) => !value)}
-              >
-                {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
               </button>
             )}
             <div className="workspace-sidebar__actions-divider" role="presentation" />

@@ -165,6 +165,21 @@
   font-size: 0.9rem;
 }
 
+[data-theme='dark-glass'] .workspace-sidebar__brand,
+.workspace-sidebar__brand {
+  background: linear-gradient(135deg, #06b6d4, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme='bright-sky'] .workspace-sidebar__brand {
+  background: linear-gradient(135deg, #0ea5e9, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 @media (max-width: 640px) {
   .theme-toggle__label {
     display: none;
