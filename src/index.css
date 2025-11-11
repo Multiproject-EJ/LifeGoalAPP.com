@@ -514,12 +514,13 @@ body {
   gap: clamp(1rem, 3vw, 1.6rem);
   padding: clamp(1.25rem, 3vw, 1.75rem);
   width: clamp(108px, 14vw, 140px);
-  max-height: calc(100vh - (var(--workspace-shell-padding) * 2));
+  height: calc(100vh - (var(--workspace-shell-padding) * 2));
+  min-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   border-radius: 24px;
   background: linear-gradient(165deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.75));
   border: 1px solid rgba(148, 163, 184, 0.3);
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.5), 0 8px 24px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(24px);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.55), 0 10px 28px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(26px);
   color: rgba(248, 250, 252, 0.95);
   overflow: hidden;
 }
@@ -581,40 +582,57 @@ body {
 }
 
 .workspace-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.workspace-sidebar__nav-list {
   display: grid;
   gap: clamp(0.65rem, 2vw, 1rem);
   justify-items: center;
   width: 100%;
+  margin-bottom: clamp(0.5rem, 2vw, 1.2rem);
 }
 
 .workspace-sidebar__nav-button {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 20px;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.48);
   color: rgba(248, 250, 252, 0.95);
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease,
+    filter 0.25s ease, opacity 0.25s ease;
   backdrop-filter: blur(18px);
+  opacity: 0.8;
+  filter: saturate(0.8);
 }
 
 .workspace-sidebar__nav-button:hover,
 .workspace-sidebar__nav-button:focus-visible {
   transform: translateY(-4px);
-  background: rgba(59, 130, 246, 0.35);
-  border-color: rgba(148, 197, 248, 0.6);
-  box-shadow: 0 10px 28px rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.4);
+  border-color: rgba(148, 197, 248, 0.7);
+  box-shadow: 0 0 0 1px rgba(148, 197, 248, 0.55), 0 18px 36px rgba(59, 130, 246, 0.35);
   outline: none;
+  opacity: 1;
+  filter: saturate(1);
 }
 
 .workspace-sidebar__nav-button--active {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.5), rgba(129, 140, 248, 0.55));
-  border-color: rgba(148, 197, 248, 0.75);
-  box-shadow: 0 14px 36px rgba(56, 189, 248, 0.4), 0 4px 12px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.6), rgba(129, 140, 248, 0.65));
+  border-color: rgba(148, 197, 248, 0.85);
+  box-shadow: 0 0 0 1px rgba(148, 197, 248, 0.7), 0 20px 42px rgba(56, 189, 248, 0.45),
+    0 8px 18px rgba(0, 0, 0, 0.28);
   color: #0f172a;
+  opacity: 1;
+  filter: saturate(1.1);
 }
 
 .workspace-sidebar__nav-icon {
@@ -624,10 +642,57 @@ body {
 
 .workspace-sidebar__actions {
   margin-top: auto;
-  display: grid;
-  gap: 0.75rem;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: center;
   width: 100%;
+}
+
+.workspace-sidebar__actions-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(148, 197, 248, 0) 0%, rgba(148, 197, 248, 0.65) 45%,
+      rgba(148, 197, 248, 0.65) 55%, rgba(148, 197, 248, 0) 100%);
+  opacity: 0.75;
+  margin: 0.25rem 0;
+}
+
+.workspace-sidebar__account-button {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.52);
+  color: rgba(248, 250, 252, 0.92);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease,
+    filter 0.25s ease, opacity 0.25s ease;
+  opacity: 0.85;
+  filter: saturate(0.85);
+}
+
+.workspace-sidebar__account-button:hover,
+.workspace-sidebar__account-button:focus-visible {
+  transform: translateY(-4px);
+  background: rgba(59, 130, 246, 0.45);
+  border-color: rgba(148, 197, 248, 0.75);
+  box-shadow: 0 0 0 1px rgba(148, 197, 248, 0.65), 0 20px 40px rgba(59, 130, 246, 0.38);
+  outline: none;
+  opacity: 1;
+  filter: saturate(1.05);
+}
+
+.workspace-sidebar__account-button--active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.62), rgba(129, 140, 248, 0.68));
+  border-color: rgba(148, 197, 248, 0.9);
+  box-shadow: 0 0 0 1px rgba(148, 197, 248, 0.75), 0 22px 46px rgba(56, 189, 248, 0.48),
+    0 10px 20px rgba(0, 0, 0, 0.3);
+  color: #0f172a;
+  opacity: 1;
+  filter: saturate(1.1);
 }
 
 .workspace-sidebar .theme-toggle {
@@ -940,7 +1005,8 @@ body {
     position: relative;
     top: 0;
     width: 100%;
-    max-height: none;
+    height: auto;
+    min-height: unset;
     grid-template-rows: auto auto auto;
     grid-template-columns: minmax(0, 1fr);
     justify-items: stretch;
@@ -957,6 +1023,11 @@ body {
   }
 
   .workspace-sidebar__nav {
+    height: auto;
+    align-items: stretch;
+  }
+
+  .workspace-sidebar__nav-list {
     grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
     justify-items: stretch;
     gap: 0.75rem;
@@ -964,8 +1035,14 @@ body {
 
   .workspace-sidebar__actions {
     width: 100%;
+    display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     justify-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .workspace-sidebar__actions-divider {
+    grid-column: 1 / -1;
   }
 
   .workspace-sidebar .theme-toggle {
