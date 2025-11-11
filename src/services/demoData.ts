@@ -111,6 +111,7 @@ const defaultState: DemoState = {
 (function seedRelatedData() {
   const goalLaunch = defaultState.goals[0];
   const goalVision = defaultState.goals[1];
+  const goalArchive = defaultState.goals[2];
 
   const morningRitualId = createId('habit');
   const outreachHabitId = createId('habit');
@@ -122,21 +123,321 @@ const defaultState: DemoState = {
       goal_id: goalLaunch.id,
       name: 'Morning focus ritual',
       frequency: 'daily',
-      schedule: { type: 'daily' } as Json,
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
+      } as Json,
     },
     {
       id: outreachHabitId,
       goal_id: goalLaunch.id,
       name: 'Reach out to a beta tester',
       frequency: 'weekly',
-      schedule: { type: 'weekly', days: ['mon', 'wed', 'fri'] } as Json,
+      schedule: {
+        type: 'weekly',
+        days: ['mon', 'wed', 'fri'],
+        life_wheel_domain: { key: 'relationships', label: 'Relationships & Community' },
+      } as Json,
     },
     {
       id: visionBoardId,
       goal_id: goalVision.id,
       name: 'Source a new inspiration image',
       frequency: 'weekly',
-      schedule: { type: 'weekly', days: ['sat'] } as Json,
+      schedule: {
+        type: 'weekly',
+        days: ['sat'],
+        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Hydrate with 80 oz of water',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Midday stretch walk',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['mon', 'tue', 'wed', 'thu', 'fri'],
+        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Inbox zero sweep',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['mon', 'tue', 'wed', 'thu'],
+        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Review tomorrow\'s priorities',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'mindset', label: 'Mindset & Clarity' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Capture product insight',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['mon', 'wed', 'fri'],
+        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Update roadmap milestone',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['mon'],
+        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Host accountability check-in',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['wed'],
+        life_wheel_domain: { key: 'relationships', label: 'Relationships & Community' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Share progress update with community',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['fri'],
+        life_wheel_domain: { key: 'community', label: 'Community & Impact' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Schedule deep work block',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['tue', 'thu'],
+        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Strength training circuit',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['tue', 'thu'],
+        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Digital sunset ritual',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'wellness', label: 'Rest & Recovery' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Sleep by 10:30 routine',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'wellness', label: 'Rest & Recovery' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalLaunch.id,
+      name: 'Balanced breakfast prep',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Reflect in vision journal',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['sun'],
+        life_wheel_domain: { key: 'personal_growth', label: 'Personal Growth' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Curate mood board snippet',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['thu'],
+        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Capture photo inspiration',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['sat', 'sun'],
+        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Schedule creative play session',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['sat'],
+        life_wheel_domain: { key: 'fun', label: 'Fun & Adventure' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Sketch storyboard concept',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['tue'],
+        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Practice gratitude note',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'mindset', label: 'Mindset & Clarity' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: '10-minute mindful breathing',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'personal_growth', label: 'Personal Growth' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Write 3 lines in reflection journal',
+      frequency: 'daily',
+      schedule: {
+        type: 'daily',
+        life_wheel_domain: { key: 'personal_growth', label: 'Personal Growth' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalVision.id,
+      name: 'Plan weekend adventure',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['thu'],
+        life_wheel_domain: { key: 'fun', label: 'Fun & Adventure' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalArchive.id,
+      name: 'Review financial dashboard',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['mon'],
+        life_wheel_domain: { key: 'finances', label: 'Finances & Wealth' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalArchive.id,
+      name: 'Reconcile budget entries',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['fri'],
+        life_wheel_domain: { key: 'finances', label: 'Finances & Wealth' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalArchive.id,
+      name: 'Offer mentorship comment',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['wed'],
+        life_wheel_domain: { key: 'giving_back', label: 'Giving Back' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalArchive.id,
+      name: 'Declutter workspace reset',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['fri'],
+        life_wheel_domain: { key: 'environment', label: 'Environment & Surroundings' },
+      } as Json,
+    },
+    {
+      id: createId('habit'),
+      goal_id: goalArchive.id,
+      name: 'Tend to plant watering',
+      frequency: 'weekly',
+      schedule: {
+        type: 'weekly',
+        days: ['wed'],
+        life_wheel_domain: { key: 'environment', label: 'Environment & Surroundings' },
+      } as Json,
     },
   ];
 

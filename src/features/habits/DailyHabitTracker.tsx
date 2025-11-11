@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
@@ -22,6 +22,8 @@ type HabitCompletionState = {
   completed: boolean;
 };
 
+type HabitMonthlyCompletionState = Record<string, HabitCompletionState>;
+
 type HabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
 
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
@@ -35,6 +37,23 @@ type HabitInsights = {
 
 const STREAK_LOOKBACK_DAYS = 60;
 
+const LIFE_WHEEL_COLORS: Record<string, string> = {
+  health: '#22c55e',
+  relationships: '#fb7185',
+  career: '#60a5fa',
+  personal_growth: '#a855f7',
+  fun: '#f97316',
+  finances: '#facc15',
+  giving_back: '#14b8a6',
+  environment: '#38bdf8',
+  spirituality: '#7c3aed',
+  creativity: '#f472b6',
+  community: '#0ea5e9',
+  mindset: '#8b5cf6',
+  wellness: '#34d399',
+  rest: '#60a5fa',
+};
+
 const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatically once you reconnect.';
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
 
@@ -46,17 +65,49 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [completions, setCompletions] = useState<Record<string, HabitCompletionState>>({});
+  const [monthlyCompletions, setMonthlyCompletions] = useState<
+    Record<string, HabitMonthlyCompletionState>
+  >({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [monthlySaving, setMonthlySaving] = useState<Record<string, boolean>>({});
   const [today, setToday] = useState(() => formatISODate(new Date()));
+  const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
+
+  const monthlySummary = useMemo(() => {
+    if (!habits.length || !monthDays.length) {
+      return { scheduledTotal: 0, scheduledComplete: 0 } as const;
+    }
+
+    let scheduledTotal = 0;
+    let scheduledComplete = 0;
+
+    for (const habit of habits) {
+      for (const dateISO of monthDays) {
+        if (!isHabitScheduledOnDate(habit, dateISO)) {
+          continue;
+        }
+
+        scheduledTotal += 1;
+        const isCompleted = Boolean(monthlyCompletions[habit.id]?.[dateISO]?.completed);
+        if (isCompleted) {
+          scheduledComplete += 1;
+        }
+      }
+    }
+
+    return { scheduledTotal, scheduledComplete } as const;
+  }, [habits, monthDays, monthlyCompletions]);
 
   const refreshHabits = useCallback(async () => {
     if (!isConfigured) {
       setHabits([]);
       setCompletions({});
+      setMonthlyCompletions({});
       setHabitInsights({});
       setHistoricalLogs([]);
+      setMonthDays([]);
       return;
     }
 
@@ -65,7 +116,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const currentDate = new Date();
     const todayISO = formatISODate(currentDate);
+    const monthStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const monthEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const monthStartISO = formatISODate(monthStartDate);
+    const monthEndISO = formatISODate(monthEndDate);
+    const monthDayList = generateDateRange(monthStartDate, monthEndDate);
     setToday(todayISO);
+    setMonthDays(monthDayList);
 
     try {
       const { data: habitData, error: habitError } = await fetchHabitsForUser(session.user.id);
@@ -76,17 +133,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
       if (nextHabits.length === 0) {
         setCompletions({});
+        setMonthlyCompletions({});
         setHabitInsights({});
         setHistoricalLogs([]);
         return;
       }
 
       const habitIds = nextHabits.map((habit) => habit.id);
-      const lookbackStart = subtractDays(currentDate, STREAK_LOOKBACK_DAYS - 1);
+      const lookbackStartCandidate = subtractDays(currentDate, STREAK_LOOKBACK_DAYS - 1);
+      const lookbackStart = monthStartDate < lookbackStartCandidate ? monthStartDate : lookbackStartCandidate;
       const { data: logs, error: logsError } = await fetchHabitLogsForRange(
         habitIds,
         formatISODate(lookbackStart),
-        todayISO,
+        monthEndISO,
       );
       if (logsError) throw logsError;
 
@@ -97,13 +156,38 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         return acc;
       }, {});
 
+      const baseMonthlyState = nextHabits.reduce<Record<string, HabitMonthlyCompletionState>>(
+        (acc, habit) => {
+          const matrix = monthDayList.reduce<HabitMonthlyCompletionState>((dayAcc, dateIso) => {
+            dayAcc[dateIso] = { logId: null, completed: false };
+            return dayAcc;
+          }, {} as HabitMonthlyCompletionState);
+          acc[habit.id] = matrix;
+          return acc;
+        },
+        {},
+      );
+
       for (const log of logRows) {
+        const completedState: HabitCompletionState = {
+          logId: log.id,
+          completed: Boolean(log.completed),
+        };
+
         if (log.date === todayISO) {
-          baseState[log.habit_id] = { logId: log.id, completed: Boolean(log.completed) };
+          baseState[log.habit_id] = completedState;
+        }
+
+        if (log.date >= monthStartISO && log.date <= monthEndISO) {
+          const habitMatrix = baseMonthlyState[log.habit_id];
+          if (habitMatrix) {
+            habitMatrix[log.date] = completedState;
+          }
         }
       }
 
       setCompletions(baseState);
+      setMonthlyCompletions(baseMonthlyState);
       setHistoricalLogs(logRows);
       setHabitInsights(calculateHabitInsights(nextHabits, logRows, todayISO));
     } catch (error) {
@@ -126,8 +210,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     if (!isConfigured && !isDemoExperience) {
       setHabits([]);
       setCompletions({});
+      setMonthlyCompletions({});
       setHabitInsights({});
       setHistoricalLogs([]);
+      setMonthDays([]);
     }
   }, [isConfigured, isDemoExperience]);
 
@@ -186,48 +272,80 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     };
   }, []);
 
-  const toggleHabit = async (habit: HabitWithGoal) => {
+  const toggleHabitForDate = async (habit: HabitWithGoal, dateISO: string) => {
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
       return;
     }
 
-    setSaving((current) => ({ ...current, [habit.id]: true }));
+    const isToday = dateISO === today;
+    const cellKey = `${habit.id}:${dateISO}`;
+
+    if (isToday) {
+      setSaving((current) => ({ ...current, [habit.id]: true }));
+    }
+    setMonthlySaving((current) => ({ ...current, [cellKey]: true }));
     setErrorMessage(null);
 
-    const existing = completions[habit.id];
+    const existingToday = completions[habit.id];
+    const existingMonthly = monthlyCompletions[habit.id]?.[dateISO];
+    const wasCompleted = Boolean(existingMonthly?.completed || (isToday && existingToday?.completed));
 
     try {
-      if (existing?.completed) {
-        const { error } = await clearHabitCompletion(habit.id, today);
+      if (wasCompleted) {
+        const { error } = await clearHabitCompletion(habit.id, dateISO);
         if (error) throw error;
-        setCompletions((current) => ({ ...current, [habit.id]: { logId: null, completed: false } }));
+
+        if (isToday) {
+          setCompletions((current) => ({ ...current, [habit.id]: { logId: null, completed: false } }));
+        }
+
+        setMonthlyCompletions((current) => {
+          const next = { ...current };
+          const habitMatrix = { ...(next[habit.id] ?? {}) };
+          habitMatrix[dateISO] = { logId: null, completed: false };
+          next[habit.id] = habitMatrix;
+          return next;
+        });
+
         setHistoricalLogs((current) => {
-          const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === today));
+          const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
           setHabitInsights(calculateHabitInsights(habits, nextLogs, today));
           return nextLogs;
         });
       } else {
         const payload: HabitLogInsert = {
           habit_id: habit.id,
-          date: today,
+          date: dateISO,
           completed: true,
         };
         const { data, error } = await logHabitCompletion(payload);
         if (error) throw error;
         const logRow: HabitLogRow =
           data ?? ({
-            id: existing?.logId ?? `temp-${habit.id}-${today}`,
+            id: existingMonthly?.logId ?? `temp-${habit.id}-${dateISO}`,
             habit_id: habit.id,
-            date: today,
+            date: dateISO,
             completed: true,
           } satisfies HabitLogRow);
-        setCompletions((current) => ({
-          ...current,
-          [habit.id]: { logId: logRow.id, completed: true },
-        }));
+
+        if (isToday) {
+          setCompletions((current) => ({
+            ...current,
+            [habit.id]: { logId: logRow.id, completed: true },
+          }));
+        }
+
+        setMonthlyCompletions((current) => {
+          const next = { ...current };
+          const habitMatrix = { ...(next[habit.id] ?? {}) };
+          habitMatrix[dateISO] = { logId: logRow.id, completed: true };
+          next[habit.id] = habitMatrix;
+          return next;
+        });
+
         setHistoricalLogs((current) => {
-          const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === today));
+          const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
           nextLogs.push(logRow);
           setHabitInsights(calculateHabitInsights(habits, nextLogs, today));
           return nextLogs;
@@ -236,8 +354,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update the habit.');
     } finally {
-      setSaving((current) => ({ ...current, [habit.id]: false }));
+      if (isToday) {
+        setSaving((current) => ({ ...current, [habit.id]: false }));
+      }
+      setMonthlySaving((current) => {
+        const next = { ...current };
+        delete next[cellKey];
+        return next;
+      });
     }
+  };
+
+  const toggleHabit = async (habit: HabitWithGoal) => {
+    await toggleHabitForDate(habit, today);
   };
 
   const renderCompactList = () => (
@@ -294,17 +423,137 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     </ul>
   );
 
+  const renderMonthlyGrid = () => {
+    if (monthDays.length === 0) {
+      return null;
+    }
+
+    const completionPercent = monthlySummary.scheduledTotal
+      ? Math.round((monthlySummary.scheduledComplete / monthlySummary.scheduledTotal) * 100)
+      : 0;
+
+    return (
+      <div className="habit-monthly" aria-label="Monthly habit dashboard">
+        <div className="habit-monthly__summary">
+          <div>
+            <h3>{formatMonthLabel(today)}</h3>
+            <p>
+              {monthlySummary.scheduledTotal === 0
+                ? 'No scheduled habits this month yet. Build your rituals to see them here.'
+                : `${monthlySummary.scheduledComplete} of ${monthlySummary.scheduledTotal} scheduled check-ins complete (${completionPercent}%).`}
+            </p>
+          </div>
+          <div className="habit-monthly__summary-meter" role="img" aria-label={`Monthly completion ${completionPercent}%`}>
+            <div
+              className="habit-monthly__summary-meter-bar"
+              style={{ width: `${completionPercent}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="habit-monthly__table-wrapper">
+          <table className="habit-monthly__table">
+            <thead>
+              <tr>
+                <th className="habit-monthly__habit-column" scope="col">
+                  Life wheel habit
+                </th>
+                {monthDays.map((dateIso) => (
+                  <th key={dateIso} scope="col" className="habit-monthly__day-column">
+                    <span className="habit-monthly__day-number">{formatDayOfMonth(dateIso)}</span>
+                    <span className="habit-monthly__day-name">{formatDayOfWeekShort(dateIso)}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {habits.map((habit) => {
+                const domainMeta = extractLifeWheelDomain(habit.schedule);
+                const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
+                const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
+                const goalLabel = habit.goal?.title ?? 'Unassigned goal';
+                const habitMatrix = monthlyCompletions[habit.id] ?? {};
+
+                return (
+                  <tr key={habit.id} className="habit-monthly__row" style={{ borderLeftColor: domainColor }}>
+                    <th scope="row" className="habit-monthly__habit-cell">
+                      <div className="habit-monthly__habit">
+                        <span className="habit-monthly__domain" style={{ backgroundColor: domainColor }}>
+                          {domainLabel ?? 'Whole life'}
+                        </span>
+                        <div className="habit-monthly__habit-details">
+                          <span className="habit-monthly__habit-name">{habit.name}</span>
+                          <span className="habit-monthly__habit-goal">Goal: {goalLabel}</span>
+                        </div>
+                      </div>
+                    </th>
+                    {monthDays.map((dateIso) => {
+                      const cellKey = `${habit.id}:${dateIso}`;
+                      const cellState = habitMatrix[dateIso];
+                      const isCompleted = Boolean(cellState?.completed);
+                      const scheduled = isHabitScheduledOnDate(habit, dateIso);
+                      const isToday = dateIso === today;
+                      const isSavingCell = Boolean(monthlySaving[cellKey]);
+                      const disableToggle = !scheduled && !isCompleted;
+                      const dayLabel = formatDateLabel(dateIso);
+
+                      const cellClassNames = ['habit-monthly__cell'];
+                      if (scheduled) {
+                        cellClassNames.push('habit-monthly__cell--scheduled');
+                      } else {
+                        cellClassNames.push('habit-monthly__cell--rest');
+                      }
+                      if (isCompleted) {
+                        cellClassNames.push('habit-monthly__cell--completed');
+                      }
+                      if (isToday) {
+                        cellClassNames.push('habit-monthly__cell--today');
+                      }
+                      if (isSavingCell) {
+                        cellClassNames.push('habit-monthly__cell--saving');
+                      }
+
+                      return (
+                        <td key={cellKey} className={cellClassNames.join(' ')}>
+                          <button
+                            type="button"
+                            className={`habit-monthly__toggle ${isCompleted ? 'habit-monthly__toggle--checked' : ''}`}
+                            aria-pressed={isCompleted}
+                            aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habit.name} for ${dayLabel}`}
+                            onClick={() => void toggleHabitForDate(habit, dateIso)}
+                            disabled={disableToggle || isSavingCell}
+                            title={scheduled ? dayLabel : `${dayLabel} (rest day)`}
+                          >
+                            {isSavingCell ? '…' : isCompleted ? '✓' : ''}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <section className={`habit-tracker ${isCompact ? 'habit-tracker--compact' : ''}`}>
-      <header className="habit-tracker__header">
-        <div>
-          <h2>{isCompact ? "Today's habits" : "Today's habit tracker"}</h2>
-          <p>
-            {isCompact
-              ? 'Check off the rituals that keep your life wheel balanced today.'
-              : `Log your progress for ${formatDateLabel(today)} so nothing slips through the cracks.`}
-          </p>
-        </div>
+        <header className="habit-tracker__header">
+          <div>
+            <h2>
+              {isCompact
+                ? "Today's habits"
+                : `Monthly habits dashboard • ${formatMonthLabel(today)} (${monthDays.length} days)`}
+            </h2>
+            <p>
+              {isCompact
+                ? 'Check off the rituals that keep your life wheel balanced today.'
+                : 'Use the monthly grid to see every habit alongside the life wheel domains they support.'}
+            </p>
+          </div>
         <button
           type="button"
           className="habit-tracker__refresh"
@@ -427,6 +676,27 @@ function extractLifeWheelDomain(schedule: Json | null): LifeWheelDomainMeta | nu
   return null;
 }
 
+function normalizeLifeWheelKey(domainKey: string | null): string | null {
+  if (!domainKey) {
+    return null;
+  }
+
+  return domainKey
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function getLifeWheelColor(domainKey: string | null): string {
+  const normalized = normalizeLifeWheelKey(domainKey);
+  if (!normalized) {
+    return '#94a3b8';
+  }
+  return LIFE_WHEEL_COLORS[normalized] ?? '#94a3b8';
+}
+
 function formatLifeWheelDomainLabel(domain: LifeWheelDomainMeta): string | null {
   if (domain.label) {
     return domain.label;
@@ -479,6 +749,31 @@ function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+const MONTH_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  month: 'long',
+  year: 'numeric',
+});
+
+const DAY_NUMBER_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+});
+
+const DAY_SHORT_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+});
+
+function formatMonthLabel(value: string) {
+  return MONTH_FORMATTER.format(parseISODate(value));
+}
+
+function formatDayOfMonth(value: string) {
+  return DAY_NUMBER_FORMATTER.format(parseISODate(value));
+}
+
+function formatDayOfWeekShort(value: string) {
+  return DAY_SHORT_FORMATTER.format(parseISODate(value));
+}
+
 function formatDateLabel(value: string) {
   const date = parseISODate(value);
   return date.toLocaleDateString(undefined, {
@@ -493,6 +788,16 @@ function formatISODate(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function generateDateRange(start: Date, end: Date): string[] {
+  const days: string[] = [];
+  const cursor = new Date(start.getTime());
+  while (cursor <= end) {
+    days.push(formatISODate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
 }
 
 function subtractDays(date: Date, amount: number) {
