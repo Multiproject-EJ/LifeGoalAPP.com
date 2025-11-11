@@ -2385,6 +2385,242 @@ body {
   font-weight: 500;
 }
 
+.habit-monthly {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.22);
+}
+
+.habit-monthly__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(99, 102, 241, 0.08));
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.habit-monthly__summary h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+}
+
+.habit-monthly__summary p {
+  margin: 0;
+  color: #475569;
+  max-width: 32rem;
+}
+
+.habit-monthly__summary-meter {
+  flex: 1 1 200px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.9);
+  overflow: hidden;
+  position: relative;
+  min-width: 160px;
+}
+
+.habit-monthly__summary-meter-bar {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #34d399, #14b8a6);
+  transition: width 0.3s ease;
+}
+
+.habit-monthly__table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.habit-monthly__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0.4rem;
+  min-width: 720px;
+  table-layout: fixed;
+}
+
+.habit-monthly__table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #475569;
+  padding: 0.5rem 0.35rem;
+  background: rgba(148, 163, 184, 0.12);
+  border-radius: 12px;
+}
+
+.habit-monthly__habit-column {
+  text-align: left;
+  min-width: 260px;
+}
+
+.habit-monthly__day-column {
+  text-align: center;
+  min-width: 44px;
+}
+
+.habit-monthly__day-number {
+  display: block;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.habit-monthly__day-name {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.habit-monthly__row {
+  background: rgba(248, 250, 252, 0.75);
+  border-radius: 18px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border-left: 4px solid transparent;
+}
+
+.habit-monthly__habit-cell {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+}
+
+.habit-monthly__habit {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.habit-monthly__domain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.habit-monthly__habit-details {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.habit-monthly__habit-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.habit-monthly__habit-goal {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.habit-monthly__cell {
+  padding: 0.35rem 0.25rem;
+  text-align: center;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habit-monthly__cell--rest {
+  opacity: 0.55;
+}
+
+.habit-monthly__cell--scheduled {
+  background: rgba(79, 70, 229, 0.08);
+}
+
+.habit-monthly__cell--completed {
+  background: rgba(34, 197, 94, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.35);
+}
+
+.habit-monthly__cell--today {
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.45);
+}
+
+.habit-monthly__cell--saving {
+  opacity: 0.7;
+}
+
+.habit-monthly__toggle {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  border: 2px solid rgba(15, 23, 42, 0.25);
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.habit-monthly__toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.15);
+}
+
+.habit-monthly__toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.habit-monthly__toggle--checked {
+  background: linear-gradient(135deg, #34d399, #14b8a6);
+  border-color: rgba(20, 184, 166, 0.8);
+  color: #ffffff;
+}
+
+@media (max-width: 960px) {
+  .habit-monthly__habit-column {
+    min-width: 220px;
+  }
+
+  .habit-monthly__table {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 640px) {
+  .habit-monthly__summary {
+    padding: 0.85rem 1rem;
+  }
+
+  .habit-monthly__summary h3 {
+    font-size: 1.1rem;
+  }
+
+  .habit-monthly__table {
+    border-spacing: 0.3rem;
+  }
+
+  .habit-monthly__toggle {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.9rem;
+  }
+}
+
 .habit-card {
   background: #ffffff;
   border-radius: 16px;
