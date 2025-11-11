@@ -23,7 +23,7 @@ export const LIFE_WHEEL_CATEGORIES = [
 
 type LifeWheelCategory = (typeof LIFE_WHEEL_CATEGORIES)[number];
 
-type LifeWheelCategoryKey = LifeWheelCategory['key'];
+export type LifeWheelCategoryKey = LifeWheelCategory['key'];
 
 type CheckinScores = Record<LifeWheelCategoryKey, number>;
 

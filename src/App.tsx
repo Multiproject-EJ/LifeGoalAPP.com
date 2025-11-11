@@ -1,7 +1,7 @@
 import { Dispatch, FormEvent, ReactNode, SetStateAction, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
-import { GoalReflectionJournal, GoalWorkspace } from './features/goals';
+import { GoalReflectionJournal, GoalWorkspace, LifeGoalsSection } from './features/goals';
 import { DailyHabitTracker, HabitsModule, MobileHabitHome } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
@@ -550,6 +550,7 @@ export default function App() {
       case 'support':
         return (
           <div className="workspace-content">
+            <LifeGoalsSection session={activeSession} />
             <GoalWorkspace session={activeSession} />
           </div>
         );
