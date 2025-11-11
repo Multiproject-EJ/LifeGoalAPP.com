@@ -1,27 +1,29 @@
 import { useTheme } from '../contexts/ThemeContext';
 
-export function ThemeToggle() {
+type ThemeToggleProps = {
+  className?: string;
+};
+
+export function ThemeToggle({ className }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
+
+  const nextThemeName = theme === 'bright-sky' ? 'Dark Glass' : 'Bright Sky';
+  const labelText = theme === 'bright-sky' ? 'Dark mode' : 'Light mode';
+  const icon = theme === 'bright-sky' ? '🌙' : '☀️';
 
   return (
     <button
       type="button"
-      className="theme-toggle"
+      className={['theme-toggle', className].filter(Boolean).join(' ')}
       onClick={toggleTheme}
-      aria-label={`Switch to ${theme === 'bright-sky' ? 'dark glass' : 'bright sky'} theme`}
-      title={`Current: ${theme === 'bright-sky' ? 'Bright Sky' : 'Dark Glass'} theme`}
+      aria-label={`Switch to the ${nextThemeName} theme`}
+      title={`Switch to the ${nextThemeName} theme`}
+      aria-pressed={theme !== 'bright-sky'}
     >
-      {theme === 'bright-sky' ? (
-        <>
-          <span className="theme-toggle__icon">🌙</span>
-          <span className="theme-toggle__label">Dark Glass</span>
-        </>
-      ) : (
-        <>
-          <span className="theme-toggle__icon">☀️</span>
-          <span className="theme-toggle__label">Bright Sky</span>
-        </>
-      )}
+      <span className="theme-toggle__icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="theme-toggle__label">{labelText}</span>
     </button>
   );
 }
