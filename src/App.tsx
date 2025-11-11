@@ -2,7 +2,7 @@ import { Dispatch, FormEvent, ReactNode, SetStateAction, useEffect, useMemo, use
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalReflectionJournal, GoalWorkspace } from './features/goals';
-import { DailyHabitTracker, HabitsModule } from './features/habits';
+import { DailyHabitTracker, HabitsModule, MobileHabitHome } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
@@ -10,6 +10,7 @@ import { NotificationPreferences } from './features/notifications';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
+import { useMediaQuery } from './hooks/useMediaQuery';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
 
@@ -101,6 +102,8 @@ export default function App() {
     WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1].id,
   );
   const [showAuthPanel, setShowAuthPanel] = useState(false);
+  const isMobileViewport = useMediaQuery('(max-width: 720px)');
+  const [showMobileHome, setShowMobileHome] = useState(false);
 
   const isDemoMode = mode === 'demo';
 
@@ -127,6 +130,14 @@ export default function App() {
       window.removeEventListener('beforeinstallprompt', handler);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport) {
+      setShowMobileHome(false);
+      return;
+    }
+    setShowMobileHome((current) => (current ? current : true));
+  }, [isMobileViewport]);
 
   const isOnboardingComplete = useMemo(() => {
     return Boolean(activeSession.user.user_metadata?.onboarding_complete);
@@ -246,6 +257,11 @@ export default function App() {
     installPromptEvent.prompt();
     await installPromptEvent.userChoice;
     setInstallPromptEvent(null);
+  };
+
+  const handleMobileNavSelect = (navId: string) => {
+    setActiveWorkspaceNav(navId);
+    setShowMobileHome(false);
   };
 
   const statusElements = (
@@ -555,6 +571,16 @@ export default function App() {
     }
   };
 
+  if (isMobileViewport && showMobileHome) {
+    return (
+      <MobileHabitHome
+        session={activeSession}
+        navItems={WORKSPACE_NAV_ITEMS}
+        onSelectNav={handleMobileNavSelect}
+      />
+    );
+  }
+
   return (
     <div className="app app--workspace">
       <div className="workspace-shell">
@@ -665,6 +691,16 @@ export default function App() {
           {showAuthPanel && (
             <div className="workspace-auth-panel">{renderAuthPanel()}</div>
           )}
+
+          {isMobileViewport ? (
+            <button
+              type="button"
+              className="workspace-main__mobile-cta"
+              onClick={() => setShowMobileHome(true)}
+            >
+              Back to daily checklist
+            </button>
+          ) : null}
 
           <section
             className={`workspace-stage ${
