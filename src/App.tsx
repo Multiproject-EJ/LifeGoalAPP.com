@@ -185,6 +185,15 @@ export default function App() {
     }
   };
 
+  const handleAccountClick = () => {
+    if (isAuthenticated) {
+      setActiveWorkspaceNav('settings');
+      setShowAuthPanel(false);
+      return;
+    }
+    setShowAuthPanel(true);
+  };
+
   const handleDemoSignIn = async () => {
     setAuthMessage(null);
     setAuthError(null);
@@ -544,28 +553,30 @@ export default function App() {
           </div>
 
           <nav className="workspace-sidebar__nav">
-            {WORKSPACE_NAV_ITEMS.map((item) => {
-              const isActive = activeWorkspaceNav === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`workspace-sidebar__nav-button ${
-                    isActive ? 'workspace-sidebar__nav-button--active' : ''
-                  }`}
-                  onClick={() => setActiveWorkspaceNav(item.id)}
-                  aria-pressed={isActive}
-                  aria-label={item.label}
-                  title={`${item.label} • ${item.summary}`}
-                >
-                  <span className="workspace-sidebar__nav-icon" aria-hidden="true">
-                    {item.icon}
-                  </span>
-                  <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
-                  <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
-                </button>
-              );
-            })}
+            <div className="workspace-sidebar__nav-list">
+              {WORKSPACE_NAV_ITEMS.map((item) => {
+                const isActive = activeWorkspaceNav === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`workspace-sidebar__nav-button ${
+                      isActive ? 'workspace-sidebar__nav-button--active' : ''
+                    }`}
+                    onClick={() => setActiveWorkspaceNav(item.id)}
+                    aria-pressed={isActive}
+                    aria-label={item.label}
+                    title={`${item.label} • ${item.summary}`}
+                  >
+                    <span className="workspace-sidebar__nav-icon" aria-hidden="true">
+                      {item.icon}
+                    </span>
+                    <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
+                    <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
+                  </button>
+                );
+              })}
+            </div>
           </nav>
 
           <div className="workspace-sidebar__actions">
@@ -588,6 +599,26 @@ export default function App() {
                 {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
               </button>
             )}
+            <div className="workspace-sidebar__actions-divider" role="presentation" />
+            <button
+              type="button"
+              className={`workspace-sidebar__account-button ${
+                isAuthenticated && activeWorkspaceNav === 'settings'
+                  ? 'workspace-sidebar__account-button--active'
+                  : ''
+              }`}
+              onClick={handleAccountClick}
+              aria-pressed={isAuthenticated && activeWorkspaceNav === 'settings'}
+              aria-label={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
+              title={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
+            >
+              <span aria-hidden="true" className="workspace-sidebar__nav-icon">
+                👤
+              </span>
+              <span className="sr-only">
+                {isAuthenticated ? 'Open my account settings' : 'Open the sign-in dialog'}
+              </span>
+            </button>
           </div>
         </aside>
 
