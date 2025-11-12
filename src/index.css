@@ -1376,6 +1376,22 @@ body {
     padding: clamp(1.5rem, 6vw, 2.25rem);
   }
 }
+
+@media (max-width: 720px) {
+  .workspace-main {
+    padding-bottom: clamp(6rem, 14vw, 7.25rem);
+  }
+
+  .workspace-shell {
+    padding-bottom: clamp(1rem, 5vw, 1.5rem);
+  }
+}
+
+@media (min-width: 721px) {
+  .mobile-footer-nav {
+    display: none;
+  }
+}
 .goal-workspace {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.7));
   border: 1px solid rgba(148, 163, 184, 0.25);
@@ -4930,6 +4946,7 @@ body {
   padding: clamp(1.25rem, 6vw, 2.25rem);
   display: grid;
   gap: clamp(1.5rem, 4vw, 2.5rem);
+  padding-bottom: clamp(6rem, 12vw, 7rem);
 }
 
 .mobile-habit-home__header {
@@ -5022,6 +5039,71 @@ body {
   font-size: 0.9rem;
   color: #475569;
   line-height: 1.4;
+}
+
+.mobile-footer-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  padding: 0.4rem clamp(1rem, 6vw, 1.75rem) calc(0.4rem + env(safe-area-inset-bottom, 0));
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.mobile-footer-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(0.4rem, 2vw, 0.75rem);
+}
+
+.mobile-footer-nav__item {
+  margin: 0;
+}
+
+.mobile-footer-nav__button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border: none;
+  border-radius: 14px;
+  padding: 0.35rem 0.25rem;
+  background: transparent;
+  color: rgba(248, 250, 252, 0.85);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.mobile-footer-nav__button:hover,
+.mobile-footer-nav__button:focus-visible {
+  background: rgba(30, 41, 59, 0.75);
+  color: #f8fafc;
+  outline: none;
+}
+
+.mobile-footer-nav__button--active {
+  background: rgba(94, 234, 212, 0.18);
+  color: #f8fafc;
+}
+
+.mobile-footer-nav__icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.mobile-footer-nav__label {
+  font-size: 0.7rem;
 }
 
 /* =====================================================

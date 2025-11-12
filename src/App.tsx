@@ -10,6 +10,7 @@ import { NotificationPreferences } from './features/notifications';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
+import { MobileFooterNav } from './components/MobileFooterNav';
 import { useMediaQuery } from './hooks/useMediaQuery';
 
 type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
@@ -81,6 +82,8 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
 ];
 
+const MOBILE_FOOTER_WORKSPACE_IDS = ['goals', 'insights', 'rituals', 'support'] as const;
+
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
@@ -113,6 +116,39 @@ export default function App() {
   const [showAuthPanel, setShowAuthPanel] = useState(false);
   const isMobileViewport = useMediaQuery('(max-width: 720px)');
   const [showMobileHome, setShowMobileHome] = useState(false);
+
+  const mobileFooterNavItems = useMemo(() => {
+    const findWorkspaceItem = (navId: string) =>
+      WORKSPACE_NAV_ITEMS.find((item) => item.id === navId);
+
+    const planningItem = findWorkspaceItem('planning');
+
+    return [
+      {
+        id: 'mobile-home',
+        label: 'Today',
+        ariaLabel: planningItem?.label ?? "Today's habits",
+        icon: planningItem?.icon ?? '✅',
+      },
+      ...MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
+        const item = findWorkspaceItem(navId);
+        const shortLabel = item?.shortLabel ?? item?.label ?? navId;
+        const formattedLabel =
+          shortLabel.length > 0
+            ? `${shortLabel.charAt(0)}${shortLabel.slice(1).toLowerCase()}`
+            : shortLabel;
+
+        return {
+          id: navId,
+          label: formattedLabel,
+          ariaLabel: item?.label ?? formattedLabel,
+          icon: item?.icon ?? '•',
+        };
+      }),
+    ];
+  }, []);
+
+  const mobileActiveNavId = showMobileHome ? 'mobile-home' : activeWorkspaceNav;
 
   const isDemoMode = mode === 'demo';
 
@@ -274,6 +310,11 @@ export default function App() {
   };
 
   const handleMobileNavSelect = (navId: string) => {
+    if (navId === 'mobile-home') {
+      setShowMobileHome(true);
+      return;
+    }
+
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
   };
@@ -625,11 +666,18 @@ export default function App() {
 
   if (isMobileViewport && showMobileHome) {
     return (
-      <MobileHabitHome
-        session={activeSession}
-        navItems={WORKSPACE_NAV_ITEMS}
-        onSelectNav={handleMobileNavSelect}
-      />
+      <>
+        <MobileHabitHome
+          session={activeSession}
+          navItems={WORKSPACE_NAV_ITEMS}
+          onSelectNav={handleMobileNavSelect}
+        />
+        <MobileFooterNav
+          items={mobileFooterNavItems}
+          activeId="mobile-home"
+          onSelect={handleMobileNavSelect}
+        />
+      </>
     );
   }
 
@@ -784,6 +832,13 @@ export default function App() {
           </section>
         </main>
       </div>
+      {isMobileViewport ? (
+        <MobileFooterNav
+          items={mobileFooterNavItems}
+          activeId={mobileActiveNavId}
+          onSelect={handleMobileNavSelect}
+        />
+      ) : null}
     </div>
   );
 }
