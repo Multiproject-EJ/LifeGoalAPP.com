@@ -7,14 +7,20 @@
   // Wait for Supabase session (Google login completes here)
   const { data } = await supabase.auth.getSession();
 
-  // If user is signed in, redirect to dashboard (or home if no dashboard exists yet)
+  const SPA_ENTRY_PATH = "/";
+
+  const redirectToApp = () => {
+    window.location.replace(SPA_ENTRY_PATH);
+  };
+
+  // If user is signed in, redirect back to the SPA entry point so routing works on GitHub Pages
   if (data?.session) {
-    window.location.replace("/dashboard");
+    redirectToApp();
   }
 
   // Also listen in case the session appears slightly later
   supabase.auth.onAuthStateChange((_e, session) => {
-    if (session) window.location.replace("/dashboard");
+    if (session) redirectToApp();
   });
 </script>
 </html>

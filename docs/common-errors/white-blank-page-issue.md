@@ -10,9 +10,11 @@ November 5, 2025
 When visiting https://lifegoalapp.com/, the site displays a completely white/blank page instead of the expected LifeGoalApp interface.
 
 ## Root Cause
+
+### November 5, 2025 – GitHub Actions Misconfiguration
 The GitHub Actions deployment workflow contained an invalid configuration that prevented proper deployment to GitHub Pages.
 
-### Technical Details
+#### Technical Details
 The `.github/workflows/deploy.yml` file had an invalid parameter in the deploy step:
 
 ```yaml
@@ -28,9 +30,22 @@ The `actions/deploy-pages@v4` action does **not** accept a `cname` parameter. Th
 2. Stale/old content remaining on the server
 3. Deployment errors that weren't immediately obvious
 
+### November 12, 2025 – Supabase Callback Redirecting to a Non-existent Route
+The Supabase OAuth callback page (`public/auth/callback.html`) redirected authenticated users to `/dashboard`. GitHub Pages hosts a static build without a server-side router, so navigating to `/dashboard` returned a 404 HTML document instead of our SPA bundle. Because the error page is mostly empty, the result looked like a white screen even though the root path (`/`) continued to work.
+
+#### Technical Details
+```html
+// public/auth/callback.html (before)
+if (data?.session) {
+  window.location.replace("/dashboard");
+}
+```
+
+Any Supabase OAuth flow (including "Continue with Google") completed at `/auth/callback`, saw a session, and immediately navigated to `/dashboard`. That path is not generated during `vite build`, so GitHub Pages served an empty 404 shell and the app never booted.
+
 ## Solution
 
-### The Fix
+### Fix (November 5, 2025)
 Remove the invalid `cname` parameter from the deploy step in `.github/workflows/deploy.yml`:
 
 ```yaml
@@ -40,6 +55,27 @@ Remove the invalid `cname` parameter from the deploy step in `.github/workflows/
   # No 'with' section needed - the action handles everything automatically
 ```
 
+### Fix (November 12, 2025)
+Redirect Supabase callback traffic back to the SPA entry point so routing stays client-side:
+
+```html
+const SPA_ENTRY_PATH = "/";
+
+const redirectToApp = () => {
+  window.location.replace(SPA_ENTRY_PATH);
+};
+
+if (data?.session) {
+  redirectToApp();
+}
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (session) redirectToApp();
+});
+```
+
+This keeps all post-login navigation on `/`, which the service worker and SPA can hydrate correctly.
+
 ### How Custom Domain Works Correctly
 The custom domain (lifegoalapp.com) is configured through the `CNAME` file, which is:
 1. Located in `public/CNAME` in the source code
@@ -48,9 +84,9 @@ The custom domain (lifegoalapp.com) is configured through the `CNAME` file, whic
 4. Used by GitHub Pages to configure the custom domain automatically
 
 ### Verification Steps
-After deploying the fix:
+After deploying the fixes:
 
-1. **Check GitHub Actions**: 
+1. **Check GitHub Actions**:
    - Navigate to the Actions tab in GitHub
    - Verify the "Deploy static site" workflow completes successfully
    - Check for green checkmarks on both "build" and "deploy" jobs
@@ -65,6 +101,11 @@ After deploying the fix:
    - Check the Network tab
    - Verify that CSS and JS files load successfully (status 200)
    - Look for `/assets/index-*.css` and `/assets/index-*.js` files
+
+4. **Test Supabase OAuth Redirect**:
+   - Trigger a Supabase OAuth sign-in (e.g., Continue with Google)
+   - Confirm that after `/auth/callback` finishes, you land on `https://lifegoalapp.com/`
+   - Confirm the SPA hydrates normally (no blank screen)
 
 ## Prevention
 
@@ -117,7 +158,8 @@ The dist folder contains:
 - `icons/` - App icons
 
 ## Resolution Date
-November 5, 2025
+November 5, 2025 (initial)
+November 12, 2025 (OAuth redirect recurrence)
 
 ## Status
-✅ **RESOLVED** - Fix deployed and verified
+✅ **RESOLVED** - Fix deployed and verified for both root causes
