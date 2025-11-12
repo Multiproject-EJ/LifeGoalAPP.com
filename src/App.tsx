@@ -116,7 +116,12 @@ export default function App() {
 
   const isDemoMode = mode === 'demo';
 
-  const activeSession = useMemo(() => supabaseSession ?? createDemoSession(), [supabaseSession]);
+  const activeSession = useMemo(() => {
+    if (supabaseSession) {
+      return supabaseSession;
+    }
+    return createDemoSession();
+  }, [supabaseSession]);
 
   useEffect(() => {
     if (!supabaseSession) {
@@ -474,6 +479,43 @@ export default function App() {
   const isDemoExperience = isDemoMode || !isAuthenticated;
   const isOnboardingGateActive = !isDemoExperience;
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
+
+  const shouldRequireAuthentication = !isDemoMode && !isAuthenticated;
+
+  if (shouldRequireAuthentication) {
+    return (
+      <div className="app app--auth-gate">
+        <header className="auth-gate__masthead">
+          <a className="auth-gate__brand" href="/" aria-label="LifeGoalApp home">
+            LifeGoalApp
+          </a>
+          <ThemeToggle className="auth-gate__theme-toggle" />
+        </header>
+
+        <main className="auth-layout auth-gate__layout">
+          <section className="auth-hero">
+            <span className="auth-hero__badge">Secure workspace</span>
+            <h1>Sign in to keep your rituals in sync</h1>
+            <p className="auth-hero__lead">
+              Access your personalized habit checklist and goal planning tools from any device.
+            </p>
+            <ul className="auth-hero__list">
+              <li>
+                <h3>Daily rituals, anywhere</h3>
+                <p>Review Today&apos;s Habits once you&apos;re signed in to your workspace.</p>
+              </li>
+              <li>
+                <h3>Private progress</h3>
+                <p>Your life wheel check-ins and reflections stay linked to your secure account.</p>
+              </li>
+            </ul>
+          </section>
+
+          <div className="auth-panel auth-gate__panel">{renderAuthPanel()}</div>
+        </main>
+      </div>
+    );
+  }
 
   const renderWorkspaceSection = () => {
     if (activeWorkspaceNav === 'goals') {
