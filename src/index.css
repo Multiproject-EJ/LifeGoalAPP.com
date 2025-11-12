@@ -111,6 +111,45 @@ body {
   align-items: center;
 }
 
+.app--auth-gate {
+  padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2.5rem);
+  gap: clamp(2rem, 6vw, 4rem);
+}
+
+.auth-gate__masthead {
+  width: min(1120px, 92vw);
+  margin: 0 auto clamp(1.5rem, 5vw, 3rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.auth-gate__brand {
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.auth-gate__brand:focus-visible {
+  outline-offset: 6px;
+}
+
+.auth-gate__theme-toggle {
+  margin-left: auto;
+}
+
+.auth-gate__layout {
+  align-items: stretch;
+}
+
+.auth-gate__panel {
+  padding: clamp(1rem, 4vw, 1.5rem) 0;
+}
+
 .auth-hero {
   display: grid;
   gap: 1.5rem;
