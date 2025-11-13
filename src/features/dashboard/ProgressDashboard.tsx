@@ -17,6 +17,7 @@ import {
   normalizeGoalStatus,
 } from '../goals/goalStatus';
 import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
+import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
@@ -149,6 +150,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
   const [habitFormMessage, setHabitFormMessage] = useState<string | null>(null);
   const [habitFormError, setHabitFormError] = useState<string | null>(null);
   const [creatingHabit, setCreatingHabit] = useState(false);
+  const [showIdeasPage, setShowIdeasPage] = useState(false);
 
   const today = useMemo(() => new Date(), []);
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBoundaries(today), [today]);
@@ -401,6 +403,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
 
   return (
     <section className="progress-dashboard">
+      {showIdeasPage ? <DeveloperIdeasPage onClose={() => setShowIdeasPage(false)} /> : null}
       <header className="progress-dashboard__header">
         <div>
           <h2>Progress dashboard</h2>
@@ -408,14 +411,23 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             Visualize your month at a glance, track streaks, and keep upcoming goal milestones on your radar.
           </p>
         </div>
-        <button
-          type="button"
-          className="progress-dashboard__refresh"
-          onClick={() => void refreshDashboard()}
-          disabled={loading || (!isConfigured && !isDemoExperience)}
-        >
-          {loading ? 'Refreshing…' : 'Refresh insights'}
-        </button>
+        <div className="progress-dashboard__actions">
+          <button
+            type="button"
+            className="progress-dashboard__ideas"
+            onClick={() => setShowIdeasPage(true)}
+          >
+            Developer ideas
+          </button>
+          <button
+            type="button"
+            className="progress-dashboard__refresh"
+            onClick={() => void refreshDashboard()}
+            disabled={loading || (!isConfigured && !isDemoExperience)}
+          >
+            {loading ? 'Refreshing…' : 'Refresh insights'}
+          </button>
+        </div>
       </header>
 
       <section className="urgent-tasks" aria-label="Urgent tasks">
