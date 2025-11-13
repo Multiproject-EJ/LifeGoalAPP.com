@@ -7,6 +7,7 @@ import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
+import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -43,7 +44,7 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     label: 'Wellbeing Wheel Check-in',
     summary: 'Reflect on your wellbeing balance with a quick wheel check-in.',
     icon: '🧭',
-    shortLabel: 'BALANCE',
+    shortLabel: 'CHECK-IN',
   },
   {
     id: 'insights',
@@ -80,9 +81,16 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     icon: '⚙️',
     shortLabel: 'PREFS',
   },
+  {
+    id: 'account',
+    label: 'My account',
+    summary: 'Review your profile, subscription status, and workspace data.',
+    icon: '👤',
+    shortLabel: 'ACCOUNT',
+  },
 ];
 
-const MOBILE_FOOTER_WORKSPACE_IDS = ['goals', 'insights', 'rituals', 'support'] as const;
+const MOBILE_FOOTER_WORKSPACE_IDS = ['support', 'insights', 'rituals', 'goals', 'account'] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -110,9 +118,7 @@ export default function App() {
   const [authEntry, setAuthEntry] = useState<'options' | 'email'>('options');
   const [profileSaving, setProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(
-    WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1].id,
-  );
+  const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>('settings');
   const [showAuthPanel, setShowAuthPanel] = useState(false);
   const isMobileViewport = useMediaQuery('(max-width: 720px)');
   const [showMobileHome, setShowMobileHome] = useState(false);
@@ -249,7 +255,7 @@ export default function App() {
 
   const handleAccountClick = () => {
     if (isAuthenticated) {
-      setActiveWorkspaceNav('settings');
+      setActiveWorkspaceNav('account');
       setShowAuthPanel(false);
       setAuthEntry('options');
       return;
@@ -601,6 +607,19 @@ export default function App() {
       );
     }
 
+    if (activeWorkspaceNav === 'account') {
+      return (
+        <div className="workspace-content">
+          <MyAccountPanel
+            session={activeSession}
+            isDemoExperience={isDemoExperience}
+            isAuthenticated={isAuthenticated}
+            onSignOut={handleSignOut}
+          />
+        </div>
+      );
+    }
+
     if (!canAccessWorkspace) {
       return (
         <p className="workspace-onboarding-hint">
@@ -763,12 +782,12 @@ export default function App() {
             <button
               type="button"
               className={`workspace-sidebar__account-button ${
-                isAuthenticated && activeWorkspaceNav === 'settings'
+                isAuthenticated && activeWorkspaceNav === 'account'
                   ? 'workspace-sidebar__account-button--active'
                   : ''
               }`}
               onClick={handleAccountClick}
-              aria-pressed={isAuthenticated && activeWorkspaceNav === 'settings'}
+              aria-pressed={isAuthenticated && activeWorkspaceNav === 'account'}
               aria-label={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
               title={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
             >
