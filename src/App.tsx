@@ -619,7 +619,7 @@ export default function App() {
   }
 
   const shouldForceAuthOverlay = shouldRequireAuthentication && !isMobileViewport;
-  const isAuthOverlayVisible = shouldForceAuthOverlay || (!isMobileViewport && showAuthPanel);
+  const isAuthOverlayVisible = shouldForceAuthOverlay || showAuthPanel;
 
   const renderWorkspaceSection = () => {
     if (activeWorkspaceNav === 'goals') {
