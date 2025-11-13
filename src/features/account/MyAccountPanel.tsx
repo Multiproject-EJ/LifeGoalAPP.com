@@ -43,9 +43,15 @@ export function MyAccountPanel({ session, isDemoExperience, isAuthenticated, onS
     timeStyle: 'short',
   });
   const workspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
+  const showDemoNotice = isDemoExperience;
 
   return (
     <div className="account-panel">
+      {showDemoNotice ? (
+        <p className="account-panel__notice">
+          You’re exploring demo data. Sign in to sync with your Supabase project.
+        </p>
+      ) : null}
       <section className="account-panel__card account-panel__profile" aria-labelledby="account-profile">
         <div className="account-panel__avatar" aria-hidden="true">
           {avatarInitial}
