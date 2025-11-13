@@ -149,7 +149,7 @@ export default function App() {
     [],
   );
 
-  const mobileActiveNavId = showMobileHome ? null : activeWorkspaceNav;
+  const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
 
   const isDemoMode = mode === 'demo';
 
@@ -309,7 +309,27 @@ export default function App() {
     setInstallPromptEvent(null);
   };
 
+  const openHabitsWorkspaceSection = () => {
+    setActiveWorkspaceNav('planning');
+    setShowMobileHome(false);
+  };
+
+  const openTodayHome = () => {
+    setActiveWorkspaceNav('planning');
+    setShowMobileHome(true);
+  };
+
   const handleMobileNavSelect = (navId: string) => {
+    if (navId === 'account' && !isAuthenticated) {
+      handleAccountClick();
+      return;
+    }
+
+    if (navId === 'planning' && isMobileViewport) {
+      openTodayHome();
+      return;
+    }
+
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
   };
@@ -669,6 +689,18 @@ export default function App() {
       case 'planning':
         return (
           <div className="workspace-content">
+            {isMobileViewport ? (
+              <div className="workspace-link-callout">
+                <p className="workspace-link-callout__text">Prefer the simplified Today home?</p>
+                <button
+                  type="button"
+                  className="workspace-link-callout__button"
+                  onClick={openTodayHome}
+                >
+                  Open Today screen
+                </button>
+              </div>
+            ) : null}
             <DailyHabitTracker session={activeSession} />
           </div>
         );
@@ -727,6 +759,7 @@ export default function App() {
           session={activeSession}
           navItems={mobileHabitHomeNavItems}
           onSelectNav={handleMobileNavSelect}
+          onOpenHabitsWorkspace={openHabitsWorkspaceSection}
         />
         <MobileFooterNav
           items={mobileFooterNavItems}
@@ -793,6 +826,13 @@ export default function App() {
               <div className="workspace-sidebar__nav-list">
                 {WORKSPACE_NAV_ITEMS.map((item) => {
                   const isActive = activeWorkspaceNav === item.id;
+                  const handleNavButtonClick = () => {
+                    if (item.id === 'account' && !isAuthenticated) {
+                      handleAccountClick();
+                      return;
+                    }
+                    setActiveWorkspaceNav(item.id);
+                  };
                   return (
                     <button
                       key={item.id}
@@ -800,7 +840,7 @@ export default function App() {
                       className={`workspace-sidebar__nav-button ${
                         isActive ? 'workspace-sidebar__nav-button--active' : ''
                       }`}
-                      onClick={() => setActiveWorkspaceNav(item.id)}
+                      onClick={handleNavButtonClick}
                       aria-pressed={isActive}
                       aria-label={item.label}
                       title={`${item.label} • ${item.summary}`}
@@ -850,32 +890,10 @@ export default function App() {
         )}
 
         <main className="workspace-main">
-          {(!isAuthenticated || authMessage || authError) && (
-            <div className="workspace-status">
-              {!isAuthenticated && (
-                <p className="workspace-status__message">
-                  You’re exploring demo data. Sign in to sync with your Supabase project.
-                </p>
-              )}
-              {statusElements}
-              {!isAuthenticated && (
-                <button
-                  type="button"
-                  className="supabase-auth__action workspace-status__cta"
-                  onClick={() => openAuthOverlay('login')}
-                >
-                  Connect Supabase
-                </button>
-              )}
-            </div>
-          )}
+          {(authMessage || authError) && <div className="workspace-status">{statusElements}</div>}
 
           {isMobileViewport ? (
-            <button
-              type="button"
-              className="workspace-main__mobile-cta"
-              onClick={() => setShowMobileHome(true)}
-            >
+            <button type="button" className="workspace-main__mobile-cta" onClick={openTodayHome}>
               Back to daily checklist
             </button>
           ) : null}

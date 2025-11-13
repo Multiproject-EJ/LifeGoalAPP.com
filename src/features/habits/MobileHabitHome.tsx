@@ -13,15 +13,30 @@ type MobileHabitHomeProps = {
   session: Session;
   navItems: MobileHabitNavItem[];
   onSelectNav: (navId: string) => void;
+  onOpenHabitsWorkspace?: () => void;
 };
 
-export function MobileHabitHome({ session, navItems, onSelectNav }: MobileHabitHomeProps) {
+export function MobileHabitHome({
+  session,
+  navItems,
+  onSelectNav,
+  onOpenHabitsWorkspace,
+}: MobileHabitHomeProps) {
   return (
     <div className="mobile-habit-home">
       <header className="mobile-habit-home__header">
         <h1>Daily habit checklist</h1>
         <p>Stay focused on today&apos;s rituals. When you&apos;re ready for more, jump into any area of your workspace.</p>
       </header>
+
+      {onOpenHabitsWorkspace ? (
+        <div className="mobile-habit-home__cta">
+          <button type="button" className="mobile-habit-home__cta-button" onClick={onOpenHabitsWorkspace}>
+            View Today&apos;s Habits &amp; Routines workspace
+          </button>
+          <p className="mobile-habit-home__cta-hint">Peek at the full rituals dashboard for deeper planning.</p>
+        </div>
+      ) : null}
 
       <DailyHabitTracker session={session} variant="compact" />
 
@@ -33,7 +48,11 @@ export function MobileHabitHome({ session, navItems, onSelectNav }: MobileHabitH
               <button
                 type="button"
                 className="mobile-habit-home__nav-button"
-                onClick={() => onSelectNav(item.id)}
+                onClick={() =>
+                  item.id === 'planning' && onOpenHabitsWorkspace
+                    ? onOpenHabitsWorkspace()
+                    : onSelectNav(item.id)
+                }
               >
                 <span className="mobile-habit-home__nav-icon" aria-hidden="true">
                   {item.icon}
