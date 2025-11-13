@@ -127,34 +127,24 @@ export default function App() {
     const findWorkspaceItem = (navId: string) =>
       WORKSPACE_NAV_ITEMS.find((item) => item.id === navId);
 
-    const planningItem = findWorkspaceItem('planning');
+    return MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
+      const item = findWorkspaceItem(navId);
+      const shortLabel = item?.shortLabel ?? item?.label ?? navId;
+      const formattedLabel =
+        shortLabel.length > 0
+          ? `${shortLabel.charAt(0)}${shortLabel.slice(1).toLowerCase()}`
+          : shortLabel;
 
-    return [
-      {
-        id: 'mobile-home',
-        label: 'Today',
-        ariaLabel: planningItem?.label ?? "Today's habits",
-        icon: planningItem?.icon ?? '✅',
-      },
-      ...MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
-        const item = findWorkspaceItem(navId);
-        const shortLabel = item?.shortLabel ?? item?.label ?? navId;
-        const formattedLabel =
-          shortLabel.length > 0
-            ? `${shortLabel.charAt(0)}${shortLabel.slice(1).toLowerCase()}`
-            : shortLabel;
-
-        return {
-          id: navId,
-          label: formattedLabel,
-          ariaLabel: item?.label ?? formattedLabel,
-          icon: item?.icon ?? '•',
-        };
-      }),
-    ];
+      return {
+        id: navId,
+        label: formattedLabel,
+        ariaLabel: item?.label ?? formattedLabel,
+        icon: item?.icon ?? '•',
+      };
+    });
   }, []);
 
-  const mobileActiveNavId = showMobileHome ? 'mobile-home' : activeWorkspaceNav;
+  const mobileActiveNavId = showMobileHome ? null : activeWorkspaceNav;
 
   const isDemoMode = mode === 'demo';
 
@@ -315,11 +305,6 @@ export default function App() {
   };
 
   const handleMobileNavSelect = (navId: string) => {
-    if (navId === 'mobile-home') {
-      setShowMobileHome(true);
-      return;
-    }
-
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
   };
@@ -740,7 +725,7 @@ export default function App() {
         />
         <MobileFooterNav
           items={mobileFooterNavItems}
-          activeId="mobile-home"
+          activeId={null}
           onSelect={handleMobileNavSelect}
         />
       </>
@@ -757,105 +742,107 @@ export default function App() {
   return (
     <div className={appClassName}>
       <div className={workspaceShellClassName}>
-        <aside className="workspace-sidebar" aria-label="Workspace navigation">
-          <div className="workspace-sidebar__masthead">
-            <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
-              LifeGoalApp
-            </a>
-            <div className="workspace-sidebar__masthead-actions">
-              <ThemeToggle className="btn btn--ghost workspace-sidebar__masthead-toggle" />
-              {isAuthenticated ? (
-                <button
-                  type="button"
-                  className="btn btn--primary workspace-sidebar__masthead-button"
-                  onClick={handleSignOut}
-                >
-                  Sign out
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn--primary workspace-sidebar__masthead-button"
-                  onClick={() =>
-                    showAuthPanel ? setShowAuthPanel(false) : openAuthOverlay('login')
-                  }
-                >
-                  {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
+        {!isMobileViewport && (
+          <aside className="workspace-sidebar" aria-label="Workspace navigation">
+            <div className="workspace-sidebar__masthead">
+              <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
+                LifeGoalApp
+              </a>
+              <div className="workspace-sidebar__masthead-actions">
+                <ThemeToggle className="btn btn--ghost workspace-sidebar__masthead-toggle" />
+                {isAuthenticated ? (
+                  <button
+                    type="button"
+                    className="btn btn--primary workspace-sidebar__masthead-button"
+                    onClick={handleSignOut}
+                  >
+                    Sign out
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn--primary workspace-sidebar__masthead-button"
+                    onClick={() =>
+                      showAuthPanel ? setShowAuthPanel(false) : openAuthOverlay('login')
+                    }
+                  >
+                    {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="workspace-sidebar__profile">
+              <div className="workspace-avatar" aria-hidden="true">
+                {userInitial}
+              </div>
+              <div className="workspace-sidebar__profile-text">
+                <span className="workspace-sidebar__welcome">
+                  {isDemoExperience ? 'Demo creator' : 'Welcome back'}
+                </span>
+                <span className="workspace-sidebar__name">{userDisplay}</span>
+              </div>
+            </div>
+
+            <nav className="workspace-sidebar__nav">
+              <div className="workspace-sidebar__nav-list">
+                {WORKSPACE_NAV_ITEMS.map((item) => {
+                  const isActive = activeWorkspaceNav === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`workspace-sidebar__nav-button ${
+                        isActive ? 'workspace-sidebar__nav-button--active' : ''
+                      }`}
+                      onClick={() => setActiveWorkspaceNav(item.id)}
+                      aria-pressed={isActive}
+                      aria-label={item.label}
+                      title={`${item.label} • ${item.summary}`}
+                    >
+                      <span className="workspace-sidebar__nav-icon" aria-hidden="true">
+                        {item.icon}
+                      </span>
+                      <span className="workspace-sidebar__nav-text" aria-hidden="true">
+                        {item.shortLabel}
+                      </span>
+                      <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
+                      <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+
+            <div className="workspace-sidebar__actions">
+              {installPromptEvent && (
+                <button type="button" className="workspace-sidebar__install" onClick={handleInstallClick}>
+                  Install app
                 </button>
               )}
-            </div>
-          </div>
-
-          <div className="workspace-sidebar__profile">
-            <div className="workspace-avatar" aria-hidden="true">
-              {userInitial}
-            </div>
-            <div className="workspace-sidebar__profile-text">
-              <span className="workspace-sidebar__welcome">
-                {isDemoExperience ? 'Demo creator' : 'Welcome back'}
-              </span>
-              <span className="workspace-sidebar__name">{userDisplay}</span>
-            </div>
-          </div>
-
-          <nav className="workspace-sidebar__nav">
-            <div className="workspace-sidebar__nav-list">
-              {WORKSPACE_NAV_ITEMS.map((item) => {
-                const isActive = activeWorkspaceNav === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`workspace-sidebar__nav-button ${
-                      isActive ? 'workspace-sidebar__nav-button--active' : ''
-                    }`}
-                    onClick={() => setActiveWorkspaceNav(item.id)}
-                    aria-pressed={isActive}
-                    aria-label={item.label}
-                    title={`${item.label} • ${item.summary}`}
-                  >
-                    <span className="workspace-sidebar__nav-icon" aria-hidden="true">
-                      {item.icon}
-                    </span>
-                    <span className="workspace-sidebar__nav-text" aria-hidden="true">
-                      {item.shortLabel}
-                    </span>
-                    <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
-                    <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-
-          <div className="workspace-sidebar__actions">
-            {installPromptEvent && (
-              <button type="button" className="workspace-sidebar__install" onClick={handleInstallClick}>
-                Install app
+              <div className="workspace-sidebar__actions-divider" role="presentation" />
+              <button
+                type="button"
+                className={`workspace-sidebar__account-button ${
+                  isAuthenticated && activeWorkspaceNav === 'account'
+                    ? 'workspace-sidebar__account-button--active'
+                    : ''
+                }`}
+                onClick={handleAccountClick}
+                aria-pressed={isAuthenticated && activeWorkspaceNav === 'account'}
+                aria-label={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
+                title={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
+              >
+                <span aria-hidden="true" className="workspace-sidebar__nav-icon">
+                  👤
+                </span>
+                <span className="sr-only">
+                  {isAuthenticated ? 'Open my account settings' : 'Open the sign-in dialog'}
+                </span>
               </button>
-            )}
-            <div className="workspace-sidebar__actions-divider" role="presentation" />
-            <button
-              type="button"
-              className={`workspace-sidebar__account-button ${
-                isAuthenticated && activeWorkspaceNav === 'account'
-                  ? 'workspace-sidebar__account-button--active'
-                  : ''
-              }`}
-              onClick={handleAccountClick}
-              aria-pressed={isAuthenticated && activeWorkspaceNav === 'account'}
-              aria-label={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
-              title={isAuthenticated ? 'Open my account' : 'Sign in to your account'}
-            >
-              <span aria-hidden="true" className="workspace-sidebar__nav-icon">
-                👤
-              </span>
-              <span className="sr-only">
-                {isAuthenticated ? 'Open my account settings' : 'Open the sign-in dialog'}
-              </span>
-            </button>
-          </div>
-        </aside>
+            </div>
+          </aside>
+        )}
 
         <main className="workspace-main">
           {(!isAuthenticated || authMessage || authError) && (
