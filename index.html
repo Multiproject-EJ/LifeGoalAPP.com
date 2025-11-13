@@ -13,6 +13,68 @@
     <main class="container" role="main">
       <div id="root"></div>
     </main>
-    <script type="module" src="/src/bootstrap.ts"></script>
+    <script type="module" src="/src/bootstrap.ts" id="lifegoal-bootstrap"></script>
+    <script>
+      (() => {
+        const FALLBACK_STYLE = '/preview-bundle/style.css';
+        const FALLBACK_SCRIPT = '/preview-bundle/app.js';
+        let fallbackLoaded = false;
+
+        const attachFallbackNotice = (text) => {
+          const status = document.createElement('div');
+          status.className = 'lifegoal-fallback-status';
+          status.textContent = text;
+          status.setAttribute('role', 'status');
+          status.setAttribute('aria-live', 'polite');
+          document.body.appendChild(status);
+          return status;
+        };
+
+        const loadFallbackBundle = () => {
+          if (fallbackLoaded) return;
+          fallbackLoaded = true;
+
+          const status = attachFallbackNotice('Loading preview bundle…');
+
+          const style = document.createElement('link');
+          style.rel = 'stylesheet';
+          style.href = FALLBACK_STYLE;
+          style.onload = () => {
+            status.textContent = 'Preview bundle ready. Rendering interface…';
+          };
+          style.onerror = () => {
+            status.textContent = 'Unable to load preview styles. Please refresh in a moment.';
+          };
+          document.head.appendChild(style);
+
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.src = FALLBACK_SCRIPT;
+          script.onload = () => {
+            status.remove();
+          };
+          script.onerror = () => {
+            status.textContent =
+              'Preview bundle failed to load. Refresh the page after the deployment finishes.';
+          };
+          document.body.appendChild(script);
+        };
+
+        const bootstrapScript = document.getElementById('lifegoal-bootstrap');
+        if (bootstrapScript) {
+          bootstrapScript.addEventListener('error', () => {
+            loadFallbackBundle();
+          });
+        }
+
+        window.addEventListener('LifeGoalApp:bootstrap-failed', () => {
+          loadFallbackBundle();
+        });
+
+        window.addEventListener('vite:preloadError', () => {
+          loadFallbackBundle();
+        });
+      })();
+    </script>
   </body>
 </html>
