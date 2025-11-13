@@ -386,6 +386,13 @@ const start = async () => {
       durationMs: duration,
     });
   } catch (error) {
+    window.dispatchEvent(
+      new CustomEvent('LifeGoalApp:bootstrap-failed', {
+        detail: {
+          message: error instanceof Error ? error.message : String(error),
+        },
+      }),
+    );
     window.__LifeGoalAppDebugger?.error('Failed to load application entry module.', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

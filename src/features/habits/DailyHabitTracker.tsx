@@ -73,6 +73,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
+  const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
 
   const monthlySummary = useMemo(() => {
@@ -369,8 +370,37 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     await toggleHabitForDate(habit, today);
   };
 
+  const compactStats = useMemo(() => {
+    if (habits.length === 0) {
+      return { total: 0, scheduled: 0, completed: 0 } as const;
+    }
+
+    let scheduled = 0;
+    let completed = 0;
+
+    for (const habit of habits) {
+      const insight = habitInsights[habit.id];
+      const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, today);
+      if (scheduledToday) {
+        scheduled += 1;
+      }
+      if (completions[habit.id]?.completed) {
+        completed += 1;
+      }
+    }
+
+    return { total: habits.length, scheduled, completed } as const;
+  }, [habits, completions, habitInsights, today]);
+
+  const toggleExpanded = (habitId: string) => {
+    setExpandedHabits((current) => ({
+      ...current,
+      [habitId]: !current[habitId],
+    }));
+  };
+
   const renderCompactList = () => (
-    <ul className="habit-checklist">
+    <ul className="habit-checklist" role="list">
       {habits.map((habit) => {
         const state = completions[habit.id];
         const isCompleted = Boolean(state?.completed);
@@ -382,6 +412,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         const domainMeta = extractLifeWheelDomain(habit.schedule);
         const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
         const goalLabel = habit.goal?.title ?? 'Unassigned goal';
+        const checkboxId = `habit-checkbox-${habit.id}`;
+        const detailPanelId = `habit-details-${habit.id}`;
+        const isExpanded = Boolean(expandedHabits[habit.id]);
 
         return (
           <li
@@ -390,38 +423,145 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               isCompleted ? 'habit-checklist__item--completed' : ''
             }`}
           >
-            <label className="habit-checklist__label">
+            <div
+              className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
+              role="button"
+              tabIndex={0}
+              aria-expanded={isExpanded}
+              aria-controls={detailPanelId}
+              onClick={() => toggleExpanded(habit.id)}
+              onKeyDown={(event) => {
+                if (event.currentTarget !== event.target) {
+                  return;
+                }
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  toggleExpanded(habit.id);
+                }
+              }}
+            >
               <input
+                id={checkboxId}
                 type="checkbox"
                 className="habit-checklist__checkbox"
                 checked={isCompleted}
-                onChange={() => void toggleHabit(habit)}
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event) => {
+                  event.stopPropagation();
+                  void toggleHabit(habit);
+                }}
                 disabled={isSaving || (!scheduledToday && !isCompleted)}
               />
-              <span className="habit-checklist__details">
-                <span className="habit-checklist__name">{habit.name}</span>
-                <span className="habit-checklist__meta">
-                  {domainLabel ? `Life wheel: ${domainLabel}` : `Goal: ${goalLabel}`}
-                </span>
-                {domainLabel && habit.goal?.title ? (
-                  <span className="habit-checklist__meta habit-checklist__meta--secondary">
-                    Goal: {habit.goal.title}
-                  </span>
-                ) : null}
-                {lastCompletedText ? (
-                  <span className="habit-checklist__note">{lastCompletedText}</span>
-                ) : null}
-                {!scheduledToday ? (
-                  <span className="habit-checklist__note habit-checklist__note--rest">Rest day</span>
-                ) : null}
-              </span>
-            </label>
-            {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+              <label
+                htmlFor={checkboxId}
+                className="habit-checklist__name"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {habit.name}
+              </label>
+              <span
+                className={`habit-checklist__chevron ${
+                  isExpanded ? 'habit-checklist__chevron--open' : ''
+                }`}
+                aria-hidden="true"
+              />
+            </div>
+            <div
+              className={`habit-checklist__details-panel ${
+                isExpanded ? 'habit-checklist__details-panel--open' : ''
+              }`}
+              id={detailPanelId}
+            >
+              <p className="habit-checklist__meta">
+                {domainLabel ? `Life wheel • ${domainLabel}` : `Goal • ${goalLabel}`}
+              </p>
+              {domainLabel && habit.goal?.title ? (
+                <p className="habit-checklist__meta habit-checklist__meta--secondary">
+                  Goal • {habit.goal.title}
+                </p>
+              ) : null}
+              {lastCompletedText ? (
+                <p className="habit-checklist__note">{lastCompletedText}</p>
+              ) : null}
+              <div className="habit-checklist__detail-actions">
+                {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
+                {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+              </div>
+            </div>
           </li>
         );
       })}
     </ul>
   );
+
+  const renderCompactExperience = () => {
+    const dateLabel = formatCompactDateLabel(today);
+    const timeLabel = formatCompactTimeLabel();
+    const scheduledTarget = compactStats.scheduled || compactStats.total;
+    const progressLabel = scheduledTarget
+      ? `${Math.min(compactStats.completed, scheduledTarget)}/${scheduledTarget} done`
+      : 'No habits scheduled';
+
+    const statusText = errorMessage
+      ? errorMessage
+      : isDemoExperience
+        ? 'Habit progress is stored locally in demo mode. Connect Supabase to sync across devices.'
+        : !isConfigured
+          ? 'Connect Supabase to sync your rituals and keep streaks backed up.'
+          : 'Tap refresh if you updated habits elsewhere to pull in the latest list.';
+
+    const statusVariant = errorMessage
+      ? 'error'
+      : isDemoExperience
+        ? 'info'
+        : !isConfigured
+          ? 'warning'
+          : 'muted';
+
+    return (
+      <div className="habit-checklist-card" role="region" aria-label="Today's habit checklist">
+        <div className="habit-checklist-card__board">
+          <div className="habit-checklist-card__board-head">
+            <div className="habit-checklist-card__date-group">
+              <p className="habit-checklist-card__date">{dateLabel}</p>
+              <p className="habit-checklist-card__time">{timeLabel}</p>
+            </div>
+            <div className="habit-checklist-card__head-actions">
+              <span className="habit-checklist-card__progress">{progressLabel}</span>
+              <button
+                type="button"
+                className="habit-checklist-card__refresh"
+                onClick={() => void refreshHabits()}
+                disabled={loading || (!isConfigured && !isDemoExperience)}
+              >
+                {loading ? 'Refreshing…' : 'Refresh'}
+              </button>
+            </div>
+          </div>
+
+          <div className="habit-checklist-card__board-body">
+            <div className="habit-checklist-card__title">
+              <h2>Things to do today</h2>
+              <p>Check off the rituals that keep your life wheel balanced.</p>
+            </div>
+
+            {habits.length === 0 ? (
+              <div className="habit-checklist-card__empty">
+                <p>No habits scheduled for today.</p>
+                <p>Add a ritual to any goal and it will show up here for quick check-ins.</p>
+              </div>
+            ) : (
+              renderCompactList()
+            )}
+          </div>
+        </div>
+
+        <p className={`habit-checklist-card__status habit-checklist-card__status--${statusVariant}`}>
+          {statusText}
+        </p>
+      </div>
+    );
+  };
 
   const renderMonthlyGrid = () => {
     if (monthDays.length === 0) {
@@ -539,28 +679,24 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     );
   };
 
+  if (isCompact) {
+    return <section className="habit-tracker habit-tracker--compact">{renderCompactExperience()}</section>;
+  }
+
   return (
-    <section className={`habit-tracker ${isCompact ? 'habit-tracker--compact' : ''}`}>
-        <header className="habit-tracker__header">
-          <div>
-            <h2>
-              {isCompact
-                ? "Today's habits"
-                : `Monthly habits dashboard • ${formatMonthLabel(today)} (${monthDays.length} days)`}
-            </h2>
-            <p>
-              {isCompact
-                ? 'Check off the rituals that keep your life wheel balanced today.'
-                : 'Use the monthly grid to see every habit alongside the life wheel domains they support.'}
-            </p>
-          </div>
+    <section className="habit-tracker">
+      <header className="habit-tracker__header">
+        <div>
+          <h2>{`Monthly habits dashboard • ${formatMonthLabel(today)} (${monthDays.length} days)`}</h2>
+          <p>Use the monthly grid to see every habit alongside the life wheel domains they support.</p>
+        </div>
         <button
           type="button"
           className="habit-tracker__refresh"
           onClick={() => void refreshHabits()}
           disabled={loading || (!isConfigured && !isDemoExperience)}
         >
-          {loading ? 'Refreshing…' : isCompact ? 'Refresh list' : 'Refresh habits'}
+          {loading ? 'Refreshing…' : 'Refresh habits'}
         </button>
       </header>
 
@@ -583,8 +719,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             Once you add habits to your goals, they will appear here so you can check in daily and keep your streak alive.
           </p>
         </div>
-      ) : isCompact ? (
-        renderCompactList()
       ) : (
         <ul className="habit-tracker__list">
           {habits.map((habit) => {
@@ -762,6 +896,19 @@ const DAY_SHORT_FORMATTER = new Intl.DateTimeFormat(undefined, {
   weekday: 'short',
 });
 
+const COMPACT_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+const COMPACT_TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
 function formatMonthLabel(value: string) {
   return MONTH_FORMATTER.format(parseISODate(value));
 }
@@ -772,6 +919,14 @@ function formatDayOfMonth(value: string) {
 
 function formatDayOfWeekShort(value: string) {
   return DAY_SHORT_FORMATTER.format(parseISODate(value));
+}
+
+function formatCompactDateLabel(value: string) {
+  return COMPACT_DATE_FORMATTER.format(parseISODate(value));
+}
+
+function formatCompactTimeLabel(date: Date = new Date()) {
+  return COMPACT_TIME_FORMATTER.format(date);
 }
 
 function formatDateLabel(value: string) {

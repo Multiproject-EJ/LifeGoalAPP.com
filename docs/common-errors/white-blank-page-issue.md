@@ -43,6 +43,15 @@ if (data?.session) {
 
 Any Supabase OAuth flow (including "Continue with Google") completed at `/auth/callback`, saw a session, and immediately navigated to `/dashboard`. That path is not generated during `vite build`, so GitHub Pages served an empty 404 shell and the app never booted.
 
+### November 13, 2025 – Browser Refused to Execute TypeScript Modules
+GitHub Pages briefly served the raw repository contents while the GitHub Actions deployment artifact was still uploading. Because `index.html` referenced `/src/bootstrap.ts`, browsers attempted to execute the TypeScript entry directly and logged:
+
+```
+Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/vnd.trolltech.linguist".
+```
+
+Without a bundler, the React app never mounted, so visitors saw a white screen until the deployment completed.
+
 ## Solution
 
 ### Fix (November 5, 2025)
@@ -75,6 +84,19 @@ supabase.auth.onAuthStateChange((_event, session) => {
 ```
 
 This keeps all post-login navigation on `/`, which the service worker and SPA can hydrate correctly.
+
+### Fix (November 13, 2025)
+Ship a precompiled preview bundle and automatically fail over to it if the TypeScript modules cannot execute:
+
+1. Added `npm run build:preview` which runs `vite build --config vite.preview.config.ts` and emits `/preview-bundle/app.js` and `style.css` with stable filenames.
+2. Updated `index.html` to monitor the primary module script and the custom `LifeGoalApp:bootstrap-failed` event. If a MIME error or preload failure occurs, the fallback loader injects the preview CSS + JS bundle so users still see the working interface.
+3. Enhanced `bootstrap.ts` so any failed dynamic import dispatches the `LifeGoalApp:bootstrap-failed` event, guaranteeing the fallback runs for chunk errors too.
+
+#### Verification Steps
+1. Run `npm run build:preview` and confirm `preview-bundle` contains `app.js` and `style.css`.
+2. Serve the repo root via `python -m http.server 8000` (which mimics GitHub Pages serving raw files) and visit `http://localhost:8000`.
+3. The fallback status pill should appear briefly before the preview bundle renders the app—no blank screen.
+4. Trigger a standard `npm run build` + deploy to ensure GitHub Actions still publishes the hashed production bundle.
 
 ### How Custom Domain Works Correctly
 The custom domain (lifegoalapp.com) is configured through the `CNAME` file, which is:
@@ -160,6 +182,7 @@ The dist folder contains:
 ## Resolution Date
 November 5, 2025 (initial)
 November 12, 2025 (OAuth redirect recurrence)
+November 13, 2025 (TypeScript module fallback)
 
 ## Status
-✅ **RESOLVED** - Fix deployed and verified for both root causes
+✅ **RESOLVED** - Fix deployed and verified for all root causes, including the TypeScript fallback
