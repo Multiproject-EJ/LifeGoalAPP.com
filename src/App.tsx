@@ -92,7 +92,7 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
 ];
 
-const MOBILE_FOOTER_WORKSPACE_IDS = ['support', 'insights', 'rituals', 'goals', 'account'] as const;
+const MOBILE_FOOTER_WORKSPACE_IDS = ['planning', 'support', 'insights', 'rituals', 'account'] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -143,6 +143,11 @@ export default function App() {
       };
     });
   }, []);
+
+  const mobileHabitHomeNavItems = useMemo(
+    () => WORKSPACE_NAV_ITEMS.filter((item) => item.id !== 'goals'),
+    [],
+  );
 
   const mobileActiveNavId = showMobileHome ? null : activeWorkspaceNav;
 
@@ -720,7 +725,7 @@ export default function App() {
       <>
         <MobileHabitHome
           session={activeSession}
-          navItems={WORKSPACE_NAV_ITEMS}
+          navItems={mobileHabitHomeNavItems}
           onSelectNav={handleMobileNavSelect}
         />
         <MobileFooterNav
