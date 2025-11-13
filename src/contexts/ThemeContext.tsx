@@ -14,11 +14,35 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
+const THEME_STORAGE_KEY = 'lifegoal-theme';
+
+const readStoredTheme = (): Theme | null => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null;
+  }
+  try {
+    return (window.localStorage.getItem(THEME_STORAGE_KEY) as Theme | null) || null;
+  } catch (error) {
+    console.warn('Unable to access theme preference from storage.', error);
+    return null;
+  }
+};
+
+const persistTheme = (theme: Theme) => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (error) {
+    console.warn('Unable to persist theme preference.', error);
+  }
+};
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem('lifegoal-theme') as Theme | null;
-    return savedTheme || 'bright-sky';
+    const stored = readStoredTheme();
+    return stored || 'bright-sky';
   });
 
   useEffect(() => {
@@ -26,7 +50,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     document.documentElement.setAttribute('data-theme', theme);
     
     // Save to localStorage
-    localStorage.setItem('lifegoal-theme', theme);
+    persistTheme(theme);
     
     // Update meta theme-color for PWA
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
