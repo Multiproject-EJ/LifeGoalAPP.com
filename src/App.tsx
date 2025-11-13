@@ -14,7 +14,9 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { useMediaQuery } from './hooks/useMediaQuery';
 
-type AuthMode = 'password' | 'magic' | 'signup' | 'reset';
+type AuthMode = 'password' | 'signup';
+
+type AuthTab = 'login' | 'signup' | 'demo';
 
 type WorkspaceNavItem = {
   id: string;
@@ -100,11 +102,9 @@ export default function App() {
     isConfigured,
     isAuthenticated,
     mode,
-    signInWithOtp,
     signInWithPassword,
     signUpWithPassword,
     signInWithGoogle,
-    sendPasswordReset,
     signOut,
   } = useSupabaseAuth();
 
@@ -115,7 +115,7 @@ export default function App() {
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [authEntry, setAuthEntry] = useState<'options' | 'email'>('options');
+  const [activeAuthTab, setActiveAuthTab] = useState<AuthTab>('login');
   const [profileSaving, setProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>('settings');
@@ -195,6 +195,10 @@ export default function App() {
     setShowMobileHome((current) => (current ? current : true));
   }, [isMobileViewport]);
 
+  useEffect(() => {
+    setAuthMode(activeAuthTab === 'signup' ? 'signup' : 'password');
+  }, [activeAuthTab]);
+
   const isOnboardingComplete = useMemo(() => {
     return Boolean(activeSession.user.user_metadata?.onboarding_complete);
   }, [activeSession]);
@@ -219,9 +223,6 @@ export default function App() {
         }
         await signInWithPassword({ email, password });
         setAuthMessage('Signed in successfully.');
-      } else if (authMode === 'magic') {
-        await signInWithOtp(email);
-        setAuthMessage('Check your inbox for the magic link.');
       } else if (authMode === 'signup') {
         if (!password) {
           setAuthError('Create a password to finish signing up.');
@@ -242,9 +243,6 @@ export default function App() {
           },
         });
         setAuthMessage('Check your email to confirm your account, then sign in to continue.');
-      } else {
-        await sendPasswordReset(email);
-        setAuthMessage('Password reset instructions are on their way to your inbox.');
       }
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Unable to complete the request.');
@@ -253,23 +251,24 @@ export default function App() {
     }
   };
 
+  const openAuthOverlay = (tab: AuthTab = 'login') => {
+    setActiveAuthTab(tab);
+    setShowAuthPanel(true);
+  };
+
   const handleAccountClick = () => {
     if (isAuthenticated) {
       setActiveWorkspaceNav('account');
       setShowAuthPanel(false);
-      setAuthEntry('options');
       return;
     }
-    setShowAuthPanel(true);
-    setAuthEntry('options');
+    openAuthOverlay('login');
   };
 
   const handleDemoSignIn = async () => {
     setAuthMessage(null);
     setAuthError(null);
     setSubmitting(true);
-    setShowAuthPanel(false);
-    setAuthEntry('options');
     try {
       await signInWithPassword({ email: DEMO_USER_EMAIL, password: 'demo-password' });
       setAuthMessage('Signed in to the demo workspace.');
@@ -334,174 +333,218 @@ export default function App() {
     </>
   );
 
-  const renderAuthPanel = () => (
+  const renderAuthPanel = () => {
+    const authTabs: { id: AuthTab; label: string }[] = [
+    { id: 'login', label: 'Log in' },
+    { id: 'signup', label: 'Sign up' },
+    { id: 'demo', label: 'Demo Account' },
+  ];
+
+    const authTabCopy: Record<AuthTab, { title: string; subtitle: string }> = {
+    login: {
+      title: 'Welcome back',
+      subtitle: 'Log in to sync your rituals, goals, and check-ins across devices.',
+    },
+    signup: {
+      title: 'Create your LifeGoal account',
+      subtitle: 'Sign up with email or Google to unlock the full workspace.',
+    },
+    demo: {
+      title: 'Take the demo for a spin',
+      subtitle: `Instantly browse the workspace as ${DEMO_USER_NAME}.`,
+    },
+  };
+
+    const renderLoginPanel = () => (
+    <div
+      className="auth-tab-panel"
+      role="tabpanel"
+      id="auth-panel-login"
+      aria-labelledby="auth-tab-login"
+    >
+      <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
+        <label className="supabase-auth__field">
+          <span>Email</span>
+          <input
+            type="email"
+            name="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
+        </label>
+
+        <label className="supabase-auth__field">
+          <span>Password</span>
+          <input
+            type="password"
+            name="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            required
+          />
+        </label>
+
+        <div className="supabase-auth__actions">
+          <button type="submit" className="supabase-auth__action auth-card__primary" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Log in'}
+          </button>
+        </div>
+      </form>
+
+      <div className="auth-card__providers">
+        <button
+          type="button"
+          className="auth-provider auth-provider--google"
+          onClick={handleGoogleSignIn}
+          disabled={submitting || !isConfigured}
+        >
+          Continue with Google
+        </button>
+      </div>
+    </div>
+    );
+
+    const renderSignupPanel = () => (
+    <div
+      className="auth-tab-panel"
+      role="tabpanel"
+      id="auth-panel-signup"
+      aria-labelledby="auth-tab-signup"
+    >
+      <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
+        <label className="supabase-auth__field">
+          <span>Your name</span>
+          <input
+            type="text"
+            name="fullName"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            placeholder="Jordan Goalsetter"
+            autoComplete="name"
+            required
+          />
+        </label>
+
+        <label className="supabase-auth__field">
+          <span>Email</span>
+          <input
+            type="email"
+            name="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
+        </label>
+
+        <label className="supabase-auth__field">
+          <span>Password</span>
+          <input
+            type="password"
+            name="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Create a secure password"
+            autoComplete="new-password"
+            required
+          />
+        </label>
+
+        <div className="supabase-auth__actions">
+          <button type="submit" className="supabase-auth__action auth-card__primary" disabled={submitting}>
+            {submitting ? 'Creating account…' : 'Sign up with email'}
+          </button>
+        </div>
+      </form>
+
+      <div className="auth-card__providers">
+        <button
+          type="button"
+          className="auth-provider auth-provider--google"
+          onClick={handleGoogleSignIn}
+          disabled={submitting || !isConfigured}
+        >
+          Sign up with Google
+        </button>
+      </div>
+    </div>
+    );
+
+    const renderDemoPanel = () => (
+    <div
+      className="auth-tab-panel"
+      role="tabpanel"
+      id="auth-panel-demo"
+      aria-labelledby="auth-tab-demo"
+    >
+      <p className="auth-card__hint">
+        Launch the fully-populated demo workspace to explore rituals, goal planning boards, and daily trackers
+        without creating an account.
+      </p>
+      <ul className="auth-demo-list">
+        <li>Preview Today&apos;s Habits and goal dashboards.</li>
+        <li>Make changes locally without affecting production data.</li>
+        <li>Decide later if you want to connect your own Supabase project.</li>
+      </ul>
+      <button
+        type="button"
+        className="supabase-auth__action auth-card__primary"
+        onClick={handleDemoSignIn}
+        disabled={submitting}
+      >
+        Enter the demo workspace
+      </button>
+    </div>
+    );
+
+    const renderTabPanel = () => {
+    if (initializing) {
+      return <p className="supabase-auth__status supabase-auth__status--info">Loading session…</p>;
+    }
+    if (activeAuthTab === 'login') {
+      return renderLoginPanel();
+    }
+    if (activeAuthTab === 'signup') {
+      return renderSignupPanel();
+    }
+    return renderDemoPanel();
+  };
+
+    return (
     <div className="auth-card">
       <header className="auth-card__header">
-        <h2>{isDemoMode ? 'Peek behind the curtain' : 'Sign in to your workspace'}</h2>
-        <p>
-          {isDemoMode
-            ? 'Use the LifeGoal demo workspace to explore the current build.'
-            : 'Connect your Supabase project credentials to unlock the full workspace.'}
-        </p>
+        <h2>{authTabCopy[activeAuthTab].title}</h2>
+        <p>{authTabCopy[activeAuthTab].subtitle}</p>
       </header>
 
+      <div className="auth-card__tabs" role="tablist" aria-label="Choose how to access LifeGoal">
+        {authTabs.map((tab) => {
+          const isActive = activeAuthTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`auth-tab-${tab.id}`}
+              aria-controls={`auth-panel-${tab.id}`}
+              aria-selected={isActive}
+              className={`auth-tab ${isActive ? 'auth-tab--active' : ''}`}
+              onClick={() => setActiveAuthTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="auth-card__body">
-        {initializing ? (
-          <p className="supabase-auth__status supabase-auth__status--info">Loading session…</p>
-        ) : (
-          <>
-            <div className="auth-card__options" role="list">
-              <button
-                type="button"
-                role="listitem"
-                className="auth-option auth-option--demo"
-                onClick={handleDemoSignIn}
-                disabled={submitting}
-              >
-                <span className="auth-option__eyebrow">Instant tour</span>
-                <span className="auth-option__title">Explore the demo workspace</span>
-                <span className="auth-option__subtitle">
-                  Sign in as <strong>{DEMO_USER_NAME}</strong> and keep your changes on this device.
-                </span>
-              </button>
-
-              <button
-                type="button"
-                role="listitem"
-                className="auth-option auth-option--google"
-                onClick={handleGoogleSignIn}
-                disabled={submitting || !isConfigured}
-              >
-                <span className="auth-option__eyebrow">Fastest sync</span>
-                <span className="auth-option__title">Continue with Google</span>
-                <span className="auth-option__subtitle">Connect your Supabase project using Google OAuth.</span>
-              </button>
-
-              <button
-                type="button"
-                role="listitem"
-                className={`auth-option auth-option--email ${authEntry === 'email' ? 'auth-option--active' : ''}`}
-                onClick={() => setAuthEntry('email')}
-                disabled={submitting || !isConfigured}
-              >
-                <span className="auth-option__eyebrow">Flexible access</span>
-                <span className="auth-option__title">Use email + password or magic link</span>
-                <span className="auth-option__subtitle">
-                  Prefer classic credentials? Continue with email-based sign-in or sign-up.
-                </span>
-              </button>
-            </div>
-
-            {authEntry === 'email' ? (
-              <div className="auth-card__email">
-                <div className="auth-card__email-header">
-                  <h3>Email sign-in</h3>
-                  <button
-                    type="button"
-                    className="supabase-auth__toggle"
-                    onClick={() => setAuthEntry('options')}
-                  >
-                    Choose a different option
-                  </button>
-                </div>
-
-                <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
-                  <div className="supabase-auth__modes" role="tablist" aria-label="Authentication mode">
-                    <button
-                      type="button"
-                      className={`supabase-auth__mode ${authMode === 'password' ? 'supabase-auth__mode--active' : ''}`}
-                      onClick={() => setAuthMode('password')}
-                    >
-                      Sign in
-                    </button>
-                    <button
-                      type="button"
-                      className={`supabase-auth__mode ${authMode === 'signup' ? 'supabase-auth__mode--active' : ''}`}
-                      onClick={() => setAuthMode('signup')}
-                    >
-                      Create account
-                    </button>
-                    <button
-                      type="button"
-                      className={`supabase-auth__mode ${authMode === 'magic' ? 'supabase-auth__mode--active' : ''}`}
-                      onClick={() => setAuthMode('magic')}
-                    >
-                      Magic link
-                    </button>
-                    <button
-                      type="button"
-                      className={`supabase-auth__mode ${authMode === 'reset' ? 'supabase-auth__mode--active' : ''}`}
-                      onClick={() => setAuthMode('reset')}
-                    >
-                      Reset password
-                    </button>
-                  </div>
-
-                  <label className="supabase-auth__field">
-                    <span>Email</span>
-                    <input
-                      type="email"
-                      name="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      required
-                    />
-                  </label>
-
-                  {(authMode === 'password' || authMode === 'signup') && (
-                    <label className="supabase-auth__field">
-                      <span>Password</span>
-                      <input
-                        type="password"
-                        name="password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        placeholder="••••••••"
-                        autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
-                        required={authMode === 'signup'}
-                      />
-                    </label>
-                  )}
-
-                  {authMode === 'signup' && (
-                    <label className="supabase-auth__field">
-                      <span>Your name</span>
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={fullName}
-                        onChange={(event) => setFullName(event.target.value)}
-                        placeholder="Jordan Goalsetter"
-                        autoComplete="name"
-                        required
-                      />
-                    </label>
-                  )}
-
-                  <div className="supabase-auth__actions">
-                    <button type="submit" className="supabase-auth__action" disabled={submitting}>
-                      {submitting
-                        ? 'Sending…'
-                        : authMode === 'password'
-                          ? 'Sign in'
-                          : authMode === 'signup'
-                            ? 'Create account'
-                            : authMode === 'magic'
-                              ? 'Send magic link'
-                              : 'Send reset link'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <p className="auth-card__hint auth-card__hint--muted">
-                Prefer email access? Choose the third option to reveal the full sign-in and sign-up form.
-              </p>
-            )}
-          </>
-        )}
+        {renderTabPanel()}
 
         {!isConfigured ? (
           <p className="supabase-auth__status supabase-auth__status--error">
@@ -512,7 +555,8 @@ export default function App() {
         {statusElements}
       </div>
     </div>
-  );
+    );
+  };
 
   const userDisplay =
     displayName ||
@@ -529,7 +573,7 @@ export default function App() {
 
   const shouldRequireAuthentication = !isDemoMode && !isAuthenticated;
 
-  if (shouldRequireAuthentication) {
+  if (shouldRequireAuthentication && isMobileViewport) {
     return (
       <div className="app app--auth-gate">
         <header className="auth-gate__masthead">
@@ -563,6 +607,9 @@ export default function App() {
       </div>
     );
   }
+
+  const shouldForceAuthOverlay = shouldRequireAuthentication && !isMobileViewport;
+  const isAuthOverlayVisible = shouldForceAuthOverlay || (!isMobileViewport && showAuthPanel);
 
   const renderWorkspaceSection = () => {
     if (activeWorkspaceNav === 'goals') {
@@ -700,9 +747,16 @@ export default function App() {
     );
   }
 
+  const appClassName = `app app--workspace ${isAuthOverlayVisible ? 'app--auth-overlay' : ''}`;
+  const workspaceShellClassName = `workspace-shell ${
+    isAuthOverlayVisible ? 'workspace-shell--blurred' : ''
+  }`;
+
+  const canDismissOverlay = isAuthOverlayVisible && !shouldForceAuthOverlay;
+
   return (
-    <div className="app app--workspace">
-      <div className="workspace-shell">
+    <div className={appClassName}>
+      <div className={workspaceShellClassName}>
         <aside className="workspace-sidebar" aria-label="Workspace navigation">
           <div className="workspace-sidebar__masthead">
             <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
@@ -722,7 +776,9 @@ export default function App() {
                 <button
                   type="button"
                   className="btn btn--primary workspace-sidebar__masthead-button"
-                  onClick={() => setShowAuthPanel((value) => !value)}
+                  onClick={() =>
+                    showAuthPanel ? setShowAuthPanel(false) : openAuthOverlay('login')
+                  }
                 >
                   {showAuthPanel ? 'Hide sign-in' : 'Sign in'}
                 </button>
@@ -814,16 +870,12 @@ export default function App() {
                 <button
                   type="button"
                   className="supabase-auth__action workspace-status__cta"
-                  onClick={() => setShowAuthPanel(true)}
+                  onClick={() => openAuthOverlay('login')}
                 >
                   Connect Supabase
                 </button>
               )}
             </div>
-          )}
-
-          {showAuthPanel && (
-            <div className="workspace-auth-panel">{renderAuthPanel()}</div>
           )}
 
           {isMobileViewport ? (
@@ -857,6 +909,25 @@ export default function App() {
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
         />
+      ) : null}
+
+      {isAuthOverlayVisible ? (
+        <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with LifeGoalApp">
+          <div
+            className="auth-overlay__backdrop"
+            onClick={() => (canDismissOverlay ? setShowAuthPanel(false) : null)}
+            role="presentation"
+          />
+          <div className="auth-overlay__dialog">
+            {canDismissOverlay ? (
+              <button type="button" className="auth-overlay__close" onClick={() => setShowAuthPanel(false)}>
+                <span aria-hidden="true">×</span>
+                <span className="sr-only">Close sign-in dialog</span>
+              </button>
+            ) : null}
+            {renderAuthPanel()}
+          </div>
+        </div>
       ) : null}
     </div>
   );
