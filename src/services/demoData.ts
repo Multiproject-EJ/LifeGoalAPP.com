@@ -1084,3 +1084,17 @@ export function removeDemoGoalReflection(id: string): GoalReflectionRow | null {
   });
   return removed ? clone(removed) : null;
 }
+
+export function getDemoState(): DemoState {
+  return clone(state);
+}
+
+export function clearDemoData(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+    state = clone(defaultState);
+  } catch (error) {
+    console.warn('Unable to clear demo data from localStorage.', error);
+  }
+}
