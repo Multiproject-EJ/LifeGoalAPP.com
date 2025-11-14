@@ -83,13 +83,6 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     icon: '⚙️',
     shortLabel: 'PREFS',
   },
-  {
-    id: 'account',
-    label: 'My account',
-    summary: 'Review your profile, subscription status, and workspace data.',
-    icon: '👤',
-    shortLabel: 'ACCOUNT',
-  },
 ];
 
 const MOBILE_FOOTER_WORKSPACE_IDS = ['planning', 'support', 'insights', 'rituals', 'account'] as const;
