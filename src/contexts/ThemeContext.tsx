@@ -1,6 +1,25 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-export type Theme = 'bright-sky' | 'dark-glass';
+export type Theme = 
+  | 'bright-sky' 
+  | 'dark-glass'
+  | 'ocean-breeze'
+  | 'forest-green'
+  | 'sunset-glow'
+  | 'midnight-purple'
+  | 'cherry-blossom'
+  | 'desert-sand'
+  | 'arctic-frost'
+  | 'autumn-harvest'
+  | 'lavender-dream';
+
+export interface ThemeMetadata {
+  id: Theme;
+  name: string;
+  icon: string;
+  description: string;
+  metaColor: string;
+}
 
 interface ThemeContextValue {
   theme: Theme;
@@ -15,6 +34,86 @@ interface ThemeProviderProps {
 }
 
 const THEME_STORAGE_KEY = 'lifegoal-theme';
+
+export const AVAILABLE_THEMES: ThemeMetadata[] = [
+  {
+    id: 'bright-sky',
+    name: 'Bright Sky',
+    icon: '☀️',
+    description: 'Light and airy with soft blue gradients',
+    metaColor: '#e0f2fe',
+  },
+  {
+    id: 'dark-glass',
+    name: 'Dark Glass',
+    icon: '🌙',
+    description: 'Premium dark glassmorphism with rich colors',
+    metaColor: '#0f172a',
+  },
+  {
+    id: 'ocean-breeze',
+    name: 'Ocean Breeze',
+    icon: '🌊',
+    description: 'Calm teal and aquamarine tones',
+    metaColor: '#0d9488',
+  },
+  {
+    id: 'forest-green',
+    name: 'Forest Green',
+    icon: '🌲',
+    description: 'Natural green with earthy accents',
+    metaColor: '#059669',
+  },
+  {
+    id: 'sunset-glow',
+    name: 'Sunset Glow',
+    icon: '🌅',
+    description: 'Warm oranges and pinks like a sunset',
+    metaColor: '#f97316',
+  },
+  {
+    id: 'midnight-purple',
+    name: 'Midnight Purple',
+    icon: '🔮',
+    description: 'Deep purple with mystical vibes',
+    metaColor: '#7c3aed',
+  },
+  {
+    id: 'cherry-blossom',
+    name: 'Cherry Blossom',
+    icon: '🌸',
+    description: 'Soft pink with gentle warmth',
+    metaColor: '#f472b6',
+  },
+  {
+    id: 'desert-sand',
+    name: 'Desert Sand',
+    icon: '🏜️',
+    description: 'Warm beige and sandy tones',
+    metaColor: '#d97706',
+  },
+  {
+    id: 'arctic-frost',
+    name: 'Arctic Frost',
+    icon: '❄️',
+    description: 'Cool whites and icy blues',
+    metaColor: '#60a5fa',
+  },
+  {
+    id: 'autumn-harvest',
+    name: 'Autumn Harvest',
+    icon: '🍂',
+    description: 'Warm browns and golden yellows',
+    metaColor: '#ea580c',
+  },
+  {
+    id: 'lavender-dream',
+    name: 'Lavender Dream',
+    icon: '💜',
+    description: 'Soft purple with dreamy gradients',
+    metaColor: '#c084fc',
+  },
+];
 
 const readStoredTheme = (): Theme | null => {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -55,7 +154,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     // Update meta theme-color for PWA
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'bright-sky' ? '#e0f2fe' : '#0f172a');
+      const themeData = AVAILABLE_THEMES.find(t => t.id === theme);
+      metaThemeColor.setAttribute('content', themeData?.metaColor || '#e0f2fe');
     }
   }, [theme]);
 

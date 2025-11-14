@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
+import { ThemeSelector } from '../../components/ThemeSelector';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -124,6 +125,11 @@ export function MyAccountPanel({ session, isDemoExperience, isAuthenticated, onS
             <dd className="account-panel__code">{user.id}</dd>
           </div>
         </dl>
+      </section>
+
+      <section className="account-panel__card" aria-labelledby="account-theme">
+        <p className="account-panel__eyebrow">Appearance</p>
+        <ThemeSelector />
       </section>
 
       <SupabaseConnectionTest 
