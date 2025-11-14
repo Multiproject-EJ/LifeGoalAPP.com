@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
+import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -124,6 +125,11 @@ export function MyAccountPanel({ session, isDemoExperience, isAuthenticated, onS
           </div>
         </dl>
       </section>
+
+      <SupabaseConnectionTest 
+        session={session} 
+        isDemoExperience={isDemoExperience} 
+      />
 
       <div className="account-panel__actions">
         <div>
