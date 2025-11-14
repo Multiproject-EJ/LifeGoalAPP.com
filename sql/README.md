@@ -10,7 +10,7 @@ These SQL files provision the Supabase project for LifeGoalAPP (project id `muan
 4. Run `003_life_goals_extended.sql` to add support for life goals with steps, substeps, and alerts.
 5. (Optional) Run `003_seed_demo_user.sql` to provision a manual testing account (if it exists).
 
-The scripts are idempotent and can be re-run safely.
+The scripts are idempotent and can be re-run safely; policy definitions explicitly drop any existing policies before creating them again so you can re-apply patches without manual cleanup.
 
 ## Schema Versions
 
