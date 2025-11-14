@@ -9,6 +9,7 @@ import {
   uploadVisionImageFromUrl,
 } from '../../services/visionBoard';
 import type { Database } from '../../lib/database.types';
+import { isDemoSession } from '../../services/demoSession';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
@@ -23,8 +24,8 @@ type VisionImage = VisionImageRow & { publicUrl: string };
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
 export function VisionBoard({ session }: VisionBoardProps) {
-  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
-  const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const { isConfigured } = useSupabaseAuth();
+  const isDemoExperience = isDemoSession(session);
   const [images, setImages] = useState<VisionImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

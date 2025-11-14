@@ -18,6 +18,7 @@ import {
 } from '../goals/goalStatus';
 import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
 import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
+import { isDemoSession } from '../../services/demoSession';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
@@ -135,8 +136,8 @@ function buildWeeklySnapshot(reference: Date, completions: Record<string, number
 }
 
 export function ProgressDashboard({ session }: ProgressDashboardProps) {
-  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
-  const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const { isConfigured } = useSupabaseAuth();
+  const isDemoExperience = isDemoSession(session);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [logs, setLogs] = useState<HabitLogRow[]>([]);

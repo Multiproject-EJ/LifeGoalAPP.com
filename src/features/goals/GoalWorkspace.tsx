@@ -11,6 +11,7 @@ import {
   type GoalStatusTag,
   normalizeGoalStatus,
 } from './goalStatus';
+import { isDemoSession } from '../../services/demoSession';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
@@ -41,8 +42,8 @@ const initialDraft: GoalDraft = {
 };
 
 export function GoalWorkspace({ session }: GoalWorkspaceProps) {
-  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
-  const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const { isConfigured } = useSupabaseAuth();
+  const isDemoExperience = isDemoSession(session);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

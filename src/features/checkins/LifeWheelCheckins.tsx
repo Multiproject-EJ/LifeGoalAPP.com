@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchCheckinsForUser, insertCheckin, updateCheckin } from '../../services/checkins';
 import type { Database } from '../../lib/database.types';
+import { isDemoSession } from '../../services/demoSession';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
@@ -282,8 +283,8 @@ function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
 }
 
 export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
-  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
-  const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const { isConfigured } = useSupabaseAuth();
+  const isDemoExperience = isDemoSession(session);
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);

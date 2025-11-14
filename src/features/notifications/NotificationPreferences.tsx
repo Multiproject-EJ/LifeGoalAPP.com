@@ -12,7 +12,7 @@ import {
   subscribeToPush,
   unsubscribeFromPush,
 } from '../../services/pushNotifications';
-import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
+import { isDemoSession } from '../../services/demoSession';
 
 const DEFAULT_REMINDER_TIME = '08:00';
 
@@ -57,8 +57,7 @@ function mapRowToState(row: NotificationPreferencesRow | null, fallbackTimezone:
 }
 
 export function NotificationPreferences({ session }: Props) {
-  const { mode, isAuthenticated } = useSupabaseAuth();
-  const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const isDemoExperience = isDemoSession(session);
   const fallbackTimezone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
       return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
