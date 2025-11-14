@@ -39,3 +39,10 @@ export function createDemoSession(): Session {
     provider_token: null,
   } as Session;
 }
+
+export function isDemoSession(session: Session | null | undefined): boolean {
+  if (!session) {
+    return false;
+  }
+  return session.user?.id === DEMO_USER_ID;
+}

@@ -13,6 +13,7 @@ import {
   type FollowUpPrompt,
 } from '../../services/reflectionPrompts';
 import type { Database } from '../../lib/database.types';
+import { isDemoSession } from '../../services/demoSession';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
@@ -241,8 +242,8 @@ function getTodayISO(): string {
 }
 
 export function GoalReflectionJournal({ session }: GoalReflectionJournalProps) {
-  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
-  const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const { isConfigured } = useSupabaseAuth();
+  const isDemoExperience = isDemoSession(session);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [reflections, setReflections] = useState<GoalReflectionRow[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');

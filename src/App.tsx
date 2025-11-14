@@ -9,7 +9,7 @@ import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
-import { createDemoSession } from './services/demoSession';
+import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { useMediaQuery } from './hooks/useMediaQuery';
@@ -580,7 +580,7 @@ export default function App() {
     WORKSPACE_NAV_ITEMS.find((item) => item.id === activeWorkspaceNav) ??
     WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1];
 
-  const isDemoExperience = isDemoMode || !isAuthenticated;
+  const isDemoExperience = isDemoSession(activeSession);
   const isOnboardingGateActive = !isDemoExperience;
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
 

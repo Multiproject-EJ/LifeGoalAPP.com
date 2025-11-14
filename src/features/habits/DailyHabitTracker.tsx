@@ -9,6 +9,7 @@ import {
   type HabitWithGoal,
 } from '../../services/habits';
 import type { Database, Json } from '../../lib/database.types';
+import { isDemoSession } from '../../services/demoSession';
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
@@ -58,8 +59,8 @@ const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatical
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
 
 export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrackerProps) {
-  const { isConfigured, mode, isAuthenticated } = useSupabaseAuth();
-  const isDemoExperience = mode === 'demo' || !isAuthenticated;
+  const { isConfigured } = useSupabaseAuth();
+  const isDemoExperience = isDemoSession(session);
   const isCompact = variant === 'compact';
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [loading, setLoading] = useState(false);
