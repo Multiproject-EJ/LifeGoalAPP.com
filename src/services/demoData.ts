@@ -479,14 +479,18 @@ const defaultState: DemoState = {
     {
       id: createId('vision'),
       user_id: DEMO_USER_ID,
-      image_path: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
+      image_path: null,
+      image_url: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
+      image_source: 'url',
       caption: 'Morning deep work setup to stay consistent with focus ritual.',
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 5)),
     },
     {
       id: createId('vision'),
       user_id: DEMO_USER_ID,
-      image_path: 'https://images.unsplash.com/photo-1487014679447-9f8336841d58?auto=format&fit=crop&w=800&q=80',
+      image_path: null,
+      image_url: 'https://images.unsplash.com/photo-1487014679447-9f8336841d58?auto=format&fit=crop&w=800&q=80',
+      image_source: 'url',
       caption: 'Community celebration after the beta launch milestone.',
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 20)),
     },
@@ -880,7 +884,9 @@ export function addDemoVisionImage(payload: VisionImageInsert): VisionImageRow {
   const record: VisionImageRow = {
     id: payload.id ?? createId('vision'),
     user_id: payload.user_id,
-    image_path: payload.image_path,
+    image_path: payload.image_path ?? null,
+    image_url: payload.image_url ?? null,
+    image_source: payload.image_source ?? 'file',
     caption: payload.caption ?? null,
     created_at: payload.created_at ?? new Date().toISOString(),
   };

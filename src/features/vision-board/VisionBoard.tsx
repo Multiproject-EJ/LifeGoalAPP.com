@@ -6,6 +6,7 @@ import {
   fetchVisionImages,
   getVisionImagePublicUrl,
   uploadVisionImage,
+  uploadVisionImageFromUrl,
 } from '../../services/visionBoard';
 import type { Database } from '../../lib/database.types';
 
@@ -28,7 +29,9 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [fileDraft, setFileDraft] = useState<File | null>(null);
+  const [urlDraft, setUrlDraft] = useState('');
   const [captionDraft, setCaptionDraft] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -48,7 +51,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
 
       const mapped = (data ?? []).map((record) => ({
         ...record,
-        publicUrl: record.image_path ? getVisionImagePublicUrl(record.image_path) : '',
+        publicUrl: getVisionImagePublicUrl(record),
       }));
       setImages(mapped);
     } catch (error) {
@@ -104,38 +107,66 @@ export function VisionBoard({ session }: VisionBoardProps) {
       return;
     }
 
-    if (!fileDraft) {
-      setErrorMessage('Choose an image to upload.');
-      return;
-    }
+    // Validate based on upload mode
+    if (uploadMode === 'file') {
+      if (!fileDraft) {
+        setErrorMessage('Choose an image to upload.');
+        return;
+      }
 
-    if (fileDraft.size > MAX_UPLOAD_SIZE) {
-      setErrorMessage('Images must be 5MB or smaller.');
-      return;
+      if (fileDraft.size > MAX_UPLOAD_SIZE) {
+        setErrorMessage('Images must be 5MB or smaller.');
+        return;
+      }
+    } else {
+      if (!urlDraft.trim()) {
+        setErrorMessage('Enter an image URL.');
+        return;
+      }
+
+      // Basic URL validation
+      try {
+        new URL(urlDraft.trim());
+      } catch {
+        setErrorMessage('Enter a valid URL.');
+        return;
+      }
     }
 
     setUploading(true);
     setErrorMessage(null);
 
     try {
-      const { data, error } = await uploadVisionImage({
-        userId: session.user.id,
-        file: fileDraft,
-        fileName: fileDraft.name,
-        caption: captionDraft,
-      });
+      let data, error;
+
+      if (uploadMode === 'file' && fileDraft) {
+        ({ data, error } = await uploadVisionImage({
+          userId: session.user.id,
+          file: fileDraft,
+          fileName: fileDraft.name,
+          caption: captionDraft,
+        }));
+      } else {
+        ({ data, error } = await uploadVisionImageFromUrl({
+          userId: session.user.id,
+          imageUrl: urlDraft.trim(),
+          caption: captionDraft,
+        }));
+      }
+
       if (error) throw error;
 
       if (data) {
         setImages((current) => [
           {
             ...data,
-            publicUrl: data.image_path ? getVisionImagePublicUrl(data.image_path) : '',
+            publicUrl: getVisionImagePublicUrl(data),
           },
           ...current,
         ]);
       }
       setFileDraft(null);
+      setUrlDraft('');
       setCaptionDraft('');
       (event.target as HTMLFormElement).reset();
     } catch (error) {
@@ -204,17 +235,60 @@ export function VisionBoard({ session }: VisionBoardProps) {
 
       <form className="vision-board__form" onSubmit={handleUpload}>
         <div className="vision-board__field">
-          <label htmlFor="vision-board-file">Image</label>
-          <input
-            id="vision-board-file"
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            disabled={(!isConfigured && !isDemoExperience) || uploading}
-            required
-          />
-          <span className="vision-board__hint">PNG, JPG, or WEBP up to 5MB.</span>
+          <label>Upload method</label>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                type="radio"
+                name="upload-mode"
+                value="file"
+                checked={uploadMode === 'file'}
+                onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
+                disabled={(!isConfigured && !isDemoExperience) || uploading}
+              />
+              <span>File upload</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                type="radio"
+                name="upload-mode"
+                value="url"
+                checked={uploadMode === 'url'}
+                onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
+                disabled={(!isConfigured && !isDemoExperience) || uploading}
+              />
+              <span>Image URL</span>
+            </label>
+          </div>
         </div>
+        {uploadMode === 'file' ? (
+          <div className="vision-board__field">
+            <label htmlFor="vision-board-file">Image file</label>
+            <input
+              id="vision-board-file"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              disabled={(!isConfigured && !isDemoExperience) || uploading}
+              required
+            />
+            <span className="vision-board__hint">PNG, JPG, or WEBP up to 5MB.</span>
+          </div>
+        ) : (
+          <div className="vision-board__field">
+            <label htmlFor="vision-board-url">Image URL</label>
+            <input
+              id="vision-board-url"
+              type="url"
+              value={urlDraft}
+              onChange={(event) => setUrlDraft(event.target.value)}
+              placeholder="https://example.com/image.jpg"
+              disabled={(!isConfigured && !isDemoExperience) || uploading}
+              required
+            />
+            <span className="vision-board__hint">Enter a direct link to an image.</span>
+          </div>
+        )}
         <div className="vision-board__field">
           <label htmlFor="vision-board-caption">Caption</label>
           <input

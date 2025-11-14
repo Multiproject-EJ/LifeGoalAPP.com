@@ -44,9 +44,15 @@ create table if not exists public.habit_logs (
 create table if not exists public.vision_images (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
-  image_path text not null,
+  image_path text,
+  image_url text,
+  image_source text default 'file' check (image_source in ('file', 'url')),
   caption text,
-  created_at timestamptz not null default timezone('utc', now())
+  created_at timestamptz not null default timezone('utc', now()),
+  constraint vision_images_path_url_check check (
+    (image_source = 'file' and image_path is not null) or
+    (image_source = 'url' and image_url is not null)
+  )
 );
 
 create table if not exists public.checkins (
