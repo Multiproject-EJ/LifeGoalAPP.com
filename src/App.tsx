@@ -218,6 +218,11 @@ export default function App() {
         }
         await signInWithPassword({ email, password });
         setAuthMessage('Signed in successfully.');
+        setShowAuthPanel(false);
+        setActiveWorkspaceNav('planning');
+        if (isMobileViewport) {
+          setShowMobileHome(true);
+        }
       } else if (authMode === 'signup') {
         if (!password) {
           setAuthError('Create a password to finish signing up.');
@@ -267,6 +272,11 @@ export default function App() {
     try {
       await signInWithPassword({ email: DEMO_USER_EMAIL, password: 'demo-password' });
       setAuthMessage('Signed in to the demo workspace.');
+      setShowAuthPanel(false);
+      setActiveWorkspaceNav('planning');
+      if (isMobileViewport) {
+        setShowMobileHome(true);
+      }
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Unable to sign in right now.');
     } finally {
