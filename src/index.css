@@ -4714,7 +4714,7 @@ body {
 .life-wheel__field-group {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .life-wheel__slider {
