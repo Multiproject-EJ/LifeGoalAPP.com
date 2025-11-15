@@ -26,3 +26,12 @@ npm run build:manual-sql
 This command concatenates all migration files in lexical order, skips `demo_data.sql`, and writes the result to `sql/manual.sql` with helpful delimiters so you can inspect where each migration starts/stops.
 
 > Legacy scripts (`001_schema.sql`, `002_policies.sql`, `003_life_goals_extended.sql`) remain checked in for reference, but `manual.sql` is the recommended way to run the schema manually.
+
+## Loading demo data
+
+`supabase/migrations/demo_data.sql` seeds realistic habits, logs, and challenge data so you can test the UI against Supabase. To target a specific account without editing the file:
+
+1. In the SQL editor, run `select set_config('app.demo_email', 'your@email.com', false);`
+2. Run the contents of `supabase/migrations/demo_data.sql`
+
+If you skip step 1 the script automatically uses the earliest `auth.users` record, so you can keep re-running it without manual edits.

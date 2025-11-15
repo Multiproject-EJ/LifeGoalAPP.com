@@ -9,6 +9,27 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          user_id: string;
+          created_at: string | null;
+          display_name: string | null;
+          tz: string | null;
+        };
+        Insert: {
+          user_id: string;
+          created_at?: string | null;
+          display_name?: string | null;
+          tz?: string | null;
+        };
+        Update: {
+          user_id?: string;
+          created_at?: string | null;
+          display_name?: string | null;
+          tz?: string | null;
+        };
+        Relationships: [];
+      };
       goals: {
         Row: {
           id: string;
@@ -132,6 +153,174 @@ export interface Database {
         };
         Relationships: [];
       };
+      habits_v2: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          emoji: string | null;
+          type: Database['public']['Enums']['habit_type'];
+          target_num: number | null;
+          target_unit: string | null;
+          schedule: Json;
+          allow_skip: boolean | null;
+          start_date: string | null;
+          archived: boolean | null;
+          created_at: string | null;
+          autoprog: Json | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          emoji?: string | null;
+          type?: Database['public']['Enums']['habit_type'];
+          target_num?: number | null;
+          target_unit?: string | null;
+          schedule: Json;
+          allow_skip?: boolean | null;
+          start_date?: string | null;
+          archived?: boolean | null;
+          created_at?: string | null;
+          autoprog?: Json | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          emoji?: string | null;
+          type?: Database['public']['Enums']['habit_type'];
+          target_num?: number | null;
+          target_unit?: string | null;
+          schedule?: Json;
+          allow_skip?: boolean | null;
+          start_date?: string | null;
+          archived?: boolean | null;
+          created_at?: string | null;
+          autoprog?: Json | null;
+        };
+        Relationships: [];
+      };
+      habit_logs_v2: {
+        Row: {
+          id: string;
+          habit_id: string;
+          user_id: string;
+          ts: string;
+          date: string;
+          value: number | null;
+          done: boolean;
+          note: string | null;
+          mood: number | null;
+        };
+        Insert: {
+          id?: string;
+          habit_id: string;
+          user_id: string;
+          ts?: string;
+          date?: string;
+          value?: number | null;
+          done?: boolean;
+          note?: string | null;
+          mood?: number | null;
+        };
+        Update: {
+          id?: string;
+          habit_id?: string;
+          user_id?: string;
+          ts?: string;
+          date?: string;
+          value?: number | null;
+          done?: boolean;
+          note?: string | null;
+          mood?: number | null;
+        };
+        Relationships: [];
+      };
+      habit_reminders: {
+        Row: {
+          id: string;
+          habit_id: string;
+          local_time: string;
+          days: number[] | null;
+          geo: Json | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          habit_id: string;
+          local_time: string;
+          days?: number[] | null;
+          geo?: Json | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          habit_id?: string;
+          local_time?: string;
+          days?: number[] | null;
+          geo?: Json | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      habit_challenges: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          description: string | null;
+          start_date: string;
+          end_date: string;
+          scoring: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          title: string;
+          description?: string | null;
+          start_date: string;
+          end_date: string;
+          scoring?: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          title?: string;
+          description?: string | null;
+          start_date?: string;
+          end_date?: string;
+          scoring?: string;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      habit_challenge_members: {
+        Row: {
+          id: string;
+          challenge_id: string;
+          user_id: string;
+          habit_id: string | null;
+          joined_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          challenge_id: string;
+          user_id: string;
+          habit_id?: string | null;
+          joined_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          challenge_id?: string;
+          user_id?: string;
+          habit_id?: string | null;
+          joined_at?: string | null;
+        };
+        Relationships: [];
+      };
       vision_images: {
         Row: {
           id: string;
@@ -240,6 +429,207 @@ export interface Database {
           onboarding_prompt_dismissed_at?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vb_boards: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          board_type: Database['public']['Enums']['vb_board_type'];
+          theme: Json | null;
+          cover_card_id: string | null;
+          archived: boolean | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          board_type?: Database['public']['Enums']['vb_board_type'];
+          theme?: Json | null;
+          cover_card_id?: string | null;
+          archived?: boolean | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          board_type?: Database['public']['Enums']['vb_board_type'];
+          theme?: Json | null;
+          cover_card_id?: string | null;
+          archived?: boolean | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      vb_sections: {
+        Row: {
+          id: string;
+          board_id: string;
+          title: string;
+          sort_index: number | null;
+        };
+        Insert: {
+          id?: string;
+          board_id: string;
+          title: string;
+          sort_index?: number | null;
+        };
+        Update: {
+          id?: string;
+          board_id?: string;
+          title?: string;
+          sort_index?: number | null;
+        };
+        Relationships: [];
+      };
+      vb_cards: {
+        Row: {
+          id: string;
+          board_id: string;
+          section_id: string | null;
+          user_id: string;
+          kind: string;
+          title: string | null;
+          affirm: string | null;
+          color: string | null;
+          tags: string[] | null;
+          size: Database['public']['Enums']['vb_card_size'];
+          favorite: boolean | null;
+          visible_in_share: boolean | null;
+          link_type: string | null;
+          link_id: string | null;
+          img_path: string | null;
+          img_w: number | null;
+          img_h: number | null;
+          sort_index: number | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          board_id: string;
+          section_id?: string | null;
+          user_id: string;
+          kind?: string;
+          title?: string | null;
+          affirm?: string | null;
+          color?: string | null;
+          tags?: string[] | null;
+          size?: Database['public']['Enums']['vb_card_size'];
+          favorite?: boolean | null;
+          visible_in_share?: boolean | null;
+          link_type?: string | null;
+          link_id?: string | null;
+          img_path?: string | null;
+          img_w?: number | null;
+          img_h?: number | null;
+          sort_index?: number | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          board_id?: string;
+          section_id?: string | null;
+          user_id?: string;
+          kind?: string;
+          title?: string | null;
+          affirm?: string | null;
+          color?: string | null;
+          tags?: string[] | null;
+          size?: Database['public']['Enums']['vb_card_size'];
+          favorite?: boolean | null;
+          visible_in_share?: boolean | null;
+          link_type?: string | null;
+          link_id?: string | null;
+          img_path?: string | null;
+          img_w?: number | null;
+          img_h?: number | null;
+          sort_index?: number | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      vb_shares: {
+        Row: {
+          id: string;
+          board_id: string;
+          owner_id: string;
+          slug: string;
+          is_active: boolean | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          board_id: string;
+          owner_id: string;
+          slug: string;
+          is_active?: boolean | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          board_id?: string;
+          owner_id?: string;
+          slug?: string;
+          is_active?: boolean | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      vb_checkins: {
+        Row: {
+          id: string;
+          user_id: string;
+          board_id: string | null;
+          the_date: string;
+          mood: number | null;
+          gratitude: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          board_id?: string | null;
+          the_date?: string;
+          mood?: number | null;
+          gratitude?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          board_id?: string | null;
+          the_date?: string;
+          mood?: number | null;
+          gratitude?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          created_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          created_at?: string | null;
+        };
+        Update: {
+          user_id?: string;
+          endpoint?: string;
+          p256dh?: string;
+          auth?: string;
+          created_at?: string | null;
         };
         Relationships: [];
       };
@@ -357,7 +747,11 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Enums: {
+      habit_type: 'boolean' | 'quantity' | 'duration';
+      vb_board_type: 'vision' | 'focus';
+      vb_card_size: 'S' | 'M' | 'L' | 'XL';
+    };
     CompositeTypes: Record<string, never>;
   };
 }
