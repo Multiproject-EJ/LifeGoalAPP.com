@@ -38,13 +38,13 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     label: 'Dashboard',
     summary: 'Review upcoming milestones and daily focus from a unified dashboard.',
     icon: '📊',
-    shortLabel: 'HOME',
+    shortLabel: 'DB',
   },
   {
     id: 'planning',
     label: "Today's Habits & Routines",
     summary: 'Check in on the rituals that keep today on track.',
-    icon: '✅',
+    icon: '☸️',
     shortLabel: 'TODAY',
   },
   {
@@ -52,7 +52,7 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     label: 'Wellbeing Wheel Check-in',
     summary: 'Reflect on your wellbeing balance with a quick wheel check-in.',
     icon: '🧭',
-    shortLabel: 'CHECK-IN',
+    shortLabel: 'WHEEL',
   },
   {
     id: 'insights',
@@ -80,7 +80,7 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     label: 'Set Up Goals',
     summary: 'Define clear, motivating goals to guide your next steps.',
     icon: '🛠️',
-    shortLabel: 'PLANS',
+    shortLabel: 'SETTINGS',
   },
   {
     id: 'settings',

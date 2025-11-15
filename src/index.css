@@ -831,7 +831,7 @@ body {
   z-index: 1;
   align-items: start;
   min-height: calc(100vh - (var(--workspace-shell-padding) * 2));
-  margin-left: 112px; /* Offset for fixed sidebar (72px width + 20px left + 20px gap) */
+  margin-left: 124px; /* Offset for fixed sidebar (84px width + 20px left + 20px gap) */
 }
 
 .workspace-sidebar {
@@ -846,7 +846,7 @@ body {
   align-items: center;
   gap: clamp(1rem, 3vw, 1.6rem);
   padding: 12px 0;
-  width: 72px;
+  width: 84px;
   border-radius: 24px;
   background: var(--sidebar-bg, rgba(255, 255, 255, 0.08));
   border: 1px solid var(--sidebar-border, rgba(255, 255, 255, 0.15));
@@ -994,17 +994,19 @@ body {
 }
 
 .workspace-sidebar__nav-button {
-  width: 48px;
-  height: 48px;
-  aspect-ratio: 1 / 1;
+  width: 64px;
+  height: auto;
+  min-height: 64px;
   border: 1px solid transparent;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.06);
   color: rgba(248, 250, 252, 0.95);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0;
+  gap: 4px;
+  padding: 8px 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(18px);
@@ -1012,7 +1014,7 @@ body {
   filter: saturate(0.8);
   text-decoration: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Subtle Inner Glow */
@@ -1074,7 +1076,7 @@ body {
 }
 
 .workspace-sidebar__nav-icon {
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
   color: var(--accent, #5ab0ff);
   display: flex;
@@ -1088,7 +1090,15 @@ body {
 }
 
 .workspace-sidebar__nav-text {
-  display: none !important; /* Hide text in icon-only sidebar */
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.7);
+  line-height: 1;
+  text-align: center;
+  margin-top: 2px;
 }
 
 .workspace-sidebar__nav-label,
