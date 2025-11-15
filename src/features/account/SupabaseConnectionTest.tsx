@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import type { PostgrestError, Session } from '@supabase/supabase-js';
 import {
   getSupabaseClient,
@@ -8,6 +8,7 @@ import {
 } from '../../lib/supabaseClient';
 import type { Database, Json } from '../../lib/database.types';
 import { getDemoState, clearDemoData } from '../../services/demoData';
+import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 
 type TableKey =
   | 'profiles'
@@ -738,6 +739,116 @@ export function SupabaseConnectionTest({ session, isDemoExperience }: SupabaseCo
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   const [demoDataSummary, setDemoDataSummary] = useState<DemoDataSummary | null>(null);
   const [showDemoData, setShowDemoData] = useState(false);
+  const {
+    session: supabaseAuthSession,
+    mode: authProviderMode,
+    isAuthenticated: supabaseAuthenticated,
+    signInWithPassword,
+    signOut,
+  } = useSupabaseAuth();
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authStatusMessage, setAuthStatusMessage] = useState<string | null>(null);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [sampleQueryStatus, setSampleQueryStatus] = useState<'idle' | 'loading'>('idle');
+  const [sampleQueryMessage, setSampleQueryMessage] = useState<string | null>(null);
+  const [sampleQueryError, setSampleQueryError] = useState<string | null>(null);
+
+  const isSupabaseMode = authProviderMode === 'supabase';
+  const activeSupabaseSession = useMemo(() => {
+    if (supabaseAuthSession) {
+      return supabaseAuthSession;
+    }
+    return hasActiveSupabaseSession() ? session : null;
+  }, [supabaseAuthSession, session]);
+
+  const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isSupabaseMode) {
+      return;
+    }
+
+    const normalizedEmail = authEmail.trim();
+    const normalizedPassword = authPassword.trim();
+
+    setAuthStatusMessage(null);
+    setAuthErrorMessage(null);
+
+    if (!normalizedEmail) {
+      setAuthErrorMessage('Enter the email address tied to your Supabase account.');
+      return;
+    }
+    if (!normalizedPassword) {
+      setAuthErrorMessage('Enter your Supabase password to continue.');
+      return;
+    }
+
+    setAuthSubmitting(true);
+    try {
+      await signInWithPassword({ email: normalizedEmail, password: normalizedPassword });
+      setAuthStatusMessage('Signed in to Supabase successfully.');
+      setAuthPassword('');
+    } catch (error) {
+      setAuthErrorMessage(error instanceof Error ? error.message : 'Unable to sign in right now.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleAuthSignOut = async () => {
+    if (!isSupabaseMode) {
+      return;
+    }
+    setAuthStatusMessage(null);
+    setAuthErrorMessage(null);
+    setAuthSubmitting(true);
+    try {
+      await signOut();
+      setAuthStatusMessage('Signed out of Supabase. Run the diagnostics again after signing back in.');
+    } catch (error) {
+      setAuthErrorMessage(error instanceof Error ? error.message : 'Unable to sign out right now.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const runSampleQuery = async () => {
+    if (!isSupabaseMode || !activeSupabaseSession) {
+      setSampleQueryError('Sign in with Supabase to run sample queries.');
+      setSampleQueryMessage(null);
+      return;
+    }
+
+    setSampleQueryStatus('loading');
+    setSampleQueryMessage(null);
+    setSampleQueryError(null);
+
+    try {
+      const client = getSupabaseClient();
+      const { data, error } = await client
+        .from('goals')
+        .select('id,title,created_at')
+        .eq('user_id', activeSupabaseSession.user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        setSampleQueryMessage('Connected successfully, but no goals exist for this account yet.');
+      } else {
+        const goal = data[0];
+        const goalTitle = goal.title || goal.id;
+        const createdAt = goal.created_at ? new Date(goal.created_at).toLocaleString() : 'unknown';
+        setSampleQueryMessage(`Fetched goal “${goalTitle}” (${goal.id}). Created on ${createdAt}.`);
+      }
+    } catch (error) {
+      setSampleQueryError(error instanceof Error ? error.message : 'Unable to run the sample query.');
+    } finally {
+      setSampleQueryStatus('idle');
+    }
+  };
 
   const runConnectionTest = async () => {
     setStatus('testing');
@@ -767,8 +878,14 @@ export function SupabaseConnectionTest({ session, isDemoExperience }: SupabaseCo
       }
 
       const client = getSupabaseClient();
+      if (!activeSupabaseSession) {
+        result.errorMessage = 'No Supabase session is available for diagnostics. Please sign in again.';
+        setStatus('error');
+        setTestResult(result);
+        return;
+      }
       const readOutcome = await runTableReadTests(client);
-      const writeOutcome = await runWriteTestPlan(client, session.user.id);
+      const writeOutcome = await runWriteTestPlan(client, activeSupabaseSession.user.id);
       const tableStatuses = combineTableStatuses(readOutcome.results, writeOutcome.results);
 
       result.tableStatuses = tableStatuses;
@@ -922,6 +1039,111 @@ export function SupabaseConnectionTest({ session, isDemoExperience }: SupabaseCo
             </p>
           </div>
         )}
+
+        <div className="connection-test__auth">
+          <div>
+            <h4>Supabase auth &amp; session</h4>
+            <p className="account-panel__hint">
+              Sign in directly within the diagnostics panel to test Supabase authentication and run lightweight data pings.
+            </p>
+          </div>
+
+          {!isSupabaseMode ? (
+            <p className="connection-test__status connection-test__status--error">
+              Supabase credentials not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable sign-in.
+            </p>
+          ) : (
+            <>
+              {authStatusMessage && (
+                <p className="connection-test__status connection-test__status--success">{authStatusMessage}</p>
+              )}
+              {authErrorMessage && (
+                <p className="connection-test__status connection-test__status--error">{authErrorMessage}</p>
+              )}
+
+              {supabaseAuthenticated && activeSupabaseSession ? (
+                <div className="connection-test__session">
+                  <dl className="account-panel__details">
+                    <div>
+                      <dt>Email</dt>
+                      <dd>{activeSupabaseSession.user.email ?? 'Unknown'}</dd>
+                    </div>
+                    <div>
+                      <dt>User ID</dt>
+                      <dd className="account-panel__code">{activeSupabaseSession.user.id}</dd>
+                    </div>
+                    <div>
+                      <dt>Last sign-in</dt>
+                      <dd>
+                        {activeSupabaseSession.user.last_sign_in_at
+                          ? new Date(activeSupabaseSession.user.last_sign_in_at).toLocaleString()
+                          : 'Not available'}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="connection-test__session-actions">
+                    <button
+                      type="button"
+                      className="btn btn--secondary"
+                      onClick={runSampleQuery}
+                      disabled={sampleQueryStatus === 'loading'}
+                    >
+                      {sampleQueryStatus === 'loading' ? 'Running query…' : 'Run sample query'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={handleAuthSignOut}
+                      disabled={authSubmitting}
+                    >
+                      {authSubmitting ? 'Signing out…' : 'Sign out'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form className="connection-test__auth-form supabase-auth__form" onSubmit={handleAuthSubmit}>
+                  <label className="supabase-auth__field">
+                    <span>Email</span>
+                    <input
+                      type="email"
+                      value={authEmail}
+                      onChange={(event) => setAuthEmail(event.target.value)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                    />
+                  </label>
+
+                  <label className="supabase-auth__field">
+                    <span>Password</span>
+                    <input
+                      type="password"
+                      value={authPassword}
+                      onChange={(event) => setAuthPassword(event.target.value)}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      required
+                    />
+                  </label>
+
+                  <div className="connection-test__auth-actions">
+                    <button type="submit" className="btn btn--primary" disabled={authSubmitting}>
+                      {authSubmitting ? 'Signing in…' : 'Sign in &amp; enable testing'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {sampleQueryMessage && (
+                <p className="connection-test__status connection-test__status--success">{sampleQueryMessage}</p>
+              )}
+              {sampleQueryError && (
+                <p className="connection-test__status connection-test__status--error">{sampleQueryError}</p>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {isDemoExperience && (
