@@ -246,7 +246,18 @@ export default function App() {
     setAuthMessage(null);
     setAuthError(null);
 
-    if (!email) {
+    // Read values directly from the form to handle browser autofill
+    const formData = new FormData(event.currentTarget);
+    const formEmail = (formData.get('email') as string)?.trim() || '';
+    const formPassword = (formData.get('password') as string)?.trim() || '';
+    const formFullName = (formData.get('fullName') as string)?.trim() || '';
+
+    // Update state to sync with actual form values
+    setEmail(formEmail);
+    setPassword(formPassword);
+    setFullName(formFullName);
+
+    if (!formEmail) {
       setAuthError('Enter an email address to continue.');
       return;
     }
@@ -255,11 +266,11 @@ export default function App() {
 
     try {
       if (authMode === 'password') {
-        if (!password) {
+        if (!formPassword) {
           setAuthError('Enter a password to continue.');
           return;
         }
-        await signInWithPassword({ email, password });
+        await signInWithPassword({ email: formEmail, password: formPassword });
         setAuthMessage('Signed in successfully.');
         setShowAuthPanel(false);
         setActiveWorkspaceNav('planning');
@@ -267,20 +278,20 @@ export default function App() {
           setShowMobileHome(true);
         }
       } else if (authMode === 'signup') {
-        if (!password) {
+        if (!formPassword) {
           setAuthError('Create a password to finish signing up.');
           return;
         }
-        if (!fullName.trim()) {
+        if (!formFullName) {
           setAuthError('Share your name so we can personalize your workspace.');
           return;
         }
         await signUpWithPassword({
-          email,
-          password,
+          email: formEmail,
+          password: formPassword,
           options: {
             data: {
-              full_name: fullName.trim(),
+              full_name: formFullName,
               onboarding_complete: false,
             },
           },
