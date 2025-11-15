@@ -5,16 +5,20 @@ exception when others then null; end $$;
 
 do $$
 begin
-  if not exists (select 1 from pg_type where typname = 'vb_board_type') then
+  begin
     create type vb_board_type as enum ('vision','focus');
-  end if;
+  exception when duplicate_object then
+    null;
+  end;
 end$$;
 
 do $$
 begin
-  if not exists (select 1 from pg_type where typname = 'vb_card_size') then
+  begin
     create type vb_card_size as enum ('S','M','L','XL');
-  end if;
+  exception when duplicate_object then
+    null;
+  end;
 end$$;
 
 create table if not exists public.vb_boards (
