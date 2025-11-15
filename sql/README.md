@@ -36,10 +36,3 @@ This command concatenates all migration files in lexical order, skips `demo_data
 
 If you skip step 1 the script automatically uses the earliest `auth.users` record, so you can keep re-running it without manual edits.
 
-## One-off onboarding seeds
-
-When you need to provision a specific teammate account with curated data, add a dedicated script to this folder. Existing seeds:
-
-| File | Purpose |
-| ---- | ------- |
-| `004_seed_eivind_josefsen.sql` | Creates `Josefsen.eivind@gmail.com`, hashes the provided password, and loads EJ's profile, five habits, and two life goals. Run it once inside the Supabase SQL editor to onboard that account. |
