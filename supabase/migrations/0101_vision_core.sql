@@ -3,8 +3,23 @@ do $$ begin
   alter table public.profiles add column if not exists tz text default 'UTC';
 exception when others then null; end $$;
 
-create type vb_board_type as enum ('vision','focus');
-create type vb_card_size as enum ('S','M','L','XL');
+do $$
+begin
+  begin
+    create type vb_board_type as enum ('vision','focus');
+  exception when duplicate_object then
+    null;
+  end;
+end$$;
+
+do $$
+begin
+  begin
+    create type vb_card_size as enum ('S','M','L','XL');
+  exception when duplicate_object then
+    null;
+  end;
+end$$;
 
 create table if not exists public.vb_boards (
   id uuid primary key default gen_random_uuid(),
@@ -58,13 +73,16 @@ alter table public.vb_boards enable row level security;
 alter table public.vb_sections enable row level security;
 alter table public.vb_cards enable row level security;
 
+drop policy if exists "own boards" on public.vb_boards;
 create policy "own boards" on public.vb_boards
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "sections of own boards" on public.vb_sections;
 create policy "sections of own boards" on public.vb_sections
   for all using (auth.uid() in (select user_id from vb_boards where id = board_id))
   with check (auth.uid() in (select user_id from vb_boards where id = board_id));
 
+drop policy if exists "own cards" on public.vb_cards;
 create policy "own cards" on public.vb_cards
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
