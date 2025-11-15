@@ -3,8 +3,23 @@ do $$ begin
   alter table public.profiles add column if not exists tz text default 'UTC';
 exception when others then null; end $$;
 
-create type vb_board_type as enum ('vision','focus');
-create type vb_card_size as enum ('S','M','L','XL');
+do $$
+begin
+  begin
+    create type vb_board_type as enum ('vision','focus');
+  exception when duplicate_object then
+    null;
+  end;
+end$$;
+
+do $$
+begin
+  begin
+    create type vb_card_size as enum ('S','M','L','XL');
+  exception when duplicate_object then
+    null;
+  end;
+end$$;
 
 create table if not exists public.vb_boards (
   id uuid primary key default gen_random_uuid(),
