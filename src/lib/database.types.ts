@@ -216,6 +216,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      workspace_profiles: {
+        Row: {
+          user_id: string;
+          full_name: string | null;
+          workspace_name: string | null;
+          onboarding_prompt_dismissed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          full_name?: string | null;
+          workspace_name?: string | null;
+          onboarding_prompt_dismissed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          full_name?: string | null;
+          workspace_name?: string | null;
+          onboarding_prompt_dismissed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       life_goal_steps: {
         Row: {
           id: string;

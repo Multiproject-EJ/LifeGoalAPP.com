@@ -480,6 +480,67 @@ body {
   width: min(520px, 100%);
 }
 
+.workspace-setup {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.workspace-setup__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+}
+
+.workspace-setup__card {
+  position: relative;
+  background: var(--surface);
+  border-radius: 28px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  max-width: min(520px, calc(100vw - 32px));
+  width: 100%;
+  box-shadow: 0 40px 90px rgba(15, 23, 42, 0.45);
+}
+
+.workspace-setup__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.workspace-setup__header {
+  margin-bottom: 1.5rem;
+}
+
+.workspace-setup__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.workspace-setup__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.workspace-setup__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .auth-overlay__close {
   position: absolute;
   top: 0.5rem;
@@ -1335,6 +1396,10 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
+.account-panel__details--grid {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
 .account-panel__details dt {
   margin: 0 0 0.25rem;
   font-size: 0.8rem;
@@ -1369,6 +1434,10 @@ body {
   border-radius: 24px;
   border: 1px dashed rgba(148, 163, 184, 0.5);
   padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+.account-panel__actions-row {
+  margin-top: 1rem;
 }
 
 [data-theme='dark-glass'] .account-panel__actions {

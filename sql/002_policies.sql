@@ -8,6 +8,7 @@ alter table public.habit_logs enable row level security;
 alter table public.vision_images enable row level security;
 alter table public.checkins enable row level security;
 alter table public.notification_preferences enable row level security;
+alter table public.workspace_profiles enable row level security;
 
 drop policy if exists "Users manage own goals" on public.goals;
 create policy "Users manage own goals" on public.goals
@@ -63,5 +64,10 @@ create policy "Users manage own checkins" on public.checkins
 
 drop policy if exists "Users manage own notification preferences" on public.notification_preferences;
 create policy "Users manage own notification preferences" on public.notification_preferences
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users manage own workspace profiles" on public.workspace_profiles;
+create policy "Users manage own workspace profiles" on public.workspace_profiles
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);

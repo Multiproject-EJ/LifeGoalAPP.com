@@ -1,12 +1,18 @@
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
+import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
+import type { WorkspaceStats } from '../../services/workspaceStats';
 
 type MyAccountPanelProps = {
   session: Session;
   isDemoExperience: boolean;
   isAuthenticated: boolean;
   onSignOut: () => void | Promise<void>;
+  onEditProfile: () => void;
+  profile: WorkspaceProfileRow | null;
+  stats: WorkspaceStats | null;
+  profileLoading: boolean;
 };
 
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
@@ -18,12 +24,22 @@ function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions)
   return new Intl.DateTimeFormat(undefined, options).format(timestamp);
 }
 
-export function MyAccountPanel({ session, isDemoExperience, isAuthenticated, onSignOut }: MyAccountPanelProps) {
+export function MyAccountPanel({
+  session,
+  isDemoExperience,
+  isAuthenticated,
+  onSignOut,
+  onEditProfile,
+  profile,
+  stats,
+  profileLoading,
+}: MyAccountPanelProps) {
   const user = session.user;
   const displayName =
-    (user.user_metadata?.full_name as string | undefined) || user.email || 'Workspace member';
+    profile?.full_name || (user.user_metadata?.full_name as string | undefined) || user.email || 'Workspace member';
   const email = user.email || 'No email on file';
   const avatarInitial = displayName.trim().charAt(0).toUpperCase() || 'U';
+  const workspaceName = profile?.workspace_name || 'Personal rituals workspace';
 
   const planName =
     (user.user_metadata?.subscription_plan as string | undefined) ||
@@ -72,6 +88,10 @@ export function MyAccountPanel({ session, isDemoExperience, isAuthenticated, onS
               <dd>{email}</dd>
             </div>
             <div>
+              <dt>Workspace name</dt>
+              <dd>{workspaceName}</dd>
+            </div>
+            <div>
               <dt>Workspace mode</dt>
               <dd>{workspaceMode}</dd>
             </div>
@@ -80,7 +100,38 @@ export function MyAccountPanel({ session, isDemoExperience, isAuthenticated, onS
               <dd>{onboardingComplete ? 'Complete' : 'In progress'}</dd>
             </div>
           </dl>
+          <div className="account-panel__actions-row">
+            <button type="button" className="btn" onClick={onEditProfile} disabled={profileLoading}>
+              {profileLoading ? 'Loading…' : 'Edit account details'}
+            </button>
+          </div>
         </div>
+      </section>
+
+      <section className="account-panel__card" aria-labelledby="account-workspace-overview">
+        <p className="account-panel__eyebrow">Workspace snapshot</p>
+        <h3 id="account-workspace-overview">Stored rituals & goals</h3>
+        <p className="account-panel__hint">
+          These counts update automatically each time you create or complete new goals, habits, or wellbeing check-ins.
+        </p>
+        {stats ? (
+          <dl className="account-panel__details account-panel__details--grid">
+            <div>
+              <dt>Goals saved</dt>
+              <dd>{stats.goalCount}</dd>
+            </div>
+            <div>
+              <dt>Habits tracked</dt>
+              <dd>{stats.habitCount}</dd>
+            </div>
+            <div>
+              <dt>Check-ins logged</dt>
+              <dd>{stats.checkinCount}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="account-panel__hint">Sign in to Supabase to see your synced ritual stats.</p>
+        )}
       </section>
 
       <section className="account-panel__card" aria-labelledby="account-subscription">
