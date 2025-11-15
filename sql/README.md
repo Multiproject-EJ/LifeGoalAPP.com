@@ -15,6 +15,7 @@ The scripts are idempotent and can be re-run safely; policy definitions explicit
 ## Schema Versions
 
 - **001_schema.sql** - Base schema with goals, habits, habit_logs, vision_images, checkins, goal_reflections, and notification_preferences
+  - Added `workspace_profiles` table and triggers for storing account metadata that powers the in-app workspace setup prompt.
 - **002_policies.sql** - Row Level Security (RLS) policies for all base tables
 - **003_life_goals_extended.sql** - Extended life goals with:
   - `life_goal_steps` - Break down goals into actionable steps

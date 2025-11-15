@@ -74,6 +74,15 @@ create table if not exists public.notification_preferences (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.workspace_profiles (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  full_name text,
+  workspace_name text,
+  onboarding_prompt_dismissed_at timestamptz,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 drop trigger if exists set_notification_preferences_updated_at on public.notification_preferences;
 drop function if exists public.set_notification_preferences_updated_at();
 
@@ -91,3 +100,21 @@ create trigger set_notification_preferences_updated_at
 before update on public.notification_preferences
 for each row
 execute procedure public.set_notification_preferences_updated_at();
+
+drop trigger if exists set_workspace_profiles_updated_at on public.workspace_profiles;
+drop function if exists public.set_workspace_profiles_updated_at();
+
+create function public.set_workspace_profiles_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at := timezone('utc', now());
+  return new;
+end;
+$$;
+
+create trigger set_workspace_profiles_updated_at
+before update on public.workspace_profiles
+for each row
+execute procedure public.set_workspace_profiles_updated_at();

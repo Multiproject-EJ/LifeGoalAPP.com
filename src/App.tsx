@@ -8,11 +8,17 @@ import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
+import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { useMediaQuery } from './hooks/useMediaQuery';
+import {
+  fetchWorkspaceProfile,
+  type WorkspaceProfileRow,
+} from './services/workspaceProfile';
+import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceStats';
 
 type AuthMode = 'password' | 'signup';
 
@@ -115,6 +121,10 @@ export default function App() {
   const [showAuthPanel, setShowAuthPanel] = useState(false);
   const isMobileViewport = useMediaQuery('(max-width: 720px)');
   const [showMobileHome, setShowMobileHome] = useState(false);
+  const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
+  const [workspaceStats, setWorkspaceStats] = useState<WorkspaceStats | null>(null);
+  const [workspaceProfileLoading, setWorkspaceProfileLoading] = useState(false);
+  const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
 
   const mobileFooterNavItems = useMemo(() => {
     const findWorkspaceItem = (navId: string) =>
@@ -159,8 +169,48 @@ export default function App() {
       setProfileSaving(false);
       return;
     }
-    setDisplayName((supabaseSession.user.user_metadata?.full_name as string | undefined) ?? '');
-  }, [supabaseSession, activeSession]);
+    setDisplayName(
+      workspaceProfile?.full_name ||
+        (supabaseSession.user.user_metadata?.full_name as string | undefined) ||
+        '',
+    );
+  }, [supabaseSession, activeSession, workspaceProfile]);
+
+  useEffect(() => {
+    if (!supabaseSession || !isConfigured) {
+      setWorkspaceProfile(null);
+      setWorkspaceStats(null);
+      setWorkspaceProfileLoading(false);
+      setShowWorkspaceSetup(false);
+      return;
+    }
+
+    let isMounted = true;
+    setWorkspaceProfileLoading(true);
+
+    fetchWorkspaceProfile(supabaseSession.user.id)
+      .then(({ data }) => {
+        if (!isMounted) return;
+        setWorkspaceProfile(data);
+        if (!data?.full_name) {
+          setShowWorkspaceSetup(true);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setWorkspaceProfileLoading(false);
+        }
+      });
+
+    fetchWorkspaceStats(supabaseSession.user.id).then(({ data }) => {
+      if (!isMounted) return;
+      setWorkspaceStats(data);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [supabaseSession, isConfigured]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -256,6 +306,14 @@ export default function App() {
       return;
     }
     openAuthOverlay('login');
+  };
+
+  const handleEditAccountDetails = () => {
+    if (!isAuthenticated) {
+      handleAccountClick();
+      return;
+    }
+    setShowWorkspaceSetup(true);
   };
 
   const handleDemoSignIn = async () => {
@@ -585,6 +643,8 @@ export default function App() {
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
 
   const shouldRequireAuthentication = !isDemoMode && !isAuthenticated;
+  const shouldShowWorkspaceSetup =
+    showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 
   if (shouldRequireAuthentication && isMobileViewport) {
     return (
@@ -675,6 +735,10 @@ export default function App() {
             isDemoExperience={isDemoExperience}
             isAuthenticated={isAuthenticated}
             onSignOut={handleSignOut}
+            onEditProfile={handleEditAccountDetails}
+            profile={workspaceProfile}
+            stats={workspaceStats}
+            profileLoading={workspaceProfileLoading}
           />
         </div>
       );
@@ -941,6 +1005,20 @@ export default function App() {
             {renderAuthPanel()}
           </div>
         </div>
+      ) : null}
+      {shouldShowWorkspaceSetup ? (
+        <WorkspaceSetupDialog
+          isOpen={shouldShowWorkspaceSetup}
+          session={supabaseSession}
+          profile={workspaceProfile}
+          onClose={() => setShowWorkspaceSetup(false)}
+          onSaved={(profile) => {
+            setWorkspaceProfile(profile);
+            setDisplayName(profile.full_name ?? displayName);
+            setShowWorkspaceSetup(false);
+            setAuthMessage('Profile saved!');
+          }}
+        />
       ) : null}
     </div>
   );
