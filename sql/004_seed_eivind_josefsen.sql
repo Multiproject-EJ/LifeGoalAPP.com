@@ -87,12 +87,14 @@ BEGIN
     SET display_name = excluded.display_name,
         tz = excluded.tz;
 
-  INSERT INTO public.workspace_profiles (user_id, full_name, workspace_name, onboarding_prompt_dismissed_at)
-  VALUES (target_user_id, display_name, display_name || ' Workspace', now_ts)
-  ON CONFLICT (user_id) DO UPDATE
-    SET full_name = excluded.full_name,
-        workspace_name = excluded.workspace_name,
-        onboarding_prompt_dismissed_at = excluded.onboarding_prompt_dismissed_at;
+  IF to_regclass('public.workspace_profiles') IS NOT NULL THEN
+    INSERT INTO public.workspace_profiles (user_id, full_name, workspace_name, onboarding_prompt_dismissed_at)
+    VALUES (target_user_id, display_name, display_name || ' Workspace', now_ts)
+    ON CONFLICT (user_id) DO UPDATE
+      SET full_name = excluded.full_name,
+          workspace_name = excluded.workspace_name,
+          onboarding_prompt_dismissed_at = excluded.onboarding_prompt_dismissed_at;
+  END IF;
 
   INSERT INTO public.notification_preferences (user_id, habit_reminders_enabled, habit_reminder_time, checkin_nudges_enabled, timezone)
   VALUES (target_user_id, true, '07:00', true, timezone_pref)
