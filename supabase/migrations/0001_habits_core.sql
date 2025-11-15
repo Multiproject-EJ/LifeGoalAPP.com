@@ -76,17 +76,52 @@ begin
       habit_id uuid not null references public.habits_v2(id) on delete cascade,
       user_id uuid not null references auth.users(id) on delete cascade,
       ts timestamptz not null default now(),
-      date date generated always as (ts::date) stored,
+      date date not null,
       value numeric,
       done boolean not null default true,
       note text,
       mood int check (mood between 1 and 5)
     );
-    
+
     create index idx_habit_logs_v2_habit_date on public.habit_logs_v2(habit_id, date);
     create index idx_habit_logs_v2_user_date on public.habit_logs_v2(user_id, date);
   end if;
 end $$;
+
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'habit_logs_v2'
+      and column_name = 'date'
+  ) then
+    begin
+      execute $$alter table public.habit_logs_v2 alter column date drop expression$$;
+    exception
+      when others then null;
+    end;
+
+    alter table public.habit_logs_v2
+      alter column date set default ((timezone('UTC', now()))::date);
+  end if;
+end $$;
+
+create or replace function public.set_habit_logs_v2_date()
+returns trigger language plpgsql as $$
+begin
+  if new.ts is null then
+    new.ts := now();
+  end if;
+  new.date := (timezone('UTC', new.ts)::date);
+  return new;
+end;
+$$;
+
+drop trigger if exists habit_logs_v2_set_date on public.habit_logs_v2;
+create trigger habit_logs_v2_set_date
+before insert or update on public.habit_logs_v2
+for each row execute function public.set_habit_logs_v2_date();
 
 -- STREAKS VIEW
 create or replace view public.v_habit_streaks as
