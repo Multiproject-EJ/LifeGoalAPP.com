@@ -97,7 +97,7 @@ begin
       and column_name = 'date'
   ) then
     begin
-      execute $$alter table public.habit_logs_v2 alter column date drop expression$$;
+      execute 'alter table public.habit_logs_v2 alter column date drop expression';
     exception
       when others then null;
     end;
