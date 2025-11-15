@@ -7,6 +7,17 @@ create table if not exists public.vb_shares (
   created_at timestamptz default now()
 );
 alter table public.vb_shares enable row level security;
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'vb_shares'
+      and policyname = 'owner manage share'
+  ) then
+    execute 'drop policy "owner manage share" on public.vb_shares';
+  end if;
+end$$ language plpgsql;
 create policy "owner manage share" on public.vb_shares
   for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
 
@@ -18,5 +29,16 @@ create table if not exists public.push_subscriptions (
   created_at timestamptz default now()
 );
 alter table public.push_subscriptions enable row level security;
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'push_subscriptions'
+      and policyname = 'own push'
+  ) then
+    execute 'drop policy "own push" on public.push_subscriptions';
+  end if;
+end$$ language plpgsql;
 create policy "own push" on public.push_subscriptions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
