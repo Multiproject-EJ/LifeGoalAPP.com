@@ -3,8 +3,23 @@ do $$ begin
   alter table public.profiles add column if not exists tz text default 'UTC';
 exception when others then null; end $$;
 
-create type vb_board_type as enum ('vision','focus');
-create type vb_card_size as enum ('S','M','L','XL');
+do $$
+begin
+  begin
+    create type vb_board_type as enum ('vision','focus');
+  exception when duplicate_object then
+    null;
+  end;
+end$$;
+
+do $$
+begin
+  begin
+    create type vb_card_size as enum ('S','M','L','XL');
+  exception when duplicate_object then
+    null;
+  end;
+end$$;
 
 create table if not exists public.vb_boards (
   id uuid primary key default gen_random_uuid(),
@@ -58,15 +73,53 @@ alter table public.vb_boards enable row level security;
 alter table public.vb_sections enable row level security;
 alter table public.vb_cards enable row level security;
 
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'vb_boards'
+      and policyname = 'own boards'
+  ) then
+    execute 'drop policy "own boards" on public.vb_boards';
+  end if;
+end $$;
+
 create policy "own boards" on public.vb_boards
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'vb_sections'
+      and policyname = 'sections of own boards'
+  ) then
+    execute 'drop policy "sections of own boards" on public.vb_sections';
+  end if;
+end $$;
 
 create policy "sections of own boards" on public.vb_sections
   for all using (auth.uid() in (select user_id from vb_boards where id = board_id))
   with check (auth.uid() in (select user_id from vb_boards where id = board_id));
 
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'vb_cards'
+      and policyname = 'own cards'
+  ) then
+    execute 'drop policy "own cards" on public.vb_cards';
+  end if;
+end $$;
+
 create policy "own cards" on public.vb_cards
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 do $$ begin perform gen_random_uuid(); exception when undefined_function then
   create extension if not exists pgcrypto; end $$;

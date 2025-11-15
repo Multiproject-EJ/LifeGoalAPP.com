@@ -5,9 +5,11 @@ create table if not exists public.vb_checkins (
   the_date date not null default current_date,
   mood int check (mood between 1 and 5),
   gratitude text,
-  created_at timestamptz default now(),
-  unique (user_id, the_date, coalesce(board_id, '00000000-0000-0000-0000-000000000000'::uuid))
+  created_at timestamptz default now()
 );
+
+create unique index if not exists vb_checkins_user_date_board_idx
+  on public.vb_checkins (user_id, the_date, coalesce(board_id, '00000000-0000-0000-0000-000000000000'::uuid));
 alter table public.vb_checkins enable row level security;
 create policy "own checkins" on public.vb_checkins
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
