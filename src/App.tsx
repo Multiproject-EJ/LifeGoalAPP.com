@@ -1,4 +1,13 @@
-import { Dispatch, FormEvent, ReactNode, SetStateAction, useEffect, useMemo, useState } from 'react';
+import {
+  Dispatch,
+  FormEvent,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalReflectionJournal, GoalWorkspace, LifeGoalsSection } from './features/goals';
@@ -16,9 +25,12 @@ import { MobileFooterNav } from './components/MobileFooterNav';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import {
   fetchWorkspaceProfile,
+  upsertWorkspaceProfile,
   type WorkspaceProfileRow,
 } from './services/workspaceProfile';
 import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceStats';
+import { getSupabaseClient } from './lib/supabaseClient';
+import { useContinuousSave } from './hooks/useContinuousSave';
 
 type AuthMode = 'password' | 'signup';
 
@@ -101,6 +113,7 @@ export default function App() {
     isConfigured,
     isAuthenticated,
     mode,
+    client,
     signInWithPassword,
     signUpWithPassword,
     signInWithGoogle,
@@ -115,7 +128,7 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [activeAuthTab, setActiveAuthTab] = useState<AuthTab>('login');
-  const [profileSaving, setProfileSaving] = useState(false);
+  const [manualProfileSaving, setManualProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>('settings');
   const [showAuthPanel, setShowAuthPanel] = useState(false);
@@ -166,7 +179,7 @@ export default function App() {
   useEffect(() => {
     if (!supabaseSession) {
       setDisplayName((activeSession.user.user_metadata?.full_name as string | undefined) ?? '');
-      setProfileSaving(false);
+      setManualProfileSaving(false);
       return;
     }
     setDisplayName(
@@ -364,6 +377,9 @@ export default function App() {
     setAuthError(null);
     setAuthMessage(null);
     try {
+      await flushProfileAutosave().catch((error) => {
+        console.warn('Unable to flush profile autosave before signing out.', error);
+      });
       await signOut();
       setAuthMessage('Signed out.');
       setEmail('');
@@ -650,10 +666,82 @@ export default function App() {
     WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1];
 
   const isDemoExperience = isDemoSession(activeSession);
+  const normalizedDisplayName =
+    displayName.trim() ||
+    workspaceProfile?.full_name ||
+    ((supabaseSession?.user.user_metadata?.full_name as string | undefined) ?? '') ||
+    '';
+
+  const profileAutoSaveResetKey = supabaseSession
+    ? `${
+        supabaseSession.user.id
+      }:${
+        workspaceProfile?.full_name ||
+        ((supabaseSession.user.user_metadata?.full_name as string | undefined) ?? '') ||
+        ''
+      }`
+    : 'demo';
+
+  const persistProfileName = useCallback(
+    async (nextName: string) => {
+      if (!supabaseSession) return;
+      const trimmed = nextName.trim();
+      if (!trimmed) return;
+
+      const supabaseClient = client ?? getSupabaseClient();
+
+      const [authResult, profileResult] = await Promise.all([
+        supabaseClient.auth.updateUser({
+          data: {
+            full_name: trimmed,
+            onboarding_complete: true,
+          },
+        }),
+        upsertWorkspaceProfile({
+          user_id: supabaseSession.user.id,
+          full_name: trimmed,
+          workspace_name: workspaceProfile?.workspace_name ?? null,
+        }),
+      ]);
+
+      if (authResult.error) throw authResult.error;
+      if (profileResult.error) throw profileResult.error;
+
+      if (profileResult.data) {
+        setWorkspaceProfile(profileResult.data);
+      } else {
+        setWorkspaceProfile((current) => {
+          if (!current) return current;
+          return { ...current, full_name: trimmed };
+        });
+      }
+    },
+    [client, supabaseSession, workspaceProfile?.workspace_name],
+  );
+
+  const {
+    isSaving: isProfileAutosaving,
+    flush: flushProfileAutosave,
+    error: profileAutosaveError,
+  } = useContinuousSave({
+    value: normalizedDisplayName,
+    enabled: Boolean(supabaseSession && client),
+    resetKey: profileAutoSaveResetKey,
+    save: persistProfileName,
+    debounceMs: 1800,
+  });
+
+  const profileSaving = manualProfileSaving || isProfileAutosaving;
   const isOnboardingGateActive = !isDemoExperience;
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
 
-  const shouldRequireAuthentication = !isDemoMode && !isAuthenticated;
+  const shouldRequireAuthentication = !isDemoExperience && !isAuthenticated && !isDemoMode;
+
+  useEffect(() => {
+    if (profileAutosaveError) {
+      setAuthError(profileAutosaveError);
+    }
+  }, [profileAutosaveError]);
   const shouldShowWorkspaceSetup =
     showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 
@@ -705,7 +793,7 @@ export default function App() {
               displayName={displayName}
               setDisplayName={setDisplayName}
               profileSaving={profileSaving}
-              setProfileSaving={setProfileSaving}
+              setProfileSaving={setManualProfileSaving}
               setAuthMessage={setAuthMessage}
               setAuthError={setAuthError}
               isOnboardingComplete={isOnboardingComplete}
