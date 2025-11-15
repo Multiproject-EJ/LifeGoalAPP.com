@@ -35,3 +35,4 @@ This command concatenates all migration files in lexical order, skips `demo_data
 2. Run the contents of `supabase/migrations/demo_data.sql`
 
 If you skip step 1 the script automatically uses the earliest `auth.users` record, so you can keep re-running it without manual edits.
+
