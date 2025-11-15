@@ -59,6 +59,7 @@ create index if not exists goals_life_wheel_category_idx on public.goals (life_w
 -- Add RLS policies for life_goal_steps
 alter table public.life_goal_steps enable row level security;
 
+drop policy if exists "Users can view steps for their own goals" on public.life_goal_steps;
 create policy "Users can view steps for their own goals"
   on public.life_goal_steps for select
   using (
@@ -69,6 +70,7 @@ create policy "Users can view steps for their own goals"
     )
   );
 
+drop policy if exists "Users can insert steps for their own goals" on public.life_goal_steps;
 create policy "Users can insert steps for their own goals"
   on public.life_goal_steps for insert
   with check (
@@ -79,6 +81,7 @@ create policy "Users can insert steps for their own goals"
     )
   );
 
+drop policy if exists "Users can update steps for their own goals" on public.life_goal_steps;
 create policy "Users can update steps for their own goals"
   on public.life_goal_steps for update
   using (
@@ -89,6 +92,7 @@ create policy "Users can update steps for their own goals"
     )
   );
 
+drop policy if exists "Users can delete steps for their own goals" on public.life_goal_steps;
 create policy "Users can delete steps for their own goals"
   on public.life_goal_steps for delete
   using (
@@ -102,6 +106,7 @@ create policy "Users can delete steps for their own goals"
 -- Add RLS policies for life_goal_substeps
 alter table public.life_goal_substeps enable row level security;
 
+drop policy if exists "Users can view substeps for their own goals" on public.life_goal_substeps;
 create policy "Users can view substeps for their own goals"
   on public.life_goal_substeps for select
   using (
@@ -113,6 +118,7 @@ create policy "Users can view substeps for their own goals"
     )
   );
 
+drop policy if exists "Users can insert substeps for their own goals" on public.life_goal_substeps;
 create policy "Users can insert substeps for their own goals"
   on public.life_goal_substeps for insert
   with check (
@@ -124,6 +130,7 @@ create policy "Users can insert substeps for their own goals"
     )
   );
 
+drop policy if exists "Users can update substeps for their own goals" on public.life_goal_substeps;
 create policy "Users can update substeps for their own goals"
   on public.life_goal_substeps for update
   using (
@@ -135,6 +142,7 @@ create policy "Users can update substeps for their own goals"
     )
   );
 
+drop policy if exists "Users can delete substeps for their own goals" on public.life_goal_substeps;
 create policy "Users can delete substeps for their own goals"
   on public.life_goal_substeps for delete
   using (
@@ -149,18 +157,22 @@ create policy "Users can delete substeps for their own goals"
 -- Add RLS policies for life_goal_alerts
 alter table public.life_goal_alerts enable row level security;
 
+drop policy if exists "Users can view their own goal alerts" on public.life_goal_alerts;
 create policy "Users can view their own goal alerts"
   on public.life_goal_alerts for select
   using (user_id = auth.uid());
 
+drop policy if exists "Users can insert their own goal alerts" on public.life_goal_alerts;
 create policy "Users can insert their own goal alerts"
   on public.life_goal_alerts for insert
   with check (user_id = auth.uid());
 
+drop policy if exists "Users can update their own goal alerts" on public.life_goal_alerts;
 create policy "Users can update their own goal alerts"
   on public.life_goal_alerts for update
   using (user_id = auth.uid());
 
+drop policy if exists "Users can delete their own goal alerts" on public.life_goal_alerts;
 create policy "Users can delete their own goal alerts"
   on public.life_goal_alerts for delete
   using (user_id = auth.uid());
