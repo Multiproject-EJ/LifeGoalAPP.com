@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
+import { getSupabaseClient } from '../../lib/supabaseClient';
 
 type WorkspaceSetupDialogProps = {
   isOpen: boolean;
@@ -49,11 +50,6 @@ export function WorkspaceSetupDialog({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!client) {
-      setErrorMessage('Supabase client is not ready.');
-      return;
-    }
-
     const trimmedName = fullName.trim();
     if (!trimmedName) {
       setErrorMessage('Add your name to personalize the workspace.');
@@ -74,7 +70,9 @@ export function WorkspaceSetupDialog({
         throw error ?? new Error('Unable to save profile.');
       }
 
-      const { error: authError } = await client.auth.updateUser({
+      const supabaseClient = client ?? getSupabaseClient();
+
+      const { error: authError } = await supabaseClient.auth.updateUser({
         data: {
           full_name: trimmedName,
         },
