@@ -83,8 +83,22 @@ begin
   ) then
     execute 'drop policy "own boards" on public.vb_boards';
   end if;
-  execute $$create policy "own boards" on public.vb_boards
-    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);$$;
+end $$;
+
+create policy "own boards" on public.vb_boards
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'vb_sections'
+      and policyname = 'sections of own boards'
+  ) then
+    execute 'drop policy "sections of own boards" on public.vb_sections';
+  end if;
 end $$;
 
 do $$
@@ -112,9 +126,11 @@ begin
   ) then
     execute 'drop policy "own cards" on public.vb_cards';
   end if;
-  execute $$create policy "own cards" on public.vb_cards
-    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);$$;
 end $$;
+
+create policy "own cards" on public.vb_cards
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 do $$ begin perform gen_random_uuid(); exception when undefined_function then
   create extension if not exists pgcrypto; end $$;
