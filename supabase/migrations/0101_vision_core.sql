@@ -101,9 +101,20 @@ begin
   end if;
 end $$;
 
-create policy "sections of own boards" on public.vb_sections
-  for all using (auth.uid() in (select user_id from vb_boards where id = board_id))
-  with check (auth.uid() in (select user_id from vb_boards where id = board_id));
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'vb_sections'
+      and policyname = 'sections of own boards'
+  ) then
+    execute 'drop policy "sections of own boards" on public.vb_sections';
+  end if;
+  execute $$create policy "sections of own boards" on public.vb_sections
+    for all using (auth.uid() in (select user_id from vb_boards where id = board_id))
+    with check (auth.uid() in (select user_id from vb_boards where id = board_id));$$;
+end $$;
 
 do $$
 begin
