@@ -73,13 +73,16 @@ alter table public.vb_boards enable row level security;
 alter table public.vb_sections enable row level security;
 alter table public.vb_cards enable row level security;
 
+drop policy if exists "own boards" on public.vb_boards;
 create policy "own boards" on public.vb_boards
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "sections of own boards" on public.vb_sections;
 create policy "sections of own boards" on public.vb_sections
   for all using (auth.uid() in (select user_id from vb_boards where id = board_id))
   with check (auth.uid() in (select user_id from vb_boards where id = board_id));
 
+drop policy if exists "own cards" on public.vb_cards;
 create policy "own cards" on public.vb_cards
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
