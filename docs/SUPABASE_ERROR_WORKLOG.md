@@ -39,3 +39,13 @@
 - `src/lib/supabaseClient.ts` now resolves credentials from environment variables first, then falls back to the checked-in defaults to keep the in-app diagnostics green even when vibecoding without shell access.
 - `scripts/generate-supa-client.mjs` reads the same JSON file so running `node scripts/generate-supa-client.mjs` no longer fails when environment variables are not exported.
 - Next verification step: rebuild/preview the site (`npm run build && npm run preview` or deploy) and re-run the Account → Supabase Connection Test. It should now report Credentials Configured ✅. If not, confirm the JSON file still matches the Supabase dashboard.
+
+## Update (Nov 16, 2025 @ 10:35 UTC)
+- **Observed error**: Attempting to sign in now yields the Supabase auth error `Database error querying schema`.
+- **Root cause hypothesis**: The Supabase project does not have the latest database objects (tables, policies, triggers). When GoTrue tries to query `public.profiles` / `auth.users` metadata, Postgres responds with `relation … does not exist`, which the API surfaces as "Database error querying schema".
+- **Remediation**:
+  1. Open your Supabase dashboard → **SQL Editor**.
+  2. Paste and run the contents of `sql/manual.sql` (this file stitches together the essential bits from `supabase/migrations/**/*.sql`).
+  3. Run the remaining migrations in `supabase/migrations/` if the editor reports that objects already exist; they are idempotent and can be re-run safely.
+  4. Rerun the Account → Supabase diagnostics panel; the auth form should now sign in successfully and the "Database connected" check should turn green.
+- **Code change**: `SupabaseAuthProvider` now intercepts this exact Supabase error and surfaces an actionable hint (“run the SQL in `supabase/migrations` or `sql/manual.sql`”), so the UI no longer shows the opaque default error string.

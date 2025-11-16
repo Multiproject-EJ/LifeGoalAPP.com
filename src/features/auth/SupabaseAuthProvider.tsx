@@ -29,6 +29,26 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function mapSupabaseAuthError(error: Error): Error {
+  const normalizedMessage = error.message ?? '';
+  const lowerMessage = normalizedMessage.toLowerCase();
+
+  if (lowerMessage.includes('database error querying schema')) {
+    return new Error(
+      'Supabase returned "Database error querying schema". This means your project database is missing the latest tables or policies. Open the Supabase SQL editor and run the SQL in supabase/migrations (or sql/manual.sql) to apply the schema, then try again.',
+    );
+  }
+
+  return error;
+}
+
+function ensureSupabaseAuthError(error: unknown): Error {
+  if (error instanceof Error) {
+    return mapSupabaseAuthError(error);
+  }
+  return mapSupabaseAuthError(new Error(String(error)));
+}
+
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
   const mode: AuthProviderMode = hasSupabaseCredentials() ? 'supabase' : 'demo';
 
@@ -104,7 +124,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
     const { error } = await supabase.auth.signInWithPassword(credentials);
-    if (error) throw error;
+    if (error) throw ensureSupabaseAuthError(error);
   }, [mode, supabase, supabaseError]);
 
   const signUpWithPassword = useCallback(
@@ -118,7 +138,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
       const { error } = await supabase.auth.signUp(credentials);
-      if (error) throw error;
+      if (error) throw ensureSupabaseAuthError(error);
     },
     [mode, supabase, supabaseError],
   );
@@ -134,7 +154,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
       const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) throw error;
+      if (error) throw ensureSupabaseAuthError(error);
     },
     [mode, supabase, supabaseError],
   );
@@ -153,7 +173,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       provider: 'google',
       options: { redirectTo },
     });
-    if (error) throw error;
+    if (error) throw ensureSupabaseAuthError(error);
   }, [mode, supabase, supabaseError]);
 
   const sendPasswordReset = useCallback(
@@ -165,7 +185,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
       const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
+      if (error) throw ensureSupabaseAuthError(error);
     },
     [mode, supabase, supabaseError],
   );
@@ -180,7 +200,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) throw ensureSupabaseAuthError(error);
   }, [mode, supabase, supabaseError]);
 
   const value = useMemo<AuthContextValue>(
