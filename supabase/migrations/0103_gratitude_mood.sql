@@ -11,5 +11,6 @@ create table if not exists public.vb_checkins (
 create unique index if not exists vb_checkins_user_date_board_idx
   on public.vb_checkins (user_id, the_date, coalesce(board_id, '00000000-0000-0000-0000-000000000000'::uuid));
 alter table public.vb_checkins enable row level security;
+drop policy if exists "own checkins" on public.vb_checkins;
 create policy "own checkins" on public.vb_checkins
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
