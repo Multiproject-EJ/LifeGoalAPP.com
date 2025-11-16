@@ -1,13 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import defaultCredentials from '../../supabase/defaultCredentials.json';
 import type { Database } from './database.types';
 
 let cachedClient: SupabaseClient<Database> | null = null;
 let activeSession: Session | null = null;
 const DEFAULT_AUTH_CALLBACK_PATH = '/auth/callback';
 
+function resolveSupabaseUrl(): string | null {
+  const configuredUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+  if (configuredUrl) return configuredUrl;
+  return defaultCredentials.url?.trim() || null;
+}
+
+function resolveSupabaseAnonKey(): string | null {
+  const configuredAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+  if (configuredAnonKey) return configuredAnonKey;
+  return defaultCredentials.anonKey?.trim() || null;
+}
+
 export function hasSupabaseCredentials(): boolean {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+  return Boolean(resolveSupabaseUrl() && resolveSupabaseAnonKey());
 }
 
 export function setSupabaseSession(session: Session | null): void {
@@ -29,8 +42,8 @@ export function getActiveSupabaseSession(): Session | null {
 export function getSupabaseClient(): SupabaseClient<Database> {
   if (cachedClient) return cachedClient;
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = resolveSupabaseUrl();
+  const supabaseAnonKey = resolveSupabaseAnonKey();
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(

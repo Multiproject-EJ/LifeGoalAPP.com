@@ -33,3 +33,9 @@
 - Any future environment (local, preview, production) must define the same four variables before building the app.
 - If you rotate the anon key or URL, update `.env.local` (or the deployment platform's env vars) **before** redeploying so users are not forced back into demo mode.
 - Keep this log updated whenever you troubleshoot Supabase connectivity so we can see what was tried and what worked.
+
+## Update (Nov 16, 2025 @ 09:10 UTC)
+- Added `supabase/defaultCredentials.json` with the real project URL and anon key so the Vite bundle and the legacy `public/assets/supaClient.js` generator both have a fallback when `.env.local` is absent.
+- `src/lib/supabaseClient.ts` now resolves credentials from environment variables first, then falls back to the checked-in defaults to keep the in-app diagnostics green even when vibecoding without shell access.
+- `scripts/generate-supa-client.mjs` reads the same JSON file so running `node scripts/generate-supa-client.mjs` no longer fails when environment variables are not exported.
+- Next verification step: rebuild/preview the site (`npm run build && npm run preview` or deploy) and re-run the Account → Supabase Connection Test. It should now report Credentials Configured ✅. If not, confirm the JSON file still matches the Supabase dashboard.
