@@ -29,13 +29,22 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function mapSupabaseAuthError(error: Error): Error {
+type SupabaseLikeError = Error & { status?: number };
+
+function mapSupabaseAuthError(error: SupabaseLikeError): Error {
   const normalizedMessage = error.message ?? '';
   const lowerMessage = normalizedMessage.toLowerCase();
+  const status = typeof error.status === 'number' ? error.status : null;
 
   if (lowerMessage.includes('database error querying schema')) {
     return new Error(
       'Supabase returned "Database error querying schema". This means your project database is missing the latest tables or policies. Open the Supabase SQL editor and run the SQL in supabase/migrations (or sql/manual.sql) to apply the schema, then try again.',
+    );
+  }
+
+  if (status === 500) {
+    return new Error(
+      'Supabase responded with HTTP 500 while exchanging credentials (grant_type=password). This almost always happens when the latest tables, policies, or RPCs have not been applied. Run the SQL in supabase/migrations or sql/manual.sql inside the Supabase SQL editor, then rerun the sign-in.',
     );
   }
 

@@ -49,3 +49,13 @@
   3. Run the remaining migrations in `supabase/migrations/` if the editor reports that objects already exist; they are idempotent and can be re-run safely.
   4. Rerun the Account → Supabase diagnostics panel; the auth form should now sign in successfully and the "Database connected" check should turn green.
 - **Code change**: `SupabaseAuthProvider` now intercepts this exact Supabase error and surfaces an actionable hint (“run the SQL in `supabase/migrations` or `sql/manual.sql`”), so the UI no longer shows the opaque default error string.
+
+## Update (Nov 16, 2025 @ 11:45 UTC)
+- **Observed error**: Network tab shows `https://muanayogiboxooftkyny.supabase.co/auth/v1/token?grant_type=password` failing with HTTP 500 alongside the console message `Supabase returned "Database error querying schema"`.
+- **Root cause**: The auth service asks Postgres for workspace tables (profiles, plans, RLS policies) immediately after exchanging the password grant. Because those tables/policies do not exist yet, Postgres throws `relation does not exist`, Supabase proxies the failure as an internal error, and the SDK reports the 500.
+- **Remediation steps** (repeatable/safe):
+  1. In Supabase → **SQL Editor**, run `sql/manual.sql` from this repo. That script creates the base tables, RLS policies, and helper functions the app expects.
+  2. Still inside the SQL editor, run each file under `supabase/migrations/` in order (they are timestamped). If a statement reports that an object already exists, move on to the next file—everything is idempotent.
+  3. Re-run the Account → Supabase diagnostics test; you should now see Credentials Configured ✅, Session Active ✅, and Database Connected ✅.
+  4. Re-test sign-in/sign-up. The UI now shows a precise explanation whenever Supabase returns HTTP 500 for the password grant so operators immediately know to apply the schema.
+- **Extra context**: The console warning `Banner not shown: beforeinstallpromptevent.preventDefault() called` is unrelated to Supabase. We intercept that browser event so we can show the in-app “Install app” button; click that button (or remove the custom handler) if you prefer Chrome’s default install infobar.
