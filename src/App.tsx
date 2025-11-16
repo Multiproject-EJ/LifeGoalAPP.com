@@ -138,6 +138,7 @@ export default function App() {
   const [workspaceStats, setWorkspaceStats] = useState<WorkspaceStats | null>(null);
   const [workspaceProfileLoading, setWorkspaceProfileLoading] = useState(false);
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
+  const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
 
   const mobileFooterNavItems = useMemo(() => {
     const findWorkspaceItem = (navId: string) =>
@@ -195,6 +196,7 @@ export default function App() {
       setWorkspaceStats(null);
       setWorkspaceProfileLoading(false);
       setShowWorkspaceSetup(false);
+      setWorkspaceSetupDismissed(false);
       return;
     }
 
@@ -205,7 +207,7 @@ export default function App() {
       .then(({ data }) => {
         if (!isMounted) return;
         setWorkspaceProfile(data);
-        if (!data?.full_name) {
+        if (!data?.full_name && !workspaceSetupDismissed) {
           setShowWorkspaceSetup(true);
         }
       })
@@ -223,7 +225,13 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, [supabaseSession, isConfigured]);
+  }, [supabaseSession, isConfigured, workspaceSetupDismissed]);
+
+  useEffect(() => {
+    if (!supabaseSession?.user?.id) {
+      setWorkspaceSetupDismissed(false);
+    }
+  }, [supabaseSession?.user?.id]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -337,6 +345,7 @@ export default function App() {
       handleAccountClick();
       return;
     }
+    setWorkspaceSetupDismissed(false);
     setShowWorkspaceSetup(true);
   };
 
@@ -745,6 +754,11 @@ export default function App() {
   const shouldShowWorkspaceSetup =
     showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 
+  const handleCloseWorkspaceSetup = () => {
+    setShowWorkspaceSetup(false);
+    setWorkspaceSetupDismissed(true);
+  };
+
   if (shouldRequireAuthentication && isMobileViewport) {
     return (
       <div className="app app--auth-gate">
@@ -1110,11 +1124,12 @@ export default function App() {
           isOpen={shouldShowWorkspaceSetup}
           session={supabaseSession}
           profile={workspaceProfile}
-          onClose={() => setShowWorkspaceSetup(false)}
+          onClose={handleCloseWorkspaceSetup}
           onSaved={(profile) => {
             setWorkspaceProfile(profile);
             setDisplayName(profile.full_name ?? displayName);
             setShowWorkspaceSetup(false);
+            setWorkspaceSetupDismissed(false);
             setAuthMessage('Profile saved!');
           }}
         />
