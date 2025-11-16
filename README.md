@@ -85,6 +85,19 @@ The development server opens at `http://localhost:5173`. The service worker only
 Environment variables for Supabase (introduced in Phase 2) live in `.env.local`; see `.env.example` for the required keys. In
 Phase 4, add your public VAPID key as `VITE_VAPID_PUBLIC_KEY` so the client can request push subscriptions.
 
+#### Where to put your Supabase credentials
+
+- **Copy the template**: `cp .env.example .env.local`
+- **Fill in your real project values** before starting the dev server or running `npm run build`:
+  ```bash
+  VITE_SUPABASE_URL="https://<your-project>.supabase.co"
+  VITE_SUPABASE_ANON_KEY="<your anon key>"
+  VITE_SUPABASE_REDIRECT_URL="https://www.lifegoalapp.com/auth/callback"
+  VITE_VAPID_PUBLIC_KEY="<your push key>"
+  ```
+- This repo uses [Vite](https://vitejs.dev/), which only exposes variables that start with the `VITE_` prefix to the browser. If these are missing, the app automatically falls back to demo mode and the **Account → Supabase Connection Test** panel will report `Supabase credentials not configured`.
+- `.env.local` is already gitignored—never commit your real keys to the repository.
+
 ### Supabase Demo Mode
 
 If `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are not configured the PWA now boots in a demo mode that mirrors the
