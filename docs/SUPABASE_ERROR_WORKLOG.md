@@ -33,3 +33,29 @@
 - Any future environment (local, preview, production) must define the same four variables before building the app.
 - If you rotate the anon key or URL, update `.env.local` (or the deployment platform's env vars) **before** redeploying so users are not forced back into demo mode.
 - Keep this log updated whenever you troubleshoot Supabase connectivity so we can see what was tried and what worked.
+
+## Update (Nov 16, 2025 @ 09:10 UTC)
+- Added `supabase/defaultCredentials.json` with the real project URL and anon key so the Vite bundle and the legacy `public/assets/supaClient.js` generator both have a fallback when `.env.local` is absent.
+- `src/lib/supabaseClient.ts` now resolves credentials from environment variables first, then falls back to the checked-in defaults to keep the in-app diagnostics green even when vibecoding without shell access.
+- `scripts/generate-supa-client.mjs` reads the same JSON file so running `node scripts/generate-supa-client.mjs` no longer fails when environment variables are not exported.
+- Next verification step: rebuild/preview the site (`npm run build && npm run preview` or deploy) and re-run the Account → Supabase Connection Test. It should now report Credentials Configured ✅. If not, confirm the JSON file still matches the Supabase dashboard.
+
+## Update (Nov 16, 2025 @ 10:35 UTC)
+- **Observed error**: Attempting to sign in now yields the Supabase auth error `Database error querying schema`.
+- **Root cause hypothesis**: The Supabase project does not have the latest database objects (tables, policies, triggers). When GoTrue tries to query `public.profiles` / `auth.users` metadata, Postgres responds with `relation … does not exist`, which the API surfaces as "Database error querying schema".
+- **Remediation**:
+  1. Open your Supabase dashboard → **SQL Editor**.
+  2. Paste and run the contents of `sql/manual.sql` (this file stitches together the essential bits from `supabase/migrations/**/*.sql`).
+  3. Run the remaining migrations in `supabase/migrations/` if the editor reports that objects already exist; they are idempotent and can be re-run safely.
+  4. Rerun the Account → Supabase diagnostics panel; the auth form should now sign in successfully and the "Database connected" check should turn green.
+- **Code change**: `SupabaseAuthProvider` now intercepts this exact Supabase error and surfaces an actionable hint (“run the SQL in `supabase/migrations` or `sql/manual.sql`”), so the UI no longer shows the opaque default error string.
+
+## Update (Nov 16, 2025 @ 11:45 UTC)
+- **Observed error**: Network tab shows `https://muanayogiboxooftkyny.supabase.co/auth/v1/token?grant_type=password` failing with HTTP 500 alongside the console message `Supabase returned "Database error querying schema"`.
+- **Root cause**: The auth service asks Postgres for workspace tables (profiles, plans, RLS policies) immediately after exchanging the password grant. Because those tables/policies do not exist yet, Postgres throws `relation does not exist`, Supabase proxies the failure as an internal error, and the SDK reports the 500.
+- **Remediation steps** (repeatable/safe):
+  1. In Supabase → **SQL Editor**, run `sql/manual.sql` from this repo. That script creates the base tables, RLS policies, and helper functions the app expects.
+  2. Still inside the SQL editor, run each file under `supabase/migrations/` in order (they are timestamped). If a statement reports that an object already exists, move on to the next file—everything is idempotent.
+  3. Re-run the Account → Supabase diagnostics test; you should now see Credentials Configured ✅, Session Active ✅, and Database Connected ✅.
+  4. Re-test sign-in/sign-up. The UI now shows a precise explanation whenever Supabase returns HTTP 500 for the password grant so operators immediately know to apply the schema.
+- **Extra context**: The console warning `Banner not shown: beforeinstallpromptevent.preventDefault() called` is unrelated to Supabase. We intercept that browser event so we can show the in-app “Install app” button; click that button (or remove the custom handler) if you prefer Chrome’s default install infobar.
