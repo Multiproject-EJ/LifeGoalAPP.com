@@ -19,6 +19,7 @@ import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiSupportAssistant } from './features/assistant';
+import { Journal } from './features/journal';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -68,6 +69,13 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'CHECK-IN',
   },
   {
+    id: 'journal',
+    label: 'Journal',
+    summary: 'Capture private reflections, moods, and links to your goals.',
+    icon: '📔',
+    shortLabel: 'JOURNAL',
+  },
+  {
     id: 'insights',
     label: 'Vision Board',
     summary: 'Stay inspired with highlights from your evolving vision board.',
@@ -115,6 +123,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'planning',
   'support',
   'assistant',
+  'journal',
   'insights',
   'rituals',
   'account',
@@ -146,6 +155,9 @@ export default function App() {
   const [manualProfileSaving, setManualProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>('settings');
+  const [initialSearch] = useState(() =>
+    typeof window !== 'undefined' ? window.location.search : '',
+  );
   const [showAuthPanel, setShowAuthPanel] = useState(false);
   const isMobileViewport = useMediaQuery('(max-width: 720px)');
   const [showMobileHome, setShowMobileHome] = useState(false);
@@ -247,6 +259,23 @@ export default function App() {
       setWorkspaceSetupDismissed(false);
     }
   }, [supabaseSession?.user?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname === '/journal') {
+      setActiveWorkspaceNav('journal');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchSuffix = initialSearch ?? '';
+    const nextPath = activeWorkspaceNav === 'journal' ? '/journal' : '/';
+    const nextUrl = `${nextPath}${searchSuffix}`;
+    if (window.location.pathname !== nextPath) {
+      window.history.replaceState({}, '', nextUrl);
+    }
+  }, [activeWorkspaceNav, initialSearch]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -445,6 +474,11 @@ export default function App() {
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
   };
+
+  const handleJournalNavigation = useCallback((navId: string) => {
+    setActiveWorkspaceNav(navId);
+    setShowMobileHome(false);
+  }, []);
 
   const statusElements = (
     <>
@@ -907,6 +941,16 @@ export default function App() {
             <LifeWheelCheckins session={activeSession} />
             <GoalReflectionJournal session={activeSession} />
             <VisionBoard session={activeSession} />
+          </div>
+        );
+      case 'journal':
+        return (
+          <div className="workspace-content">
+            <Journal
+              session={activeSession}
+              onNavigateToGoals={() => handleJournalNavigation('support')}
+              onNavigateToHabits={() => handleJournalNavigation('planning')}
+            />
           </div>
         );
       case 'insights':
