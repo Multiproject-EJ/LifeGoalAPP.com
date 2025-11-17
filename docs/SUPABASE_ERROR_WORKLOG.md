@@ -59,3 +59,12 @@
   3. Re-run the Account → Supabase diagnostics test; you should now see Credentials Configured ✅, Session Active ✅, and Database Connected ✅.
   4. Re-test sign-in/sign-up. The UI now shows a precise explanation whenever Supabase returns HTTP 500 for the password grant so operators immediately know to apply the schema.
 - **Extra context**: The console warning `Banner not shown: beforeinstallpromptevent.preventDefault() called` is unrelated to Supabase. We intercept that browser event so we can show the in-app “Install app” button; click that button (or remove the custom handler) if you prefer Chrome’s default install infobar.
+
+## Update (Nov 18, 2025 @ 08:20 UTC)
+- **Observed error**: Supabase auth calls returned `Invalid login credentials` immediately after migrating hosting to Vercel even though the same email/password worked previously.
+- **Root cause**: The Vercel project reused Next.js-style environment variable names (`NEXT_PUBLIC_SUPABASE_URL`, etc.). The Vite bundle, the Supabase client factory, and the legacy `public/assets/supaClient.js` generator only looked for `VITE_*` variables, so the build fell back to the checked-in default credentials. That pointed at an old Supabase project with no matching accounts, so every sign-in attempt failed with `invalid_grant`.
+- **Remediation steps**:
+  1. Teach Vite to expose both `VITE_` and `NEXT_PUBLIC_` prefixes via `envPrefix` in `vite.config.ts` and `vite.preview.config.ts`.
+  2. Update `src/lib/supabaseClient.ts` and `scripts/generate-supa-client.mjs` to read either prefix before falling back to `supabase/defaultCredentials.json`.
+  3. Document the new option in `.env.example`, `README.md`, and `SUPABASE_READINESS_REPORT.md` so operators know they can keep the Vercel-friendly names.
+  4. Redeploy after confirming the `NEXT_PUBLIC_*` values are present in the environment. The Supabase Connection Test now shows Credentials Configured ✅ and logins succeed again.
