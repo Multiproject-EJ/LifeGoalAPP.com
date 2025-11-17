@@ -23,6 +23,9 @@ export type NotificationPreferencesUpdate = Database['public']['Tables']['notifi
 export type GoalReflectionRow = Database['public']['Tables']['goal_reflections']['Row'];
 export type GoalReflectionInsert = Database['public']['Tables']['goal_reflections']['Insert'];
 export type GoalReflectionUpdate = Database['public']['Tables']['goal_reflections']['Update'];
+export type JournalEntryRow = Database['public']['Tables']['journal_entries']['Row'];
+export type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Insert'];
+export type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
 
 export const DEMO_USER_ID = 'demo-user-0001';
 export const DEMO_USER_EMAIL = 'demo@lifegoalapp.com';
@@ -38,6 +41,7 @@ type DemoState = {
   checkins: CheckinRow[];
   notificationPreferences: NotificationPreferencesRow | null;
   goalReflections: GoalReflectionRow[];
+  journalEntries: JournalEntryRow[];
 };
 
 type StructuredCloneFn = <T>(value: T) => T;
@@ -63,6 +67,7 @@ function createId(prefix: string): string {
 
 const today = new Date();
 const iso = (date: Date) => date.toISOString();
+const isoDateOnly = (date: Date) => date.toISOString().slice(0, 10);
 
 const defaultState: DemoState = {
   goals: [
@@ -117,6 +122,7 @@ const defaultState: DemoState = {
   checkins: [],
   notificationPreferences: null,
   goalReflections: [],
+  journalEntries: [],
 };
 
 // Populate habits and dependent tables once goals exist so references align.
@@ -628,6 +634,57 @@ const defaultState: DemoState = {
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 2, 11)),
     },
   ];
+
+  defaultState.journalEntries = [
+    {
+      id: createId('journal'),
+      user_id: DEMO_USER_ID,
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)),
+      updated_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)),
+      entry_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)),
+      title: 'Beta kickoff energy',
+      content:
+        'Hosted three intro calls and felt the cohort\'s excitement. Captured five new insight threads to unpack tomorrow.',
+      mood: 'excited',
+      tags: ['beta', 'momentum'],
+      is_private: true,
+      attachments: null,
+      linked_goal_ids: [goalLaunch.id],
+      linked_habit_ids: [morningRitualId, outreachHabitId],
+    },
+    {
+      id: createId('journal'),
+      user_id: DEMO_USER_ID,
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)),
+      updated_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)),
+      entry_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)),
+      title: 'Vision sprint reflection',
+      content:
+        'Spent the afternoon curating the board refresh. Loved the deep purple palette that emerged and tagged next steps for the mood boards.',
+      mood: 'happy',
+      tags: ['vision', 'creative flow'],
+      is_private: true,
+      attachments: null,
+      linked_goal_ids: [goalVision.id],
+      linked_habit_ids: [visionBoardId],
+    },
+    {
+      id: createId('journal'),
+      user_id: DEMO_USER_ID,
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)),
+      updated_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)),
+      entry_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)),
+      title: 'Integrating pilot learnings',
+      content:
+        'Documented the post-pilot insights. Noticed a confidence dip midweek when decisions piled up, but feel steady after the walk-and-talk debrief.',
+      mood: 'neutral',
+      tags: ['reflection', 'pilot'],
+      is_private: true,
+      attachments: null,
+      linked_goal_ids: [goalArchive.id],
+      linked_habit_ids: [visionBoardId],
+    },
+  ];
 })();
 
 function normalizeGoalRow(goal: GoalRow): GoalRow {
@@ -665,6 +722,7 @@ function loadState(): DemoState {
       notificationPreferences:
         parsed.notificationPreferences ?? clone(defaultState.notificationPreferences),
       goalReflections: parsed.goalReflections ?? clone(defaultState.goalReflections),
+      journalEntries: parsed.journalEntries ?? clone(defaultState.journalEntries),
     } satisfies DemoState;
   } catch (error) {
     console.warn('Unable to parse demo data state, falling back to defaults.', error);
@@ -695,6 +753,19 @@ function sortByDateDesc<T extends { created_at?: string | null; date?: string | 
     const aDate = (a.created_at ?? a.date ?? '') as string;
     const bDate = (b.created_at ?? b.date ?? '') as string;
     return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
+  });
+}
+
+function sortJournalEntries(entries: JournalEntryRow[]): JournalEntryRow[] {
+  return [...entries].sort((a, b) => {
+    const aDate = a.entry_date ?? '';
+    const bDate = b.entry_date ?? '';
+    if (aDate === bDate) {
+      const aCreated = a.created_at ?? '';
+      const bCreated = b.created_at ?? '';
+      return aCreated > bCreated ? -1 : aCreated < bCreated ? 1 : 0;
+    }
+    return aDate > bDate ? -1 : 1;
   });
 }
 
@@ -1081,6 +1152,79 @@ export function removeDemoGoalReflection(id: string): GoalReflectionRow | null {
       return true;
     });
     return { ...current, goalReflections };
+  });
+  return removed ? clone(removed) : null;
+}
+
+export function getDemoJournalEntries(userId: string): JournalEntryRow[] {
+  return clone(sortJournalEntries(state.journalEntries.filter((entry) => entry.user_id === userId)));
+}
+
+export function addDemoJournalEntry(payload: JournalEntryInsert): JournalEntryRow {
+  const record: JournalEntryRow = {
+    id: payload.id ?? createId('journal'),
+    user_id: payload.user_id,
+    created_at: payload.created_at ?? new Date().toISOString(),
+    updated_at: payload.updated_at ?? new Date().toISOString(),
+    entry_date: payload.entry_date ?? isoDateOnly(new Date()),
+    title: payload.title ?? null,
+    content: payload.content,
+    mood: payload.mood ?? null,
+    tags: payload.tags ?? null,
+    is_private: payload.is_private ?? true,
+    attachments: payload.attachments ?? null,
+    linked_goal_ids: payload.linked_goal_ids ?? null,
+    linked_habit_ids: payload.linked_habit_ids ?? null,
+  };
+
+  updateState((current) => ({
+    ...current,
+    journalEntries: sortJournalEntries([record, ...current.journalEntries]),
+  }));
+
+  return clone(record);
+}
+
+export function updateDemoJournalEntry(
+  id: string,
+  payload: JournalEntryUpdate,
+): JournalEntryRow | null {
+  let updated: JournalEntryRow | null = null;
+  updateState((current) => {
+    const journalEntries = current.journalEntries.map((entry) => {
+      if (entry.id !== id) return entry;
+      updated = {
+        ...entry,
+        ...payload,
+        entry_date: payload.entry_date ?? entry.entry_date,
+        title: payload.title ?? entry.title,
+        content: payload.content ?? entry.content,
+        mood: payload.mood ?? entry.mood,
+        tags: payload.tags ?? entry.tags,
+        is_private: payload.is_private ?? entry.is_private,
+        attachments: payload.attachments ?? entry.attachments,
+        linked_goal_ids: payload.linked_goal_ids ?? entry.linked_goal_ids,
+        linked_habit_ids: payload.linked_habit_ids ?? entry.linked_habit_ids,
+        updated_at: new Date().toISOString(),
+      } satisfies JournalEntryRow;
+      return updated;
+    });
+    return { ...current, journalEntries: sortJournalEntries(journalEntries) };
+  });
+  return updated ? clone(updated) : null;
+}
+
+export function removeDemoJournalEntry(id: string): JournalEntryRow | null {
+  let removed: JournalEntryRow | null = null;
+  updateState((current) => {
+    const journalEntries = current.journalEntries.filter((entry) => {
+      if (entry.id === id) {
+        removed = entry;
+        return false;
+      }
+      return true;
+    });
+    return { ...current, journalEntries };
   });
   return removed ? clone(removed) : null;
 }

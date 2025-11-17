@@ -108,6 +108,54 @@ export interface Database {
         };
         Relationships: [];
       };
+      journal_entries: {
+        Row: {
+          id: string;
+          user_id: string;
+          created_at: string;
+          updated_at: string;
+          entry_date: string;
+          title: string | null;
+          content: string;
+          mood: string | null;
+          tags: string[] | null;
+          is_private: boolean;
+          attachments: Json | null;
+          linked_goal_ids: string[] | null;
+          linked_habit_ids: string[] | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          created_at?: string;
+          updated_at?: string;
+          entry_date?: string;
+          title?: string | null;
+          content: string;
+          mood?: string | null;
+          tags?: string[] | null;
+          is_private?: boolean;
+          attachments?: Json | null;
+          linked_goal_ids?: string[] | null;
+          linked_habit_ids?: string[] | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          created_at?: string;
+          updated_at?: string;
+          entry_date?: string;
+          title?: string | null;
+          content?: string;
+          mood?: string | null;
+          tags?: string[] | null;
+          is_private?: boolean;
+          attachments?: Json | null;
+          linked_goal_ids?: string[] | null;
+          linked_habit_ids?: string[] | null;
+        };
+        Relationships: [];
+      };
       habits: {
         Row: {
           id: string;
