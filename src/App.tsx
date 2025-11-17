@@ -18,6 +18,7 @@ import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
+import { AiSupportAssistant } from './features/assistant';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -81,6 +82,13 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'GOALS',
   },
   {
+    id: 'assistant',
+    label: 'AI Strategy Assistant',
+    summary: 'Tap into momentum resets, vacation modes, and scenario planning.',
+    icon: '🤖',
+    shortLabel: 'AI',
+  },
+  {
     id: 'setup-habits',
     label: 'Set Up Habits',
     summary: 'Create or refine the habits that support your life goals.',
@@ -103,7 +111,14 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
 ];
 
-const MOBILE_FOOTER_WORKSPACE_IDS = ['planning', 'support', 'insights', 'rituals', 'account'] as const;
+const MOBILE_FOOTER_WORKSPACE_IDS = [
+  'planning',
+  'support',
+  'assistant',
+  'insights',
+  'rituals',
+  'account',
+] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -857,7 +872,9 @@ export default function App() {
       );
     }
 
-    if (!canAccessWorkspace) {
+    const isAssistantView = activeWorkspaceNav === 'assistant';
+
+    if (!canAccessWorkspace && !isAssistantView) {
       return (
         <p className="workspace-onboarding-hint">
           Finish onboarding to unlock this area.
@@ -903,6 +920,12 @@ export default function App() {
           <div className="workspace-content">
             <LifeGoalsSection session={activeSession} />
             <GoalWorkspace session={activeSession} />
+          </div>
+        );
+      case 'assistant':
+        return (
+          <div className="workspace-content">
+            <AiSupportAssistant session={activeSession} />
           </div>
         );
       case 'setup-habits':
