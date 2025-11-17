@@ -270,6 +270,8 @@ Use this to validate your Supabase connection and permissions.
    VITE_SUPABASE_REDIRECT_URL="https://www.lifegoalapp.com/auth/callback"
    VITE_VAPID_PUBLIC_KEY="your-web-push-public-key"
    ```
+   > Deploying on Vercel? You can provide `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and
+   > `NEXT_PUBLIC_SUPABASE_REDIRECT_URL` instead of the `VITE_` variables—the toolchain now watches both prefixes.
 
 2. **Build Commands**:
    ```bash

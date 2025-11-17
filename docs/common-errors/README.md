@@ -14,6 +14,7 @@ Since certain issues have occurred multiple times, this database serves as:
 | ID | Issue | Status | Date | File |
 |---|---|---|---|---|
 | ERROR-001 | White/Blank Page on Production | ✅ Resolved (updated 2025-11-13) | 2025-11-05 | [white-blank-page-issue.md](./white-blank-page-issue.md) |
+| ERROR-002 | Invalid Login Credentials After Vercel Migration | ✅ Resolved (updated 2025-11-18) | 2025-11-18 | [invalid-login-credentials.md](./invalid-login-credentials.md) |
 
 ## How to Use This Database
 

@@ -95,6 +95,7 @@ Phase 4, add your public VAPID key as `VITE_VAPID_PUBLIC_KEY` so the client can 
   VITE_SUPABASE_REDIRECT_URL="https://www.lifegoalapp.com/auth/callback"
   VITE_VAPID_PUBLIC_KEY="<your push key>"
   ```
+- **Deploying on Vercel?** You can also set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_SUPABASE_REDIRECT_URL` instead of the `VITE_` variants—the Vite build and the public `supaClient.js` generator now look for both naming conventions.
 - This repo uses [Vite](https://vitejs.dev/), which only exposes variables that start with the `VITE_` prefix to the browser. If these are missing, the app automatically falls back to demo mode and the **Account → Supabase Connection Test** panel will report `Supabase credentials not configured`.
 - `.env.local` is already gitignored—never commit your real keys to the repository.
 
