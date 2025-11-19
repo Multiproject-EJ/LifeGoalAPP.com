@@ -455,26 +455,29 @@ export interface Database {
       };
       workspace_profiles: {
         Row: {
+          id: string;
           user_id: string;
+          display_name: string | null;
           full_name: string | null;
           workspace_name: string | null;
-          onboarding_prompt_dismissed_at: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
+          id?: string;
           user_id: string;
+          display_name?: string | null;
           full_name?: string | null;
           workspace_name?: string | null;
-          onboarding_prompt_dismissed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
+          id?: string;
           user_id?: string;
+          display_name?: string | null;
           full_name?: string | null;
           workspace_name?: string | null;
-          onboarding_prompt_dismissed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
