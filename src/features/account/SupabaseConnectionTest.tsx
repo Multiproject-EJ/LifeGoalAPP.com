@@ -33,7 +33,8 @@ type TableKey =
   | 'vb_cards'
   | 'vb_shares'
   | 'vb_checkins'
-  | 'push_subscriptions';
+  | 'push_subscriptions'
+  | 'journal_entries';
 
 type TableReadConfig = {
   key: TableKey;
@@ -106,6 +107,7 @@ const tableReadConfigs: TableReadConfig[] = [
   { key: 'vb_shares', label: 'Vision board shares', table: 'vb_shares', column: 'id' },
   { key: 'vb_checkins', label: 'Vision check-ins', table: 'vb_checkins', column: 'id' },
   { key: 'push_subscriptions', label: 'Push subscriptions', table: 'push_subscriptions', column: 'endpoint' },
+  { key: 'journal_entries', label: 'Journal entries', table: 'journal_entries', column: 'id' },
 ];
 
 const tableConfigMap = new Map<TableKey, TableReadConfig>(tableReadConfigs.map((config) => [config.key, config]));
@@ -598,6 +600,25 @@ const writeTestDefinitions: Partial<Record<TableKey, WriteTestDefinition>> = {
       if (error) throw error;
       ctx.cleanup.push(async () => {
         await ctx.client.from('push_subscriptions').delete().eq('endpoint', endpoint);
+      });
+    },
+  },
+  journal_entries: {
+    async run(ctx) {
+      const { data, error } = await ctx.client
+        .from('journal_entries')
+        .insert({
+          user_id: ctx.userId,
+          entry_date: new Date().toISOString().slice(0, 10),
+          content: 'SUPABASE_DIAGNOSTICS_TEST_ENTRY',
+          is_private: true,
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      ctx.cleanup.push(async () => {
+        await ctx.client.from('journal_entries').delete().eq('id', data.id);
       });
     },
   },
