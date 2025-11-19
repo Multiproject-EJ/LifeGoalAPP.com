@@ -234,9 +234,6 @@ export default function App() {
       .then(({ data }) => {
         if (!isMounted) return;
         setWorkspaceProfile(data);
-        if (!data?.full_name && !workspaceSetupDismissed) {
-          setShowWorkspaceSetup(true);
-        }
       })
       .finally(() => {
         if (isMounted) {
