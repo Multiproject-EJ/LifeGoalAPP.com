@@ -230,6 +230,8 @@ export default function App() {
     let isMounted = true;
     setWorkspaceProfileLoading(true);
 
+    // Note: Workspace setup dialog is not auto-opened here.
+    // Users can manually open it via "Edit Account Details" if needed.
     fetchWorkspaceProfile(supabaseSession.user.id)
       .then(({ data }) => {
         if (!isMounted) return;
