@@ -795,6 +795,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      ai_settings: {
+        Row: {
+          user_id: string;
+          provider: string;
+          api_key: string | null;
+          model: string | null;
+        };
+        Insert: {
+          user_id: string;
+          provider: string;
+          api_key?: string | null;
+          model?: string | null;
+        };
+        Update: {
+          user_id?: string;
+          provider?: string;
+          api_key?: string | null;
+          model?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
