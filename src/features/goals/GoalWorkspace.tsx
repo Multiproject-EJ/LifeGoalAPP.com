@@ -30,6 +30,37 @@ type GoalDraft = {
   statusTag: GoalStatusTag;
 };
 
+// Type definition matching LifeGoalInputDialog's form data structure
+type LifeGoalFormData = {
+  title: string;
+  description: string;
+  lifeWheelCategory: LifeWheelCategoryKey;
+  startDate: string;
+  targetDate: string;
+  estimatedDurationDays: string;
+  timingNotes: string;
+  statusTag: GoalStatusTag;
+  steps: Array<{
+    id: string;
+    title: string;
+    description: string;
+    dueDate: string;
+    substeps: Array<{
+      id: string;
+      title: string;
+    }>;
+  }>;
+  alerts: Array<{
+    id: string;
+    alertType: 'milestone' | 'deadline' | 'reminder' | 'custom';
+    alertTime: string;
+    title: string;
+    message: string;
+    repeatPattern: 'once' | 'daily' | 'weekly' | 'monthly';
+    enabled: boolean;
+  }>;
+};
+
 const STATUS_OPTIONS = GOAL_STATUS_OPTIONS;
 
 const defaultStatusTag: GoalStatusTag = DEFAULT_GOAL_STATUS;
@@ -61,7 +92,6 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<GoalStatusFilter>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<LifeWheelCategoryKey | null>(null);
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -363,11 +393,11 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   };
 
   const handleSaveLifeGoal = useCallback(
-    async (formData: any) => {
+    async (formData: LifeGoalFormData) => {
       setErrorMessage(null);
       setStatusMessage(null);
 
-      if (!isConfigured) {
+      if (!isConfigured && !isDemoExperience) {
         setErrorMessage('Supabase credentials are not configured. Add them to continue.');
         throw new Error('Supabase not configured');
       }
@@ -769,7 +799,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         onSave={handleSaveLifeGoal}
-        initialCategory={selectedCategory}
+        initialCategory={null}
       />
     </section>
   );
