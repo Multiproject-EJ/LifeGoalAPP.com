@@ -12,6 +12,9 @@ import {
   normalizeGoalStatus,
 } from './goalStatus';
 import { isDemoSession } from '../../services/demoSession';
+import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
+import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
+import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
@@ -57,6 +60,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<GoalStatusFilter>('all');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<LifeWheelCategoryKey | null>(null);
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -347,6 +352,105 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     }
   };
 
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+    setErrorMessage(null);
+    setStatusMessage(null);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+  };
+
+  const handleSaveLifeGoal = useCallback(
+    async (formData: any) => {
+      setErrorMessage(null);
+      setStatusMessage(null);
+
+      if (!isConfigured) {
+        setErrorMessage('Supabase credentials are not configured. Add them to continue.');
+        throw new Error('Supabase not configured');
+      }
+
+      try {
+        // Create the goal with life wheel category and additional fields
+        const goalPayload = {
+          user_id: session.user.id,
+          title: formData.title,
+          description: formData.description || null,
+          life_wheel_category: formData.lifeWheelCategory,
+          start_date: formData.startDate || null,
+          target_date: formData.targetDate || null,
+          estimated_duration_days: formData.estimatedDurationDays
+            ? parseInt(formData.estimatedDurationDays, 10)
+            : null,
+          timing_notes: formData.timingNotes || null,
+          status_tag: formData.statusTag,
+        };
+
+        const { data: goal, error: goalError } = await insertGoal(goalPayload);
+        if (goalError) throw goalError;
+        if (!goal) throw new Error('Failed to create goal');
+
+        // Create steps
+        for (let i = 0; i < formData.steps.length; i++) {
+          const step = formData.steps[i];
+          const stepPayload = {
+            goal_id: goal.id,
+            step_order: i,
+            title: step.title,
+            description: step.description || null,
+            due_date: step.dueDate || null,
+          };
+
+          const { data: createdStep, error: stepError } = await insertStep(stepPayload);
+          if (stepError) throw stepError;
+          if (!createdStep) continue;
+
+          // Create substeps for this step
+          for (let j = 0; j < step.substeps.length; j++) {
+            const substep = step.substeps[j];
+            const substepPayload = {
+              step_id: createdStep.id,
+              substep_order: j,
+              title: substep.title,
+            };
+
+            const { error: substepError } = await insertSubstep(substepPayload);
+            if (substepError) throw substepError;
+          }
+        }
+
+        // Create alerts
+        for (const alert of formData.alerts) {
+          const alertPayload = {
+            goal_id: goal.id,
+            user_id: session.user.id,
+            alert_type: alert.alertType,
+            alert_time: alert.alertTime,
+            title: alert.title,
+            message: alert.message || null,
+            repeat_pattern: alert.repeatPattern,
+            enabled: alert.enabled,
+          };
+
+          const { error: alertError } = await insertAlert(alertPayload);
+          if (alertError) throw alertError;
+        }
+
+        // Add the new goal to the list
+        setGoals((current) => [goal, ...current]);
+        setStatusMessage(
+          isDemoExperience ? 'Life goal saved to demo data.' : 'Life goal created successfully!'
+        );
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Failed to save life goal');
+        throw error;
+      }
+    },
+    [session.user.id, isConfigured, isDemoExperience]
+  );
+
   return (
     <section className="goal-workspace">
       <header className="goal-workspace__header">
@@ -387,8 +491,33 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       ) : null}
 
       <div className="goal-workspace__grid">
-        <form className="goal-form" onSubmit={handleSubmit}>
-          <h3>Capture a new goal</h3>
+        <div className="goal-form">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3>Capture a new goal</h3>
+            <button
+              type="button"
+              className="goal-workspace__add-life-goal"
+              onClick={handleOpenDialog}
+              disabled={!isConfigured && !isDemoExperience}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--color-primary, #4F46E5)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                transition: 'background-color 0.2s',
+              }}
+            >
+              ✨ Add Life Goal
+            </button>
+          </div>
+          <p style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--color-text-secondary, #6B7280)' }}>
+            Use the quick form below or click "✨ Add Life Goal" to create a detailed goal with AI assistance, steps, timing, and alerts.
+          </p>
+          <form onSubmit={handleSubmit}>
           <label className="goal-form__field">
             <span>Goal title</span>
             <input
@@ -442,7 +571,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
           <button type="submit" className="goal-form__submit" disabled={saving}>
             {saving ? 'Saving…' : 'Save goal'}
           </button>
-        </form>
+          </form>
+        </div>
 
         <div className="goal-list">
           <div className="goal-list__header">
@@ -633,6 +763,14 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
           ) : null}
         </div>
       </div>
+
+      <LifeGoalInputDialog
+        session={session}
+        isOpen={isDialogOpen}
+        onClose={handleCloseDialog}
+        onSave={handleSaveLifeGoal}
+        initialCategory={selectedCategory}
+      />
     </section>
   );
 }
