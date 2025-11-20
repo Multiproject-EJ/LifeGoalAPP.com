@@ -6660,6 +6660,168 @@ body {
   transform: none;
 }
 
+/* AI Suggestion Section */
+.life-goal-dialog__ai-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.life-goal-dialog__ai-generate {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.life-goal-dialog__ai-generate:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.life-goal-dialog__ai-generate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.life-goal-dialog__ai-status {
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 6px;
+  color: #1e40af;
+  font-size: 0.9rem;
+  margin: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.life-goal-dialog__ai-error {
+  padding: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+.life-goal-dialog__ai-suggestion {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.life-goal-dialog__ai-suggestion h4 {
+  margin: 0 0 1rem 0;
+  color: #1e40af;
+  font-size: 1.1rem;
+}
+
+.life-goal-dialog__ai-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.life-goal-dialog__ai-goal,
+.life-goal-dialog__ai-milestones,
+.life-goal-dialog__ai-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.life-goal-dialog__ai-goal strong,
+.life-goal-dialog__ai-milestones strong,
+.life-goal-dialog__ai-tasks strong {
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.life-goal-dialog__ai-goal p {
+  margin: 0;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-left: 3px solid #3b82f6;
+  border-radius: 4px;
+  color: #1e293b;
+}
+
+.life-goal-dialog__ai-milestones ul,
+.life-goal-dialog__ai-tasks ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style: none;
+}
+
+.life-goal-dialog__ai-milestones li,
+.life-goal-dialog__ai-tasks li {
+  position: relative;
+  padding: 0.5rem 0;
+  color: #334155;
+}
+
+.life-goal-dialog__ai-milestones li::before {
+  content: '🎯';
+  position: absolute;
+  left: -1.5rem;
+}
+
+.life-goal-dialog__ai-tasks li::before {
+  content: '✓';
+  position: absolute;
+  left: -1.5rem;
+  color: #059669;
+}
+
+.life-goal-dialog__ai-use {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.life-goal-dialog__ai-use:hover {
+  background: linear-gradient(135deg, #047857, #065f46);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);
+}
+
 .ideas-page {
   position: fixed;
   inset: 0;

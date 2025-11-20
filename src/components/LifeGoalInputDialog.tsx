@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
 import type { GoalStatusTag } from '../features/goals/goalStatus';
 import { DEFAULT_GOAL_STATUS, GOAL_STATUS_OPTIONS } from '../features/goals/goalStatus';
+import useAiGoalSuggestion from '../hooks/useAiGoalSuggestion';
 
 type LifeGoalStep = {
   id: string;
@@ -55,6 +56,9 @@ export function LifeGoalInputDialog({
   onSave,
   initialCategory,
 }: LifeGoalInputDialogProps) {
+  // Initialize AI goal suggestion hook for generating goal recommendations
+  const { loading: aiLoading, error: aiError, suggestion: aiSuggestion, generateSuggestion } = useAiGoalSuggestion();
+
   const [formData, setFormData] = useState<LifeGoalFormData>(() => ({
     title: '',
     description: '',
@@ -183,6 +187,61 @@ export function LifeGoalInputDialog({
     }));
   };
 
+  const handleGenerateAiSuggestion = async () => {
+    if (!formData.description.trim()) return;
+
+    // Calculate timeframe from target date if available
+    let timeframe: string | undefined;
+    if (formData.targetDate) {
+      const targetDate = new Date(formData.targetDate);
+      const today = new Date();
+      const daysUntil = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntil > 0) {
+        timeframe = `${daysUntil} days`;
+      }
+    } else if (formData.estimatedDurationDays) {
+      timeframe = `${formData.estimatedDurationDays} days`;
+    }
+
+    await generateSuggestion({
+      description: formData.description,
+      timeframe,
+      category: formData.lifeWheelCategory,
+    });
+  };
+
+  const handleUseAiSuggestion = () => {
+    if (!aiSuggestion) return;
+
+    // Update the title with AI-generated goal
+    setFormData((current) => ({
+      ...current,
+      title: aiSuggestion.goal,
+    }));
+
+    // Convert milestones to steps
+    const newSteps: LifeGoalStep[] = aiSuggestion.milestones.map((milestone, index) => ({
+      id: crypto.randomUUID(),
+      title: milestone,
+      description: '',
+      dueDate: '',
+      substeps: [],
+    }));
+
+    // If there are tasks, add them as substeps to the first milestone
+    if (aiSuggestion.tasks.length > 0 && newSteps.length > 0) {
+      newSteps[0].substeps = aiSuggestion.tasks.map((task) => ({
+        id: crypto.randomUUID(),
+        title: task,
+      }));
+    }
+
+    setFormData((current) => ({
+      ...current,
+      steps: [...current.steps, ...newSteps],
+    }));
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -280,6 +339,72 @@ export function LifeGoalInputDialog({
                   rows={4}
                 />
               </label>
+
+              {/* AI Suggestion Section */}
+              <div className="life-goal-dialog__ai-section">
+                <button
+                  type="button"
+                  className="life-goal-dialog__ai-generate"
+                  onClick={handleGenerateAiSuggestion}
+                  disabled={!formData.description.trim() || aiLoading}
+                >
+                  {aiLoading ? '🤖 Generating...' : '✨ Generate with AI'}
+                </button>
+
+                {aiLoading && (
+                  <p className="life-goal-dialog__ai-status">
+                    Generating AI suggestion based on your description...
+                  </p>
+                )}
+
+                {aiError && (
+                  <div className="life-goal-dialog__ai-error">
+                    <strong>Error:</strong> {aiError}
+                  </div>
+                )}
+
+                {aiSuggestion && (
+                  <div className="life-goal-dialog__ai-suggestion">
+                    <h4>💡 AI Suggestion</h4>
+                    <div className="life-goal-dialog__ai-content">
+                      <div className="life-goal-dialog__ai-goal">
+                        <strong>Goal:</strong>
+                        <p>{aiSuggestion.goal}</p>
+                      </div>
+                      
+                      {aiSuggestion.milestones.length > 0 && (
+                        <div className="life-goal-dialog__ai-milestones">
+                          <strong>Milestones:</strong>
+                          <ul>
+                            {aiSuggestion.milestones.map((milestone, index) => (
+                              <li key={index}>{milestone}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {aiSuggestion.tasks.length > 0 && (
+                        <div className="life-goal-dialog__ai-tasks">
+                          <strong>Tasks:</strong>
+                          <ul>
+                            {aiSuggestion.tasks.map((task, index) => (
+                              <li key={index}>{task}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <button
+                        type="button"
+                        className="life-goal-dialog__ai-use"
+                        onClick={handleUseAiSuggestion}
+                      >
+                        ✓ Use this as goal
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <label className="life-goal-dialog__field">
                 <span>Life Area</span>
