@@ -68,3 +68,116 @@
   2. Update `src/lib/supabaseClient.ts` and `scripts/generate-supa-client.mjs` to read either prefix before falling back to `supabase/defaultCredentials.json`.
   3. Document the new option in `.env.example`, `README.md`, and `SUPABASE_READINESS_REPORT.md` so operators know they can keep the Vercel-friendly names.
   4. Redeploy after confirming the `NEXT_PUBLIC_*` values are present in the environment. The Supabase Connection Test now shows Credentials Configured ✅ and logins succeed again.
+
+---
+
+## Schema Documentation: Journal Entries & Workspace Profiles
+
+### Journal Entries (`journal_entries`)
+
+The `journal_entries` table stores user journal/diary entries with metadata, tags, and links to goals/habits.
+
+#### Schema
+```sql
+CREATE TABLE public.journal_entries (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  entry_date date NOT NULL DEFAULT current_date,
+  title text,
+  content text NOT NULL,
+  mood text,
+  tags text[] DEFAULT '{}',
+  is_private boolean NOT NULL DEFAULT true,
+  attachments jsonb,
+  linked_goal_ids text[] DEFAULT '{}',
+  linked_habit_ids text[] DEFAULT '{}'
+);
+```
+
+#### RLS Policies
+- **Policy**: `"own journal entries"`
+  - **Type**: FOR ALL (SELECT, INSERT, UPDATE, DELETE)
+  - **USING**: `auth.uid() = user_id`
+  - **WITH CHECK**: `auth.uid() = user_id`
+  - **Effect**: Users can only access and modify their own journal entries
+
+#### Triggers
+- **Trigger**: `set_journal_entries_updated_at`
+  - **Type**: BEFORE UPDATE
+  - **Function**: `public.set_journal_updated_at()`
+  - **Effect**: Automatically sets `updated_at` to `now()` on every update
+
+#### Migration
+- Defined in: `supabase/migrations/0106_journal_feature.sql`
+- TypeScript types: `src/lib/database.types.ts` (Table: `journal_entries`)
+
+### Workspace Profiles (`workspace_profiles`)
+
+The `workspace_profiles` table stores workspace-specific user profile information, including display name, full name, and workspace name.
+
+#### Schema
+```sql
+CREATE TABLE public.workspace_profiles (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  display_name text,
+  full_name text,
+  workspace_name text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Critical: Unique index required for upsert operations
+CREATE UNIQUE INDEX workspace_profiles_user_id_key 
+ON public.workspace_profiles (user_id);
+```
+
+#### RLS Policies
+- **Policy**: `"workspace_profiles_owner_all"`
+  - **Type**: FOR ALL (SELECT, INSERT, UPDATE, DELETE)
+  - **Scope**: AS PERMISSIVE, TO public
+  - **USING**: `auth.uid() = user_id`
+  - **WITH CHECK**: `auth.uid() = user_id`
+  - **Effect**: Users can only access and modify their own workspace profile
+
+#### Common Error: Upsert Without Unique Constraint
+
+**Observed error**:
+```
+there is no unique or exclusion constraint matching the ON CONFLICT specification
+```
+
+**Symptoms**:
+- "Unable to save profile" error in the UI
+- "Unable to save your changes automatically" message in workspace setup
+- Failed upsert operations in `src/services/workspaceProfile.ts`
+
+**Root cause**:
+The application uses `supabase.from('workspace_profiles').upsert(payload, { onConflict: 'user_id' })` to create or update workspace profiles. PostgreSQL's `UPSERT` (INSERT ... ON CONFLICT) requires a unique constraint or index on the conflict column(s). Without the unique index on `user_id`, the database cannot determine which row to update and throws this error.
+
+**Solution**:
+Add a unique index on the `user_id` column:
+```sql
+CREATE UNIQUE INDEX IF NOT EXISTS workspace_profiles_user_id_key 
+ON public.workspace_profiles (user_id);
+```
+
+This index serves two purposes:
+1. **Enables upserts**: Allows `onConflict: 'user_id'` to work correctly
+2. **Data integrity**: Ensures each user has at most one workspace profile
+
+**Frontend dependencies**:
+- `src/services/workspaceProfile.ts` - `upsertWorkspaceProfile()` function
+- `src/features/account/WorkspaceSetupDialog.tsx` - Workspace setup UI
+- `src/App.tsx` - Profile name persistence and loading
+
+#### Migration
+- Defined in: `supabase/migrations/0107_workspace_profiles.sql`
+- TypeScript types: `src/lib/database.types.ts` (Table: `workspace_profiles`)
+
+#### Key Design Decisions
+1. **Separate `id` and `user_id`**: While `user_id` has a unique constraint, we use a separate `id` as the primary key for flexibility and consistency with other tables
+2. **Nullable text fields**: `display_name`, `full_name`, and `workspace_name` are optional to support incremental profile completion
+3. **Cascading deletes**: When a user is deleted from `auth.users`, their workspace profile is automatically removed
