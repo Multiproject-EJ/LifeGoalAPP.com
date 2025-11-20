@@ -56,15 +56,7 @@ export function LifeGoalInputDialog({
   onSave,
   initialCategory,
 }: LifeGoalInputDialogProps) {
-  // Copilot, integrate the useAiGoalSuggestion hook into this goal creation form.
-  //
-  // Context:
-  // - We imported useAiGoalSuggestion from "../hooks/useAiGoalSuggestion".
-  // - This component already has local state for goal fields, including
-  //   formData.description, formData.targetDate, and formData.lifeWheelCategory.
-  //
-  // Requirements:
-  // - Call const { loading: aiLoading, error: aiError, suggestion: aiSuggestion, generateSuggestion } = useAiGoalSuggestion() at the top of the component.
+  // Initialize AI goal suggestion hook for generating goal recommendations
   const { loading: aiLoading, error: aiError, suggestion: aiSuggestion, generateSuggestion } = useAiGoalSuggestion();
 
   const [formData, setFormData] = useState<LifeGoalFormData>(() => ({

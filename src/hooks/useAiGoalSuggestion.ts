@@ -1,33 +1,5 @@
-// Copilot, create a React hook for calling the Supabase Edge Function suggest-goal.
-//
-// Context:
-// - This is a Vite/React SPA (src/App.tsx etc.).
-// - The edge function URL will be passed via an environment variable:
-//     import.meta.env.VITE_AI_GOAL_SUGGEST_URL
-//   For development I might hardcode it first.
-//
-// Requirements:
-// - Hook name: useAiGoalSuggestion.
-// - Local state:
-//     loading: boolean
-//     error: string | null
-//     suggestion: {
-//       goal: string;
-//       milestones: string[];
-//       tasks: string[];
-//     } | null
-// - Expose a function:
-//     generateSuggestion(params: { description: string; timeframe?: string; category?: string }): Promise<void>
-//   Behavior:
-//   - Set loading true, clear previous error.
-//   - POST to the edge function URL with JSON body.
-//   - Include the user's Supabase JWT if available:
-//       - Try to get the current session via getSupabaseClient() from src/lib/supabaseClient
-//       - If session exists, add Authorization: Bearer <access_token>
-//   - If response is not ok, read JSON and set error message (body.error or generic).
-//   - If ok, parse JSON into suggestion state.
-// - Return { loading, error, suggestion, generateSuggestion }.
-// - Export it as default.
+// Hook for calling the Supabase Edge Function to generate AI-powered goal suggestions
+// Uses OpenAI to generate structured goal recommendations based on user input
 
 import { useState, useCallback } from 'react';
 import { getSupabaseClient } from '../lib/supabaseClient';
