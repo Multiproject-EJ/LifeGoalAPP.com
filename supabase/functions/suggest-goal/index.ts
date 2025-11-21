@@ -219,16 +219,61 @@ Deno.serve(async (req) => {
       throw new Error('No response from OpenAI');
     }
 
-    const suggestion: SuggestGoalResponse = JSON.parse(responseContent);
-
-    // Validate response structure
-    if (!suggestion.goal || !Array.isArray(suggestion.milestones) || !Array.isArray(suggestion.tasks)) {
-      throw new Error('Invalid response format from AI');
+    // Parse the raw response from OpenAI
+    let raw: any;
+    try {
+      raw = JSON.parse(responseContent);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'AI returned invalid JSON' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    // Return the suggestion directly to the client
+    // Normalize the response to ensure it matches the expected format
+    // Ensure goal is a non-empty string
+    const safeGoal = typeof raw.goal === 'string' && raw.goal.trim() ? raw.goal.trim() : '';
+
+    // Ensure milestones is an array of strings
+    const safeMilestones = Array.isArray(raw.milestones)
+      ? raw.milestones
+          .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
+          .map((item: string) => item.trim())
+      : [];
+
+    // Ensure tasks is an array of strings
+    const safeTasks = Array.isArray(raw.tasks)
+      ? raw.tasks
+          .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
+          .map((item: string) => item.trim())
+      : [];
+
+    // Validate that we have complete data after normalization
+    if (!safeGoal || safeMilestones.length === 0 || safeTasks.length === 0) {
+      console.error('AI returned incomplete data:', { safeGoal, safeMilestones, safeTasks });
+      return new Response(
+        JSON.stringify({ error: 'AI returned incomplete data' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Build the normalized result
+    const result: SuggestGoalResponse = {
+      goal: safeGoal,
+      milestones: safeMilestones,
+      tasks: safeTasks,
+    };
+
+    // Return the normalized suggestion to the client
     return new Response(
-      JSON.stringify(suggestion),
+      JSON.stringify(result),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
