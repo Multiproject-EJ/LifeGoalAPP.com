@@ -110,13 +110,6 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     icon: '🛠️',
     shortLabel: 'PLANS',
   },
-  {
-    id: 'settings',
-    label: 'Settings',
-    summary: 'Adjust preferences and configure your workspace experience.',
-    icon: '⚙️',
-    shortLabel: 'PREFS',
-  },
 ];
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
@@ -154,7 +147,7 @@ export default function App() {
   const [activeAuthTab, setActiveAuthTab] = useState<AuthTab>('login');
   const [manualProfileSaving, setManualProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>('settings');
+  const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>('goals');
   const [initialSearch] = useState(() =>
     typeof window !== 'undefined' ? window.location.search : '',
   );
@@ -877,14 +870,6 @@ export default function App() {
             </p>
           )}
         </>
-      );
-    }
-
-    if (activeWorkspaceNav === 'settings') {
-      return (
-        <div className="workspace-content">
-          <NotificationPreferences session={activeSession} />
-        </div>
       );
     }
 
