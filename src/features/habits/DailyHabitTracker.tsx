@@ -14,6 +14,9 @@ import {
 } from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { HabitAlertConfig } from './HabitAlertConfig';
+import { getHabitAlertSummary } from '../../services/habitAlertNotifications';
+import './HabitAlertConfig.css';
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
@@ -21,6 +24,8 @@ type DailyHabitTrackerProps = {
   session: Session;
   variant?: DailyHabitTrackerVariant;
 };
+
+type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
 
 type HabitCompletionState = {
   logId: string | null;
@@ -98,6 +103,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
   // State for storing monthly statistics from our helper function
   const [monthlyStats, setMonthlyStats] = useState<MonthlyHabitCompletions | null>(null);
+  // State for alert configuration modal
+  const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
+  // State for habit alert summaries (which days have alerts scheduled)
+  const [habitAlertSummaries, setHabitAlertSummaries] = useState<Map<string, Map<string, HabitAlertRow[]>>>(new Map());
 
   const monthlySummary = useMemo(() => {
     if (!habits.length || !monthDays.length) {
@@ -260,6 +269,32 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   useEffect(() => {
     void loadMonthlyStats(selectedYear, selectedMonth);
   }, [selectedYear, selectedMonth, loadMonthlyStats]);
+
+  // Load habit alert summaries for the selected month
+  useEffect(() => {
+    if (habits.length === 0 || monthDays.length === 0) {
+      setHabitAlertSummaries(new Map());
+      return;
+    }
+
+    const monthStartDate = new Date(selectedYear, selectedMonth, 1);
+    const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
+
+    const loadAlertSummaries = async () => {
+      const summaries = new Map<string, Map<string, HabitAlertRow[]>>();
+      
+      for (const habit of habits) {
+        const summary = await getHabitAlertSummary(habit.id, monthStartDate, monthEndDate);
+        if (summary.size > 0) {
+          summaries.set(habit.id, summary);
+        }
+      }
+      
+      setHabitAlertSummaries(summaries);
+    };
+
+    void loadAlertSummaries();
+  }, [habits, monthDays, selectedYear, selectedMonth]);
 
   useEffect(() => {
     if (!isConfigured && !isDemoExperience) {
@@ -540,6 +575,16 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               <div className="habit-checklist__detail-actions">
                 {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
                 {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+                <button
+                  type="button"
+                  className="habit-checklist__alert-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAlertConfigHabit({ id: habit.id, name: habit.name });
+                  }}
+                >
+                  🔔 Alerts
+                </button>
               </div>
             </div>
           </li>
@@ -798,6 +843,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       const isSavingCell = Boolean(monthlySaving[cellKey]);
                       const disableToggle = !scheduled && !isCompleted;
                       const dayLabel = formatDateLabel(dateIso);
+                      
+                      // Check if there are alerts for this habit on this day
+                      const habitAlerts = habitAlertSummaries.get(habit.id);
+                      const hasAlerts = habitAlerts?.has(dateIso) ?? false;
 
                       const cellClassNames = ['habit-monthly__cell'];
                       if (scheduled) {
@@ -814,6 +863,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       if (isSavingCell) {
                         cellClassNames.push('habit-monthly__cell--saving');
                       }
+                      if (hasAlerts) {
+                        cellClassNames.push('habit-monthly__cell--has-alert');
+                      }
 
                       return (
                         <td key={cellKey} className={cellClassNames.join(' ')}>
@@ -821,12 +873,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                             type="button"
                             className={`habit-monthly__toggle ${isCompleted ? 'habit-monthly__toggle--checked' : ''}`}
                             aria-pressed={isCompleted}
-                            aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habit.name} for ${dayLabel}`}
+                            aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habit.name} for ${dayLabel}${hasAlerts ? ' (has alerts)' : ''}`}
                             onClick={() => void toggleHabitForDate(habit, dateIso)}
                             disabled={disableToggle || isSavingCell}
-                            title={scheduled ? dayLabel : `${dayLabel} (rest day)`}
+                            title={scheduled ? `${dayLabel}${hasAlerts ? ' 🔔' : ''}` : `${dayLabel} (rest day)`}
                           >
-                            {isSavingCell ? '…' : isCompleted ? '✓' : ''}
+                            {isSavingCell ? '…' : isCompleted ? '✓' : hasAlerts ? '🔔' : ''}
                           </button>
                         </td>
                       );
@@ -943,6 +995,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           {/* Monthly Grid View with Month Switcher */}
           {renderMonthlyGrid()}
         </>
+      )}
+      
+      {/* Alert Configuration Modal */}
+      {alertConfigHabit && (
+        <div className="habit-alert-modal-overlay" onClick={() => setAlertConfigHabit(null)}>
+          <div className="habit-alert-modal-content" onClick={(e) => e.stopPropagation()}>
+            <HabitAlertConfig
+              habitId={alertConfigHabit.id}
+              habitName={alertConfigHabit.name}
+              onClose={() => setAlertConfigHabit(null)}
+            />
+          </div>
+        </div>
       )}
     </section>
   );

@@ -201,6 +201,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      habit_alerts: {
+        Row: {
+          id: string;
+          habit_id: string;
+          alert_time: string;
+          days_of_week: number[] | null;
+          enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          habit_id: string;
+          alert_time: string;
+          days_of_week?: number[] | null;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          habit_id?: string;
+          alert_time?: string;
+          days_of_week?: number[] | null;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       habits_v2: {
         Row: {
           id: string;

@@ -26,6 +26,9 @@ export type GoalReflectionUpdate = Database['public']['Tables']['goal_reflection
 export type JournalEntryRow = Database['public']['Tables']['journal_entries']['Row'];
 export type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Insert'];
 export type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
+export type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
+export type HabitAlertInsert = Database['public']['Tables']['habit_alerts']['Insert'];
+export type HabitAlertUpdate = Database['public']['Tables']['habit_alerts']['Update'];
 
 export const DEMO_USER_ID = 'demo-user-0001';
 export const DEMO_USER_EMAIL = 'demo@lifegoalapp.com';
@@ -37,6 +40,7 @@ type DemoState = {
   goals: GoalRow[];
   habits: HabitRow[];
   habitLogs: HabitLogRow[];
+  habitAlerts: HabitAlertRow[];
   visionImages: VisionImageRow[];
   checkins: CheckinRow[];
   notificationPreferences: NotificationPreferencesRow | null;
@@ -118,6 +122,7 @@ const defaultState: DemoState = {
   ],
   habits: [],
   habitLogs: [],
+  habitAlerts: [],
   visionImages: [],
   checkins: [],
   notificationPreferences: null,
@@ -717,6 +722,7 @@ function loadState(): DemoState {
       goals,
       habits: parsed.habits ?? clone(defaultState.habits),
       habitLogs: parsed.habitLogs ?? clone(defaultState.habitLogs),
+      habitAlerts: parsed.habitAlerts ?? clone(defaultState.habitAlerts),
       visionImages: parsed.visionImages ?? clone(defaultState.visionImages),
       checkins: parsed.checkins ?? clone(defaultState.checkins),
       notificationPreferences:
@@ -1225,6 +1231,66 @@ export function removeDemoJournalEntry(id: string): JournalEntryRow | null {
       return true;
     });
     return { ...current, journalEntries };
+  });
+  return removed ? clone(removed) : null;
+}
+
+export function getDemoHabitAlerts(habitId?: string): HabitAlertRow[] {
+  if (habitId) {
+    return clone(state.habitAlerts.filter((alert) => alert.habit_id === habitId));
+  }
+  return clone(state.habitAlerts);
+}
+
+export function upsertDemoHabitAlert(payload: HabitAlertInsert | HabitAlertUpdate): HabitAlertRow {
+  let nextRecord: HabitAlertRow | null = null;
+  updateState((current) => {
+    const habitAlerts = [...current.habitAlerts];
+    if (payload.id) {
+      const index = habitAlerts.findIndex((alert) => alert.id === payload.id);
+      if (index >= 0) {
+        const existing = habitAlerts[index];
+        nextRecord = {
+          ...existing,
+          ...payload,
+          updated_at: iso(new Date()),
+        } as HabitAlertRow;
+        habitAlerts[index] = nextRecord;
+        return { ...current, habitAlerts };
+      }
+    }
+
+    nextRecord = {
+      id: payload.id ?? createId('alert'),
+      habit_id: (payload as HabitAlertInsert).habit_id,
+      alert_time: (payload as HabitAlertInsert).alert_time,
+      days_of_week: payload.days_of_week ?? null,
+      enabled: payload.enabled ?? true,
+      created_at: iso(new Date()),
+      updated_at: iso(new Date()),
+    };
+    habitAlerts.push(nextRecord);
+    return { ...current, habitAlerts };
+  });
+
+  if (!nextRecord) {
+    throw new Error('Unable to resolve habit alert payload.');
+  }
+
+  return clone(nextRecord);
+}
+
+export function deleteDemoHabitAlert(id: string): HabitAlertRow | null {
+  let removed: HabitAlertRow | null = null;
+  updateState((current) => {
+    const habitAlerts = current.habitAlerts.filter((alert) => {
+      if (alert.id === id) {
+        removed = alert;
+        return false;
+      }
+      return true;
+    });
+    return { ...current, habitAlerts };
   });
   return removed ? clone(removed) : null;
 }
