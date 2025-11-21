@@ -8,6 +8,10 @@ import {
   logHabitCompletion,
   type HabitWithGoal,
 } from '../../services/habits';
+import {
+  getHabitCompletionsByMonth,
+  type MonthlyHabitCompletions,
+} from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 
@@ -92,6 +96,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   // selectedYear: full year number (e.g., 2025)
   const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+  // State for storing monthly statistics from our helper function
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyHabitCompletions | null>(null);
 
   const monthlySummary = useMemo(() => {
     if (!habits.length || !monthDays.length) {
@@ -230,6 +236,30 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
     void refreshHabits();
   }, [session?.user?.id, isConfigured, isDemoExperience, refreshHabits]);
+
+  // Extracted function to load monthly statistics (reused in useEffect and handleMonthChange)
+  const loadMonthlyStats = useCallback(async (year: number, month: number) => {
+    if (!isConfigured || !session?.user?.id) {
+      return;
+    }
+    
+    const result = await getHabitCompletionsByMonth(
+      session.user.id,
+      year,
+      month + 1, // Convert from 0-11 to 1-12
+    );
+    
+    if (result.data) {
+      setMonthlyStats(result.data);
+    } else if (result.error) {
+      console.error('Error loading monthly statistics:', result.error);
+    }
+  }, [session?.user?.id, isConfigured]);
+
+  // Load monthly statistics when month changes
+  useEffect(() => {
+    void loadMonthlyStats(selectedYear, selectedMonth);
+  }, [selectedYear, selectedMonth, loadMonthlyStats]);
 
   useEffect(() => {
     if (!isConfigured && !isDemoExperience) {
@@ -604,6 +634,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const handleMonthChange = (monthIndex: number) => {
       setSelectedMonth(monthIndex);
+      // Monthly stats will be loaded automatically by the useEffect that depends on selectedMonth
     };
 
     return (
@@ -652,6 +683,75 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               />
             </div>
           </div>
+
+          {/* Monthly Statistics Section - showing per-habit completion percentages */}
+          {monthlyStats && monthlyStats.habits.length > 0 && (
+            <div className="habit-monthly__stats" style={{ 
+              margin: '1rem 0', 
+              padding: '1rem', 
+              background: '#f8f9fa', 
+              borderRadius: '8px' 
+            }}>
+              <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.875rem', fontWeight: 600 }}>
+                Per-Habit Completion for {monthNames[selectedMonth]} {selectedYear}
+              </h4>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {monthlyStats.habits.map((habitStat) => (
+                  <div 
+                    key={habitStat.habitId} 
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      fontSize: '0.8125rem',
+                      padding: '0.5rem',
+                      background: 'white',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 500, marginBottom: '0.125rem' }}>
+                        {habitStat.habitName}
+                      </div>
+                      {habitStat.goalTitle && (
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          Goal: {habitStat.goalTitle}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem',
+                      marginLeft: '1rem'
+                    }}>
+                      <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                        {habitStat.completedDays}/{habitStat.totalDays} days
+                      </span>
+                      <span style={{ 
+                        fontWeight: 600, 
+                        minWidth: '3rem',
+                        textAlign: 'right',
+                        color: habitStat.completionPercentage >= 80 ? '#10b981' : 
+                               habitStat.completionPercentage >= 50 ? '#f59e0b' : '#ef4444'
+                      }}>
+                        {habitStat.completionPercentage}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ 
+                marginTop: '0.75rem', 
+                paddingTop: '0.75rem', 
+                borderTop: '1px solid #e5e7eb',
+                fontSize: '0.8125rem',
+                fontWeight: 600
+              }}>
+                Overall: {monthlyStats.overallCompletionPercentage}% completion rate
+              </div>
+            </div>
+          )}
 
         <div className="habit-monthly__table-wrapper">
           <table className="habit-monthly__table">
