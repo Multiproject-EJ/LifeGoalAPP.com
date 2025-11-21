@@ -237,28 +237,29 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     void refreshHabits();
   }, [session?.user?.id, isConfigured, isDemoExperience, refreshHabits]);
 
-  // Load monthly statistics when month changes
-  useEffect(() => {
+  // Extracted function to load monthly statistics (reused in useEffect and handleMonthChange)
+  const loadMonthlyStats = useCallback(async (year: number, month: number) => {
     if (!isConfigured || !session?.user?.id) {
       return;
     }
     
-    const loadMonthlyStats = async () => {
-      const result = await getHabitCompletionsByMonth(
-        session.user.id,
-        selectedYear,
-        selectedMonth + 1, // Convert from 0-11 to 1-12
-      );
-      
-      if (result.data) {
-        setMonthlyStats(result.data);
-      } else if (result.error) {
-        console.error('Error loading monthly statistics:', result.error);
-      }
-    };
+    const result = await getHabitCompletionsByMonth(
+      session.user.id,
+      year,
+      month + 1, // Convert from 0-11 to 1-12
+    );
     
-    void loadMonthlyStats();
-  }, [session?.user?.id, isConfigured, selectedMonth, selectedYear]);
+    if (result.data) {
+      setMonthlyStats(result.data);
+    } else if (result.error) {
+      console.error('Error loading monthly statistics:', result.error);
+    }
+  }, [session?.user?.id, isConfigured]);
+
+  // Load monthly statistics when month changes
+  useEffect(() => {
+    void loadMonthlyStats(selectedYear, selectedMonth);
+  }, [selectedYear, selectedMonth, loadMonthlyStats]);
 
   useEffect(() => {
     if (!isConfigured && !isDemoExperience) {
@@ -631,29 +632,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
 
-    const handleMonthChange = async (monthIndex: number) => {
+    const handleMonthChange = (monthIndex: number) => {
       setSelectedMonth(monthIndex);
-      
-      // Call our new helper to get monthly statistics
-      // Note: month parameter is 1-12 (not 0-11 like JavaScript Date)
-      const result = await getHabitCompletionsByMonth(
-        session.user.id,
-        selectedYear,
-        monthIndex + 1, // Convert from 0-11 to 1-12
-      );
-      
-      if (result.data) {
-        setMonthlyStats(result.data);
-        console.log('Monthly habit statistics:', result.data);
-        // Log individual habit completion percentages
-        result.data.habits.forEach(habit => {
-          console.log(
-            `${habit.habitName}: ${habit.completedDays}/${habit.totalDays} days (${habit.completionPercentage}%)`,
-          );
-        });
-      } else if (result.error) {
-        console.error('Error loading monthly statistics:', result.error);
-      }
+      // Monthly stats will be loaded automatically by the useEffect that depends on selectedMonth
     };
 
     return (

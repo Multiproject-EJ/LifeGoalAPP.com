@@ -107,8 +107,8 @@ export async function getHabitCompletionsByMonth(
     // Fetch all habits for the user with their associated goals
     const { data: habitsData, error: habitsError } = await supabase
       .from('habits')
-      .select('id, name, goal_id, frequency, schedule, goal:goals!goal_id(id, title, target_date)')
-      .eq('goal.user_id', userId);
+      .select('id, name, goal_id, frequency, schedule, goal:goals(id, title, target_date)')
+      .eq('goals.user_id', userId);
     
     if (habitsError) {
       return { data: null, error: habitsError };
