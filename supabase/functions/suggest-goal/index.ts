@@ -241,19 +241,19 @@ Deno.serve(async (req) => {
     // Ensure milestones is an array of strings
     const safeMilestones = Array.isArray(raw.milestones)
       ? raw.milestones
-          .filter((item: any) => typeof item === 'string' && item.trim())
+          .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
           .map((item: string) => item.trim())
       : [];
 
     // Ensure tasks is an array of strings
     const safeTasks = Array.isArray(raw.tasks)
       ? raw.tasks
-          .filter((item: any) => typeof item === 'string' && item.trim())
+          .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
           .map((item: string) => item.trim())
       : [];
 
     // Validate that we have complete data after normalization
-    if (!safeGoal || !Array.isArray(safeMilestones) || !Array.isArray(safeTasks)) {
+    if (!safeGoal || safeMilestones.length === 0 || safeTasks.length === 0) {
       console.error('AI returned incomplete data:', { safeGoal, safeMilestones, safeTasks });
       return new Response(
         JSON.stringify({ error: 'AI returned incomplete data' }),
