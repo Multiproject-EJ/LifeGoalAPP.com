@@ -70,22 +70,26 @@ async function getOpenAIForUser(userId: string, supabase: any): Promise<OpenAI> 
  * Get the AI model for a specific user or return default
  */
 async function getUserAiModel(userId: string, supabase: any): Promise<string> {
-  const DEFAULT_MODEL = 'gpt-4o-mini';
+  const DEFAULT_MODEL = 'gpt-5-nano';
 
   try {
     const { data: settings, error } = await supabase
       .from('ai_settings')
       .select('user_id, provider, api_key, model')
       .eq('user_id', userId)
+      .eq('provider', 'openai')
       .single();
 
-    if (!error && settings && settings.provider === 'openai' && settings.model?.trim()) {
-      return settings.model.trim();
+    if (!error && settings && settings.model?.trim()) {
+      const modelName = settings.model.trim();
+      console.log(`[suggest-goal] Using user-configured model: ${modelName} for user ${userId}`);
+      return modelName;
     }
   } catch (error) {
-    console.warn(`Could not fetch user AI model for ${userId}:`, error);
+    console.warn(`[suggest-goal] Could not fetch user AI model for ${userId}:`, error);
   }
 
+  console.log(`[suggest-goal] Using default model: ${DEFAULT_MODEL} for user ${userId}`);
   return DEFAULT_MODEL;
 }
 
