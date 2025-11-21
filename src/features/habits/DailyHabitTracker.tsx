@@ -23,6 +23,17 @@ type HabitCompletionState = {
   completed: boolean;
 };
 
+/**
+ * Monthly completion state for a single habit across all days in the selected month.
+ * Maps date strings (YYYY-MM-DD) to completion state for each day.
+ * 
+ * Example:
+ * {
+ *   "2024-01-01": { logId: "abc123", completed: true },
+ *   "2024-01-02": { logId: null, completed: false },
+ *   // ... rest of month
+ * }
+ */
 type HabitMonthlyCompletionState = Record<string, HabitCompletionState>;
 
 type HabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
@@ -76,6 +87,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
+  // New state for selected month (0-11, where 0 = January)
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
 
   const monthlySummary = useMemo(() => {
     if (!habits.length || !monthDays.length) {
@@ -118,13 +132,20 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const currentDate = new Date();
     const todayISO = formatISODate(currentDate);
-    const monthStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const monthEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    // Use selected month/year instead of current month for monthly grid
+    const monthStartDate = new Date(selectedYear, selectedMonth, 1);
+    const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
     const monthStartISO = formatISODate(monthStartDate);
     const monthEndISO = formatISODate(monthEndDate);
     const monthDayList = generateDateRange(monthStartDate, monthEndDate);
     setToday(todayISO);
     setMonthDays(monthDayList);
+
+    // TODO: Backend optimization - Consider adding Supabase query optimization for monthly aggregation:
+    // 1. Create a materialized view or function to aggregate habit completion by month
+    // 2. Add indexes on habit_logs(date) and habit_logs(habit_id, date) for faster range queries
+    // 3. Consider caching monthly statistics to reduce database load
+    // 4. Add RLS policies to ensure users can only access their own monthly data
 
     try {
       const { data: habitData, error: habitError } = await fetchHabitsForUser(session.user.id);
@@ -199,7 +220,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     } finally {
       setLoading(false);
     }
-  }, [session, isConfigured, isDemoExperience]);
+  }, [session, isConfigured, isDemoExperience, selectedMonth, selectedYear]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -573,24 +594,62 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       ? Math.round((monthlySummary.scheduledComplete / monthlySummary.scheduledTotal) * 100)
       : 0;
 
+    // Month switcher tabs
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+
+    const handleMonthChange = (monthIndex: number) => {
+      setSelectedMonth(monthIndex);
+    };
+
     return (
       <div className="habit-monthly" aria-label="Monthly habit dashboard">
-        <div className="habit-monthly__summary">
-          <div>
-            <h3>{formatMonthLabel(today)}</h3>
-            <p>
-              {monthlySummary.scheduledTotal === 0
-                ? 'No scheduled habits this month yet. Build your rituals to see them here.'
-                : `${monthlySummary.scheduledComplete} of ${monthlySummary.scheduledTotal} scheduled check-ins complete (${completionPercent}%).`}
-            </p>
-          </div>
-          <div className="habit-monthly__summary-meter" role="img" aria-label={`Monthly completion ${completionPercent}%`}>
-            <div
-              className="habit-monthly__summary-meter-bar"
-              style={{ width: `${completionPercent}%` }}
-            />
+        {/* Month Switcher */}
+        <div className="habit-monthly__month-switcher">
+          <div className="habit-monthly__month-tabs" role="tablist" aria-label="Select month">
+            {monthNames.map((monthName, index) => {
+              const isActive = index === selectedMonth;
+              const currentMonth = new Date().getMonth();
+              const currentYear = new Date().getFullYear();
+              const isCurrentMonth = index === currentMonth && selectedYear === currentYear;
+              
+              return (
+                <button
+                  key={monthName}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls="habit-monthly-grid"
+                  className={`habit-monthly__month-tab ${isActive ? 'habit-monthly__month-tab--active' : ''} ${isCurrentMonth ? 'habit-monthly__month-tab--current' : ''}`}
+                  onClick={() => handleMonthChange(index)}
+                  disabled={loading}
+                >
+                  {monthName}
+                </button>
+              );
+            })}
           </div>
         </div>
+
+        <div id="habit-monthly-grid" role="tabpanel" aria-label={`Habit data for ${monthNames[selectedMonth]} ${selectedYear}`}>
+          <div className="habit-monthly__summary">
+            <div>
+              <h3>{formatMonthLabel(monthDays[0] || today)}</h3>
+              <p>
+                {monthlySummary.scheduledTotal === 0
+                  ? 'No scheduled habits this month yet. Build your rituals to see them here.'
+                  : `${monthlySummary.scheduledComplete} of ${monthlySummary.scheduledTotal} scheduled check-ins complete (${completionPercent}%).`}
+              </p>
+            </div>
+            <div className="habit-monthly__summary-meter" role="img" aria-label={`Monthly completion ${completionPercent}%`}>
+              <div
+                className="habit-monthly__summary-meter-bar"
+                style={{ width: `${completionPercent}%` }}
+              />
+            </div>
+          </div>
 
         <div className="habit-monthly__table-wrapper">
           <table className="habit-monthly__table">
@@ -676,6 +735,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             </tbody>
           </table>
         </div>
+        </div>
       </div>
     );
   };
@@ -688,7 +748,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     <section className="habit-tracker">
       <header className="habit-tracker__header">
         <div>
-          <h2>{`Monthly habits dashboard • ${formatMonthLabel(today)} (${monthDays.length} days)`}</h2>
+          <h2>{`Monthly habits dashboard • ${formatMonthYearLabel(selectedYear, selectedMonth)} (${monthDays.length} days)`}</h2>
           <p>Use the monthly grid to see every habit alongside the life wheel domains they support.</p>
         </div>
         <button
@@ -912,6 +972,10 @@ const COMPACT_TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
 
 function formatMonthLabel(value: string) {
   return MONTH_FORMATTER.format(parseISODate(value));
+}
+
+function formatMonthYearLabel(year: number, month: number) {
+  return MONTH_FORMATTER.format(new Date(year, month, 1));
 }
 
 function formatDayOfMonth(value: string) {
