@@ -3685,7 +3685,6 @@ body {
   opacity: 0.5;
 }
 
-
 @media (max-width: 960px) {
   .habit-monthly__habit-column {
     min-width: 220px;

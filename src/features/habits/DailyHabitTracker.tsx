@@ -87,7 +87,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
-  // New state for selected month (0-11, where 0 = January)
+  // State for selected month/year: allows user to navigate between different months
+  // selectedMonth: 0-11, where 0 = January
+  // selectedYear: full year number (e.g., 2025)
   const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
 
@@ -636,7 +638,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         <div id="habit-monthly-grid" role="tabpanel" aria-label={`Habit data for ${monthNames[selectedMonth]} ${selectedYear}`}>
           <div className="habit-monthly__summary">
             <div>
-              <h3>{formatMonthLabel(monthDays[0] || today)}</h3>
+              <h3>{formatMonthYearLabel(selectedYear, selectedMonth)}</h3>
               <p>
                 {monthlySummary.scheduledTotal === 0
                   ? 'No scheduled habits this month yet. Build your rituals to see them here.'
@@ -781,61 +783,66 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           </p>
         </div>
       ) : (
-        <ul className="habit-tracker__list">
-          {habits.map((habit) => {
-            const state = completions[habit.id];
-            const isCompleted = Boolean(state?.completed);
-            const isSaving = Boolean(saving[habit.id]);
-            const insight = habitInsights[habit.id];
-            const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, today);
-            const currentStreak = insight?.currentStreak ?? (isCompleted ? 1 : 0);
-            const longestStreak = insight?.longestStreak ?? Math.max(currentStreak, 0);
-            const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? today : null);
-            const statusText = scheduledToday
-              ? isCompleted
-                ? 'Completed for today. Keep the streak going!'
-                : 'Tap the toggle when you finish this habit.'
-              : 'Today is a rest day for this habit.';
-            const lastCompletedText = formatLastCompleted(lastCompletedOn, today);
-            return (
-              <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''}`}>
-                <div className="habit-card__content">
-                  <div>
-                    <h3>{habit.name}</h3>
-                    <p className="habit-card__goal">
-                      Goal: <span>{habit.goal?.title ?? 'Unassigned goal'}</span>
+        <>
+          <ul className="habit-tracker__list">
+            {habits.map((habit) => {
+              const state = completions[habit.id];
+              const isCompleted = Boolean(state?.completed);
+              const isSaving = Boolean(saving[habit.id]);
+              const insight = habitInsights[habit.id];
+              const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, today);
+              const currentStreak = insight?.currentStreak ?? (isCompleted ? 1 : 0);
+              const longestStreak = insight?.longestStreak ?? Math.max(currentStreak, 0);
+              const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? today : null);
+              const statusText = scheduledToday
+                ? isCompleted
+                  ? 'Completed for today. Keep the streak going!'
+                  : 'Tap the toggle when you finish this habit.'
+                : 'Today is a rest day for this habit.';
+              const lastCompletedText = formatLastCompleted(lastCompletedOn, today);
+              return (
+                <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''}`}>
+                  <div className="habit-card__content">
+                    <div>
+                      <h3>{habit.name}</h3>
+                      <p className="habit-card__goal">
+                        Goal: <span>{habit.goal?.title ?? 'Unassigned goal'}</span>
+                      </p>
+                      <p className="habit-card__meta">{formatHabitMeta(habit.frequency, habit.schedule)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className={`habit-card__toggle ${isCompleted ? 'habit-card__toggle--active' : ''}`}
+                      onClick={() => void toggleHabit(habit)}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Saving…' : isCompleted ? 'Mark incomplete' : 'Mark complete'}
+                    </button>
+                  </div>
+                  <footer className="habit-card__footer">
+                    <div className="habit-card__streaks">
+                      <div className="habit-card__streak habit-card__streak--current">
+                        <span className="habit-card__streak-label">Current streak</span>
+                        <span className="habit-card__streak-value">{formatStreakValue(currentStreak)}</span>
+                      </div>
+                      <div className="habit-card__streak habit-card__streak--longest">
+                        <span className="habit-card__streak-label">Longest streak</span>
+                        <span className="habit-card__streak-value">{formatStreakValue(longestStreak)}</span>
+                      </div>
+                    </div>
+                    <p className={`habit-card__status ${scheduledToday ? '' : 'habit-card__status--rest'}`}>
+                      {statusText}
+                      {lastCompletedText ? ` ${lastCompletedText}` : ''}
                     </p>
-                    <p className="habit-card__meta">{formatHabitMeta(habit.frequency, habit.schedule)}</p>
-                  </div>
-                  <button
-                    type="button"
-                    className={`habit-card__toggle ${isCompleted ? 'habit-card__toggle--active' : ''}`}
-                    onClick={() => void toggleHabit(habit)}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? 'Saving…' : isCompleted ? 'Mark incomplete' : 'Mark complete'}
-                  </button>
-                </div>
-                <footer className="habit-card__footer">
-                  <div className="habit-card__streaks">
-                    <div className="habit-card__streak habit-card__streak--current">
-                      <span className="habit-card__streak-label">Current streak</span>
-                      <span className="habit-card__streak-value">{formatStreakValue(currentStreak)}</span>
-                    </div>
-                    <div className="habit-card__streak habit-card__streak--longest">
-                      <span className="habit-card__streak-label">Longest streak</span>
-                      <span className="habit-card__streak-value">{formatStreakValue(longestStreak)}</span>
-                    </div>
-                  </div>
-                  <p className={`habit-card__status ${scheduledToday ? '' : 'habit-card__status--rest'}`}>
-                    {statusText}
-                    {lastCompletedText ? ` ${lastCompletedText}` : ''}
-                  </p>
-                </footer>
-              </li>
-            );
-          })}
-        </ul>
+                  </footer>
+                </li>
+              );
+            })}
+          </ul>
+          
+          {/* Monthly Grid View with Month Switcher */}
+          {renderMonthlyGrid()}
+        </>
       )}
     </section>
   );
