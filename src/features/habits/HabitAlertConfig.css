@@ -395,3 +395,28 @@
     font-size: 0.75rem;
   }
 }
+
+/* Monthly grid alert indicators */
+.habit-monthly__cell--has-alert {
+  position: relative;
+}
+
+.habit-monthly__cell--has-alert::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: #667eea;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.habit-monthly__cell--has-alert.habit-monthly__cell--completed::before {
+  background: #10b981;
+}
+
+.habit-monthly__toggle {
+  position: relative;
+}
