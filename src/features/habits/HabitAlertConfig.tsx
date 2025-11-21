@@ -32,6 +32,7 @@ export function HabitAlertConfig({ habitId, habitName, onClose }: HabitAlertConf
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
   // Form state for adding new alert
   const [newAlertTime, setNewAlertTime] = useState('08:00');
@@ -106,16 +107,13 @@ export function HabitAlertConfig({ habitId, habitName, onClose }: HabitAlertConf
   };
 
   const handleDeleteAlert = async (alertId: string) => {
-    if (!confirm('Are you sure you want to delete this alert?')) {
-      return;
-    }
-
     setSaving(true);
     setError(null);
     try {
       const { error: deleteError } = await deleteHabitAlert(alertId);
       if (deleteError) throw deleteError;
       setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
+      setDeleteConfirmId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete alert');
     } finally {
@@ -191,14 +189,35 @@ export function HabitAlertConfig({ habitId, habitName, onClose }: HabitAlertConf
                     >
                       {alert.enabled ? 'Disable' : 'Enable'}
                     </button>
-                    <button
-                      type="button"
-                      className="habit-alert-config__btn habit-alert-config__btn--delete"
-                      onClick={() => handleDeleteAlert(alert.id)}
-                      disabled={saving}
-                    >
-                      Delete
-                    </button>
+                    {deleteConfirmId === alert.id ? (
+                      <>
+                        <button
+                          type="button"
+                          className="habit-alert-config__btn habit-alert-config__btn--delete"
+                          onClick={() => handleDeleteAlert(alert.id)}
+                          disabled={saving}
+                        >
+                          Confirm Delete
+                        </button>
+                        <button
+                          type="button"
+                          className="habit-alert-config__btn habit-alert-config__btn--secondary"
+                          onClick={() => setDeleteConfirmId(null)}
+                          disabled={saving}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="habit-alert-config__btn habit-alert-config__btn--delete"
+                        onClick={() => setDeleteConfirmId(alert.id)}
+                        disabled={saving}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

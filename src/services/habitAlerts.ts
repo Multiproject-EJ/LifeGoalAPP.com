@@ -6,6 +6,7 @@ import {
   upsertDemoHabitAlert,
   deleteDemoHabitAlert,
 } from './demoData';
+import { formatTime } from './habitAlertUtils';
 
 type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
 type HabitAlertInsert = Database['public']['Tables']['habit_alerts']['Insert'];
@@ -146,14 +147,4 @@ export function getAlertScheduleDescription(alert: HabitAlertRow): string {
     .join(', ');
   
   return `${days} at ${formatTime(alert.alert_time)}`;
-}
-
-/**
- * Helper: Format time from HH:MM:SS to HH:MM AM/PM
- */
-function formatTime(timeString: string): string {
-  const [hours, minutes] = timeString.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12;
-  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 }

@@ -1,5 +1,6 @@
 import type { Database } from '../lib/database.types';
 import { fetchHabitAlerts, shouldAlertOnDay } from './habitAlerts';
+import { formatTime, formatDateKey, parseTimeToDate } from './habitAlertUtils';
 
 type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
 
@@ -81,16 +82,6 @@ export async function getNextAlertTime(habitId: string): Promise<Date | null> {
 }
 
 /**
- * Helper: Parse a time string (HH:MM:SS or HH:MM) to a Date object on a given day
- */
-function parseTimeToDate(timeString: string, date: Date): Date {
-  const [hours, minutes] = timeString.split(':').map(Number);
-  const result = new Date(date);
-  result.setHours(hours, minutes, 0, 0);
-  return result;
-}
-
-/**
  * Schedule local notifications for a habit's alerts
  * 
  * TODO: Platform-specific implementation needed
@@ -156,16 +147,6 @@ export function formatAlertTimesForDay(alerts: HabitAlertRow[]): string {
 }
 
 /**
- * Helper: Format time from HH:MM:SS to HH:MM AM/PM
- */
-function formatTime(timeString: string): string {
-  const [hours, minutes] = timeString.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12;
-  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-}
-
-/**
  * Get a summary of alerts for a habit across a date range
  * Useful for the monthly view to show which days have alerts
  * 
@@ -185,7 +166,9 @@ export async function getHabitAlertSummary(
   }
   
   const summary = new Map<string, HabitAlertRow[]>();
-  const current = new Date(startDate);
+  
+  // Create a new date for each iteration to avoid mutation issues
+  let current = new Date(startDate);
   
   while (current <= endDate) {
     const dayOfWeek = current.getDay();
@@ -196,18 +179,10 @@ export async function getHabitAlertSummary(
       summary.set(dateKey, dayAlerts);
     }
     
+    // Create new Date object for next iteration
+    current = new Date(current);
     current.setDate(current.getDate() + 1);
   }
   
   return summary;
-}
-
-/**
- * Helper: Format date as YYYY-MM-DD
- */
-function formatDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
