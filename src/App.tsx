@@ -62,6 +62,13 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'TODAY',
   },
   {
+    id: 'habits',
+    label: 'Habits & Routines',
+    summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
+    icon: '📆',
+    shortLabel: 'ROUTINES',
+  },
+  {
     id: 'rituals',
     label: 'Wellbeing Wheel Check-in',
     summary: 'Reflect on your wellbeing balance with a quick wheel check-in.',
@@ -114,6 +121,7 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
   'planning',
+  'habits',
   'support',
   'assistant',
   'journal',
@@ -949,6 +957,13 @@ export default function App() {
             <LifeWheelCheckins session={activeSession} />
             <GoalReflectionJournal session={activeSession} />
             <VisionBoard session={activeSession} />
+          </div>
+        );
+      case 'habits':
+        return (
+          <div className="workspace-content">
+            <DailyHabitTracker session={activeSession} />
+            <HabitsModule session={activeSession} />
           </div>
         );
       case 'journal':
