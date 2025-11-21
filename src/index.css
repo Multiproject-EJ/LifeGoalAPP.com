@@ -435,6 +435,8 @@ body {
 .app--workspace {
   position: relative;
   --workspace-shell-padding: clamp(2.5rem, 7vw, 4rem);
+  --workspace-shell-offset: 96px;
+  --workspace-shell-gutter: clamp(28px, 4vw, 40px);
   min-height: 100vh;
   padding: var(--workspace-shell-padding) 0;
   display: flex;
@@ -443,6 +445,7 @@ body {
     radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.28), transparent 55%),
     radial-gradient(circle at 85% 10%, rgba(129, 140, 248, 0.25), transparent 60%),
     linear-gradient(140deg, #0b1120 0%, #111827 55%, #0f172a 100%);
+  overflow-x: clip;
 }
 
 .app--auth-overlay {
@@ -824,14 +827,17 @@ body {
 
 .workspace-shell {
   position: relative;
-  width: min(1280px, 96vw);
+  width: min(1320px, calc(100vw - (var(--workspace-shell-offset) + var(--workspace-shell-gutter))));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   z-index: 1;
   align-items: start;
   min-height: calc(100vh - (var(--workspace-shell-padding) * 2));
-  margin-left: 112px; /* Offset for fixed sidebar (72px width + 20px left + 20px gap) */
+  margin: 0 auto;
+  padding-left: var(--workspace-shell-offset);
+  padding-right: var(--workspace-shell-offset);
+  box-sizing: border-box;
 }
 
 .workspace-sidebar {
@@ -907,10 +913,6 @@ body {
   background: linear-gradient(135deg, rgba(90, 176, 255, 0.15), rgba(168, 85, 247, 0.15));
   border: 1px solid var(--sidebar-border, rgba(255, 255, 255, 0.15));
   transition: all 0.3s ease;
-}
-
-.workspace-sidebar__brand::before {
-  content: '🌿';
 }
 
 .workspace-sidebar__brand:focus-visible,
@@ -1190,8 +1192,8 @@ body {
   gap: clamp(1.25rem, 3vw, 2.25rem);
   max-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   overflow-y: auto;
-  padding-right: clamp(0.5rem, 1vw, 0.85rem);
-  scrollbar-gutter: stable both-edges;
+  padding: 0 clamp(0.5rem, 1vw, 0.85rem);
+  align-items: center;
 }
 
 .workspace-main__mobile-cta {
@@ -1250,6 +1252,7 @@ body {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(20px);
   color: rgba(248, 250, 252, 0.9);
+  width: min(100%, 1050px);
 }
 
 .workspace-status .supabase-auth__status {
@@ -1266,6 +1269,8 @@ body {
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08);
   color: #0f172a;
   backdrop-filter: blur(28px);
+  width: min(100%, 1080px);
+  margin: 0 auto;
 }
 
 .workspace-stage__header {
@@ -1900,10 +1905,11 @@ body {
 }
 
 @media (max-width: 1200px) {
-  .workspace-shell {
-    margin-left: 96px; /* Adjust for tablet sidebar (60px + 16px left + 20px gap) */
+  .app--workspace {
+    --workspace-shell-offset: 82px;
+    --workspace-shell-gutter: clamp(22px, 4vw, 30px);
   }
-  
+
   .workspace-sidebar {
     width: 60px;
     left: 16px;
@@ -1933,6 +1939,8 @@ body {
 
 @media (max-width: 1024px) {
   .app--workspace {
+    --workspace-shell-offset: 0px;
+    --workspace-shell-gutter: clamp(16px, 5vw, 24px);
     padding: clamp(2rem, 10vw, 3.5rem) clamp(1.5rem, 6vw, 2.5rem);
   }
 
@@ -4563,6 +4571,12 @@ body {
   margin: 0;
   font-size: 0.95rem;
   color: rgba(248, 250, 252, 0.75);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.supabase-auth__status--hidden {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 
 .supabase-auth__status--success {

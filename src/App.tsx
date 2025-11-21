@@ -142,6 +142,7 @@ export default function App() {
   const [fullName, setFullName] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>('password');
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [authMessageVisible, setAuthMessageVisible] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [activeAuthTab, setActiveAuthTab] = useState<AuthTab>('login');
@@ -289,6 +290,23 @@ export default function App() {
     }
     setShowMobileHome((current) => (current ? current : true));
   }, [isMobileViewport]);
+
+  useEffect(() => {
+    if (!authMessage) {
+      setAuthMessageVisible(false);
+      return;
+    }
+
+    setAuthMessageVisible(true);
+
+    const fadeTimer = window.setTimeout(() => setAuthMessageVisible(false), 1500);
+    const clearTimer = window.setTimeout(() => setAuthMessage(null), 2100);
+
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(clearTimer);
+    };
+  }, [authMessage]);
 
   useEffect(() => {
     setAuthMode(activeAuthTab === 'signup' ? 'signup' : 'password');
@@ -475,7 +493,13 @@ export default function App() {
   const statusElements = (
     <>
       {authMessage && (
-        <p className="supabase-auth__status supabase-auth__status--success">{authMessage}</p>
+        <p
+          className={`supabase-auth__status supabase-auth__status--success ${
+            authMessageVisible ? '' : 'supabase-auth__status--hidden'
+          }`}
+        >
+          {authMessage}
+        </p>
       )}
       {authError && <p className="supabase-auth__status supabase-auth__status--error">{authError}</p>}
     </>
@@ -1015,7 +1039,8 @@ export default function App() {
           <aside className="workspace-sidebar" aria-label="Workspace navigation">
             <div className="workspace-sidebar__masthead">
               <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
-                LifeGoalApp
+                <span aria-hidden="true">🌿</span>
+                <span className="sr-only">LifeGoalApp</span>
               </a>
               <div className="workspace-sidebar__masthead-actions">
                 <ThemeToggle className="btn btn--ghost workspace-sidebar__masthead-toggle" />
