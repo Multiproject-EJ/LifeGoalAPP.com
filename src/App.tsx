@@ -1039,7 +1039,8 @@ export default function App() {
           <aside className="workspace-sidebar" aria-label="Workspace navigation">
             <div className="workspace-sidebar__masthead">
               <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
-                LifeGoalApp
+                <span aria-hidden="true">🌿</span>
+                <span className="sr-only">LifeGoalApp</span>
               </a>
               <div className="workspace-sidebar__masthead-actions">
                 <ThemeToggle className="btn btn--ghost workspace-sidebar__masthead-toggle" />
