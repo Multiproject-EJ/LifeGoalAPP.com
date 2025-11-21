@@ -14,6 +14,8 @@ import {
 } from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { HabitAlertConfig } from './HabitAlertConfig';
+import './HabitAlertConfig.css';
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
@@ -98,6 +100,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
   // State for storing monthly statistics from our helper function
   const [monthlyStats, setMonthlyStats] = useState<MonthlyHabitCompletions | null>(null);
+  // State for alert configuration modal
+  const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
 
   const monthlySummary = useMemo(() => {
     if (!habits.length || !monthDays.length) {
@@ -540,6 +544,16 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               <div className="habit-checklist__detail-actions">
                 {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
                 {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+                <button
+                  type="button"
+                  className="habit-checklist__alert-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAlertConfigHabit({ id: habit.id, name: habit.name });
+                  }}
+                >
+                  🔔 Alerts
+                </button>
               </div>
             </div>
           </li>
@@ -943,6 +957,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           {/* Monthly Grid View with Month Switcher */}
           {renderMonthlyGrid()}
         </>
+      )}
+      
+      {/* Alert Configuration Modal */}
+      {alertConfigHabit && (
+        <div className="habit-alert-modal-overlay" onClick={() => setAlertConfigHabit(null)}>
+          <div className="habit-alert-modal-content" onClick={(e) => e.stopPropagation()}>
+            <HabitAlertConfig
+              habitId={alertConfigHabit.id}
+              habitName={alertConfigHabit.name}
+              onClose={() => setAlertConfigHabit(null)}
+            />
+          </div>
+        </div>
       )}
     </section>
   );

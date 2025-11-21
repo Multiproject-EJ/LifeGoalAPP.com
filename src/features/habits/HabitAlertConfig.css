@@ -1,0 +1,397 @@
+/* Habit Alert Configuration Component Styles */
+
+/* Alert Button in habit detail panel */
+.habit-checklist__alert-btn {
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.habit-checklist__alert-btn:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+}
+
+/* Modal overlay and content */
+.habit-alert-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.habit-alert-modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.habit-alert-config {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.habit-alert-config__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.habit-alert-config__header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.habit-alert-config__close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.habit-alert-config__close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.habit-alert-config__error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.habit-alert-config__loading {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.habit-alert-config__empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #6b7280;
+}
+
+.habit-alert-config__empty p {
+  margin: 0.5rem 0;
+}
+
+.habit-alert-config__hint {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.habit-alert-config__list {
+  margin-bottom: 1rem;
+}
+
+.habit-alert-config__item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.habit-alert-config__item-info {
+  flex: 1;
+}
+
+.habit-alert-config__item-time {
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.habit-alert-config__item-status {
+  margin-top: 0.25rem;
+}
+
+.habit-alert-config__badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.habit-alert-config__badge--enabled {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.habit-alert-config__badge--disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.habit-alert-config__item-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.habit-alert-config__btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.habit-alert-config__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.habit-alert-config__btn--toggle {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.habit-alert-config__btn--toggle:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.habit-alert-config__btn--delete {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.habit-alert-config__btn--delete:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+.habit-alert-config__btn--primary {
+  background: #667eea;
+  color: white;
+  border: none;
+}
+
+.habit-alert-config__btn--primary:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.habit-alert-config__btn--secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.habit-alert-config__btn--secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.habit-alert-config__add-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.habit-alert-config__add-btn:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.habit-alert-config__add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.habit-alert-config__form {
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.habit-alert-config__form h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.habit-alert-config__form-group {
+  margin-bottom: 1.25rem;
+}
+
+.habit-alert-config__form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.habit-alert-config__input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.habit-alert-config__input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.habit-alert-config__radio-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.habit-alert-config__radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.habit-alert-config__radio input[type="radio"] {
+  cursor: pointer;
+}
+
+.habit-alert-config__radio span {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.habit-alert-config__days {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.habit-alert-config__day {
+  padding: 0.625rem 1rem;
+  border: 2px solid #d1d5db;
+  background: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 50px;
+  text-align: center;
+}
+
+.habit-alert-config__day:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.habit-alert-config__day--selected {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.habit-alert-config__form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.habit-alert-config__form-actions button {
+  flex: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .habit-alert-config {
+    padding: 1rem;
+  }
+
+  .habit-alert-config__header h3 {
+    font-size: 1.25rem;
+  }
+
+  .habit-alert-config__item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .habit-alert-config__item-actions {
+    width: 100%;
+  }
+
+  .habit-alert-config__item-actions button {
+    flex: 1;
+  }
+
+  .habit-alert-config__form {
+    padding: 1rem;
+  }
+
+  .habit-alert-config__days {
+    gap: 0.375rem;
+  }
+
+  .habit-alert-config__day {
+    padding: 0.5rem 0.75rem;
+    min-width: 45px;
+    font-size: 0.75rem;
+  }
+}
