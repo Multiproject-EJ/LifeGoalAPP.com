@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
+import { NotificationSettingsSection } from '../notifications';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 
@@ -182,6 +183,8 @@ export function MyAccountPanel({
         <p className="account-panel__eyebrow">Appearance</p>
         <ThemeSelector />
       </section>
+
+      <NotificationSettingsSection session={session} />
 
       <SupabaseConnectionTest 
         session={session} 
