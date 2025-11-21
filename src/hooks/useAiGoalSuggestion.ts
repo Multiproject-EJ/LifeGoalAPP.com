@@ -83,15 +83,33 @@ export default function useAiGoalSuggestion() {
       // Parse successful response
       const data = await response.json();
 
-      // Validate response structure
-      if (!data.goal || !Array.isArray(data.milestones) || !Array.isArray(data.tasks)) {
-        throw new Error('Invalid response format from AI service');
+      // Log the raw response for debugging
+      console.debug('[useAiGoalSuggestion] Raw AI response', data);
+
+      // Normalize the response to handle edge cases gracefully
+      const goal = typeof data.goal === 'string' ? data.goal : '';
+      const milestones = Array.isArray(data.milestones)
+        ? data.milestones.filter((m: any) => typeof m === 'string' && m.trim().length > 0).map((m: any) => m.trim())
+        : [];
+      const tasks = Array.isArray(data.tasks)
+        ? data.tasks.filter((t: any) => typeof t === 'string' && t.trim().length > 0).map((t: any) => t.trim())
+        : [];
+
+      // Validate normalized response structure
+      if (!goal || milestones.length === 0 || tasks.length === 0) {
+        throw new Error(
+          `Invalid response format from AI service: ${JSON.stringify({
+            goalLength: goal.length,
+            milestonesCount: milestones.length,
+            tasksCount: tasks.length,
+          })}`,
+        );
       }
 
       setSuggestion({
-        goal: data.goal,
-        milestones: data.milestones,
-        tasks: data.tasks,
+        goal,
+        milestones,
+        tasks,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
