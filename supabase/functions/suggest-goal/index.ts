@@ -219,10 +219,16 @@ Deno.serve(async (req) => {
       throw new Error('No response from OpenAI');
     }
 
+    // Log raw OpenAI content before parsing
+    const content = completion.choices[0]?.message?.content ?? "";
+    console.log("[suggest-goal] Raw OpenAI content:", content);
+
     // Parse the raw response from OpenAI
     let raw: any;
     try {
       raw = JSON.parse(responseContent);
+      // Log parsed OpenAI JSON
+      console.log("[suggest-goal] Parsed OpenAI JSON:", JSON.stringify(raw));
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
       return new Response(
@@ -254,7 +260,12 @@ Deno.serve(async (req) => {
 
     // Validate that we have complete data after normalization
     if (!safeGoal || safeMilestones.length === 0 || safeTasks.length === 0) {
-      console.error('AI returned incomplete data:', { safeGoal, safeMilestones, safeTasks });
+      console.error("[suggest-goal] Incomplete AI data:", JSON.stringify({
+        raw,
+        safeGoal,
+        safeMilestones,
+        safeTasks,
+      }));
       return new Response(
         JSON.stringify({ error: 'AI returned incomplete data' }),
         {
@@ -270,6 +281,9 @@ Deno.serve(async (req) => {
       milestones: safeMilestones,
       tasks: safeTasks,
     };
+
+    // Log normalized result before returning
+    console.log("[suggest-goal] Normalized result:", JSON.stringify(result));
 
     // Return the normalized suggestion to the client
     return new Response(
