@@ -70,6 +70,18 @@ const QUICK_PROMPTS = [
   "What's on your mind right now?",
 ];
 
+// Life Wheel categories aligned with app's Life Wheel domains
+const LIFE_WHEEL_CATEGORIES = [
+  'Career & Mission',
+  'Health & Vitality',
+  'Relationships & Community',
+  'Personal Growth',
+  'Fun & Adventure',
+  'Mindset & Clarity',
+  'Finances & Wealth',
+  'Environment & Surroundings',
+];
+
 function getRandomPrompt(): string {
   return QUICK_PROMPTS[Math.floor(Math.random() * QUICK_PROMPTS.length)];
 }
@@ -222,6 +234,13 @@ export function JournalEntryEditor({
     }));
   };
 
+  const handleSatisfactionChange = (value: number) => {
+    setDraft((current) => ({
+      ...current,
+      moodScore: value,
+    }));
+  };
+
   const handleUsePrompt = () => {
     const prompt = getRandomPrompt();
     const promptWithNewline = `${prompt}\n`;
@@ -240,6 +259,7 @@ export function JournalEntryEditor({
     if (isQuickMode) return "Today's thoughts (aim for ~3 sentences)";
     if (isGoalMode) return "Reflection on this goal";
     if (isTimeCapsuleMode) return "Message to your future self";
+    if (isLifeWheelMode) return "Reflect on this area of your life";
     return "Content";
   };
 
@@ -247,12 +267,14 @@ export function JournalEntryEditor({
     if (isQuickMode) return "Quick capture of your day...";
     if (isGoalMode) return "Reflect on your progress, challenges, and insights related to this goal...";
     if (isTimeCapsuleMode) return "Write a message to your future self. What do you want to remember? What are you hoping for?";
+    if (isLifeWheelMode) return "Write about how this area has felt recently...";
     return "Capture what unfolded, how you felt, and any momentum you want to carry forward.";
   };
 
   const isQuickMode = draft.type === 'quick';
   const isGoalMode = draft.type === 'goal';
   const isTimeCapsuleMode = draft.type === 'time_capsule';
+  const isLifeWheelMode = draft.type === 'life_wheel';
 
   if (!open) {
     return null;
@@ -351,7 +373,41 @@ export function JournalEntryEditor({
             </label>
           )}
 
-          {!isQuickMode && !isGoalMode && !isTimeCapsuleMode && (
+          {isLifeWheelMode && (
+            <>
+              <label className="journal-editor__field">
+                <span>Life area</span>
+                <select
+                  value={draft.category ?? ''}
+                  onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}
+                  required
+                >
+                  <option value="">Select a life area…</option>
+                  {LIFE_WHEEL_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="journal-editor__field">
+                <span>Satisfaction level (1-10)</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={draft.moodScore ?? DEFAULT_MOOD_SCORE}
+                  onChange={(event) => handleSatisfactionChange(Number(event.target.value))}
+                  className="journal-editor__mood-slider"
+                />
+                <div className="journal-editor__mood-value">
+                  {draft.moodScore ?? DEFAULT_MOOD_SCORE} / 10
+                </div>
+              </label>
+            </>
+          )}
+
+          {!isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && (
             <label className="journal-editor__field">
               <span>Title</span>
               <input
@@ -386,7 +442,7 @@ export function JournalEntryEditor({
             </div>
           )}
 
-          {!isQuickMode && !isTimeCapsuleMode && (
+          {!isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && (
             <>
               <div className="journal-editor__field">
                 <span>Tags</span>
