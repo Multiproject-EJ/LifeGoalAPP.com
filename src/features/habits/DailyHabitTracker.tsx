@@ -872,19 +872,26 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             <tbody>
               {/* Use monthlyStats.habits for the monthly grid if available (from habits_v2) */}
               {(monthlyStats?.habits || []).map((habitStat) => {
-                // For monthly view, we don't have schedule data in habitStat
-                // We'll assume all days are schedulable for habits_v2
                 const habitCompletionGrid = monthlyCompletionsV2[habitStat.habitId] ?? {};
+                
+                // Extract scheduling info if available
+                const habitSchedule = habitStat.schedule ?? null;
+                const domainMeta = extractLifeWheelDomain(habitSchedule);
+                const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
+                const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
+                const displayLabel = domainLabel || 'Habit';
 
                 return (
-                  <tr key={habitStat.habitId} className="habit-monthly__row" style={{ borderLeftColor: '#94a3b8' }}>
+                  <tr key={habitStat.habitId} className="habit-monthly__row" style={{ borderLeftColor: domainColor }}>
                     <th scope="row" className="habit-monthly__habit-cell">
                       <div className="habit-monthly__habit">
-                        <span className="habit-monthly__domain" style={{ backgroundColor: '#94a3b8' }}>
-                          Habit
+                        <span className="habit-monthly__domain" style={{ backgroundColor: domainColor }}>
+                          {displayLabel}
                         </span>
                         <div className="habit-monthly__habit-details">
-                          <span className="habit-monthly__habit-name">{habitStat.habitName}</span>
+                          <span className="habit-monthly__habit-name">
+                            {habitStat.emoji ? `${habitStat.emoji} ` : ''}{habitStat.habitName}
+                          </span>
                           <span className="habit-monthly__habit-goal">
                             {habitStat.goalTitle ? `Goal: ${habitStat.goalTitle}` : 'No goal assigned'}
                           </span>
@@ -897,8 +904,23 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       const isToday = dateIso === today;
                       const isSavingCell = Boolean(monthlySaving[cellKey]);
                       const dayLabel = formatDateLabel(dateIso);
+                      
+                      // Check if habit is scheduled for this date
+                      // We need to create a minimal habit object for the schedule checker
+                      const habitForSchedule = {
+                        id: habitStat.habitId,
+                        name: habitStat.habitName,
+                        frequency: 'daily', // Default, will be overridden by schedule
+                        schedule: habitSchedule,
+                      } as HabitWithGoal;
+                      const scheduled = isHabitScheduledOnDate(habitForSchedule, dateIso);
 
-                      const cellClassNames = ['habit-monthly__cell', 'habit-monthly__cell--scheduled'];
+                      const cellClassNames = ['habit-monthly__cell'];
+                      if (scheduled) {
+                        cellClassNames.push('habit-monthly__cell--scheduled');
+                      } else {
+                        cellClassNames.push('habit-monthly__cell--rest');
+                      }
                       if (isCompleted) {
                         cellClassNames.push('habit-monthly__cell--completed');
                       }
@@ -917,8 +939,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                             aria-pressed={isCompleted}
                             aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habitStat.habitName} for ${dayLabel}`}
                             onClick={() => void toggleMonthlyHabitForDate(habitStat.habitId, habitStat.habitName, dateIso)}
-                            disabled={isSavingCell}
-                            title={dayLabel}
+                            disabled={(!scheduled && !isCompleted) || isSavingCell}
+                            title={scheduled ? dayLabel : `${dayLabel} (rest day)`}
                           >
                             {isSavingCell ? '…' : isCompleted ? '✓' : ''}
                           </button>

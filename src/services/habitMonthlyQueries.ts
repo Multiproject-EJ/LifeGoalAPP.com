@@ -1,6 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
-import type { Database } from '../lib/database.types';
+import type { Database, Json } from '../lib/database.types';
 import {
   DEMO_USER_ID,
   getDemoHabitLogsForRange,
@@ -29,6 +29,8 @@ export type HabitMonthlyCompletion = {
   completedDays: number;
   completionPercentage: number;
   goalTitle?: string | null;
+  emoji?: string | null;
+  schedule?: Json | null;
 };
 
 /**
@@ -76,6 +78,13 @@ function formatISODate(date: Date): string {
 
 /**
  * Main helper function to get habit completions for a specific month.
+ * 
+ * **IMPORTANT**: This function queries the NEW habits_v2 and habit_completions tables.
+ * 
+ * Data structure differences from legacy habits table:
+ * - Uses `habits_v2.title` instead of `habits.name`
+ * - No direct goal associations (goalTitle will be null)
+ * - Includes emoji and schedule fields from habits_v2
  * 
  * @param userId - The user's ID
  * @param year - The year (e.g., 2025)
@@ -178,7 +187,9 @@ export async function getHabitCompletionsByMonth(
         totalDays: totalDaysInMonth,
         completedDays,
         completionPercentage,
-        goalTitle: null, // habits_v2 doesn't have goal associations
+        goalTitle: null, // habits_v2 doesn't have direct goal associations
+        emoji: habit.emoji,
+        schedule: habit.schedule,
       };
     });
     
