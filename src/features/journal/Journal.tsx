@@ -15,6 +15,7 @@ import { fetchHabitsForUser } from '../../services/habits';
 import { JournalEntryList } from './JournalEntryList';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
+import { JournalTypeSelector } from './JournalTypeSelector';
 import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
 
@@ -63,7 +64,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const isCompactLayout = useMediaQuery('(max-width: 960px)');
 
   // Journal mode state for different journaling experiences
-  const [journalType, setJournalType] = useState<JournalType>('standard');
+  const [journalType, setJournalType] = useState<JournalType>(DEFAULT_JOURNAL_TYPE);
 
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -354,14 +355,17 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
           <p className="journal__eyebrow">Daily reflections</p>
           <h1>Journal</h1>
         </div>
-        <button
-          type="button"
-          className="journal__new"
-          onClick={() => handleOpenEditor('create', null)}
-          disabled={journalDisabled}
-        >
-          + New entry
-        </button>
+        <div className="journal__header-actions">
+          <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
+          <button
+            type="button"
+            className="journal__new"
+            onClick={() => handleOpenEditor('create', null)}
+            disabled={journalDisabled}
+          >
+            + New entry
+          </button>
+        </div>
       </header>
 
       {journalDisabled ? (
