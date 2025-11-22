@@ -20,3 +20,11 @@ export async function requireAuth() {
   }
   return session;
 }
+
+export function getVapidPublicKey() {
+  return window.ENV?.VAPID_PUBLIC_KEY || import.meta?.env?.VITE_VAPID_PUBLIC_KEY || '';
+}
+
+export function getSupabaseUrl() {
+  return window.ENV?.SUPABASE_URL || import.meta?.env?.VITE_SUPABASE_URL || '<PUT_SUPABASE_URL>';
+}
