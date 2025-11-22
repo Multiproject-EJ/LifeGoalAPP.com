@@ -1,11 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { InteractiveLifeWheel } from '../../components/InteractiveLifeWheel';
 import { CategoryInfoCard } from '../../components/CategoryInfoCard';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
-import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { insertGoal } from '../../services/goals';
 import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 type LifeGoalsSectionProps = {
   session: Session;
@@ -17,6 +18,16 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const isMobile = useMediaQuery('(max-width: 720px)');
+
+  const activeCategoryLabel = useMemo(() => {
+    if (!selectedCategory) {
+      return 'Choose a life area to focus on';
+    }
+
+    const match = LIFE_WHEEL_CATEGORIES.find((category) => category.key === selectedCategory);
+    return match ? `Focus: ${match.label}` : 'Explore each life area';
+  }, [selectedCategory]);
 
   const handleCategorySelect = (categoryKey: LifeWheelCategoryKey) => {
     setSelectedCategory(categoryKey);
@@ -115,13 +126,25 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   );
 
   return (
-    <section className="life-goals-section">
+    <section className={`life-goals-section ${isMobile ? 'life-goals-section--mobile' : ''}`}>
       <header className="life-goals-section__header">
-        <h2>Life Goals</h2>
-        <p>
-          Use the life wheel to explore different areas of your life. Click on a slice to view goal ideas and create
-          detailed life goals with steps, timing, and notifications.
-        </p>
+        <div className="life-goals-section__eyebrow">Long-term roadmap</div>
+        <div className="life-goals-section__heading-row">
+          <div>
+            <h2>Life Goals</h2>
+            <p>
+              Use the life wheel to explore different areas of your life. Click or tap on a slice to view goal ideas and
+              create detailed life goals with steps, timing, and notifications.
+            </p>
+          </div>
+          <button className="life-goals-section__cta" type="button" onClick={handleAddGoal}>
+            Add a life goal
+          </button>
+        </div>
+        <div className="life-goals-section__mobile-bar" aria-live="polite">
+          <span className="life-goals-section__chip">{activeCategoryLabel}</span>
+          <span className="life-goals-section__chip life-goals-section__chip--muted">Tap the wheel to change focus</span>
+        </div>
       </header>
 
       {errorMessage && (
@@ -132,11 +155,22 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
       )}
 
       <div className="life-goals-section__interactive">
-        <div className="life-goals-section__wheel">
-          <InteractiveLifeWheel
-            onCategorySelect={handleCategorySelect}
-            selectedCategory={selectedCategory}
-          />
+        <div className="life-goals-section__wheel-card">
+          <div className="life-goals-section__card-header">
+            <div>
+              <p className="life-goals-section__card-label">Life wheel</p>
+              <p className="life-goals-section__card-helper">Tap any slice to browse goal prompts for that area.</p>
+            </div>
+            <button type="button" className="life-goals-section__icon-button" onClick={handleAddGoal}>
+              +
+            </button>
+          </div>
+          <div className="life-goals-section__wheel">
+            <InteractiveLifeWheel
+              onCategorySelect={handleCategorySelect}
+              selectedCategory={selectedCategory}
+            />
+          </div>
         </div>
         <div className="life-goals-section__info">
           <CategoryInfoCard categoryKey={selectedCategory} onAddGoal={handleAddGoal} />
