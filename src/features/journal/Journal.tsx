@@ -427,6 +427,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
         moodOptions={MOOD_OPTIONS}
         saving={editorSaving}
         error={editorError}
+        journalType={journalType}
         onClose={() => setEditorOpen(false)}
         onSave={handleSaveEntry}
       />

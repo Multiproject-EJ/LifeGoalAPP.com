@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useSt
 import type { JournalEntry } from '../../services/journal';
 import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
+import type { JournalType } from './Journal';
 
 export type JournalMoodOption = { value: string; label: string; icon: string };
 
@@ -33,13 +34,29 @@ type JournalEntryEditorProps = {
   moodOptions: JournalMoodOption[];
   saving: boolean;
   error: string | null;
+  journalType?: JournalType;
   onClose: () => void;
   onSave: (draft: JournalEntryDraft) => Promise<void> | void;
 };
 
+const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
+  'quick': 'Quick',
+  'deep': 'Deep',
+  'brain_dump': 'Brain Dump',
+  'life_wheel': 'Life Wheel',
+  'secret': 'Secret',
+  'goal': 'Goal',
+  'time_capsule': 'Time Capsule',
+  'standard': 'Standard',
+};
+
+function getModeLabel(type?: JournalEntryType): string {
+  return JOURNAL_TYPE_LABELS[type ?? 'standard'];
+}
+
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
-function createDraft(entry: JournalEntry | null): JournalEntryDraft {
+function createDraft(entry: JournalEntry | null, journalType?: JournalType): JournalEntryDraft {
   return {
     id: entry?.id,
     entryDate: entry?.entry_date ?? todayIso(),
@@ -49,7 +66,7 @@ function createDraft(entry: JournalEntry | null): JournalEntryDraft {
     tags: entry?.tags ? [...entry.tags] : [],
     linkedGoalIds: entry?.linked_goal_ids ? [...entry.linked_goal_ids] : [],
     linkedHabitIds: entry?.linked_habit_ids ? [...entry.linked_habit_ids] : [],
-    type: entry?.type ?? DEFAULT_JOURNAL_TYPE,
+    type: entry?.type ?? journalType ?? DEFAULT_JOURNAL_TYPE,
     moodScore: entry?.mood_score ?? null,
     category: entry?.category ?? null,
     unlockDate: entry?.unlock_date ?? null,
@@ -66,18 +83,19 @@ export function JournalEntryEditor({
   moodOptions,
   saving,
   error,
+  journalType,
   onClose,
   onSave,
 }: JournalEntryEditorProps) {
   const titleId = useId();
-  const [draft, setDraft] = useState<JournalEntryDraft>(createDraft(entry));
+  const [draft, setDraft] = useState<JournalEntryDraft>(createDraft(entry, journalType));
   const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (!open) return;
-    setDraft(createDraft(entry));
+    setDraft(createDraft(entry, journalType));
     setTagInput('');
-  }, [entry, open, mode]);
+  }, [entry, open, mode, journalType]);
 
   const moodValue = draft.mood ?? '';
 
@@ -167,6 +185,11 @@ export function JournalEntryEditor({
           <div>
             <p className="journal-editor__eyebrow">Private journal</p>
             <h2 id={titleId}>{mode === 'create' ? 'New entry' : 'Edit entry'}</h2>
+            {draft.type && (
+              <p className="journal-editor__mode-label">
+                Mode: {getModeLabel(draft.type)}
+              </p>
+            )}
           </div>
           <button type="button" className="journal-editor__close" onClick={onClose}>
             Close
