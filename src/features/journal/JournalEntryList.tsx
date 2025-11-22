@@ -110,8 +110,8 @@ export function JournalEntryList({
                     {moodMeta ? <span className="journal-list__item-mood">{moodMeta.icon}</span> : null}
                   </div>
                   <strong>{entry.title?.trim() || 'Untitled'}</strong>
-                  {isLocked ? (
-                    <p>🔒 Locked until {unlockDateFormatter.format(new Date(entry.unlock_date!))}</p>
+                  {isLocked && entry.unlock_date ? (
+                    <p>🔒 Locked until {unlockDateFormatter.format(new Date(entry.unlock_date))}</p>
                   ) : (
                     <p>{getPreview(entry.content)}</p>
                   )}

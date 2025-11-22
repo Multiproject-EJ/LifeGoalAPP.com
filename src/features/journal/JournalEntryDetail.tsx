@@ -109,10 +109,10 @@ export function JournalEntryDetail({
         </ul>
       ) : null}
 
-      {isLocked ? (
+      {isLocked && entry.unlock_date ? (
         <div className="journal-detail__locked">
           <h3>🔒 Time capsule locked</h3>
-          <p>This time capsule will unlock on {unlockDateFormatter.format(new Date(entry.unlock_date!))}.</p>
+          <p>This time capsule will unlock on {unlockDateFormatter.format(new Date(entry.unlock_date))}.</p>
           <p>Come back then to read your message to your future self.</p>
         </div>
       ) : (
