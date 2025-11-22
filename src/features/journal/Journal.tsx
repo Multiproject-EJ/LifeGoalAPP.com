@@ -239,6 +239,11 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
         linked_goal_ids: draft.linkedGoalIds.length ? draft.linkedGoalIds : null,
         linked_habit_ids: draft.linkedHabitIds.length ? draft.linkedHabitIds : null,
         is_private: true,
+        type: draft.type ?? 'standard', // Default to 'standard' type for backward compatibility
+        mood_score: draft.moodScore ?? null,
+        category: draft.category ?? null,
+        unlock_date: draft.unlockDate ?? null,
+        goal_id: draft.goalId ?? null,
       };
 
       let saved: JournalEntry | null = null;

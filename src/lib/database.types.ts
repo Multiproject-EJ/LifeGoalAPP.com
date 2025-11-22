@@ -123,6 +123,11 @@ export interface Database {
           attachments: Json | null;
           linked_goal_ids: string[] | null;
           linked_habit_ids: string[] | null;
+          type: string;
+          mood_score: number | null;
+          category: string | null;
+          unlock_date: string | null;
+          goal_id: string | null;
         };
         Insert: {
           id?: string;
@@ -138,6 +143,11 @@ export interface Database {
           attachments?: Json | null;
           linked_goal_ids?: string[] | null;
           linked_habit_ids?: string[] | null;
+          type?: string;
+          mood_score?: number | null;
+          category?: string | null;
+          unlock_date?: string | null;
+          goal_id?: string | null;
         };
         Update: {
           id?: string;
@@ -153,6 +163,11 @@ export interface Database {
           attachments?: Json | null;
           linked_goal_ids?: string[] | null;
           linked_habit_ids?: string[] | null;
+          type?: string;
+          mood_score?: number | null;
+          category?: string | null;
+          unlock_date?: string | null;
+          goal_id?: string | null;
         };
         Relationships: [];
       };

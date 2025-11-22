@@ -13,6 +13,11 @@ export type JournalEntryDraft = {
   tags: string[];
   linkedGoalIds: string[];
   linkedHabitIds: string[];
+  type?: string;
+  moodScore?: number | null;
+  category?: string | null;
+  unlockDate?: string | null;
+  goalId?: string | null;
 };
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -43,6 +48,11 @@ function createDraft(entry: JournalEntry | null): JournalEntryDraft {
     tags: entry?.tags ? [...entry.tags] : [],
     linkedGoalIds: entry?.linked_goal_ids ? [...entry.linked_goal_ids] : [],
     linkedHabitIds: entry?.linked_habit_ids ? [...entry.linked_habit_ids] : [],
+    type: entry?.type,
+    moodScore: entry?.mood_score ?? null,
+    category: entry?.category ?? null,
+    unlockDate: entry?.unlock_date ?? null,
+    goalId: entry?.goal_id ?? null,
   };
 }
 

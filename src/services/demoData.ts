@@ -656,6 +656,11 @@ const defaultState: DemoState = {
       attachments: null,
       linked_goal_ids: [goalLaunch.id],
       linked_habit_ids: [morningRitualId, outreachHabitId],
+      type: 'standard',
+      mood_score: null,
+      category: null,
+      unlock_date: null,
+      goal_id: null,
     },
     {
       id: createId('journal'),
@@ -672,6 +677,11 @@ const defaultState: DemoState = {
       attachments: null,
       linked_goal_ids: [goalVision.id],
       linked_habit_ids: [visionBoardId],
+      type: 'standard',
+      mood_score: null,
+      category: null,
+      unlock_date: null,
+      goal_id: null,
     },
     {
       id: createId('journal'),
@@ -688,6 +698,11 @@ const defaultState: DemoState = {
       attachments: null,
       linked_goal_ids: [goalArchive.id],
       linked_habit_ids: [visionBoardId],
+      type: 'standard',
+      mood_score: null,
+      category: null,
+      unlock_date: null,
+      goal_id: null,
     },
   ];
 })();
@@ -1181,6 +1196,11 @@ export function addDemoJournalEntry(payload: JournalEntryInsert): JournalEntryRo
     attachments: payload.attachments ?? null,
     linked_goal_ids: payload.linked_goal_ids ?? null,
     linked_habit_ids: payload.linked_habit_ids ?? null,
+    type: payload.type ?? 'standard',
+    mood_score: payload.mood_score ?? null,
+    category: payload.category ?? null,
+    unlock_date: payload.unlock_date ?? null,
+    goal_id: payload.goal_id ?? null,
   };
 
   updateState((current) => ({
