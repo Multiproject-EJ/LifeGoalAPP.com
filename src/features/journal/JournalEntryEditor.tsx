@@ -39,6 +39,21 @@ type JournalEntryEditorProps = {
   onSave: (draft: JournalEntryDraft) => Promise<void> | void;
 };
 
+const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
+  'quick': 'Quick',
+  'deep': 'Deep',
+  'brain_dump': 'Brain Dump',
+  'life_wheel': 'Life Wheel',
+  'secret': 'Secret',
+  'goal': 'Goal',
+  'time_capsule': 'Time Capsule',
+  'standard': 'Standard',
+};
+
+function getModeLabel(type?: JournalEntryType): string {
+  return JOURNAL_TYPE_LABELS[type ?? 'standard'];
+}
+
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 function createDraft(entry: JournalEntry | null, journalType?: JournalType): JournalEntryDraft {
@@ -158,20 +173,6 @@ export function JournalEntryEditor({
     setDraft((current) => ({ ...current, linkedHabitIds: values }));
   };
 
-  const getModeLabel = (type?: JournalEntryType): string => {
-    const labels: Record<JournalEntryType, string> = {
-      'quick': 'Quick',
-      'deep': 'Deep',
-      'brain_dump': 'Brain Dump',
-      'life_wheel': 'Life Wheel',
-      'secret': 'Secret',
-      'goal': 'Goal',
-      'time_capsule': 'Time Capsule',
-      'standard': 'Standard',
-    };
-    return labels[type ?? 'standard'];
-  };
-
   if (!open) {
     return null;
   }
@@ -185,7 +186,7 @@ export function JournalEntryEditor({
             <p className="journal-editor__eyebrow">Private journal</p>
             <h2 id={titleId}>{mode === 'create' ? 'New entry' : 'Edit entry'}</h2>
             {draft.type && (
-              <p className="journal-editor__mode-label" style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
+              <p className="journal-editor__mode-label">
                 Mode: {getModeLabel(draft.type)}
               </p>
             )}

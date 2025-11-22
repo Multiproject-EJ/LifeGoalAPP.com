@@ -7765,6 +7765,12 @@ body {
   color: var(--color-text-muted, #64748b);
 }
 
+.journal-editor__mode-label {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #666);
+}
+
 .journal-editor__close {
   border: none;
   background: transparent;
