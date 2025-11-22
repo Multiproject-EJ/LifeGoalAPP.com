@@ -234,6 +234,13 @@ export function JournalEntryEditor({
     }));
   };
 
+  const handleSatisfactionChange = (value: number) => {
+    setDraft((current) => ({
+      ...current,
+      moodScore: value,
+    }));
+  };
+
   const handleUsePrompt = () => {
     const prompt = getRandomPrompt();
     const promptWithNewline = `${prompt}\n`;
@@ -390,7 +397,7 @@ export function JournalEntryEditor({
                   min="1"
                   max="10"
                   value={draft.moodScore ?? DEFAULT_MOOD_SCORE}
-                  onChange={(event) => handleMoodScoreChange(Number(event.target.value))}
+                  onChange={(event) => handleSatisfactionChange(Number(event.target.value))}
                   className="journal-editor__mood-slider"
                 />
                 <div className="journal-editor__mood-value">

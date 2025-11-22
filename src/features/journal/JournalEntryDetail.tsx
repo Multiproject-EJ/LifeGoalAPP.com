@@ -105,7 +105,7 @@ export function JournalEntryDetail({
       {isLifeWheelMode && entry.category ? (
         <div className="journal-detail__metadata">
           <p><strong>Life area:</strong> {entry.category}</p>
-          {entry.mood_score !== null && entry.mood_score !== undefined ? (
+          {entry.mood_score != null ? (
             <p><strong>Satisfaction:</strong> {entry.mood_score}/10</p>
           ) : null}
         </div>
