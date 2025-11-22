@@ -57,6 +57,19 @@ function sortEntries(entries: JournalEntry[]): JournalEntry[] {
   });
 }
 
+/**
+ * Check if a time capsule entry is locked.
+ * An entry is locked if:
+ * - type is 'time_capsule'
+ * - unlock_date is not null
+ * - unlock_date is in the future
+ */
+function isEntryLocked(entry: JournalEntry): boolean {
+  if (entry.type !== 'time_capsule') return false;
+  if (!entry.unlock_date) return false;
+  return new Date(entry.unlock_date) > new Date();
+}
+
 export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: JournalProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
@@ -396,6 +409,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
             emptyStateMessage={listEmptyState}
             getMoodMeta={getMoodMeta}
             onSelectEntry={handleSelectEntry}
+            isEntryLocked={isEntryLocked}
           />
         </div>
         <div className={`journal__column journal__column--detail ${
@@ -414,6 +428,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
             onNavigateToHabit={handleNavigateHabit}
             disabled={journalDisabled || actionLoading}
             unavailableMessage={journalDisabled ? listEmptyState : null}
+            isLocked={activeEntry ? isEntryLocked(activeEntry) : false}
           />
         </div>
       </div>

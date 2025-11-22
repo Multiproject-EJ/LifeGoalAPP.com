@@ -18,12 +18,21 @@ type JournalEntryDetailProps = {
   onNavigateToHabit?: (habitId: string) => void;
   disabled?: boolean;
   unavailableMessage?: string | null;
+  isLocked: boolean;
 };
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
+});
+
+const unlockDateFormatter = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
 });
 
 export function JournalEntryDetail({
@@ -39,6 +48,7 @@ export function JournalEntryDetail({
   onNavigateToHabit,
   disabled = false,
   unavailableMessage,
+  isLocked,
 }: JournalEntryDetailProps) {
   if (!entry) {
     return (
@@ -99,13 +109,21 @@ export function JournalEntryDetail({
         </ul>
       ) : null}
 
-      <article className="journal-detail__content">
-        {paragraphs.length ? (
-          paragraphs.map((paragraph, index) => <p key={`${entry.id}-p-${index}`}>{paragraph}</p>)
-        ) : (
-          <p className="journal-detail__placeholder">This entry is waiting for words.</p>
-        )}
-      </article>
+      {isLocked && entry.unlock_date ? (
+        <div className="journal-detail__locked">
+          <h3>🔒 Time capsule locked</h3>
+          <p>This time capsule will unlock on {unlockDateFormatter.format(new Date(entry.unlock_date))}.</p>
+          <p>Come back then to read your message to your future self.</p>
+        </div>
+      ) : (
+        <article className="journal-detail__content">
+          {paragraphs.length ? (
+            paragraphs.map((paragraph, index) => <p key={`${entry.id}-p-${index}`}>{paragraph}</p>)
+          ) : (
+            <p className="journal-detail__placeholder">This entry is waiting for words.</p>
+          )}
+        </article>
+      )}
 
       {isGoalMode && primaryGoal && primaryGoalId ? (
         <div className="journal-detail__links">

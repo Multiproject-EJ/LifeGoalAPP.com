@@ -16,12 +16,21 @@ type JournalEntryListProps = {
   emptyStateMessage: string;
   getMoodMeta: (mood?: string | null) => JournalMoodOption | undefined;
   onSelectEntry: (entryId: string) => void;
+  isEntryLocked: (entry: JournalEntry) => boolean;
 };
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
   month: 'short',
   year: 'numeric',
+});
+
+const unlockDateFormatter = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
 });
 
 function getPreview(content: string, limit = 140): string {
@@ -45,6 +54,7 @@ export function JournalEntryList({
   emptyStateMessage,
   getMoodMeta,
   onSelectEntry,
+  isEntryLocked,
 }: JournalEntryListProps) {
   return (
     <aside className={`journal-list ${isCollapsed ? 'journal-list--collapsed' : ''}`}>
@@ -86,6 +96,7 @@ export function JournalEntryList({
           {filteredEntries.map((entry) => {
             const isActive = entry.id === selectedEntryId;
             const moodMeta = getMoodMeta(entry.mood);
+            const isLocked = isEntryLocked(entry);
             return (
               <li key={entry.id}>
                 <button
@@ -99,7 +110,11 @@ export function JournalEntryList({
                     {moodMeta ? <span className="journal-list__item-mood">{moodMeta.icon}</span> : null}
                   </div>
                   <strong>{entry.title?.trim() || 'Untitled'}</strong>
-                  <p>{getPreview(entry.content)}</p>
+                  {isLocked && entry.unlock_date ? (
+                    <p>🔒 Locked until {unlockDateFormatter.format(new Date(entry.unlock_date))}</p>
+                  ) : (
+                    <p>{getPreview(entry.content)}</p>
+                  )}
                 </button>
               </li>
             );

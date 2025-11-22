@@ -239,17 +239,20 @@ export function JournalEntryEditor({
   const getContentLabel = (): string => {
     if (isQuickMode) return "Today's thoughts (aim for ~3 sentences)";
     if (isGoalMode) return "Reflection on this goal";
+    if (isTimeCapsuleMode) return "Message to your future self";
     return "Content";
   };
 
   const getContentPlaceholder = (): string => {
     if (isQuickMode) return "Quick capture of your day...";
     if (isGoalMode) return "Reflect on your progress, challenges, and insights related to this goal...";
+    if (isTimeCapsuleMode) return "Write a message to your future self. What do you want to remember? What are you hoping for?";
     return "Capture what unfolded, how you felt, and any momentum you want to carry forward.";
   };
 
   const isQuickMode = draft.type === 'quick';
   const isGoalMode = draft.type === 'goal';
+  const isTimeCapsuleMode = draft.type === 'time_capsule';
 
   if (!open) {
     return null;
@@ -286,7 +289,17 @@ export function JournalEntryEditor({
               />
             </label>
 
-            {isQuickMode ? (
+            {isTimeCapsuleMode ? (
+              <label className="journal-editor__field">
+                <span>Unlock date</span>
+                <input
+                  type="datetime-local"
+                  value={draft.unlockDate ?? ''}
+                  onChange={(event) => setDraft((current) => ({ ...current, unlockDate: event.target.value }))}
+                  required
+                />
+              </label>
+            ) : isQuickMode ? (
               <label className="journal-editor__field">
                 <span>Mood score (1-10)</span>
                 <input
@@ -338,7 +351,7 @@ export function JournalEntryEditor({
             </label>
           )}
 
-          {!isQuickMode && !isGoalMode && (
+          {!isQuickMode && !isGoalMode && !isTimeCapsuleMode && (
             <label className="journal-editor__field">
               <span>Title</span>
               <input
@@ -373,7 +386,7 @@ export function JournalEntryEditor({
             </div>
           )}
 
-          {!isQuickMode && (
+          {!isQuickMode && !isTimeCapsuleMode && (
             <>
               <div className="journal-editor__field">
                 <span>Tags</span>
