@@ -64,7 +64,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const isCompactLayout = useMediaQuery('(max-width: 960px)');
 
   // Journal mode state for different journaling experiences
-  const [journalType, setJournalType] = useState<JournalType>('standard');
+  const [journalType, setJournalType] = useState<JournalType>(DEFAULT_JOURNAL_TYPE);
 
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
