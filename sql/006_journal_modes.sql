@@ -27,6 +27,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint 
     WHERE conname = 'journal_entries_mood_score_range'
+    AND conrelid = 'public.journal_entries'::regclass
   ) THEN
     ALTER TABLE public.journal_entries
     ADD CONSTRAINT journal_entries_mood_score_range
@@ -40,6 +41,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint 
     WHERE conname = 'journal_entries_type_allowed_values'
+    AND conrelid = 'public.journal_entries'::regclass
   ) THEN
     ALTER TABLE public.journal_entries
     ADD CONSTRAINT journal_entries_type_allowed_values
@@ -53,6 +55,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint 
     WHERE conname = 'journal_entries_goal_id_fkey'
+    AND conrelid = 'public.journal_entries'::regclass
   ) THEN
     ALTER TABLE public.journal_entries
     ADD CONSTRAINT journal_entries_goal_id_fkey
