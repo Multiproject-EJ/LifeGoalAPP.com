@@ -465,16 +465,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
         <p className="progress-dashboard__status progress-dashboard__status--error">{errorMessage}</p>
       ) : null}
 
-      {isConfigured && habits.length === 0 ? (
-        <div className="progress-dashboard__empty">
-          <h3>No habits to visualize yet</h3>
-          <p>
-            Capture habits inside the Goals &amp; Habits workspace and they&apos;ll populate the dashboard with streaks and
-            completion stats.
-          </p>
-        </div>
-      ) : (
-        <div className="progress-dashboard__grid">
+      <div className="progress-dashboard__grid">
           <article className="progress-card progress-card--habit-create">
             <header>
               <h3>Capture a new daily habit</h3>
@@ -724,7 +715,6 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             )}
           </article>
         </div>
-      )}
     </section>
   );
 }
