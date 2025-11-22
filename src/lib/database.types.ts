@@ -6,6 +6,16 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type JournalEntryType = 
+  | 'quick' 
+  | 'deep' 
+  | 'brain_dump' 
+  | 'life_wheel' 
+  | 'secret' 
+  | 'goal' 
+  | 'time_capsule' 
+  | 'standard';
+
 export interface Database {
   public: {
     Tables: {
@@ -123,7 +133,7 @@ export interface Database {
           attachments: Json | null;
           linked_goal_ids: string[] | null;
           linked_habit_ids: string[] | null;
-          type: string;
+          type: JournalEntryType;
           mood_score: number | null;
           category: string | null;
           unlock_date: string | null;
@@ -143,7 +153,7 @@ export interface Database {
           attachments?: Json | null;
           linked_goal_ids?: string[] | null;
           linked_habit_ids?: string[] | null;
-          type?: string;
+          type?: JournalEntryType;
           mood_score?: number | null;
           category?: string | null;
           unlock_date?: string | null;
@@ -163,7 +173,7 @@ export interface Database {
           attachments?: Json | null;
           linked_goal_ids?: string[] | null;
           linked_habit_ids?: string[] | null;
-          type?: string;
+          type?: JournalEntryType;
           mood_score?: number | null;
           category?: string | null;
           unlock_date?: string | null;
