@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habit Notifications Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
+      color: #1f2937;
+      margin-bottom: 1rem;
+      font-size: 1.75rem;
+    }
+    
+    .status {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .status.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .status.granted {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status.denied {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .icon {
+      font-size: 1.5rem;
+    }
+    
+    button {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 0.75rem;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .time-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .time-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+      color: #1e40af;
+      line-height: 1.6;
+    }
+    
+    .info strong {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔔 Habit Notifications Demo</h1>
+    
+    <div id="status" class="status pending">
+      <span class="icon">⏳</span>
+      <div>
+        <strong>Permission Status</strong>
+        <div>Checking...</div>
+      </div>
+    </div>
+    
+    <button class="btn-primary" id="enableBtn">Enable Notifications</button>
+    
+    <input type="time" class="time-input" id="timeInput" value="08:00" />
+    
+    <button class="btn-secondary" id="testBtn" disabled>Send Test Notification</button>
+    <button class="btn-secondary" id="scheduleBtn" disabled>Schedule Reminder</button>
+    
+    <div class="info">
+      <strong>How it works:</strong>
+      1. Click "Enable Notifications" and allow when asked<br>
+      2. Set a time for your reminder<br>
+      3. Click "Schedule Reminder" or test immediately<br>
+      4. You'll get notifications at the scheduled time!
+    </div>
+  </div>
+  
+  <script>
+    const statusDiv = document.getElementById('status');
+    const enableBtn = document.getElementById('enableBtn');
+    const testBtn = document.getElementById('testBtn');
+    const scheduleBtn = document.getElementById('scheduleBtn');
+    const timeInput = document.getElementById('timeInput');
+    
+    function updateStatus() {
+      if (!('Notification' in window)) {
+        statusDiv.className = 'status denied';
+        statusDiv.innerHTML = `
+          <span class="icon">❌</span>
+          <div>
+            <strong>Not Supported</strong>
+            <div>Your browser doesn't support notifications</div>
+          </div>
+        `;
+        return;
+      }
+      
+      const permission = Notification.permission;
+      
+      if (permission === 'granted') {
+        statusDiv.className = 'status granted';
+        statusDiv.innerHTML = `
+          <span class="icon">✅</span>
+          <div>
+            <strong>Enabled</strong>
+            <div>Notifications are active</div>
+          </div>
+        `;
+        enableBtn.style.display = 'none';
+        testBtn.disabled = false;
+        scheduleBtn.disabled = false;
+      } else if (permission === 'denied') {
+        statusDiv.className = 'status denied';
+        statusDiv.innerHTML = `
+          <span class="icon">🚫</span>
+          <div>
+            <strong>Blocked</strong>
+            <div>Please enable notifications in browser settings</div>
+          </div>
+        `;
+      } else {
+        statusDiv.className = 'status pending';
+        statusDiv.innerHTML = `
+          <span class="icon">⏳</span>
+          <div>
+            <strong>Not Enabled</strong>
+            <div>Click the button to enable notifications</div>
+          </div>
+        `;
+      }
+    }
+    
+    enableBtn.addEventListener('click', async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        updateStatus();
+      } catch (error) {
+        alert('Failed to enable notifications: ' + error.message);
+      }
+    });
+    
+    testBtn.addEventListener('click', () => {
+      new Notification('🎯 Test Habit Reminder', {
+        body: 'This is what your habit reminders will look like!',
+        icon: '/icons/icon-192x192.svg',
+        badge: '/icons/icon-192x192.svg',
+        tag: 'test-notification',
+        requireInteraction: false,
+      });
+    });
+    
+    scheduleBtn.addEventListener('click', () => {
+      const time = timeInput.value;
+      if (!time) {
+        alert('Please select a time first!');
+        return;
+      }
+      
+      const [hours, minutes] = time.split(':').map(Number);
+      const now = new Date();
+      const scheduled = new Date();
+      scheduled.setHours(hours, minutes, 0, 0);
+      
+      // If time has passed today, schedule for tomorrow
+      if (scheduled <= now) {
+        scheduled.setDate(scheduled.getDate() + 1);
+      }
+      
+      const delay = scheduled.getTime() - now.getTime();
+      
+      setTimeout(() => {
+        new Notification('⏰ Habit Reminder', {
+          body: 'Time to complete your habit! Mark it done in LifeGoal App.',
+          icon: '/icons/icon-192x192.svg',
+          badge: '/icons/icon-192x192.svg',
+          tag: 'habit-reminder',
+          requireInteraction: true,
+        });
+      }, delay);
+      
+      const minutesUntil = Math.round(delay / 60000);
+      alert(`Reminder scheduled! You'll get a notification in ${minutesUntil} minute(s).`);
+    });
+    
+    // Initialize
+    updateStatus();
+  </script>
+</body>
+</html>

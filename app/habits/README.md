@@ -2,6 +2,18 @@
 
 This document provides the SQL patches you need to run in your Supabase SQL Editor to enable the comprehensive Habits module.
 
+## 🆕 NEW: Push Notifications & Alerts
+
+The habits module now includes **push notifications and alerts** for daily habit reminders! Users can:
+- Receive notifications on their phone at scheduled times
+- Mark habits as done or skip directly from notifications
+- Set up to 3 reminder times per habit
+- Get alerts even when the app is closed (PWA)
+
+**See these guides for setup:**
+- **Users**: See `/NOTIFICATIONS_QUICK_START.md` for 5-minute setup
+- **Developers**: See `/DAILY_HABITS_ALERTS_GUIDE.md` for complete implementation details
+
 ## Overview
 
 The Habits module adds:
