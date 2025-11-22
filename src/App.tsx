@@ -46,6 +46,14 @@ type WorkspaceNavItem = {
   shortLabel: string;
 };
 
+type MobileMenuNavItem = {
+  id: string;
+  label: string;
+  ariaLabel: string;
+  icon: ReactNode;
+  summary: string;
+};
+
 const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'goals',
@@ -168,8 +176,9 @@ export default function App() {
   const [workspaceProfileLoading, setWorkspaceProfileLoading] = useState(false);
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const mobileFooterNavItems = useMemo(() => {
+  const mobileMenuNavItems: MobileMenuNavItem[] = useMemo(() => {
     const findWorkspaceItem = (navId: string) =>
       WORKSPACE_NAV_ITEMS.find((item) => item.id === navId);
 
@@ -181,14 +190,30 @@ export default function App() {
           ? `${shortLabel.charAt(0)}${shortLabel.slice(1).toLowerCase()}`
           : shortLabel;
 
+      if (navId === 'account') {
+        return {
+          id: navId,
+          label: 'Account',
+          ariaLabel: 'Account and profile',
+          icon: '👤',
+          summary: 'Manage your profile, workspace, and sign-in preferences.',
+        } satisfies MobileMenuNavItem;
+      }
+
       return {
         id: navId,
         label: formattedLabel,
         ariaLabel: item?.label ?? formattedLabel,
         icon: item?.icon ?? '•',
-      };
+        summary: item?.summary ?? 'Open this section.',
+      } satisfies MobileMenuNavItem;
     });
   }, []);
+
+  const mobileFooterNavItems = useMemo(
+    () => mobileMenuNavItems.slice(0, 4),
+    [mobileMenuNavItems],
+  );
 
   const mobileHabitHomeNavItems = useMemo(
     () => WORKSPACE_NAV_ITEMS.filter((item) => item.id !== 'goals'),
@@ -479,6 +504,8 @@ export default function App() {
   };
 
   const handleMobileNavSelect = (navId: string) => {
+    setIsMobileMenuOpen(false);
+
     if (navId === 'account' && !isAuthenticated) {
       handleAccountClick();
       return;
@@ -1035,6 +1062,7 @@ export default function App() {
           items={mobileFooterNavItems}
           activeId={null}
           onSelect={handleMobileNavSelect}
+          onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
       </>
     );
@@ -1189,7 +1217,51 @@ export default function App() {
           items={mobileFooterNavItems}
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
+          onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
+      ) : null}
+
+      {isMobileViewport && isMobileMenuOpen ? (
+        <div
+          className="mobile-menu-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Open full LifeGoalApp menu"
+        >
+          <div
+            className="mobile-menu-overlay__backdrop"
+            onClick={() => setIsMobileMenuOpen(false)}
+            role="presentation"
+          />
+          <div className="mobile-menu-overlay__panel">
+            <div className="mobile-menu-overlay__header">
+              <h2 className="mobile-menu-overlay__title">Quick menu</h2>
+              <button
+                type="button"
+                className="mobile-menu-overlay__close"
+                aria-label="Close menu"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <ul className="mobile-menu-overlay__list">
+              {mobileMenuNavItems.map((item) => (
+                <li key={item.id} className="mobile-menu-overlay__item">
+                  <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
+                    <span aria-hidden="true" className="mobile-menu-overlay__icon">
+                      {item.icon}
+                    </span>
+                    <span className="mobile-menu-overlay__texts">
+                      <span className="mobile-menu-overlay__label">{item.label}</span>
+                      <span className="mobile-menu-overlay__summary">{item.summary}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       ) : null}
 
       {isAuthOverlayVisible ? (
