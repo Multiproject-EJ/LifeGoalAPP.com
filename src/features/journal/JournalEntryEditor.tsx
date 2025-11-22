@@ -39,6 +39,8 @@ type JournalEntryEditorProps = {
   onSave: (draft: JournalEntryDraft) => Promise<void> | void;
 };
 
+const DEFAULT_MOOD_SCORE = 5;
+
 const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'quick': 'Quick',
   'deep': 'Deep',
@@ -222,9 +224,10 @@ export function JournalEntryEditor({
 
   const handleUsePrompt = () => {
     const prompt = getRandomPrompt();
+    const promptWithNewline = `${prompt}\n`;
     setDraft((current) => ({
       ...current,
-      content: current.content ? `${current.content}\n\n${prompt}\n` : `${prompt}\n`,
+      content: current.content ? `${current.content}\n\n${promptWithNewline}` : promptWithNewline,
     }));
   };
 
@@ -272,13 +275,16 @@ export function JournalEntryEditor({
                   type="range"
                   min="1"
                   max="10"
-                  value={draft.moodScore ?? 5}
+                  value={draft.moodScore ?? DEFAULT_MOOD_SCORE}
                   onChange={(event) => handleMoodScoreChange(Number(event.target.value))}
                   className="journal-editor__mood-slider"
                 />
                 <div className="journal-editor__mood-value">
-                  {draft.moodScore ?? 5} / 10
-                  {draft.mood && ` (${moodOptions.find(opt => opt.value === draft.mood)?.icon ?? ''} ${moodOptions.find(opt => opt.value === draft.mood)?.label ?? ''})`}
+                  {draft.moodScore ?? DEFAULT_MOOD_SCORE} / 10
+                  {draft.mood && (() => {
+                    const moodOption = moodOptions.find(opt => opt.value === draft.mood);
+                    return moodOption ? ` (${moodOption.icon} ${moodOption.label})` : '';
+                  })()}
                 </div>
               </label>
             ) : (
