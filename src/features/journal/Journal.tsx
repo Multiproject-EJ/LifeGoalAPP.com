@@ -16,6 +16,7 @@ import { JournalEntryList } from './JournalEntryList';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
 import type { Database } from '../../lib/database.types';
+import { DEFAULT_JOURNAL_TYPE } from './constants';
 
 const MOOD_OPTIONS: JournalMoodOption[] = [
   { value: 'happy', label: 'Happy', icon: '🙂' },
@@ -239,6 +240,11 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
         linked_goal_ids: draft.linkedGoalIds.length ? draft.linkedGoalIds : null,
         linked_habit_ids: draft.linkedHabitIds.length ? draft.linkedHabitIds : null,
         is_private: true,
+        type: draft.type ?? DEFAULT_JOURNAL_TYPE,
+        mood_score: draft.moodScore ?? null,
+        category: draft.category ?? null,
+        unlock_date: draft.unlockDate ?? null,
+        goal_id: draft.goalId ?? null,
       };
 
       let saved: JournalEntry | null = null;

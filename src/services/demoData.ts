@@ -2,6 +2,7 @@ import type { Json } from '../lib/database.types';
 import type {
   Database,
 } from '../lib/database.types';
+import { DEFAULT_JOURNAL_TYPE } from '../features/journal/constants';
 
 export type GoalRow = Database['public']['Tables']['goals']['Row'];
 export type GoalInsert = Database['public']['Tables']['goals']['Insert'];
@@ -656,6 +657,11 @@ const defaultState: DemoState = {
       attachments: null,
       linked_goal_ids: [goalLaunch.id],
       linked_habit_ids: [morningRitualId, outreachHabitId],
+      type: DEFAULT_JOURNAL_TYPE,
+      mood_score: null,
+      category: null,
+      unlock_date: null,
+      goal_id: null,
     },
     {
       id: createId('journal'),
@@ -672,6 +678,11 @@ const defaultState: DemoState = {
       attachments: null,
       linked_goal_ids: [goalVision.id],
       linked_habit_ids: [visionBoardId],
+      type: DEFAULT_JOURNAL_TYPE,
+      mood_score: null,
+      category: null,
+      unlock_date: null,
+      goal_id: null,
     },
     {
       id: createId('journal'),
@@ -688,6 +699,11 @@ const defaultState: DemoState = {
       attachments: null,
       linked_goal_ids: [goalArchive.id],
       linked_habit_ids: [visionBoardId],
+      type: DEFAULT_JOURNAL_TYPE,
+      mood_score: null,
+      category: null,
+      unlock_date: null,
+      goal_id: null,
     },
   ];
 })();
@@ -1181,6 +1197,11 @@ export function addDemoJournalEntry(payload: JournalEntryInsert): JournalEntryRo
     attachments: payload.attachments ?? null,
     linked_goal_ids: payload.linked_goal_ids ?? null,
     linked_habit_ids: payload.linked_habit_ids ?? null,
+    type: payload.type ?? DEFAULT_JOURNAL_TYPE,
+    mood_score: payload.mood_score ?? null,
+    category: payload.category ?? null,
+    unlock_date: payload.unlock_date ?? null,
+    goal_id: payload.goal_id ?? null,
   };
 
   updateState((current) => ({
