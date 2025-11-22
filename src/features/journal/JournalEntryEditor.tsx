@@ -127,6 +127,13 @@ function createDraft(entry: JournalEntry | null, journalType?: JournalType): Jou
   };
 }
 
+// AI analysis stub for brain dump mode
+async function analyzeBrainDump(text: string): Promise<string> {
+  // TODO: Integrate real AI analysis here
+  if (!text.trim()) return 'No content to analyze yet.';
+  return 'AI reflection placeholder: this is where insights about your brain dump would appear.';
+}
+
 export function JournalEntryEditor({
   open,
   mode,
@@ -144,11 +151,37 @@ export function JournalEntryEditor({
   const [draft, setDraft] = useState<JournalEntryDraft>(createDraft(entry, journalType));
   const [tagInput, setTagInput] = useState('');
 
+  // Brain dump mode state
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [hasFinished, setHasFinished] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+
   useEffect(() => {
     if (!open) return;
     setDraft(createDraft(entry, journalType));
     setTagInput('');
+    // Reset brain dump state when opening/changing entries
+    setTimeLeft(60);
+    setHasFinished(false);
+    setAnalysis(null);
   }, [entry, open, mode, journalType]);
+
+  // Brain dump countdown timer
+  useEffect(() => {
+    if (!open || draft.type !== 'brain_dump' || hasFinished || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setHasFinished(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [open, draft.type, hasFinished, timeLeft]);
 
   const moodValue = draft.mood ?? '';
 
@@ -255,11 +288,17 @@ export function JournalEntryEditor({
     setDraft((current) => ({ ...current, goalId: value || null }));
   };
 
+  const handleAnalyzeBrainDump = async () => {
+    const result = await analyzeBrainDump(draft.content);
+    setAnalysis(result);
+  };
+
   const getContentLabel = (): string => {
     if (isQuickMode) return "Today's thoughts (aim for ~3 sentences)";
     if (isGoalMode) return "Reflection on this goal";
     if (isTimeCapsuleMode) return "Message to your future self";
     if (isLifeWheelMode) return "Reflect on this area of your life";
+    if (isBrainDumpMode) return "Brain dump your thoughts";
     return "Content";
   };
 
@@ -268,6 +307,7 @@ export function JournalEntryEditor({
     if (isGoalMode) return "Reflect on your progress, challenges, and insights related to this goal...";
     if (isTimeCapsuleMode) return "Write a message to your future self. What do you want to remember? What are you hoping for?";
     if (isLifeWheelMode) return "Write about how this area has felt recently...";
+    if (isBrainDumpMode) return "Write freely without stopping. Let your thoughts flow...";
     return "Capture what unfolded, how you felt, and any momentum you want to carry forward.";
   };
 
@@ -275,6 +315,7 @@ export function JournalEntryEditor({
   const isGoalMode = draft.type === 'goal';
   const isTimeCapsuleMode = draft.type === 'time_capsule';
   const isLifeWheelMode = draft.type === 'life_wheel';
+  const isBrainDumpMode = draft.type === 'brain_dump';
 
   if (!open) {
     return null;
@@ -407,7 +448,7 @@ export function JournalEntryEditor({
             </>
           )}
 
-          {!isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && (
+          {!isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
             <label className="journal-editor__field">
               <span>Title</span>
               <input
@@ -419,6 +460,17 @@ export function JournalEntryEditor({
             </label>
           )}
 
+          {isBrainDumpMode && (
+            <div className="journal-brain-dump__timer">
+              <span className="journal-brain-dump__timer-label">
+                Time left: {timeLeft}s
+              </span>
+              {hasFinished && (
+                <span className="journal-brain-dump__timer-complete">Time's up! ✅</span>
+              )}
+            </div>
+          )}
+
           <label className="journal-editor__field">
             <span>{getContentLabel()}</span>
             <textarea
@@ -427,8 +479,32 @@ export function JournalEntryEditor({
               rows={isQuickMode ? 4 : 8}
               required
               placeholder={getContentPlaceholder()}
+              readOnly={isBrainDumpMode && hasFinished}
+              style={isBrainDumpMode ? {
+                filter: `blur(${Math.max((60 - timeLeft) / 10, 0)}px)`,
+                transition: 'filter 0.3s'
+              } : undefined}
             />
           </label>
+
+          {isBrainDumpMode && hasFinished && (
+            <div className="journal-brain-dump__reflect">
+              {!analysis ? (
+                <button
+                  type="button"
+                  className="journal-brain-dump__reflect-button"
+                  onClick={handleAnalyzeBrainDump}
+                >
+                  🧠 Reflect on my brain dump
+                </button>
+              ) : (
+                <div className="journal-brain-dump__analysis">
+                  <h4 className="journal-brain-dump__analysis-title">AI Reflection</h4>
+                  <p className="journal-brain-dump__analysis-content">{analysis}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {isQuickMode && (
             <div className="journal-editor__quick-actions">
@@ -442,7 +518,7 @@ export function JournalEntryEditor({
             </div>
           )}
 
-          {!isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && (
+          {!isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
             <>
               <div className="journal-editor__field">
                 <span>Tags</span>
