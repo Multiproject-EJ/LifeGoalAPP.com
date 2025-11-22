@@ -55,6 +55,9 @@ export function JournalEntryDetail({
   const tagList = entry.tags?.filter(Boolean) ?? [];
   const goalIds = entry.linked_goal_ids ?? [];
   const habitIds = entry.linked_habit_ids ?? [];
+  const isGoalMode = entry.type === 'goal';
+  const primaryGoalId = entry.goal_id;
+  const primaryGoal = primaryGoalId ? goalMap[primaryGoalId] : null;
   const paragraphs = entry.content
     .split(/\n+/)
     .map((text) => text.trim())
@@ -103,6 +106,21 @@ export function JournalEntryDetail({
           <p className="journal-detail__placeholder">This entry is waiting for words.</p>
         )}
       </article>
+
+      {isGoalMode && primaryGoal && primaryGoalId ? (
+        <div className="journal-detail__links">
+          <h3>Primary goal</h3>
+          <div className="journal-detail__chips">
+            <button
+              type="button"
+              onClick={() => onNavigateToGoal?.(primaryGoalId)}
+              disabled={disabled}
+            >
+              {primaryGoal.title}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {goalIds.length ? (
         <div className="journal-detail__links">

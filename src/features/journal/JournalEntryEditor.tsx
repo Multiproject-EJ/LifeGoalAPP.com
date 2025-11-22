@@ -231,7 +231,25 @@ export function JournalEntryEditor({
     }));
   };
 
+  const handlePrimaryGoalChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setDraft((current) => ({ ...current, goalId: value || null }));
+  };
+
+  const getContentLabel = (): string => {
+    if (isQuickMode) return "Today's thoughts (aim for ~3 sentences)";
+    if (isGoalMode) return "Reflection on this goal";
+    return "Content";
+  };
+
+  const getContentPlaceholder = (): string => {
+    if (isQuickMode) return "Quick capture of your day...";
+    if (isGoalMode) return "Reflect on your progress, challenges, and insights related to this goal...";
+    return "Capture what unfolded, how you felt, and any momentum you want to carry forward.";
+  };
+
   const isQuickMode = draft.type === 'quick';
+  const isGoalMode = draft.type === 'goal';
 
   if (!open) {
     return null;
@@ -302,7 +320,25 @@ export function JournalEntryEditor({
             )}
           </div>
 
-          {!isQuickMode && (
+          {isGoalMode && (
+            <label className="journal-editor__field">
+              <span>Link to goal</span>
+              <select 
+                value={draft.goalId ?? ''} 
+                onChange={handlePrimaryGoalChange}
+                aria-label="Select a goal to reflect on"
+              >
+                <option value="">Select a goal…</option>
+                {goalOptions.map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {!isQuickMode && !isGoalMode && (
             <label className="journal-editor__field">
               <span>Title</span>
               <input
@@ -315,17 +351,13 @@ export function JournalEntryEditor({
           )}
 
           <label className="journal-editor__field">
-            <span>{isQuickMode ? "Today's thoughts (aim for ~3 sentences)" : "Content"}</span>
+            <span>{getContentLabel()}</span>
             <textarea
               value={draft.content}
               onChange={(event) => handleFieldChange('content', event.target.value)}
               rows={isQuickMode ? 4 : 8}
               required
-              placeholder={
-                isQuickMode
-                  ? "Quick capture of your day..."
-                  : "Capture what unfolded, how you felt, and any momentum you want to carry forward."
-              }
+              placeholder={getContentPlaceholder()}
             />
           </label>
 
@@ -369,17 +401,19 @@ export function JournalEntryEditor({
                 )}
               </div>
 
-              <label className="journal-editor__field">
-                <span>Linked goals</span>
-                <select multiple value={draft.linkedGoalIds} onChange={handleGoalChange}>
-                  {goalOptions.map((goal) => (
-                    <option key={goal.id} value={goal.id}>
-                      {goal.title}
-                    </option>
-                  ))}
-                </select>
-                <p className="journal-editor__hint">Hold Cmd/Ctrl to select multiple goals.</p>
-              </label>
+              {!isGoalMode && (
+                <label className="journal-editor__field">
+                  <span>Linked goals</span>
+                  <select multiple value={draft.linkedGoalIds} onChange={handleGoalChange}>
+                    {goalOptions.map((goal) => (
+                      <option key={goal.id} value={goal.id}>
+                        {goal.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="journal-editor__hint">Hold Cmd/Ctrl to select multiple goals.</p>
+                </label>
+              )}
 
               <label className="journal-editor__field">
                 <span>Linked habits</span>
