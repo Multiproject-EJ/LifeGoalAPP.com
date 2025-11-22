@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
 import type { JournalEntry } from '../../services/journal';
 import type { Database, JournalEntryType } from '../../lib/database.types';
+import { DEFAULT_JOURNAL_TYPE } from './constants';
 
 export type JournalMoodOption = { value: string; label: string; icon: string };
 
@@ -48,7 +49,7 @@ function createDraft(entry: JournalEntry | null): JournalEntryDraft {
     tags: entry?.tags ? [...entry.tags] : [],
     linkedGoalIds: entry?.linked_goal_ids ? [...entry.linked_goal_ids] : [],
     linkedHabitIds: entry?.linked_habit_ids ? [...entry.linked_habit_ids] : [],
-    type: entry?.type ?? 'standard',
+    type: entry?.type ?? DEFAULT_JOURNAL_TYPE,
     moodScore: entry?.mood_score ?? null,
     category: entry?.category ?? null,
     unlockDate: entry?.unlock_date ?? null,

@@ -6,7 +6,8 @@
 ALTER TABLE public.journal_entries
 ADD COLUMN IF NOT EXISTS type text NOT NULL DEFAULT 'standard';
 
--- Numeric mood score on a 0-10 scale (integer type matches TypeScript number)
+-- Numeric mood score on a 0-10 scale
+-- Note: Using integer type to enforce whole numbers only (no fractional scores)
 ALTER TABLE public.journal_entries
 ADD COLUMN IF NOT EXISTS mood_score integer;
 
