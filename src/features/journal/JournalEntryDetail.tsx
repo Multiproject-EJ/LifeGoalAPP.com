@@ -107,13 +107,13 @@ export function JournalEntryDetail({
         )}
       </article>
 
-      {isGoalMode && primaryGoal ? (
+      {isGoalMode && primaryGoal && primaryGoalId ? (
         <div className="journal-detail__links">
           <h3>Primary goal</h3>
           <div className="journal-detail__chips">
             <button
               type="button"
-              onClick={() => onNavigateToGoal?.(primaryGoalId!)}
+              onClick={() => onNavigateToGoal?.(primaryGoalId)}
               disabled={disabled}
             >
               {primaryGoal.title}
