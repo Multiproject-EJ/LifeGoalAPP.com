@@ -66,6 +66,7 @@ export function JournalEntryDetail({
   const goalIds = entry.linked_goal_ids ?? [];
   const habitIds = entry.linked_habit_ids ?? [];
   const isGoalMode = entry.type === 'goal';
+  const isLifeWheelMode = entry.type === 'life_wheel';
   const primaryGoalId = entry.goal_id;
   const primaryGoal = primaryGoalId ? goalMap[primaryGoalId] : null;
   const paragraphs = entry.content
@@ -100,6 +101,15 @@ export function JournalEntryDetail({
           </button>
         </div>
       </header>
+
+      {isLifeWheelMode && entry.category ? (
+        <div className="journal-detail__metadata">
+          <p><strong>Life area:</strong> {entry.category}</p>
+          {entry.mood_score !== null && entry.mood_score !== undefined ? (
+            <p><strong>Satisfaction:</strong> {entry.mood_score}/10</p>
+          ) : null}
+        </div>
+      ) : null}
 
       {tagList.length ? (
         <ul className="journal-detail__tags">
