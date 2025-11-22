@@ -10,6 +10,8 @@ import {
 } from '../../services/habits';
 import {
   getHabitCompletionsByMonth,
+  getMonthlyCompletionGrid,
+  toggleHabitCompletionForDate,
   type MonthlyHabitCompletions,
 } from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
@@ -103,6 +105,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
   // State for storing monthly statistics from our helper function
   const [monthlyStats, setMonthlyStats] = useState<MonthlyHabitCompletions | null>(null);
+  // State for per-day completion data from habit_completions table
+  const [monthlyCompletionsV2, setMonthlyCompletionsV2] = useState<
+    Record<string, Record<string, boolean>>
+  >({});
   // State for alert configuration modal
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
   // State for habit alert summaries (which days have alerts scheduled)
@@ -262,6 +268,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setMonthlyStats(result.data);
     } else if (result.error) {
       console.error('Error loading monthly statistics:', result.error);
+    }
+    
+    // Also fetch per-day completion grid for the monthly table
+    const gridResult = await getMonthlyCompletionGrid(
+      session.user.id,
+      year,
+      month + 1, // Convert from 0-11 to 1-12
+    );
+    
+    if (gridResult.data) {
+      setMonthlyCompletionsV2(gridResult.data);
+    } else if (gridResult.error) {
+      console.error('Error loading monthly completion grid:', gridResult.error);
     }
   }, [session?.user?.id, isConfigured]);
 
@@ -457,6 +476,43 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
   const toggleHabit = async (habit: HabitWithGoal) => {
     await toggleHabitForDate(habit, today);
+  };
+
+  /**
+   * Toggle habit completion for the monthly grid using the new habit_completions table.
+   * This function is specifically for monthly view interactions with habits_v2.
+   */
+  const toggleMonthlyHabitForDate = async (habitId: string, habitName: string, dateISO: string) => {
+    if (!isConfigured && !isDemoExperience) {
+      setErrorMessage('Supabase credentials are not configured yet.');
+      return;
+    }
+
+    const cellKey = `${habitId}:${dateISO}`;
+    setMonthlySaving((current) => ({ ...current, [cellKey]: true }));
+    setErrorMessage(null);
+
+    try {
+      // Use the new toggleHabitCompletionForDate function for habits_v2 + habit_completions
+      const { data, error } = await toggleHabitCompletionForDate(
+        session.user.id,
+        habitId,
+        dateISO
+      );
+      
+      if (error) throw error;
+
+      // Refresh monthly stats to get updated completion data
+      await loadMonthlyStats(selectedYear, selectedMonth);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to update the habit.');
+    } finally {
+      setMonthlySaving((current) => {
+        const next = { ...current };
+        delete next[cellKey];
+        return next;
+      });
+    }
   };
 
   const compactStats = useMemo(() => {
@@ -814,39 +870,50 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               </tr>
             </thead>
             <tbody>
-              {habits.map((habit) => {
-                const domainMeta = extractLifeWheelDomain(habit.schedule);
+              {/* Use monthlyStats.habits for the monthly grid if available (from habits_v2) */}
+              {(monthlyStats?.habits || []).map((habitStat) => {
+                const habitCompletionGrid = monthlyCompletionsV2[habitStat.habitId] ?? {};
+                
+                // Extract scheduling info if available
+                const habitSchedule = habitStat.schedule ?? null;
+                const domainMeta = extractLifeWheelDomain(habitSchedule);
                 const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
                 const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
-                const goalLabel = habit.goal?.title ?? 'Unassigned goal';
-                const habitMatrix = monthlyCompletions[habit.id] ?? {};
+                const displayLabel = domainLabel || 'Habit';
 
                 return (
-                  <tr key={habit.id} className="habit-monthly__row" style={{ borderLeftColor: domainColor }}>
+                  <tr key={habitStat.habitId} className="habit-monthly__row" style={{ borderLeftColor: domainColor }}>
                     <th scope="row" className="habit-monthly__habit-cell">
                       <div className="habit-monthly__habit">
                         <span className="habit-monthly__domain" style={{ backgroundColor: domainColor }}>
-                          {domainLabel ?? 'Whole life'}
+                          {displayLabel}
                         </span>
                         <div className="habit-monthly__habit-details">
-                          <span className="habit-monthly__habit-name">{habit.name}</span>
-                          <span className="habit-monthly__habit-goal">Goal: {goalLabel}</span>
+                          <span className="habit-monthly__habit-name">
+                            {habitStat.emoji ? `${habitStat.emoji} ` : ''}{habitStat.habitName}
+                          </span>
+                          <span className="habit-monthly__habit-goal">
+                            {habitStat.goalTitle ? `Goal: ${habitStat.goalTitle}` : 'No goal assigned'}
+                          </span>
                         </div>
                       </div>
                     </th>
                     {monthDays.map((dateIso) => {
-                      const cellKey = `${habit.id}:${dateIso}`;
-                      const cellState = habitMatrix[dateIso];
-                      const isCompleted = Boolean(cellState?.completed);
-                      const scheduled = isHabitScheduledOnDate(habit, dateIso);
+                      const cellKey = `${habitStat.habitId}:${dateIso}`;
+                      const isCompleted = Boolean(habitCompletionGrid[dateIso]);
                       const isToday = dateIso === today;
                       const isSavingCell = Boolean(monthlySaving[cellKey]);
-                      const disableToggle = !scheduled && !isCompleted;
                       const dayLabel = formatDateLabel(dateIso);
                       
-                      // Check if there are alerts for this habit on this day
-                      const habitAlerts = habitAlertSummaries.get(habit.id);
-                      const hasAlerts = habitAlerts?.has(dateIso) ?? false;
+                      // Check if habit is scheduled for this date
+                      // We need to create a minimal habit object for the schedule checker
+                      const habitForSchedule = {
+                        id: habitStat.habitId,
+                        name: habitStat.habitName,
+                        frequency: 'daily', // Default, will be overridden by schedule
+                        schedule: habitSchedule,
+                      } as HabitWithGoal;
+                      const scheduled = isHabitScheduledOnDate(habitForSchedule, dateIso);
 
                       const cellClassNames = ['habit-monthly__cell'];
                       if (scheduled) {
@@ -863,9 +930,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       if (isSavingCell) {
                         cellClassNames.push('habit-monthly__cell--saving');
                       }
-                      if (hasAlerts) {
-                        cellClassNames.push('habit-monthly__cell--has-alert');
-                      }
 
                       return (
                         <td key={cellKey} className={cellClassNames.join(' ')}>
@@ -873,12 +937,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                             type="button"
                             className={`habit-monthly__toggle ${isCompleted ? 'habit-monthly__toggle--checked' : ''}`}
                             aria-pressed={isCompleted}
-                            aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habit.name} for ${dayLabel}${hasAlerts ? ' (has alerts)' : ''}`}
-                            onClick={() => void toggleHabitForDate(habit, dateIso)}
-                            disabled={disableToggle || isSavingCell}
-                            title={scheduled ? `${dayLabel}${hasAlerts ? ' 🔔' : ''}` : `${dayLabel} (rest day)`}
+                            aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habitStat.habitName} for ${dayLabel}`}
+                            onClick={() => void toggleMonthlyHabitForDate(habitStat.habitId, habitStat.habitName, dateIso)}
+                            disabled={(!scheduled && !isCompleted) || isSavingCell}
+                            title={scheduled ? dayLabel : `${dayLabel} (rest day)`}
                           >
-                            {isSavingCell ? '…' : isCompleted ? '✓' : hasAlerts ? '🔔' : ''}
+                            {isSavingCell ? '…' : isCompleted ? '✓' : ''}
                           </button>
                         </td>
                       );

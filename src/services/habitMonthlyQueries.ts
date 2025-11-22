@@ -1,6 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
-import type { Database } from '../lib/database.types';
+import type { Database, Json } from '../lib/database.types';
 import {
   DEMO_USER_ID,
   getDemoHabitLogsForRange,
@@ -8,6 +8,10 @@ import {
 } from './demoData';
 
 type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
+type HabitCompletionRow = Database['public']['Tables']['habit_completions']['Row'];
+type HabitCompletionInsert = Database['public']['Tables']['habit_completions']['Insert'];
+type HabitCompletionUpdate = Database['public']['Tables']['habit_completions']['Update'];
+type HabitV2Row = Database['public']['Tables']['habits_v2']['Row'];
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -25,6 +29,8 @@ export type HabitMonthlyCompletion = {
   completedDays: number;
   completionPercentage: number;
   goalTitle?: string | null;
+  emoji?: string | null;
+  schedule?: Json | null;
 };
 
 /**
@@ -73,6 +79,13 @@ function formatISODate(date: Date): string {
 /**
  * Main helper function to get habit completions for a specific month.
  * 
+ * **IMPORTANT**: This function queries the NEW habits_v2 and habit_completions tables.
+ * 
+ * Data structure differences from legacy habits table:
+ * - Uses `habits_v2.title` instead of `habits.name`
+ * - No direct goal associations (goalTitle will be null)
+ * - Includes emoji and schedule fields from habits_v2
+ * 
  * @param userId - The user's ID
  * @param year - The year (e.g., 2025)
  * @param month - The month (1-12, where 1 = January)
@@ -104,11 +117,12 @@ export async function getHabitCompletionsByMonth(
     
     const supabase = getSupabaseClient();
     
-    // Fetch all habits for the user with their associated goals
+    // Fetch all habits_v2 for the user (no goal association in habits_v2)
     const { data: habitsData, error: habitsError } = await supabase
-      .from('habits')
-      .select('id, name, goal_id, frequency, schedule, goal:goals(id, title, target_date)')
-      .eq('goals.user_id', userId);
+      .from('habits_v2')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('archived', false);
     
     if (habitsError) {
       return { data: null, error: habitsError };
@@ -129,38 +143,25 @@ export async function getHabitCompletionsByMonth(
       };
     }
     
-    // Type the habits properly
-    type HabitWithGoal = {
-      id: string;
-      name: string;
-      goal_id: string;
-      frequency: string;
-      schedule: any;
-      goal: {
-        id: string;
-        title: string;
-        target_date: string | null;
-      } | null;
-    };
-    
-    const habits = habitsData as unknown as HabitWithGoal[];
+    const habits = habitsData as HabitV2Row[];
     
     // Get habit IDs
     const habitIds = habits.map(h => h.id);
     
-    // Fetch all habit logs for these habits within the month range
-    const { data: logsData, error: logsError } = await supabase
-      .from('habit_logs')
+    // Fetch all habit_completions for these habits within the month range
+    const { data: completionsData, error: completionsError } = await supabase
+      .from('habit_completions')
       .select('*')
+      .eq('user_id', userId)
       .in('habit_id', habitIds)
-      .gte('date', startDate)
-      .lte('date', endDate);
+      .gte('completed_date', startDate)
+      .lte('completed_date', endDate);
     
-    if (logsError) {
-      return { data: null, error: logsError };
+    if (completionsError) {
+      return { data: null, error: completionsError };
     }
     
-    const logs = (logsData || []) as HabitLogRow[];
+    const completions = (completionsData || []) as HabitCompletionRow[];
     
     // Calculate days in month
     const monthStart = new Date(year, month - 1, 1);
@@ -169,9 +170,11 @@ export async function getHabitCompletionsByMonth(
     
     // Build completion data for each habit
     const habitCompletions: HabitMonthlyCompletion[] = habits.map(habit => {
-      // Count completed logs for this habit
-      const habitLogs = logs.filter(log => log.habit_id === habit.id && log.completed);
-      const completedDays = habitLogs.length;
+      // Count completed entries for this habit
+      const habitCompletions = completions.filter(
+        completion => completion.habit_id === habit.id && completion.completed
+      );
+      const completedDays = habitCompletions.length;
       
       // Calculate completion percentage (out of total days in month)
       const completionPercentage = totalDaysInMonth > 0
@@ -180,11 +183,13 @@ export async function getHabitCompletionsByMonth(
       
       return {
         habitId: habit.id,
-        habitName: habit.name,
+        habitName: habit.title, // habits_v2 uses 'title' instead of 'name'
         totalDays: totalDaysInMonth,
         completedDays,
         completionPercentage,
-        goalTitle: habit.goal?.title || null,
+        goalTitle: null, // habits_v2 doesn't have direct goal associations
+        emoji: habit.emoji,
+        schedule: habit.schedule,
       };
     });
     
@@ -312,6 +317,227 @@ function getHabitCompletionsByMonthDemo(
     };
   } catch (error) {
     console.error('Error in getHabitCompletionsByMonthDemo:', error);
+    return {
+      data: null,
+      error: error as PostgrestError,
+    };
+  }
+}
+
+/**
+ * Toggle habit completion for a specific date.
+ * If a row for (user_id, habit_id, completed_date) does not exist, insert one with completed = true.
+ * If it exists, toggle the completed value.
+ * 
+ * @param userId - The user's ID
+ * @param habitId - The habit ID
+ * @param date - The date in ISO format (YYYY-MM-DD)
+ * @returns Promise with the updated completion row or error
+ * 
+ * @example
+ * ```typescript
+ * const result = await toggleHabitCompletionForDate('user-123', 'habit-456', '2025-01-15');
+ * if (result.data) {
+ *   console.log(`Habit completion toggled to: ${result.data.completed}`);
+ * }
+ * ```
+ */
+export async function toggleHabitCompletionForDate(
+  userId: string,
+  habitId: string,
+  date: string,
+): Promise<ServiceResponse<HabitCompletionRow>> {
+  try {
+    // Check if we should use demo data or real Supabase data
+    if (!canUseSupabaseData()) {
+      return toggleHabitCompletionForDateDemo(userId, habitId, date);
+    }
+    
+    const supabase = getSupabaseClient();
+    
+    // Check if a completion record already exists for this user/habit/date
+    const { data: existingData, error: fetchError } = await supabase
+      .from('habit_completions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('habit_id', habitId)
+      .eq('completed_date', date)
+      .maybeSingle();
+    
+    if (fetchError) {
+      return { data: null, error: fetchError };
+    }
+    
+    const existingCompletion = existingData as HabitCompletionRow | null;
+    
+    if (existingCompletion) {
+      // Record exists - toggle the completed value
+      const newCompletedValue = !existingCompletion.completed;
+      const { data: updateData, error: updateError } = await supabase
+        .from('habit_completions')
+        .update({ completed: newCompletedValue })
+        .eq('id', existingCompletion.id)
+        .select()
+        .single();
+      
+      if (updateError) {
+        return { data: null, error: updateError };
+      }
+      
+      return { data: updateData as HabitCompletionRow, error: null };
+    } else {
+      // Record doesn't exist - insert a new one with completed = true
+      const insertPayload: HabitCompletionInsert = {
+        user_id: userId,
+        habit_id: habitId,
+        completed_date: date,
+        completed: true,
+      };
+      
+      const { data: insertData, error: insertError } = await supabase
+        .from('habit_completions')
+        .insert(insertPayload)
+        .select()
+        .single();
+      
+      if (insertError) {
+        return { data: null, error: insertError };
+      }
+      
+      return { data: insertData as HabitCompletionRow, error: null };
+    }
+  } catch (error) {
+    console.error('Error in toggleHabitCompletionForDate:', error);
+    return {
+      data: null,
+      error: error as PostgrestError,
+    };
+  }
+}
+
+/**
+ * Demo mode version of toggleHabitCompletionForDate.
+ * Uses demo data instead of Supabase queries.
+ */
+function toggleHabitCompletionForDateDemo(
+  userId: string,
+  habitId: string,
+  date: string,
+): ServiceResponse<HabitCompletionRow> {
+  try {
+    // In demo mode, we simulate the toggle behavior
+    // Since we're using the old habit_logs structure in demo mode,
+    // we need to create a mock HabitCompletionRow
+    const effectiveUserId = userId || DEMO_USER_ID;
+    
+    // Create a mock completion row
+    // Note: In demo mode, this won't actually persist to the database
+    // The actual demo data is managed by the existing demo functions
+    const mockCompletion: HabitCompletionRow = {
+      id: `demo-${habitId}-${date}`,
+      user_id: effectiveUserId,
+      habit_id: habitId,
+      completed_date: date,
+      completed: true, // Always toggle to true in demo mode for simplicity
+      created_at: new Date().toISOString(),
+    };
+    
+    return { data: mockCompletion, error: null };
+  } catch (error) {
+    console.error('Error in toggleHabitCompletionForDateDemo:', error);
+    return {
+      data: null,
+      error: error as PostgrestError,
+    };
+  }
+}
+
+/**
+ * Get per-day completion data for all habits in a given month.
+ * Returns a map of habitId -> date -> completed boolean.
+ * This is useful for rendering monthly grids.
+ * 
+ * @param userId - The user's ID
+ * @param year - The year (e.g., 2025)
+ * @param month - The month (1-12, where 1 = January)
+ * @returns Promise with per-day completion data or error
+ */
+export async function getMonthlyCompletionGrid(
+  userId: string,
+  year: number,
+  month: number,
+): Promise<ServiceResponse<Record<string, Record<string, boolean>>>> {
+  try {
+    const { startDate, endDate } = getMonthBoundaries(year, month);
+    
+    if (!canUseSupabaseData()) {
+      return getMonthlyCompletionGridDemo(userId, year, month, startDate, endDate);
+    }
+    
+    const supabase = getSupabaseClient();
+    
+    // Fetch all habit_completions for the user within the month range
+    const { data: completionsData, error: completionsError } = await supabase
+      .from('habit_completions')
+      .select('habit_id, completed_date, completed')
+      .eq('user_id', userId)
+      .gte('completed_date', startDate)
+      .lte('completed_date', endDate);
+    
+    if (completionsError) {
+      return { data: null, error: completionsError };
+    }
+    
+    const completions = (completionsData || []) as HabitCompletionRow[];
+    
+    // Build the grid: habitId -> date -> completed
+    const grid: Record<string, Record<string, boolean>> = {};
+    
+    for (const completion of completions) {
+      if (!grid[completion.habit_id]) {
+        grid[completion.habit_id] = {};
+      }
+      grid[completion.habit_id][completion.completed_date] = completion.completed;
+    }
+    
+    return { data: grid, error: null };
+  } catch (error) {
+    console.error('Error in getMonthlyCompletionGrid:', error);
+    return {
+      data: null,
+      error: error as PostgrestError,
+    };
+  }
+}
+
+/**
+ * Demo mode version of getMonthlyCompletionGrid.
+ */
+function getMonthlyCompletionGridDemo(
+  userId: string,
+  year: number,
+  month: number,
+  startDate: string,
+  endDate: string,
+): ServiceResponse<Record<string, Record<string, boolean>>> {
+  try {
+    const effectiveUserId = userId || DEMO_USER_ID;
+    const habits = getDemoHabitsForUser(effectiveUserId);
+    const habitIds = habits.map(h => h.id);
+    const logs = getDemoHabitLogsForRange(habitIds, startDate, endDate);
+    
+    const grid: Record<string, Record<string, boolean>> = {};
+    
+    for (const log of logs) {
+      if (!grid[log.habit_id]) {
+        grid[log.habit_id] = {};
+      }
+      grid[log.habit_id][log.date] = log.completed;
+    }
+    
+    return { data: grid, error: null };
+  } catch (error) {
+    console.error('Error in getMonthlyCompletionGridDemo:', error);
     return {
       data: null,
       error: error as PostgrestError,
