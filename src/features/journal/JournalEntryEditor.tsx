@@ -56,6 +56,45 @@ function getModeLabel(type?: JournalEntryType): string {
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
+// Quick journal prompts
+const QUICK_PROMPTS = [
+  "What's one thing you're grateful for today?",
+  "What made you smile today?",
+  "What challenged you today, and how did you handle it?",
+  "What's something you learned today?",
+  "What's one thing you're looking forward to tomorrow?",
+  "Describe your energy level today and what influenced it.",
+  "What's one small win you had today?",
+  "What's on your mind right now?",
+];
+
+function getRandomPrompt(): string {
+  return QUICK_PROMPTS[Math.floor(Math.random() * QUICK_PROMPTS.length)];
+}
+
+// Map mood_score (1-10) to mood string
+function moodScoreToMood(score: number | null): string | null {
+  if (score === null) return null;
+  if (score <= 3) return 'sad';
+  if (score <= 5) return 'stressed';
+  if (score <= 7) return 'neutral';
+  if (score <= 9) return 'happy';
+  return 'excited';
+}
+
+// Map mood string to mood_score (1-10)
+function moodToMoodScore(mood: string | null): number | null {
+  if (!mood) return null;
+  const mapping: Record<string, number> = {
+    'sad': 2,
+    'stressed': 5,
+    'neutral': 7,
+    'happy': 8,
+    'excited': 10,
+  };
+  return mapping[mood] ?? null;
+}
+
 function createDraft(entry: JournalEntry | null, journalType?: JournalType): JournalEntryDraft {
   return {
     id: entry?.id,
@@ -173,6 +212,24 @@ export function JournalEntryEditor({
     setDraft((current) => ({ ...current, linkedHabitIds: values }));
   };
 
+  const handleMoodScoreChange = (value: number) => {
+    setDraft((current) => ({
+      ...current,
+      moodScore: value,
+      mood: moodScoreToMood(value),
+    }));
+  };
+
+  const handleUsePrompt = () => {
+    const prompt = getRandomPrompt();
+    setDraft((current) => ({
+      ...current,
+      content: current.content ? `${current.content}\n\n${prompt}\n` : `${prompt}\n`,
+    }));
+  };
+
+  const isQuickMode = draft.type === 'quick';
+
   if (!open) {
     return null;
   }
@@ -208,88 +265,128 @@ export function JournalEntryEditor({
               />
             </label>
 
-            <label className="journal-editor__field">
-              <span>Mood</span>
-              <select value={moodValue} onChange={(event) => handleFieldChange('mood', event.target.value)}>
-                <option value="">No mood selected</option>
-                {moodOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.icon} {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <label className="journal-editor__field">
-            <span>Title</span>
-            <input
-              type="text"
-              value={draft.title}
-              onChange={(event) => handleFieldChange('title', event.target.value)}
-              placeholder="Optional headline"
-            />
-          </label>
-
-          <label className="journal-editor__field">
-            <span>Content</span>
-            <textarea
-              value={draft.content}
-              onChange={(event) => handleFieldChange('content', event.target.value)}
-              rows={8}
-              required
-              placeholder="Capture what unfolded, how you felt, and any momentum you want to carry forward."
-            />
-          </label>
-
-          <div className="journal-editor__field">
-            <span>Tags</span>
-            <input
-              type="text"
-              value={tagInput}
-              onChange={handleTagInputChange}
-              onKeyDown={handleTagKeyDown}
-              onBlur={handleTagBlur}
-              placeholder="Add tags separated by commas"
-            />
-            {draft.tags.length > 0 ? (
-              <ul className="journal-editor__tags">
-                {draft.tags.map((tag) => (
-                  <li key={tag}>
-                    <span>{tag}</span>
-                    <button type="button" onClick={() => handleRemoveTag(tag)} aria-label={`Remove tag ${tag}`}>
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            {isQuickMode ? (
+              <label className="journal-editor__field">
+                <span>Mood score (1-10)</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={draft.moodScore ?? 5}
+                  onChange={(event) => handleMoodScoreChange(Number(event.target.value))}
+                  className="journal-editor__mood-slider"
+                />
+                <div className="journal-editor__mood-value">
+                  {draft.moodScore ?? 5} / 10
+                  {draft.mood && ` (${moodOptions.find(opt => opt.value === draft.mood)?.icon ?? ''} ${moodOptions.find(opt => opt.value === draft.mood)?.label ?? ''})`}
+                </div>
+              </label>
             ) : (
-              <p className="journal-editor__hint">Use tags like mood, project, or ritual to organize entries.</p>
+              <label className="journal-editor__field">
+                <span>Mood</span>
+                <select value={moodValue} onChange={(event) => handleFieldChange('mood', event.target.value)}>
+                  <option value="">No mood selected</option>
+                  {moodOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.icon} {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
           </div>
 
-          <label className="journal-editor__field">
-            <span>Linked goals</span>
-            <select multiple value={draft.linkedGoalIds} onChange={handleGoalChange}>
-              {goalOptions.map((goal) => (
-                <option key={goal.id} value={goal.id}>
-                  {goal.title}
-                </option>
-              ))}
-            </select>
-            <p className="journal-editor__hint">Hold Cmd/Ctrl to select multiple goals.</p>
-          </label>
+          {!isQuickMode && (
+            <label className="journal-editor__field">
+              <span>Title</span>
+              <input
+                type="text"
+                value={draft.title}
+                onChange={(event) => handleFieldChange('title', event.target.value)}
+                placeholder="Optional headline"
+              />
+            </label>
+          )}
 
           <label className="journal-editor__field">
-            <span>Linked habits</span>
-            <select multiple value={draft.linkedHabitIds} onChange={handleHabitChange}>
-              {habitOptions.map((habit) => (
-                <option key={habit.id} value={habit.id}>
-                  {habit.name}
-                </option>
-              ))}
-            </select>
+            <span>{isQuickMode ? "Today's thoughts (aim for ~3 sentences)" : "Content"}</span>
+            <textarea
+              value={draft.content}
+              onChange={(event) => handleFieldChange('content', event.target.value)}
+              rows={isQuickMode ? 4 : 8}
+              required
+              placeholder={
+                isQuickMode
+                  ? "Quick capture of your day..."
+                  : "Capture what unfolded, how you felt, and any momentum you want to carry forward."
+              }
+            />
           </label>
+
+          {isQuickMode && (
+            <div className="journal-editor__quick-actions">
+              <button
+                type="button"
+                className="journal-editor__prompt-button"
+                onClick={handleUsePrompt}
+              >
+                ✨ Use a prompt
+              </button>
+            </div>
+          )}
+
+          {!isQuickMode && (
+            <>
+              <div className="journal-editor__field">
+                <span>Tags</span>
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={handleTagInputChange}
+                  onKeyDown={handleTagKeyDown}
+                  onBlur={handleTagBlur}
+                  placeholder="Add tags separated by commas"
+                />
+                {draft.tags.length > 0 ? (
+                  <ul className="journal-editor__tags">
+                    {draft.tags.map((tag) => (
+                      <li key={tag}>
+                        <span>{tag}</span>
+                        <button type="button" onClick={() => handleRemoveTag(tag)} aria-label={`Remove tag ${tag}`}>
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="journal-editor__hint">Use tags like mood, project, or ritual to organize entries.</p>
+                )}
+              </div>
+
+              <label className="journal-editor__field">
+                <span>Linked goals</span>
+                <select multiple value={draft.linkedGoalIds} onChange={handleGoalChange}>
+                  {goalOptions.map((goal) => (
+                    <option key={goal.id} value={goal.id}>
+                      {goal.title}
+                    </option>
+                  ))}
+                </select>
+                <p className="journal-editor__hint">Hold Cmd/Ctrl to select multiple goals.</p>
+              </label>
+
+              <label className="journal-editor__field">
+                <span>Linked habits</span>
+                <select multiple value={draft.linkedHabitIds} onChange={handleHabitChange}>
+                  {habitOptions.map((habit) => (
+                    <option key={habit.id} value={habit.id}>
+                      {habit.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
 
           {error ? <p className="journal-editor__status journal-editor__status--error">{error}</p> : null}
 
