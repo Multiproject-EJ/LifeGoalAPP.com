@@ -191,6 +191,17 @@ Ensure your `manifest.webmanifest` includes:
 }
 ```
 
+**Note on Icon Formats:**
+While SVG icons work well for PWAs, some browsers have better notification support with PNG icons. For production deployments, consider adding PNG versions:
+
+```json
+{
+  "src": "/icons/icon-192x192.png",
+  "sizes": "192x192",
+  "type": "image/png"
+}
+```
+
 ### Step 7: Service Worker Registration
 
 The service worker should be registered in your app. Verify in `index.html` or main app file:

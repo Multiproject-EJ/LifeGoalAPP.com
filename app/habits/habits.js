@@ -1005,8 +1005,8 @@ async function handleNotificationAction(habitId, action) {
   console.log('Notification action:', action, 'for habit:', habitId);
   
   if (action === 'done') {
-    // Mark habit as done
-    await toggleBoolean(habitId, false);
+    // Mark habit as done (second param 'false' means it's not currently done, so we're marking it as done)
+    await toggleBoolean(habitId, /* currentDone */ false);
   } else if (action === 'skip') {
     // Skip habit
     await skipHabit(habitId);

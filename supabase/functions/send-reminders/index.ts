@@ -209,7 +209,22 @@ Deno.serve(async (req) => {
             if (!habit) continue;
 
             const title = `Time for: ${habit.emoji || '📋'} ${habit.title}`;
-            const payload = JSON.stringify({
+            
+            // Define notification payload structure
+            interface NotificationPayload {
+              title: string;
+              body: string;
+              icon: string;
+              badge: string;
+              tag: string;
+              data: {
+                habit_id: string;
+                url: string;
+              };
+              actions: Array<{ action: string; title: string }>;
+            }
+            
+            const notificationPayload: NotificationPayload = {
               title,
               body: 'Mark it complete in LifeGoal App',
               icon: '/icons/icon-192x192.svg',
@@ -223,7 +238,9 @@ Deno.serve(async (req) => {
                 { action: 'done', title: 'Mark Done' },
                 { action: 'skip', title: 'Skip' },
               ],
-            });
+            };
+            
+            const payload = JSON.stringify(notificationPayload);
 
             for (const sub of userSubs) {
               try {
