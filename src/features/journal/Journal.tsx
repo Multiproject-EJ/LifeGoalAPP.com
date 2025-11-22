@@ -15,8 +15,15 @@ import { fetchHabitsForUser } from '../../services/habits';
 import { JournalEntryList } from './JournalEntryList';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
-import type { Database } from '../../lib/database.types';
+import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
+
+/**
+ * Journal mode type representing different journaling experiences.
+ * This is an alias for JournalEntryType to provide better semantic meaning
+ * in the context of journal UI state.
+ */
+export type JournalType = JournalEntryType;
 
 const MOOD_OPTIONS: JournalMoodOption[] = [
   { value: 'happy', label: 'Happy', icon: '🙂' },
@@ -54,6 +61,9 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const isDemoExperience = isDemoSession(session);
   const journalDisabled = !isConfigured && !isDemoExperience;
   const isCompactLayout = useMediaQuery('(max-width: 960px)');
+
+  // Journal mode state for different journaling experiences
+  const [journalType, setJournalType] = useState<JournalType>('standard');
 
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
