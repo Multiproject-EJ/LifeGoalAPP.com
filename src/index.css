@@ -7383,6 +7383,90 @@ body {
   box-shadow: 0 18px 32px rgba(168, 85, 247, 0.25);
 }
 
+.journal__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.journal-mode-selector {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.journal-mode-selector__option {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.journal-mode-selector__radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.journal-mode-selector__label {
+  display: inline-block;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 999px;
+  background: var(--color-surface-raised, #f1f5f9);
+  color: var(--color-text-secondary, #475569);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  transition: all 0.2s ease;
+}
+
+.journal-mode-selector__radio:checked + .journal-mode-selector__label {
+  background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+}
+
+.journal-mode-selector__radio:focus + .journal-mode-selector__label {
+  outline: 2px solid var(--color-primary, #0ea5e9);
+  outline-offset: 2px;
+}
+
+.journal-mode-selector__option:hover .journal-mode-selector__label {
+  background: var(--color-surface-hover, #e2e8f0);
+}
+
+.journal-mode-selector__radio:checked + .journal-mode-selector__label:hover {
+  background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
+}
+
+@media (max-width: 960px) {
+  .journal__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .journal__header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .journal-mode-selector {
+    order: 2;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .journal-mode-selector__label {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+  }
+}
+
 .journal__banner {
   margin: 0;
   padding: 0.85rem 1rem;
