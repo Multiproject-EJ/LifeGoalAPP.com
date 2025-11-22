@@ -111,14 +111,181 @@ Deno.serve(async (req) => {
     }
 
     // CRON: Send reminders (runs every minute)
-    // TODO: Implement VAPID-based Web Push sending
-    // For now, return placeholder
     if (pathname.endsWith('/cron')) {
       console.log('CRON: Send reminders job triggered');
-      // TODO: Query users with reminders due, send push notifications
-      return new Response(JSON.stringify({ success: true, message: 'Reminders sent' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      
+      try {
+        // Get current time rounded to nearest minute
+        const now = new Date();
+        const currentMinute = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        console.log('Checking for reminders at:', currentMinute);
+
+        // Query habits with reminders due now
+        const { data: reminders, error: remindersError } = await supabase
+          .from('habit_reminders')
+          .select(`
+            id,
+            habit_id,
+            local_time,
+            days,
+            habits_v2 (
+              id,
+              user_id,
+              title,
+              emoji
+            )
+          `)
+          .like('local_time', `${currentMinute}:%`);
+
+        if (remindersError) throw remindersError;
+
+        if (!reminders || reminders.length === 0) {
+          return new Response(JSON.stringify({ success: true, message: 'No reminders due', count: 0 }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Filter by day of week if specified
+        const dayOfWeek = now.getDay(); // 0=Sunday, 1=Monday, etc.
+        const dueReminders = reminders.filter(r => {
+          if (!r.days || r.days.length === 0) return true; // No day restriction
+          return r.days.includes(dayOfWeek);
+        });
+
+        console.log(`Found ${dueReminders.length} reminders to send`);
+
+        // Get push subscriptions for users with due reminders
+        const userIds = [...new Set(dueReminders.map(r => r.habits_v2?.user_id).filter(Boolean))];
+        
+        const { data: subscriptions, error: subsError } = await supabase
+          .from('push_subscriptions')
+          .select('*')
+          .in('user_id', userIds);
+
+        if (subsError) throw subsError;
+
+        // Group reminders by user
+        const remindersByUser = {};
+        dueReminders.forEach(reminder => {
+          const userId = reminder.habits_v2?.user_id;
+          if (userId) {
+            if (!remindersByUser[userId]) {
+              remindersByUser[userId] = [];
+            }
+            remindersByUser[userId].push(reminder);
+          }
+        });
+
+        // Send notifications
+        let sentCount = 0;
+        const webpush = await import('https://esm.sh/web-push@3.6.6');
+        
+        // Set VAPID details
+        const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+        const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+        
+        if (!vapidPublicKey || !vapidPrivateKey) {
+          console.warn('VAPID keys not configured, skipping push notifications');
+          return new Response(JSON.stringify({ 
+            success: true, 
+            message: 'Reminders found but VAPID not configured', 
+            count: dueReminders.length 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        webpush.setVapidDetails(
+          'mailto:support@lifegoalapp.com',
+          vapidPublicKey,
+          vapidPrivateKey
+        );
+
+        for (const [userId, userReminders] of Object.entries(remindersByUser)) {
+          const userSubs = subscriptions?.filter(s => s.user_id === userId) || [];
+          
+          for (const reminder of userReminders) {
+            const habit = reminder.habits_v2;
+            if (!habit) continue;
+
+            const title = `Time for: ${habit.emoji || '📋'} ${habit.title}`;
+            
+            // Define notification payload structure
+            interface NotificationPayload {
+              title: string;
+              body: string;
+              icon: string;
+              badge: string;
+              tag: string;
+              data: {
+                habit_id: string;
+                url: string;
+              };
+              actions: Array<{ action: string; title: string }>;
+            }
+            
+            const notificationPayload: NotificationPayload = {
+              title,
+              body: 'Mark it complete in LifeGoal App',
+              icon: '/icons/icon-192x192.svg',
+              badge: '/icons/icon-192x192.svg',
+              tag: `habit-${habit.id}`,
+              data: {
+                habit_id: habit.id,
+                url: '/#habits',
+              },
+              actions: [
+                { action: 'done', title: 'Mark Done' },
+                { action: 'skip', title: 'Skip' },
+              ],
+            };
+            
+            const payload = JSON.stringify(notificationPayload);
+
+            for (const sub of userSubs) {
+              try {
+                const pushSubscription = {
+                  endpoint: sub.endpoint,
+                  keys: {
+                    p256dh: sub.p256dh,
+                    auth: sub.auth,
+                  },
+                };
+
+                await webpush.sendNotification(pushSubscription, payload);
+                sentCount++;
+              } catch (error) {
+                console.error('Failed to send notification:', error);
+                // If subscription is invalid, remove it
+                if (error.statusCode === 410 || error.statusCode === 404) {
+                  await supabase
+                    .from('push_subscriptions')
+                    .delete()
+                    .eq('endpoint', sub.endpoint);
+                }
+              }
+            }
+          }
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: `Sent ${sentCount} notifications`, 
+          reminders: dueReminders.length,
+          sent: sentCount
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error('Error in CRON job:', error);
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: error.message 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ error: 'Not found' }), {

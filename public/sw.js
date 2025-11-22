@@ -437,30 +437,43 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'done' || event.action === 'skip') {
     const notificationData = event.notification.data || {};
     const habitId = notificationData.habit_id;
-    const supabaseUrl = notificationData.supabase_url;
-    const authToken = notificationData.auth_token;
-
-    if (habitId && supabaseUrl && authToken) {
+    
+    if (habitId) {
       event.waitUntil(
         (async () => {
           try {
-            const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/log`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`,
-              },
-              body: JSON.stringify({
-                habit_id: habitId,
-                done: event.action === 'done',
-              }),
-            });
+            // Notify the client to update the UI
+            const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+            for (const client of clients) {
+              client.postMessage({
+                type: 'HABIT_ACTION_FROM_NOTIFICATION',
+                habitId,
+                action: event.action,
+              });
+            }
 
-            if (!response.ok) {
-              console.error('Failed to log habit from notification:', await response.text());
+            // If we have credentials, also log to server
+            const supabaseUrl = notificationData.supabase_url;
+            const authToken = notificationData.auth_token;
+            if (supabaseUrl && authToken) {
+              const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/log`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({
+                  habit_id: habitId,
+                  done: event.action === 'done',
+                }),
+              });
+
+              if (!response.ok) {
+                console.error('Failed to log habit from notification:', await response.text());
+              }
             }
           } catch (error) {
-            console.error('Error logging habit from notification:', error);
+            console.error('Error handling habit action from notification:', error);
           }
         })()
       );

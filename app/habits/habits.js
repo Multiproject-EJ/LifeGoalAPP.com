@@ -5,6 +5,7 @@
 
 import { supabase, getSession, requireAuth, getVapidPublicKey, getSupabaseUrl } from '../lib/supabaseClient.js';
 import { BuildChecklist } from './BuildChecklist.js';
+import { initNotifications, subscribeToPushNotifications, getNotificationStatus, testNotification } from './notifications.js';
 
 // State management
 const state = {
@@ -26,6 +27,18 @@ export async function initHabits() {
     if (!session) {
       renderAuthRequired();
       return;
+    }
+
+    // Initialize notifications
+    await initNotifications();
+
+    // Listen for notification actions from service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'HABIT_ACTION_FROM_NOTIFICATION') {
+          handleNotificationAction(event.data.habitId, event.data.action);
+        }
+      });
     }
 
     // Load templates
@@ -266,6 +279,7 @@ function renderStep2() {
 
 function renderStep3() {
   const showTargets = state.wizardData.type !== 'boolean';
+  const notifStatus = getNotificationStatus();
   
   return `
     <div class="habit-card">
@@ -293,7 +307,35 @@ function renderStep3() {
       </div>
 
       <div class="form-group">
-        <label>Reminders (up to 3)</label>
+        <label>Push Notifications</label>
+        <div style="padding: 0.75rem; background: ${notifStatus.subscribed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-radius: 0.5rem; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.25rem;">${notifStatus.subscribed ? '✅' : '🔔'}</span>
+            <strong>Status: ${notifStatus.subscribed ? 'Enabled' : 'Not Enabled'}</strong>
+          </div>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #6b7280;">
+            ${notifStatus.subscribed 
+              ? 'You will receive push notifications for habit reminders.' 
+              : 'Enable push notifications to get reminders on your phone.'}
+          </p>
+          ${!notifStatus.subscribed ? `
+            <button type="button" class="btn-secondary" onclick="habits.enableNotifications()" style="margin-top: 0.75rem;">
+              Enable Push Notifications
+            </button>
+          ` : `
+            <button type="button" class="btn-secondary" onclick="habits.testNotification()" style="margin-top: 0.75rem;">
+              Test Notification
+            </button>
+          `}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Reminder Times (up to 3)</label>
+        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
+          Set times when you want to be reminded about this habit. 
+          ${notifStatus.subscribed ? 'You will receive push notifications.' : 'Enable push notifications above to get alerts on your phone.'}
+        </p>
         <div id="reminders-list">
           <input type="time" class="reminder-time" value="${state.wizardData.reminders?.[0] || ''}" />
           <input type="time" class="reminder-time" value="${state.wizardData.reminders?.[1] || ''}" />
@@ -955,6 +997,53 @@ function getScheduleDescription(schedule) {
   return 'Custom';
 }
 
+// ========================================================
+// NOTIFICATION FUNCTIONS
+// ========================================================
+
+async function handleNotificationAction(habitId, action) {
+  console.log('Notification action:', action, 'for habit:', habitId);
+  
+  if (action === 'done') {
+    // Mark habit as done (second param 'false' means it's not currently done, so we're marking it as done)
+    await toggleBoolean(habitId, /* currentDone */ false);
+  } else if (action === 'skip') {
+    // Skip habit
+    await skipHabit(habitId);
+  }
+  
+  // Refresh the UI
+  await loadAndRenderActiveHabits();
+}
+
+async function enableNotifications() {
+  try {
+    await subscribeToPushNotifications();
+    alert('Push notifications enabled! You will receive reminders for your habits. 🔔');
+    // Re-render step 3 to update status
+    if (state.currentStep === 3) {
+      renderWizardStep();
+    }
+  } catch (error) {
+    console.error('Failed to enable notifications:', error);
+    alert('Failed to enable notifications: ' + error.message + '\n\nPlease check your browser settings and ensure notifications are not blocked.');
+  }
+}
+
+async function showTestNotification() {
+  try {
+    const success = await testNotification();
+    if (success) {
+      alert('Test notification sent! Check your notifications. 🔔');
+    } else {
+      alert('Failed to send test notification. Please ensure notifications are enabled in your browser settings.');
+    }
+  } catch (error) {
+    console.error('Failed to send test notification:', error);
+    alert('Failed to send test notification: ' + error.message);
+  }
+}
+
 // Export functions to window for onclick handlers
 if (typeof window !== 'undefined') {
   window.habits = {
@@ -968,6 +1057,8 @@ if (typeof window !== 'undefined') {
     skipHabit,
     startTimer,
     renderHabitInsights,
+    enableNotifications,
+    testNotification: showTestNotification,
   };
 }
 
