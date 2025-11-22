@@ -46,4 +46,4 @@ COMMENT ON COLUMN public.journal_entries.type IS 'Journal entry mode: quick, dee
 COMMENT ON COLUMN public.journal_entries.mood_score IS 'Numeric mood score on a 0-10 scale (separate from the string mood field)';
 COMMENT ON COLUMN public.journal_entries.category IS 'Life Wheel category for life_wheel journal mode';
 COMMENT ON COLUMN public.journal_entries.unlock_date IS 'Date when a time capsule entry becomes visible';
-COMMENT ON COLUMN public.journal_entries.goal_id IS 'Single goal reference for goal-specific journal entries (supplements linked_goal_ids array)';
+COMMENT ON COLUMN public.journal_entries.goal_id IS 'Primary goal reference for goal-specific journal entries. Use this for entries focused on a single goal. For entries that reference multiple goals, use the linked_goal_ids array instead.';
