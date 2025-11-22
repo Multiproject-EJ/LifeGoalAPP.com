@@ -18,18 +18,47 @@ ALTER TABLE public.journal_entries
 ADD COLUMN IF NOT EXISTS unlock_date timestamptz;
 
 ALTER TABLE public.journal_entries
-ADD COLUMN IF NOT EXISTS goal_id uuid REFERENCES public.goals(id) ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS goal_id uuid;
 
 -- Add constraints for data validation
 -- Mood score should be between 0 and 10 if provided
-ALTER TABLE public.journal_entries
-ADD CONSTRAINT IF NOT EXISTS mood_score_range
-CHECK (mood_score IS NULL OR (mood_score >= 0 AND mood_score <= 10));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'journal_entries_mood_score_range'
+  ) THEN
+    ALTER TABLE public.journal_entries
+    ADD CONSTRAINT journal_entries_mood_score_range
+    CHECK (mood_score IS NULL OR (mood_score >= 0 AND mood_score <= 10));
+  END IF;
+END $$;
 
 -- Type should be one of the valid journal modes
-ALTER TABLE public.journal_entries
-ADD CONSTRAINT IF NOT EXISTS valid_journal_type
-CHECK (type IN ('quick', 'deep', 'brain_dump', 'life_wheel', 'secret', 'goal', 'time_capsule', 'standard'));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'journal_entries_type_allowed_values'
+  ) THEN
+    ALTER TABLE public.journal_entries
+    ADD CONSTRAINT journal_entries_type_allowed_values
+    CHECK (type IN ('quick', 'deep', 'brain_dump', 'life_wheel', 'secret', 'goal', 'time_capsule', 'standard'));
+  END IF;
+END $$;
+
+-- Foreign key constraint for goal_id
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'journal_entries_goal_id_fkey'
+  ) THEN
+    ALTER TABLE public.journal_entries
+    ADD CONSTRAINT journal_entries_goal_id_fkey
+    FOREIGN KEY (goal_id) REFERENCES public.goals(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- Create an index on type for better query performance
 CREATE INDEX IF NOT EXISTS idx_journal_entries_type ON public.journal_entries(type);
