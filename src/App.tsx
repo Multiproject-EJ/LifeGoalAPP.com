@@ -215,11 +215,6 @@ export default function App() {
     [mobileMenuNavItems],
   );
 
-  const mobileHabitHomeNavItems = useMemo(
-    () => WORKSPACE_NAV_ITEMS.filter((item) => item.id !== 'goals'),
-    [],
-  );
-
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
 
   const isDemoMode = mode === 'demo';
@@ -1054,9 +1049,6 @@ export default function App() {
       <>
         <MobileHabitHome
           session={activeSession}
-          navItems={mobileHabitHomeNavItems}
-          onSelectNav={handleMobileNavSelect}
-          onOpenHabitsWorkspace={openHabitsWorkspaceSection}
         />
         <MobileFooterNav
           items={mobileFooterNavItems}
