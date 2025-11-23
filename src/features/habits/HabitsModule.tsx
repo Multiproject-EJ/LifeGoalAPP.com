@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
+import { HabitsInsights } from './HabitsInsights';
 import type { Database } from '../../lib/database.types';
 
 type HabitsModuleProps = {
@@ -854,6 +855,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           </div>
         )}
       </div>
+
+      {/* Insights Section */}
+      <HabitsInsights session={session} habits={habits} />
     </div>
   );
 }
