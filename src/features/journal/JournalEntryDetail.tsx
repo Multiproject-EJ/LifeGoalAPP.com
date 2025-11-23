@@ -1,6 +1,7 @@
 import type { JournalEntry } from '../../services/journal';
 import type { JournalMoodOption } from './JournalEntryEditor';
 import type { Database } from '../../lib/database.types';
+import { entryDetailDateFormatter, unlockDateFormatter } from './utils';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type HabitRow = Database['public']['Tables']['habits']['Row'];
@@ -20,20 +21,6 @@ type JournalEntryDetailProps = {
   unavailableMessage?: string | null;
   isLocked: boolean;
 };
-
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-
-const unlockDateFormatter = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-});
 
 export function JournalEntryDetail({
   entry,
@@ -67,8 +54,8 @@ export function JournalEntryDetail({
   const habitIds = entry.linked_habit_ids ?? [];
   const isGoalMode = entry.type === 'goal';
   const isLifeWheelMode = entry.type === 'life_wheel';
-  const primaryGoalId = entry.goal_id;
-  const primaryGoal = primaryGoalId ? goalMap[primaryGoalId] : null;
+  const primaryGoalId = entry.goal_id ?? null;
+  const primaryGoal = (primaryGoalId && goalMap[primaryGoalId]) ?? null;
   const paragraphs = entry.content
     .split(/\n+/)
     .map((text) => text.trim())
@@ -84,7 +71,7 @@ export function JournalEntryDetail({
 
       <header className="journal-detail__header">
         <div>
-          <p className="journal-detail__date">{dateFormatter.format(new Date(entry.entry_date))}</p>
+          <p className="journal-detail__date">{entryDetailDateFormatter.format(new Date(entry.entry_date))}</p>
           <h2>{entry.title?.trim() || 'Untitled entry'}</h2>
           {moodMeta ? (
             <span className="journal-detail__mood">
@@ -105,7 +92,7 @@ export function JournalEntryDetail({
       {isLifeWheelMode && entry.category ? (
         <div className="journal-detail__metadata">
           <p><strong>Life area:</strong> {entry.category}</p>
-          {entry.mood_score != null ? (
+          {entry.mood_score !== null && entry.mood_score !== undefined ? (
             <p><strong>Satisfaction:</strong> {entry.mood_score}/10</p>
           ) : null}
         </div>

@@ -3,6 +3,13 @@ import type { JournalEntry } from '../../services/journal';
 import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
 import type { JournalType } from './Journal';
+import {
+  moodScoreToMood,
+  moodToMoodScore,
+  getModeLabel,
+  getContentLabel,
+  getContentPlaceholder,
+} from './utils';
 
 export type JournalMoodOption = { value: string; label: string; icon: string };
 
@@ -39,8 +46,6 @@ type JournalEntryEditorProps = {
   onSave: (draft: JournalEntryDraft) => Promise<void> | void;
 };
 
-const DEFAULT_MOOD_SCORE = 5;
-
 // Brain dump mode constants
 const BRAIN_DUMP_DURATION_SECONDS = 60;
 const BRAIN_DUMP_BLUR_DIVISOR = 10;
@@ -48,45 +53,6 @@ const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this t
 
 // Secret mode constants
 const SECRET_DURATION_SECONDS = 30;
-
-// Content labels for different modes
-const CONTENT_LABELS = {
-  quick: "Today's thoughts (aim for ~3 sentences)",
-  goal: "Reflection on this goal",
-  time_capsule: "Message to your future self",
-  life_wheel: "Reflect on this area of your life",
-  brain_dump: "Brain dump your thoughts",
-  secret: "Secret thoughts (not saved)",
-  deep: "Full entry",
-  standard: "Content",
-} as const;
-
-// Content placeholders for different modes
-const CONTENT_PLACEHOLDERS = {
-  quick: "Quick capture of your day...",
-  goal: "Reflect on your progress, challenges, and insights related to this goal...",
-  time_capsule: "Write a message to your future self. What do you want to remember? What are you hoping for?",
-  life_wheel: "Write about how this area has felt recently...",
-  brain_dump: "Write freely without stopping. Let your thoughts flow...",
-  secret: "Write anything you need to get off your chest. It will disappear...",
-  deep: "Write deeply and thoughtfully. Take your time to explore your thoughts...",
-  standard: "Capture what unfolded, how you felt, and any momentum you want to carry forward.",
-} as const;
-
-const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
-  'quick': 'Quick',
-  'deep': 'Deep',
-  'brain_dump': 'Brain Dump',
-  'life_wheel': 'Life Wheel',
-  'secret': 'Secret',
-  'goal': 'Goal',
-  'time_capsule': 'Time Capsule',
-  'standard': 'Standard',
-};
-
-function getModeLabel(type?: JournalEntryType): string {
-  return JOURNAL_TYPE_LABELS[type ?? 'standard'];
-}
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -114,31 +80,11 @@ const LIFE_WHEEL_CATEGORIES = [
   'Environment & Surroundings',
 ];
 
+// Default mood score for quick and life wheel modes
+const DEFAULT_MOOD_SCORE = 5;
+
 function getRandomPrompt(): string {
   return QUICK_PROMPTS[Math.floor(Math.random() * QUICK_PROMPTS.length)];
-}
-
-// Map mood_score (1-10) to mood string
-function moodScoreToMood(score: number | null): string | null {
-  if (score === null) return null;
-  if (score <= 3) return 'sad';
-  if (score <= 5) return 'stressed';
-  if (score <= 7) return 'neutral';
-  if (score <= 9) return 'happy';
-  return 'excited';
-}
-
-// Map mood string to mood_score (1-10)
-function moodToMoodScore(mood: string | null): number | null {
-  if (!mood) return null;
-  const mapping: Record<string, number> = {
-    'sad': 2,
-    'stressed': 5,
-    'neutral': 7,
-    'happy': 8,
-    'excited': 10,
-  };
-  return mapping[mood] ?? null;
 }
 
 /**
@@ -416,14 +362,6 @@ export function JournalEntryEditor({
     setSecretText(event.target.value);
   };
 
-  const getContentLabel = (): string => {
-    return CONTENT_LABELS[draft.type ?? 'standard'];
-  };
-
-  const getContentPlaceholder = (): string => {
-    return CONTENT_PLACEHOLDERS[draft.type ?? 'standard'];
-  };
-
   const isQuickMode = draft.type === 'quick';
   const isGoalMode = draft.type === 'goal';
   const isTimeCapsuleMode = draft.type === 'time_capsule';
@@ -494,7 +432,7 @@ export function JournalEntryEditor({
   };
 
   const renderQuickModeActions = () => {
-    if (!isSecretMode && isQuickMode) {
+    if (isQuickMode) {
       return (
         <div className="journal-editor__quick-actions">
           <button
@@ -511,7 +449,7 @@ export function JournalEntryEditor({
   };
 
   const renderDeepModeSection = () => {
-    if (!isSecretMode && isDeepMode) {
+    if (isDeepMode) {
       return (
         <div className="journal-deep-mode__actions">
           <button
@@ -529,7 +467,7 @@ export function JournalEntryEditor({
   };
 
   const renderBrainDumpSection = () => {
-    if (!isSecretMode && isBrainDumpMode) {
+    if (isBrainDumpMode) {
       return (
         <div className="journal-brain-dump__timer">
           <span className="journal-brain-dump__timer-label" aria-live="polite">
@@ -545,7 +483,7 @@ export function JournalEntryEditor({
   };
 
   const renderBrainDumpReflection = () => {
-    if (!isSecretMode && isBrainDumpMode && hasFinished) {
+    if (isBrainDumpMode && hasFinished) {
       return (
         <div className="journal-brain-dump__reflect">
           {!analysis ? (
@@ -570,7 +508,7 @@ export function JournalEntryEditor({
   };
 
   const renderLifeWheelSection = () => {
-    if (!isSecretMode && isLifeWheelMode) {
+    if (isLifeWheelMode) {
       return (
         <>
           <label className="journal-editor__field">
@@ -609,7 +547,7 @@ export function JournalEntryEditor({
   };
 
   const renderGoalSection = () => {
-    if (!isSecretMode && isGoalMode) {
+    if (isGoalMode) {
       return (
         <label className="journal-editor__field">
           <span>Link to goal</span>
@@ -727,13 +665,13 @@ export function JournalEntryEditor({
           {renderDeepModeSection()}
 
           <label className="journal-editor__field">
-            <span>{getContentLabel()}</span>
+            <span>{getContentLabel(draft.type)}</span>
             <textarea
               value={isSecretMode ? secretText : draft.content}
               onChange={isSecretMode ? handleSecretTextChange : (event) => handleFieldChange('content', event.target.value)}
               rows={isQuickMode ? 4 : isDeepMode ? 14 : 8}
               required={!isSecretMode}
-              placeholder={getContentPlaceholder()}
+              placeholder={getContentPlaceholder(draft.type)}
               readOnly={isBrainDumpMode && hasFinished}
               className={isSecretMode && isFading ? 'journal-secret__textarea--fading' : undefined}
               style={isBrainDumpMode ? {
