@@ -78,6 +78,11 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       return;
     }
 
+    if (!session) {
+      setError('Session expired. Please refresh the page.');
+      return;
+    }
+
     // Mark habit as logging
     setLoggingHabitIds(prev => new Set(prev).add(habitId));
     setError(null);
