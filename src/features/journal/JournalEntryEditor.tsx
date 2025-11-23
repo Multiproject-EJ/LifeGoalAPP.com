@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { JournalEntry } from '../../services/journal';
 import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
@@ -185,6 +185,7 @@ export function JournalEntryEditor({
   const [secretText, setSecretText] = useState('');
   const [secretTimeLeft, setSecretTimeLeft] = useState(SECRET_DURATION_SECONDS);
   const [isFading, setIsFading] = useState(false);
+  const secretDestroyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -194,10 +195,12 @@ export function JournalEntryEditor({
     setTimeLeft(BRAIN_DUMP_DURATION_SECONDS);
     setHasFinished(false);
     setAnalysis(null);
-    // Reset secret mode state when opening/changing entries
-    setSecretText('');
-    setSecretTimeLeft(SECRET_DURATION_SECONDS);
-    setIsFading(false);
+    // Reset secret mode state when opening/changing entries in secret mode
+    if (journalType === 'secret') {
+      setSecretText('');
+      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setIsFading(false);
+    }
   }, [entry, open, journalType]);
 
   // Brain dump countdown timer
@@ -224,13 +227,6 @@ export function JournalEntryEditor({
     const timer = setInterval(() => {
       setSecretTimeLeft((prev) => {
         if (prev <= 1) {
-          // Trigger auto-destruct
-          setIsFading(true);
-          setTimeout(() => {
-            setSecretText('');
-            setIsFading(false);
-            setSecretTimeLeft(SECRET_DURATION_SECONDS);
-          }, 500);
           return 0;
         }
         return prev - 1;
@@ -238,6 +234,20 @@ export function JournalEntryEditor({
     }, 1000);
 
     return () => clearInterval(timer);
+  }, [open, draft.type, secretTimeLeft]);
+
+  // Handle auto-destruct when timer reaches 0
+  useEffect(() => {
+    if (!open || draft.type !== 'secret' || secretTimeLeft !== 0) return;
+    
+    setIsFading(true);
+    const destroyTimeout = setTimeout(() => {
+      setSecretText('');
+      setIsFading(false);
+      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+    }, 500);
+
+    return () => clearTimeout(destroyTimeout);
   }, [open, draft.type, secretTimeLeft]);
 
   const moodValue = draft.mood ?? '';
@@ -361,11 +371,17 @@ export function JournalEntryEditor({
   };
 
   const handleSecretDestroy = () => {
+    // Clear any existing timeout
+    if (secretDestroyTimeoutRef.current) {
+      clearTimeout(secretDestroyTimeoutRef.current);
+    }
+    
     setIsFading(true);
-    setTimeout(() => {
+    secretDestroyTimeoutRef.current = setTimeout(() => {
       setSecretText('');
       setIsFading(false);
       setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      secretDestroyTimeoutRef.current = null;
     }, 500); // Match animation duration
   };
 

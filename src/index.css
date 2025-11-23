@@ -7979,6 +7979,10 @@ body {
 }
 
 /* Secret Mode Styles */
+:root {
+  --secret-fade-duration: 500ms;
+}
+
 .journal-secret__notice {
   padding: 1rem 1.25rem;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
@@ -8046,7 +8050,7 @@ body {
 }
 
 .journal-secret__textarea--fading {
-  animation: fadeOutText 0.5s ease-out forwards;
+  animation: fadeOutText var(--secret-fade-duration) ease-out forwards;
 }
 
 
