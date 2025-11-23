@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { listHabitsV2, listTodayHabitLogsV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
 
 type HabitsModuleProps = {
   session: Session;
@@ -7,6 +8,43 @@ type HabitsModuleProps = {
 
 export function HabitsModule({ session }: HabitsModuleProps) {
   const [showDevNotes, setShowDevNotes] = useState(false);
+  const [habits, setHabits] = useState<HabitV2Row[]>([]);
+  const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load habits and today's logs on mount
+  useEffect(() => {
+    if (!session) return;
+
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Load habits
+        const { data: habitsData, error: habitsError } = await listHabitsV2();
+        if (habitsError) {
+          throw new Error(habitsError.message);
+        }
+
+        // Load today's logs
+        const { data: logsData, error: logsError } = await listTodayHabitLogsV2(session.user.id);
+        if (logsError) {
+          throw new Error(logsError.message);
+        }
+
+        setHabits(habitsData ?? []);
+        setTodayLogs(logsData ?? []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unable to load habits right now.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [session]);
 
   return (
     <div className="habits-module-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
@@ -63,26 +101,143 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         )}
       </div>
 
+      {/* Error state */}
+      {error && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #fca5a5',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '2rem',
+          color: '#991b1b'
+        }}>
+          {error}
+        </div>
+      )}
+
+      {/* Two-column layout: Your habits | Today's checklist */}
       <div style={{
-        background: 'white',
-        border: '2px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '2rem',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '2rem',
         marginBottom: '2rem'
       }}>
-        <h2 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.5rem' }}>Habits coming soon</h2>
-        <p style={{ margin: '0 0 1.5rem 0', color: '#64748b', lineHeight: '1.6' }}>
-          You'll be able to create habits, log completions, and view streaks here.
-        </p>
-        
-        <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: '#475569', fontWeight: 600 }}>Planned features:</h3>
-        <ul style={{ marginLeft: '1.5rem', lineHeight: '1.75', color: '#64748b' }}>
-          <li>3-step habit wizard</li>
-          <li>Templates for common habits</li>
-          <li>Smart tracking (boolean/quantity/duration)</li>
-          <li>Streaks & insights</li>
-          <li>Reminders & challenges (future)</li>
-        </ul>
+        {/* Left column: Your habits */}
+        <div style={{
+          background: 'white',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '2rem'
+        }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>Your habits</h2>
+
+          {loading ? (
+            <p style={{ color: '#64748b', margin: 0 }}>Loading habits…</p>
+          ) : habits.length === 0 ? (
+            <p style={{ color: '#64748b', margin: 0 }}>
+              No habits yet. Create your first habit to get started!
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {habits.map((habit) => (
+                <div
+                  key={habit.id}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '1rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    {habit.emoji && (
+                      <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
+                    )}
+                    <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
+                      {habit.title}
+                    </h3>
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <div>
+                      <strong>Type:</strong> {habit.type}
+                      {habit.type !== 'boolean' && habit.target_num && (
+                        <span> ({habit.target_num} {habit.target_unit || 'units'})</span>
+                      )}
+                    </div>
+                    <div>
+                      <strong>Schedule:</strong> Custom schedule
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right column: Today's checklist */}
+        <div style={{
+          background: 'white',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '2rem'
+        }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>Today's checklist</h2>
+
+          {loading ? (
+            <p style={{ color: '#64748b', margin: 0 }}>Loading today's status…</p>
+          ) : habits.length === 0 ? (
+            <p style={{ color: '#64748b', margin: 0 }}>
+              No habits to check today.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {habits.map((habit) => {
+                // Find log for this habit
+                const log = todayLogs.find((l) => l.habit_id === habit.id);
+                const isDone = log?.done ?? false;
+                const logValue = log?.value;
+
+                return (
+                  <div
+                    key={habit.id}
+                    style={{
+                      background: isDone ? '#f0fdf4' : '#f8fafc',
+                      border: `1px solid ${isDone ? '#bbf7d0' : '#e2e8f0'}`,
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      {habit.emoji && (
+                        <span style={{ fontSize: '1.25rem' }}>{habit.emoji}</span>
+                      )}
+                      <span style={{ fontWeight: 500 }}>{habit.title}</span>
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.875rem',
+                      color: isDone ? '#15803d' : '#64748b',
+                      fontWeight: isDone ? 600 : 400
+                    }}>
+                      {isDone ? (
+                        <>
+                          Done
+                          {logValue !== null && logValue !== undefined && habit.type !== 'boolean' && (
+                            <span> ({logValue} {habit.target_unit || 'units'})</span>
+                          )}
+                        </>
+                      ) : (
+                        'Not logged yet'
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
