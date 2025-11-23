@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Placeholder schedule type - will be refined to match habits_v2 JSON schema later
 export interface ScheduleDraft {
@@ -19,11 +19,12 @@ export interface HabitWizardDraft {
 export type HabitWizardProps = {
   onCancel?: () => void;
   onCompleteDraft?: (draft: HabitWizardDraft) => void;
+  initialDraft?: HabitWizardDraft;
 };
 
 type ScheduleChoice = 'every_day' | 'specific_days' | 'x_per_week';
 
-export function HabitWizard({ onCancel, onCompleteDraft }: HabitWizardProps) {
+export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   
   // Step 1: Basics
@@ -39,6 +40,21 @@ export function HabitWizard({ onCancel, onCompleteDraft }: HabitWizardProps) {
   const [targetUnit, setTargetUnit] = useState<string>('');
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
   const [reminderTime, setReminderTime] = useState<string>('08:00');
+
+  // Reset wizard state when initialDraft changes
+  useEffect(() => {
+    if (initialDraft) {
+      setEmoji(initialDraft.emoji || '');
+      setTitle(initialDraft.title);
+      setType(initialDraft.type);
+      setScheduleChoice(initialDraft.schedule.choice);
+      setTargetValue(initialDraft.targetValue ?? undefined);
+      setTargetUnit(initialDraft.targetUnit || '');
+      setRemindersEnabled(initialDraft.remindersEnabled ?? false);
+      setReminderTime(initialDraft.reminderTimes?.[0] || '08:00');
+      setStep(1); // Reset to first step
+    }
+  }, [initialDraft]);
 
   const handleNext = () => {
     if (step < 3) {
