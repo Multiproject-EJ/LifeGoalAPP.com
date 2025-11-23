@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
+import type { Database } from '../../lib/database.types';
 
 type HabitsModuleProps = {
   session: Session;
@@ -17,6 +18,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   // Wizard state
   const [showWizard, setShowWizard] = useState(false);
   const [pendingHabitDraft, setPendingHabitDraft] = useState<HabitWizardDraft | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Load habits and today's logs on mount
   useEffect(() => {
@@ -51,11 +53,67 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     loadData();
   }, [session]);
 
+  // Helper to reload habits list
+  const reloadHabits = async () => {
+    try {
+      const { data: habitsData, error: habitsError } = await listHabitsV2();
+      if (habitsError) {
+        throw new Error(habitsError.message);
+      }
+      setHabits(habitsData ?? []);
+    } catch (err) {
+      console.error('Error reloading habits:', err);
+    }
+  };
+
   // Handler for wizard completion
-  const handleCompleteDraft = (draft: HabitWizardDraft) => {
+  const handleCompleteDraft = async (draft: HabitWizardDraft) => {
     console.log('Habit draft', draft);
     setPendingHabitDraft(draft);
-    setShowWizard(false);
+    
+    // Clear any previous messages
+    setError(null);
+    setSuccessMessage(null);
+    
+    try {
+      // Map HabitWizardDraft to habits_v2.Insert
+      const insertPayload: Omit<Database['public']['Tables']['habits_v2']['Insert'], 'user_id'> = {
+        title: draft.title,
+        emoji: draft.emoji,
+        type: draft.type,
+        target_num: draft.targetValue ?? null,
+        target_unit: draft.targetUnit ?? null,
+        schedule: draft.schedule as any, // JSON type - will refine schema later
+        archived: false,
+      };
+      
+      // Call createHabitV2
+      const { data: newHabit, error: createError } = await createHabitV2(insertPayload, session.user.id);
+      
+      if (createError) {
+        throw new Error(createError.message);
+      }
+      
+      if (!newHabit) {
+        throw new Error('Failed to create habit - no data returned');
+      }
+      
+      // Success: hide wizard, clear draft, refresh list
+      setShowWizard(false);
+      setPendingHabitDraft(null);
+      setSuccessMessage(`Habit "${draft.title}" created successfully!`);
+      
+      // Prepend new habit to local state for immediate feedback
+      setHabits([newHabit, ...habits]);
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+      
+    } catch (err) {
+      // Show error but keep wizard open
+      setError(err instanceof Error ? err.message : 'Failed to create habit');
+      console.error('Error creating habit:', err);
+    }
   };
 
   // Handler for wizard cancel
@@ -129,6 +187,20 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           color: '#991b1b'
         }}>
           {error}
+        </div>
+      )}
+
+      {/* Success message */}
+      {successMessage && (
+        <div style={{
+          background: '#d1fae5',
+          border: '1px solid #6ee7b7',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '2rem',
+          color: '#065f46'
+        }}>
+          {successMessage}
         </div>
       )}
 
