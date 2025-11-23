@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
+import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import type { Database } from '../../lib/database.types';
 
 type HabitsModuleProps = {
@@ -18,7 +19,13 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   // Wizard state
   const [showWizard, setShowWizard] = useState(false);
   const [pendingHabitDraft, setPendingHabitDraft] = useState<HabitWizardDraft | null>(null);
+  const [wizardInitialDraft, setWizardInitialDraft] = useState<HabitWizardDraft | undefined>(undefined);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Templates state
+  const [templates, setTemplates] = useState<HabitTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [templatesError, setTemplatesError] = useState<string | null>(null);
   
   // Logging state for tracking in-flight habit logging
   const [loggingHabitIds, setLoggingHabitIds] = useState<Set<string>>(new Set());
@@ -58,6 +65,26 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
     loadData();
   }, [session]);
+
+  // Load templates on mount
+  useEffect(() => {
+    const loadTemplatesData = async () => {
+      setTemplatesLoading(true);
+      setTemplatesError(null);
+
+      try {
+        const templatesData = await loadHabitTemplates();
+        setTemplates(templatesData);
+      } catch (err) {
+        setTemplatesError(err instanceof Error ? err.message : 'Failed to load templates');
+        console.error('Error loading habit templates:', err);
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+
+    loadTemplatesData();
+  }, []);
 
   // Helper to reload today's logs
   const reloadTodayLogs = async () => {
@@ -231,6 +258,45 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   // Handler for wizard cancel
   const handleCancelWizard = () => {
     setShowWizard(false);
+    setWizardInitialDraft(undefined);
+  };
+
+  // Helper to map template schedule to ScheduleDraft choice
+  const mapTemplateScheduleToChoice = (schedule: HabitTemplate['schedule']): 'every_day' | 'specific_days' | 'x_per_week' => {
+    switch (schedule.mode) {
+      case 'daily':
+        return 'every_day';
+      case 'specific_days':
+        return 'specific_days';
+      case 'times_per_week':
+        return 'x_per_week';
+      case 'every_n_days':
+        // Map every_n_days to every_day for now (simplified)
+        return 'every_day';
+      default:
+        return 'every_day';
+    }
+  };
+
+  // Handler for template click
+  const handleTemplateClick = (template: HabitTemplate) => {
+    // Map template to HabitWizardDraft
+    const draft: HabitWizardDraft = {
+      title: template.title,
+      emoji: template.emoji || null,
+      type: template.type,
+      targetValue: template.target_num ?? null,
+      targetUnit: template.target_unit ?? null,
+      schedule: {
+        choice: mapTemplateScheduleToChoice(template.schedule)
+      },
+      remindersEnabled: (template.reminders && template.reminders.length > 0) || false,
+      reminderTimes: template.reminders || []
+    };
+
+    // Set the initial draft and open wizard
+    setWizardInitialDraft(draft);
+    setShowWizard(true);
   };
 
   return (
@@ -316,11 +382,124 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         </div>
       )}
 
+      {/* Templates Gallery */}
+      {!showWizard && (
+        <div style={{
+          background: 'white',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '2rem',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Templates</h2>
+            <button
+              onClick={() => {
+                setWizardInitialDraft(undefined);
+                setShowWizard(true);
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <span style={{ fontSize: '1.125rem' }}>+</span>
+              New habit
+            </button>
+          </div>
+
+          {templatesLoading && (
+            <p style={{ color: '#64748b', margin: 0 }}>Loading templates…</p>
+          )}
+
+          {templatesError && (
+            <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: 0 }}>
+              {templatesError}
+            </p>
+          )}
+
+          {!templatesLoading && !templatesError && templates.length > 0 && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: '1rem'
+            }}>
+              {templates.map((template, index) => {
+                // Generate a short schedule description
+                let scheduleDesc = '';
+                if (template.schedule.mode === 'daily') {
+                  scheduleDesc = 'Daily';
+                } else if (template.schedule.mode === 'specific_days') {
+                  scheduleDesc = `${template.schedule.days?.length || 0} days/week`;
+                } else if (template.schedule.mode === 'times_per_week') {
+                  scheduleDesc = `${template.schedule.value || 0}x/week`;
+                } else if (template.schedule.mode === 'every_n_days') {
+                  scheduleDesc = `Every ${template.schedule.value || 0} days`;
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleTemplateClick(template)}
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.background = '#f1f5f9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.background = '#f8fafc';
+                    }}
+                  >
+                    <div style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>
+                      {template.emoji}
+                    </div>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>
+                      {template.title}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                      {template.type} • {scheduleDesc}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {!templatesLoading && !templatesError && templates.length === 0 && (
+            <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>
+              No templates available.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Habit Wizard */}
       {showWizard && (
         <HabitWizard 
           onCancel={handleCancelWizard}
           onCompleteDraft={handleCompleteDraft}
+          initialDraft={wizardInitialDraft}
         />
       )}
 
@@ -352,27 +531,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           borderRadius: '12px',
           padding: '2rem'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
             <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Your habits</h2>
-            <button
-              onClick={() => setShowWizard(true)}
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#667eea',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <span style={{ fontSize: '1.125rem' }}>+</span>
-              New habit
-            </button>
           </div>
 
           {loading ? (
