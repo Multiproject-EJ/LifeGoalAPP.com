@@ -53,19 +53,6 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     loadData();
   }, [session]);
 
-  // Helper to reload habits list
-  const reloadHabits = async () => {
-    try {
-      const { data: habitsData, error: habitsError } = await listHabitsV2();
-      if (habitsError) {
-        throw new Error(habitsError.message);
-      }
-      setHabits(habitsData ?? []);
-    } catch (err) {
-      console.error('Error reloading habits:', err);
-    }
-  };
-
   // Handler for wizard completion
   const handleCompleteDraft = async (draft: HabitWizardDraft) => {
     console.log('Habit draft', draft);
@@ -83,7 +70,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         type: draft.type,
         target_num: draft.targetValue ?? null,
         target_unit: draft.targetUnit ?? null,
-        schedule: draft.schedule as any, // JSON type - will refine schema later
+        schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
         archived: false,
       };
       
