@@ -49,6 +49,30 @@ const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this t
 // Secret mode constants
 const SECRET_DURATION_SECONDS = 30;
 
+// Content labels for different modes
+const CONTENT_LABELS = {
+  quick: "Today's thoughts (aim for ~3 sentences)",
+  goal: "Reflection on this goal",
+  time_capsule: "Message to your future self",
+  life_wheel: "Reflect on this area of your life",
+  brain_dump: "Brain dump your thoughts",
+  secret: "Secret thoughts (not saved)",
+  deep: "Full entry",
+  standard: "Content",
+} as const;
+
+// Content placeholders for different modes
+const CONTENT_PLACEHOLDERS = {
+  quick: "Quick capture of your day...",
+  goal: "Reflect on your progress, challenges, and insights related to this goal...",
+  time_capsule: "Write a message to your future self. What do you want to remember? What are you hoping for?",
+  life_wheel: "Write about how this area has felt recently...",
+  brain_dump: "Write freely without stopping. Let your thoughts flow...",
+  secret: "Write anything you need to get off your chest. It will disappear...",
+  deep: "Write deeply and thoughtfully. Take your time to explore your thoughts...",
+  standard: "Capture what unfolded, how you felt, and any momentum you want to carry forward.",
+} as const;
+
 const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'quick': 'Quick',
   'deep': 'Deep',
@@ -393,25 +417,11 @@ export function JournalEntryEditor({
   };
 
   const getContentLabel = (): string => {
-    if (isQuickMode) return "Today's thoughts (aim for ~3 sentences)";
-    if (isGoalMode) return "Reflection on this goal";
-    if (isTimeCapsuleMode) return "Message to your future self";
-    if (isLifeWheelMode) return "Reflect on this area of your life";
-    if (isBrainDumpMode) return "Brain dump your thoughts";
-    if (isSecretMode) return "Secret thoughts (not saved)";
-    if (isDeepMode) return "Full entry";
-    return "Content";
+    return CONTENT_LABELS[draft.type ?? 'standard'];
   };
 
   const getContentPlaceholder = (): string => {
-    if (isQuickMode) return "Quick capture of your day...";
-    if (isGoalMode) return "Reflect on your progress, challenges, and insights related to this goal...";
-    if (isTimeCapsuleMode) return "Write a message to your future self. What do you want to remember? What are you hoping for?";
-    if (isLifeWheelMode) return "Write about how this area has felt recently...";
-    if (isBrainDumpMode) return "Write freely without stopping. Let your thoughts flow...";
-    if (isSecretMode) return "Write anything you need to get off your chest. It will disappear...";
-    if (isDeepMode) return "Write deeply and thoughtfully. Take your time to explore your thoughts...";
-    return "Capture what unfolded, how you felt, and any momentum you want to carry forward.";
+    return CONTENT_PLACEHOLDERS[draft.type ?? 'standard'];
   };
 
   const isQuickMode = draft.type === 'quick';
@@ -427,6 +437,216 @@ export function JournalEntryEditor({
     if (!isBrainDumpMode) return 0;
     return calculateBrainDumpBlur(timeLeft);
   }, [isBrainDumpMode, timeLeft]);
+
+  // Helper render functions for each mode
+  const renderSecretModeNotice = () => {
+    if (!isSecretMode) return null;
+    return (
+      <div className="journal-secret__notice">
+        <p className="journal-secret__notice-text">
+          🔒 <strong>Secret mode:</strong> Nothing you write here is saved. It will self-destruct.
+        </p>
+      </div>
+    );
+  };
+
+  const renderSecretModeTimer = () => {
+    if (!isSecretMode) return null;
+    return (
+      <div className="journal-secret__timer">
+        <span className="journal-secret__timer-label" aria-live="polite">
+          Self-destruct in: {secretTimeLeft}s
+        </span>
+        <button
+          type="button"
+          className="journal-secret__destroy-button"
+          onClick={handleSecretDestroy}
+          aria-label="Destroy secret text now"
+        >
+          🔥 Destroy now
+        </button>
+      </div>
+    );
+  };
+
+  const renderQuickModeSection = () => {
+    if (!isQuickMode) return null;
+    return (
+      <label className="journal-editor__field">
+        <span>Mood score (1-10)</span>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value={draft.moodScore ?? DEFAULT_MOOD_SCORE}
+          onChange={(event) => handleMoodScoreChange(Number(event.target.value))}
+          className="journal-editor__mood-slider"
+        />
+        <div className="journal-editor__mood-value">
+          {draft.moodScore ?? DEFAULT_MOOD_SCORE} / 10
+          {draft.mood && (() => {
+            const moodOption = moodOptions.find(opt => opt.value === draft.mood);
+            return moodOption ? ` (${moodOption.icon} ${moodOption.label})` : '';
+          })()}
+        </div>
+      </label>
+    );
+  };
+
+  const renderQuickModeActions = () => {
+    if (!isSecretMode && isQuickMode) {
+      return (
+        <div className="journal-editor__quick-actions">
+          <button
+            type="button"
+            className="journal-editor__prompt-button"
+            onClick={handleUsePrompt}
+          >
+            ✨ Use a prompt
+          </button>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderDeepModeSection = () => {
+    if (!isSecretMode && isDeepMode) {
+      return (
+        <div className="journal-deep-mode__actions">
+          <button
+            type="button"
+            className="journal-deep-mode__focus-button"
+            onClick={() => setIsFocusMode(!isFocusMode)}
+            aria-label={isFocusMode ? "Exit focus mode" : "Enter focus mode"}
+          >
+            {isFocusMode ? 'Exit focus mode' : 'Enter focus mode'}
+          </button>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderBrainDumpSection = () => {
+    if (!isSecretMode && isBrainDumpMode) {
+      return (
+        <div className="journal-brain-dump__timer">
+          <span className="journal-brain-dump__timer-label" aria-live="polite">
+            Time left: {timeLeft}s
+          </span>
+          {hasFinished && (
+            <span className="journal-brain-dump__timer-complete">Time's up! ✅</span>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderBrainDumpReflection = () => {
+    if (!isSecretMode && isBrainDumpMode && hasFinished) {
+      return (
+        <div className="journal-brain-dump__reflect">
+          {!analysis ? (
+            <button
+              type="button"
+              className="journal-brain-dump__reflect-button"
+              onClick={handleAnalyzeBrainDump}
+              aria-label="Reflect on my brain dump"
+            >
+              🧠 Reflect on my brain dump
+            </button>
+          ) : (
+            <div className="journal-brain-dump__analysis">
+              <h4 className="journal-brain-dump__analysis-title">AI Reflection</h4>
+              <p className="journal-brain-dump__analysis-content">{analysis}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderLifeWheelSection = () => {
+    if (!isSecretMode && isLifeWheelMode) {
+      return (
+        <>
+          <label className="journal-editor__field">
+            <span>Life area</span>
+            <select
+              value={draft.category ?? ''}
+              onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}
+              required
+            >
+              <option value="">Select a life area…</option>
+              {LIFE_WHEEL_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="journal-editor__field">
+            <span>Satisfaction level (1-10)</span>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={draft.moodScore ?? DEFAULT_MOOD_SCORE}
+              onChange={(event) => handleSatisfactionChange(Number(event.target.value))}
+              className="journal-editor__mood-slider"
+            />
+            <div className="journal-editor__mood-value">
+              {draft.moodScore ?? DEFAULT_MOOD_SCORE} / 10
+            </div>
+          </label>
+        </>
+      );
+    }
+    return null;
+  };
+
+  const renderGoalSection = () => {
+    if (!isSecretMode && isGoalMode) {
+      return (
+        <label className="journal-editor__field">
+          <span>Link to goal</span>
+          <select 
+            value={draft.goalId ?? ''} 
+            onChange={handlePrimaryGoalChange}
+            aria-label="Select a goal to reflect on"
+          >
+            <option value="">Select a goal…</option>
+            {goalOptions.map((goal) => (
+              <option key={goal.id} value={goal.id}>
+                {goal.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      );
+    }
+    return null;
+  };
+
+  const renderTimeCapsuleSection = () => {
+    if (isTimeCapsuleMode) {
+      return (
+        <label className="journal-editor__field">
+          <span>Unlock date</span>
+          <input
+            type="datetime-local"
+            value={draft.unlockDate ?? ''}
+            onChange={(event) => setDraft((current) => ({ ...current, unlockDate: event.target.value }))}
+            required
+          />
+        </label>
+      );
+    }
+    return null;
+  };
 
   if (!open) {
     return null;
@@ -452,29 +672,9 @@ export function JournalEntryEditor({
         </header>
 
         <form className="journal-editor__form" onSubmit={handleSubmit}>
-          {isSecretMode && (
-            <div className="journal-secret__notice">
-              <p className="journal-secret__notice-text">
-                🔒 <strong>Secret mode:</strong> Nothing you write here is saved. It will self-destruct.
-              </p>
-            </div>
-          )}
+          {renderSecretModeNotice()}
 
-          {isSecretMode && (
-            <div className="journal-secret__timer">
-              <span className="journal-secret__timer-label" aria-live="polite">
-                Self-destruct in: {secretTimeLeft}s
-              </span>
-              <button
-                type="button"
-                className="journal-secret__destroy-button"
-                onClick={handleSecretDestroy}
-                aria-label="Destroy secret text now"
-              >
-                🔥 Destroy now
-              </button>
-            </div>
-          )}
+          {renderSecretModeTimer()}
 
           {!isSecretMode && (
           <div className="journal-editor__grid">
@@ -488,36 +688,9 @@ export function JournalEntryEditor({
               />
             </label>
 
-            {isTimeCapsuleMode ? (
-              <label className="journal-editor__field">
-                <span>Unlock date</span>
-                <input
-                  type="datetime-local"
-                  value={draft.unlockDate ?? ''}
-                  onChange={(event) => setDraft((current) => ({ ...current, unlockDate: event.target.value }))}
-                  required
-                />
-              </label>
-            ) : isQuickMode ? (
-              <label className="journal-editor__field">
-                <span>Mood score (1-10)</span>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={draft.moodScore ?? DEFAULT_MOOD_SCORE}
-                  onChange={(event) => handleMoodScoreChange(Number(event.target.value))}
-                  className="journal-editor__mood-slider"
-                />
-                <div className="journal-editor__mood-value">
-                  {draft.moodScore ?? DEFAULT_MOOD_SCORE} / 10
-                  {draft.mood && (() => {
-                    const moodOption = moodOptions.find(opt => opt.value === draft.mood);
-                    return moodOption ? ` (${moodOption.icon} ${moodOption.label})` : '';
-                  })()}
-                </div>
-              </label>
-            ) : (
+            {renderTimeCapsuleSection()}
+            {renderQuickModeSection()}
+            {!isTimeCapsuleMode && !isQuickMode && (
               <label className="journal-editor__field">
                 <span>Mood</span>
                 <select value={moodValue} onChange={(event) => handleFieldChange('mood', event.target.value)}>
@@ -533,57 +706,9 @@ export function JournalEntryEditor({
           </div>
           )}
 
-          {!isSecretMode && isGoalMode && (
-            <label className="journal-editor__field">
-              <span>Link to goal</span>
-              <select 
-                value={draft.goalId ?? ''} 
-                onChange={handlePrimaryGoalChange}
-                aria-label="Select a goal to reflect on"
-              >
-                <option value="">Select a goal…</option>
-                {goalOptions.map((goal) => (
-                  <option key={goal.id} value={goal.id}>
-                    {goal.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          {renderGoalSection()}
 
-          {!isSecretMode && isLifeWheelMode && (
-            <>
-              <label className="journal-editor__field">
-                <span>Life area</span>
-                <select
-                  value={draft.category ?? ''}
-                  onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}
-                  required
-                >
-                  <option value="">Select a life area…</option>
-                  {LIFE_WHEEL_CATEGORIES.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="journal-editor__field">
-                <span>Satisfaction level (1-10)</span>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={draft.moodScore ?? DEFAULT_MOOD_SCORE}
-                  onChange={(event) => handleSatisfactionChange(Number(event.target.value))}
-                  className="journal-editor__mood-slider"
-                />
-                <div className="journal-editor__mood-value">
-                  {draft.moodScore ?? DEFAULT_MOOD_SCORE} / 10
-                </div>
-              </label>
-            </>
-          )}
+          {renderLifeWheelSection()}
 
           {!isSecretMode && !isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
             <label className="journal-editor__field">
@@ -597,29 +722,9 @@ export function JournalEntryEditor({
             </label>
           )}
 
-          {!isSecretMode && isBrainDumpMode && (
-            <div className="journal-brain-dump__timer">
-              <span className="journal-brain-dump__timer-label" aria-live="polite">
-                Time left: {timeLeft}s
-              </span>
-              {hasFinished && (
-                <span className="journal-brain-dump__timer-complete">Time's up! ✅</span>
-              )}
-            </div>
-          )}
+          {renderBrainDumpSection()}
 
-          {!isSecretMode && isDeepMode && (
-            <div className="journal-deep-mode__actions">
-              <button
-                type="button"
-                className="journal-deep-mode__focus-button"
-                onClick={() => setIsFocusMode(!isFocusMode)}
-                aria-label={isFocusMode ? "Exit focus mode" : "Enter focus mode"}
-              >
-                {isFocusMode ? 'Exit focus mode' : 'Enter focus mode'}
-              </button>
-            </div>
-          )}
+          {renderDeepModeSection()}
 
           <label className="journal-editor__field">
             <span>{getContentLabel()}</span>
@@ -638,37 +743,9 @@ export function JournalEntryEditor({
             />
           </label>
 
-          {!isSecretMode && isBrainDumpMode && hasFinished && (
-            <div className="journal-brain-dump__reflect">
-              {!analysis ? (
-                <button
-                  type="button"
-                  className="journal-brain-dump__reflect-button"
-                  onClick={handleAnalyzeBrainDump}
-                  aria-label="Reflect on my brain dump"
-                >
-                  🧠 Reflect on my brain dump
-                </button>
-              ) : (
-                <div className="journal-brain-dump__analysis">
-                  <h4 className="journal-brain-dump__analysis-title">AI Reflection</h4>
-                  <p className="journal-brain-dump__analysis-content">{analysis}</p>
-                </div>
-              )}
-            </div>
-          )}
+          {renderBrainDumpReflection()}
 
-          {!isSecretMode && isQuickMode && (
-            <div className="journal-editor__quick-actions">
-              <button
-                type="button"
-                className="journal-editor__prompt-button"
-                onClick={handleUsePrompt}
-              >
-                ✨ Use a prompt
-              </button>
-            </div>
-          )}
+          {renderQuickModeActions()}
 
           {!isSecretMode && !isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
             <>
