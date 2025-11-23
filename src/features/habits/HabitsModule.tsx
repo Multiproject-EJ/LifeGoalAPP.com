@@ -62,10 +62,10 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         }
 
         // Load streaks
-        const { data: streaksData, error: streaksError } = await listHabitStreaksV2(session.user.id);
-        if (streaksError) {
-          console.error('Error loading streaks:', streaksError);
-          setStreaksError(streaksError.message);
+        const { data: streaksData, error: streaksApiError } = await listHabitStreaksV2(session.user.id);
+        if (streaksApiError) {
+          console.error('Error loading streaks:', streaksApiError);
+          setStreaksError(streaksApiError.message);
         } else {
           setStreaks(streaksData ?? []);
         }

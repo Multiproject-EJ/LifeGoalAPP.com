@@ -136,10 +136,12 @@ export async function listHabitStreaksV2(
   const habitIds = userHabits.map(h => h.id);
   
   // Query the streaks view filtered by the user's habit IDs
-  return supabase
+  const result = await supabase
     .from('v_habit_streaks')
     .select('*')
     .in('habit_id', habitIds)
     .order('current_streak', { ascending: false })
     .returns<HabitStreakRow[]>();
+  
+  return result;
 }
