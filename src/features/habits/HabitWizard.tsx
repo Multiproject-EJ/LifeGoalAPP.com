@@ -1,12 +1,17 @@
 import { useState } from 'react';
 
+// Placeholder schedule type - will be refined to match habits_v2 JSON schema later
+export interface ScheduleDraft {
+  choice: 'every_day' | 'specific_days' | 'x_per_week';
+}
+
 export interface HabitWizardDraft {
   title: string;
   emoji: string | null;
   type: 'boolean' | 'quantity' | 'duration';
   targetValue?: number | null;
   targetUnit?: string | null;
-  schedule: any; // We'll refine later
+  schedule: ScheduleDraft;
   remindersEnabled?: boolean;
   reminderTimes?: string[];
 }
@@ -269,9 +274,13 @@ export function HabitWizard({ onCancel, onCompleteDraft }: HabitWizardProps) {
                   id="habit-target-value"
                   type="number"
                   value={targetValue ?? ''}
-                  onChange={(e) => setTargetValue(e.target.value ? Number(e.target.value) : undefined)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setTargetValue(val ? parseFloat(val) : undefined);
+                  }}
                   placeholder={type === 'quantity' ? 'e.g., 8' : 'e.g., 30'}
                   min="0"
+                  step="any"
                   style={{
                     width: '100%',
                     padding: '0.75rem',
