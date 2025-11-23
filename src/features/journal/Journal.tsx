@@ -18,6 +18,7 @@ import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } fr
 import { JournalTypeSelector } from './JournalTypeSelector';
 import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
+import { isEntryLocked } from './utils';
 
 /**
  * Journal mode type representing different journaling experiences.
@@ -55,19 +56,6 @@ function sortEntries(entries: JournalEntry[]): JournalEntry[] {
     const bCreated = b.created_at ?? '';
     return bCreated.localeCompare(aCreated);
   });
-}
-
-/**
- * Check if a time capsule entry is locked.
- * An entry is locked if:
- * - type is 'time_capsule'
- * - unlock_date is not null
- * - unlock_date is in the future
- */
-function isEntryLocked(entry: JournalEntry): boolean {
-  if (entry.type !== 'time_capsule') return false;
-  if (!entry.unlock_date) return false;
-  return new Date(entry.unlock_date) > new Date();
 }
 
 export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: JournalProps) {

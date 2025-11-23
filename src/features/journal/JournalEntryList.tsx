@@ -1,5 +1,6 @@
 import type { JournalEntry } from '../../services/journal';
 import type { JournalMoodOption } from './JournalEntryEditor';
+import { entryListDateFormatter, unlockDateFormatter } from './utils';
 
 type JournalEntryListProps = {
   entries: JournalEntry[];
@@ -18,20 +19,6 @@ type JournalEntryListProps = {
   onSelectEntry: (entryId: string) => void;
   isEntryLocked: (entry: JournalEntry) => boolean;
 };
-
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-});
-
-const unlockDateFormatter = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-});
 
 function getPreview(content: string, limit = 140): string {
   const normalized = content.replace(/\s+/g, ' ').trim();
@@ -106,7 +93,7 @@ export function JournalEntryList({
                   disabled={disabled}
                 >
                   <div className="journal-list__item-meta">
-                    <span>{dateFormatter.format(new Date(entry.entry_date))}</span>
+                    <span>{entryListDateFormatter.format(new Date(entry.entry_date))}</span>
                     {moodMeta ? <span className="journal-list__item-mood">{moodMeta.icon}</span> : null}
                   </div>
                   <strong>{entry.title?.trim() || 'Untitled'}</strong>
