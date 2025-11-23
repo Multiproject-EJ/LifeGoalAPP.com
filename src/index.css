@@ -7978,6 +7978,77 @@ body {
   color: var(--color-text-primary, #0f172a);
 }
 
+/* Secret Mode Styles */
+.journal-secret__notice {
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.journal-secret__notice-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-primary, #0f172a);
+  line-height: 1.5;
+}
+
+.journal-secret__timer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+
+.journal-secret__timer-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #dc2626;
+}
+
+.journal-secret__destroy-button {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.15));
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.journal-secret__destroy-button:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.25));
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Fade-out animation for secret text */
+@keyframes fadeOutText {
+  0% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+
+.journal-secret__textarea--fading {
+  animation: fadeOutText 0.5s ease-out forwards;
+}
+
 
 @media (max-width: 960px) {
   .journal__layout {
