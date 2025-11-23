@@ -174,11 +174,11 @@ export function JournalEntryEditor({
     setTimeLeft(BRAIN_DUMP_DURATION_SECONDS);
     setHasFinished(false);
     setAnalysis(null);
-  }, [entry, open, mode, journalType]);
+  }, [entry, open, journalType]);
 
   // Brain dump countdown timer
   useEffect(() => {
-    if (!open || draft.type !== 'brain_dump' || hasFinished || timeLeft <= 0) return;
+    if (!open || draft.type !== 'brain_dump' || hasFinished) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -191,7 +191,7 @@ export function JournalEntryEditor({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [open, draft.type, hasFinished, timeLeft]);
+  }, [open, draft.type, hasFinished]);
 
   const moodValue = draft.mood ?? '';
 
