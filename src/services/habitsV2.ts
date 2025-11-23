@@ -145,3 +145,29 @@ export async function listHabitStreaksV2(
   
   return result;
 }
+
+/**
+ * List habit logs for a specific habit within a date range.
+ * Used for generating insights and heatmap visualizations.
+ * 
+ * @param params - Query parameters with userId, habitId, and date range
+ * @returns Promise with data array of habit logs and error
+ */
+export async function listHabitLogsForRangeV2(params: {
+  userId: string;
+  habitId: string;
+  startDate: string; // ISO date (YYYY-MM-DD)
+  endDate: string;   // ISO date (YYYY-MM-DD)
+}): Promise<ServiceResponse<HabitLogV2Row[]>> {
+  const supabase = getSupabaseClient();
+  
+  return supabase
+    .from('habit_logs_v2')
+    .select('*')
+    .eq('user_id', params.userId)
+    .eq('habit_id', params.habitId)
+    .gte('date', params.startDate)
+    .lte('date', params.endDate)
+    .order('date', { ascending: true })
+    .returns<HabitLogV2Row[]>();
+}
