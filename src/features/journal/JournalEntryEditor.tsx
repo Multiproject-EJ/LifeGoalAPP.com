@@ -41,6 +41,10 @@ type JournalEntryEditorProps = {
 
 const DEFAULT_MOOD_SCORE = 5;
 
+// Brain dump mode constants
+const BRAIN_DUMP_DURATION_SECONDS = 60;
+const BRAIN_DUMP_BLUR_DIVISOR = 10;
+
 const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'quick': 'Quick',
   'deep': 'Deep',
@@ -127,7 +131,13 @@ function createDraft(entry: JournalEntry | null, journalType?: JournalType): Jou
   };
 }
 
-// AI analysis stub for brain dump mode
+/**
+ * AI analysis stub for brain dump mode.
+ * This is a placeholder function that will be replaced with actual AI integration.
+ * 
+ * @param text - The brain dump content to analyze
+ * @returns A promise that resolves to the AI-generated reflection text
+ */
 async function analyzeBrainDump(text: string): Promise<string> {
   // TODO: Integrate real AI analysis here
   if (!text.trim()) return 'No content to analyze yet.';
@@ -152,7 +162,7 @@ export function JournalEntryEditor({
   const [tagInput, setTagInput] = useState('');
 
   // Brain dump mode state
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(BRAIN_DUMP_DURATION_SECONDS);
   const [hasFinished, setHasFinished] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
 
@@ -161,7 +171,7 @@ export function JournalEntryEditor({
     setDraft(createDraft(entry, journalType));
     setTagInput('');
     // Reset brain dump state when opening/changing entries
-    setTimeLeft(60);
+    setTimeLeft(BRAIN_DUMP_DURATION_SECONDS);
     setHasFinished(false);
     setAnalysis(null);
   }, [entry, open, mode, journalType]);
@@ -481,7 +491,7 @@ export function JournalEntryEditor({
               placeholder={getContentPlaceholder()}
               readOnly={isBrainDumpMode && hasFinished}
               style={isBrainDumpMode ? {
-                filter: `blur(${Math.max((60 - timeLeft) / 10, 0)}px)`,
+                filter: `blur(${Math.max((BRAIN_DUMP_DURATION_SECONDS - timeLeft) / BRAIN_DUMP_BLUR_DIVISOR, 0)}px)`,
                 transition: 'filter 0.3s'
               } : undefined}
             />
