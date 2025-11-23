@@ -187,6 +187,9 @@ export function JournalEntryEditor({
   const [isFading, setIsFading] = useState(false);
   const secretDestroyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Deep mode focus state
+  const [isFocusMode, setIsFocusMode] = useState(false);
+
   useEffect(() => {
     if (!open) return;
     setDraft(createDraft(entry, journalType));
@@ -396,6 +399,7 @@ export function JournalEntryEditor({
     if (isLifeWheelMode) return "Reflect on this area of your life";
     if (isBrainDumpMode) return "Brain dump your thoughts";
     if (isSecretMode) return "Secret thoughts (not saved)";
+    if (isDeepMode) return "Full entry";
     return "Content";
   };
 
@@ -406,6 +410,7 @@ export function JournalEntryEditor({
     if (isLifeWheelMode) return "Write about how this area has felt recently...";
     if (isBrainDumpMode) return "Write freely without stopping. Let your thoughts flow...";
     if (isSecretMode) return "Write anything you need to get off your chest. It will disappear...";
+    if (isDeepMode) return "Write deeply and thoughtfully. Take your time to explore your thoughts...";
     return "Capture what unfolded, how you felt, and any momentum you want to carry forward.";
   };
 
@@ -415,6 +420,7 @@ export function JournalEntryEditor({
   const isLifeWheelMode = draft.type === 'life_wheel';
   const isBrainDumpMode = draft.type === 'brain_dump';
   const isSecretMode = draft.type === 'secret';
+  const isDeepMode = draft.type === 'deep';
 
   // Memoize blur calculation to avoid unnecessary computations on every render
   const blurAmount = useMemo(() => {
@@ -427,7 +433,7 @@ export function JournalEntryEditor({
   }
 
   return (
-    <div className="journal-editor" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+    <div className={`journal-editor ${isFocusMode ? 'journal-editor--fullscreen' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <div className="journal-editor__backdrop" onClick={onClose} />
       <div className="journal-editor__panel" role="document" onClick={(event) => event.stopPropagation()}>
         <header className="journal-editor__header">
@@ -440,8 +446,8 @@ export function JournalEntryEditor({
               </p>
             )}
           </div>
-          <button type="button" className="journal-editor__close" onClick={onClose}>
-            Close
+          <button type="button" className="journal-editor__close" onClick={isFocusMode ? () => setIsFocusMode(false) : onClose}>
+            {isFocusMode ? '← Exit focus' : 'Close'}
           </button>
         </header>
 
@@ -602,12 +608,25 @@ export function JournalEntryEditor({
             </div>
           )}
 
+          {!isSecretMode && isDeepMode && (
+            <div className="journal-deep-mode__actions">
+              <button
+                type="button"
+                className="journal-deep-mode__focus-button"
+                onClick={() => setIsFocusMode(!isFocusMode)}
+                aria-label={isFocusMode ? "Exit focus mode" : "Enter focus mode"}
+              >
+                {isFocusMode ? 'Exit focus mode' : 'Enter focus mode'}
+              </button>
+            </div>
+          )}
+
           <label className="journal-editor__field">
             <span>{getContentLabel()}</span>
             <textarea
               value={isSecretMode ? secretText : draft.content}
               onChange={isSecretMode ? handleSecretTextChange : (event) => handleFieldChange('content', event.target.value)}
-              rows={isQuickMode ? 4 : 8}
+              rows={isQuickMode ? 4 : isDeepMode ? 14 : 8}
               required={!isSecretMode}
               placeholder={getContentPlaceholder()}
               readOnly={isBrainDumpMode && hasFinished}
