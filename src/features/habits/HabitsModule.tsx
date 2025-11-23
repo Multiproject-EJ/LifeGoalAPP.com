@@ -55,9 +55,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         {showDevNotes && (
           <div style={{ fontSize: '0.875rem', lineHeight: '1.6', marginTop: '1rem', color: '#475569' }}>
             <ul style={{ marginLeft: '1.5rem', marginBottom: 0 }}>
-              <li>SQL migrations for <code>habits_v2</code> and related tables exist under <code>/supabase/migrations/</code></li>
+              <li>SQL migrations for <code>habits_v2</code>, <code>habit_logs_v2</code>, <code>habit_reminders</code>, and related tables exist under <code>/supabase/migrations/</code></li>
               <li>Edge Functions live under <code>/supabase/functions/</code></li>
-              <li>More details are in <code>HABITS_SETUP_GUIDE.md</code></li>
+              <li>More details are in <code>/HABITS_SETUP_GUIDE.md</code></li>
             </ul>
           </div>
         )}
