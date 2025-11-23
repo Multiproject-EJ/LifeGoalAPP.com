@@ -495,7 +495,7 @@ export function JournalEntryEditor({
 
           {isBrainDumpMode && (
             <div className="journal-brain-dump__timer">
-              <span className="journal-brain-dump__timer-label">
+              <span className="journal-brain-dump__timer-label" aria-live="polite">
                 Time left: {timeLeft}s
               </span>
               {hasFinished && (
@@ -527,6 +527,7 @@ export function JournalEntryEditor({
                   type="button"
                   className="journal-brain-dump__reflect-button"
                   onClick={handleAnalyzeBrainDump}
+                  aria-label="Reflect on my brain dump"
                 >
                   🧠 Reflect on my brain dump
                 </button>
