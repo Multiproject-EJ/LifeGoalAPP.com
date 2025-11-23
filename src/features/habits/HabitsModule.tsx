@@ -22,6 +22,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   
   // Logging state for tracking in-flight habit logging
   const [loggingHabitIds, setLoggingHabitIds] = useState<Set<string>>(new Set());
+  
+  // Input values for quantity/duration habits
+  const [habitInputValues, setHabitInputValues] = useState<Record<string, string>>({});
 
   // Load habits and today's logs on mount
   useEffect(() => {
@@ -117,6 +120,59 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       setLoggingHabitIds(prev => {
         const next = new Set(prev);
         next.delete(habitId);
+        return next;
+      });
+    }
+  };
+
+  // Handler for logging habit with a numeric value (quantity or duration)
+  const handleLogHabitValue = async (habit: HabitV2Row, value: number) => {
+    if (!session) {
+      setError('Session expired. Please refresh the page.');
+      return;
+    }
+
+    // Mark habit as logging
+    setLoggingHabitIds(prev => new Set(prev).add(habit.id));
+    setError(null);
+
+    try {
+      // Create log entry with the value
+      const { data: newLog, error: logError } = await logHabitCompletionV2(
+        {
+          habit_id: habit.id,
+          done: true,
+          value: value,
+        },
+        session.user.id
+      );
+
+      if (logError) {
+        throw new Error(logError.message);
+      }
+
+      if (!newLog) {
+        throw new Error('Failed to log habit - no data returned');
+      }
+
+      // Reload today's logs to update the UI
+      await reloadTodayLogs();
+      
+      // Clear the input value after successful log
+      setHabitInputValues(prev => {
+        const next = { ...prev };
+        delete next[habit.id];
+        return next;
+      });
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to log habit');
+      console.error('Error logging habit:', err);
+    } finally {
+      // Remove habit from logging state
+      setLoggingHabitIds(prev => {
+        const next = new Set(prev);
+        next.delete(habit.id);
         return next;
       });
     }
@@ -385,6 +441,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                 const isDone = log?.done ?? false;
                 const logValue = log?.value;
                 const isLogging = loggingHabitIds.has(habit.id);
+                const inputValue = habitInputValues[habit.id] || '';
 
                 return (
                   <div
@@ -396,25 +453,34 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                       padding: '1rem',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between'
+                      justifyContent: 'space-between',
+                      gap: '1rem'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
                       {habit.emoji && (
                         <span style={{ fontSize: '1.25rem' }}>{habit.emoji}</span>
                       )}
-                      <span style={{ fontWeight: 500 }}>{habit.title}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 500 }}>{habit.title}</div>
+                        {!isDone && habit.type !== 'boolean' && habit.target_num && (
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                            Target: {habit.target_num} {habit.target_unit || 'units'}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       {isDone ? (
                         <div style={{ 
                           fontSize: '0.875rem',
                           color: '#15803d',
-                          fontWeight: 600
+                          fontWeight: 600,
+                          whiteSpace: 'nowrap'
                         }}>
                           Done
                           {logValue !== null && logValue !== undefined && habit.type !== 'boolean' && (
-                            <span> ({logValue} {habit.target_unit || 'units'})</span>
+                            <span> – {logValue} {habit.target_unit || 'units'}</span>
                           )}
                         </div>
                       ) : (
@@ -433,18 +499,98 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                                 fontWeight: 600,
                                 cursor: isLogging ? 'not-allowed' : 'pointer',
                                 opacity: isLogging ? 0.7 : 1,
+                                whiteSpace: 'nowrap'
                               }}
                             >
                               {isLogging ? 'Saving…' : 'Mark done'}
                             </button>
-                          ) : (
-                            <div style={{ 
-                              fontSize: '0.875rem',
-                              color: '#64748b'
-                            }}>
-                              Not logged yet
-                            </div>
-                          )}
+                          ) : habit.type === 'quantity' ? (
+                            <>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={inputValue}
+                                onChange={(e) => setHabitInputValues(prev => ({ ...prev, [habit.id]: e.target.value }))}
+                                placeholder="0"
+                                disabled={isLogging}
+                                style={{
+                                  width: '70px',
+                                  padding: '0.5rem',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  fontSize: '0.875rem',
+                                  textAlign: 'center'
+                                }}
+                              />
+                              <button
+                                onClick={() => {
+                                  const value = parseFloat(inputValue);
+                                  if (!isNaN(value) && value > 0) {
+                                    handleLogHabitValue(habit, value);
+                                  }
+                                }}
+                                disabled={isLogging || !inputValue || parseFloat(inputValue) <= 0}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  background: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? '#94a3b8' : '#667eea',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                  cursor: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 'not-allowed' : 'pointer',
+                                  opacity: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 0.7 : 1,
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {isLogging ? 'Saving…' : 'Log'}
+                              </button>
+                            </>
+                          ) : habit.type === 'duration' ? (
+                            <>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={inputValue}
+                                onChange={(e) => setHabitInputValues(prev => ({ ...prev, [habit.id]: e.target.value }))}
+                                placeholder="0"
+                                disabled={isLogging}
+                                style={{
+                                  width: '70px',
+                                  padding: '0.5rem',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  fontSize: '0.875rem',
+                                  textAlign: 'center'
+                                }}
+                              />
+                              <button
+                                onClick={() => {
+                                  const value = parseFloat(inputValue);
+                                  if (!isNaN(value) && value > 0) {
+                                    handleLogHabitValue(habit, value);
+                                  }
+                                }}
+                                disabled={isLogging || !inputValue || parseFloat(inputValue) <= 0}
+                                style={{
+                                  padding: '0.5rem 0.75rem',
+                                  background: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? '#94a3b8' : '#667eea',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                  cursor: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 'not-allowed' : 'pointer',
+                                  opacity: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 0.7 : 1,
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {isLogging ? 'Saving…' : 'Log min'}
+                              </button>
+                            </>
+                          ) : null}
                         </>
                       )}
                     </div>
