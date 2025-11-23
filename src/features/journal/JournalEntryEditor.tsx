@@ -44,6 +44,7 @@ const DEFAULT_MOOD_SCORE = 5;
 // Brain dump mode constants
 const BRAIN_DUMP_DURATION_SECONDS = 60;
 const BRAIN_DUMP_BLUR_DIVISOR = 10;
+const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this time. Please try again.';
 
 const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'quick': 'Quick',
@@ -111,6 +112,17 @@ function moodToMoodScore(mood: string | null): number | null {
     'excited': 10,
   };
   return mapping[mood] ?? null;
+}
+
+/**
+ * Calculate the blur amount for brain dump mode based on elapsed time.
+ * The blur gradually increases as the timer counts down.
+ * 
+ * @param timeLeft - Seconds remaining in the countdown
+ * @returns The blur amount in pixels
+ */
+function calculateBrainDumpBlur(timeLeft: number): number {
+  return Math.max((BRAIN_DUMP_DURATION_SECONDS - timeLeft) / BRAIN_DUMP_BLUR_DIVISOR, 0);
 }
 
 function createDraft(entry: JournalEntry | null, journalType?: JournalType): JournalEntryDraft {
@@ -304,7 +316,7 @@ export function JournalEntryEditor({
       setAnalysis(result);
     } catch (err) {
       // If AI analysis fails, show a user-friendly message
-      setAnalysis('Sorry, unable to generate reflection at this time. Please try again.');
+      setAnalysis(BRAIN_DUMP_ERROR_MESSAGE);
     }
   };
 
@@ -335,7 +347,7 @@ export function JournalEntryEditor({
   // Memoize blur calculation to avoid unnecessary computations on every render
   const blurAmount = useMemo(() => {
     if (!isBrainDumpMode) return 0;
-    return Math.max((BRAIN_DUMP_DURATION_SECONDS - timeLeft) / BRAIN_DUMP_BLUR_DIVISOR, 0);
+    return calculateBrainDumpBlur(timeLeft);
   }, [isBrainDumpMode, timeLeft]);
 
   if (!open) {
