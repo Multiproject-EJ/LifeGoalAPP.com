@@ -144,3 +144,62 @@ export async function deleteJournalEntry(id: string): Promise<ServiceResponse<Jo
   const supabase = getSupabaseClient();
   return supabase.from('journal_entries').delete().eq('id', id).select().single();
 }
+
+/**
+ * List journal entries filtered by mode/type for analytics and dashboards.
+ * Supports filtering by journal type, life wheel category, and goal ID.
+ * 
+ * @param params - Filter parameters
+ * @param params.type - Journal mode/type (e.g., 'quick', 'deep', 'life_wheel', 'goal')
+ * @param params.category - Life wheel category (used with type='life_wheel')
+ * @param params.goalId - Goal ID (used with type='goal')
+ * @param params.limit - Maximum number of entries to return (defaults to 250)
+ * @returns Promise with data array of journal entries and error
+ */
+export async function listJournalEntriesByMode(params: {
+  type?: Database['public']['Tables']['journal_entries']['Row']['type'];
+  category?: string | null;
+  goalId?: string | null;
+  limit?: number;
+}): Promise<ServiceResponse<JournalEntry[]>> {
+  if (!canUseSupabaseData()) {
+    let entries = getDemoJournalEntries(DEMO_USER_ID);
+    
+    // Apply filters to demo data
+    if (params.type) {
+      entries = entries.filter((entry) => entry.type === params.type);
+    }
+    if (params.category) {
+      entries = entries.filter((entry) => entry.category === params.category);
+    }
+    if (params.goalId) {
+      entries = entries.filter((entry) => entry.goal_id === params.goalId);
+    }
+    
+    const limit = params.limit ?? 250;
+    return { data: entries.slice(0, limit), error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  let query = supabase
+    .from('journal_entries')
+    .select('*')
+    .order('entry_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (params.type) {
+    query = query.eq('type', params.type);
+  }
+  if (params.category) {
+    query = query.eq('category', params.category);
+  }
+  if (params.goalId) {
+    query = query.eq('goal_id', params.goalId);
+  }
+
+  const limit = params.limit ?? 250;
+  query = query.limit(limit);
+
+  const response = await query.returns<JournalEntry[]>();
+  return { data: response.data, error: response.error };
+}
