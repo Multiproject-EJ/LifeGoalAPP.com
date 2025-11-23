@@ -47,7 +47,7 @@ export function isEntryLocked(entry: JournalEntry): boolean {
  * Map mood_score (1-10) to mood string
  */
 export function moodScoreToMood(score: number | null | undefined): string | null {
-  if (score == null) return null;
+  if (score === null || score === undefined) return null;
   if (score <= 3) return 'sad';
   if (score <= 5) return 'stressed';
   if (score <= 7) return 'neutral';
@@ -116,19 +116,19 @@ export const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
  * Get a human-readable label for a journal type
  */
 export function getModeLabel(type: JournalEntryType | null | undefined): string {
-  return JOURNAL_TYPE_LABELS[type ?? 'standard'];
+  return JOURNAL_TYPE_LABELS[type ?? 'standard'] ?? 'Standard';
 }
 
 /**
  * Get the content label for a journal type
  */
 export function getContentLabel(type: JournalEntryType | null | undefined): string {
-  return CONTENT_LABELS[type ?? 'standard'];
+  return CONTENT_LABELS[type ?? 'standard'] ?? 'Content';
 }
 
 /**
  * Get the content placeholder for a journal type
  */
 export function getContentPlaceholder(type: JournalEntryType | null | undefined): string {
-  return CONTENT_PLACEHOLDERS[type ?? 'standard'];
+  return CONTENT_PLACEHOLDERS[type ?? 'standard'] ?? 'Enter your content...';
 }

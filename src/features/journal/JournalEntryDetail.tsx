@@ -55,7 +55,7 @@ export function JournalEntryDetail({
   const isGoalMode = entry.type === 'goal';
   const isLifeWheelMode = entry.type === 'life_wheel';
   const primaryGoalId = entry.goal_id ?? null;
-  const primaryGoal = primaryGoalId ? goalMap[primaryGoalId] ?? null : null;
+  const primaryGoal = (primaryGoalId && goalMap[primaryGoalId]) ?? null;
   const paragraphs = entry.content
     .split(/\n+/)
     .map((text) => text.trim())
