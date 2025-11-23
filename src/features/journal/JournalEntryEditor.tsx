@@ -616,7 +616,7 @@ export function JournalEntryEditor({
                 onClick={() => setIsFocusMode(!isFocusMode)}
                 aria-label={isFocusMode ? "Exit focus mode" : "Enter focus mode"}
               >
-                {isFocusMode ? '⬅️ Exit focus mode' : '🎯 Enter focus mode'}
+                {isFocusMode ? 'Exit focus mode' : 'Enter focus mode'}
               </button>
             </div>
           )}
