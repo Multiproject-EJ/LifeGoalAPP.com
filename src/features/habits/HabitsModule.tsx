@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import type { Database } from '../../lib/database.types';
 
@@ -19,6 +19,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   const [showWizard, setShowWizard] = useState(false);
   const [pendingHabitDraft, setPendingHabitDraft] = useState<HabitWizardDraft | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Logging state for tracking in-flight habit logging
+  const [loggingHabitIds, setLoggingHabitIds] = useState<Set<string>>(new Set());
 
   // Load habits and today's logs on mount
   useEffect(() => {
@@ -52,6 +55,67 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
     loadData();
   }, [session]);
+
+  // Helper to reload today's logs
+  const reloadTodayLogs = async () => {
+    if (!session) return;
+    
+    try {
+      const { data: logsData, error: logsError } = await listTodayHabitLogsV2(session.user.id);
+      if (logsError) {
+        throw new Error(logsError.message);
+      }
+      setTodayLogs(logsData ?? []);
+    } catch (err) {
+      console.error('Error reloading today\'s logs:', err);
+    }
+  };
+
+  // Handler for marking a habit as done
+  const handleMarkHabitDone = async (habitId: string, type: HabitV2Row['type']) => {
+    // Only handle boolean habits for now
+    if (type !== 'boolean') {
+      return;
+    }
+
+    // Mark habit as logging
+    setLoggingHabitIds(prev => new Set(prev).add(habitId));
+    setError(null);
+
+    try {
+      // Create log entry for boolean habit
+      const { data: newLog, error: logError } = await logHabitCompletionV2(
+        {
+          habit_id: habitId,
+          done: true,
+          value: null, // For boolean habits, value is null
+        },
+        session.user.id
+      );
+
+      if (logError) {
+        throw new Error(logError.message);
+      }
+
+      if (!newLog) {
+        throw new Error('Failed to log habit - no data returned');
+      }
+
+      // Reload today's logs to update the UI
+      await reloadTodayLogs();
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to log habit');
+      console.error('Error logging habit:', err);
+    } finally {
+      // Remove habit from logging state
+      setLoggingHabitIds(prev => {
+        const next = new Set(prev);
+        next.delete(habitId);
+        return next;
+      });
+    }
+  };
 
   // Handler for wizard completion
   const handleCompleteDraft = async (draft: HabitWizardDraft) => {
@@ -315,6 +379,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                 const log = todayLogs.find((l) => l.habit_id === habit.id);
                 const isDone = log?.done ?? false;
                 const logValue = log?.value;
+                const isLogging = loggingHabitIds.has(habit.id);
 
                 return (
                   <div
@@ -335,20 +400,47 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                       )}
                       <span style={{ fontWeight: 500 }}>{habit.title}</span>
                     </div>
-                    <div style={{ 
-                      fontSize: '0.875rem',
-                      color: isDone ? '#15803d' : '#64748b',
-                      fontWeight: isDone ? 600 : 400
-                    }}>
+                    <div>
                       {isDone ? (
-                        <>
+                        <div style={{ 
+                          fontSize: '0.875rem',
+                          color: '#15803d',
+                          fontWeight: 600
+                        }}>
                           Done
                           {logValue !== null && logValue !== undefined && habit.type !== 'boolean' && (
                             <span> ({logValue} {habit.target_unit || 'units'})</span>
                           )}
-                        </>
+                        </div>
                       ) : (
-                        'Not logged yet'
+                        <>
+                          {habit.type === 'boolean' ? (
+                            <button
+                              onClick={() => handleMarkHabitDone(habit.id, habit.type)}
+                              disabled={isLogging}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                background: isLogging ? '#94a3b8' : '#667eea',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                cursor: isLogging ? 'not-allowed' : 'pointer',
+                                opacity: isLogging ? 0.7 : 1,
+                              }}
+                            >
+                              {isLogging ? 'Saving…' : 'Mark done'}
+                            </button>
+                          ) : (
+                            <div style={{ 
+                              fontSize: '0.875rem',
+                              color: '#64748b'
+                            }}>
+                              Not logged yet
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
