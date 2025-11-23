@@ -4,6 +4,7 @@ import type { Database } from '../lib/database.types';
 
 export type HabitV2Row = Database['public']['Tables']['habits_v2']['Row'];
 export type HabitLogV2Row = Database['public']['Tables']['habit_logs_v2']['Row'];
+export type HabitStreakRow = Database['public']['Views']['v_habit_streaks']['Row'];
 
 type HabitV2Insert = Database['public']['Tables']['habits_v2']['Insert'];
 type HabitLogV2Insert = Database['public']['Tables']['habit_logs_v2']['Insert'];
@@ -102,4 +103,45 @@ export async function logHabitCompletionV2(
     .insert(payload)
     .select()
     .single();
+}
+
+/**
+ * List all habit streaks for the current authenticated user.
+ * Joins the v_habit_streaks view with habits_v2 to filter by user_id.
+ * Returns streaks ordered by current streak descending.
+ * 
+ * @param userId - The user ID to filter streaks by
+ * @returns Promise with data array of habit streaks and error
+ */
+export async function listHabitStreaksV2(
+  userId: string,
+): Promise<ServiceResponse<HabitStreakRow[]>> {
+  const supabase = getSupabaseClient();
+  
+  // First, get the user's habit IDs
+  const { data: userHabits, error: habitsError } = await supabase
+    .from('habits_v2')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('archived', false);
+  
+  if (habitsError) {
+    return { data: null, error: habitsError };
+  }
+  
+  if (!userHabits || userHabits.length === 0) {
+    return { data: [], error: null };
+  }
+  
+  const habitIds = userHabits.map(h => h.id);
+  
+  // Query the streaks view filtered by the user's habit IDs
+  const result = await supabase
+    .from('v_habit_streaks')
+    .select('*')
+    .in('habit_id', habitIds)
+    .order('current_streak', { ascending: false })
+    .returns<HabitStreakRow[]>();
+  
+  return result;
 }

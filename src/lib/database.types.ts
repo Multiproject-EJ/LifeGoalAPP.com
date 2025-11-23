@@ -912,7 +912,26 @@ export interface Database {
         ];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      v_habit_streaks: {
+        Row: {
+          habit_id: string;
+          current_streak: number;
+          best_streak: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "v_habit_streaks_habit_id_fkey";
+            columns: ["habit_id"];
+            isOneToOne: false;
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+    };
     Functions: Record<string, never>;
     Enums: {
       habit_type: 'boolean' | 'quantity' | 'duration';

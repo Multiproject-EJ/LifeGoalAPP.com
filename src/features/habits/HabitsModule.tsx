@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import type { Database } from '../../lib/database.types';
@@ -15,6 +15,11 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Streaks state
+  const [streaks, setStreaks] = useState<HabitStreakRow[]>([]);
+  const [streaksLoading, setStreaksLoading] = useState(false);
+  const [streaksError, setStreaksError] = useState<string | null>(null);
   
   // Wizard state
   const [showWizard, setShowWizard] = useState(false);
@@ -40,6 +45,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     const loadData = async () => {
       setLoading(true);
       setError(null);
+      setStreaksLoading(true);
+      setStreaksError(null);
 
       try {
         // Load habits
@@ -54,12 +61,22 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           throw new Error(logsError.message);
         }
 
+        // Load streaks
+        const { data: streaksData, error: streaksApiError } = await listHabitStreaksV2(session.user.id);
+        if (streaksApiError) {
+          console.error('Error loading streaks:', streaksApiError);
+          setStreaksError(streaksApiError.message);
+        } else {
+          setStreaks(streaksData ?? []);
+        }
+
         setHabits(habitsData ?? []);
         setTodayLogs(logsData ?? []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load habits right now.');
       } finally {
         setLoading(false);
+        setStreaksLoading(false);
       }
     };
 
@@ -763,6 +780,79 @@ export function HabitsModule({ session }: HabitsModuleProps) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Streaks Section */}
+      <div style={{
+        background: 'white',
+        border: '2px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '2rem',
+        marginBottom: '2rem'
+      }}>
+        <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>Streaks</h2>
+
+        {streaksLoading ? (
+          <p style={{ color: '#64748b', margin: 0 }}>Loading streaks…</p>
+        ) : streaksError ? (
+          <div style={{
+            background: '#fee2e2',
+            border: '1px solid #fca5a5',
+            borderRadius: '8px',
+            padding: '0.75rem',
+            fontSize: '0.875rem',
+            color: '#991b1b'
+          }}>
+            {streaksError}
+          </div>
+        ) : streaks.length === 0 ? (
+          <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
+            Start logging habits to see streaks here.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {streaks.map((streak) => {
+              // Find the corresponding habit
+              const habit = habits.find(h => h.id === streak.habit_id);
+              if (!habit) return null;
+
+              return (
+                <div
+                  key={streak.habit_id}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '1rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {habit.emoji && (
+                      <span style={{ fontSize: '1.25rem' }}>{habit.emoji}</span>
+                    )}
+                    <div style={{ fontWeight: 500 }}>{habit.title}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <span>🔥</span>
+                      <span style={{ color: '#64748b' }}>Current:</span>
+                      <span style={{ fontWeight: 600, color: '#1e293b' }}>{streak.current_streak} days</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <span>⭐</span>
+                      <span style={{ color: '#64748b' }}>Best:</span>
+                      <span style={{ fontWeight: 600, color: '#1e293b' }}>{streak.best_streak} days</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
