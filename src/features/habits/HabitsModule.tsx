@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, type HabitV2Row, type HabitLogV2Row } from '../../services/habitsV2';
+import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 
 type HabitsModuleProps = {
   session: Session;
@@ -12,6 +13,10 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Wizard state
+  const [showWizard, setShowWizard] = useState(false);
+  const [pendingHabitDraft, setPendingHabitDraft] = useState<HabitWizardDraft | null>(null);
 
   // Load habits and today's logs on mount
   useEffect(() => {
@@ -45,6 +50,18 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
     loadData();
   }, [session]);
+
+  // Handler for wizard completion
+  const handleCompleteDraft = (draft: HabitWizardDraft) => {
+    console.log('Habit draft', draft);
+    setPendingHabitDraft(draft);
+    setShowWizard(false);
+  };
+
+  // Handler for wizard cancel
+  const handleCancelWizard = () => {
+    setShowWizard(false);
+  };
 
   return (
     <div className="habits-module-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
@@ -115,6 +132,28 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         </div>
       )}
 
+      {/* Habit Wizard */}
+      {showWizard && (
+        <HabitWizard 
+          onCancel={handleCancelWizard}
+          onCompleteDraft={handleCompleteDraft}
+        />
+      )}
+
+      {/* Debug: Show pending draft */}
+      {pendingHabitDraft && !showWizard && (
+        <div style={{
+          background: '#ecfdf5',
+          border: '1px solid #6ee7b7',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '2rem',
+          fontSize: '0.875rem'
+        }}>
+          <strong>Draft created:</strong> {pendingHabitDraft.title} ({pendingHabitDraft.type})
+        </div>
+      )}
+
       {/* Two-column layout: Your habits | Today's checklist */}
       <div style={{
         display: 'grid',
@@ -129,7 +168,28 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           borderRadius: '12px',
           padding: '2rem'
         }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>Your habits</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Your habits</h2>
+            <button
+              onClick={() => setShowWizard(true)}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <span style={{ fontSize: '1.125rem' }}>+</span>
+              New habit
+            </button>
+          </div>
 
           {loading ? (
             <p style={{ color: '#64748b', margin: 0 }}>Loading habits…</p>
