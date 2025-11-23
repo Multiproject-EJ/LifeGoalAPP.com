@@ -283,7 +283,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     // Map template to HabitWizardDraft
     const draft: HabitWizardDraft = {
       title: template.title,
-      emoji: template.emoji || null,
+      emoji: template.emoji ? template.emoji : null,
       type: template.type,
       targetValue: template.target_num ?? null,
       targetUnit: template.target_unit ?? null,
@@ -433,7 +433,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
               gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
               gap: '1rem'
             }}>
-              {templates.map((template, index) => {
+              {templates.map((template) => {
                 // Generate a short schedule description
                 let scheduleDesc = '';
                 if (template.schedule.mode === 'daily') {
@@ -446,9 +446,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                   scheduleDesc = `Every ${template.schedule.value || 0} days`;
                 }
 
+                // Use a unique key combining title and emoji
+                const templateKey = `${template.emoji}-${template.title}`;
+
                 return (
                   <button
-                    key={index}
+                    key={templateKey}
                     onClick={() => handleTemplateClick(template)}
                     style={{
                       background: '#f8fafc',

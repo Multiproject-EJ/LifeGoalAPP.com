@@ -27,6 +27,23 @@ export interface HabitTemplate {
 }
 
 /**
+ * Validates if an object matches the HabitTemplate structure
+ */
+function isValidTemplate(obj: unknown): obj is HabitTemplate {
+  if (typeof obj !== 'object' || obj === null) return false;
+  
+  const template = obj as Record<string, unknown>;
+  
+  return (
+    typeof template.title === 'string' &&
+    typeof template.emoji === 'string' &&
+    (template.type === 'boolean' || template.type === 'quantity' || template.type === 'duration') &&
+    typeof template.schedule === 'object' &&
+    template.schedule !== null
+  );
+}
+
+/**
  * Loads habit templates from /app/habits/templates.json
  * @returns Promise<HabitTemplate[]> - Array of habit templates, or empty array on error
  */
@@ -47,7 +64,16 @@ export async function loadHabitTemplates(): Promise<HabitTemplate[]> {
       return [];
     }
     
-    return data as HabitTemplate[];
+    // Filter out invalid templates
+    const validTemplates = data.filter((item) => {
+      const isValid = isValidTemplate(item);
+      if (!isValid) {
+        console.warn('Skipping invalid template:', item);
+      }
+      return isValid;
+    });
+    
+    return validTemplates as HabitTemplate[];
   } catch (error) {
     console.error('Error loading habit templates:', error);
     return [];
