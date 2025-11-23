@@ -299,8 +299,13 @@ export function JournalEntryEditor({
   };
 
   const handleAnalyzeBrainDump = async () => {
-    const result = await analyzeBrainDump(draft.content);
-    setAnalysis(result);
+    try {
+      const result = await analyzeBrainDump(draft.content);
+      setAnalysis(result);
+    } catch (err) {
+      // If AI analysis fails, show a user-friendly message
+      setAnalysis('Sorry, unable to generate reflection at this time. Please try again.');
+    }
   };
 
   const getContentLabel = (): string => {
@@ -326,6 +331,12 @@ export function JournalEntryEditor({
   const isTimeCapsuleMode = draft.type === 'time_capsule';
   const isLifeWheelMode = draft.type === 'life_wheel';
   const isBrainDumpMode = draft.type === 'brain_dump';
+
+  // Memoize blur calculation to avoid unnecessary computations on every render
+  const blurAmount = useMemo(() => {
+    if (!isBrainDumpMode) return 0;
+    return Math.max((BRAIN_DUMP_DURATION_SECONDS - timeLeft) / BRAIN_DUMP_BLUR_DIVISOR, 0);
+  }, [isBrainDumpMode, timeLeft]);
 
   if (!open) {
     return null;
@@ -491,7 +502,7 @@ export function JournalEntryEditor({
               placeholder={getContentPlaceholder()}
               readOnly={isBrainDumpMode && hasFinished}
               style={isBrainDumpMode ? {
-                filter: `blur(${Math.max((BRAIN_DUMP_DURATION_SECONDS - timeLeft) / BRAIN_DUMP_BLUR_DIVISOR, 0)}px)`,
+                filter: `blur(${blurAmount}px)`,
                 transition: 'filter 0.3s'
               } : undefined}
             />
