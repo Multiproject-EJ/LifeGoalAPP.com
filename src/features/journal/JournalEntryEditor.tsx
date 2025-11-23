@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { JournalEntry } from '../../services/journal';
 import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
@@ -45,6 +45,9 @@ const DEFAULT_MOOD_SCORE = 5;
 const BRAIN_DUMP_DURATION_SECONDS = 60;
 const BRAIN_DUMP_BLUR_DIVISOR = 10;
 const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this time. Please try again.';
+
+// Secret mode constants
+const SECRET_DURATION_SECONDS = 30;
 
 const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'quick': 'Quick',
@@ -178,6 +181,12 @@ export function JournalEntryEditor({
   const [hasFinished, setHasFinished] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
 
+  // Secret mode state
+  const [secretText, setSecretText] = useState('');
+  const [secretTimeLeft, setSecretTimeLeft] = useState(SECRET_DURATION_SECONDS);
+  const [isFading, setIsFading] = useState(false);
+  const secretDestroyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!open) return;
     setDraft(createDraft(entry, journalType));
@@ -186,6 +195,12 @@ export function JournalEntryEditor({
     setTimeLeft(BRAIN_DUMP_DURATION_SECONDS);
     setHasFinished(false);
     setAnalysis(null);
+    // Reset secret mode state when opening/changing entries in secret mode
+    if (journalType === 'secret') {
+      setSecretText('');
+      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setIsFading(false);
+    }
   }, [entry, open, journalType]);
 
   // Brain dump countdown timer
@@ -204,6 +219,36 @@ export function JournalEntryEditor({
 
     return () => clearInterval(timer);
   }, [open, draft.type, hasFinished]);
+
+  // Secret mode countdown timer
+  useEffect(() => {
+    if (!open || draft.type !== 'secret' || secretTimeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setSecretTimeLeft((prev) => {
+        if (prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [open, draft.type, secretTimeLeft]);
+
+  // Handle auto-destruct when timer reaches 0
+  useEffect(() => {
+    if (!open || draft.type !== 'secret' || secretTimeLeft !== 0) return;
+    
+    setIsFading(true);
+    const destroyTimeout = setTimeout(() => {
+      setSecretText('');
+      setIsFading(false);
+      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+    }, 500);
+
+    return () => clearTimeout(destroyTimeout);
+  }, [open, draft.type, secretTimeLeft]);
 
   const moodValue = draft.mood ?? '';
 
@@ -261,6 +306,11 @@ export function JournalEntryEditor({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // In secret mode, just close the editor without saving
+    if (isSecretMode) {
+      onClose();
+      return;
+    }
     onSave(draft);
   };
 
@@ -320,12 +370,32 @@ export function JournalEntryEditor({
     }
   };
 
+  const handleSecretDestroy = () => {
+    // Clear any existing timeout
+    if (secretDestroyTimeoutRef.current) {
+      clearTimeout(secretDestroyTimeoutRef.current);
+    }
+    
+    setIsFading(true);
+    secretDestroyTimeoutRef.current = setTimeout(() => {
+      setSecretText('');
+      setIsFading(false);
+      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      secretDestroyTimeoutRef.current = null;
+    }, 500); // Match animation duration
+  };
+
+  const handleSecretTextChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setSecretText(event.target.value);
+  };
+
   const getContentLabel = (): string => {
     if (isQuickMode) return "Today's thoughts (aim for ~3 sentences)";
     if (isGoalMode) return "Reflection on this goal";
     if (isTimeCapsuleMode) return "Message to your future self";
     if (isLifeWheelMode) return "Reflect on this area of your life";
     if (isBrainDumpMode) return "Brain dump your thoughts";
+    if (isSecretMode) return "Secret thoughts (not saved)";
     return "Content";
   };
 
@@ -335,6 +405,7 @@ export function JournalEntryEditor({
     if (isTimeCapsuleMode) return "Write a message to your future self. What do you want to remember? What are you hoping for?";
     if (isLifeWheelMode) return "Write about how this area has felt recently...";
     if (isBrainDumpMode) return "Write freely without stopping. Let your thoughts flow...";
+    if (isSecretMode) return "Write anything you need to get off your chest. It will disappear...";
     return "Capture what unfolded, how you felt, and any momentum you want to carry forward.";
   };
 
@@ -343,6 +414,7 @@ export function JournalEntryEditor({
   const isTimeCapsuleMode = draft.type === 'time_capsule';
   const isLifeWheelMode = draft.type === 'life_wheel';
   const isBrainDumpMode = draft.type === 'brain_dump';
+  const isSecretMode = draft.type === 'secret';
 
   // Memoize blur calculation to avoid unnecessary computations on every render
   const blurAmount = useMemo(() => {
@@ -374,6 +446,31 @@ export function JournalEntryEditor({
         </header>
 
         <form className="journal-editor__form" onSubmit={handleSubmit}>
+          {isSecretMode && (
+            <div className="journal-secret__notice">
+              <p className="journal-secret__notice-text">
+                🔒 <strong>Secret mode:</strong> Nothing you write here is saved. It will self-destruct.
+              </p>
+            </div>
+          )}
+
+          {isSecretMode && (
+            <div className="journal-secret__timer">
+              <span className="journal-secret__timer-label" aria-live="polite">
+                Self-destruct in: {secretTimeLeft}s
+              </span>
+              <button
+                type="button"
+                className="journal-secret__destroy-button"
+                onClick={handleSecretDestroy}
+                aria-label="Destroy secret text now"
+              >
+                🔥 Destroy now
+              </button>
+            </div>
+          )}
+
+          {!isSecretMode && (
           <div className="journal-editor__grid">
             <label className="journal-editor__field">
               <span>Entry date</span>
@@ -428,8 +525,9 @@ export function JournalEntryEditor({
               </label>
             )}
           </div>
+          )}
 
-          {isGoalMode && (
+          {!isSecretMode && isGoalMode && (
             <label className="journal-editor__field">
               <span>Link to goal</span>
               <select 
@@ -447,7 +545,7 @@ export function JournalEntryEditor({
             </label>
           )}
 
-          {isLifeWheelMode && (
+          {!isSecretMode && isLifeWheelMode && (
             <>
               <label className="journal-editor__field">
                 <span>Life area</span>
@@ -481,7 +579,7 @@ export function JournalEntryEditor({
             </>
           )}
 
-          {!isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
+          {!isSecretMode && !isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
             <label className="journal-editor__field">
               <span>Title</span>
               <input
@@ -493,7 +591,7 @@ export function JournalEntryEditor({
             </label>
           )}
 
-          {isBrainDumpMode && (
+          {!isSecretMode && isBrainDumpMode && (
             <div className="journal-brain-dump__timer">
               <span className="journal-brain-dump__timer-label" aria-live="polite">
                 Time left: {timeLeft}s
@@ -507,12 +605,13 @@ export function JournalEntryEditor({
           <label className="journal-editor__field">
             <span>{getContentLabel()}</span>
             <textarea
-              value={draft.content}
-              onChange={(event) => handleFieldChange('content', event.target.value)}
+              value={isSecretMode ? secretText : draft.content}
+              onChange={isSecretMode ? handleSecretTextChange : (event) => handleFieldChange('content', event.target.value)}
               rows={isQuickMode ? 4 : 8}
-              required
+              required={!isSecretMode}
               placeholder={getContentPlaceholder()}
               readOnly={isBrainDumpMode && hasFinished}
+              className={isSecretMode && isFading ? 'journal-secret__textarea--fading' : undefined}
               style={isBrainDumpMode ? {
                 filter: `blur(${blurAmount}px)`,
                 transition: 'filter 0.3s'
@@ -520,7 +619,7 @@ export function JournalEntryEditor({
             />
           </label>
 
-          {isBrainDumpMode && hasFinished && (
+          {!isSecretMode && isBrainDumpMode && hasFinished && (
             <div className="journal-brain-dump__reflect">
               {!analysis ? (
                 <button
@@ -540,7 +639,7 @@ export function JournalEntryEditor({
             </div>
           )}
 
-          {isQuickMode && (
+          {!isSecretMode && isQuickMode && (
             <div className="journal-editor__quick-actions">
               <button
                 type="button"
@@ -552,7 +651,7 @@ export function JournalEntryEditor({
             </div>
           )}
 
-          {!isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
+          {!isSecretMode && !isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
             <>
               <div className="journal-editor__field">
                 <span>Tags</span>
@@ -614,7 +713,7 @@ export function JournalEntryEditor({
               Cancel
             </button>
             <button type="submit" className="journal-editor__save" disabled={saving}>
-              {saving ? 'Saving…' : 'Save entry'}
+              {isSecretMode ? 'Done' : (saving ? 'Saving…' : 'Save entry')}
             </button>
           </div>
         </form>
