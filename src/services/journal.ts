@@ -157,11 +157,11 @@ export async function deleteJournalEntry(id: string): Promise<ServiceResponse<Jo
  * @returns Promise with data array of journal entries and error
  */
 export async function listJournalEntriesByMode(params: {
-  type?: string;
+  type?: Database['public']['Tables']['journal_entries']['Row']['type'];
   category?: string | null;
   goalId?: string | null;
   limit?: number;
-}): Promise<{ data: JournalEntry[] | null; error: PostgrestError | null }> {
+}): Promise<ServiceResponse<JournalEntry[]>> {
   if (!canUseSupabaseData()) {
     let entries = getDemoJournalEntries(DEMO_USER_ID);
     
@@ -188,7 +188,7 @@ export async function listJournalEntriesByMode(params: {
     .order('created_at', { ascending: false });
 
   if (params.type) {
-    query = query.eq('type', params.type as Database['public']['Tables']['journal_entries']['Row']['type']);
+    query = query.eq('type', params.type);
   }
   if (params.category) {
     query = query.eq('category', params.category);
