@@ -13,6 +13,33 @@ interface HabitSchedule {
 }
 
 /**
+ * Type guard to check if a value is a valid schedule mode.
+ */
+function isValidScheduleMode(mode: unknown): mode is ScheduleMode {
+  return typeof mode === 'string' && 
+    ['daily', 'specific_days', 'times_per_week', 'every_n_days'].includes(mode);
+}
+
+/**
+ * Safely parse the schedule JSON and validate its structure.
+ */
+function parseSchedule(schedule: unknown): HabitSchedule | null {
+  if (!schedule || typeof schedule !== 'object') {
+    return null;
+  }
+  
+  const scheduleObj = schedule as Record<string, unknown>;
+  
+  if (scheduleObj.mode !== undefined && !isValidScheduleMode(scheduleObj.mode)) {
+    return null;
+  }
+  
+  return {
+    mode: scheduleObj.mode as ScheduleMode | undefined,
+  };
+}
+
+/**
  * Determines if a habit is scheduled to be tracked today based on its schedule configuration.
  * 
  * @param habit - The habit row from habits_v2
@@ -25,11 +52,11 @@ interface HabitSchedule {
  * - every_n_days mode (e.g., every 2 days)
  */
 export function isHabitScheduledToday(habit: HabitV2Row, today: Date = new Date()): boolean {
-  // Parse the schedule JSON
-  const schedule = habit.schedule as HabitSchedule | null;
+  // Safely parse and validate the schedule JSON
+  const schedule = parseSchedule(habit.schedule);
   
   if (!schedule || !schedule.mode) {
-    // If no schedule mode is specified, default to showing the habit (backwards compatible)
+    // If no valid schedule mode is specified, default to showing the habit (backwards compatible)
     return true;
   }
   

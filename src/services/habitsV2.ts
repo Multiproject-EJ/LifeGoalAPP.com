@@ -211,9 +211,9 @@ export async function quickAddDailyHabit(params: {
  * Archived habits will not appear in the active habits list.
  * 
  * @param habitId - The ID of the habit to archive
- * @returns Promise with error if the operation failed
+ * @returns Promise with data (null) and error
  */
-export async function archiveHabitV2(habitId: string): Promise<{ error: PostgrestError | null }> {
+export async function archiveHabitV2(habitId: string): Promise<ServiceResponse<null>> {
   const supabase = getSupabaseClient();
   
   const { error } = await supabase
@@ -221,5 +221,5 @@ export async function archiveHabitV2(habitId: string): Promise<{ error: Postgres
     .update({ archived: true })
     .eq('id', habitId);
   
-  return { error };
+  return { data: null, error };
 }
