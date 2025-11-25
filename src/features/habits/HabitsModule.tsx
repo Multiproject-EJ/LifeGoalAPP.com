@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
+import { isHabitScheduledToday } from './scheduleInterpreter';
 import type { Database } from '../../lib/database.types';
 
 type HabitsModuleProps = {
@@ -38,6 +39,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   
   // Input values for quantity/duration habits
   const [habitInputValues, setHabitInputValues] = useState<Record<string, string>>({});
+
+  // Compute habits scheduled for today using the schedule interpreter
+  const todaysHabits = useMemo(() => {
+    const today = new Date();
+    return habits.filter((habit) => isHabitScheduledToday(habit, today));
+  }, [habits]);
 
   // Load habits and today's logs on mount
   useEffect(() => {
@@ -574,13 +581,37 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                     padding: '1rem'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    {habit.emoji && (
-                      <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      {habit.emoji && (
+                        <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
+                      )}
+                      <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
+                        {habit.title}
+                      </h3>
+                    </div>
+                    {/* Archive button - only visible if habit is not archived */}
+                    {!habit.archived && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: wire archive functionality
+                          console.log('Archive habit:', habit.id);
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '4px',
+                          padding: '0.25rem 0.5rem',
+                          fontSize: '0.75rem',
+                          color: '#64748b',
+                          cursor: 'pointer',
+                        }}
+                        title="Archive this habit"
+                      >
+                        Archive
+                      </button>
                     )}
-                    <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
-                      {habit.title}
-                    </h3>
                   </div>
                   <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     <div>
@@ -610,13 +641,13 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
           {loading ? (
             <p style={{ color: '#64748b', margin: 0 }}>Loading today's status…</p>
-          ) : habits.length === 0 ? (
+          ) : todaysHabits.length === 0 ? (
             <p style={{ color: '#64748b', margin: 0 }}>
               No habits to check today.
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {habits.map((habit) => {
+              {todaysHabits.map((habit) => {
                 // Find log for this habit
                 const log = todayLogs.find((l) => l.habit_id === habit.id);
                 const isDone = log?.done ?? false;

@@ -3,13 +3,12 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchGoals } from '../../services/goals';
 import {
-  buildSchedulePayload,
   fetchHabitLogsForRange,
   fetchHabitsForUser,
   type HabitWithGoal,
-  upsertHabit,
 } from '../../services/habits';
-import type { Database, Json } from '../../lib/database.types';
+import { quickAddDailyHabit } from '../../services/habitsV2';
+import type { Database } from '../../lib/database.types';
 import {
   GOAL_STATUS_META,
   GOAL_STATUS_ORDER,
@@ -247,30 +246,26 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
       return;
     }
 
-    if (!selectedGoalId) {
-      setHabitFormError('Choose a goal so we can attach this habit to your life wheel focus.');
-      return;
-    }
-
     setCreatingHabit(true);
 
     try {
-      const domain = LIFE_WHEEL_CATEGORIES.find((entry) => entry.key === selectedDomainKey) ?? null;
-      const scheduleRecord: Record<string, Json> = { type: 'daily' };
-      if (domain) {
-        scheduleRecord.life_wheel_domain = { key: domain.key, label: domain.label } as Json;
-      } else if (selectedDomainKey) {
-        scheduleRecord.life_wheel_domain = { key: selectedDomainKey } as Json;
-      }
-
-      const { error } = await upsertHabit({
-        goal_id: selectedGoalId,
-        name: trimmedName,
-        frequency: 'daily',
-        schedule: buildSchedulePayload(scheduleRecord),
-      });
+      // Use quickAddDailyHabit to create the habit in habits_v2
+      // This ensures the habit appears in the unified checklist
+      const { data: newHabit, error } = await quickAddDailyHabit(
+        {
+          title: trimmedName,
+          domainKey: selectedDomainKey || null,
+          goalId: selectedGoalId || null,
+          emoji: null,
+        },
+        session.user.id
+      );
 
       if (error) throw error;
+
+      if (!newHabit) {
+        throw new Error('Failed to create habit - no data returned');
+      }
 
       setHabitFormMessage('Habit added to your daily checklist.');
       setNewHabitName('');
@@ -534,7 +529,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
               <button
                 type="submit"
                 className="habit-create-form__submit"
-                disabled={creatingHabit || !canCreateHabits || !hasGoals}
+                disabled={creatingHabit || !canCreateHabits}
               >
                 {creatingHabit ? 'Saving…' : 'Add daily habit'}
               </button>
@@ -543,11 +538,6 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
             {!canCreateHabits ? (
               <p className="habit-create-form__hint">
                 Connect Supabase or explore demo mode to create habits from the dashboard.
-              </p>
-            ) : null}
-            {canCreateHabits && !hasGoals ? (
-              <p className="habit-create-form__hint">
-                Create a goal first to anchor your new habit to your life wheel.
               </p>
             ) : null}
           </article>

@@ -271,6 +271,8 @@ export interface Database {
           archived: boolean | null;
           created_at: string | null;
           autoprog: Json | null;
+          domain_key: string | null;
+          goal_id: string | null;
         };
         Insert: {
           id?: string;
@@ -286,6 +288,8 @@ export interface Database {
           archived?: boolean | null;
           created_at?: string | null;
           autoprog?: Json | null;
+          domain_key?: string | null;
+          goal_id?: string | null;
         };
         Update: {
           id?: string;
@@ -301,6 +305,8 @@ export interface Database {
           archived?: boolean | null;
           created_at?: string | null;
           autoprog?: Json | null;
+          domain_key?: string | null;
+          goal_id?: string | null;
         };
         Relationships: [];
       };
