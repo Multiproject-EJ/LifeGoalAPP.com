@@ -94,6 +94,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [monthlySaving, setMonthlySaving] = useState<Record<string, boolean>>({});
   const [today, setToday] = useState(() => formatISODate(new Date()));
+  const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
@@ -113,6 +114,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
   // State for habit alert summaries (which days have alerts scheduled)
   const [habitAlertSummaries, setHabitAlertSummaries] = useState<Map<string, Map<string, HabitAlertRow[]>>>(new Map());
+
+  useEffect(() => {
+    const parsedDate = parseISODate(activeDate);
+    if (parsedDate.getMonth() !== selectedMonth || parsedDate.getFullYear() !== selectedYear) {
+      setSelectedMonth(parsedDate.getMonth());
+      setSelectedYear(parsedDate.getFullYear());
+    }
+  }, [activeDate, selectedMonth, selectedYear]);
 
   const monthlySummary = useMemo(() => {
     if (!habits.length || !monthDays.length) {
@@ -155,6 +164,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const currentDate = new Date();
     const todayISO = formatISODate(currentDate);
+    const trackingDateISO = activeDate > todayISO ? todayISO : activeDate;
     // Use selected month/year instead of current month for monthly grid
     const monthStartDate = new Date(selectedYear, selectedMonth, 1);
     const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
@@ -162,6 +172,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const monthEndISO = formatISODate(monthEndDate);
     const monthDayList = generateDateRange(monthStartDate, monthEndDate);
     setToday(todayISO);
+    if (trackingDateISO !== activeDate) {
+      setActiveDate(trackingDateISO);
+    }
     setMonthDays(monthDayList);
 
     // TODO: Backend optimization - Consider adding Supabase query optimization for monthly aggregation:
@@ -220,7 +233,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           completed: Boolean(log.completed),
         };
 
-        if (log.date === todayISO) {
+        if (log.date === trackingDateISO) {
           baseState[log.habit_id] = completedState;
         }
 
@@ -235,7 +248,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setCompletions(baseState);
       setMonthlyCompletions(baseMonthlyState);
       setHistoricalLogs(logRows);
-      setHabitInsights(calculateHabitInsights(nextHabits, logRows, todayISO));
+      setHabitInsights(calculateHabitInsights(nextHabits, logRows, trackingDateISO));
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Unable to load habits right now. Try refreshing shortly.',
@@ -243,7 +256,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     } finally {
       setLoading(false);
     }
-  }, [session, isConfigured, isDemoExperience, selectedMonth, selectedYear]);
+  }, [session, isConfigured, isDemoExperience, selectedMonth, selectedYear, activeDate]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -387,10 +400,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       return;
     }
 
-    const isToday = dateISO === today;
+    const isActiveDay = dateISO === activeDate;
     const cellKey = `${habit.id}:${dateISO}`;
 
-    if (isToday) {
+    if (isActiveDay) {
       setSaving((current) => ({ ...current, [habit.id]: true }));
     }
     setMonthlySaving((current) => ({ ...current, [cellKey]: true }));
@@ -398,14 +411,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const existingToday = completions[habit.id];
     const existingMonthly = monthlyCompletions[habit.id]?.[dateISO];
-    const wasCompleted = Boolean(existingMonthly?.completed || (isToday && existingToday?.completed));
+    const wasCompleted = Boolean(existingMonthly?.completed || (isActiveDay && existingToday?.completed));
 
     try {
       if (wasCompleted) {
         const { error } = await clearHabitCompletion(habit.id, dateISO);
         if (error) throw error;
 
-        if (isToday) {
+        if (isActiveDay) {
           setCompletions((current) => ({ ...current, [habit.id]: { logId: null, completed: false } }));
         }
 
@@ -419,7 +432,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
         setHistoricalLogs((current) => {
           const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
-          setHabitInsights(calculateHabitInsights(habits, nextLogs, today));
+          setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
           return nextLogs;
         });
       } else {
@@ -438,7 +451,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             completed: true,
           } satisfies HabitLogRow);
 
-        if (isToday) {
+        if (isActiveDay) {
           setCompletions((current) => ({
             ...current,
             [habit.id]: { logId: logRow.id, completed: true },
@@ -456,14 +469,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         setHistoricalLogs((current) => {
           const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
           nextLogs.push(logRow);
-          setHabitInsights(calculateHabitInsights(habits, nextLogs, today));
+          setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
           return nextLogs;
         });
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update the habit.');
     } finally {
-      if (isToday) {
+      if (isActiveDay) {
         setSaving((current) => ({ ...current, [habit.id]: false }));
       }
       setMonthlySaving((current) => {
@@ -475,8 +488,34 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   };
 
   const toggleHabit = async (habit: HabitWithGoal) => {
-    await toggleHabitForDate(habit, today);
+    await toggleHabitForDate(habit, activeDate);
   };
+
+  const changeActiveDateBy = useCallback(
+    (offsetDays: number) => {
+      setActiveDate((current) => {
+        const baseDate = parseISODate(current);
+        const safeDate = Number.isNaN(baseDate.getTime()) ? new Date() : baseDate;
+        const nextDate = addDays(safeDate, offsetDays);
+        const nextISO = formatISODate(nextDate);
+        return nextISO > today ? today : nextISO;
+      });
+    },
+    [today],
+  );
+
+  const handleDateInputChange = useCallback(
+    (value: string) => {
+      if (!value) return;
+      const parsed = parseISODate(value);
+      if (Number.isNaN(parsed.getTime())) return;
+      const normalized = formatISODate(parsed);
+      setActiveDate(normalized > today ? today : normalized);
+    },
+    [today],
+  );
+
+  const resetToToday = useCallback(() => setActiveDate(today), [today]);
 
   /**
    * Toggle habit completion for the monthly grid using the new habit_completions table.
@@ -525,7 +564,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     for (const habit of habits) {
       const insight = habitInsights[habit.id];
-      const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, today);
+      const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
       if (scheduledToday) {
         scheduled += 1;
       }
@@ -535,13 +574,64 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
 
     return { total: habits.length, scheduled, completed } as const;
-  }, [habits, completions, habitInsights, today]);
+  }, [habits, completions, habitInsights, activeDate]);
 
   const toggleExpanded = (habitId: string) => {
     setExpandedHabits((current) => ({
       ...current,
       [habitId]: !current[habitId],
     }));
+  };
+
+  const renderDayNavigation = (variant: 'compact' | 'full') => {
+    const displayLabel = formatDateLabel(activeDate);
+    const canGoForward = activeDate < today;
+    const isViewingToday = activeDate === today;
+    const navClasses = ['habit-day-nav', `habit-day-nav--${variant}`];
+
+    return (
+      <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
+        <button
+          type="button"
+          className="habit-day-nav__button"
+          onClick={() => changeActiveDateBy(-1)}
+        >
+          ← Previous day
+        </button>
+
+        <div className="habit-day-nav__info">
+          <p className="habit-day-nav__label">Tracking day</p>
+          <p className="habit-day-nav__value">{displayLabel}</p>
+          <div className="habit-day-nav__actions">
+            {isViewingToday ? (
+              <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
+            ) : (
+              <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
+                Jump to today
+              </button>
+            )}
+            <label className="habit-day-nav__picker" aria-label="Select a date to track">
+              <span className="sr-only">Select a date to track</span>
+              <input
+                type="date"
+                value={activeDate}
+                max={today}
+                onChange={(event) => handleDateInputChange(event.target.value)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="habit-day-nav__button"
+          onClick={() => changeActiveDateBy(1)}
+          disabled={!canGoForward}
+        >
+          Next day →
+        </button>
+      </div>
+    );
   };
 
   const renderCompactList = () => (
@@ -551,9 +641,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         const isCompleted = Boolean(state?.completed);
         const isSaving = Boolean(saving[habit.id]);
         const insight = habitInsights[habit.id];
-        const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, today);
-        const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? today : null);
-        const lastCompletedText = formatLastCompleted(lastCompletedOn, today);
+        const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
+        const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? activeDate : null);
+        const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
         const domainMeta = extractLifeWheelDomain(habit.schedule);
         const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
         const goalLabel = habit.goal?.title ?? 'Unassigned goal';
@@ -650,12 +740,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   );
 
   const renderCompactExperience = () => {
-    const dateLabel = formatCompactDateLabel(today);
+    const dateLabel = formatCompactDateLabel(activeDate);
     const timeLabel = formatCompactTimeLabel();
     const scheduledTarget = compactStats.scheduled || compactStats.total;
     const progressLabel = scheduledTarget
       ? `${Math.min(compactStats.completed, scheduledTarget)}/${scheduledTarget} done`
       : 'No habits scheduled';
+    const isViewingToday = activeDate === today;
+    const titleText = isViewingToday ? 'Things to do today' : 'Things to do for this day';
+    const subtitleText = isViewingToday
+      ? 'Check off the rituals that keep your life wheel balanced.'
+      : `Logging for ${formatDateLabel(activeDate)}. Check off the rituals that keep your life wheel balanced.`;
 
     const statusText = errorMessage
       ? errorMessage
@@ -673,8 +768,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           ? 'warning'
           : 'muted';
 
+    const ariaLabel = `Habit checklist for ${formatDateLabel(activeDate)}`;
+
     return (
-      <div className="habit-checklist-card" role="region" aria-label="Today's habit checklist">
+      <div className="habit-checklist-card" role="region" aria-label={ariaLabel}>
         <div className="habit-checklist-card__board">
           <div className="habit-checklist-card__board-head">
             <div className="habit-checklist-card__date-group">
@@ -695,14 +792,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           </div>
 
           <div className="habit-checklist-card__board-body">
+            {renderDayNavigation('compact')}
             <div className="habit-checklist-card__title">
-              <h2>Things to do today</h2>
-              <p>Check off the rituals that keep your life wheel balanced.</p>
+              <h2>{titleText}</h2>
+              <p>{subtitleText}</p>
             </div>
 
             {habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
-                <p>No habits scheduled for today.</p>
+                <p>No habits scheduled for this day.</p>
                 <p>Add a ritual to any goal and it will show up here for quick check-ins.</p>
               </div>
             ) : (
@@ -901,7 +999,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     {monthDays.map((dateIso) => {
                       const cellKey = `${habitStat.habitId}:${dateIso}`;
                       const isCompleted = Boolean(habitCompletionGrid[dateIso]);
-                      const isToday = dateIso === today;
+                      const isToday = dateIso === activeDate;
                       const isSavingCell = Boolean(monthlySaving[cellKey]);
                       const dayLabel = formatDateLabel(dateIso);
                       
@@ -993,29 +1091,30 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
       {habits.length === 0 ? (
         <div className="habit-tracker__empty">
-          <h3>No habits scheduled for today</h3>
+          <h3>No habits scheduled for this day</h3>
           <p>
             Once you add habits to your goals, they will appear here so you can check in daily and keep your streak alive.
           </p>
         </div>
       ) : (
         <>
+          {renderDayNavigation('full')}
           <ul className="habit-tracker__list">
             {habits.map((habit) => {
               const state = completions[habit.id];
               const isCompleted = Boolean(state?.completed);
               const isSaving = Boolean(saving[habit.id]);
               const insight = habitInsights[habit.id];
-              const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, today);
+              const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
               const currentStreak = insight?.currentStreak ?? (isCompleted ? 1 : 0);
               const longestStreak = insight?.longestStreak ?? Math.max(currentStreak, 0);
-              const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? today : null);
+              const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? activeDate : null);
               const statusText = scheduledToday
                 ? isCompleted
-                  ? 'Completed for today. Keep the streak going!'
-                  : 'Tap the toggle when you finish this habit.'
-                : 'Today is a rest day for this habit.';
-              const lastCompletedText = formatLastCompleted(lastCompletedOn, today);
+                  ? 'Completed for this day. Keep the streak going!'
+                  : 'Tap the toggle when you finish this habit for the selected day.'
+                : 'This is a rest day for this habit.';
+              const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
               return (
                 <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''}`}>
                   <div className="habit-card__content">
@@ -1256,6 +1355,12 @@ function generateDateRange(start: Date, end: Date): string[] {
   return days;
 }
 
+function addDays(date: Date, amount: number) {
+  const copy = new Date(date.getTime());
+  copy.setDate(copy.getDate() + amount);
+  return copy;
+}
+
 function subtractDays(date: Date, amount: number) {
   const copy = new Date(date.getTime());
   copy.setDate(copy.getDate() - amount);
@@ -1337,13 +1442,13 @@ function isHabitScheduledOnDate(habit: HabitWithGoal, dateISO: string): boolean 
 function calculateHabitInsights(
   habits: HabitWithGoal[],
   logs: HabitLogRow[],
-  todayISO: string,
+  trackingDateISO: string,
 ): Record<string, HabitInsights> {
   if (habits.length === 0) {
     return {};
   }
 
-  const todayDate = parseISODate(todayISO);
+  const todayDate = parseISODate(trackingDateISO);
   const lookbackStartDate = subtractDays(todayDate, STREAK_LOOKBACK_DAYS - 1);
   const lookbackStartISO = formatISODate(lookbackStartDate);
 
@@ -1352,7 +1457,7 @@ function calculateHabitInsights(
 
   for (const log of logs) {
     if (!log.completed) continue;
-    if (log.date < lookbackStartISO || log.date > todayISO) continue;
+    if (log.date < lookbackStartISO || log.date > trackingDateISO) continue;
     let set = completionSets.get(log.habit_id);
     if (!set) {
       set = new Set<string>();
@@ -1428,16 +1533,16 @@ function differenceInDays(laterISO: string, earlierISO: string): number {
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
-function formatLastCompleted(lastCompletedOn: string | null, todayISO: string): string | null {
+function formatLastCompleted(lastCompletedOn: string | null, referenceISO: string): string | null {
   if (!lastCompletedOn) {
     return null;
   }
 
-  if (lastCompletedOn === todayISO) {
+  if (lastCompletedOn === referenceISO) {
     return 'Last completed today.';
   }
 
-  const diff = differenceInDays(todayISO, lastCompletedOn);
+  const diff = differenceInDays(referenceISO, lastCompletedOn);
   if (diff === 1) {
     return 'Last completed yesterday.';
   }
@@ -1449,6 +1554,6 @@ function formatLastCompleted(lastCompletedOn: string | null, todayISO: string): 
   return `Last completed on ${date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
-    year: date.getFullYear() !== parseISODate(todayISO).getFullYear() ? 'numeric' : undefined,
+    year: date.getFullYear() !== parseISODate(referenceISO).getFullYear() ? 'numeric' : undefined,
   })}.`;
 }
