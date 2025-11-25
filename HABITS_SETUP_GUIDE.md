@@ -420,4 +420,14 @@ Generated for lifegoalapp.com using GitHub Copilot, Supabase, and modern web tec
 7. 📱 Test Web Push notifications (requires HTTPS)
 8. 🏆 Launch challenges for your users!
 
+## 🔄 Migration to React
+
+The React-native habits experience located in `src/features/habits` is now the primary UI shown in the app's main tabs/workspace, including the "Set Up Habits" functionality. This React implementation is fully integrated with the app's navigation and state management.
+
+The legacy vanilla JavaScript module in `/app/habits` is retained as a reference implementation and for potential standalone use. However, it is not wired to the main app navigation and serves primarily as documentation of the original architecture and feature set.
+
+Future development, bugfixes, and new features should focus on the React components and services in `src/features/habits`. Contributors should direct their efforts toward enhancing the React-based implementation to maintain consistency with the app's overall architecture.
+
+---
+
 **Happy habit tracking! 🎯**
