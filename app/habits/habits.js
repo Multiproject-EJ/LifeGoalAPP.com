@@ -17,6 +17,7 @@ const state = {
   challenges: [],
   selectedHabitForInsights: null,
   selectedChallenge: null,
+  activeDate: new Date().toISOString().split('T')[0],
 };
 
 // Initialize the habits module
@@ -584,13 +585,13 @@ async function loadAndRenderActiveHabits() {
 
     state.habits = habits || [];
 
-    // Load logs for today
-    const today = new Date().toISOString().split('T')[0];
+    // Load logs for selected day
+    const targetDate = state.activeDate || getTodayDateString();
     const { data: logs, error: logsError } = await supabase
       .from('habit_logs_v2')
       .select('*')
       .eq('user_id', session.user.id)
-      .eq('date', today);
+      .eq('date', targetDate);
 
     if (logsError) throw logsError;
 
@@ -604,7 +605,7 @@ async function loadAndRenderActiveHabits() {
 
     if (streaksError) console.error('Failed to load streaks:', streaksError);
 
-    renderActiveHabits(habits, logs, streaks || []);
+    renderActiveHabits(habits, logs, streaks || [], targetDate);
   } catch (error) {
     console.error('Failed to load active habits:', error);
     container.innerHTML = `
@@ -617,7 +618,7 @@ async function loadAndRenderActiveHabits() {
   }
 }
 
-function renderActiveHabits(habits, logs, streaks) {
+function renderActiveHabits(habits, logs, streaks, activeDate) {
   const container = document.getElementById('habits-active');
 
   if (habits.length === 0) {
@@ -633,6 +634,7 @@ function renderActiveHabits(habits, logs, streaks) {
 
   const html = `
     <h2>Active Habits</h2>
+    ${renderDateNavigation(activeDate)}
     <div style="display: grid; gap: 1rem;">
       ${habits.map(habit => renderActiveHabitCard(habit, logs, streaks)).join('')}
     </div>
@@ -708,10 +710,36 @@ function renderActiveHabitCard(habit, logs, streaks) {
   `;
 }
 
+function renderDateNavigation(activeDate) {
+  const today = getTodayDateString();
+  const displayDate = formatDateLabel(activeDate);
+
+  return `
+    <div class="habit-date-nav">
+      <button class="btn-secondary" onclick="habits.changeActiveDate(-1)" aria-label="Previous day">
+        ← Prev
+      </button>
+
+      <div class="habit-date-display">
+        <div class="habit-date-label">Tracking day</div>
+        <div class="habit-date-value">${displayDate}</div>
+      </div>
+
+      <div class="habit-date-picker">
+        <input type="date" value="${activeDate}" max="${today}" onchange="habits.setActiveDate(this.value)" aria-label="Choose date" />
+      </div>
+
+      <button class="btn-secondary" onclick="habits.changeActiveDate(1)" aria-label="Next day" ${activeDate >= today ? 'disabled' : ''}>
+        Next →
+      </button>
+    </div>
+  `;
+}
+
 async function toggleBoolean(habitId, currentDone) {
   try {
     const session = requireAuth();
-    const today = new Date().toISOString().split('T')[0];
+    const targetDate = state.activeDate || getTodayDateString();
 
     if (currentDone) {
       // Delete the log
@@ -720,7 +748,7 @@ async function toggleBoolean(habitId, currentDone) {
         .delete()
         .eq('habit_id', habitId)
         .eq('user_id', session.user.id)
-        .eq('date', today);
+        .eq('date', targetDate);
 
       if (error) throw error;
     } else {
@@ -731,6 +759,7 @@ async function toggleBoolean(habitId, currentDone) {
           habit_id: habitId,
           user_id: session.user.id,
           done: true,
+          date: targetDate,
         });
 
       if (error) throw error;
@@ -746,6 +775,7 @@ async function toggleBoolean(habitId, currentDone) {
 async function adjustQuantity(habitId, delta) {
   try {
     const session = requireAuth();
+    const targetDate = state.activeDate || getTodayDateString();
 
     const { error } = await supabase
       .from('habit_logs_v2')
@@ -754,6 +784,7 @@ async function adjustQuantity(habitId, delta) {
         user_id: session.user.id,
         done: true,
         value: delta,
+        date: targetDate,
       });
 
     if (error) throw error;
@@ -768,6 +799,7 @@ async function adjustQuantity(habitId, delta) {
 async function skipHabit(habitId) {
   try {
     const session = requireAuth();
+    const targetDate = state.activeDate || getTodayDateString();
 
     const { error } = await supabase
       .from('habit_logs_v2')
@@ -776,6 +808,7 @@ async function skipHabit(habitId) {
         user_id: session.user.id,
         done: false,
         note: 'skipped',
+        date: targetDate,
       });
 
     if (error) throw error;
@@ -785,6 +818,23 @@ async function skipHabit(habitId) {
     console.error('Failed to skip habit:', error);
     alert('Failed to skip habit: ' + error.message);
   }
+}
+
+function setActiveDate(dateStr) {
+  if (!dateStr) return;
+
+  const today = getTodayDateString();
+  const normalizedDate = dateStr > today ? today : dateStr;
+
+  state.activeDate = normalizedDate;
+  loadAndRenderActiveHabits();
+}
+
+function changeActiveDate(deltaDays) {
+  const baseDate = state.activeDate ? new Date(state.activeDate + 'T00:00:00') : new Date();
+  baseDate.setDate(baseDate.getDate() + deltaDays);
+
+  setActiveDate(baseDate.toISOString().split('T')[0]);
 }
 
 function startTimer(habitId) {
@@ -956,6 +1006,22 @@ function renderAutoProgressionUI() {
 // UTILITY FUNCTIONS
 // ========================================================
 
+function getTodayDateString() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatDateLabel(dateStr) {
+  if (!dateStr) return 'Select a date';
+
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 function renderAuthRequired() {
   const root = document.getElementById('habits-root');
   if (root) {
@@ -1056,6 +1122,8 @@ if (typeof window !== 'undefined') {
     adjustQuantity,
     skipHabit,
     startTimer,
+    setActiveDate,
+    changeActiveDate,
     renderHabitInsights,
     enableNotifications,
     testNotification: showTestNotification,
