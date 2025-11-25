@@ -171,3 +171,55 @@ export async function listHabitLogsForRangeV2(params: {
     .order('date', { ascending: true })
     .returns<HabitLogV2Row[]>();
 }
+
+/**
+ * Quick add a daily boolean habit with minimal configuration.
+ * Intended for use by the Dashboard quick form to create habits
+ * that immediately appear in the habits_v2 unified checklist.
+ * 
+ * @param params - Habit configuration
+ * @param params.title - The habit title/name
+ * @param params.domainKey - Optional life wheel domain key
+ * @param params.goalId - Optional goal ID to link the habit to
+ * @param params.emoji - Optional emoji for the habit (defaults to null)
+ * @param userId - The user ID to associate with the habit
+ * @returns Promise with the created habit data and error
+ */
+export async function quickAddDailyHabit(params: {
+  title: string;
+  domainKey?: string | null;
+  goalId?: string | null;
+  emoji?: string | null;
+}, userId: string): Promise<ServiceResponse<HabitV2Row>> {
+  const habitInput: Omit<HabitV2Insert, 'user_id'> = {
+    title: params.title,
+    emoji: params.emoji ?? null,
+    type: 'boolean',
+    schedule: { mode: 'daily' },
+    domain_key: params.domainKey ?? null,
+    goal_id: params.goalId ?? null,
+    archived: false,
+    target_num: null,
+    target_unit: null,
+  };
+  
+  return createHabitV2(habitInput, userId);
+}
+
+/**
+ * Archive a habit by setting its archived flag to true.
+ * Archived habits will not appear in the active habits list.
+ * 
+ * @param habitId - The ID of the habit to archive
+ * @returns Promise with error if the operation failed
+ */
+export async function archiveHabitV2(habitId: string): Promise<{ error: PostgrestError | null }> {
+  const supabase = getSupabaseClient();
+  
+  const { error } = await supabase
+    .from('habits_v2')
+    .update({ archived: true })
+    .eq('id', habitId);
+  
+  return { error };
+}
