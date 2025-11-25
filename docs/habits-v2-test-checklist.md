@@ -24,14 +24,14 @@ This document provides a manual regression checklist for testing the habits feat
 
 ## Streaks
 
-- [ ] After several days of logging, Streaks section shows non‑zero current/best streaks for a habit.
+- [ ] After several days of logging, Streaks section shows non-zero current/best streaks for a habit.
 - [ ] Removing logs (e.g., manually in Supabase) appropriately affects streaks after reload.
 
 ---
 
 ## Insights Heatmap
 
-- [ ] Selecting a habit in "Habit Insights" triggers the 31‑day heatmap.
+- [ ] Selecting a habit in "Habit Insights" triggers the 31-day heatmap.
 - [ ] Days with logs are rendered as filled/green; others as empty/gray.
 - [ ] Changing selected habit updates the heatmap.
 
