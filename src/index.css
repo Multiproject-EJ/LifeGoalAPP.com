@@ -2054,10 +2054,28 @@ body {
 @media (max-width: 720px) {
   .workspace-main {
     padding-bottom: clamp(6rem, 14vw, 7.25rem);
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .workspace-shell {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding-bottom: clamp(1rem, 5vw, 1.5rem);
+    padding-left: clamp(1rem, 4vw, 1.5rem);
+    padding-right: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .workspace-stage {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .habit-monthly__table-wrapper {
+    margin-inline: auto;
+    max-width: 100%;
   }
 }
 
