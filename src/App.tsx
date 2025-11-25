@@ -1044,18 +1044,61 @@ export default function App() {
     }
   };
 
+  const mobileMenuOverlay =
+    isMobileViewport && isMobileMenuOpen ? (
+      <div
+        className="mobile-menu-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Open full LifeGoalApp menu"
+      >
+        <div
+          className="mobile-menu-overlay__backdrop"
+          onClick={() => setIsMobileMenuOpen(false)}
+          role="presentation"
+        />
+        <div className="mobile-menu-overlay__panel">
+          <div className="mobile-menu-overlay__header">
+            <h2 className="mobile-menu-overlay__title">Quick menu</h2>
+            <button
+              type="button"
+              className="mobile-menu-overlay__close"
+              aria-label="Close menu"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              ×
+            </button>
+          </div>
+          <ul className="mobile-menu-overlay__list">
+            {mobileMenuNavItems.map((item) => (
+              <li key={item.id} className="mobile-menu-overlay__item">
+                <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
+                  <span aria-hidden="true" className="mobile-menu-overlay__icon">
+                    {item.icon}
+                  </span>
+                  <span className="mobile-menu-overlay__texts">
+                    <span className="mobile-menu-overlay__label">{item.label}</span>
+                    <span className="mobile-menu-overlay__summary">{item.summary}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    ) : null;
+
   if (isMobileViewport && showMobileHome) {
     return (
       <>
-        <MobileHabitHome
-          session={activeSession}
-        />
+        <MobileHabitHome session={activeSession} />
         <MobileFooterNav
           items={mobileFooterNavItems}
           activeId={null}
           onSelect={handleMobileNavSelect}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
+        {mobileMenuOverlay}
       </>
     );
   }
@@ -1213,48 +1256,7 @@ export default function App() {
         />
       ) : null}
 
-      {isMobileViewport && isMobileMenuOpen ? (
-        <div
-          className="mobile-menu-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Open full LifeGoalApp menu"
-        >
-          <div
-            className="mobile-menu-overlay__backdrop"
-            onClick={() => setIsMobileMenuOpen(false)}
-            role="presentation"
-          />
-          <div className="mobile-menu-overlay__panel">
-            <div className="mobile-menu-overlay__header">
-              <h2 className="mobile-menu-overlay__title">Quick menu</h2>
-              <button
-                type="button"
-                className="mobile-menu-overlay__close"
-                aria-label="Close menu"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-            <ul className="mobile-menu-overlay__list">
-              {mobileMenuNavItems.map((item) => (
-                <li key={item.id} className="mobile-menu-overlay__item">
-                  <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
-                    <span aria-hidden="true" className="mobile-menu-overlay__icon">
-                      {item.icon}
-                    </span>
-                    <span className="mobile-menu-overlay__texts">
-                      <span className="mobile-menu-overlay__label">{item.label}</span>
-                      <span className="mobile-menu-overlay__summary">{item.summary}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
+      {mobileMenuOverlay}
 
       {isAuthOverlayVisible ? (
         <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with LifeGoalApp">
