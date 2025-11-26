@@ -18,6 +18,7 @@ import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { HabitAlertConfig } from './HabitAlertConfig';
 import { getHabitAlertSummary } from '../../services/habitAlertNotifications';
+import { createJournalEntry } from '../../services/journal';
 import './HabitAlertConfig.css';
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
@@ -114,6 +115,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
   // State for habit alert summaries (which days have alerts scheduled)
   const [habitAlertSummaries, setHabitAlertSummaries] = useState<Map<string, Map<string, HabitAlertRow[]>>>(new Map());
+  const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
+  const [quickJournalContent, setQuickJournalContent] = useState('');
+  const [quickJournalSaving, setQuickJournalSaving] = useState(false);
+  const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
+  const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const parsedDate = parseISODate(activeDate);
@@ -770,6 +776,59 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const ariaLabel = `Habit checklist for ${formatDateLabel(activeDate)}`;
 
+    const handleOpenQuickJournal = () => {
+      setIsQuickJournalOpen(true);
+      setQuickJournalContent('');
+      setQuickJournalError(null);
+      setQuickJournalStatus(null);
+    };
+
+    const handleSaveQuickJournal = async () => {
+      const content = quickJournalContent.trim();
+      if (!content) {
+        setQuickJournalError('Add a few thoughts before saving.');
+        return;
+      }
+
+      setQuickJournalSaving(true);
+      setQuickJournalError(null);
+      setQuickJournalStatus(null);
+
+      try {
+        const payload: Database['public']['Tables']['journal_entries']['Insert'] = {
+          user_id: session.user.id,
+          entry_date: activeDate,
+          title: null,
+          content,
+          mood: null,
+          tags: null,
+          linked_goal_ids: null,
+          linked_habit_ids: null,
+          is_private: true,
+          type: 'quick',
+          mood_score: null,
+          category: null,
+          unlock_date: null,
+          goal_id: null,
+        };
+
+        const { error } = await createJournalEntry(payload);
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        setIsQuickJournalOpen(false);
+        setQuickJournalContent('');
+        setQuickJournalStatus('Saved to your journal.');
+      } catch (err) {
+        setQuickJournalError(err instanceof Error ? err.message : 'Unable to save your journal entry.');
+      } finally {
+        setQuickJournalSaving(false);
+      }
+    };
+
+    const quickJournalDateLabel = formatDateLabel(activeDate);
+
     return (
       <div className="habit-checklist-card" role="region" aria-label={ariaLabel}>
         <div className="habit-checklist-card__board">
@@ -806,6 +865,73 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             ) : (
               renderCompactList()
             )}
+
+            <div className="habit-quick-journal" aria-live="polite">
+              <div className="habit-quick-journal__header">
+                <div>
+                  <p className="habit-quick-journal__eyebrow">Reflect for this day</p>
+                  <h3 className="habit-quick-journal__title">Quick journal</h3>
+                </div>
+                <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+              </div>
+              <p className="habit-quick-journal__hint">
+                Capture a few thoughts tied to the same date you are tracking above.
+              </p>
+              {!isQuickJournalOpen ? (
+                <button
+                  type="button"
+                  className="habit-quick-journal__button"
+                  onClick={handleOpenQuickJournal}
+                >
+                  + Add quick journal
+                </button>
+              ) : (
+                <div className="habit-quick-journal__sheet">
+                  <label className="habit-quick-journal__field">
+                    <span className="habit-quick-journal__field-label">Entry for {quickJournalDateLabel}</span>
+                    <textarea
+                      rows={4}
+                      value={quickJournalContent}
+                      onChange={(event) => setQuickJournalContent(event.target.value)}
+                      placeholder="What stood out about this day?"
+                    />
+                  </label>
+                  {quickJournalError ? (
+                    <p className="habit-quick-journal__status habit-quick-journal__status--error">
+                      {quickJournalError}
+                    </p>
+                  ) : null}
+                  <div className="habit-quick-journal__actions">
+                    <button
+                      type="button"
+                      className="habit-quick-journal__save"
+                      onClick={() => void handleSaveQuickJournal()}
+                      disabled={quickJournalSaving}
+                    >
+                      {quickJournalSaving ? 'Saving…' : 'Save entry'}
+                    </button>
+                    <button
+                      type="button"
+                      className="habit-quick-journal__cancel"
+                      onClick={() => {
+                        setIsQuickJournalOpen(false);
+                        setQuickJournalContent('');
+                        setQuickJournalError(null);
+                      }}
+                      disabled={quickJournalSaving}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {quickJournalStatus ? (
+                <p className="habit-quick-journal__status habit-quick-journal__status--success">
+                  {quickJournalStatus}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
 
