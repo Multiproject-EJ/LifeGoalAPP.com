@@ -223,3 +223,89 @@ export async function archiveHabitV2(habitId: string): Promise<ServiceResponse<n
   
   return { data: null, error };
 }
+
+/**
+ * Get ISO week bounds (Monday to Sunday) for a given date.
+ * ISO weeks start on Monday.
+ */
+function getISOWeekBounds(date: Date): { startDate: string; endDate: string } {
+  const d = new Date(date);
+  const day = d.getDay();
+  // Convert Sunday (0) to 7 for ISO week calculation
+  const isoDay = day === 0 ? 7 : day;
+  
+  // Get Monday
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - isoDay + 1);
+  
+  // Get Sunday
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  
+  return {
+    startDate: monday.toISOString().split('T')[0],
+    endDate: sunday.toISOString().split('T')[0],
+  };
+}
+
+/**
+ * List habit logs for the current ISO week (Monday-Sunday) for the provided habit IDs.
+ * Used for times_per_week schedule mode to determine if weekly target has been met.
+ * 
+ * @param userId - The user ID to filter logs by
+ * @param habitIds - Array of habit IDs to fetch logs for
+ * @param referenceDate - Optional reference date for the week (defaults to today)
+ * @returns Promise with data array of habit logs and error
+ */
+export async function listHabitLogsForWeekV2(
+  userId: string,
+  habitIds: string[],
+  referenceDate: Date = new Date(),
+): Promise<ServiceResponse<HabitLogV2Row[]>> {
+  if (!habitIds || habitIds.length === 0) {
+    return { data: [], error: null };
+  }
+  
+  const supabase = getSupabaseClient();
+  const { startDate, endDate } = getISOWeekBounds(referenceDate);
+  
+  return supabase
+    .from('habit_logs_v2')
+    .select('*')
+    .eq('user_id', userId)
+    .in('habit_id', habitIds)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: true })
+    .returns<HabitLogV2Row[]>();
+}
+
+/**
+ * List habit logs for multiple habits within a date range.
+ * Used for adherence calculations and analytics.
+ * 
+ * @param params - Query parameters with userId, habitIds, and date range
+ * @returns Promise with data array of habit logs and error
+ */
+export async function listHabitLogsForRangeMultiV2(params: {
+  userId: string;
+  habitIds: string[];
+  startDate: string; // ISO date (YYYY-MM-DD)
+  endDate: string;   // ISO date (YYYY-MM-DD)
+}): Promise<ServiceResponse<HabitLogV2Row[]>> {
+  if (!params.habitIds || params.habitIds.length === 0) {
+    return { data: [], error: null };
+  }
+  
+  const supabase = getSupabaseClient();
+  
+  return supabase
+    .from('habit_logs_v2')
+    .select('*')
+    .eq('user_id', params.userId)
+    .in('habit_id', params.habitIds)
+    .gte('date', params.startDate)
+    .lte('date', params.endDate)
+    .order('date', { ascending: true })
+    .returns<HabitLogV2Row[]>();
+}
