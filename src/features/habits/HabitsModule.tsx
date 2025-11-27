@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
@@ -36,6 +36,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   
   // Logging state for tracking in-flight habit logging
   const [loggingHabitIds, setLoggingHabitIds] = useState<Set<string>>(new Set());
+  
+  // Archiving state for tracking in-flight archive operations
+  const [archivingHabitIds, setArchivingHabitIds] = useState<Set<string>>(new Set());
   
   // Input values for quantity/duration habits
   const [habitInputValues, setHabitInputValues] = useState<Record<string, string>>({});
@@ -225,6 +228,42 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       setLoggingHabitIds(prev => {
         const next = new Set(prev);
         next.delete(habit.id);
+        return next;
+      });
+    }
+  };
+
+  // Handler for archiving a habit
+  const handleArchiveHabit = async (habitId: string) => {
+    if (!session) {
+      setError('Session expired. Please refresh the page.');
+      return;
+    }
+
+    // Mark habit as archiving
+    setArchivingHabitIds(prev => new Set(prev).add(habitId));
+    setError(null);
+
+    try {
+      const { error: archiveError } = await archiveHabitV2(habitId);
+
+      if (archiveError) {
+        throw new Error(archiveError.message);
+      }
+
+      // Update local state to remove the archived habit from the list
+      setHabits(prev => prev.filter(h => h.id !== habitId));
+      setSuccessMessage('Habit archived successfully.');
+      setTimeout(() => setSuccessMessage(null), 3000);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to archive habit');
+      console.error('Error archiving habit:', err);
+    } finally {
+      // Remove habit from archiving state
+      setArchivingHabitIds(prev => {
+        const next = new Set(prev);
+        next.delete(habitId);
         return next;
       });
     }
@@ -594,10 +633,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                     {!habit.archived && (
                       <button
                         type="button"
-                        onClick={() => {
-                          // TODO: wire archive functionality
-                          console.log('Archive habit:', habit.id);
-                        }}
+                        onClick={() => handleArchiveHabit(habit.id)}
+                        disabled={archivingHabitIds.has(habit.id)}
                         style={{
                           background: 'transparent',
                           border: '1px solid #e2e8f0',
@@ -605,11 +642,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                           padding: '0.25rem 0.5rem',
                           fontSize: '0.75rem',
                           color: '#64748b',
-                          cursor: 'pointer',
+                          cursor: archivingHabitIds.has(habit.id) ? 'not-allowed' : 'pointer',
+                          opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
                         }}
                         title="Archive this habit"
                       >
-                        Archive
+                        {archivingHabitIds.has(habit.id) ? 'Archiving…' : 'Archive'}
                       </button>
                     )}
                   </div>
