@@ -21,8 +21,8 @@ Deno.serve(async (req) => {
 
   try {
     // Health check
-    if (pathname.endsWith('/health')) {
-      return new Response(JSON.stringify({ status: 'ok' }), {
+    if (pathname.endsWith('/health') && req.method === 'GET') {
+      return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -53,9 +53,9 @@ Deno.serve(async (req) => {
       }
 
       const body = await req.json();
-      const { endpoint, p256dh, auth } = body;
+      const { endpoint, keys } = body;
 
-      if (!endpoint || !p256dh || !auth) {
+      if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
         return new Response(JSON.stringify({ error: 'Missing subscription fields' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -65,8 +65,8 @@ Deno.serve(async (req) => {
       const { error } = await supabase.from('push_subscriptions').upsert({
         user_id: user.id,
         endpoint,
-        p256dh,
-        auth,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
       });
 
       if (error) throw error;
