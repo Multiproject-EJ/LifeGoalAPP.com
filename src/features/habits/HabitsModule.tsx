@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
-import { isHabitScheduledToday } from './scheduleInterpreter';
+import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEveryNDaysNextDue } from './scheduleInterpreter';
 import type { Database } from '../../lib/database.types';
 
 type HabitsModuleProps = {
@@ -15,6 +16,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   const [showDevNotes, setShowDevNotes] = useState(false);
   const [habits, setHabits] = useState<HabitV2Row[]>([]);
   const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
+  const [weekLogs, setWeekLogs] = useState<HabitLogV2Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -22,6 +24,11 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   const [streaks, setStreaks] = useState<HabitStreakRow[]>([]);
   const [streaksLoading, setStreaksLoading] = useState(false);
   const [streaksError, setStreaksError] = useState<string | null>(null);
+  
+  // Adherence state
+  const [adherenceSnapshots, setAdherenceSnapshots] = useState<HabitAdherenceSnapshot[]>([]);
+  const [adherenceLoading, setAdherenceLoading] = useState(false);
+  const [showAdherence, setShowAdherence] = useState(false);
   
   // Wizard state
   const [showWizard, setShowWizard] = useState(false);
@@ -43,11 +50,15 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   // Input values for quantity/duration habits
   const [habitInputValues, setHabitInputValues] = useState<Record<string, string>>({});
 
-  // Compute habits scheduled for today using the schedule interpreter
+  // Compute habits scheduled for today using the schedule interpreter with week logs
   const todaysHabits = useMemo(() => {
     const today = new Date();
-    return habits.filter((habit) => isHabitScheduledToday(habit, today));
-  }, [habits]);
+    return habits.filter((habit) => {
+      // Get this habit's week logs
+      const habitWeekLogs = weekLogs.filter(log => log.habit_id === habit.id);
+      return isHabitScheduledToday(habit, today, habitWeekLogs);
+    });
+  }, [habits, weekLogs]);
 
   // Load habits and today's logs on mount
   useEffect(() => {
@@ -66,10 +77,28 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           throw new Error(habitsError.message);
         }
 
+        const loadedHabits = habitsData ?? [];
+        setHabits(loadedHabits);
+
         // Load today's logs
         const { data: logsData, error: logsError } = await listTodayHabitLogsV2(session.user.id);
         if (logsError) {
           throw new Error(logsError.message);
+        }
+        setTodayLogs(logsData ?? []);
+
+        // Load week logs for times_per_week schedule support
+        if (loadedHabits.length > 0) {
+          const habitIds = loadedHabits.map(h => h.id);
+          const { data: weekLogsData, error: weekLogsError } = await listHabitLogsForWeekV2(
+            session.user.id,
+            habitIds
+          );
+          if (weekLogsError) {
+            console.error('Error loading week logs:', weekLogsError);
+          } else {
+            setWeekLogs(weekLogsData ?? []);
+          }
         }
 
         // Load streaks
@@ -81,8 +110,6 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           setStreaks(streaksData ?? []);
         }
 
-        setHabits(habitsData ?? []);
-        setTodayLogs(logsData ?? []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load habits right now.');
       } finally {
@@ -129,6 +156,40 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     }
   };
 
+  // Helper to reload week logs (for times_per_week support)
+  const reloadWeekLogs = async () => {
+    if (!session || habits.length === 0) return;
+    
+    try {
+      const habitIds = habits.map(h => h.id);
+      const { data: weekLogsData, error: weekLogsError } = await listHabitLogsForWeekV2(
+        session.user.id,
+        habitIds
+      );
+      if (weekLogsError) {
+        throw new Error(weekLogsError.message);
+      }
+      setWeekLogs(weekLogsData ?? []);
+    } catch (err) {
+      console.error('Error reloading week logs:', err);
+    }
+  };
+
+  // Load adherence snapshots when toggled on
+  const loadAdherenceData = async () => {
+    if (!session || habits.length === 0) return;
+    
+    setAdherenceLoading(true);
+    try {
+      const snapshots = await buildAdherenceSnapshots(session.user.id, habits);
+      setAdherenceSnapshots(snapshots);
+    } catch (err) {
+      console.error('Error loading adherence data:', err);
+    } finally {
+      setAdherenceLoading(false);
+    }
+  };
+
   // Handler for marking a habit as done
   const handleMarkHabitDone = async (habitId: string, type: HabitV2Row['type']) => {
     // Only handle boolean habits for now
@@ -164,8 +225,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         throw new Error('Failed to log habit - no data returned');
       }
 
-      // Reload today's logs to update the UI
-      await reloadTodayLogs();
+      // Reload today's logs and week logs to update the UI
+      await Promise.all([reloadTodayLogs(), reloadWeekLogs()]);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to log habit');
@@ -210,8 +271,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         throw new Error('Failed to log habit - no data returned');
       }
 
-      // Reload today's logs to update the UI
-      await reloadTodayLogs();
+      // Reload today's logs and week logs to update the UI
+      await Promise.all([reloadTodayLogs(), reloadWeekLogs()]);
       
       // Clear the input value after successful log
       setHabitInputValues(prev => {
@@ -692,6 +753,35 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                 const logValue = log?.value;
                 const isLogging = loggingHabitIds.has(habit.id);
                 const inputValue = habitInputValues[habit.id] || '';
+                
+                // Parse schedule for badge display
+                const schedule = parseSchedule(habit.schedule);
+                const habitWeekLogs = weekLogs.filter(l => l.habit_id === habit.id);
+                
+                // Get times_per_week progress if applicable
+                let weekProgress: { completed: number; target: number } | null = null;
+                if (schedule?.mode === 'times_per_week' && schedule.timesPerWeek) {
+                  const progress = getTimesPerWeekProgress(schedule, habitWeekLogs);
+                  weekProgress = { completed: progress.completed, target: progress.target };
+                }
+                
+                // Get every_n_days next due date if applicable
+                let nextDueLabel: string | null = null;
+                if (schedule?.mode === 'every_n_days') {
+                  const nextDue = getEveryNDaysNextDue(schedule, habit.created_at);
+                  if (nextDue) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const diffDays = Math.round((nextDue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 0) {
+                      nextDueLabel = 'Due today';
+                    } else if (diffDays === 1) {
+                      nextDueLabel = 'Due tomorrow';
+                    } else if (diffDays > 0) {
+                      nextDueLabel = `Due in ${diffDays} days`;
+                    }
+                  }
+                }
 
                 return (
                   <div
@@ -712,7 +802,35 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                         <span style={{ fontSize: '1.25rem' }}>{habit.emoji}</span>
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 500 }}>{habit.title}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 500 }}>{habit.title}</span>
+                          {/* Badge for times_per_week progress */}
+                          {weekProgress && (
+                            <span style={{
+                              fontSize: '0.625rem',
+                              background: '#e0e7ff',
+                              color: '#4338ca',
+                              padding: '0.125rem 0.375rem',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                            }}>
+                              {weekProgress.completed}/{weekProgress.target} this week
+                            </span>
+                          )}
+                          {/* Badge for every_n_days */}
+                          {nextDueLabel && (
+                            <span style={{
+                              fontSize: '0.625rem',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              padding: '0.125rem 0.375rem',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                            }}>
+                              {nextDueLabel}
+                            </span>
+                          )}
+                        </div>
                         {!isDone && habit.type !== 'boolean' && habit.target_num && (
                           <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
                             Target: {habit.target_num} {habit.target_unit || 'units'}
@@ -922,6 +1040,117 @@ export function HabitsModule({ session }: HabitsModuleProps) {
               );
             })}
           </div>
+        )}
+      </div>
+
+      {/* Adherence Snapshot Section (Optional) */}
+      <div style={{
+        background: 'white',
+        border: '2px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '2rem',
+        marginBottom: '2rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Adherence</h2>
+          <button
+            onClick={() => {
+              if (!showAdherence) {
+                loadAdherenceData();
+              }
+              setShowAdherence(!showAdherence);
+            }}
+            style={{
+              padding: '0.5rem 1rem',
+              background: showAdherence ? '#64748b' : '#667eea',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {showAdherence ? 'Hide' : 'Show 7d/30d metrics'}
+          </button>
+        </div>
+
+        {showAdherence && (
+          <>
+            {adherenceLoading ? (
+              <p style={{ color: '#64748b', margin: 0 }}>Loading adherence data…</p>
+            ) : adherenceSnapshots.length === 0 ? (
+              <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
+                No habits to analyze. Create habits and log progress to see adherence metrics.
+              </p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.875rem',
+                }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                      <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Habit</th>
+                      <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>7-day</th>
+                      <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>30-day</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adherenceSnapshots.map((snapshot) => {
+                      const habit = habits.find(h => h.id === snapshot.habitId);
+                      return (
+                        <tr key={snapshot.habitId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              {habit?.emoji && <span>{habit.emoji}</span>}
+                              <span>{snapshot.habitTitle}</span>
+                            </div>
+                          </td>
+                          <td style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                              background: snapshot.window7.percentage >= 80 ? '#dcfce7' : 
+                                         snapshot.window7.percentage >= 50 ? '#fef9c3' : '#fee2e2',
+                              color: snapshot.window7.percentage >= 80 ? '#166534' : 
+                                    snapshot.window7.percentage >= 50 ? '#854d0e' : '#991b1b',
+                            }}>
+                              {snapshot.window7.percentage}%
+                            </span>
+                            <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '0.125rem' }}>
+                              {snapshot.window7.completedCount}/{snapshot.window7.scheduledCount}
+                            </div>
+                          </td>
+                          <td style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                              background: snapshot.window30.percentage >= 80 ? '#dcfce7' : 
+                                         snapshot.window30.percentage >= 50 ? '#fef9c3' : '#fee2e2',
+                              color: snapshot.window30.percentage >= 80 ? '#166534' : 
+                                    snapshot.window30.percentage >= 50 ? '#854d0e' : '#991b1b',
+                            }}>
+                              {snapshot.window30.percentage}%
+                            </span>
+                            <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '0.125rem' }}>
+                              {snapshot.window30.completedCount}/{snapshot.window30.scheduledCount}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {/* TODO: Underperformance classification & AI suggestions will be added in a future step */}
+              </div>
+            )}
+          </>
         )}
       </div>
 

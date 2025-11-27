@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import { getISOWeekBounds } from '../features/habits/scheduleInterpreter';
 
 export type HabitV2Row = Database['public']['Tables']['habits_v2']['Row'];
 export type HabitLogV2Row = Database['public']['Tables']['habit_logs_v2']['Row'];
@@ -222,4 +223,68 @@ export async function archiveHabitV2(habitId: string): Promise<ServiceResponse<n
     .eq('id', habitId);
   
   return { data: null, error };
+}
+
+/**
+ * List habit logs for the current ISO week (Monday-Sunday) for the provided habit IDs.
+ * Used for times_per_week schedule mode to determine if weekly target has been met.
+ * 
+ * @param userId - The user ID to filter logs by
+ * @param habitIds - Array of habit IDs to fetch logs for
+ * @param referenceDate - Optional reference date for the week (defaults to today)
+ * @returns Promise with data array of habit logs and error
+ */
+export async function listHabitLogsForWeekV2(
+  userId: string,
+  habitIds: string[],
+  referenceDate: Date = new Date(),
+): Promise<ServiceResponse<HabitLogV2Row[]>> {
+  if (!habitIds || habitIds.length === 0) {
+    return { data: [], error: null };
+  }
+  
+  const supabase = getSupabaseClient();
+  const { monday, sunday } = getISOWeekBounds(referenceDate);
+  const startDate = monday.toISOString().split('T')[0];
+  const endDate = sunday.toISOString().split('T')[0];
+  
+  return supabase
+    .from('habit_logs_v2')
+    .select('*')
+    .eq('user_id', userId)
+    .in('habit_id', habitIds)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: true })
+    .returns<HabitLogV2Row[]>();
+}
+
+/**
+ * List habit logs for multiple habits within a date range.
+ * Used for adherence calculations and analytics.
+ * 
+ * @param params - Query parameters with userId, habitIds, and date range
+ * @returns Promise with data array of habit logs and error
+ */
+export async function listHabitLogsForRangeMultiV2(params: {
+  userId: string;
+  habitIds: string[];
+  startDate: string; // ISO date (YYYY-MM-DD)
+  endDate: string;   // ISO date (YYYY-MM-DD)
+}): Promise<ServiceResponse<HabitLogV2Row[]>> {
+  if (!params.habitIds || params.habitIds.length === 0) {
+    return { data: [], error: null };
+  }
+  
+  const supabase = getSupabaseClient();
+  
+  return supabase
+    .from('habit_logs_v2')
+    .select('*')
+    .eq('user_id', params.userId)
+    .in('habit_id', params.habitIds)
+    .gte('date', params.startDate)
+    .lte('date', params.endDate)
+    .order('date', { ascending: true })
+    .returns<HabitLogV2Row[]>();
 }
