@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import { getISOWeekBounds } from '../features/habits/scheduleInterpreter';
 
 export type HabitV2Row = Database['public']['Tables']['habits_v2']['Row'];
 export type HabitLogV2Row = Database['public']['Tables']['habit_logs_v2']['Row'];
@@ -225,30 +226,6 @@ export async function archiveHabitV2(habitId: string): Promise<ServiceResponse<n
 }
 
 /**
- * Get ISO week bounds (Monday to Sunday) for a given date.
- * ISO weeks start on Monday.
- */
-function getISOWeekBounds(date: Date): { startDate: string; endDate: string } {
-  const d = new Date(date);
-  const day = d.getDay();
-  // Convert Sunday (0) to 7 for ISO week calculation
-  const isoDay = day === 0 ? 7 : day;
-  
-  // Get Monday
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - isoDay + 1);
-  
-  // Get Sunday
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  
-  return {
-    startDate: monday.toISOString().split('T')[0],
-    endDate: sunday.toISOString().split('T')[0],
-  };
-}
-
-/**
  * List habit logs for the current ISO week (Monday-Sunday) for the provided habit IDs.
  * Used for times_per_week schedule mode to determine if weekly target has been met.
  * 
@@ -267,7 +244,9 @@ export async function listHabitLogsForWeekV2(
   }
   
   const supabase = getSupabaseClient();
-  const { startDate, endDate } = getISOWeekBounds(referenceDate);
+  const { monday, sunday } = getISOWeekBounds(referenceDate);
+  const startDate = monday.toISOString().split('T')[0];
+  const endDate = sunday.toISOString().split('T')[0];
   
   return supabase
     .from('habit_logs_v2')

@@ -297,8 +297,7 @@ export function getScheduledCountForWindow(
         return windowDays; // Fallback to daily
       }
       // Approximate: timesPerWeek * (windowDays / 7)
-      // TODO: Consider using ceil or floor with comment explaining choice
-      // Using floor to be conservative (not over-estimating scheduled count)
+      // Using floor for complete weeks to be conservative (not over-estimating)
       const weeks = Math.floor(windowDays / 7);
       const remainingDays = windowDays % 7;
       // For remaining days, estimate proportionally
@@ -311,9 +310,11 @@ export function getScheduledCountForWindow(
       if (typeof intervalDays !== 'number' || intervalDays <= 0) {
         return windowDays; // Fallback to daily
       }
-      // floor(windowDays / intervalDays) + 1 for baseline adjustment
-      // This accounts for the first day and then every interval after
-      return Math.floor(windowDays / intervalDays) + 1;
+      // Calculate occurrences: floor(windowDays / intervalDays) gives us the number of complete intervals
+      // We add 1 only if there's at least one occurrence (the first day counts)
+      // For a 30-day window with 7-day interval: floor(30/7) = 4, so 4-5 occurrences depending on alignment
+      // Using ceil to be slightly more generous in expected scheduled count
+      return Math.ceil(windowDays / intervalDays);
     }
     
     default:
