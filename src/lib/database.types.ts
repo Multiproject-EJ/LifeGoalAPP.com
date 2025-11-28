@@ -917,6 +917,64 @@ export interface Database {
           }
         ];
       };
+      user_reminder_prefs: {
+        Row: {
+          user_id: string;
+          timezone: string;
+          window_start: string;
+          window_end: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          timezone?: string;
+          window_start?: string;
+          window_end?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          user_id?: string;
+          timezone?: string;
+          window_start?: string;
+          window_end?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      habit_reminder_state: {
+        Row: {
+          habit_id: string;
+          last_reminder_sent_at: string | null;
+          snooze_until: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          habit_id: string;
+          last_reminder_sent_at?: string | null;
+          snooze_until?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          habit_id?: string;
+          last_reminder_sent_at?: string | null;
+          snooze_until?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "habit_reminder_state_habit_id_fkey";
+            columns: ["habit_id"];
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       v_habit_streaks: {
