@@ -180,6 +180,44 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     loadTemplatesData();
   }, []);
 
+  // Listen for service worker messages (habit completion from notification actions)
+  useEffect(() => {
+    if (!session) return;
+
+    const handleServiceWorkerMessage = async (event: MessageEvent) => {
+      if (event.data?.type === 'HABIT_ACTION_FROM_NOTIFICATION') {
+        const { habitId, action, completed, wasAlreadyCompleted } = event.data;
+        
+        if (action === 'done' && completed) {
+          // Reload today's and week logs to update UI
+          await Promise.all([reloadTodayLogs(), reloadWeekLogs()]);
+          
+          // Find habit name for toast message
+          const habit = habits.find(h => h.id === habitId);
+          const habitName = habit?.title || 'Habit';
+          
+          // Show appropriate toast message
+          if (wasAlreadyCompleted) {
+            setSuccessMessage(`"${habitName}" was already completed today.`);
+          } else {
+            setSuccessMessage(`✓ Marked "${habitName}" as done!`);
+          }
+          setTimeout(() => setSuccessMessage(null), 3000);
+        } else if (action === 'snooze') {
+          setSuccessMessage('Habit snoozed until tomorrow.');
+          setTimeout(() => setSuccessMessage(null), 3000);
+        }
+      }
+    };
+
+    // Listen for messages from service worker
+    navigator.serviceWorker?.addEventListener('message', handleServiceWorkerMessage);
+    
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', handleServiceWorkerMessage);
+    };
+  }, [session, habits]);
+
   // Helper to reload today's logs
   const reloadTodayLogs = async () => {
     if (!session) return;

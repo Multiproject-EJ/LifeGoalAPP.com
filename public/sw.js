@@ -442,19 +442,11 @@ self.addEventListener('notificationclick', (event) => {
       event.waitUntil(
         (async () => {
           try {
-            // Notify the client to update the UI
-            const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-            for (const client of clients) {
-              client.postMessage({
-                type: 'HABIT_ACTION_FROM_NOTIFICATION',
-                habitId,
-                action: event.action,
-              });
-            }
-
-            // If we have credentials, log to server
+            // If we have credentials, log to server first
             const supabaseUrl = notificationData.supabase_url;
             const authToken = notificationData.auth_token;
+            let serverResponse = null;
+            
             if (supabaseUrl && authToken) {
               const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/log`, {
                 method: 'POST',
@@ -468,9 +460,34 @@ self.addEventListener('notificationclick', (event) => {
                 }),
               });
 
-              if (!response.ok) {
+              if (response.ok) {
+                serverResponse = await response.json();
+              } else {
                 console.error('Failed to log habit action from notification:', await response.text());
               }
+            }
+
+            // Notify all clients to update the UI with server response
+            const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+            for (const client of clients) {
+              client.postMessage({
+                type: 'HABIT_ACTION_FROM_NOTIFICATION',
+                habitId,
+                action: event.action,
+                completed: serverResponse?.completed ?? (event.action === 'done'),
+                wasAlreadyCompleted: serverResponse?.was_already_completed ?? false,
+              });
+            }
+
+            // If action is 'done' and no clients are open, show a confirmation notification
+            if (event.action === 'done' && clients.length === 0) {
+              const habitTitle = notificationData.habit_title || 'Habit';
+              await self.registration.showNotification('✓ Marked as done', {
+                body: `${habitTitle} completed for today`,
+                icon: '/icons/icon-192x192.svg',
+                badge: '/icons/icon-192x192.svg',
+                tag: 'habit-completion-confirmation',
+              });
             }
           } catch (error) {
             console.error('Error handling habit action from notification:', error);
