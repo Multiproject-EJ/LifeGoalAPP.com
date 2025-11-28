@@ -12,6 +12,9 @@ import type { HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import type { ClassificationResult, SuggestedAction } from './performanceClassifier';
 import { parseSchedule, type HabitSchedule } from './scheduleInterpreter';
 
+// Re-export parseSchedule for convenience
+export { parseSchedule, type HabitSchedule };
+
 /**
  * Preview of potential schedule/target changes (not auto-applied).
  */
@@ -254,6 +257,58 @@ export function buildAllSuggestions(
       classificationResult,
       snapshot
     );
+  }
+
+  return result;
+}
+
+/**
+ * Clamps schedule and target changes to safe values.
+ * 
+ * Guardrails:
+ * - timesPerWeek: clamped to [1, 7]
+ * - intervalDays: clamped to [1, 30]
+ * - target_num: for quantity/duration habits, ensure > 0 (min 0.5); for boolean, leave null
+ * 
+ * This utility is used by both the applySuggestionForHabit service and UI components
+ * to ensure suggested changes don't result in invalid habit configurations.
+ * 
+ * @param habit - The current habit row
+ * @param preview - The preview changes from a suggestion
+ * @returns Clamped schedule and target_num values
+ */
+export function clampScheduleChange(
+  habit: HabitV2Row,
+  preview: { schedule?: HabitSchedule; target_num?: number }
+): { schedule?: HabitSchedule; target_num?: number | null } {
+  const result: { schedule?: HabitSchedule; target_num?: number | null } = {};
+
+  // Clamp schedule values if present
+  if (preview.schedule) {
+    const clampedSchedule = { ...preview.schedule };
+    
+    // Clamp timesPerWeek to [1, 7]
+    if (typeof clampedSchedule.timesPerWeek === 'number') {
+      clampedSchedule.timesPerWeek = Math.max(1, Math.min(7, clampedSchedule.timesPerWeek));
+    }
+    
+    // Clamp intervalDays to [1, 30]
+    if (typeof clampedSchedule.intervalDays === 'number') {
+      clampedSchedule.intervalDays = Math.max(1, Math.min(30, clampedSchedule.intervalDays));
+    }
+    
+    result.schedule = clampedSchedule;
+  }
+
+  // Clamp target_num based on habit type
+  if (preview.target_num !== undefined) {
+    if (habit.type === 'boolean') {
+      // Boolean habits don't have target_num
+      result.target_num = null;
+    } else {
+      // Quantity/duration habits: ensure target_num > 0, minimum 0.5
+      result.target_num = Math.max(0.5, preview.target_num);
+    }
   }
 
   return result;

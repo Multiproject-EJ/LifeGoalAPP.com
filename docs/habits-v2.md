@@ -148,3 +148,71 @@ To extend the habits system with new features:
 5. **Add service functions:**
    - Create new query helpers in `src/services/habitsV2.ts` if custom data access is required
    - Follow existing patterns for error handling and type safety
+
+## Applying Suggestions
+
+The habits system supports AI-driven performance suggestions that can be applied to adjust habit schedules and targets. This feature requires:
+
+1. **Environment variable:** Set `VITE_ENABLE_HABIT_SUGGESTIONS=1` to enable the Apply button in the UI.
+2. **Database migration:** Run `supabase/migrations/0005_habit_adjustments.sql` to create the `habit_adjustments` table for auditing.
+
+### How It Works
+
+1. **Classification:** When viewing Adherence metrics, each habit is classified based on 7-day and 30-day adherence percentages and current streak:
+   - **Underperforming:** Low adherence (< 45%) or broken streak → suggests "ease" (reduce frequency/targets)
+   - **High performer:** Strong adherence (>= 85%) with sustained streak → suggests "progress" (increase frequency/targets)
+   - **Stable:** Moderate adherence (45-80%) → suggests "maintain" (no changes)
+   - **Observe:** Borderline cases → suggests monitoring before changes
+
+2. **Preview Changes:** For "ease" and "progress" suggestions, a preview of the proposed change is shown:
+   - Schedule changes: Adjust `timesPerWeek` or `intervalDays`
+   - Target changes: Adjust `target_num` for quantity/duration habits
+
+3. **Guardrails:** All changes are clamped to safe values:
+   - `timesPerWeek`: 1–7
+   - `intervalDays`: 1–30
+   - `target_num`: Minimum 0.5 for quantity/duration habits; `null` for boolean habits
+
+4. **Auditing:** When a suggestion is applied:
+   - The `habit_adjustments` table records the suggestion with `applied=true`
+   - Before/after values for schedule and target are stored
+   - The habit is updated in `habits_v2`
+
+### UI Behavior
+
+- The **Apply** button appears in the Adherence table's Actions column when:
+  - `VITE_ENABLE_HABIT_SUGGESTIONS=1` is set
+  - The suggestion has a `previewChange` (not for "maintain" or "observe")
+  - The suggestion has not already been applied
+
+- After clicking Apply:
+  - The habit is updated with the clamped new values
+  - A success toast is displayed
+  - The button changes to "✓ Applied"
+
+### Testing Instructions
+
+1. Ensure you have the migration applied:
+   ```sql
+   -- Run in Supabase SQL editor or via CLI
+   SELECT * FROM habit_adjustments;
+   ```
+   If this errors, apply `supabase/migrations/0005_habit_adjustments.sql`.
+
+2. Set the environment variable:
+   ```
+   VITE_ENABLE_HABIT_SUGGESTIONS=1
+   ```
+
+3. Create a few test habits with different schedules (times_per_week, every_n_days) and types (boolean, quantity, duration).
+
+4. Log completions to build up adherence data (at least 7 days of history helps).
+
+5. In the Habits module, click "Show 7d/30d metrics" to view adherence.
+
+6. Look for habits with "ease" or "progress" suggestions that have a Preview description.
+
+7. Click "Apply" and verify:
+   - The habit's schedule/target is updated correctly
+   - The `habit_adjustments` table has a new row with `applied=true`
+   - The before/after values match expectations
