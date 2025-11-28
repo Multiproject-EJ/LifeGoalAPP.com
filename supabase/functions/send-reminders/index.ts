@@ -430,8 +430,10 @@ Deno.serve(async (req) => {
 
       // Validate preferred_time format if provided
       if (preferred_time !== undefined && preferred_time !== null) {
+        // Ensure preferred_time is a string
+        const timeStr = String(preferred_time);
         const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
-        if (!timeRegex.test(preferred_time)) {
+        if (!timeRegex.test(timeStr)) {
           return new Response(JSON.stringify({ error: 'Invalid preferred_time format. Use HH:MM or HH:MM:SS' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -443,8 +445,12 @@ Deno.serve(async (req) => {
       const updateData: { habit_id: string; enabled?: boolean; preferred_time?: string | null } = { habit_id };
       if (enabled !== undefined) updateData.enabled = Boolean(enabled);
       if (preferred_time !== undefined) {
-        updateData.preferred_time = preferred_time === null ? null : 
-          (preferred_time.length === 5 ? `${preferred_time}:00` : preferred_time);
+        if (preferred_time === null || preferred_time === '') {
+          updateData.preferred_time = null;
+        } else {
+          const timeStr = String(preferred_time);
+          updateData.preferred_time = timeStr.length === 5 ? `${timeStr}:00` : timeStr;
+        }
       }
 
       const { data: updatedPref, error: updateError } = await supabase

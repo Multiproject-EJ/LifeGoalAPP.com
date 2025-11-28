@@ -215,9 +215,13 @@ export async function fetchReminderActionLogs(
  */
 export function formatTimeForDisplay(time: string | null): string {
   if (!time) return '';
-  // Remove seconds if present
-  const match = time.match(/^(\d{2}):(\d{2})/);
-  return match ? `${match[1]}:${match[2]}` : '';
+  // Match times with single or double digit hours/minutes, and optional seconds
+  const match = time.match(/^(\d{1,2}):(\d{1,2})/);
+  if (!match) return '';
+  // Pad single digits with leading zeros
+  const hours = match[1].padStart(2, '0');
+  const minutes = match[2].padStart(2, '0');
+  return `${hours}:${minutes}`;
 }
 
 /**
