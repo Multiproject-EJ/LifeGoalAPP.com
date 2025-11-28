@@ -26,6 +26,10 @@ function resolveSupabaseUrl(): string | null {
   return defaultCredentials.url?.trim() || null;
 }
 
+export function getSupabaseUrl(): string | null {
+  return resolveSupabaseUrl();
+}
+
 function resolveSupabaseAnonKey(): string | null {
   const configuredAnonKey = readEnvValue(['VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']);
   if (configuredAnonKey) return configuredAnonKey;

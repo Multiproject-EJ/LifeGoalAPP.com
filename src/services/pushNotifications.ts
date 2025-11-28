@@ -88,3 +88,46 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Sends a push subscription to the server (Edge Function) for storage.
+ * This allows the server to send push notifications to this device.
+ *
+ * @param subscription - The PushSubscription object from the browser
+ * @param supabaseUrl - The Supabase project URL
+ * @param accessToken - The user's JWT access token
+ * @returns Promise resolving to { success: true } or throwing an error
+ */
+export async function sendSubscriptionToServer(
+  subscription: PushSubscription,
+  supabaseUrl: string,
+  accessToken: string,
+): Promise<{ success: boolean }> {
+  const subscriptionJson = subscription.toJSON();
+  
+  if (!subscriptionJson.endpoint || !subscriptionJson.keys) {
+    throw new Error('Invalid push subscription: missing endpoint or keys');
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/subscribe`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      endpoint: subscriptionJson.endpoint,
+      keys: {
+        p256dh: subscriptionJson.keys.p256dh,
+        auth: subscriptionJson.keys.auth,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `Failed to register subscription: ${response.status}`);
+  }
+
+  return response.json();
+}
