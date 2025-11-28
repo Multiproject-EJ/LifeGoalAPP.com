@@ -31,6 +31,10 @@ export interface HabitAdjustmentRow {
   old_target_num: number | null;
   new_target_num: number | null;
   applied: boolean;
+  applied_at: string | null;
+  reverted: boolean;
+  reverted_at: string | null;
+  revert_rationale: string | null;
 }
 
 /**
@@ -182,7 +186,7 @@ export async function markSuggestionApplied(
     
     const { error } = await supabase
       .from('habit_adjustments')
-      .update({ applied: true })
+      .update({ applied: true, applied_at: new Date().toISOString() })
       .eq('id', suggestionId);
 
     if (error) {
@@ -337,6 +341,7 @@ export async function applySuggestionForHabit(params: {
       .from('habit_adjustments')
       .update({
         applied: true,
+        applied_at: new Date().toISOString(),
         old_schedule: oldSchedule ?? null,
         // Use clamped value if available, otherwise fall back to suggestion's new_schedule
         // This ensures we record the actual value applied after guardrails
@@ -446,4 +451,218 @@ export async function saveAndApplySuggestion(params: {
     suggestionId: saveResult.suggestionId,
     userId,
   });
+}
+
+/**
+ * Revert a previously applied suggestion, restoring the habit's previous schedule/target values.
+ * 
+ * This function:
+ * 1. Fetches the suggestion by ID from habit_adjustments
+ * 2. Validates that it was applied and not yet reverted, and has old_* values
+ * 3. Fetches the current habit from habits_v2
+ * 4. Applies guardrails to old_* values via clampScheduleChange
+ * 5. Updates the habit in habits_v2 with restored values
+ * 6. Updates the suggestion row with reverted=true, reverted_at, revert_rationale, and backfills applied_at if needed
+ * 7. Returns the updated habit
+ * 
+ * @param params - Object containing suggestionId, userId, and optional rationale
+ * @returns Object with ok boolean, optional error message, and optional updated habit
+ */
+export async function revertSuggestionForHabit(params: {
+  suggestionId: string;
+  userId: string;
+  rationale?: string;
+}): Promise<{ ok: boolean; error?: string; updatedHabit?: HabitV2Row }> {
+  const { suggestionId, userId, rationale } = params;
+  
+  try {
+    // Dynamically import to avoid circular dependencies
+    const { getHabitV2, updateHabitV2 } = await import('./habitsV2');
+    const { clampScheduleChange } = await import('../features/habits/suggestionsEngine');
+    const { parseSchedule: parseScheduleInterpreter } = await import('../features/habits/scheduleInterpreter');
+    
+    // 1. Fetch the suggestion by ID
+    const untypedSupabase = getUntypedSupabase();
+    const { data: suggestion, error: suggestionError } = await untypedSupabase
+      .from('habit_adjustments')
+      .select('*')
+      .eq('id', suggestionId)
+      .single();
+    
+    if (suggestionError) {
+      if (isTableNotFoundError(suggestionError)) {
+        return { ok: false, error: 'Revert feature not available (table not found)' };
+      }
+      return { ok: false, error: suggestionError.message };
+    }
+    
+    if (!suggestion) {
+      return { ok: false, error: 'Suggestion not found' };
+    }
+    
+    // 2. Validate that the suggestion was applied and not yet reverted
+    if (!suggestion.applied) {
+      return { ok: false, error: 'Suggestion has not been applied yet' };
+    }
+    
+    if (suggestion.reverted) {
+      return { ok: false, error: 'Suggestion has already been reverted' };
+    }
+    
+    // Validate old_* values are present for rollback
+    const hasOldSchedule = suggestion.old_schedule !== null;
+    const hasOldTargetNum = suggestion.old_target_num !== null;
+    
+    if (!hasOldSchedule && !hasOldTargetNum) {
+      return { ok: false, error: 'No previous values to restore (old_schedule and old_target_num are both null)' };
+    }
+    
+    // 3. Fetch the current habit
+    const { data: habit, error: habitError } = await getHabitV2(suggestion.habit_id);
+    
+    if (habitError) {
+      return { ok: false, error: habitError.message };
+    }
+    
+    if (!habit) {
+      return { ok: false, error: 'Habit not found' };
+    }
+    
+    // Validate user owns this habit
+    if (habit.user_id !== userId) {
+      return { ok: false, error: 'Not authorized to modify this habit' };
+    }
+    
+    // 4. Build restore payload from old_* fields and apply guardrails
+    type HabitScheduleType = NonNullable<ReturnType<typeof parseScheduleInterpreter>>;
+    const restorePreview: { schedule?: HabitScheduleType; target_num?: number } = {};
+    
+    if (hasOldSchedule && suggestion.old_schedule) {
+      const parsedSchedule = parseScheduleInterpreter(suggestion.old_schedule);
+      if (parsedSchedule) {
+        restorePreview.schedule = parsedSchedule;
+      }
+    }
+    
+    if (hasOldTargetNum && typeof suggestion.old_target_num === 'number') {
+      restorePreview.target_num = suggestion.old_target_num;
+    }
+    
+    // Apply guardrails to ensure restored values are valid
+    const clamped = clampScheduleChange(habit, restorePreview);
+    
+    // 5. Prepare update payload
+    const updatePayload: {
+      schedule?: typeof habit.schedule;
+      target_num?: number | null;
+    } = {};
+    
+    if (clamped.schedule) {
+      updatePayload.schedule = clamped.schedule as typeof habit.schedule;
+    }
+    
+    if (clamped.target_num !== undefined) {
+      updatePayload.target_num = clamped.target_num;
+    }
+    
+    // 6. Update the habit in habits_v2 with restored values
+    const { data: updatedHabit, error: updateError } = await updateHabitV2(suggestion.habit_id, updatePayload);
+    
+    if (updateError) {
+      return { ok: false, error: updateError.message };
+    }
+    
+    if (!updatedHabit) {
+      return { ok: false, error: 'Failed to update habit' };
+    }
+    
+    // 7. Update the suggestion row with revert audit fields
+    // Use COALESCE logic: backfill applied_at if it was null (for pre-migration rows)
+    const now = new Date().toISOString();
+    const { error: updateSuggestionError } = await untypedSupabase
+      .from('habit_adjustments')
+      .update({
+        reverted: true,
+        reverted_at: now,
+        revert_rationale: rationale ?? null,
+        // Backfill applied_at for pre-migration rows that were applied but didn't have this field
+        applied_at: suggestion.applied_at ?? now,
+      })
+      .eq('id', suggestionId);
+    
+    if (updateSuggestionError && !isTableNotFoundError(updateSuggestionError)) {
+      console.error('Error updating suggestion revert status:', updateSuggestionError);
+      // Don't fail the whole operation - the habit was restored successfully
+    }
+    
+    return { ok: true, updatedHabit };
+  } catch (err) {
+    console.error('Unexpected error in revertSuggestionForHabit:', err);
+    return { ok: false, error: 'Unexpected error occurred while reverting suggestion' };
+  }
+}
+
+/**
+ * List applied suggestions for a user's habits that can be reverted.
+ * Returns suggestions that have applied=true and reverted=false with old_* values present.
+ * 
+ * @param userId - The user ID to fetch suggestions for
+ * @param limit - Maximum number of suggestions to return (default: 50)
+ * @returns Array of habit adjustment rows eligible for revert
+ */
+export async function listRevertableSuggestions(
+  userId: string,
+  limit: number = 50
+): Promise<HabitAdjustmentRow[]> {
+  try {
+    const supabase = getSupabaseClient();
+    
+    // First get the user's habit IDs (using typed query)
+    const { data: userHabits, error: habitsError } = await supabase
+      .from('habits_v2')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('archived', false);
+
+    if (habitsError) {
+      console.error('Error fetching user habits:', habitsError);
+      return [];
+    }
+
+    if (!userHabits || userHabits.length === 0) {
+      return [];
+    }
+
+    const habitIds = userHabits.map(h => h.id);
+
+    // Query the optional table using untyped access
+    const untypedSupabase = getUntypedSupabase();
+    const { data, error } = await untypedSupabase
+      .from('habit_adjustments')
+      .select('*')
+      .in('habit_id', habitIds)
+      .eq('applied', true)
+      .eq('reverted', false)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      if (isTableNotFoundError(error)) {
+        console.warn('habit_adjustments table not found. Returning empty list.');
+        return [];
+      }
+      console.error('Error listing revertable suggestions:', error);
+      return [];
+    }
+
+    // Filter to only include suggestions with old_* values
+    const revertable = (data as HabitAdjustmentRow[])?.filter(
+      s => s.old_schedule !== null || s.old_target_num !== null
+    ) ?? [];
+    
+    return revertable;
+  } catch (err) {
+    console.error('Unexpected error in listRevertableSuggestions:', err);
+    return [];
+  }
 }
