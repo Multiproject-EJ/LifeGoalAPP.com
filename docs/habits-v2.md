@@ -216,3 +216,82 @@ The habits system supports AI-driven performance suggestions that can be applied
    - The habit's schedule/target is updated correctly
    - The `habit_adjustments` table has a new row with `applied=true`
    - The before/after values match expectations
+
+## Rollback
+
+The habits system supports safe rollback of applied suggestions. After applying a suggestion, you can revert to the previous schedule/target if the change doesn't work for you.
+
+### Requirements
+
+1. **Migration:** Apply `supabase/migrations/0006_habit_adjustments_rollbacks.sql` to add rollback audit columns.
+2. **Environment:** The `VITE_ENABLE_HABIT_SUGGESTIONS=1` environment variable must be set.
+
+### How Rollback Works
+
+1. **Revert Button:** When viewing Adherence metrics, applied suggestions show a "Revert" button.
+2. **Confirmation Dialog:** Clicking "Revert" opens a dialog to confirm and optionally provide a rationale.
+3. **Restore Values:** The habit's schedule and/or target_num are restored from `old_schedule` and `old_target_num`.
+4. **Guardrails:** Restored values are clamped to safe ranges (same guardrails as apply):
+   - `timesPerWeek`: 1–7
+   - `intervalDays`: 1–30
+   - `target_num`: minimum 0.5 for quantity/duration habits
+
+### Audit Fields
+
+When a suggestion is reverted, the following fields are updated in `habit_adjustments`:
+- `reverted`: Set to `true`
+- `reverted_at`: Timestamp when the revert occurred
+- `revert_rationale`: Optional user-provided reason for reverting
+- `applied_at`: Backfilled with current time if it was null (for pre-migration rows)
+
+### Testing Rollback
+
+1. Apply a suggestion to a habit (creates a row in `habit_adjustments` with `applied=true`).
+2. Verify the habit's schedule/target was updated.
+3. Click "Revert" in the Actions column.
+4. Enter an optional rationale and confirm.
+5. Verify:
+   - The habit's schedule/target is restored to previous values
+   - The `habit_adjustments` row has `reverted=true`, `reverted_at`, and optionally `revert_rationale`
+   - The Revert button is no longer shown for this suggestion
+
+## AI Rationale (Optional)
+
+The habits system supports AI-enhanced rationale text for suggestions. When enabled, an AI model generates a more personalized 2-3 sentence explanation of the recommendation.
+
+### Requirements
+
+1. **Environment Variable:** Set `VITE_OPENAI_API_KEY` with a valid OpenAI API key.
+2. **Model:** Uses `gpt-4o-mini` for fast, cost-effective responses.
+
+### How It Works
+
+1. **Automatic Enhancement:** When loading adherence data, rationale text is enhanced in the background (non-blocking).
+2. **Fallback:** If the API call fails or times out (3 seconds), the baseline classifier rationale is shown.
+3. **Session Caching:** Enhanced rationales are cached per session to avoid repeated API calls.
+4. **UI Indicator:** An "AI" badge appears next to AI-enhanced rationales.
+
+### Configuration
+
+```bash
+# Add to .env or environment
+VITE_OPENAI_API_KEY=sk-your-openai-api-key
+VITE_ENABLE_HABIT_SUGGESTIONS=1
+```
+
+### UI Behavior
+
+- **Expandable Details:** Click "View rationale" to expand and see the full AI-enhanced text.
+- **AI Badge:** A small "AI" badge indicates when rationale was AI-generated vs. baseline.
+- **Graceful Degradation:** Without the API key, baseline rationale from the classifier is shown.
+
+### Testing AI Rationale
+
+1. Set the `VITE_OPENAI_API_KEY` environment variable.
+2. Enable suggestions with `VITE_ENABLE_HABIT_SUGGESTIONS=1`.
+3. Open the Adherence metrics section.
+4. Click "View rationale" next to a suggestion.
+5. Verify:
+   - The rationale text is shown in an expandable panel
+   - AI-enhanced rationales show an "AI" badge
+   - If the API is unavailable, baseline text is displayed without the badge

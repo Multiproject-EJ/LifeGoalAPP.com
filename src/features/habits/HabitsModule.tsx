@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
-import { saveAndApplySuggestion } from '../../services/habitAdjustments';
+import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEveryNDaysNextDue } from './scheduleInterpreter';
 import { classifyHabit } from './performanceClassifier';
 import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
+import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
 
 // Check if habit suggestions feature is enabled via environment variable
@@ -64,6 +65,29 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   
   // State for tracking which suggestions have been applied (by habit ID)
   const [appliedSuggestionHabitIds, setAppliedSuggestionHabitIds] = useState<Set<string>>(new Set());
+  
+  // State for revertable suggestions (applied suggestions with old_* values)
+  const [revertableSuggestions, setRevertableSuggestions] = useState<HabitAdjustmentRow[]>([]);
+  
+  // State for tracking which suggestions are being reverted (by suggestion ID)
+  const [revertingSuggestionIds, setRevertingSuggestionIds] = useState<Set<string>>(new Set());
+  
+  // State for tracking which suggestions have been reverted (by suggestion ID)
+  const [revertedSuggestionIds, setRevertedSuggestionIds] = useState<Set<string>>(new Set());
+  
+  // State for revert confirmation dialog
+  const [revertConfirmation, setRevertConfirmation] = useState<{
+    suggestionId: string;
+    habitId: string;
+    habitTitle: string;
+  } | null>(null);
+  const [revertRationale, setRevertRationale] = useState('');
+  
+  // State for AI-enhanced rationales (by habit ID)
+  const [enhancedRationales, setEnhancedRationales] = useState<Record<string, EnhancedRationaleResult>>({});
+  
+  // State for tracking which rationales are being expanded (by habit ID)
+  const [expandedRationales, setExpandedRationales] = useState<Set<string>>(new Set());
 
   // Compute habits scheduled for today using the schedule interpreter with week logs
   const todaysHabits = useMemo(() => {
@@ -220,8 +244,30 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         // Build suggestion based on classification
         const suggestion = buildSuggestion(habit, classificationResult, snapshot);
         suggestions[habit.id] = suggestion;
+        
+        // Optionally enhance the rationale with AI (async, non-blocking)
+        // Note: buildEnhancedRationale has internal caching, so repeated calls with same params are fast
+        // Skip if we already have an enhanced rationale in state (from previous load)
+        if (!enhancedRationales[habit.id]) {
+          buildEnhancedRationale({
+            classification: classificationResult.classification,
+            adherence7: snapshot.window7.percentage,
+            adherence30: snapshot.window30.percentage,
+            streak: streakData?.current_streak ?? 0,
+            preview: suggestion.previewChange,
+            baselineRationale: classificationResult.rationale,
+          }).then(result => {
+            setEnhancedRationales(prev => ({ ...prev, [habit.id]: result }));
+          }).catch(err => {
+            console.warn('Error enhancing rationale:', err);
+          });
+        }
       }
       setPerformanceSuggestions(suggestions);
+      
+      // Also load revertable suggestions
+      const revertable = await listRevertableSuggestions(session.user.id);
+      setRevertableSuggestions(revertable);
     } catch (err) {
       console.error('Error loading adherence data:', err);
     } finally {
@@ -466,6 +512,10 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       // Show success toast
       setSuccessMessage(`Suggestion applied to "${habit.title}"!`);
       setTimeout(() => setSuccessMessage(null), 3000);
+      
+      // Reload revertable suggestions after successful apply
+      const revertable = await listRevertableSuggestions(session.user.id);
+      setRevertableSuggestions(revertable);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to apply suggestion');
@@ -477,6 +527,66 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         next.delete(habitId);
         return next;
       });
+    }
+  };
+
+  // Handler for reverting a suggestion
+  const handleRevertSuggestion = async (suggestionId: string, rationale?: string) => {
+    if (!session) {
+      setError('Session expired. Please refresh the page.');
+      return;
+    }
+
+    // Mark as reverting
+    setRevertingSuggestionIds(prev => new Set(prev).add(suggestionId));
+    setError(null);
+
+    try {
+      const result = await revertSuggestionForHabit({
+        suggestionId,
+        userId: session.user.id,
+        rationale,
+      });
+
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to revert suggestion');
+      }
+
+      // Update local habits state with the restored habit
+      if (result.updatedHabit) {
+        const updatedHabit = result.updatedHabit;
+        setHabits(prev => prev.map(h => h.id === updatedHabit.id ? updatedHabit : h));
+      }
+
+      // Mark suggestion as reverted
+      setRevertedSuggestionIds(prev => new Set(prev).add(suggestionId));
+
+      // Find the habit title for the toast
+      const revertedSuggestion = revertableSuggestions.find(s => s.id === suggestionId);
+      const habit = habits.find(h => h.id === revertedSuggestion?.habit_id);
+      const habitTitle = habit?.title ?? 'habit';
+
+      // Show success toast
+      setSuccessMessage(`Successfully reverted changes to "${habitTitle}"!`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+
+      // Reload revertable suggestions
+      const revertable = await listRevertableSuggestions(session.user.id);
+      setRevertableSuggestions(revertable);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to revert suggestion');
+      console.error('Error reverting suggestion:', err);
+    } finally {
+      // Remove from reverting state
+      setRevertingSuggestionIds(prev => {
+        const next = new Set(prev);
+        next.delete(suggestionId);
+        return next;
+      });
+      // Close the confirmation dialog
+      setRevertConfirmation(null);
+      setRevertRationale('');
     }
   };
 
@@ -1273,9 +1383,78 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                                 }}>
                                   {suggestion.suggestedAction}
                                 </span>
-                                <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '0.25rem', maxWidth: '200px' }}>
-                                  {suggestion.rationale}
-                                </div>
+                                {/* Show enhanced rationale with expandable details */}
+                                {enhancedRationales[snapshot.habitId] ? (
+                                  <div style={{ marginTop: '0.25rem' }}>
+                                    <button
+                                      onClick={() => {
+                                        setExpandedRationales(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(snapshot.habitId)) {
+                                            next.delete(snapshot.habitId);
+                                          } else {
+                                            next.add(snapshot.habitId);
+                                          }
+                                          return next;
+                                        });
+                                      }}
+                                      style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        padding: 0,
+                                        cursor: 'pointer',
+                                        fontSize: '0.625rem',
+                                        color: '#64748b',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                        textAlign: 'left',
+                                        maxWidth: '200px',
+                                      }}
+                                    >
+                                      <span style={{ 
+                                        transform: expandedRationales.has(snapshot.habitId) ? 'rotate(90deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.2s',
+                                        display: 'inline-block',
+                                      }}>
+                                        ▶
+                                      </span>
+                                      <span>
+                                        {expandedRationales.has(snapshot.habitId) ? 'Hide' : 'View'} rationale
+                                        {enhancedRationales[snapshot.habitId].isAiEnhanced && (
+                                          <span style={{ 
+                                            marginLeft: '0.25rem',
+                                            background: '#e0e7ff',
+                                            color: '#4338ca',
+                                            padding: '0.0625rem 0.25rem',
+                                            borderRadius: '2px',
+                                            fontSize: '0.5rem',
+                                          }}>
+                                            AI
+                                          </span>
+                                        )}
+                                      </span>
+                                    </button>
+                                    {expandedRationales.has(snapshot.habitId) && (
+                                      <div style={{ 
+                                        fontSize: '0.625rem', 
+                                        color: '#475569', 
+                                        marginTop: '0.25rem', 
+                                        maxWidth: '200px',
+                                        padding: '0.5rem',
+                                        background: '#f8fafc',
+                                        borderRadius: '4px',
+                                        border: '1px solid #e2e8f0',
+                                      }}>
+                                        {enhancedRationales[snapshot.habitId].rationale}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '0.25rem', maxWidth: '200px' }}>
+                                    {suggestion.rationale}
+                                  </div>
+                                )}
                                 {suggestion.previewChange?.changeDescription && (
                                   <div style={{ 
                                     fontSize: '0.625rem', 
@@ -1293,35 +1472,72 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                           </td>
                           {SUGGESTIONS_ENABLED && (
                             <td style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
-                              {canApply && habit && suggestion ? (
-                                <button
-                                  onClick={() => handleApplySuggestion(habit.id, suggestion)}
-                                  disabled={isApplying}
-                                  style={{
-                                    padding: '0.375rem 0.75rem',
-                                    background: isApplying ? '#94a3b8' : '#667eea',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
-                                    cursor: isApplying ? 'not-allowed' : 'pointer',
-                                    opacity: isApplying ? 0.7 : 1,
-                                  }}
-                                >
-                                  {isApplying ? 'Applying…' : 'Apply'}
-                                </button>
-                              ) : isApplied ? (
-                                <span style={{
-                                  fontSize: '0.75rem',
-                                  color: '#16a34a',
-                                  fontWeight: 600,
-                                }}>
-                                  ✓ Applied
-                                </span>
-                              ) : (
-                                <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>—</span>
-                              )}
+                              {(() => {
+                                // Check if there's a revertable suggestion for this habit
+                                const revertableSuggestion = revertableSuggestions.find(
+                                  s => s.habit_id === snapshot.habitId && !revertedSuggestionIds.has(s.id)
+                                );
+                                const isReverting = revertableSuggestion && revertingSuggestionIds.has(revertableSuggestion.id);
+
+                                return (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                                    {canApply && habit && suggestion ? (
+                                      <button
+                                        onClick={() => handleApplySuggestion(habit.id, suggestion)}
+                                        disabled={isApplying}
+                                        style={{
+                                          padding: '0.375rem 0.75rem',
+                                          background: isApplying ? '#94a3b8' : '#667eea',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '6px',
+                                          fontSize: '0.75rem',
+                                          fontWeight: 600,
+                                          cursor: isApplying ? 'not-allowed' : 'pointer',
+                                          opacity: isApplying ? 0.7 : 1,
+                                        }}
+                                      >
+                                        {isApplying ? 'Applying…' : 'Apply'}
+                                      </button>
+                                    ) : isApplied && !revertableSuggestion ? (
+                                      <span style={{
+                                        fontSize: '0.75rem',
+                                        color: '#16a34a',
+                                        fontWeight: 600,
+                                      }}>
+                                        ✓ Applied
+                                      </span>
+                                    ) : !revertableSuggestion ? (
+                                      <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>—</span>
+                                    ) : null}
+                                    
+                                    {/* Revert button for applied suggestions */}
+                                    {revertableSuggestion && habit && (
+                                      <button
+                                        onClick={() => setRevertConfirmation({
+                                          suggestionId: revertableSuggestion.id,
+                                          habitId: revertableSuggestion.habit_id,
+                                          habitTitle: habit.title,
+                                        })}
+                                        disabled={isReverting}
+                                        style={{
+                                          padding: '0.25rem 0.5rem',
+                                          background: isReverting ? '#94a3b8' : '#f59e0b',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          fontSize: '0.625rem',
+                                          fontWeight: 600,
+                                          cursor: isReverting ? 'not-allowed' : 'pointer',
+                                          opacity: isReverting ? 0.7 : 1,
+                                        }}
+                                      >
+                                        {isReverting ? 'Reverting…' : '↩ Revert'}
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </td>
                           )}
                         </tr>
@@ -1334,6 +1550,104 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           </>
         )}
       </div>
+
+      {/* Revert Confirmation Dialog */}
+      {revertConfirmation && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => {
+            setRevertConfirmation(null);
+            setRevertRationale('');
+          }}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '2rem',
+              maxWidth: '400px',
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.125rem' }}>
+              Revert Changes?
+            </h3>
+            <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>
+              This will restore the previous schedule/target settings for "{revertConfirmation.habitTitle}".
+            </p>
+            
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+              Reason for reverting (optional):
+            </label>
+            <textarea
+              value={revertRationale}
+              onChange={(e) => setRevertRationale(e.target.value)}
+              placeholder="Why are you reverting this change?"
+              style={{
+                width: '100%',
+                minHeight: '80px',
+                padding: '0.75rem',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                resize: 'vertical',
+                marginBottom: '1.5rem',
+                boxSizing: 'border-box',
+              }}
+            />
+            
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setRevertConfirmation(null);
+                  setRevertRationale('');
+                }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRevertSuggestion(revertConfirmation.suggestionId, revertRationale || undefined)}
+                disabled={revertingSuggestionIds.has(revertConfirmation.suggestionId)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: revertingSuggestionIds.has(revertConfirmation.suggestionId) ? '#94a3b8' : '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: revertingSuggestionIds.has(revertConfirmation.suggestionId) ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {revertingSuggestionIds.has(revertConfirmation.suggestionId) ? 'Reverting…' : 'Confirm Revert'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Insights Section */}
       <HabitsInsights session={session} habits={habits} />
