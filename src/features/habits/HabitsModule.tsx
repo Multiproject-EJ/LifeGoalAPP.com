@@ -6,6 +6,8 @@ import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEveryNDaysNextDue } from './scheduleInterpreter';
+import { classifyHabit } from './performanceClassifier';
+import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import type { Database } from '../../lib/database.types';
 
 type HabitsModuleProps = {
@@ -49,6 +51,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   
   // Input values for quantity/duration habits
   const [habitInputValues, setHabitInputValues] = useState<Record<string, string>>({});
+  
+  // Performance suggestions state
+  const [performanceSuggestions, setPerformanceSuggestions] = useState<Record<string, HabitSuggestion>>({});
 
   // Compute habits scheduled for today using the schedule interpreter with week logs
   const todaysHabits = useMemo(() => {
@@ -183,6 +188,30 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     try {
       const snapshots = await buildAdherenceSnapshots(session.user.id, habits);
       setAdherenceSnapshots(snapshots);
+      
+      // Build performance suggestions for each habit based on adherence and streaks
+      const suggestions: Record<string, HabitSuggestion> = {};
+      for (const habit of habits) {
+        const snapshot = snapshots.find(s => s.habitId === habit.id);
+        if (!snapshot) continue;
+        
+        // Get streak data for this habit
+        const streakData = streaks.find(s => s.habit_id === habit.id);
+        
+        // Classify the habit's performance
+        // TODO: Implement previousStreak tracking for more accurate underperforming detection
+        // Currently, we only use currentStreak since historical streak data is not stored
+        const classificationResult = classifyHabit({
+          adherence7: snapshot.window7.percentage,
+          adherence30: snapshot.window30.percentage,
+          currentStreak: streakData?.current_streak ?? 0,
+        });
+        
+        // Build suggestion based on classification
+        const suggestion = buildSuggestion(habit, classificationResult, snapshot);
+        suggestions[habit.id] = suggestion;
+      }
+      setPerformanceSuggestions(suggestions);
     } catch (err) {
       console.error('Error loading adherence data:', err);
     } finally {
@@ -1095,11 +1124,28 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                       <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Habit</th>
                       <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>7-day</th>
                       <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>30-day</th>
+                      <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Suggestion</th>
                     </tr>
                   </thead>
                   <tbody>
                     {adherenceSnapshots.map((snapshot) => {
                       const habit = habits.find(h => h.id === snapshot.habitId);
+                      const suggestion = performanceSuggestions[snapshot.habitId];
+                      
+                      // Determine suggestion badge colors
+                      const getSuggestionBadgeStyle = (action: string) => {
+                        switch (action) {
+                          case 'ease':
+                            return { background: '#fef3c7', color: '#92400e' };
+                          case 'progress':
+                            return { background: '#dbeafe', color: '#1e40af' };
+                          case 'maintain':
+                            return { background: '#dcfce7', color: '#166534' };
+                          default:
+                            return { background: '#f1f5f9', color: '#475569' };
+                        }
+                      };
+                      
                       return (
                         <tr key={snapshot.habitId} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td style={{ padding: '0.75rem 0.5rem' }}>
@@ -1142,12 +1188,43 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                               {snapshot.window30.completedCount}/{snapshot.window30.scheduledCount}
                             </div>
                           </td>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>
+                            {suggestion ? (
+                              <div>
+                                <span style={{
+                                  display: 'inline-block',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '4px',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  textTransform: 'capitalize',
+                                  ...getSuggestionBadgeStyle(suggestion.suggestedAction),
+                                }}>
+                                  {suggestion.suggestedAction}
+                                </span>
+                                <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '0.25rem', maxWidth: '200px' }}>
+                                  {suggestion.rationale}
+                                </div>
+                                {suggestion.previewChange?.changeDescription && (
+                                  <div style={{ 
+                                    fontSize: '0.625rem', 
+                                    color: '#6366f1', 
+                                    marginTop: '0.25rem',
+                                    fontStyle: 'italic'
+                                  }}>
+                                    Preview: {suggestion.previewChange.changeDescription}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>—</span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-                {/* TODO: Underperformance classification & AI suggestions will be added in a future step */}
               </div>
             )}
           </>
