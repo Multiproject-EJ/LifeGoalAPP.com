@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
+import { saveAndApplySuggestion } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
@@ -9,6 +10,9 @@ import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEvery
 import { classifyHabit } from './performanceClassifier';
 import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import type { Database } from '../../lib/database.types';
+
+// Check if habit suggestions feature is enabled via environment variable
+const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
 
 type HabitsModuleProps = {
   session: Session;
@@ -54,6 +58,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   
   // Performance suggestions state
   const [performanceSuggestions, setPerformanceSuggestions] = useState<Record<string, HabitSuggestion>>({});
+  
+  // State for tracking which suggestions are being applied
+  const [applyingSuggestionIds, setApplyingSuggestionIds] = useState<Set<string>>(new Set());
+  
+  // State for tracking which suggestions have been applied (by habit ID)
+  const [appliedSuggestionHabitIds, setAppliedSuggestionHabitIds] = useState<Set<string>>(new Set());
 
   // Compute habits scheduled for today using the schedule interpreter with week logs
   const todaysHabits = useMemo(() => {
@@ -413,6 +423,61 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   const handleCancelWizard = () => {
     setShowWizard(false);
     setWizardInitialDraft(undefined);
+  };
+
+  // Handler for applying a suggestion to a habit
+  const handleApplySuggestion = async (habitId: string, suggestion: HabitSuggestion) => {
+    if (!session) {
+      setError('Session expired. Please refresh the page.');
+      return;
+    }
+
+    // Find the habit
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) {
+      setError('Habit not found.');
+      return;
+    }
+
+    // Mark as applying
+    setApplyingSuggestionIds(prev => new Set(prev).add(habitId));
+    setError(null);
+
+    try {
+      const result = await saveAndApplySuggestion({
+        habit,
+        suggestion,
+        userId: session.user.id,
+      });
+
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to apply suggestion');
+      }
+
+      // Update local habits state with the updated habit
+      if (result.updatedHabit) {
+        const updatedHabit = result.updatedHabit;
+        setHabits(prev => prev.map(h => h.id === habitId ? updatedHabit : h));
+      }
+
+      // Mark suggestion as applied
+      setAppliedSuggestionHabitIds(prev => new Set(prev).add(habitId));
+
+      // Show success toast
+      setSuccessMessage(`Suggestion applied to "${habit.title}"!`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to apply suggestion');
+      console.error('Error applying suggestion:', err);
+    } finally {
+      // Remove from applying state
+      setApplyingSuggestionIds(prev => {
+        const next = new Set(prev);
+        next.delete(habitId);
+        return next;
+      });
+    }
   };
 
   // Helper to map template schedule to ScheduleDraft choice
@@ -1125,12 +1190,18 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                       <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>7-day</th>
                       <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>30-day</th>
                       <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Suggestion</th>
+                      {SUGGESTIONS_ENABLED && (
+                        <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Actions</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
                     {adherenceSnapshots.map((snapshot) => {
                       const habit = habits.find(h => h.id === snapshot.habitId);
                       const suggestion = performanceSuggestions[snapshot.habitId];
+                      const isApplying = applyingSuggestionIds.has(snapshot.habitId);
+                      const isApplied = appliedSuggestionHabitIds.has(snapshot.habitId);
+                      const canApply = SUGGESTIONS_ENABLED && suggestion?.previewChange && !isApplied;
                       
                       // Determine suggestion badge colors
                       const getSuggestionBadgeStyle = (action: string) => {
@@ -1220,6 +1291,39 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                               <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>—</span>
                             )}
                           </td>
+                          {SUGGESTIONS_ENABLED && (
+                            <td style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
+                              {canApply && habit && suggestion ? (
+                                <button
+                                  onClick={() => handleApplySuggestion(habit.id, suggestion)}
+                                  disabled={isApplying}
+                                  style={{
+                                    padding: '0.375rem 0.75rem',
+                                    background: isApplying ? '#94a3b8' : '#667eea',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    cursor: isApplying ? 'not-allowed' : 'pointer',
+                                    opacity: isApplying ? 0.7 : 1,
+                                  }}
+                                >
+                                  {isApplying ? 'Applying…' : 'Apply'}
+                                </button>
+                              ) : isApplied ? (
+                                <span style={{
+                                  fontSize: '0.75rem',
+                                  color: '#16a34a',
+                                  fontWeight: 600,
+                                }}>
+                                  ✓ Applied
+                                </span>
+                              ) : (
+                                <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>—</span>
+                              )}
+                            </td>
+                          )}
                         </tr>
                       );
                     })}

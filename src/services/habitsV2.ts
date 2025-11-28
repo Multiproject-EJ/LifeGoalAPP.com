@@ -288,3 +288,45 @@ export async function listHabitLogsForRangeMultiV2(params: {
     .order('date', { ascending: true })
     .returns<HabitLogV2Row[]>();
 }
+
+/**
+ * Update an existing habit with new schedule and/or target values.
+ * Used when applying suggestions to modify habit configuration.
+ * 
+ * @param habitId - The ID of the habit to update
+ * @param updates - Object containing fields to update (schedule, target_num)
+ * @returns Promise with the updated habit data and error
+ */
+export async function updateHabitV2(
+  habitId: string,
+  updates: {
+    schedule?: Database['public']['Tables']['habits_v2']['Row']['schedule'];
+    target_num?: number | null;
+  }
+): Promise<ServiceResponse<HabitV2Row>> {
+  const supabase = getSupabaseClient();
+  
+  return supabase
+    .from('habits_v2')
+    .update(updates)
+    .eq('id', habitId)
+    .select()
+    .single();
+}
+
+/**
+ * Get a single habit by ID.
+ * Used for fetching the current habit state before applying suggestions.
+ * 
+ * @param habitId - The ID of the habit to fetch
+ * @returns Promise with the habit data and error
+ */
+export async function getHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
+  const supabase = getSupabaseClient();
+  
+  return supabase
+    .from('habits_v2')
+    .select('*')
+    .eq('id', habitId)
+    .single();
+}
