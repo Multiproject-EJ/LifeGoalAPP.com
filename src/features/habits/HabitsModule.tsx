@@ -246,18 +246,22 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         suggestions[habit.id] = suggestion;
         
         // Optionally enhance the rationale with AI (async, non-blocking)
-        buildEnhancedRationale({
-          classification: classificationResult.classification,
-          adherence7: snapshot.window7.percentage,
-          adherence30: snapshot.window30.percentage,
-          streak: streakData?.current_streak ?? 0,
-          preview: suggestion.previewChange,
-          baselineRationale: classificationResult.rationale,
-        }).then(result => {
-          setEnhancedRationales(prev => ({ ...prev, [habit.id]: result }));
-        }).catch(err => {
-          console.warn('Error enhancing rationale:', err);
-        });
+        // Note: buildEnhancedRationale has internal caching, so repeated calls with same params are fast
+        // Skip if we already have an enhanced rationale in state (from previous load)
+        if (!enhancedRationales[habit.id]) {
+          buildEnhancedRationale({
+            classification: classificationResult.classification,
+            adherence7: snapshot.window7.percentage,
+            adherence30: snapshot.window30.percentage,
+            streak: streakData?.current_streak ?? 0,
+            preview: suggestion.previewChange,
+            baselineRationale: classificationResult.rationale,
+          }).then(result => {
+            setEnhancedRationales(prev => ({ ...prev, [habit.id]: result }));
+          }).catch(err => {
+            console.warn('Error enhancing rationale:', err);
+          });
+        }
       }
       setPerformanceSuggestions(suggestions);
       

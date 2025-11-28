@@ -591,8 +591,9 @@ export async function revertSuggestionForHabit(params: {
       .eq('id', suggestionId);
     
     if (updateSuggestionError && !isTableNotFoundError(updateSuggestionError)) {
-      console.error('Error updating suggestion revert status:', updateSuggestionError);
-      // Don't fail the whole operation - the habit was restored successfully
+      // Log a warning but don't fail - the habit was restored successfully
+      // The audit record may be incomplete but the user's habit is correctly updated
+      console.warn('Warning: Revert succeeded but audit update failed. Audit data may be incomplete.', updateSuggestionError);
     }
     
     return { ok: true, updatedHabit };
