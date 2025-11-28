@@ -6,7 +6,9 @@ import {
   subscribeToPush,
   sendSubscriptionToServer,
 } from '../../services/pushNotifications';
-import { getSupabaseClient, hasSupabaseCredentials } from '../../lib/supabaseClient';
+import { hasSupabaseCredentials, getSupabaseUrl } from '../../lib/supabaseClient';
+
+const NOTIFICATION_ICON = '/icons/icon-192x192.svg';
 
 type StatusMessage = {
   kind: 'success' | 'error' | 'info';
@@ -94,8 +96,7 @@ export function PushNotificationTestPanel({ session }: Props) {
         throw new Error('No push subscription found. Create one first.');
       }
 
-      const client = getSupabaseClient();
-      const supabaseUrl = (client as unknown as { supabaseUrl: string }).supabaseUrl;
+      const supabaseUrl = getSupabaseUrl();
       const accessToken = session.access_token;
 
       if (!supabaseUrl || !accessToken) {
@@ -125,8 +126,10 @@ export function PushNotificationTestPanel({ session }: Props) {
         throw new Error('Supabase credentials not configured.');
       }
 
-      const client = getSupabaseClient();
-      const supabaseUrl = (client as unknown as { supabaseUrl: string }).supabaseUrl;
+      const supabaseUrl = getSupabaseUrl();
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL not configured.');
+      }
 
       const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/health`);
       const data = await response.json();
@@ -155,8 +158,8 @@ export function PushNotificationTestPanel({ session }: Props) {
       
       await registration.showNotification('Test Notification', {
         body: 'This is a test notification from LifeGoal App.',
-        icon: '/icons/icon-192x192.svg',
-        badge: '/icons/icon-192x192.svg',
+        icon: NOTIFICATION_ICON,
+        badge: NOTIFICATION_ICON,
         tag: 'test-notification',
         data: {
           url: '/#habits',
