@@ -433,8 +433,8 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  // Handle habit reminder actions (done/skip)
-  if (event.action === 'done' || event.action === 'skip') {
+  // Handle habit reminder actions (done/snooze/dismiss)
+  if (event.action === 'done' || event.action === 'snooze' || event.action === 'dismiss') {
     const notificationData = event.notification.data || {};
     const habitId = notificationData.habit_id;
     
@@ -452,7 +452,7 @@ self.addEventListener('notificationclick', (event) => {
               });
             }
 
-            // If we have credentials, also log to server
+            // If we have credentials, log to server
             const supabaseUrl = notificationData.supabase_url;
             const authToken = notificationData.auth_token;
             if (supabaseUrl && authToken) {
@@ -464,12 +464,12 @@ self.addEventListener('notificationclick', (event) => {
                 },
                 body: JSON.stringify({
                   habit_id: habitId,
-                  done: event.action === 'done',
+                  action: event.action,
                 }),
               });
 
               if (!response.ok) {
-                console.error('Failed to log habit from notification:', await response.text());
+                console.error('Failed to log habit action from notification:', await response.text());
               }
             }
           } catch (error) {
@@ -481,7 +481,7 @@ self.addEventListener('notificationclick', (event) => {
     }
   }
 
-  // Default notification click behavior
+  // Default notification click behavior (open app)
   const targetUrl = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
 
   event.waitUntil(
