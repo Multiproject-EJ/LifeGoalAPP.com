@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
@@ -180,35 +180,44 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     loadTemplatesData();
   }, []);
 
+  // Ref to store latest habits for use in service worker message handler
+  const habitsRef = useRef<HabitV2Row[]>([]);
+  useEffect(() => {
+    habitsRef.current = habits;
+  }, [habits]);
+
+  // Handler for service worker messages - defined outside effect to maintain stable reference
+  const handleServiceWorkerMessage = useCallback(async (event: MessageEvent) => {
+    if (event.data?.type === 'HABIT_ACTION_FROM_NOTIFICATION') {
+      const { habitId, action, completed, wasAlreadyCompleted } = event.data;
+      
+      if (action === 'done' && completed) {
+        // Reload today's and week logs to update UI
+        // Note: These functions reference session from closure which is stable
+        await Promise.all([reloadTodayLogs(), reloadWeekLogs()]);
+        
+        // Find habit name for toast message using ref to get latest habits
+        const habit = habitsRef.current.find(h => h.id === habitId);
+        const habitName = habit?.title || 'Habit';
+        
+        // Show appropriate toast message
+        if (wasAlreadyCompleted) {
+          setSuccessMessage(`"${habitName}" was already completed today.`);
+        } else {
+          setSuccessMessage(`✓ Marked "${habitName}" as done!`);
+        }
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else if (action === 'snooze') {
+        setSuccessMessage('Habit snoozed until tomorrow.');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]); // Only depends on session for reloadTodayLogs/reloadWeekLogs stability
+
   // Listen for service worker messages (habit completion from notification actions)
   useEffect(() => {
     if (!session) return;
-
-    const handleServiceWorkerMessage = async (event: MessageEvent) => {
-      if (event.data?.type === 'HABIT_ACTION_FROM_NOTIFICATION') {
-        const { habitId, action, completed, wasAlreadyCompleted } = event.data;
-        
-        if (action === 'done' && completed) {
-          // Reload today's and week logs to update UI
-          await Promise.all([reloadTodayLogs(), reloadWeekLogs()]);
-          
-          // Find habit name for toast message
-          const habit = habits.find(h => h.id === habitId);
-          const habitName = habit?.title || 'Habit';
-          
-          // Show appropriate toast message
-          if (wasAlreadyCompleted) {
-            setSuccessMessage(`"${habitName}" was already completed today.`);
-          } else {
-            setSuccessMessage(`✓ Marked "${habitName}" as done!`);
-          }
-          setTimeout(() => setSuccessMessage(null), 3000);
-        } else if (action === 'snooze') {
-          setSuccessMessage('Habit snoozed until tomorrow.');
-          setTimeout(() => setSuccessMessage(null), 3000);
-        }
-      }
-    };
 
     // Listen for messages from service worker
     navigator.serviceWorker?.addEventListener('message', handleServiceWorkerMessage);
@@ -216,7 +225,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     return () => {
       navigator.serviceWorker?.removeEventListener('message', handleServiceWorkerMessage);
     };
-  }, [session, habits]);
+  }, [session, handleServiceWorkerMessage]);
 
   // Helper to reload today's logs
   const reloadTodayLogs = async () => {
