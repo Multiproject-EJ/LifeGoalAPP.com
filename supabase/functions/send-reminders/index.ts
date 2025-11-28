@@ -104,6 +104,36 @@ function wasReminderSentToday(lastSentAt: string | null, timezone: string): bool
   }
 }
 
+// Helper: Get today's date string in YYYY-MM-DD format (UTC)
+function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+// Helper: Check if habit is already completed today (idempotency for done action)
+async function isHabitCompletedToday(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  habitId: string
+): Promise<boolean> {
+  const today = getTodayDateString();
+  
+  const { data, error } = await supabase
+    .from('habit_logs_v2')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('habit_id', habitId)
+    .eq('date', today)
+    .eq('done', true)
+    .limit(1);
+  
+  if (error) {
+    console.error('Error checking habit completion:', error);
+    return false; // Allow completion attempt if check fails
+  }
+  
+  return data !== null && data.length > 0;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -287,12 +317,43 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Log the action
+      // Handle specific actions with idempotency
+      let alreadyCompleted = false;
+      let wasInserted = false;
+      
+      if (resolvedAction === 'done') {
+        // Check if habit is already completed today (idempotency guard)
+        alreadyCompleted = await isHabitCompletedToday(supabase, user.id, habit_id);
+        
+        if (!alreadyCompleted) {
+          // Mark habit as completed with explicit date
+          const today = getTodayDateString();
+          const { error: habitError } = await supabase.from('habit_logs_v2').insert({
+            habit_id,
+            user_id: user.id,
+            done: true,
+            value: null,
+            date: today,
+          });
+
+          if (habitError) {
+            console.error('Failed to log habit completion:', habitError);
+          } else {
+            wasInserted = true;
+          }
+        }
+      }
+
+      // Log the action (after completion check so we can include context)
       const { error: logError } = await supabase.from('reminder_action_logs').insert({
         habit_id,
         user_id: user.id,
         action: resolvedAction,
-        payload: payload || null,
+        payload: { 
+          ...(payload || {}), 
+          via: 'push_action',
+          already_completed: alreadyCompleted,
+        },
       });
 
       if (logError) {
@@ -300,20 +361,8 @@ Deno.serve(async (req) => {
         // Continue even if logging fails - don't block the user
       }
 
-      // Handle specific actions
-      if (resolvedAction === 'done') {
-        // Mark habit as completed
-        const { error: habitError } = await supabase.from('habit_logs_v2').insert({
-          habit_id,
-          user_id: user.id,
-          done: true,
-          value: null,
-        });
-
-        if (habitError) {
-          console.error('Failed to log habit completion:', habitError);
-        }
-      } else if (resolvedAction === 'snooze') {
+      // Handle snooze action
+      if (resolvedAction === 'snooze') {
         // Set snooze_until to now + 1 day
         const snoozeUntil = new Date();
         snoozeUntil.setDate(snoozeUntil.getDate() + 1);
@@ -331,7 +380,23 @@ Deno.serve(async (req) => {
       }
       // dismiss action only logs, no additional processing
 
-      return new Response(JSON.stringify({ success: true, action: resolvedAction }), {
+      // Build response with completion status for 'done' action
+      const responseBody: { 
+        ok: boolean; 
+        action: string; 
+        completed?: boolean;
+        was_already_completed?: boolean;
+      } = {
+        ok: true,
+        action: resolvedAction,
+      };
+      
+      if (resolvedAction === 'done') {
+        responseBody.completed = true;
+        responseBody.was_already_completed = alreadyCompleted;
+      }
+
+      return new Response(JSON.stringify(responseBody), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -773,6 +838,7 @@ Deno.serve(async (req) => {
             tag: string;
             data: {
               habit_id: string;
+              habit_title: string;
               url: string;
             };
             actions: Array<{ action: string; title: string }>;
@@ -786,6 +852,7 @@ Deno.serve(async (req) => {
             tag: `habit-${habit.id}`,
             data: {
               habit_id: habit.id,
+              habit_title: habit.title,
               url: '/#habits',
             },
             actions: [

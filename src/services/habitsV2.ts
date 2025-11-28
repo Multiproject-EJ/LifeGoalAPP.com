@@ -330,3 +330,77 @@ export async function getHabitV2(habitId: string): Promise<ServiceResponse<Habit
     .eq('id', habitId)
     .single();
 }
+
+/**
+ * Check if a habit has already been completed today.
+ * Used for idempotent completion checks.
+ * 
+ * @param habitId - The ID of the habit to check
+ * @param userId - The user ID
+ * @returns Promise with boolean indicating if completed today and any error
+ */
+export async function isHabitCompletedToday(
+  habitId: string,
+  userId: string,
+): Promise<ServiceResponse<boolean>> {
+  const supabase = getSupabaseClient();
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { data, error } = await supabase
+    .from('habit_logs_v2')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('habit_id', habitId)
+    .eq('date', today)
+    .eq('done', true)
+    .limit(1);
+  
+  if (error) {
+    return { data: null, error };
+  }
+  
+  return { data: data !== null && data.length > 0, error: null };
+}
+
+/**
+ * Record a habit completion with idempotency.
+ * If the habit is already completed today, this function returns success without inserting.
+ * 
+ * @param habitId - The ID of the habit to complete
+ * @param userId - The user ID
+ * @returns Promise with result indicating if completion was newly inserted or already existed
+ */
+export async function recordHabitCompletion(
+  habitId: string,
+  userId: string,
+): Promise<ServiceResponse<{ completed: boolean; wasAlreadyCompleted: boolean }>> {
+  const supabase = getSupabaseClient();
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Check if already completed today
+  const { data: isCompleted, error: checkError } = await isHabitCompletedToday(habitId, userId);
+  
+  if (checkError) {
+    return { data: null, error: checkError };
+  }
+  
+  if (isCompleted) {
+    // Already completed, return success without inserting (idempotent)
+    return { data: { completed: true, wasAlreadyCompleted: true }, error: null };
+  }
+  
+  // Insert new completion
+  const { error: insertError } = await supabase.from('habit_logs_v2').insert({
+    habit_id: habitId,
+    user_id: userId,
+    done: true,
+    value: null,
+    date: today,
+  });
+  
+  if (insertError) {
+    return { data: null, error: insertError };
+  }
+  
+  return { data: { completed: true, wasAlreadyCompleted: false }, error: null };
+}

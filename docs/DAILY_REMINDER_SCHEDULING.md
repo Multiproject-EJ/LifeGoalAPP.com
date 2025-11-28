@@ -274,6 +274,73 @@ Snoozed habits are skipped until `snooze_until` has passed.
 2. Verify timezone string is a valid IANA identifier
 3. Check if reminder window crosses midnight (supported)
 
+## Wiring "Done" to Completion
+
+The "Done" notification action records a real habit completion with idempotency and UI feedback.
+
+### Flow
+
+1. **User clicks "Done"** on push notification
+2. **Service Worker** sends POST to `/send-reminders/log` with `action=done` and `habit_id`
+3. **Edge Function** checks if habit is already completed today (idempotency guard)
+4. **If not completed**: Inserts into `habit_logs_v2` with `done=true`
+5. **Returns response** with `{ ok: true, completed: true, was_already_completed: false }`
+6. **Service Worker** broadcasts message to all open app windows
+7. **HabitsModule** receives message, reloads logs, shows toast
+
+### Idempotency
+
+The system ensures only one completion per habit per day:
+
+```typescript
+// Edge Function helper
+async function isHabitCompletedToday(supabase, userId, habitId) {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await supabase
+    .from('habit_logs_v2')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('habit_id', habitId)
+    .eq('date', today)
+    .eq('done', true)
+    .limit(1);
+  return data?.length > 0;
+}
+```
+
+### Response Format
+
+```json
+{
+  "ok": true,
+  "action": "done",
+  "completed": true,
+  "was_already_completed": false
+}
+```
+
+### Action Logging
+
+All notification actions are logged to `reminder_action_logs` with:
+- `action`: "done", "snooze", or "dismiss"
+- `payload`: `{ via: "push_action", already_completed: boolean }`
+
+### UI Feedback
+
+When a completion is recorded from a notification:
+1. `HabitsModule` listens for `HABIT_ACTION_FROM_NOTIFICATION` messages
+2. Reloads today's logs to update the checklist
+3. Shows toast: "✓ Marked 'Habit Name' as done!" or "already completed today"
+
+### Frontend Service
+
+The `recordHabitCompletion` function in `src/services/habitsV2.ts` provides the same idempotent behavior for in-app completion:
+
+```typescript
+const { data, error } = await recordHabitCompletion(habitId, userId);
+// data: { completed: true, wasAlreadyCompleted: boolean }
+```
+
 ## Related Documentation
 
 - [WEB_PUSH_REMINDERS.md](./WEB_PUSH_REMINDERS.md) - Web Push setup
