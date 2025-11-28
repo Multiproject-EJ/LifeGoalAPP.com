@@ -101,6 +101,58 @@ Health check endpoint to verify the Edge Function is running.
 { "ok": true }
 ```
 
+### `GET /prefs`
+
+Get the current user's reminder preferences (timezone, reminder window).
+
+**Headers:**
+- `Authorization: Bearer <access_token>` (required)
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "prefs": {
+    "user_id": "uuid",
+    "timezone": "America/New_York",
+    "window_start": "08:00:00",
+    "window_end": "10:00:00",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+### `POST /prefs`
+
+Update the current user's reminder preferences.
+
+**Headers:**
+- `Authorization: Bearer <access_token>` (required)
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "timezone": "America/New_York",
+  "window_start": "09:00",
+  "window_end": "11:00"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "prefs": {
+    "user_id": "uuid",
+    "timezone": "America/New_York",
+    "window_start": "09:00:00",
+    "window_end": "11:00:00"
+  }
+}
+```
+
 ### `POST /subscribe`
 
 Register a push subscription for the authenticated user.
@@ -149,7 +201,58 @@ Log a habit completion from a notification action.
 
 ### `POST /cron`
 
-Trigger the reminder sending job (typically called by a CRON scheduler).
+Trigger the reminder sending job (typically called by a CRON scheduler). The endpoint implements idempotent delivery using the `habit_reminder_state` table to prevent duplicate notifications.
+
+**Headers:**
+- `Authorization: Bearer <access_token>` (required)
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "Sent 5 notifications, skipped 2",
+  "reminders": 7,
+  "sent": 5,
+  "skipped": 2
+}
+```
+
+**Features:**
+- Respects per-user reminder window (only sends during configured hours)
+- Idempotent delivery (won't send same reminder twice in one day)
+- Respects snooze settings per habit
+- Automatically cleans up invalid push subscriptions
+
+## Database Tables
+
+### `user_reminder_prefs`
+
+Stores per-user reminder scheduling preferences.
+
+```sql
+CREATE TABLE public.user_reminder_prefs (
+  user_id uuid PRIMARY KEY,
+  timezone text NOT NULL DEFAULT 'UTC',
+  window_start time NOT NULL DEFAULT '08:00:00',
+  window_end time NOT NULL DEFAULT '10:00:00',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+```
+
+### `habit_reminder_state`
+
+Tracks reminder delivery state for idempotent sending.
+
+```sql
+CREATE TABLE public.habit_reminder_state (
+  habit_id uuid PRIMARY KEY,
+  last_reminder_sent_at timestamptz,
+  snooze_until timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+```
 
 ## Client Usage
 
@@ -252,6 +355,42 @@ To access:
 1. Navigate to Account settings
 2. Scroll to "Push Notification Test Panel"
 3. Use the buttons to test each step of the pipeline
+
+## Reminder Schedule Settings
+
+The Reminder Schedule Settings panel (also in Account settings) allows users to configure:
+
+1. **Timezone** - IANA timezone identifier (e.g., `America/New_York`, `Europe/London`)
+2. **Window Start** - Earliest time to receive reminders each day
+3. **Window End** - Latest time to receive reminders each day
+
+### Features:
+- **Auto-detect timezone** - Click "Detect" to use browser's detected timezone
+- **Test Scheduler** - Manually trigger the CRON job to test your configuration
+
+### Usage:
+
+```typescript
+import { 
+  fetchReminderPrefs, 
+  updateReminderPrefs,
+  triggerReminderCron 
+} from '@/services/reminderPrefs';
+
+// Fetch current preferences
+const { data: prefs } = await fetchReminderPrefs(session.access_token);
+
+// Update preferences
+await updateReminderPrefs(session.access_token, {
+  timezone: 'America/New_York',
+  windowStart: '09:00',
+  windowEnd: '11:00',
+});
+
+// Test the scheduler
+const result = await triggerReminderCron(session.access_token);
+console.log(result.message); // "Sent 3 notifications, skipped 1"
+```
 
 ## Troubleshooting
 

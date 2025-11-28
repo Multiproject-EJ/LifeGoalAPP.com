@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
-import { NotificationSettingsSection, PushNotificationTestPanel } from '../notifications';
+import { NotificationSettingsSection, PushNotificationTestPanel, ReminderScheduleSettings } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
@@ -188,6 +188,8 @@ export function MyAccountPanel({
       <AiSettingsSection session={session} />
 
       <NotificationSettingsSection session={session} />
+
+      <ReminderScheduleSettings session={session} />
 
       <PushNotificationTestPanel session={session} />
 

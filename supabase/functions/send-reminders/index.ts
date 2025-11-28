@@ -1,6 +1,7 @@
 // ========================================================
 // EDGE FUNCTION: send-reminders
 // Purpose: Web Push reminders + quick action logging
+// Endpoints: /health, /subscribe, /log, /prefs, /cron
 // ========================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
@@ -9,6 +10,22 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Type definitions for reminder preferences
+interface UserReminderPrefs {
+  user_id: string;
+  timezone: string;
+  window_start: string;
+  window_end: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface HabitReminderState {
+  habit_id: string;
+  last_reminder_sent_at: string | null;
+  snooze_until: string | null;
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -20,7 +37,7 @@ Deno.serve(async (req) => {
   const pathname = url.pathname;
 
   try {
-    // Health check
+    // Health check (no auth required)
     if (pathname.endsWith('/health') && req.method === 'GET') {
       return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -41,6 +58,85 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
+
+    // GET /prefs - Fetch current user's reminder preferences
+    if (pathname.endsWith('/prefs') && req.method === 'GET') {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data, error } = await supabase
+        .from('user_reminder_prefs')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      // Return default values if no preferences exist
+      const prefs: UserReminderPrefs = data || {
+        user_id: user.id,
+        timezone: 'UTC',
+        window_start: '08:00:00',
+        window_end: '10:00:00',
+      };
+
+      return new Response(JSON.stringify({ success: true, prefs }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // POST /prefs - Update current user's reminder preferences
+    if (pathname.endsWith('/prefs') && req.method === 'POST') {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const body = await req.json();
+      const { timezone, window_start, window_end } = body;
+
+      // Validate time format (HH:MM:SS or HH:MM)
+      const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+      if (window_start && !timeRegex.test(window_start)) {
+        return new Response(JSON.stringify({ error: 'Invalid window_start format. Use HH:MM or HH:MM:SS' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (window_end && !timeRegex.test(window_end)) {
+        return new Response(JSON.stringify({ error: 'Invalid window_end format. Use HH:MM or HH:MM:SS' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const updateData: Partial<UserReminderPrefs> = {
+        user_id: user.id,
+      };
+      if (timezone !== undefined) updateData.timezone = timezone;
+      if (window_start !== undefined) updateData.window_start = window_start.length === 5 ? `${window_start}:00` : window_start;
+      if (window_end !== undefined) updateData.window_end = window_end.length === 5 ? `${window_end}:00` : window_end;
+
+      const { data, error } = await supabase
+        .from('user_reminder_prefs')
+        .upsert(updateData, { onConflict: 'user_id' })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ success: true, prefs: data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Subscribe to push notifications
     if (pathname.endsWith('/subscribe') && req.method === 'POST') {
@@ -110,17 +206,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // CRON: Send reminders (runs every minute)
+    // CRON: Send reminders (runs every minute) with idempotent delivery
     if (pathname.endsWith('/cron')) {
       console.log('CRON: Send reminders job triggered');
       
       try {
-        // Get current time rounded to nearest minute
+        // Get current time
         const now = new Date();
         const currentMinute = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         console.log('Checking for reminders at:', currentMinute);
 
-        // Query habits with reminders due now
+        // Query habits with reminders due now, including user preferences
         const { data: reminders, error: remindersError } = await supabase
           .from('habit_reminders')
           .select(`
@@ -154,8 +250,68 @@ Deno.serve(async (req) => {
 
         console.log(`Found ${dueReminders.length} reminders to send`);
 
+        // Get habit IDs for idempotency check
+        const habitIds = dueReminders.map(r => r.habit_id).filter(Boolean);
+        
+        // Check reminder state to avoid duplicate sends (idempotency)
+        const { data: reminderStates, error: stateError } = await supabase
+          .from('habit_reminder_state')
+          .select('*')
+          .in('habit_id', habitIds);
+
+        if (stateError) {
+          console.warn('Could not fetch reminder states, proceeding without idempotency check:', stateError);
+        }
+
+        // Create a map of habit_id -> last_reminder_sent_at
+        const stateMap: Record<string, HabitReminderState> = {};
+        (reminderStates || []).forEach((state: HabitReminderState) => {
+          stateMap[state.habit_id] = state;
+        });
+
+        // Filter out habits that have already received a reminder today or are snoozed
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        
+        const eligibleReminders = dueReminders.filter(r => {
+          const state = stateMap[r.habit_id];
+          if (!state) return true; // No state = never sent
+          
+          // Check snooze
+          if (state.snooze_until) {
+            const snoozeUntil = new Date(state.snooze_until);
+            if (now < snoozeUntil) {
+              console.log(`Habit ${r.habit_id} snoozed until ${snoozeUntil}`);
+              return false;
+            }
+          }
+          
+          // Check if already sent today (idempotency)
+          if (state.last_reminder_sent_at) {
+            const lastSent = new Date(state.last_reminder_sent_at);
+            if (lastSent >= todayStart) {
+              console.log(`Habit ${r.habit_id} already reminded today at ${lastSent}`);
+              return false;
+            }
+          }
+          
+          return true;
+        });
+
+        console.log(`${eligibleReminders.length} reminders eligible after idempotency check`);
+
+        if (eligibleReminders.length === 0) {
+          return new Response(JSON.stringify({ 
+            success: true, 
+            message: 'No eligible reminders (already sent or snoozed)', 
+            count: 0 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
         // Get push subscriptions for users with due reminders
-        const userIds = [...new Set(dueReminders.map(r => r.habits_v2?.user_id).filter(Boolean))];
+        const userIds = [...new Set(eligibleReminders.map(r => r.habits_v2?.user_id).filter(Boolean))];
         
         const { data: subscriptions, error: subsError } = await supabase
           .from('push_subscriptions')
@@ -164,9 +320,25 @@ Deno.serve(async (req) => {
 
         if (subsError) throw subsError;
 
+        // Fetch user reminder preferences for timezone-aware scheduling
+        const { data: userPrefs, error: prefsError } = await supabase
+          .from('user_reminder_prefs')
+          .select('*')
+          .in('user_id', userIds);
+
+        if (prefsError) {
+          console.warn('Could not fetch user preferences:', prefsError);
+        }
+
+        // Create user preferences map
+        const prefsMap: Record<string, UserReminderPrefs> = {};
+        (userPrefs || []).forEach((pref: UserReminderPrefs) => {
+          prefsMap[pref.user_id] = pref;
+        });
+
         // Group reminders by user
-        const remindersByUser = {};
-        dueReminders.forEach(reminder => {
+        const remindersByUser: Record<string, typeof eligibleReminders> = {};
+        eligibleReminders.forEach(reminder => {
           const userId = reminder.habits_v2?.user_id;
           if (userId) {
             if (!remindersByUser[userId]) {
@@ -178,6 +350,7 @@ Deno.serve(async (req) => {
 
         // Send notifications
         let sentCount = 0;
+        let skippedCount = 0;
         const webpush = await import('https://esm.sh/web-push@3.6.6');
         
         // Set VAPID details
@@ -189,7 +362,7 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ 
             success: true, 
             message: 'Reminders found but VAPID not configured', 
-            count: dueReminders.length 
+            count: eligibleReminders.length 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -203,6 +376,19 @@ Deno.serve(async (req) => {
 
         for (const [userId, userReminders] of Object.entries(remindersByUser)) {
           const userSubs = subscriptions?.filter(s => s.user_id === userId) || [];
+          const userPref = prefsMap[userId];
+          
+          // Check if current time is within user's reminder window
+          if (userPref) {
+            const windowStart = userPref.window_start.substring(0, 5); // HH:MM
+            const windowEnd = userPref.window_end.substring(0, 5); // HH:MM
+            
+            if (currentMinute < windowStart || currentMinute > windowEnd) {
+              console.log(`User ${userId} current time ${currentMinute} outside window ${windowStart}-${windowEnd}`);
+              skippedCount += userReminders.length;
+              continue;
+            }
+          }
           
           for (const reminder of userReminders) {
             const habit = reminder.habits_v2;
@@ -241,6 +427,7 @@ Deno.serve(async (req) => {
             };
             
             const payload = JSON.stringify(notificationPayload);
+            let notificationSent = false;
 
             for (const sub of userSubs) {
               try {
@@ -253,6 +440,7 @@ Deno.serve(async (req) => {
                 };
 
                 await webpush.sendNotification(pushSubscription, payload);
+                notificationSent = true;
                 sentCount++;
               } catch (error) {
                 console.error('Failed to send notification:', error);
@@ -265,14 +453,29 @@ Deno.serve(async (req) => {
                 }
               }
             }
+
+            // Update reminder state for idempotency (track that we sent this reminder)
+            if (notificationSent) {
+              const { error: updateError } = await supabase
+                .from('habit_reminder_state')
+                .upsert({
+                  habit_id: habit.id,
+                  last_reminder_sent_at: now.toISOString(),
+                }, { onConflict: 'habit_id' });
+
+              if (updateError) {
+                console.warn(`Failed to update reminder state for habit ${habit.id}:`, updateError);
+              }
+            }
           }
         }
 
         return new Response(JSON.stringify({ 
           success: true, 
-          message: `Sent ${sentCount} notifications`, 
-          reminders: dueReminders.length,
-          sent: sentCount
+          message: `Sent ${sentCount} notifications, skipped ${skippedCount}`, 
+          reminders: eligibleReminders.length,
+          sent: sentCount,
+          skipped: skippedCount
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
