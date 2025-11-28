@@ -124,7 +124,16 @@ export function ReminderScheduleSettings({ session }: Props) {
 
   const handleResetToDetected = () => {
     setTimezone(fallbackTimezone);
+    // Clear any existing error states to avoid showing stale messages
     setStatus({ kind: 'info', message: `Timezone reset to detected: ${fallbackTimezone}` });
+    setCronResult(null);
+  };
+
+  // Helper function to determine CSS class for cron result
+  const getCronResultClass = (result: string): string => {
+    if (result.startsWith('✓')) return 'push-test-panel__health--success';
+    if (result.startsWith('⚠️')) return 'push-test-panel__health--warning';
+    return 'push-test-panel__health--error';
   };
 
   if (loading) {
@@ -242,7 +251,7 @@ export function ReminderScheduleSettings({ session }: Props) {
           {triggeringCron ? 'Running…' : 'Test Reminder Scheduler'}
         </button>
         {cronResult && (
-          <p className={`push-test-panel__health ${cronResult.startsWith('✓') ? 'push-test-panel__health--success' : cronResult.startsWith('⚠️') ? 'push-test-panel__health--warning' : 'push-test-panel__health--error'}`}>
+          <p className={`push-test-panel__health ${getCronResultClass(cronResult)}`}>
             {cronResult}
           </p>
         )}

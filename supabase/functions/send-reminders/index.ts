@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
           .in('habit_id', habitIds);
 
         if (stateError) {
-          console.warn('Could not fetch reminder states, proceeding without idempotency check:', stateError);
+          console.warn('Could not fetch reminder states - proceeding without idempotency check (may result in duplicate reminders):', stateError);
         }
 
         // Create a map of habit_id -> last_reminder_sent_at
@@ -327,7 +327,7 @@ Deno.serve(async (req) => {
           .in('user_id', userIds);
 
         if (prefsError) {
-          console.warn('Could not fetch user preferences:', prefsError);
+          console.warn('Could not fetch user preferences - using default reminder windows:', prefsError);
         }
 
         // Create user preferences map
@@ -383,7 +383,21 @@ Deno.serve(async (req) => {
             const windowStart = userPref.window_start.substring(0, 5); // HH:MM
             const windowEnd = userPref.window_end.substring(0, 5); // HH:MM
             
-            if (currentMinute < windowStart || currentMinute > windowEnd) {
+            // Convert to minutes since midnight for proper numeric comparison
+            const toMinutes = (time: string) => {
+              const [h, m] = time.split(':').map(Number);
+              return h * 60 + m;
+            };
+            const currentMins = toMinutes(currentMinute);
+            const startMins = toMinutes(windowStart);
+            const endMins = toMinutes(windowEnd);
+            
+            // Handle windows that span midnight (e.g., 22:00 to 06:00)
+            const isInWindow = endMins >= startMins
+              ? currentMins >= startMins && currentMins <= endMins
+              : currentMins >= startMins || currentMins <= endMins;
+            
+            if (!isInWindow) {
               console.log(`User ${userId} current time ${currentMinute} outside window ${windowStart}-${windowEnd}`);
               skippedCount += userReminders.length;
               continue;
@@ -464,7 +478,7 @@ Deno.serve(async (req) => {
                 }, { onConflict: 'habit_id' });
 
               if (updateError) {
-                console.warn(`Failed to update reminder state for habit ${habit.id}:`, updateError);
+                console.warn(`Failed to update reminder state for habit ${habit.id} - may result in duplicate reminders:`, updateError);
               }
             }
           }

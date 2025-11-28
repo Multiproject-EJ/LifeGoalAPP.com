@@ -19,14 +19,15 @@ export type ReminderPrefsPayload = {
 };
 
 // Demo mode storage for reminder preferences
-const demoReminderPrefs: Record<string, UserReminderPrefsRow> = {};
+// Using Map for better performance with frequent lookups and to avoid prototype pollution
+const demoReminderPrefs = new Map<string, UserReminderPrefsRow>();
 
 function getDemoReminderPrefs(userId: string): UserReminderPrefsRow | null {
-  return demoReminderPrefs[userId] || null;
+  return demoReminderPrefs.get(userId) || null;
 }
 
 function upsertDemoReminderPrefs(userId: string, prefs: Partial<UserReminderPrefsRow>): UserReminderPrefsRow {
-  const existing = demoReminderPrefs[userId];
+  const existing = demoReminderPrefs.get(userId);
   const now = new Date().toISOString();
   
   const newPrefs: UserReminderPrefsRow = {
@@ -38,7 +39,7 @@ function upsertDemoReminderPrefs(userId: string, prefs: Partial<UserReminderPref
     updated_at: now,
   };
   
-  demoReminderPrefs[userId] = newPrefs;
+  demoReminderPrefs.set(userId, newPrefs);
   return newPrefs;
 }
 
