@@ -12,7 +12,7 @@
  */
 
 import { getSupabaseClient } from '../lib/supabaseClient';
-import type { HabitSuggestion } from '../features/habits/suggestionsEngine';
+import type { HabitSuggestion, HabitSchedule } from '../features/habits/suggestionsEngine';
 import type { Json } from '../lib/database.types';
 import type { HabitV2Row } from './habitsV2';
 
@@ -338,8 +338,11 @@ export async function applySuggestionForHabit(params: {
       .update({
         applied: true,
         old_schedule: oldSchedule ?? null,
+        // Use clamped value if available, otherwise fall back to suggestion's new_schedule
+        // This ensures we record the actual value applied after guardrails
         new_schedule: clamped.schedule ?? suggestion.new_schedule ?? null,
         old_target_num: oldTargetNum ?? null,
+        // Same fallback logic for target_num
         new_target_num: clamped.target_num ?? suggestion.new_target_num ?? null,
       })
       .eq('id', suggestionId);
@@ -390,8 +393,8 @@ export async function saveAndApplySuggestion(params: {
       const { getHabitV2, updateHabitV2 } = await import('./habitsV2');
       const { clampScheduleChange } = await import('../features/habits/suggestionsEngine');
       
-      // Build preview from suggestion
-      const preview: { schedule?: NonNullable<typeof suggestion.previewChange>['schedule']; target_num?: number } = {};
+      // Build preview from suggestion - using explicit type for clarity
+      const preview: { schedule?: HabitSchedule; target_num?: number } = {};
       
       if (suggestion.previewChange?.schedule) {
         preview.schedule = suggestion.previewChange.schedule;

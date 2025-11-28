@@ -456,7 +456,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
       // Update local habits state with the updated habit
       if (result.updatedHabit) {
-        setHabits(prev => prev.map(h => h.id === habitId ? result.updatedHabit! : h));
+        const updatedHabit = result.updatedHabit;
+        setHabits(prev => prev.map(h => h.id === habitId ? updatedHabit : h));
       }
 
       // Mark suggestion as applied
