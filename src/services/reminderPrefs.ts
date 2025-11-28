@@ -129,13 +129,17 @@ function normalizeTime(time: string): string {
   if (/^\d{2}:\d{2}:\d{2}$/.test(time)) {
     return time;
   }
-  // If HH:MM format, add :00
+  // If HH:MM format (two-digit hour), add :00
   if (/^\d{2}:\d{2}$/.test(time)) {
     return `${time}:00`;
   }
-  // If single digit hour, pad it
+  // If H:MM format (single-digit hour like "8:00"), pad hour and add seconds
   if (/^\d:\d{2}$/.test(time)) {
     return `0${time}:00`;
+  }
+  // If H:MM:SS format (single-digit hour with seconds), pad hour
+  if (/^\d:\d{2}:\d{2}$/.test(time)) {
+    return `0${time}`;
   }
   return time;
 }

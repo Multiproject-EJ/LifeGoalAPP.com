@@ -381,14 +381,18 @@ Deno.serve(async (req) => {
           const state = stateMap[habit.id];
           const { dayOfWeek } = getLocalTimeInTimezone(prefs.timezone);
 
-          // Check if reminder has valid days configuration
+          // Check if habit has reminders configured and has valid days
           const reminders = habit.habit_reminders || [];
+          
+          // Skip habits with no reminders configured
+          if (reminders.length === 0) continue;
+          
           const hasValidReminder = reminders.some(r => {
             if (!r.days || r.days.length === 0) return true;
             return r.days.includes(dayOfWeek);
           });
 
-          if (!hasValidReminder && reminders.length > 0) continue;
+          if (!hasValidReminder) continue;
 
           // Check idempotency - skip if already sent today
           if (state && wasReminderSentToday(state.last_reminder_sent_at, prefs.timezone)) {
