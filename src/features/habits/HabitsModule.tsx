@@ -199,11 +199,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         const streakData = streaks.find(s => s.habit_id === habit.id);
         
         // Classify the habit's performance
+        // TODO: Implement previousStreak tracking for more accurate underperforming detection
+        // Currently, we only use currentStreak since historical streak data is not stored
         const classificationResult = classifyHabit({
           adherence7: snapshot.window7.percentage,
           adherence30: snapshot.window30.percentage,
           currentStreak: streakData?.current_streak ?? 0,
-          // Note: previousStreak would require historical streak tracking
         });
         
         // Build suggestion based on classification

@@ -33,6 +33,24 @@ export interface HabitAdjustmentRow {
 }
 
 /**
+ * Checks if an error indicates the table doesn't exist.
+ * Used for graceful no-op when the optional table hasn't been created.
+ */
+function isTableNotFoundError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === '42P01' || (error.message?.includes('does not exist') ?? false);
+}
+
+/**
+ * Helper to get untyped access to Supabase client for optional tables.
+ * This allows querying tables that may not exist in the generated types.
+ */
+function getUntypedSupabase() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return getSupabaseClient() as any;
+}
+
+/**
  * Saves a habit suggestion to the habit_adjustments table for auditing.
  * If the table doesn't exist, this function will gracefully no-op.
  * 
@@ -49,7 +67,7 @@ export async function saveHabitSuggestion(
   oldTargetNum?: number | null
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getUntypedSupabase();
     
     const insertPayload = {
       habit_id: habitId,
@@ -65,17 +83,14 @@ export async function saveHabitSuggestion(
       applied: false,
     };
 
-    // Use type assertion since habit_adjustments is an optional table
-    // that may not exist in the generated database types
-    const { error } = await (supabase as unknown as { from: (table: string) => { insert: (data: unknown) => Promise<{ error: { code?: string; message: string } | null }> } })
+    const { error } = await supabase
       .from('habit_adjustments')
       .insert(insertPayload);
 
     if (error) {
-      // Check if error is due to table not existing
-      if (error.code === '42P01' || error.message.includes('does not exist')) {
+      if (isTableNotFoundError(error)) {
         console.warn('habit_adjustments table not found. Skipping persistence.');
-        return { success: true }; // Graceful no-op
+        return { success: true }; // Graceful no-op for missing table
       }
       console.error('Error saving habit suggestion:', error);
       return { success: false, error: error.message };
@@ -83,9 +98,9 @@ export async function saveHabitSuggestion(
 
     return { success: true };
   } catch (err) {
-    // Graceful handling for any unexpected errors
+    // Unexpected errors should be logged and reported
     console.error('Unexpected error in saveHabitSuggestion:', err);
-    return { success: true }; // Graceful no-op
+    return { success: false, error: 'Unexpected error occurred' };
   }
 }
 
@@ -104,7 +119,7 @@ export async function listPendingSuggestions(
   try {
     const supabase = getSupabaseClient();
     
-    // First get the user's habit IDs
+    // First get the user's habit IDs (using typed query)
     const { data: userHabits, error: habitsError } = await supabase
       .from('habits_v2')
       .select('id')
@@ -122,25 +137,9 @@ export async function listPendingSuggestions(
 
     const habitIds = userHabits.map(h => h.id);
 
-    // Use type assertion since habit_adjustments is an optional table
-    type QueryResult = { 
-      data: HabitAdjustmentRow[] | null; 
-      error: { code?: string; message: string } | null 
-    };
-    
-    const { data, error } = await (supabase as unknown as { 
-      from: (table: string) => { 
-        select: (columns: string) => { 
-          in: (column: string, values: string[]) => { 
-            eq: (column: string, value: boolean) => { 
-              order: (column: string, options: { ascending: boolean }) => { 
-                limit: (count: number) => Promise<QueryResult> 
-              } 
-            } 
-          } 
-        } 
-      } 
-    })
+    // Query the optional table using untyped access
+    const untypedSupabase = getUntypedSupabase();
+    const { data, error } = await untypedSupabase
       .from('habit_adjustments')
       .select('*')
       .in('habit_id', habitIds)
@@ -149,8 +148,7 @@ export async function listPendingSuggestions(
       .limit(limit);
 
     if (error) {
-      // Check if error is due to table not existing
-      if (error.code === '42P01' || error.message.includes('does not exist')) {
+      if (isTableNotFoundError(error)) {
         console.warn('habit_adjustments table not found. Returning empty list.');
         return [];
       }
@@ -158,9 +156,9 @@ export async function listPendingSuggestions(
       return [];
     }
 
-    return data ?? [];
+    return (data as HabitAdjustmentRow[]) ?? [];
   } catch (err) {
-    // Graceful handling for any unexpected errors
+    // Unexpected errors should be logged
     console.error('Unexpected error in listPendingSuggestions:', err);
     return [];
   }
@@ -177,25 +175,17 @@ export async function markSuggestionApplied(
   suggestionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getUntypedSupabase();
     
-    // Use type assertion since habit_adjustments is an optional table
-    const { error } = await (supabase as unknown as { 
-      from: (table: string) => { 
-        update: (data: { applied: boolean }) => { 
-          eq: (column: string, value: string) => Promise<{ error: { code?: string; message: string } | null }> 
-        } 
-      } 
-    })
+    const { error } = await supabase
       .from('habit_adjustments')
       .update({ applied: true })
       .eq('id', suggestionId);
 
     if (error) {
-      // Check if error is due to table not existing
-      if (error.code === '42P01' || error.message.includes('does not exist')) {
+      if (isTableNotFoundError(error)) {
         console.warn('habit_adjustments table not found. Skipping update.');
-        return { success: true }; // Graceful no-op
+        return { success: true }; // Graceful no-op for missing table
       }
       console.error('Error marking suggestion applied:', error);
       return { success: false, error: error.message };
@@ -203,8 +193,8 @@ export async function markSuggestionApplied(
 
     return { success: true };
   } catch (err) {
-    // Graceful handling for any unexpected errors
+    // Unexpected errors should be logged and reported
     console.error('Unexpected error in markSuggestionApplied:', err);
-    return { success: true }; // Graceful no-op
+    return { success: false, error: 'Unexpected error occurred' };
   }
 }

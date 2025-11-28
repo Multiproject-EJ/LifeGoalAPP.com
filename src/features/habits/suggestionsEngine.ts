@@ -232,7 +232,7 @@ export function buildAllSuggestions(
     adherence30: number;
     currentStreak: number;
     previousStreak?: number;
-  }) => { classification: string; suggestedAction: SuggestedAction; rationale: string }
+  }) => ClassificationResult
 ): Record<string, HabitSuggestion> {
   const result: Record<string, HabitSuggestion> = {};
 
@@ -251,7 +251,7 @@ export function buildAllSuggestions(
 
     result[habit.id] = buildSuggestion(
       habit,
-      classificationResult as ClassificationResult,
+      classificationResult,
       snapshot
     );
   }
