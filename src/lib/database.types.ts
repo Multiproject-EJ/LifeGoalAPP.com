@@ -975,6 +975,120 @@ export interface Database {
           }
         ];
       };
+      habit_reminder_prefs: {
+        Row: {
+          habit_id: string;
+          enabled: boolean;
+          preferred_time: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          habit_id: string;
+          enabled?: boolean;
+          preferred_time?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          habit_id?: string;
+          enabled?: boolean;
+          preferred_time?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "habit_reminder_prefs_habit_id_fkey";
+            columns: ["habit_id"];
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      reminder_action_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          habit_id: string;
+          action: 'done' | 'snooze' | 'dismiss';
+          payload: Json | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          habit_id: string;
+          action: 'done' | 'snooze' | 'dismiss';
+          payload?: Json | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          habit_id?: string;
+          action?: 'done' | 'snooze' | 'dismiss';
+          payload?: Json | null;
+          created_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_action_logs_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reminder_action_logs_habit_id_fkey";
+            columns: ["habit_id"];
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      reminder_delivery_failures: {
+        Row: {
+          id: string;
+          user_id: string;
+          habit_id: string;
+          endpoint: string;
+          error: string;
+          retry_count: number;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          habit_id: string;
+          endpoint: string;
+          error: string;
+          retry_count?: number;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          habit_id?: string;
+          endpoint?: string;
+          error?: string;
+          retry_count?: number;
+          created_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_delivery_failures_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reminder_delivery_failures_habit_id_fkey";
+            columns: ["habit_id"];
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       v_habit_streaks: {

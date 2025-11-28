@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
-import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences } from '../notifications';
+import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
@@ -191,7 +191,11 @@ export function MyAccountPanel({
 
       <DailyReminderPreferences session={session} />
 
+      <PerHabitReminderPrefs session={session} />
+
       <PushNotificationTestPanel session={session} />
+
+      <ReminderActionDebugPanel session={session} />
 
       <SupabaseConnectionTest 
         session={session} 

@@ -6237,6 +6237,199 @@ body {
   color: #991b1b;
 }
 
+/* Per-Habit Reminder Preferences Styles */
+.per-habit-prefs__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.per-habit-prefs__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  flex-wrap: wrap;
+}
+
+.per-habit-prefs__habit-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+
+.per-habit-prefs__emoji {
+  font-size: 1.25rem;
+}
+
+.per-habit-prefs__title {
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.per-habit-prefs__controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.per-habit-prefs__toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.per-habit-prefs__toggle {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.per-habit-prefs__toggle-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.per-habit-prefs__time-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.per-habit-prefs__time-text {
+  color: #64748b;
+}
+
+.per-habit-prefs__time-input {
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  color: #0f172a;
+  background: white;
+  min-width: 100px;
+}
+
+.per-habit-prefs__time-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Reminder Action Debug Panel Styles */
+.reminder-action-debug__panel {
+  margin-top: 1rem;
+}
+
+.reminder-action-debug__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.reminder-action-debug__count {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.notification-preferences__action--small {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+}
+
+.reminder-action-debug__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.reminder-action-debug__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 0.85rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.reminder-action-debug__habit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.reminder-action-debug__emoji {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.reminder-action-debug__title {
+  font-weight: 500;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.reminder-action-debug__details {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.reminder-action-debug__action {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+}
+
+.reminder-action-debug__action--done {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+
+.reminder-action-debug__action--snooze {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+
+.reminder-action-debug__action--dismiss {
+  background: rgba(148, 163, 184, 0.2);
+  color: #475569;
+}
+
+.reminder-action-debug__time {
+  font-size: 0.8rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
 .mobile-habit-home {
   min-height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 35%, #f8fafc 100%);
