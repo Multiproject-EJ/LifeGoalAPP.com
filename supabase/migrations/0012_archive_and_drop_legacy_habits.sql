@@ -279,7 +279,11 @@ DROP TABLE IF EXISTS public.habit_logs CASCADE;
 -- Drop habits (has foreign key to goals)
 DROP TABLE IF EXISTS public.habits CASCADE;
 
-RAISE NOTICE 'Legacy tables dropped (if they existed).';
+-- Log completion of table drops
+DO $$
+BEGIN
+    RAISE NOTICE 'Legacy tables dropped (if they existed).';
+END $$;
 
 -- ========================================================
 -- Step 6: Clean up helper functions

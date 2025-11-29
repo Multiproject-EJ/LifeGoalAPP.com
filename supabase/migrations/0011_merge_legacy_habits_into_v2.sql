@@ -217,7 +217,7 @@ BEGIN
             legacy_habit.schedule::jsonb
         );
         
-        -- Insert into habits_v2 with ON CONFLICT handling for idempotency
+        -- Insert into habits_v2 (loop already filters unmigrated habits via LEFT JOIN)
         INSERT INTO public.habits_v2 (
             user_id,
             title,
@@ -239,7 +239,7 @@ BEGIN
         )
         RETURNING id INTO new_habit_id;
         
-        -- Record the mapping with ON CONFLICT handling
+        -- Record the mapping with ON CONFLICT for idempotency
         INSERT INTO public.habit_migration_map (old_habit_id, new_habit_v2_id, migration_notes)
         VALUES (legacy_habit.id, new_habit_id, 'Automated migration from legacy habits')
         ON CONFLICT (old_habit_id) DO NOTHING;
