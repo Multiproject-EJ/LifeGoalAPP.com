@@ -6,8 +6,8 @@ import {
   fetchHabitLogsForRange,
   fetchHabitsForUser,
   logHabitCompletion,
-  type HabitWithGoal,
-} from '../../services/habits';
+  type LegacyHabitWithGoal as HabitWithGoal,
+} from '../../compat/legacyHabitsAdapter';
 import {
   getHabitCompletionsByMonth,
   getMonthlyCompletionGrid,

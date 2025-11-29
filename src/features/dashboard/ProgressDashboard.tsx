@@ -5,8 +5,8 @@ import { fetchGoals } from '../../services/goals';
 import {
   fetchHabitLogsForRange,
   fetchHabitsForUser,
-  type HabitWithGoal,
-} from '../../services/habits';
+  type LegacyHabitWithGoal as HabitWithGoal,
+} from '../../compat/legacyHabitsAdapter';
 import { quickAddDailyHabit } from '../../services/habitsV2';
 import type { Database } from '../../lib/database.types';
 import {
