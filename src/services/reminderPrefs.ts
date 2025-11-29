@@ -15,12 +15,18 @@ export type ReminderPrefsPayload = {
   timezone: string;
   windowStart: string;
   windowEnd: string;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
+  skipWeekends: boolean;
 };
 
 const DEFAULT_PREFS: Omit<UserReminderPrefsRow, 'user_id'> = {
   timezone: 'UTC',
   window_start: '08:00:00',
   window_end: '10:00:00',
+  quiet_hours_start: null,
+  quiet_hours_end: null,
+  skip_weekends: false,
   created_at: null,
   updated_at: null,
 };
@@ -91,6 +97,13 @@ export async function updateReminderPrefs(
       timezone: payload.timezone ?? existing.timezone,
       window_start: payload.windowStart ? normalizeTime(payload.windowStart) : existing.window_start,
       window_end: payload.windowEnd ? normalizeTime(payload.windowEnd) : existing.window_end,
+      quiet_hours_start: payload.quietHoursStart !== undefined 
+        ? (payload.quietHoursStart ? normalizeTime(payload.quietHoursStart) : null)
+        : existing.quiet_hours_start,
+      quiet_hours_end: payload.quietHoursEnd !== undefined
+        ? (payload.quietHoursEnd ? normalizeTime(payload.quietHoursEnd) : null)
+        : existing.quiet_hours_end,
+      skip_weekends: payload.skipWeekends !== undefined ? payload.skipWeekends : existing.skip_weekends,
       updated_at: new Date().toISOString(),
     };
     setDemoPrefs(updated);
@@ -110,6 +123,15 @@ export async function updateReminderPrefs(
   }
   if (payload.windowEnd !== undefined) {
     updateData.window_end = normalizeTime(payload.windowEnd);
+  }
+  if (payload.quietHoursStart !== undefined) {
+    updateData.quiet_hours_start = payload.quietHoursStart ? normalizeTime(payload.quietHoursStart) : null;
+  }
+  if (payload.quietHoursEnd !== undefined) {
+    updateData.quiet_hours_end = payload.quietHoursEnd ? normalizeTime(payload.quietHoursEnd) : null;
+  }
+  if (payload.skipWeekends !== undefined) {
+    updateData.skip_weekends = payload.skipWeekends;
   }
 
   const { data, error } = await supabase
@@ -201,3 +223,23 @@ export const COMMON_TIMEZONES = [
   { value: 'Australia/Perth', label: 'Perth' },
   { value: 'Pacific/Auckland', label: 'Auckland' },
 ];
+
+/**
+ * Validate quiet hours - both must be set or both null
+ */
+export function validateQuietHours(
+  start: string | null,
+  end: string | null
+): { valid: boolean; error?: string } {
+  const hasStart = start && start.trim() !== '';
+  const hasEnd = end && end.trim() !== '';
+
+  if (hasStart !== hasEnd) {
+    return {
+      valid: false,
+      error: 'Both quiet hours start and end must be set, or both must be empty.',
+    };
+  }
+
+  return { valid: true };
+}

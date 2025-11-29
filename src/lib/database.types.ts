@@ -923,6 +923,9 @@ export interface Database {
           timezone: string;
           window_start: string;
           window_end: string;
+          quiet_hours_start: string | null;
+          quiet_hours_end: string | null;
+          skip_weekends: boolean;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -931,6 +934,9 @@ export interface Database {
           timezone?: string;
           window_start?: string;
           window_end?: string;
+          quiet_hours_start?: string | null;
+          quiet_hours_end?: string | null;
+          skip_weekends?: boolean;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -939,6 +945,9 @@ export interface Database {
           timezone?: string;
           window_start?: string;
           window_end?: string;
+          quiet_hours_start?: string | null;
+          quiet_hours_end?: string | null;
+          skip_weekends?: boolean;
           created_at?: string | null;
           updated_at?: string | null;
         };

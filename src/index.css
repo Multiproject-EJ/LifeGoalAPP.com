@@ -6181,6 +6181,24 @@ body {
   color: rgba(100, 116, 139, 0.8);
 }
 
+.notification-preferences__divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1rem 0;
+}
+
+.notification-preferences__checkbox-label {
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.notification-preferences__checkbox-label input[type='checkbox'] {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+}
+
 /* Push Notification Test Panel */
 .push-test-panel {
   display: grid;
