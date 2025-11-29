@@ -239,10 +239,10 @@ export function DailyReminderPreferences({ session }: Props) {
                 setStatus(null);
               }}
               disabled={saving}
-              placeholder="Optional"
+              aria-describedby="quiet-hours-start-desc"
             />
           </label>
-          <p>Start of quiet period when no reminders are sent (optional).</p>
+          <p id="quiet-hours-start-desc">Start of quiet period when no reminders are sent (optional).</p>
         </div>
 
         <div className="notification-preferences__control notification-preferences__control--inline">
@@ -256,10 +256,10 @@ export function DailyReminderPreferences({ session }: Props) {
                 setStatus(null);
               }}
               disabled={saving}
-              placeholder="Optional"
+              aria-describedby="quiet-hours-end-desc"
             />
           </label>
-          <p>End of quiet period when no reminders are sent (optional).</p>
+          <p id="quiet-hours-end-desc">End of quiet period when no reminders are sent (optional).</p>
         </div>
 
         <div className="notification-preferences__control notification-preferences__control--inline">

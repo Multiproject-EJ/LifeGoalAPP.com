@@ -254,7 +254,14 @@ Deno.serve(async (req) => {
       }
 
       const body = await req.json();
-      const { timezone, window_start, window_end, quiet_hours_start, quiet_hours_end, skip_weekends } = body;
+      const {
+        timezone,
+        window_start,
+        window_end,
+        quiet_hours_start,
+        quiet_hours_end,
+        skip_weekends,
+      } = body;
 
       // Validate timezone if provided
       if (timezone !== undefined && typeof timezone !== 'string') {
@@ -303,7 +310,16 @@ Deno.serve(async (req) => {
         });
       }
 
-      const updateData: Record<string, string | boolean | null> = { user_id: user.id };
+      interface UpdateData {
+        user_id: string;
+        timezone?: string;
+        window_start?: string;
+        window_end?: string;
+        quiet_hours_start?: string | null;
+        quiet_hours_end?: string | null;
+        skip_weekends?: boolean;
+      }
+      const updateData: UpdateData = { user_id: user.id };
       if (timezone !== undefined) updateData.timezone = timezone;
       if (window_start !== undefined) updateData.window_start = window_start.length === 5 ? `${window_start}:00` : window_start;
       if (window_end !== undefined) updateData.window_end = window_end.length === 5 ? `${window_end}:00` : window_end;
