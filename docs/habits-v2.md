@@ -295,3 +295,69 @@ VITE_ENABLE_HABIT_SUGGESTIONS=1
    - The rationale text is shown in an expandable panel
    - AI-enhanced rationales show an "AI" badge
    - If the API is unavailable, baseline text is displayed without the badge
+
+## System Consolidation
+
+The Habits V2 system is now the **single, unified habit tracking implementation** for the application. Legacy habits systems have been consolidated as follows:
+
+### Migration from Legacy System
+
+If your deployment previously used the legacy `/app/habits` system with `habits`, `habit_logs`, and `habit_alerts` tables:
+
+1. **Run Migration 0011**: `supabase/migrations/0011_merge_legacy_habits_into_v2.sql`
+   - Migrates all legacy habit data to V2 tables
+   - Creates mapping between old and new habit IDs
+   - Translates alert settings to reminder preferences
+
+2. **Enable Read-Only Mode**: After verification, enable read-only lock on legacy tables for a shadow period
+
+3. **Run Migration 0012**: `supabase/migrations/0012_archive_and_drop_legacy_habits.sql`
+   - Archives and removes legacy tables
+
+See [docs/MERGE_HABITS_SYSTEMS.md](MERGE_HABITS_SYSTEMS.md) for detailed migration steps.
+
+### Compatibility Adapters
+
+For code that still uses legacy service signatures during transition:
+
+```typescript
+// Instead of:
+import { fetchHabitsForUser } from '../services/habits';
+
+// Use the compatibility adapter:
+import { fetchHabitsForUser } from '../compat/legacyHabitsAdapter';
+
+// Or migrate to V2 directly (recommended):
+import { listHabitsV2 } from '../services/habitsV2';
+```
+
+Adapters available:
+- `src/compat/legacyHabitsAdapter.ts` - Wraps legacy habits.ts functions
+- `src/compat/legacyAlertsAdapter.ts` - Wraps legacy habitAlerts.ts functions
+
+**Note:** These adapters are deprecated and will be removed in a future release. Migrate to V2 services directly when possible.
+
+### UnifiedTodayView Component
+
+For embedding the Today checklist in other views:
+
+```tsx
+import { UnifiedTodayView } from '../features/habits/UnifiedTodayView';
+
+// Full variant (default)
+<UnifiedTodayView session={session} />
+
+// Compact variant for sidebars
+<UnifiedTodayView session={session} variant="compact" />
+
+// Minimal variant for widgets
+<UnifiedTodayView 
+  session={session} 
+  variant="minimal" 
+  maxHabitsInMinimal={3} 
+/>
+```
+
+### CI Guardrails
+
+The `.github/workflows/legacy-refs-check.yml` workflow prevents accidental reintroduction of legacy table references after migration is complete
