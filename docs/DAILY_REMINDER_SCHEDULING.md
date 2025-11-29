@@ -455,7 +455,53 @@ After testing, verify that:
 | Window crosses midnight | Reminder sent if inside window |
 | Quiet hours overlap with window partially | Reminders blocked during overlap |
 
+## System Consolidation Note
+
+The reminder system now operates **exclusively with Habits V2** (`habits_v2` table). The legacy `habit_alerts` table has been consolidated:
+
+### Migration from Legacy Alerts
+
+If your deployment previously used `habit_alerts`:
+
+1. Run migration 0011 which translates `habit_alerts` → `habit_reminder_prefs`
+2. Legacy `alert_time` → V2 `preferred_time`
+3. Legacy `enabled` → V2 `enabled`
+4. Legacy `days_of_week` → Embedded in habit's V2 schedule JSON
+
+### Updated Architecture
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Browser/PWA   │────▶│  Edge Function   │────▶│  Push Service   │
+│  (Per-Habit     │◀────│ (send-reminders) │◀────│  (FCM/APNs)     │
+│   Preferences)  │     │                  │     │                 │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+                               │
+                               ▼
+                        ┌──────────────────┐
+                        │    Supabase      │
+                        │  - habits_v2     │
+                        │  - habit_reminder│
+                        │    _prefs        │
+                        │  - user_reminder │
+                        │    _prefs        │
+                        └──────────────────┘
+```
+
+### Service Updates
+
+| Legacy Service | V2 Service |
+|----------------|------------|
+| `habitAlerts.ts` | `habitReminderPrefs.ts` |
+| `fetchHabitAlerts()` | `fetchHabitReminderPrefs()` |
+| `upsertHabitAlert()` | `updateHabitReminderPref()` |
+
+For temporary compatibility, use `src/compat/legacyAlertsAdapter.ts`.
+
+See [docs/MERGE_HABITS_SYSTEMS.md](MERGE_HABITS_SYSTEMS.md) for full migration guide.
+
 ## Related Documentation
 
 - [WEB_PUSH_REMINDERS.md](./WEB_PUSH_REMINDERS.md) - Web Push setup
 - [NOTIFICATIONS_QUICK_START.md](../NOTIFICATIONS_QUICK_START.md) - Quick start guide
+- [MERGE_HABITS_SYSTEMS.md](MERGE_HABITS_SYSTEMS.md) - System consolidation guide

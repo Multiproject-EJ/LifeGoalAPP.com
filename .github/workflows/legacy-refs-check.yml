@@ -1,0 +1,187 @@
+name: Legacy Habits References Check
+
+# This workflow prevents accidental reintroduction of legacy habit table references
+# in the codebase after the v2 migration has been completed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check-legacy-refs:
+    name: Check for Legacy Habit References
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for legacy habits table references
+        run: |
+          echo "🔍 Scanning for legacy habits table references..."
+          
+          # Define patterns to search for (case-insensitive)
+          # These patterns detect direct references to legacy tables
+          PATTERNS=(
+            "from.*['\"\`]habits['\"\`]"
+            "\.from\(['\"\`]habits['\"\`]\)"
+            "\.from\('habits'\)"
+            'from\("habits"\)'
+            "into.*['\"\`]habits['\"\`]"
+            "update.*['\"\`]habits['\"\`]"
+            "delete.*from.*['\"\`]habits['\"\`]"
+            "Tables\['habits'\]"
+            "Tables\[\"habits\"\]"
+            "habit_logs['\"\`](?!_v2)"
+            "habit_alerts['\"\`]"
+          )
+          
+          # Files/directories to exclude from scanning
+          EXCLUDES=(
+            "supabase/migrations/*"
+            "docs/*"
+            ".github/workflows/legacy-refs-check.yml"
+            "*.md"
+            "*.sql"
+            "src/compat/*"
+            "src/lib/database.types.ts"
+            "node_modules/*"
+            "dist/*"
+          )
+          
+          # Build exclude arguments
+          EXCLUDE_ARGS=""
+          for exclude in "${EXCLUDES[@]}"; do
+            EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=$exclude"
+          done
+          
+          # Track if any violations found
+          FOUND_VIOLATIONS=0
+          
+          for pattern in "${PATTERNS[@]}"; do
+            echo "  Checking pattern: $pattern"
+            
+            # Use grep to find matches, excluding specified paths
+            if grep -riE $EXCLUDE_ARGS "$pattern" --include="*.ts" --include="*.tsx" --include="*.js" . 2>/dev/null; then
+              echo ""
+              echo "⚠️  Found potential legacy reference with pattern: $pattern"
+              FOUND_VIOLATIONS=1
+            fi
+          done
+          
+          # Additional specific checks for common patterns
+          echo ""
+          echo "🔍 Running additional specific checks..."
+          
+          # Check for direct Supabase queries to legacy tables in TypeScript files
+          if grep -rE "supabase\s*\.\s*from\s*\(\s*['\"]habits['\"]" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules \
+            --exclude-dir=dist \
+            --exclude-dir=supabase \
+            --exclude="**/compat/**" \
+            . 2>/dev/null; then
+            echo "⚠️  Found direct Supabase query to legacy 'habits' table"
+            FOUND_VIOLATIONS=1
+          fi
+          
+          if grep -rE "supabase\s*\.\s*from\s*\(\s*['\"]habit_logs['\"]" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules \
+            --exclude-dir=dist \
+            --exclude-dir=supabase \
+            --exclude="**/compat/**" \
+            . 2>/dev/null; then
+            echo "⚠️  Found direct Supabase query to legacy 'habit_logs' table"
+            FOUND_VIOLATIONS=1
+          fi
+          
+          if grep -rE "supabase\s*\.\s*from\s*\(\s*['\"]habit_alerts['\"]" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules \
+            --exclude-dir=dist \
+            --exclude-dir=supabase \
+            --exclude="**/compat/**" \
+            . 2>/dev/null; then
+            echo "⚠️  Found direct Supabase query to legacy 'habit_alerts' table"
+            FOUND_VIOLATIONS=1
+          fi
+          
+          echo ""
+          
+          if [ $FOUND_VIOLATIONS -eq 1 ]; then
+            echo "❌ FAILED: Found references to legacy habits tables!"
+            echo ""
+            echo "📋 Migration Guide:"
+            echo "   - Replace 'habits' with 'habits_v2'"
+            echo "   - Replace 'habit_logs' with 'habit_logs_v2'"
+            echo "   - Replace 'habit_alerts' with 'habit_reminder_prefs'"
+            echo "   - Use src/services/habitsV2.ts instead of src/services/habits.ts"
+            echo "   - Use src/services/habitReminderPrefs.ts instead of src/services/habitAlerts.ts"
+            echo ""
+            echo "📖 For temporary compatibility, use adapters in src/compat/"
+            echo ""
+            exit 1
+          else
+            echo "✅ PASSED: No legacy habits table references found in source code"
+          fi
+
+      - name: Check for deprecated service imports
+        run: |
+          echo "🔍 Checking for deprecated service imports..."
+          
+          # Check for imports from legacy services (excluding compat adapters)
+          LEGACY_IMPORTS_FOUND=0
+          
+          # Search for direct imports of legacy habits.ts (not habitsV2.ts)
+          if grep -rE "from ['\"].*services/habits['\"]" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules \
+            --exclude-dir=dist \
+            --exclude="**/compat/**" \
+            . 2>/dev/null | grep -v "habitsV2" | grep -v "habitAlerts" | grep -v "habitAdjustments" | grep -v "habitMonthlyQueries" | grep -v "habitReminderPrefs" | grep -v "habitAlertUtils" | grep -v "habitAlertNotifications"; then
+            echo "⚠️  Found direct import from legacy habits.ts service"
+            LEGACY_IMPORTS_FOUND=1
+          fi
+          
+          # Search for imports from habitAlerts.ts (should use habitReminderPrefs.ts)
+          if grep -rE "from ['\"].*services/habitAlerts['\"]" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules \
+            --exclude-dir=dist \
+            --exclude="**/compat/**" \
+            . 2>/dev/null; then
+            echo "⚠️  Found direct import from legacy habitAlerts.ts service"
+            LEGACY_IMPORTS_FOUND=1
+          fi
+          
+          echo ""
+          
+          if [ $LEGACY_IMPORTS_FOUND -eq 1 ]; then
+            echo "❌ FAILED: Found imports from deprecated services!"
+            echo ""
+            echo "📋 Migration Guide:"
+            echo "   - Replace imports from 'services/habits' with 'services/habitsV2'"
+            echo "   - Replace imports from 'services/habitAlerts' with 'services/habitReminderPrefs'"
+            echo "   - Or use compatibility adapters from 'src/compat/' during transition"
+            echo ""
+            exit 1
+          else
+            echo "✅ PASSED: No deprecated service imports found"
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          echo "  Legacy Habits References Check Complete"
+          echo "═══════════════════════════════════════════════════════"
+          echo ""
+          echo "This check ensures that the codebase uses the unified"
+          echo "Habits V2 system exclusively, preventing accidental"
+          echo "regression to legacy tables."
+          echo ""
+          echo "Documentation: docs/MERGE_HABITS_SYSTEMS.md"
+          echo ""
