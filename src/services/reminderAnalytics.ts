@@ -28,10 +28,6 @@ export type ReminderAnalyticsDaily = {
   dismiss: number;
 };
 
-// Demo mode storage keys
-const DEMO_ANALYTICS_SUMMARY_KEY = 'demo_reminder_analytics_summary';
-const DEMO_ANALYTICS_DAILY_KEY = 'demo_reminder_analytics_daily';
-
 function getDemoSummary(rangeDays: number): ReminderAnalyticsSummary {
   return {
     rangeDays,
