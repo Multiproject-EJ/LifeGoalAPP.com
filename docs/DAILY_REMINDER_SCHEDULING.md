@@ -8,6 +8,8 @@ The daily reminder scheduling system sends push notifications for habits within 
 
 - **Per-user timezone preferences**: Users can set their local timezone for accurate scheduling
 - **Customizable reminder windows**: Define start and end times for daily reminders
+- **Quiet hours**: Define periods when no reminders should be sent (supports overnight ranges like 22:00–06:00)
+- **Weekend skip**: Optionally disable reminders on Saturday and Sunday
 - **Idempotent delivery**: Prevents duplicate reminders - each habit is reminded at most once per day
 - **Snooze support**: Temporarily delay reminders for specific habits
 
@@ -42,6 +44,9 @@ Stores per-user timezone and reminder window preferences.
 | timezone | TEXT | User's timezone (e.g., 'America/New_York') |
 | window_start | TIME | Start of daily reminder window (default: 08:00:00) |
 | window_end | TIME | End of daily reminder window (default: 10:00:00) |
+| quiet_hours_start | TIME | Start of quiet period (null if not set) |
+| quiet_hours_end | TIME | End of quiet period (null if not set) |
+| skip_weekends | BOOLEAN | When true, skip reminders on Sat/Sun (default: false) |
 | created_at | TIMESTAMPTZ | Record creation timestamp |
 | updated_at | TIMESTAMPTZ | Last update timestamp |
 
@@ -73,6 +78,9 @@ Returns the current user's reminder preferences.
   "timezone": "America/New_York",
   "window_start": "08:00:00",
   "window_end": "10:00:00",
+  "quiet_hours_start": "22:00:00",
+  "quiet_hours_end": "06:00:00",
+  "skip_weekends": false,
   "created_at": "2024-01-01T00:00:00Z",
   "updated_at": "2024-01-01T00:00:00Z"
 }
@@ -91,11 +99,15 @@ Update the current user's reminder preferences.
 {
   "timezone": "America/Los_Angeles",
   "window_start": "09:00",
-  "window_end": "11:00"
+  "window_end": "11:00",
+  "quiet_hours_start": "22:00",
+  "quiet_hours_end": "06:00",
+  "skip_weekends": true
 }
 ```
 
 All fields are optional. Only provided fields will be updated.
+Note: `quiet_hours_start` and `quiet_hours_end` must both be set or both be null.
 
 **Response:**
 ```json
@@ -104,6 +116,9 @@ All fields are optional. Only provided fields will be updated.
   "timezone": "America/Los_Angeles",
   "window_start": "09:00:00",
   "window_end": "11:00:00",
+  "quiet_hours_start": "22:00:00",
+  "quiet_hours_end": "06:00:00",
+  "skip_weekends": true,
   "created_at": "2024-01-01T00:00:00Z",
   "updated_at": "2024-01-02T00:00:00Z"
 }
@@ -116,10 +131,12 @@ Triggers the daily reminder scheduler. This endpoint is designed to be called pe
 **Flow:**
 1. Queries all users with push subscriptions
 2. Filters users whose local time is within their reminder window
-3. Queries active habits for eligible users
-4. Filters out habits that were already reminded today (idempotency)
-5. Filters out snoozed habits
-6. Sends push notifications
+3. **NEW**: Filters out users with skip_weekends=true on Saturday/Sunday
+4. **NEW**: Filters out users currently within their quiet hours
+5. Queries active habits for eligible users
+6. Filters out habits that were already reminded today (idempotency)
+7. Filters out snoozed habits
+8. Sends push notifications
 7. Updates reminder state to prevent duplicates
 
 **Response:**
@@ -340,6 +357,103 @@ The `recordHabitCompletion` function in `src/services/habitsV2.ts` provides the 
 const { data, error } = await recordHabitCompletion(habitId, userId);
 // data: { completed: true, wasAlreadyCompleted: boolean }
 ```
+
+## Timezone Conversion Approach
+
+The system uses the native `Intl.DateTimeFormat` API for robust timezone conversion, which:
+
+- Automatically handles daylight saving time (DST) transitions
+- Works with any valid IANA timezone identifier
+- Provides accurate local time calculation on the server
+
+### How it Works
+
+```typescript
+function getLocalTimeInTimezone(timezone: string) {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    hour: 'numeric',
+    minute: 'numeric',
+    weekday: 'short',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  // Extract hours, minutes, and day of week
+}
+```
+
+### DST Handling
+
+When a user is in a timezone that observes DST:
+- During the spring forward transition, the hour 2:00-2:59 AM doesn't exist
+- During the fall back transition, the hour 1:00-1:59 AM occurs twice
+- The `Intl` API handles these edge cases correctly by returning the actual local time
+
+## Quiet Hours Behavior
+
+Quiet hours define a period during which no reminders will be sent.
+
+### Normal Range (e.g., 09:00–17:00)
+
+Reminders are blocked when: `start <= current_time < end`
+
+### Overnight Range (e.g., 22:00–06:00)
+
+Overnight ranges (where start > end) are fully supported:
+- Reminders are blocked when: `current_time >= start` OR `current_time < end`
+- Example: 22:00–06:00 blocks reminders from 10 PM to 6 AM
+
+### Clearing Quiet Hours
+
+Set both `quiet_hours_start` and `quiet_hours_end` to `null` to disable quiet hours.
+
+## Weekend Skip Rules
+
+When `skip_weekends` is enabled:
+- No reminders are sent on Saturday (day 6) or Sunday (day 0)
+- The check uses the user's local timezone to determine the day
+
+## Testing Guidance
+
+### Simulating CRON Across Boundaries
+
+1. **Test timezone conversion**:
+   - Create users in different timezones
+   - Trigger the CRON endpoint
+   - Verify only users in their window receive reminders
+
+2. **Test quiet hours**:
+   - Set quiet hours for a user (e.g., 22:00–06:00)
+   - Test at times inside and outside quiet hours
+   - Verify reminders are blocked during quiet hours
+
+3. **Test overnight quiet hours**:
+   - Configure overnight range (start > end)
+   - Test at 23:00 (should be blocked)
+   - Test at 05:00 (should be blocked)
+   - Test at 07:00 (should send)
+
+4. **Test weekend skip**:
+   - Enable `skip_weekends` for a user
+   - Test on Saturday/Sunday (should be skipped)
+   - Test on weekdays (should send normally)
+
+### Verifying Analytics
+
+After testing, verify that:
+- Analytics send counts reflect the quiet hours filtering
+- Weekend skips reduce the expected send count appropriately
+
+### Edge Cases to Test
+
+| Scenario | Expected Behavior |
+|----------|-------------------|
+| DST spring forward (2:00 AM doesn't exist) | System uses actual local time |
+| DST fall back (2:00 AM occurs twice) | System uses the standard time |
+| Quiet hours same as window (e.g., 08:00–10:00) | No reminders sent |
+| Window crosses midnight | Reminder sent if inside window |
+| Quiet hours overlap with window partially | Reminders blocked during overlap |
 
 ## Related Documentation
 

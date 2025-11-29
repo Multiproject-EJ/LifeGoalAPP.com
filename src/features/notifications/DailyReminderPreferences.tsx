@@ -6,6 +6,7 @@ import {
   formatTimeForDisplay,
   getDetectedTimezone,
   isValidTimezone,
+  validateQuietHours,
   COMMON_TIMEZONES,
   type UserReminderPrefsRow,
 } from '../../services/reminderPrefs';
@@ -30,6 +31,9 @@ export function DailyReminderPreferences({ session }: Props) {
   const [timezone, setTimezone] = useState(detectedTimezone);
   const [windowStart, setWindowStart] = useState('08:00');
   const [windowEnd, setWindowEnd] = useState('10:00');
+  const [quietHoursStart, setQuietHoursStart] = useState('');
+  const [quietHoursEnd, setQuietHoursEnd] = useState('');
+  const [skipWeekends, setSkipWeekends] = useState(false);
 
   // Load preferences
   useEffect(() => {
@@ -49,6 +53,9 @@ export function DailyReminderPreferences({ session }: Props) {
           setTimezone(data.timezone || detectedTimezone);
           setWindowStart(formatTimeForDisplay(data.window_start));
           setWindowEnd(formatTimeForDisplay(data.window_end));
+          setQuietHoursStart(data.quiet_hours_start ? formatTimeForDisplay(data.quiet_hours_start) : '');
+          setQuietHoursEnd(data.quiet_hours_end ? formatTimeForDisplay(data.quiet_hours_end) : '');
+          setSkipWeekends(data.skip_weekends ?? false);
         }
       })
       .finally(() => {
@@ -73,6 +80,13 @@ export function DailyReminderPreferences({ session }: Props) {
       return;
     }
 
+    // Validate quiet hours
+    const quietHoursValidation = validateQuietHours(quietHoursStart, quietHoursEnd);
+    if (!quietHoursValidation.valid) {
+      setStatus({ kind: 'error', message: quietHoursValidation.error! });
+      return;
+    }
+
     setSaving(true);
     setStatus(null);
 
@@ -80,6 +94,9 @@ export function DailyReminderPreferences({ session }: Props) {
       timezone,
       windowStart,
       windowEnd,
+      quietHoursStart: quietHoursStart.trim() || null,
+      quietHoursEnd: quietHoursEnd.trim() || null,
+      skipWeekends,
     });
 
     setSaving(false);
@@ -202,6 +219,63 @@ export function DailyReminderPreferences({ session }: Props) {
             />
           </label>
           <p>Latest time to receive daily reminders.</p>
+        </div>
+
+        <hr className="notification-preferences__divider" />
+
+        <p className="account-panel__hint">
+          <strong>Quiet Hours & Weekend Skip</strong>: Reminders are sent only within your window and outside quiet hours.
+          Overnight quiet hours (e.g., 22:00–06:00) are supported.
+        </p>
+
+        <div className="notification-preferences__control notification-preferences__control--inline">
+          <label className="notification-preferences__inline">
+            Quiet Hours Start
+            <input
+              type="time"
+              value={quietHoursStart}
+              onChange={(e) => {
+                setQuietHoursStart(e.target.value);
+                setStatus(null);
+              }}
+              disabled={saving}
+              aria-describedby="quiet-hours-start-desc"
+            />
+          </label>
+          <p id="quiet-hours-start-desc">Start of quiet period when no reminders are sent (optional).</p>
+        </div>
+
+        <div className="notification-preferences__control notification-preferences__control--inline">
+          <label className="notification-preferences__inline">
+            Quiet Hours End
+            <input
+              type="time"
+              value={quietHoursEnd}
+              onChange={(e) => {
+                setQuietHoursEnd(e.target.value);
+                setStatus(null);
+              }}
+              disabled={saving}
+              aria-describedby="quiet-hours-end-desc"
+            />
+          </label>
+          <p id="quiet-hours-end-desc">End of quiet period when no reminders are sent (optional).</p>
+        </div>
+
+        <div className="notification-preferences__control notification-preferences__control--inline">
+          <label className="notification-preferences__inline notification-preferences__checkbox-label">
+            <input
+              type="checkbox"
+              checked={skipWeekends}
+              onChange={(e) => {
+                setSkipWeekends(e.target.checked);
+                setStatus(null);
+              }}
+              disabled={saving}
+            />
+            Skip weekends
+          </label>
+          <p>When enabled, reminders will not be sent on Saturday or Sunday.</p>
         </div>
 
         <button

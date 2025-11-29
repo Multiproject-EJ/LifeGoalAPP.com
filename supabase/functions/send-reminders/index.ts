@@ -45,6 +45,7 @@ function getLocalTimeInTimezone(timezone: string): { hours: number; minutes: num
 }
 
 // Helper: Check if current time is within a window
+// Note: Uses inclusive boundaries (current <= end) so reminders can be sent AT the window_end time
 function isTimeInWindow(
   hours: number,
   minutes: number,
@@ -63,6 +64,46 @@ function isTimeInWindow(
     // Window crosses midnight
     return current >= start || current <= end;
   }
+}
+
+/**
+ * Helper: Check if current time is within quiet hours
+ * Supports overnight ranges (e.g., 22:00 to 06:00) where start > end
+ * Note: Uses exclusive end boundary (current < end) so reminders CAN be sent AT the quiet_hours_end time
+ * @returns true if within quiet hours (should NOT send reminders)
+ */
+function isWithinQuietHours(
+  hours: number,
+  minutes: number,
+  quietHoursStart: string | null,
+  quietHoursEnd: string | null
+): boolean {
+  // If quiet hours are not configured, not in quiet hours
+  if (!quietHoursStart || !quietHoursEnd) {
+    return false;
+  }
+
+  const [startH, startM] = quietHoursStart.split(':').map(Number);
+  const [endH, endM] = quietHoursEnd.split(':').map(Number);
+  const current = hours * 60 + minutes;
+  const start = startH * 60 + startM;
+  const end = endH * 60 + endM;
+
+  if (start <= end) {
+    // Normal range (e.g., 09:00 to 17:00)
+    return current >= start && current < end;
+  } else {
+    // Overnight range (e.g., 22:00 to 06:00)
+    // Within quiet hours if current >= start OR current < end
+    return current >= start || current < end;
+  }
+}
+
+/**
+ * Helper: Check if day is a weekend (Saturday=6 or Sunday=0)
+ */
+function isWeekend(dayOfWeek: number): boolean {
+  return dayOfWeek === 0 || dayOfWeek === 6;
 }
 
 // Helper: Check if current time is at or after preferred_time
@@ -190,6 +231,9 @@ Deno.serve(async (req) => {
         timezone: 'UTC',
         window_start: '08:00:00',
         window_end: '10:00:00',
+        quiet_hours_start: null,
+        quiet_hours_end: null,
+        skip_weekends: false,
         created_at: null,
         updated_at: null,
       };
@@ -210,7 +254,14 @@ Deno.serve(async (req) => {
       }
 
       const body = await req.json();
-      const { timezone, window_start, window_end } = body;
+      const {
+        timezone,
+        window_start,
+        window_end,
+        quiet_hours_start,
+        quiet_hours_end,
+        skip_weekends,
+      } = body;
 
       // Validate timezone if provided
       if (timezone !== undefined && typeof timezone !== 'string') {
@@ -235,10 +286,50 @@ Deno.serve(async (req) => {
         });
       }
 
-      const updateData: Record<string, string> = { user_id: user.id };
+      // Validate quiet hours format if provided (allow null to clear)
+      if (quiet_hours_start !== undefined && quiet_hours_start !== null && !timeRegex.test(quiet_hours_start)) {
+        return new Response(JSON.stringify({ error: 'Invalid quiet_hours_start format. Use HH:MM or HH:MM:SS' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (quiet_hours_end !== undefined && quiet_hours_end !== null && !timeRegex.test(quiet_hours_end)) {
+        return new Response(JSON.stringify({ error: 'Invalid quiet_hours_end format. Use HH:MM or HH:MM:SS' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Validate quiet hours: both must be provided or both null
+      const hasQuietStart = quiet_hours_start !== undefined && quiet_hours_start !== null;
+      const hasQuietEnd = quiet_hours_end !== undefined && quiet_hours_end !== null;
+      if (hasQuietStart !== hasQuietEnd) {
+        return new Response(JSON.stringify({ error: 'Both quiet_hours_start and quiet_hours_end must be set, or both must be null' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      interface UpdateData {
+        user_id: string;
+        timezone?: string;
+        window_start?: string;
+        window_end?: string;
+        quiet_hours_start?: string | null;
+        quiet_hours_end?: string | null;
+        skip_weekends?: boolean;
+      }
+      const updateData: UpdateData = { user_id: user.id };
       if (timezone !== undefined) updateData.timezone = timezone;
       if (window_start !== undefined) updateData.window_start = window_start.length === 5 ? `${window_start}:00` : window_start;
       if (window_end !== undefined) updateData.window_end = window_end.length === 5 ? `${window_end}:00` : window_end;
+      if (quiet_hours_start !== undefined) {
+        updateData.quiet_hours_start = quiet_hours_start === null ? null : (quiet_hours_start.length === 5 ? `${quiet_hours_start}:00` : quiet_hours_start);
+      }
+      if (quiet_hours_end !== undefined) {
+        updateData.quiet_hours_end = quiet_hours_end === null ? null : (quiet_hours_end.length === 5 ? `${quiet_hours_end}:00` : quiet_hours_end);
+      }
+      if (skip_weekends !== undefined) updateData.skip_weekends = Boolean(skip_weekends);
 
       const { data: updatedPrefs, error: updateError } = await supabase
         .from('user_reminder_prefs')
@@ -599,27 +690,54 @@ Deno.serve(async (req) => {
         if (prefsError) throw prefsError;
 
         // Build prefs map with defaults
-        const prefsMap: Record<string, { timezone: string; window_start: string; window_end: string }> = {};
+        const prefsMap: Record<string, { 
+          timezone: string; 
+          window_start: string; 
+          window_end: string;
+          quiet_hours_start: string | null;
+          quiet_hours_end: string | null;
+          skip_weekends: boolean;
+        }> = {};
         for (const userId of userIds) {
           const userPrefs = allPrefs?.find(p => p.user_id === userId);
           prefsMap[userId] = {
             timezone: userPrefs?.timezone || 'UTC',
             window_start: userPrefs?.window_start || '08:00:00',
             window_end: userPrefs?.window_end || '10:00:00',
+            quiet_hours_start: userPrefs?.quiet_hours_start || null,
+            quiet_hours_end: userPrefs?.quiet_hours_end || null,
+            skip_weekends: userPrefs?.skip_weekends ?? false,
           };
         }
 
         // Filter users whose current local time is within their reminder window
+        // and not in quiet hours, and not on weekend if skip_weekends is enabled
         const eligibleUsers: string[] = [];
         const userLocalTime: Record<string, { hours: number; minutes: number; dayOfWeek: number }> = {};
         for (const userId of userIds) {
           const prefs = prefsMap[userId];
           const localTime = getLocalTimeInTimezone(prefs.timezone);
           userLocalTime[userId] = localTime;
-          if (isTimeInWindow(localTime.hours, localTime.minutes, prefs.window_start, prefs.window_end)) {
-            eligibleUsers.push(userId);
-            console.log(`User ${userId} eligible: ${localTime.hours}:${localTime.minutes} in ${prefs.timezone} within ${prefs.window_start}-${prefs.window_end}`);
+          
+          // Check if weekend skip is enabled and it's a weekend
+          if (prefs.skip_weekends && isWeekend(localTime.dayOfWeek)) {
+            console.log(`User ${userId} skipped: skip_weekends enabled and day is ${localTime.dayOfWeek}`);
+            continue;
           }
+          
+          // Check if within reminder window
+          if (!isTimeInWindow(localTime.hours, localTime.minutes, prefs.window_start, prefs.window_end)) {
+            continue;
+          }
+          
+          // Check if within quiet hours
+          if (isWithinQuietHours(localTime.hours, localTime.minutes, prefs.quiet_hours_start, prefs.quiet_hours_end)) {
+            console.log(`User ${userId} skipped: within quiet hours ${prefs.quiet_hours_start}-${prefs.quiet_hours_end}`);
+            continue;
+          }
+          
+          eligibleUsers.push(userId);
+          console.log(`User ${userId} eligible: ${localTime.hours}:${localTime.minutes} in ${prefs.timezone} within ${prefs.window_start}-${prefs.window_end}`);
         }
 
         if (eligibleUsers.length === 0) {
