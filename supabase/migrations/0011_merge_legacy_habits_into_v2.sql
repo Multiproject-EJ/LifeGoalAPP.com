@@ -5,6 +5,9 @@
 -- Purpose: Consolidate the two habit systems into a single,
 -- React-based Habits V2 implementation without loss of functionality,
 -- preserving historical data and Today checklist UX in the PWA.
+--
+-- HARDENED: This migration is resilient to missing legacy tables.
+-- It will run successfully whether or not legacy tables exist.
 -- ========================================================
 
 -- Step 1: Create migration map table to track old→new habit ID mappings
@@ -24,17 +27,46 @@ CREATE INDEX IF NOT EXISTS idx_habit_migration_map_new_id
 -- RLS for migration map (admin-only access typically)
 ALTER TABLE public.habit_migration_map ENABLE ROW LEVEL SECURITY;
 
--- Allow authenticated users to read their own migration mappings
-DROP POLICY IF EXISTS "users_view_own_migrations" ON public.habit_migration_map;
-CREATE POLICY "users_view_own_migrations" ON public.habit_migration_map
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM public.habits h
-            JOIN public.goals g ON h.goal_id = g.id
-            WHERE h.id = habit_migration_map.old_habit_id 
-            AND g.user_id = auth.uid()
-        )
-    );
+-- Conditionally create the RLS policy only if public.habits table exists
+-- If legacy habits table is absent, create a fallback policy
+DO $$
+BEGIN
+    -- Drop any existing policy first
+    DROP POLICY IF EXISTS "users_view_own_migrations" ON public.habit_migration_map;
+    
+    -- Check if public.habits table exists
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'habits'
+    ) THEN
+        -- Legacy table exists: create policy that references it
+        EXECUTE '
+            CREATE POLICY "users_view_own_migrations" ON public.habit_migration_map
+                FOR SELECT USING (
+                    EXISTS (
+                        SELECT 1 FROM public.habits h
+                        JOIN public.goals g ON h.goal_id = g.id
+                        WHERE h.id = habit_migration_map.old_habit_id 
+                        AND g.user_id = auth.uid()
+                    )
+                )
+        ';
+        RAISE NOTICE 'Created migration_map policy using legacy habits table.';
+    ELSE
+        -- Legacy table does not exist: create fallback policy via habits_v2
+        EXECUTE '
+            CREATE POLICY "users_view_own_migrations" ON public.habit_migration_map
+                FOR SELECT USING (
+                    EXISTS (
+                        SELECT 1 FROM public.habits_v2 h
+                        WHERE h.id = habit_migration_map.new_habit_v2_id 
+                        AND h.user_id = auth.uid()
+                    )
+                )
+        ';
+        RAISE NOTICE 'Legacy habits table absent. Created fallback migration_map policy using habits_v2.';
+    END IF;
+END $$;
 
 -- ========================================================
 -- Step 2: Migrate habits from public.habits → habits_v2
@@ -44,6 +76,8 @@ CREATE POLICY "users_view_own_migrations" ON public.habit_migration_map
 --   habits.frequency → used to derive schedule mode
 --   habits.schedule → habits_v2.schedule (transformed)
 --   type defaults to 'boolean' for legacy habits
+--
+-- GUARDED: Only runs if public.habits table exists
 -- ========================================================
 
 -- Function to convert legacy schedule JSON to v2 format
@@ -140,14 +174,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Perform the migration (only for habits not already migrated)
+-- Perform the migration (only if legacy habits table exists)
 DO $$
 DECLARE
     legacy_habit RECORD;
     new_habit_id uuid;
     user_id_for_habit uuid;
     v2_schedule jsonb;
+    habits_exist boolean;
 BEGIN
+    -- Check if public.habits table exists
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'habits'
+    ) INTO habits_exist;
+    
+    IF NOT habits_exist THEN
+        RAISE NOTICE 'SKIP: Legacy public.habits table does not exist. No habits migration needed.';
+        RETURN;
+    END IF;
+    
     -- Iterate through each legacy habit that hasn't been migrated
     FOR legacy_habit IN 
         SELECT h.id, h.goal_id, h.name, h.frequency, h.schedule
@@ -171,7 +217,7 @@ BEGIN
             legacy_habit.schedule::jsonb
         );
         
-        -- Insert into habits_v2
+        -- Insert into habits_v2 with ON CONFLICT handling for idempotency
         INSERT INTO public.habits_v2 (
             user_id,
             title,
@@ -193,11 +239,14 @@ BEGIN
         )
         RETURNING id INTO new_habit_id;
         
-        -- Record the mapping
+        -- Record the mapping with ON CONFLICT handling
         INSERT INTO public.habit_migration_map (old_habit_id, new_habit_v2_id, migration_notes)
-        VALUES (legacy_habit.id, new_habit_id, 'Automated migration from legacy habits');
+        VALUES (legacy_habit.id, new_habit_id, 'Automated migration from legacy habits')
+        ON CONFLICT (old_habit_id) DO NOTHING;
         
     END LOOP;
+    
+    RAISE NOTICE 'Legacy habits migration completed successfully.';
 END $$;
 
 -- ========================================================
@@ -207,6 +256,8 @@ END $$;
 --   habit_logs.date → habit_logs_v2.date
 --   habit_logs.completed → habit_logs_v2.done
 --   value defaults to NULL (boolean logs)
+--
+-- GUARDED: Only runs if public.habit_logs table exists
 -- ========================================================
 
 DO $$
@@ -214,7 +265,19 @@ DECLARE
     legacy_log RECORD;
     new_habit_id uuid;
     user_id_for_habit uuid;
+    habit_logs_exist boolean;
 BEGIN
+    -- Check if public.habit_logs table exists
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'habit_logs'
+    ) INTO habit_logs_exist;
+    
+    IF NOT habit_logs_exist THEN
+        RAISE NOTICE 'SKIP: Legacy public.habit_logs table does not exist. No logs migration needed.';
+        RETURN;
+    END IF;
+    
     -- Iterate through each legacy log for migrated habits
     FOR legacy_log IN 
         SELECT l.id, l.habit_id, l.date, l.completed, m.new_habit_v2_id
@@ -231,7 +294,7 @@ BEGIN
         WHERE id = legacy_log.new_habit_v2_id;
         
         IF user_id_for_habit IS NOT NULL THEN
-            -- Insert into habit_logs_v2
+            -- Insert into habit_logs_v2 with ON CONFLICT handling
             INSERT INTO public.habit_logs_v2 (
                 habit_id,
                 user_id,
@@ -250,6 +313,8 @@ BEGIN
             ON CONFLICT DO NOTHING;
         END IF;
     END LOOP;
+    
+    RAISE NOTICE 'Legacy habit_logs migration completed successfully.';
 END $$;
 
 -- ========================================================
@@ -259,13 +324,27 @@ END $$;
 --   habit_alerts.alert_time → habit_reminder_prefs.preferred_time
 --   habit_alerts.enabled → habit_reminder_prefs.enabled
 --   habit_alerts.days_of_week → embedded in v2 schedule (best-effort)
+--
+-- GUARDED: Only runs if public.habit_alerts table exists
 -- ========================================================
 
 DO $$
 DECLARE
     legacy_alert RECORD;
     new_habit_id uuid;
+    habit_alerts_exist boolean;
 BEGIN
+    -- Check if public.habit_alerts table exists
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'habit_alerts'
+    ) INTO habit_alerts_exist;
+    
+    IF NOT habit_alerts_exist THEN
+        RAISE NOTICE 'SKIP: Legacy public.habit_alerts table does not exist. No alerts migration needed.';
+        RETURN;
+    END IF;
+    
     -- Iterate through each legacy alert for migrated habits
     FOR legacy_alert IN 
         SELECT a.id, a.habit_id, a.alert_time, a.enabled, a.days_of_week, m.new_habit_v2_id
@@ -293,11 +372,15 @@ BEGIN
             preferred_time = EXCLUDED.preferred_time,
             updated_at = now();
     END LOOP;
+    
+    RAISE NOTICE 'Legacy habit_alerts migration completed successfully.';
 END $$;
 
 -- ========================================================
 -- Step 5: Create read-only lock mechanism for legacy tables
 -- Controlled via a feature flag row in a config table
+--
+-- GUARDED: Triggers are only created if legacy tables exist
 -- ========================================================
 
 -- Create config table for feature flags if not exists
@@ -336,25 +419,55 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add triggers to enforce read-only mode on legacy tables
--- These only fire when the flag is enabled
+-- GUARDED: Only create triggers if the corresponding tables exist
 
-DROP TRIGGER IF EXISTS enforce_readonly_habits ON public.habits;
-CREATE TRIGGER enforce_readonly_habits
-    BEFORE INSERT OR UPDATE OR DELETE ON public.habits
-    FOR EACH ROW
-    EXECUTE FUNCTION check_legacy_habits_readonly();
-
-DROP TRIGGER IF EXISTS enforce_readonly_habit_logs ON public.habit_logs;
-CREATE TRIGGER enforce_readonly_habit_logs
-    BEFORE INSERT OR UPDATE OR DELETE ON public.habit_logs
-    FOR EACH ROW
-    EXECUTE FUNCTION check_legacy_habits_readonly();
-
-DROP TRIGGER IF EXISTS enforce_readonly_habit_alerts ON public.habit_alerts;
-CREATE TRIGGER enforce_readonly_habit_alerts
-    BEFORE INSERT OR UPDATE OR DELETE ON public.habit_alerts
-    FOR EACH ROW
-    EXECUTE FUNCTION check_legacy_habits_readonly();
+DO $$
+BEGIN
+    -- Guard trigger creation for public.habits
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'habits'
+    ) THEN
+        DROP TRIGGER IF EXISTS enforce_readonly_habits ON public.habits;
+        CREATE TRIGGER enforce_readonly_habits
+            BEFORE INSERT OR UPDATE OR DELETE ON public.habits
+            FOR EACH ROW
+            EXECUTE FUNCTION check_legacy_habits_readonly();
+        RAISE NOTICE 'Created read-only trigger on public.habits';
+    ELSE
+        RAISE NOTICE 'SKIP: public.habits does not exist. No trigger created.';
+    END IF;
+    
+    -- Guard trigger creation for public.habit_logs
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'habit_logs'
+    ) THEN
+        DROP TRIGGER IF EXISTS enforce_readonly_habit_logs ON public.habit_logs;
+        CREATE TRIGGER enforce_readonly_habit_logs
+            BEFORE INSERT OR UPDATE OR DELETE ON public.habit_logs
+            FOR EACH ROW
+            EXECUTE FUNCTION check_legacy_habits_readonly();
+        RAISE NOTICE 'Created read-only trigger on public.habit_logs';
+    ELSE
+        RAISE NOTICE 'SKIP: public.habit_logs does not exist. No trigger created.';
+    END IF;
+    
+    -- Guard trigger creation for public.habit_alerts
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'habit_alerts'
+    ) THEN
+        DROP TRIGGER IF EXISTS enforce_readonly_habit_alerts ON public.habit_alerts;
+        CREATE TRIGGER enforce_readonly_habit_alerts
+            BEFORE INSERT OR UPDATE OR DELETE ON public.habit_alerts
+            FOR EACH ROW
+            EXECUTE FUNCTION check_legacy_habits_readonly();
+        RAISE NOTICE 'Created read-only trigger on public.habit_alerts';
+    ELSE
+        RAISE NOTICE 'SKIP: public.habit_alerts does not exist. No trigger created.';
+    END IF;
+END $$;
 
 -- ========================================================
 -- Verification queries (as comments for manual verification)

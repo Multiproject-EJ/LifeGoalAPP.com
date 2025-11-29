@@ -40,6 +40,9 @@ jobs:
             "Tables\[\"habits\"\]"
             "habit_logs['\"\`](?!_v2)"
             "habit_alerts['\"\`]"
+            "public\.habits[^_]"
+            "public\.habit_logs[^_]"
+            "public\.habit_alerts"
           )
           
           # Files/directories to exclude from scanning
@@ -182,6 +185,12 @@ jobs:
           echo "This check ensures that the codebase uses the unified"
           echo "Habits V2 system exclusively, preventing accidental"
           echo "regression to legacy tables."
+          echo ""
+          echo "Allowed exceptions:"
+          echo "  - supabase/migrations/ (for migration scripts)"
+          echo "  - docs/ (for documentation)"
+          echo "  - src/compat/ (for backwards compatibility adapters)"
+          echo "  - src/lib/database.types.ts (generated types)"
           echo ""
           echo "Documentation: docs/MERGE_HABITS_SYSTEMS.md"
           echo ""

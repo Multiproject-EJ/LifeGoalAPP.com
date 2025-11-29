@@ -11,7 +11,7 @@ import {
   type JournalEntry,
 } from '../../services/journal';
 import { fetchGoals } from '../../services/goals';
-import { fetchHabitsForUser } from '../../services/habits';
+import { fetchHabitsForUser } from '../../compat/legacyHabitsAdapter';
 import { JournalEntryList } from './JournalEntryList';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';

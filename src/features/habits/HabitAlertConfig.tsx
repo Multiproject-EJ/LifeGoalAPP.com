@@ -6,7 +6,7 @@ import {
   deleteHabitAlert,
   toggleHabitAlert,
   getAlertScheduleDescription,
-} from '../../services/habitAlerts';
+} from '../../compat/legacyAlertsAdapter';
 
 type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
 
