@@ -933,6 +933,110 @@ Deno.serve(async (req) => {
       }
     }
 
+    // GET /analytics/summary - Get aggregated reminder analytics
+    if (pathname.endsWith('/analytics/summary') && req.method === 'GET') {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const rangeParam = url.searchParams.get('range');
+      const rangeDays = rangeParam === '7' ? 7 : 30; // Default to 30 days
+
+      try {
+        // Call the database function for analytics summary
+        const { data, error } = await supabase.rpc('get_reminder_analytics_summary', {
+          p_range_days: rangeDays
+        });
+
+        if (error) {
+          console.error('Analytics summary error:', error);
+          // Fallback to raw queries if function not available
+          return await getAnalyticsSummaryFallback(supabase, user.id, rangeDays, corsHeaders);
+        }
+
+        if (!data || data.length === 0) {
+          // Return empty metrics
+          return new Response(JSON.stringify({
+            rangeDays,
+            sends: 0,
+            actions: { done: 0, snooze: 0, dismiss: 0 },
+            actionRatePct: 0,
+            doneRatePct: 0,
+            habitsWithPrefs: 0,
+            habitsEnabledPct: 0,
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const row = data[0];
+        return new Response(JSON.stringify({
+          rangeDays: row.range_days,
+          sends: Number(row.total_sends),
+          actions: {
+            done: Number(row.done_count),
+            snooze: Number(row.snooze_count),
+            dismiss: Number(row.dismiss_count),
+          },
+          actionRatePct: Number(row.action_rate_pct),
+          doneRatePct: Number(row.done_rate_pct),
+          habitsWithPrefs: Number(row.habits_with_prefs),
+          habitsEnabledPct: Number(row.habits_enabled_pct),
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        console.error('Analytics summary exception:', err);
+        return await getAnalyticsSummaryFallback(supabase, user.id, rangeDays, corsHeaders);
+      }
+    }
+
+    // GET /analytics/daily - Get daily reminder analytics
+    if (pathname.endsWith('/analytics/daily') && req.method === 'GET') {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const rangeParam = url.searchParams.get('range');
+      const rangeDays = rangeParam === '7' ? 7 : 30; // Default to 30 days
+
+      try {
+        // Call the database function for daily analytics
+        const { data, error } = await supabase.rpc('get_reminder_analytics_daily', {
+          p_range_days: rangeDays
+        });
+
+        if (error) {
+          console.error('Analytics daily error:', error);
+          // Fallback to raw queries if function not available
+          return await getAnalyticsDailyFallback(supabase, user.id, rangeDays, corsHeaders);
+        }
+
+        const dailyData = (data || []).map((row: { day: string; sends: number; done: number; snooze: number; dismiss: number }) => ({
+          day: row.day,
+          sends: Number(row.sends),
+          done: Number(row.done),
+          snooze: Number(row.snooze),
+          dismiss: Number(row.dismiss),
+        }));
+
+        return new Response(JSON.stringify(dailyData), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        console.error('Analytics daily exception:', err);
+        return await getAnalyticsDailyFallback(supabase, user.id, rangeDays, corsHeaders);
+      }
+    }
+
     return new Response(JSON.stringify({ error: 'Not found' }), {
       status: 404,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -945,3 +1049,154 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+// Fallback function for analytics summary when database function is not available
+async function getAnalyticsSummaryFallback(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  rangeDays: number,
+  corsHeaders: Record<string, string>
+): Promise<Response> {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - rangeDays);
+  const startDateStr = startDate.toISOString().split('T')[0];
+
+  // Get sends from habit_reminder_state
+  const { data: stateData } = await supabase
+    .from('habit_reminder_state')
+    .select('habit_id, last_reminder_sent_at, habits_v2!inner(user_id)')
+    .gte('last_reminder_sent_at', startDateStr);
+
+  const userSends = (stateData || []).filter(
+    (s: { habits_v2: { user_id: string } }) => s.habits_v2?.user_id === userId
+  );
+  const sends = userSends.length;
+
+  // Get actions from reminder_action_logs
+  const { data: actionData } = await supabase
+    .from('reminder_action_logs')
+    .select('action')
+    .eq('user_id', userId)
+    .gte('created_at', startDateStr);
+
+  const actions = actionData || [];
+  const done = actions.filter((a: { action: string }) => a.action === 'done').length;
+  const snooze = actions.filter((a: { action: string }) => a.action === 'snooze').length;
+  const dismiss = actions.filter((a: { action: string }) => a.action === 'dismiss').length;
+  const totalActions = done + snooze + dismiss;
+
+  // Get habits with prefs
+  const { data: habitsData } = await supabase
+    .from('habits_v2')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('archived', false);
+
+  const habitIds = (habitsData || []).map((h: { id: string }) => h.id);
+  
+  let habitsWithPrefs = 0;
+  let habitsEnabled = 0;
+  
+  if (habitIds.length > 0) {
+    const { data: prefsData } = await supabase
+      .from('habit_reminder_prefs')
+      .select('habit_id, enabled')
+      .in('habit_id', habitIds);
+
+    habitsWithPrefs = (prefsData || []).length;
+    habitsEnabled = (prefsData || []).filter((p: { enabled: boolean }) => p.enabled).length;
+  }
+
+  const actionRatePct = sends > 0 ? Math.round((totalActions / sends) * 10000) / 100 : 0;
+  const doneRatePct = totalActions > 0 ? Math.round((done / totalActions) * 10000) / 100 : 0;
+  const habitsEnabledPct = habitsWithPrefs > 0 ? Math.round((habitsEnabled / habitsWithPrefs) * 10000) / 100 : 0;
+
+  return new Response(JSON.stringify({
+    rangeDays,
+    sends,
+    actions: { done, snooze, dismiss },
+    actionRatePct,
+    doneRatePct,
+    habitsWithPrefs,
+    habitsEnabledPct,
+  }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// Fallback function for daily analytics when database function is not available
+async function getAnalyticsDailyFallback(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  rangeDays: number,
+  corsHeaders: Record<string, string>
+): Promise<Response> {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - rangeDays);
+
+  // Generate date series
+  const dates: string[] = [];
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  const startDateStr = startDate.toISOString().split('T')[0];
+
+  // Get sends from habit_reminder_state
+  const { data: stateData } = await supabase
+    .from('habit_reminder_state')
+    .select('habit_id, last_reminder_sent_at, habits_v2!inner(user_id)')
+    .gte('last_reminder_sent_at', startDateStr);
+
+  const userSends = (stateData || []).filter(
+    (s: { habits_v2: { user_id: string } }) => s.habits_v2?.user_id === userId
+  );
+
+  // Get actions from reminder_action_logs
+  const { data: actionData } = await supabase
+    .from('reminder_action_logs')
+    .select('action, created_at')
+    .eq('user_id', userId)
+    .gte('created_at', startDateStr);
+
+  // Aggregate by day
+  const dailyMap = new Map<string, { sends: number; done: number; snooze: number; dismiss: number }>();
+  
+  for (const day of dates) {
+    dailyMap.set(day, { sends: 0, done: 0, snooze: 0, dismiss: 0 });
+  }
+
+  for (const send of userSends) {
+    if (send.last_reminder_sent_at) {
+      const day = send.last_reminder_sent_at.split('T')[0];
+      const entry = dailyMap.get(day);
+      if (entry) {
+        entry.sends++;
+      }
+    }
+  }
+
+  for (const action of (actionData || [])) {
+    if (action.created_at) {
+      const day = action.created_at.split('T')[0];
+      const entry = dailyMap.get(day);
+      if (entry) {
+        if (action.action === 'done') entry.done++;
+        else if (action.action === 'snooze') entry.snooze++;
+        else if (action.action === 'dismiss') entry.dismiss++;
+      }
+    }
+  }
+
+  const dailyData = dates.map(day => ({
+    day,
+    ...dailyMap.get(day)!,
+  }));
+
+  return new Response(JSON.stringify(dailyData), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}

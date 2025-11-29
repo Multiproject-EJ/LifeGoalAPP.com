@@ -4,3 +4,4 @@ export { PushNotificationTestPanel } from './PushNotificationTestPanel';
 export { DailyReminderPreferences } from './DailyReminderPreferences';
 export { PerHabitReminderPrefs } from './PerHabitReminderPrefs';
 export { ReminderActionDebugPanel } from './ReminderActionDebugPanel';
+export { ReminderAnalyticsDashboard } from './ReminderAnalyticsDashboard';

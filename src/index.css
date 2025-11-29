@@ -8660,3 +8660,213 @@ body {
     border-radius: 0;
   }
 }
+
+/* =====================================================
+   REMINDER ANALYTICS DASHBOARD
+   ===================================================== */
+
+.reminder-analytics__panel {
+  margin-top: 1rem;
+}
+
+.reminder-analytics__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.reminder-analytics__range-selector {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reminder-analytics__range-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.15));
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-text-secondary, #475569);
+}
+
+.reminder-analytics__range-btn:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.reminder-analytics__range-btn--active {
+  background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
+  color: #fff;
+  border-color: transparent;
+}
+
+.reminder-analytics__range-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reminder-analytics__empty {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.reminder-analytics__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.reminder-analytics__kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 16px;
+  background: var(--color-surface-glass-light, rgba(248, 250, 252, 0.85));
+  border: 1px solid var(--color-border-light, rgba(15, 23, 42, 0.08));
+}
+
+[data-theme='dark-glass'] .reminder-analytics__kpi {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.reminder-analytics__kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+[data-theme='dark-glass'] .reminder-analytics__kpi-value {
+  color: #f8fafc;
+}
+
+.reminder-analytics__kpi-value--done {
+  color: #10b981;
+}
+
+.reminder-analytics__kpi-value--snooze {
+  color: #f59e0b;
+}
+
+.reminder-analytics__kpi-value--dismiss {
+  color: #ef4444;
+}
+
+.reminder-analytics__kpi-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.reminder-analytics__chart {
+  margin-bottom: 1.5rem;
+}
+
+.reminder-analytics__chart-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+}
+
+[data-theme='dark-glass'] .reminder-analytics__chart-title {
+  color: #f8fafc;
+}
+
+.reminder-analytics__chart-container {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.reminder-analytics__chart-svg {
+  width: 100%;
+  min-width: 300px;
+  height: 120px;
+}
+
+.reminder-analytics__chart-bar--done {
+  fill: #10b981;
+}
+
+.reminder-analytics__chart-bar--snooze {
+  fill: #f59e0b;
+}
+
+.reminder-analytics__chart-bar--dismiss {
+  fill: #ef4444;
+}
+
+.reminder-analytics__chart-bar--empty {
+  fill: rgba(148, 163, 184, 0.3);
+}
+
+.reminder-analytics__chart-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.reminder-analytics__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #475569);
+}
+
+.reminder-analytics__legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.reminder-analytics__legend-item--done .reminder-analytics__legend-color {
+  background: #10b981;
+}
+
+.reminder-analytics__legend-item--snooze .reminder-analytics__legend-color {
+  background: #f59e0b;
+}
+
+.reminder-analytics__legend-item--dismiss .reminder-analytics__legend-color {
+  background: #ef4444;
+}
+
+.reminder-analytics__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-light, rgba(15, 23, 42, 0.08));
+}
+
+.reminder-analytics__stat {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.reminder-analytics__stat-label {
+  color: var(--color-text-muted, #64748b);
+}
+
+.reminder-analytics__stat-value {
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+}
+
+[data-theme='dark-glass'] .reminder-analytics__stat-value {
+  color: #f8fafc;
+}
