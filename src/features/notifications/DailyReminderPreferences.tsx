@@ -94,8 +94,8 @@ export function DailyReminderPreferences({ session }: Props) {
       timezone,
       windowStart,
       windowEnd,
-      quietHoursStart: quietHoursStart || null,
-      quietHoursEnd: quietHoursEnd || null,
+      quietHoursStart: quietHoursStart.trim() || null,
+      quietHoursEnd: quietHoursEnd.trim() || null,
       skipWeekends,
     });
 

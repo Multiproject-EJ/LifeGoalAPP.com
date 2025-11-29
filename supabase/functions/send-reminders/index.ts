@@ -45,6 +45,7 @@ function getLocalTimeInTimezone(timezone: string): { hours: number; minutes: num
 }
 
 // Helper: Check if current time is within a window
+// Note: Uses inclusive boundaries (current <= end) so reminders can be sent AT the window_end time
 function isTimeInWindow(
   hours: number,
   minutes: number,
@@ -68,6 +69,7 @@ function isTimeInWindow(
 /**
  * Helper: Check if current time is within quiet hours
  * Supports overnight ranges (e.g., 22:00 to 06:00) where start > end
+ * Note: Uses exclusive end boundary (current < end) so reminders CAN be sent AT the quiet_hours_end time
  * @returns true if within quiet hours (should NOT send reminders)
  */
 function isWithinQuietHours(
