@@ -10,6 +10,9 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 jobs:
   check-legacy-refs:
     name: Check for Legacy Habit References
