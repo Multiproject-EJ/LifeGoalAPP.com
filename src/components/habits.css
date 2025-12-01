@@ -1,5 +1,6 @@
 /* Habits & Routines - Responsive CSS */
 /* POC layout fixes for small screens and notch devices */
+/* Uses theme system variables from src/themes.css with fallbacks */
 
 /* Global box-sizing for predictable sizing */
 .habits-container *,
@@ -15,8 +16,8 @@
   min-height: 100vh;
   padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 16px);
   padding-bottom: calc(env(safe-area-inset-bottom, 0) + 80px); /* Space for bottom nav */
-  background: var(--background, #0a0e1a);
-  color: var(--text, #f0f0f0);
+  background: var(--color-bg-main, #0a0e1a);
+  color: var(--color-text-primary, #f0f0f0);
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;
@@ -32,14 +33,14 @@
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 8px 0;
-  color: var(--text, #f0f0f0);
+  color: var(--color-text-primary, #f0f0f0);
   overflow-wrap: break-word;
   word-break: break-word;
 }
 
 .habits-header p {
   font-size: 0.9rem;
-  color: var(--text-muted, #a0a0a0);
+  color: var(--color-text-muted, #64748b);
   margin: 0;
   overflow-wrap: break-word;
 }
@@ -59,7 +60,7 @@
 .habit-card {
   display: flex;
   flex-direction: column;
-  background: var(--surface, rgba(255, 255, 255, 0.05));
+  background: var(--color-surface-primary, rgba(255, 255, 255, 0.05));
   border-radius: 12px;
   padding: 16px;
   min-width: 0; /* Allow shrinking in flex context */
@@ -82,7 +83,7 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
-  color: var(--text, #f0f0f0);
+  color: var(--color-text-primary, #f0f0f0);
   overflow-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
@@ -90,7 +91,7 @@
 
 .card-content p {
   font-size: 0.9rem;
-  color: var(--text-muted, #a0a0a0);
+  color: var(--color-text-muted, #64748b);
   margin: 0;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -112,8 +113,8 @@
   gap: 4px;
   padding: 6px 12px;
   border-radius: 16px;
-  background: var(--accent-bg, rgba(0, 123, 255, 0.15));
-  color: var(--accent, #007bff);
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--color-primary, #06b6d4);
   font-size: 0.8rem;
   font-weight: 500;
   white-space: nowrap;
@@ -130,7 +131,7 @@
   gap: 12px;
   align-items: center;
   padding: 12px;
-  background: var(--surface-alt, rgba(255, 255, 255, 0.03));
+  background: var(--color-surface-secondary, rgba(255, 255, 255, 0.03));
   border-radius: 8px;
   min-width: 0; /* Allow shrinking */
 }
@@ -143,7 +144,7 @@
 
 .habit-entry-title {
   font-weight: 500;
-  color: var(--text, #f0f0f0);
+  color: var(--color-text-primary, #f0f0f0);
   margin: 0 0 4px 0;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -151,7 +152,7 @@
 
 .habit-entry-meta {
   font-size: 0.8rem;
-  color: var(--text-muted, #a0a0a0);
+  color: var(--color-text-muted, #64748b);
   overflow-wrap: break-word;
 }
 
@@ -174,7 +175,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  background: var(--accent, #007bff);
+  background: var(--color-primary, #06b6d4);
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -194,21 +195,21 @@
 }
 
 .habit-btn--secondary {
-  background: var(--secondary, rgba(255, 255, 255, 0.1));
-  color: var(--text, #f0f0f0);
+  background: var(--color-surface-secondary, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-primary, #f0f0f0);
 }
 
 .habit-btn--ghost {
   background: transparent;
-  color: var(--text-muted, #a0a0a0);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-muted, #64748b);
+  border: 1px solid var(--color-border-primary, rgba(255, 255, 255, 0.1));
 }
 
 /* Progress bar */
 .progress-bar {
   width: 100%;
   height: 8px;
-  background: var(--border, rgba(255, 255, 255, 0.1));
+  background: var(--color-border-primary, rgba(255, 255, 255, 0.1));
   border-radius: 4px;
   overflow: hidden;
   margin-top: 8px;
@@ -216,7 +217,7 @@
 
 .progress-bar-fill {
   height: 100%;
-  background: var(--accent, #007bff);
+  background: var(--color-primary, #06b6d4);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -231,8 +232,8 @@
   justify-content: space-around;
   align-items: center;
   padding: 12px env(safe-area-inset-right, 16px) calc(12px + env(safe-area-inset-bottom, 0)) env(safe-area-inset-left, 16px);
-  background: var(--nav-bg, rgba(10, 14, 26, 0.95));
-  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  background: var(--color-surface-primary, rgba(10, 14, 26, 0.95));
+  border-top: 1px solid var(--color-border-primary, rgba(255, 255, 255, 0.1));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   z-index: 1000;
@@ -246,7 +247,7 @@
   padding: 8px 12px;
   background: transparent;
   border: none;
-  color: var(--text-muted, #a0a0a0);
+  color: var(--color-text-muted, #64748b);
   font-size: 0.75rem;
   cursor: pointer;
   min-width: 0; /* Allow shrinking */
@@ -259,7 +260,7 @@
 
 .nav-btn:hover,
 .nav-btn.active {
-  color: var(--accent, #007bff);
+  color: var(--color-primary, #06b6d4);
 }
 
 .nav-btn-icon {
@@ -291,17 +292,17 @@
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 500;
-  background: var(--border, rgba(255, 255, 255, 0.1));
-  color: var(--text-muted, #a0a0a0);
+  background: var(--color-border-primary, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-muted, #64748b);
 }
 
 .streak-day.completed {
-  background: var(--success, #28a745);
+  background: #10b981; /* Green success color matching theme system */
   color: #fff;
 }
 
 .streak-day.today {
-  border: 2px solid var(--accent, #007bff);
+  border: 2px solid var(--color-primary, #06b6d4);
 }
 
 /* Section headers */
@@ -317,7 +318,7 @@
 .section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text, #f0f0f0);
+  color: var(--color-text-primary, #f0f0f0);
   margin: 0;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -325,7 +326,7 @@
 
 .section-action {
   font-size: 0.85rem;
-  color: var(--accent, #007bff);
+  color: var(--color-primary, #06b6d4);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -399,14 +400,14 @@
 
 /* Dark theme support (default for this app) */
 [data-theme="dark-glass"] .habits-container {
-  background: var(--background, #0a0e1a);
-  color: var(--text, #f0f0f0);
+  background: var(--color-bg-main, #0a0e1a);
+  color: var(--color-text-primary, #f1f5f9);
 }
 
 [data-theme="dark-glass"] .habit-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-primary, rgba(26, 31, 46, 0.7));
 }
 
 [data-theme="dark-glass"] .habits-nav {
-  background: rgba(10, 14, 26, 0.95);
+  background: var(--color-surface-primary, rgba(26, 31, 46, 0.95));
 }
