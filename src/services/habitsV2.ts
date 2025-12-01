@@ -315,6 +315,35 @@ export async function updateHabitV2(
 }
 
 /**
+ * Update an existing habit with all editable fields.
+ * Used when editing a habit through the HabitWizard.
+ * 
+ * @param habitId - The ID of the habit to update
+ * @param updates - Object containing fields to update
+ * @returns Promise with the updated habit data and error
+ */
+export async function updateHabitFullV2(
+  habitId: string,
+  updates: {
+    title?: string;
+    emoji?: string | null;
+    type?: Database['public']['Enums']['habit_type'];
+    target_num?: number | null;
+    target_unit?: string | null;
+    schedule?: Database['public']['Tables']['habits_v2']['Row']['schedule'];
+  }
+): Promise<ServiceResponse<HabitV2Row>> {
+  const supabase = getSupabaseClient();
+  
+  return supabase
+    .from('habits_v2')
+    .update(updates)
+    .eq('id', habitId)
+    .select()
+    .single();
+}
+
+/**
  * Get a single habit by ID.
  * Used for fetching the current habit state before applying suggestions.
  * 

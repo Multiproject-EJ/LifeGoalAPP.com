@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, updateHabitFullV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
@@ -82,6 +82,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     habitTitle: string;
   } | null>(null);
   const [revertRationale, setRevertRationale] = useState('');
+  
+  // State for archive confirmation dialog
+  const [archiveConfirmation, setArchiveConfirmation] = useState<{
+    habitId: string;
+    habitTitle: string;
+  } | null>(null);
   
   // State for AI-enhanced rationales (by habit ID)
   const [enhancedRationales, setEnhancedRationales] = useState<Record<string, EnhancedRationaleResult>>({});
@@ -426,16 +432,31 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     }
   };
 
-  // Handler for archiving a habit
-  const handleArchiveHabit = async (habitId: string) => {
+  // Handler for initiating archive (shows confirmation dialog)
+  const handleArchiveHabit = (habitId: string, habitTitle?: string) => {
+    const habit = habits.find(h => h.id === habitId);
+    setArchiveConfirmation({
+      habitId,
+      habitTitle: habitTitle || habit?.title || 'this habit',
+    });
+  };
+
+  // Handler for confirming the archive action
+  const handleConfirmArchive = async () => {
+    if (!archiveConfirmation) return;
+    
+    const { habitId } = archiveConfirmation;
+    
     if (!session) {
       setError('Session expired. Please refresh the page.');
+      setArchiveConfirmation(null);
       return;
     }
 
     // Mark habit as archiving
     setArchivingHabitIds(prev => new Set(prev).add(habitId));
     setError(null);
+    setArchiveConfirmation(null);
 
     try {
       const { error: archiveError } = await archiveHabitV2(habitId);
@@ -462,6 +483,46 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     }
   };
 
+  // Handler for editing a habit (opens wizard with pre-filled data)
+  const handleEditHabit = (habit: HabitV2Row) => {
+    // Build HabitWizardDraft from HabitV2Row
+    const draft: HabitWizardDraft = {
+      habitId: habit.id,
+      title: habit.title,
+      emoji: habit.emoji,
+      type: habit.type,
+      targetValue: habit.target_num,
+      targetUnit: habit.target_unit,
+      schedule: {
+        choice: mapScheduleToChoice(habit.schedule),
+      },
+      remindersEnabled: false,
+      reminderTimes: [],
+    };
+    
+    setWizardInitialDraft(draft);
+    setShowWizard(true);
+  };
+
+  // Helper to map schedule JSON to wizard choice
+  const mapScheduleToChoice = (schedule: unknown): 'every_day' | 'specific_days' | 'x_per_week' => {
+    if (typeof schedule !== 'object' || schedule === null) return 'every_day';
+    const mode = (schedule as Record<string, unknown>).mode;
+    if (typeof mode !== 'string') return 'every_day';
+    switch (mode) {
+      case 'daily':
+        return 'every_day';
+      case 'specific_days':
+        return 'specific_days';
+      case 'times_per_week':
+        return 'x_per_week';
+      case 'every_n_days':
+        return 'every_day';
+      default:
+        return 'every_day';
+    }
+  };
+
   // Handler for wizard completion
   const handleCompleteDraft = async (draft: HabitWizardDraft) => {
     console.log('Habit draft', draft);
@@ -471,44 +532,79 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     setError(null);
     setSuccessMessage(null);
     
+    const isEditMode = Boolean(draft.habitId);
+    
     try {
-      // Map HabitWizardDraft to habits_v2.Insert
-      const insertPayload: Omit<Database['public']['Tables']['habits_v2']['Insert'], 'user_id'> = {
-        title: draft.title,
-        emoji: draft.emoji,
-        type: draft.type,
-        target_num: draft.targetValue ?? null,
-        target_unit: draft.targetUnit ?? null,
-        schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
-        archived: false,
-      };
-      
-      // Call createHabitV2
-      const { data: newHabit, error: createError } = await createHabitV2(insertPayload, session.user.id);
-      
-      if (createError) {
-        throw new Error(createError.message);
+      if (isEditMode && draft.habitId) {
+        // Update existing habit
+        const updatePayload = {
+          title: draft.title,
+          emoji: draft.emoji,
+          type: draft.type,
+          target_num: draft.targetValue ?? null,
+          target_unit: draft.targetUnit ?? null,
+          schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+        };
+        
+        const { data: updatedHabit, error: updateError } = await updateHabitFullV2(draft.habitId, updatePayload);
+        
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+        
+        if (!updatedHabit) {
+          throw new Error('Failed to update habit - no data returned');
+        }
+        
+        // Success: hide wizard, clear draft, update list
+        setShowWizard(false);
+        setPendingHabitDraft(null);
+        setWizardInitialDraft(undefined);
+        setSuccessMessage('Habit saved successfully!');
+        
+        // Update the habit in local state
+        setHabits(prev => prev.map(h => h.id === draft.habitId ? updatedHabit : h));
+        
+      } else {
+        // Create new habit
+        const insertPayload: Omit<Database['public']['Tables']['habits_v2']['Insert'], 'user_id'> = {
+          title: draft.title,
+          emoji: draft.emoji,
+          type: draft.type,
+          target_num: draft.targetValue ?? null,
+          target_unit: draft.targetUnit ?? null,
+          schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+          archived: false,
+        };
+        
+        const { data: newHabit, error: createError } = await createHabitV2(insertPayload, session.user.id);
+        
+        if (createError) {
+          throw new Error(createError.message);
+        }
+        
+        if (!newHabit) {
+          throw new Error('Failed to create habit - no data returned');
+        }
+        
+        // Success: hide wizard, clear draft, refresh list
+        setShowWizard(false);
+        setPendingHabitDraft(null);
+        setWizardInitialDraft(undefined);
+        setSuccessMessage(`Habit "${draft.title}" created successfully!`);
+        
+        // Prepend new habit to local state for immediate feedback
+        setHabits([newHabit, ...habits]);
       }
-      
-      if (!newHabit) {
-        throw new Error('Failed to create habit - no data returned');
-      }
-      
-      // Success: hide wizard, clear draft, refresh list
-      setShowWizard(false);
-      setPendingHabitDraft(null);
-      setSuccessMessage(`Habit "${draft.title}" created successfully!`);
-      
-      // Prepend new habit to local state for immediate feedback
-      setHabits([newHabit, ...habits]);
       
       // Auto-hide success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
       
     } catch (err) {
       // Show error but keep wizard open
-      setError(err instanceof Error ? err.message : 'Failed to create habit');
-      console.error('Error creating habit:', err);
+      const action = isEditMode ? 'update' : 'create';
+      setError(err instanceof Error ? err.message : `Failed to ${action} habit`);
+      console.error(`Error ${action}ing habit:`, err);
     }
   };
 
@@ -732,28 +828,35 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
       {/* Error state */}
       {error && (
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #fca5a5',
-          borderRadius: '8px',
-          padding: '1rem',
-          marginBottom: '2rem',
-          color: '#991b1b'
-        }}>
+        <div 
+          role="alert"
+          style={{
+            background: '#fee2e2',
+            border: '1px solid #fca5a5',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '2rem',
+            color: '#991b1b'
+          }}
+        >
           {error}
         </div>
       )}
 
       {/* Success message */}
       {successMessage && (
-        <div style={{
-          background: '#d1fae5',
-          border: '1px solid #6ee7b7',
-          borderRadius: '8px',
-          padding: '1rem',
-          marginBottom: '2rem',
-          color: '#065f46'
-        }}>
+        <div 
+          role="status"
+          aria-live="polite"
+          style={{
+            background: '#d1fae5',
+            border: '1px solid #6ee7b7',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '2rem',
+            color: '#065f46'
+          }}
+        >
           {successMessage}
         </div>
       )}
@@ -925,43 +1028,87 @@ export function HabitsModule({ session }: HabitsModuleProps) {
               {habits.map((habit) => (
                 <div
                   key={habit.id}
+                  className="habit-card"
                   style={{
                     background: '#f8fafc',
                     border: '1px solid #e2e8f0',
                     borderRadius: '8px',
-                    padding: '1rem'
+                    padding: '1rem',
+                    position: 'relative',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      {habit.emoji && (
-                        <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
-                      )}
-                      <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
-                        {habit.title}
-                      </h3>
-                    </div>
-                    {/* Archive button - only visible if habit is not archived */}
-                    {!habit.archived && (
+                  {/* Action strip in top-right corner */}
+                  {!habit.archived && (
+                    <div 
+                      style={{ 
+                        position: 'absolute', 
+                        top: '0.5rem', 
+                        right: '0.5rem',
+                        display: 'flex',
+                        gap: '0.25rem',
+                      }}
+                    >
                       <button
                         type="button"
-                        onClick={() => handleArchiveHabit(habit.id)}
-                        disabled={archivingHabitIds.has(habit.id)}
+                        onClick={() => handleEditHabit(habit)}
+                        className="action-btn"
+                        aria-label={`Edit habit: ${habit.title}`}
+                        title="Edit habit"
                         style={{
                           background: 'transparent',
                           border: '1px solid #e2e8f0',
                           borderRadius: '4px',
-                          padding: '0.25rem 0.5rem',
-                          fontSize: '0.75rem',
+                          padding: '0.375rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                           color: '#64748b',
-                          cursor: archivingHabitIds.has(habit.id) ? 'not-allowed' : 'pointer',
-                          opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
+                          transition: 'all 0.2s',
                         }}
-                        title="Archive this habit"
                       >
-                        {archivingHabitIds.has(habit.id) ? 'Archiving…' : 'Archive'}
+                        {/* Pencil icon */}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => handleArchiveHabit(habit.id, habit.title)}
+                        disabled={archivingHabitIds.has(habit.id)}
+                        className="action-btn archive"
+                        aria-label={`Archive habit: ${habit.title}`}
+                        title="Archive habit"
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '4px',
+                          padding: '0.375rem',
+                          cursor: archivingHabitIds.has(habit.id) ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: archivingHabitIds.has(habit.id) ? '#94a3b8' : '#64748b',
+                          opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        {/* Trash icon */}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', paddingRight: '4.5rem' }}>
+                    {habit.emoji && (
+                      <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
                     )}
+                    <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
+                      {habit.title}
+                    </h3>
                   </div>
                   <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     <div>
@@ -1690,6 +1837,82 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                 }}
               >
                 {revertingSuggestionIds.has(revertConfirmation.suggestionId) ? 'Reverting…' : 'Confirm Revert'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Confirmation Dialog */}
+      {archiveConfirmation && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setArchiveConfirmation(null)}
+        >
+          <div 
+            role="dialog"
+            aria-labelledby="archive-dialog-title"
+            aria-describedby="archive-dialog-description"
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '2rem',
+              maxWidth: '400px',
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="archive-dialog-title" style={{ margin: '0 0 1rem 0', fontSize: '1.125rem' }}>
+              Archive Habit?
+            </h3>
+            <p id="archive-dialog-description" style={{ margin: '0 0 1.5rem 0', color: '#64748b', fontSize: '0.875rem' }}>
+              Are you sure you want to archive "{archiveConfirmation.habitTitle}"? 
+              The habit will be removed from your active list, but all history and logs will be preserved.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setArchiveConfirmation(null)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmArchive}
+                disabled={archivingHabitIds.has(archiveConfirmation.habitId)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: archivingHabitIds.has(archiveConfirmation.habitId) ? '#94a3b8' : '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: archivingHabitIds.has(archiveConfirmation.habitId) ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {archivingHabitIds.has(archiveConfirmation.habitId) ? 'Archiving…' : 'Archive'}
               </button>
             </div>
           </div>

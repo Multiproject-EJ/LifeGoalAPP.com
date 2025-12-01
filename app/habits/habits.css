@@ -42,6 +42,41 @@
   transform: translateY(-2px);
 }
 
+/* Action buttons for habit cards */
+.habit-card .action-btn {
+  background: transparent;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 4px;
+  padding: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #64748b);
+  transition: all 0.2s ease;
+}
+
+.habit-card .action-btn:hover {
+  background: var(--secondary-bg, #f3f4f6);
+  color: var(--text-color, #334155);
+}
+
+.habit-card .action-btn.archive:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.habit-card .action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.habit-card .action-btn:focus-visible {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
 /* Date navigation */
 .habit-date-nav {
   display: flex;
