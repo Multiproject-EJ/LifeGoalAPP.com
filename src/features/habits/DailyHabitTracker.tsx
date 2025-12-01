@@ -120,6 +120,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalSaving, setQuickJournalSaving] = useState(false);
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
+  // State for intentions journal
+  const [isIntentionsJournalOpen, setIsIntentionsJournalOpen] = useState(false);
+  const [intentionsJournalContent, setIntentionsJournalContent] = useState('');
+  const [intentionsJournalSaving, setIntentionsJournalSaving] = useState(false);
+  const [intentionsJournalError, setIntentionsJournalError] = useState<string | null>(null);
+  const [intentionsJournalStatus, setIntentionsJournalStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const parsedDate = parseISODate(activeDate);
@@ -829,6 +835,57 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const quickJournalDateLabel = formatDateLabel(activeDate);
 
+    const handleOpenIntentionsJournal = () => {
+      setIsIntentionsJournalOpen(true);
+      setIntentionsJournalContent('');
+      setIntentionsJournalError(null);
+      setIntentionsJournalStatus(null);
+    };
+
+    const handleSaveIntentionsJournal = async () => {
+      const content = intentionsJournalContent.trim();
+      if (!content) {
+        setIntentionsJournalError('Add your intentions or todos before saving.');
+        return;
+      }
+
+      setIntentionsJournalSaving(true);
+      setIntentionsJournalError(null);
+      setIntentionsJournalStatus(null);
+
+      try {
+        const payload: Database['public']['Tables']['journal_entries']['Insert'] = {
+          user_id: session.user.id,
+          entry_date: activeDate,
+          title: "Today's Intentions",
+          content,
+          mood: null,
+          tags: ['intentions', 'todos'],
+          linked_goal_ids: null,
+          linked_habit_ids: null,
+          is_private: true,
+          type: 'quick',
+          mood_score: null,
+          category: null,
+          unlock_date: null,
+          goal_id: null,
+        };
+
+        const { error } = await createJournalEntry(payload);
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        setIsIntentionsJournalOpen(false);
+        setIntentionsJournalContent('');
+        setIntentionsJournalStatus('Saved to your journal.');
+      } catch (err) {
+        setIntentionsJournalError(err instanceof Error ? err.message : 'Unable to save your journal entry.');
+      } finally {
+        setIntentionsJournalSaving(false);
+      }
+    };
+
     return (
       <div className="habit-checklist-card" role="region" aria-label={ariaLabel}>
         <div className="habit-checklist-card__board">
@@ -929,6 +986,73 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               {quickJournalStatus ? (
                 <p className="habit-quick-journal__status habit-quick-journal__status--success">
                   {quickJournalStatus}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="habit-quick-journal habit-quick-journal--intentions" aria-live="polite">
+              <div className="habit-quick-journal__header">
+                <div>
+                  <p className="habit-quick-journal__eyebrow">Plan for this day</p>
+                  <h3 className="habit-quick-journal__title">Today's Intentions & Todos</h3>
+                </div>
+                <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+              </div>
+              <p className="habit-quick-journal__hint">
+                Set your intentions and list your key todos for the day ahead.
+              </p>
+              {!isIntentionsJournalOpen ? (
+                <button
+                  type="button"
+                  className="habit-quick-journal__button"
+                  onClick={handleOpenIntentionsJournal}
+                >
+                  + Add intentions & todos
+                </button>
+              ) : (
+                <div className="habit-quick-journal__sheet">
+                  <label className="habit-quick-journal__field">
+                    <span className="habit-quick-journal__field-label">Intentions for {quickJournalDateLabel}</span>
+                    <textarea
+                      rows={4}
+                      value={intentionsJournalContent}
+                      onChange={(event) => setIntentionsJournalContent(event.target.value)}
+                      placeholder="What do you intend to accomplish today? What's most important?"
+                    />
+                  </label>
+                  {intentionsJournalError ? (
+                    <p className="habit-quick-journal__status habit-quick-journal__status--error">
+                      {intentionsJournalError}
+                    </p>
+                  ) : null}
+                  <div className="habit-quick-journal__actions">
+                    <button
+                      type="button"
+                      className="habit-quick-journal__save"
+                      onClick={() => void handleSaveIntentionsJournal()}
+                      disabled={intentionsJournalSaving}
+                    >
+                      {intentionsJournalSaving ? 'Saving…' : 'Save entry'}
+                    </button>
+                    <button
+                      type="button"
+                      className="habit-quick-journal__cancel"
+                      onClick={() => {
+                        setIsIntentionsJournalOpen(false);
+                        setIntentionsJournalContent('');
+                        setIntentionsJournalError(null);
+                      }}
+                      disabled={intentionsJournalSaving}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {intentionsJournalStatus ? (
+                <p className="habit-quick-journal__status habit-quick-journal__status--success">
+                  {intentionsJournalStatus}
                 </p>
               ) : null}
             </div>
