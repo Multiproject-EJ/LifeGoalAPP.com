@@ -14,6 +14,8 @@ export interface HabitWizardDraft {
   schedule: ScheduleDraft;
   remindersEnabled?: boolean;
   reminderTimes?: string[];
+  /** If present, indicates we're editing an existing habit */
+  habitId?: string;
 }
 
 export type HabitWizardProps = {
@@ -26,6 +28,9 @@ type ScheduleChoice = 'every_day' | 'specific_days' | 'x_per_week';
 
 export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  
+  // Track if we're in edit mode
+  const isEditMode = Boolean(initialDraft?.habitId);
   
   // Step 1: Basics
   const [emoji, setEmoji] = useState<string>('');
@@ -76,6 +81,8 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       schedule: { choice: scheduleChoice },
       remindersEnabled,
       reminderTimes: remindersEnabled && reminderTime ? [reminderTime] : [],
+      // Preserve habitId if editing
+      habitId: initialDraft?.habitId,
     };
 
     // Add target fields only for quantity/duration types
@@ -101,10 +108,11 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#667eea' }}>
-          Create New Habit
+          {isEditMode ? 'Edit Habit' : 'Create New Habit'}
         </h2>
         <button
           onClick={onCancel}
+          aria-label="Close wizard"
           style={{
             background: 'transparent',
             border: 'none',
@@ -406,7 +414,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
             cursor: (step === 1 && !title) ? 'not-allowed' : 'pointer',
           }}
         >
-          {step === 3 ? 'Create draft' : 'Next'}
+          {step === 3 ? (isEditMode ? 'Save changes' : 'Create draft') : 'Next'}
         </button>
       </div>
     </div>
