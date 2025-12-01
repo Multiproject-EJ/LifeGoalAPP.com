@@ -507,8 +507,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   // Helper to map schedule JSON to wizard choice
   const mapScheduleToChoice = (schedule: unknown): 'every_day' | 'specific_days' | 'x_per_week' => {
     if (typeof schedule !== 'object' || schedule === null) return 'every_day';
-    const sched = schedule as { mode?: string };
-    switch (sched.mode) {
+    const mode = (schedule as Record<string, unknown>).mode;
+    if (typeof mode !== 'string') return 'every_day';
+    switch (mode) {
       case 'daily':
         return 'every_day';
       case 'specific_days':
@@ -1065,14 +1066,6 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                           color: '#64748b',
                           transition: 'all 0.2s',
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#e2e8f0';
-                          e.currentTarget.style.color = '#334155';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = '#64748b';
-                        }}
                       >
                         {/* Pencil icon */}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1099,18 +1092,6 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                           color: archivingHabitIds.has(habit.id) ? '#94a3b8' : '#64748b',
                           opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
                           transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!archivingHabitIds.has(habit.id)) {
-                            e.currentTarget.style.background = '#fee2e2';
-                            e.currentTarget.style.borderColor = '#fca5a5';
-                            e.currentTarget.style.color = '#dc2626';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.borderColor = '#e2e8f0';
-                          e.currentTarget.style.color = archivingHabitIds.has(habit.id) ? '#94a3b8' : '#64748b';
                         }}
                       >
                         {/* Trash icon */}
