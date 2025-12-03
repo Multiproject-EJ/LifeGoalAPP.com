@@ -2071,6 +2071,17 @@ body {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+    padding: clamp(1.25rem, 5vw, 1.75rem);
+  }
+
+  .workspace-content,
+  .habit-tracker,
+  .habit-monthly,
+  .habit-checklist-card,
+  .habit-checklist-card__board {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .habit-monthly__table-wrapper {
