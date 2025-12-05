@@ -316,7 +316,7 @@ For quick end-to-end testing of Web Push without building a full backend, we pro
 npm install web-push
 
 # 2. Generate VAPID keys (one-time)
-npx web-push generate-vapid-keys
+npx web-push generate-vapid-keys --json
 
 # 3. Set environment variables (copy from step 2 output)
 export VAPID_PUBLIC="your_public_key_here"
