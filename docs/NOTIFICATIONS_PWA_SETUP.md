@@ -288,6 +288,87 @@ SELECT cron.schedule(
 | `public/register-push.js` | Vanilla JS for subscribing to push |
 | `src/push-subscribe.ts` | TypeScript version for dev integration |
 | `scripts/send-push-node.js` | Node.js script for sending push notifications |
+| `api/vapid-public.js` | Dev serverless endpoint to retrieve the public VAPID key |
+| `api/save-subscription.js` | Dev serverless endpoint to persist subscriptions locally |
+| `scripts/test-send.js` | Dev script to send test notifications to stored subscriptions |
+
+## Developer Endpoints & Test Script (Dev Only)
+
+This section describes helper endpoints and scripts for local/staging end-to-end testing of Web Push.
+
+> **⚠️ WARNING:** These endpoints and scripts are for development and testing only. They use file-based storage which is not suitable for production serverless environments. For production, use a proper database (Supabase, Postgres, DynamoDB, etc.).
+
+### 1. Generate VAPID Keys
+
+```bash
+npx web-push generate-vapid-keys --json
+```
+
+This outputs something like:
+```json
+{
+  "publicKey": "BEl62iUYgUivxIkv69yViEuiBIa...",
+  "privateKey": "UUxI4O8-FbRouAevSmBQ6o18hgE..."
+}
+```
+
+### 2. Set Environment Variables
+
+Set the following environment variables in your deployment (Vercel, Netlify, etc.) or locally:
+
+```bash
+export VAPID_PUBLIC="<your_public_key>"
+export VAPID_PRIVATE="<your_private_key>"
+```
+
+### 3. Dev Endpoints
+
+#### `GET /api/vapid-public`
+
+Returns the public VAPID key from the environment. Use this endpoint to fetch the key client-side during development.
+
+**Response:**
+```json
+{ "publicKey": "BEl62iUYgUivxIkv69yViEuiBIa..." }
+```
+
+#### `POST /api/save-subscription`
+
+Saves a PushSubscription object to `./.data/subscriptions.json`. Send the subscription object from `PushManager.subscribe()` as the request body.
+
+**Request body:**
+```json
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+  "keys": { "p256dh": "...", "auth": "..." }
+}
+```
+
+**Response:**
+```json
+{ "ok": true }
+```
+
+### 4. Test Sending Push Notifications
+
+Use the `scripts/test-send.js` script to send a test notification to all stored subscriptions:
+
+```bash
+# Install web-push if not already installed
+npm install web-push
+
+# Set environment variables
+export VAPID_PUBLIC="<your_public_key>"
+export VAPID_PRIVATE="<your_private_key>"
+
+# Send test notifications (reads from ./.data/subscriptions.json by default)
+node scripts/test-send.js
+
+# Or specify a custom subscriptions file
+node scripts/test-send.js path/to/subscriptions.json
+```
+
+The script reads subscriptions from the specified file and sends a test push notification to each one.
 
 ## Security Considerations
 
