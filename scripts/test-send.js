@@ -18,10 +18,14 @@
  *   VAPID_PUBLIC  - Your VAPID public key
  *   VAPID_PRIVATE - Your VAPID private key
  *
+ * ENVIRONMENT VARIABLES (optional):
+ *   VAPID_MAILTO  - Contact email for VAPID (default: mailto:you@example.com)
+ *
  * USAGE:
  *   # Set environment variables first
  *   export VAPID_PUBLIC="your_public_key_here"
  *   export VAPID_PRIVATE="your_private_key_here"
+ *   export VAPID_MAILTO="mailto:your@email.com"  # optional
  *
  *   # Run with default subscriptions file (.data/subscriptions.json)
  *   node scripts/test-send.js
@@ -48,11 +52,12 @@ const path = require('path');
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE;
+const VAPID_MAILTO = process.env.VAPID_MAILTO || 'mailto:you@example.com';
 if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
   console.error('VAPID_PUBLIC and VAPID_PRIVATE must be set in env');
   process.exit(1);
 }
-webpush.setVapidDetails('mailto:you@example.com', VAPID_PUBLIC, VAPID_PRIVATE);
+webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE);
 
 const subsPath = process.argv[2] || path.resolve('./.data/subscriptions.json');
 let list = [];
@@ -65,7 +70,7 @@ async function run() {
   for (const entry of list) {
     const subscription = entry.sub || entry;
     try {
-      await webpush.sendNotification(subscription, JSON.stringify({ title: 'Test habit', body: 'This is a test push' }));
+      await webpush.sendNotification(subscription, JSON.stringify({ title: 'Test notification', body: 'This is a test push from LifeGoal App' }));
       console.log('Push sent to', subscription.endpoint);
     } catch (err) {
       console.error('Failed to send push to', subscription.endpoint, err && err.statusCode ? 'status:'+err.statusCode : err);

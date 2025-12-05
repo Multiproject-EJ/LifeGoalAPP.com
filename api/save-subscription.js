@@ -54,7 +54,11 @@ export default async function handler(req, res) {
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
     const file = path.join(dataDir, 'subscriptions.json');
     let list = [];
-    try { list = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { list = []; }
+    try { list = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) {
+      // Log the error for debugging; file might not exist or contain invalid JSON
+      if (e.code !== 'ENOENT') console.warn('Could not parse existing subscriptions file:', e.message);
+      list = [];
+    }
     list.push({ sub, createdAt: new Date().toISOString() });
     fs.writeFileSync(file, JSON.stringify(list, null, 2));
     return res.status(201).json({ ok: true });
