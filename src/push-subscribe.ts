@@ -149,7 +149,8 @@ export async function subscribeToPushManager(
 
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
+    // Cast to BufferSource to satisfy TypeScript - Uint8Array is a valid BufferSource
+    applicationServerKey: applicationServerKey as unknown as BufferSource,
   });
 
   console.log('[push-subscribe] Push subscription created:', subscription.endpoint);
