@@ -7,6 +7,10 @@
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.svg" />
     <link rel="stylesheet" href="/src/styles/theme.css" />
     <meta name="theme-color" content="#0a0e1a" />
+    <!-- iOS Home Screen support for Web Push (iOS 16.4+) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="LifeGoals" />
     <title>LifeGoalApp</title>
   </head>
   <body data-page="landing">
@@ -74,6 +78,52 @@
         window.addEventListener('vite:preloadError', () => {
           loadFallbackBundle();
         });
+      })();
+    </script>
+    <!--
+      Optional Web Push Setup Script
+      
+      To enable automatic push subscription for testing:
+      1. Set window.ENABLE_PUSH_SETUP = true before this script runs
+      2. Replace 'REPLACE_WITH_VAPID_PUBLIC_KEY' with your actual VAPID public key
+      3. Generate keys with: npx web-push generate-vapid-keys
+      
+      For production, integrate push subscription into your app's UI flow instead.
+      See docs/NOTIFICATIONS_PWA_SETUP.md for complete setup instructions.
+    -->
+    <script>
+      (function() {
+        // Only run if ENABLE_PUSH_SETUP flag is set to true
+        if (window.ENABLE_PUSH_SETUP !== true) {
+          return;
+        }
+
+        // DEVELOPER: Replace this with your actual VAPID public key
+        var VAPID_PUBLIC_KEY = 'REPLACE_WITH_VAPID_PUBLIC_KEY';
+
+        // Check if this is a placeholder key
+        if (VAPID_PUBLIC_KEY === 'REPLACE_WITH_VAPID_PUBLIC_KEY') {
+          console.warn('[push-setup] VAPID public key not configured. Replace REPLACE_WITH_VAPID_PUBLIC_KEY with your actual key.');
+          return;
+        }
+
+        // Load register-push.js and subscribe
+        var script = document.createElement('script');
+        script.src = '/register-push.js';
+        script.onload = function() {
+          console.log('[push-setup] register-push.js loaded, attempting subscription...');
+          window.subscribeToPush(VAPID_PUBLIC_KEY)
+            .then(function(subscription) {
+              console.log('[push-setup] Push subscription successful:', subscription.endpoint);
+            })
+            .catch(function(error) {
+              console.error('[push-setup] Push subscription failed:', error);
+            });
+        };
+        script.onerror = function() {
+          console.error('[push-setup] Failed to load register-push.js');
+        };
+        document.body.appendChild(script);
       })();
     </script>
   </body>
