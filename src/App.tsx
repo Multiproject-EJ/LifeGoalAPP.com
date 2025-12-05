@@ -978,7 +978,6 @@ export default function App() {
           <div className="workspace-content">
             <LifeWheelCheckins session={activeSession} />
             <GoalReflectionJournal session={activeSession} />
-            <VisionBoard session={activeSession} />
           </div>
         );
       case 'habits':
