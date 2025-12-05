@@ -288,6 +288,63 @@ SELECT cron.schedule(
 | `public/register-push.js` | Vanilla JS for subscribing to push |
 | `src/push-subscribe.ts` | TypeScript version for dev integration |
 | `scripts/send-push-node.js` | Node.js script for sending push notifications |
+| `api/vapid-public.js` | (Dev) Serverless endpoint to fetch VAPID public key |
+| `api/save-subscription.js` | (Dev) Serverless endpoint to save subscriptions locally |
+| `scripts/test-send.js` | (Dev) Script to send test notifications |
+
+## Development-Only Endpoints & Test Script
+
+> ⚠️ **WARNING**: The endpoints and script described in this section are for **local development and testing only**. Do NOT use them in production environments.
+
+For quick end-to-end testing of Web Push without building a full backend, we provide three dev-only helpers:
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/vapid-public` | GET | Returns the VAPID public key from `VAPID_PUBLIC` env var |
+| `/api/save-subscription` | POST | Saves a PushSubscription to `.data/subscriptions.json` |
+
+### Test Send Script
+
+`scripts/test-send.js` reads stored subscriptions and sends a test notification to each.
+
+### Quick Start Commands
+
+```bash
+# 1. Install web-push (one-time)
+npm install web-push
+
+# 2. Generate VAPID keys (one-time)
+npx web-push generate-vapid-keys
+
+# 3. Set environment variables (copy from step 2 output)
+export VAPID_PUBLIC="your_public_key_here"
+export VAPID_PRIVATE="your_private_key_here"
+
+# 4. Start your dev server (make sure it serves /api routes)
+npm run dev
+
+# 5. In your app, subscribe to push (this saves to .data/subscriptions.json)
+#    The app should POST the subscription to /api/save-subscription
+
+# 6. Send test notifications
+node scripts/test-send.js
+
+# Or specify a custom subscriptions file:
+node scripts/test-send.js /path/to/subscriptions.json
+```
+
+### Why These Are Dev-Only
+
+- **`api/save-subscription.js`**: Uses local filesystem storage. Serverless platforms have ephemeral filesystems - files won't persist between invocations in production.
+- **`scripts/test-send.js`**: Reads from local file, no authentication, uses hardcoded mailto contact.
+- **No authentication**: These endpoints don't verify user identity.
+
+For production, use:
+- A proper database (Supabase, PostgreSQL, DynamoDB, etc.)
+- Authenticated endpoints with user association
+- A production-ready notification service or queue
 
 ## Security Considerations
 
