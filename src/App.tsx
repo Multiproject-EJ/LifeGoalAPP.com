@@ -915,7 +915,6 @@ export default function App() {
               <GoalWorkspace session={activeSession} />
               <GoalReflectionJournal session={activeSession} />
               <DailyHabitTracker session={activeSession} />
-              <VisionBoard session={activeSession} />
               <LifeWheelCheckins session={activeSession} />
             </div>
           ) : (
