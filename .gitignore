@@ -15,3 +15,4 @@ pnpm-debug.log*
 screenshots
 index.html.backup
 public/assets/supaClient.js
+.data
