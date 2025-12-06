@@ -53,14 +53,30 @@ function getTypeColor(type: string | null | undefined): string {
 }
 
 /**
- * Format a date as YYYY-MM-DD
+ * Format a Date object to YYYY-MM-DD string format.
+ * Uses ISO string split to ensure consistent date key format
+ * that matches the journal entry_date format from the database.
+ * 
+ * @param date - The Date object to format
+ * @returns A string in YYYY-MM-DD format (e.g., "2025-12-05")
  */
 function formatDateKey(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
 /**
- * Get all days in a month as a 2D array (weeks)
+ * Generate a 2D array representing a month's calendar grid.
+ * Each inner array represents a week (7 elements), where null values
+ * represent empty cells for padding before/after the actual month days.
+ * 
+ * @param year - The full year (e.g., 2025)
+ * @param month - The month index (0 = January, 11 = December)
+ * @returns A 2D array of Date objects and null values for calendar display
+ * 
+ * @example
+ * // December 2025 starts on Monday, so Sunday is null
+ * getMonthDays(2025, 11)
+ * // Returns: [[null, Date(Dec 1), Date(Dec 2), ...], [...], ...]
  */
 function getMonthDays(year: number, month: number): (Date | null)[][] {
   const firstDay = new Date(year, month, 1);

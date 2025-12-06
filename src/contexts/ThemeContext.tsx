@@ -188,7 +188,14 @@ const persistValue = (key: string, value: string) => {
 };
 
 /**
- * Get system preference for dark mode
+ * Detect the user's system color scheme preference.
+ * Uses the prefers-color-scheme media query to determine if the user
+ * prefers dark or light mode at the OS/browser level.
+ * 
+ * In SSR environments where window is undefined, or in browsers that
+ * don't support matchMedia, this falls back to 'light' as the safe default.
+ * 
+ * @returns 'dark' if the system prefers dark mode, 'light' otherwise
  */
 function getSystemPreference(): ThemeCategory {
   if (typeof window === 'undefined' || !window.matchMedia) {

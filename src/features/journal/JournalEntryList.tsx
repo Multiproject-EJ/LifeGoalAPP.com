@@ -24,6 +24,19 @@ type JournalEntryListProps = {
   isEntryLocked: (entry: JournalEntry) => boolean;
 };
 
+/**
+ * Parse a YYYY-MM-DD date string into a Date object.
+ * Uses Date constructor with year, month, day parameters to avoid
+ * timezone issues that occur when parsing ISO strings directly.
+ * 
+ * @param dateStr - Date string in YYYY-MM-DD format
+ * @returns Date object representing midnight local time on the given date
+ */
+function parseDateString(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function getPreview(content: string, limit = 140): string {
   const normalized = content.replace(/\s+/g, ' ').trim();
   if (normalized.length <= limit) return normalized;
@@ -127,7 +140,7 @@ export function JournalEntryList({
           {selectedCalendarDate && (
             <div className="journal-list__date-entries">
               <h4 className="journal-list__date-heading">
-                {new Date(selectedCalendarDate + 'T00:00:00').toLocaleDateString(undefined, {
+                {parseDateString(selectedCalendarDate).toLocaleDateString(undefined, {
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',

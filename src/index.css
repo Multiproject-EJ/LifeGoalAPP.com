@@ -9287,11 +9287,14 @@ body {
   flex-direction: column-reverse;
   align-items: center;
   gap: 0.75rem;
+  /* Mobile footer nav height offset - applied via media query */
+  --fab-mobile-footer-offset: 5.5rem;
 }
 
 @media (max-width: 720px) {
   .quick-actions-fab {
-    bottom: calc(clamp(4.5rem, 12vw, 5.5rem) + 1rem);
+    /* Position FAB above mobile footer nav */
+    bottom: calc(var(--fab-mobile-footer-offset) + 1rem);
   }
 }
 

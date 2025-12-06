@@ -38,12 +38,14 @@ export function QuickActionsFAB({
   const [showLifeCoach, setShowLifeCoach] = useState(false);
   const fabRef = useRef<HTMLDivElement>(null);
 
-  // Close on click outside
+  // Close FAB menu and reset all states on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (fabRef.current && !fabRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setShowJournalTypes(false);
+        // Note: showLifeCoach is not reset here because the Life Coach modal
+        // has its own backdrop click handler for closing
       }
     };
 
