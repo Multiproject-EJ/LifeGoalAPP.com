@@ -24,6 +24,7 @@ import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
+import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import {
   fetchWorkspaceProfile,
@@ -518,6 +519,22 @@ export default function App() {
   const handleJournalNavigation = useCallback((navId: string) => {
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
+  }, []);
+
+  // Quick Actions FAB handlers
+  const handleQuickCheckHabit = useCallback(() => {
+    setActiveWorkspaceNav('planning');
+    setShowMobileHome(false);
+  }, []);
+
+  const handleQuickJournalNow = useCallback((type: string) => {
+    setActiveWorkspaceNav('journal');
+    setShowMobileHome(false);
+    // Note: Journal type selection could be passed via context in future enhancement
+  }, []);
+
+  const handleOpenLifeCoach = useCallback(() => {
+    // Life Coach modal is handled within the FAB component
   }, []);
 
   const statusElements = (
@@ -1289,6 +1306,16 @@ export default function App() {
           }}
         />
       ) : null}
+
+      {/* Quick Actions FAB - visible app-wide */}
+      {!shouldRequireAuthentication && (
+        <QuickActionsFAB
+          session={activeSession}
+          onCheckHabit={handleQuickCheckHabit}
+          onJournalNow={handleQuickJournalNow}
+          onOpenLifeCoach={handleOpenLifeCoach}
+        />
+      )}
     </div>
   );
 }
