@@ -34,6 +34,7 @@ import {
 import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceStats';
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
+import './styles/workspace.css';
 
 type AuthMode = 'password' | 'signup';
 

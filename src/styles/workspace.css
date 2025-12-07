@@ -1,0 +1,23 @@
+:root {
+  --workspace-max-width: 1200px;
+  --workspace-padding: 2rem;
+  --workspace-padding-sm: 1rem;
+}
+
+.workspace-content {
+  padding: var(--workspace-padding);
+  box-sizing: border-box;
+}
+
+.workspace-content > * {
+  max-width: var(--workspace-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .workspace-content { padding: var(--workspace-padding-sm); }
+  .workspace-content > * { padding: 0; max-width: 100%; }
+}
