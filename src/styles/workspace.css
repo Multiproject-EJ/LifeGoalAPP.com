@@ -1,0 +1,32 @@
+:root {
+  --workspace-max-width: 1200px;
+  --workspace-padding: 2rem;
+  --workspace-padding-sm: 1rem;
+}
+
+.workspace-content {
+  /* overall padding for workspace pages */
+  padding: var(--workspace-padding);
+  box-sizing: border-box;
+}
+
+/* Constrain the immediate child of .workspace-content so large internal elements don't overflow.
+   Many components already use their own container; this rule ensures those that
+   don't will still be constrained and centered. */
+.workspace-content > * {
+  max-width: var(--workspace-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* On screens narrower than 768px: reduce padding and ensure full width usage */
+@media (max-width: 768px) {
+  .workspace-content {
+    padding: var(--workspace-padding-sm);
+  }
+  .workspace-content > * {
+    max-width: 100%;
+  }
+}
