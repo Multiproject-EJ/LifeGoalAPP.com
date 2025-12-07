@@ -10,7 +10,7 @@
   box-sizing: border-box;
 }
 
-/* Constrain the immediate child module so large internal elements don't overflow.
+/* Constrain the immediate child of .workspace-content so large internal elements don't overflow.
    Many components already use their own container; this rule ensures those that
    don't will still be constrained and centered. */
 .workspace-content > * {
@@ -21,7 +21,7 @@
   width: 100%;
 }
 
-/* Some smaller screens: reduce padding and ensure full width usage */
+/* On screens narrower than 768px: reduce padding and ensure full width usage */
 @media (max-width: 768px) {
   .workspace-content {
     padding: var(--workspace-padding-sm);
