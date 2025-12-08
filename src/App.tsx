@@ -914,7 +914,7 @@ export default function App() {
     if (activeWorkspaceNav === 'goals') {
       return (
         <>
-          {isOnboardingGateActive && (
+          {isOnboardingGateActive && !isOnboardingComplete && (
             <OnboardingCard
               session={activeSession}
               displayName={displayName}

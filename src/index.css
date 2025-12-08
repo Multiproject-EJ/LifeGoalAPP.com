@@ -9284,7 +9284,7 @@ body {
   right: clamp(1.5rem, 5vw, 2rem);
   z-index: 1000;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   align-items: center;
   gap: 0.75rem;
   /* Mobile footer nav height offset - applied via media query */
@@ -9338,7 +9338,7 @@ body {
 
 .quick-actions-fab__actions {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 0.5rem;
   pointer-events: none;
 }
@@ -9352,7 +9352,7 @@ body {
   align-items: center;
   gap: 0.75rem;
   opacity: 0;
-  transform: translateY(20px) scale(0.8);
+  transform: translateY(-20px) scale(0.8);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   transition-delay: calc(var(--action-index, 0) * 0.05s);
   position: relative;
