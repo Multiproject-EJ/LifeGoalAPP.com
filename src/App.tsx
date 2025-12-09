@@ -931,7 +931,6 @@ export default function App() {
             <div className="workspace-content">
               <ProgressDashboard session={activeSession} />
               <GoalWorkspace session={activeSession} />
-              <GoalReflectionJournal session={activeSession} />
             </div>
           ) : (
             <p className="workspace-onboarding-hint">
@@ -1023,6 +1022,7 @@ export default function App() {
           <div className="workspace-content">
             <LifeGoalsSection session={activeSession} />
             <GoalWorkspace session={activeSession} />
+            <GoalReflectionJournal session={activeSession} />
           </div>
         );
       case 'assistant':
