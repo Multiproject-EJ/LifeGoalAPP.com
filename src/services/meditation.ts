@@ -121,6 +121,36 @@ export async function createMeditationSession(
 }
 
 /**
+ * Calculate meditation streak from sorted sessions (most recent first)
+ */
+function calculateStreak(sessions: { session_date: string }[]): number {
+  let currentStreak = 0;
+  const today = new Date().toISOString().split('T')[0];
+  let checkDate = new Date();
+
+  for (const session of sessions) {
+    const sessionDate = session.session_date;
+    const expectedDate = checkDate.toISOString().split('T')[0];
+
+    if (sessionDate === expectedDate || (currentStreak === 0 && sessionDate === today)) {
+      currentStreak++;
+      checkDate = new Date(checkDate.getTime() - 86400000); // Move back one day
+    } else if (
+      currentStreak === 0 &&
+      sessionDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    ) {
+      // Allow streak to start from yesterday
+      currentStreak++;
+      checkDate = new Date(checkDate.getTime() - 172800000); // Move back two days
+    } else {
+      break;
+    }
+  }
+
+  return currentStreak;
+}
+
+/**
  * Get meditation stats for a user
  */
 export async function getMeditationStats(userId: string): Promise<
@@ -142,25 +172,7 @@ export async function getMeditationStats(userId: string): Promise<
     const sortedSessions = [...completedSessions].sort((a, b) =>
       b.session_date.localeCompare(a.session_date),
     );
-    let currentStreak = 0;
-    const today = new Date().toISOString().split('T')[0];
-    let checkDate = new Date();
-
-    for (const session of sortedSessions) {
-      const sessionDate = session.session_date;
-      const expectedDate = checkDate.toISOString().split('T')[0];
-
-      if (sessionDate === expectedDate || (currentStreak === 0 && sessionDate === today)) {
-        currentStreak++;
-        checkDate = new Date(checkDate.getTime() - 86400000); // Move back one day
-      } else if (currentStreak === 0 && sessionDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]) {
-        // Allow streak to start from yesterday
-        currentStreak++;
-        checkDate = new Date(checkDate.getTime() - 172800000); // Move back two days
-      } else {
-        break;
-      }
-    }
+    const currentStreak = calculateStreak(sortedSessions);
 
     return {
       data: { totalMinutes, totalSessions, currentStreak },
@@ -189,24 +201,7 @@ export async function getMeditationStats(userId: string): Promise<
     const totalSessions = sessions?.length ?? 0;
 
     // Calculate streak
-    let currentStreak = 0;
-    const today = new Date().toISOString().split('T')[0];
-    let checkDate = new Date();
-
-    for (const session of sessions ?? []) {
-      const sessionDate = session.session_date;
-      const expectedDate = checkDate.toISOString().split('T')[0];
-
-      if (sessionDate === expectedDate || (currentStreak === 0 && sessionDate === today)) {
-        currentStreak++;
-        checkDate = new Date(checkDate.getTime() - 86400000);
-      } else if (currentStreak === 0 && sessionDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]) {
-        currentStreak++;
-        checkDate = new Date(checkDate.getTime() - 172800000);
-      } else {
-        break;
-      }
-    }
+    const currentStreak = calculateStreak(sessions ?? []);
 
     return {
       data: { totalMinutes, totalSessions, currentStreak },
