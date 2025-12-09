@@ -1066,6 +1066,26 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     );
   };
 
+  // Helper function to extract and format life wheel domain info
+  const getHabitDomainInfo = (habitSchedule: Json | null) => {
+    const domainMeta = extractLifeWheelDomain(habitSchedule);
+    const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
+    const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
+    const displayLabel = domainLabel || 'Habit';
+    
+    return { domainMeta, domainLabel, domainColor, displayLabel };
+  };
+
+  // Helper function to create a minimal habit object for schedule checking
+  const createHabitForSchedule = (habitId: string, habitName: string, habitSchedule: Json | null): HabitWithGoal => {
+    return {
+      id: habitId,
+      name: habitName,
+      frequency: 'daily', // Default, will be overridden by schedule
+      schedule: habitSchedule,
+    } as HabitWithGoal;
+  };
+
   const renderMonthlyGrid = () => {
     if (monthDays.length === 0) {
       return null;
@@ -1224,10 +1244,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 
                 // Extract scheduling info if available
                 const habitSchedule = habitStat.schedule ?? null;
-                const domainMeta = extractLifeWheelDomain(habitSchedule);
-                const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
-                const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
-                const displayLabel = domainLabel || 'Habit';
+                const { domainColor, displayLabel } = getHabitDomainInfo(habitSchedule);
 
                 return (
                   <tr key={habitStat.habitId} className="habit-monthly__row" style={{ borderLeftColor: domainColor }}>
@@ -1254,13 +1271,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       const dayLabel = formatDateLabel(dateIso);
                       
                       // Check if habit is scheduled for this date
-                      // We need to create a minimal habit object for the schedule checker
-                      const habitForSchedule = {
-                        id: habitStat.habitId,
-                        name: habitStat.habitName,
-                        frequency: 'daily', // Default, will be overridden by schedule
-                        schedule: habitSchedule,
-                      } as HabitWithGoal;
+                      const habitForSchedule = createHabitForSchedule(habitStat.habitId, habitStat.habitName, habitSchedule);
                       const scheduled = isHabitScheduledOnDate(habitForSchedule, dateIso);
 
                       const cellClassNames = ['habit-monthly__cell'];
@@ -1300,6 +1311,107 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile-optimized card view - shown only on mobile */}
+        <div className="habit-monthly__mobile-view">
+          {(monthlyStats?.habits || []).length === 0 ? (
+            <div className="habit-monthly__mobile-empty">
+              <h3>No habits scheduled</h3>
+              <p>Add habits to your goals to see them tracked here month by month.</p>
+            </div>
+          ) : (
+            (monthlyStats?.habits || []).map((habitStat) => {
+              const habitCompletionGrid = monthlyCompletionsV2[habitStat.habitId] ?? {};
+              const habitSchedule = habitStat.schedule ?? null;
+              const { domainColor, displayLabel } = getHabitDomainInfo(habitSchedule);
+
+              // Calculate completion percentage
+              const completedDays = Object.values(habitCompletionGrid).filter(Boolean).length;
+              const totalDays = monthDays.length;
+              const completionPercent = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+
+              return (
+                <div 
+                  key={habitStat.habitId} 
+                  className="habit-monthly__mobile-card"
+                  style={{ borderLeftColor: domainColor }}
+                >
+                  <div className="habit-monthly__mobile-header">
+                    <span className="habit-monthly__mobile-domain" style={{ backgroundColor: domainColor }}>
+                      {displayLabel}
+                    </span>
+                    <div className="habit-monthly__mobile-info">
+                      <h3 className="habit-monthly__mobile-name">
+                        {habitStat.emoji ? `${habitStat.emoji} ` : ''}{habitStat.habitName}
+                      </h3>
+                      <p className="habit-monthly__mobile-goal">
+                        {habitStat.goalTitle ? `Goal: ${habitStat.goalTitle}` : 'No goal assigned'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="habit-monthly__mobile-days">
+                    {monthDays.map((dateIso) => {
+                      const cellKey = `${habitStat.habitId}:${dateIso}`;
+                      const isCompleted = Boolean(habitCompletionGrid[dateIso]);
+                      const isToday = dateIso === activeDate;
+                      const isSavingCell = Boolean(monthlySaving[cellKey]);
+                      const dayLabel = formatDateLabel(dateIso);
+                      
+                      const habitForSchedule = createHabitForSchedule(habitStat.habitId, habitStat.habitName, habitSchedule);
+                      const scheduled = isHabitScheduledOnDate(habitForSchedule, dateIso);
+
+                      const dayClassNames = ['habit-monthly__mobile-day'];
+                      if (scheduled) {
+                        dayClassNames.push('habit-monthly__mobile-day--scheduled');
+                      } else {
+                        dayClassNames.push('habit-monthly__mobile-day--rest');
+                      }
+                      if (isCompleted) {
+                        dayClassNames.push('habit-monthly__mobile-day--completed');
+                      }
+                      if (isToday) {
+                        dayClassNames.push('habit-monthly__mobile-day--today');
+                      }
+
+                      return (
+                        <div key={dateIso} className={dayClassNames.join(' ')}>
+                          <span className="habit-monthly__mobile-day-num">{formatDayOfMonth(dateIso)}</span>
+                          <span className="habit-monthly__mobile-day-name">{formatDayOfWeekShort(dateIso)}</span>
+                          <button
+                            type="button"
+                            className={`habit-monthly__mobile-toggle ${isCompleted ? 'habit-monthly__mobile-toggle--checked' : ''}`}
+                            aria-pressed={isCompleted}
+                            aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habitStat.habitName} for ${dayLabel}`}
+                            onClick={() => void toggleMonthlyHabitForDate(habitStat.habitId, habitStat.habitName, dateIso)}
+                            disabled={(!scheduled && !isCompleted) || isSavingCell}
+                          >
+                            {isSavingCell ? '…' : isCompleted ? '✓' : ''}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="habit-monthly__mobile-summary">
+                    <div className="habit-monthly__mobile-completion">
+                      <span>{completedDays} of {totalDays} days</span>
+                    </div>
+                    <span 
+                      className={`habit-monthly__mobile-percentage ${
+                        completionPercent >= 80 ? 'habit-monthly__mobile-percentage--high' : 
+                        completionPercent >= 50 ? 'habit-monthly__mobile-percentage--medium' : 
+                        'habit-monthly__mobile-percentage--low'
+                      }`}
+                    >
+                      {completionPercent}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
         </div>
       </div>
