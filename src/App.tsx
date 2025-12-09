@@ -20,6 +20,7 @@ import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiSupportAssistant } from './features/assistant';
 import { Journal } from './features/journal';
+import { BreathingSpace } from './features/meditation';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -93,6 +94,13 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'JOURNAL',
   },
   {
+    id: 'breathing-space',
+    label: 'Breathing Space',
+    summary: 'Practice mindful breathing and meditation to center yourself.',
+    icon: '🌬️',
+    shortLabel: 'BREATHE',
+  },
+  {
     id: 'insights',
     label: 'Vision Board',
     summary: 'Stay inspired with highlights from your evolving vision board.',
@@ -135,6 +143,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'support',
   'assistant',
   'journal',
+  'breathing-space',
   'insights',
   'rituals',
   'account',
@@ -287,13 +296,20 @@ export default function App() {
     if (typeof window === 'undefined') return;
     if (window.location.pathname === '/journal') {
       setActiveWorkspaceNav('journal');
+    } else if (window.location.pathname === '/breathing-space') {
+      setActiveWorkspaceNav('breathing-space');
     }
   }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const searchSuffix = initialSearch ?? '';
-    const nextPath = activeWorkspaceNav === 'journal' ? '/journal' : '/';
+    let nextPath = '/';
+    if (activeWorkspaceNav === 'journal') {
+      nextPath = '/journal';
+    } else if (activeWorkspaceNav === 'breathing-space') {
+      nextPath = '/breathing-space';
+    }
     const nextUrl = `${nextPath}${searchSuffix}`;
     if (window.location.pathname !== nextPath) {
       window.history.replaceState({}, '', nextUrl);
@@ -1008,6 +1024,12 @@ export default function App() {
               onNavigateToGoals={() => handleJournalNavigation('support')}
               onNavigateToHabits={() => handleJournalNavigation('planning')}
             />
+          </div>
+        );
+      case 'breathing-space':
+        return (
+          <div className="workspace-content">
+            <BreathingSpace session={activeSession} />
           </div>
         );
       case 'insights':

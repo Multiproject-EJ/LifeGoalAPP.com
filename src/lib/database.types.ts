@@ -1098,6 +1098,39 @@ export interface Database {
           }
         ];
       };
+      meditation_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          created_at: string;
+          session_date: string;
+          session_type: string;
+          duration_seconds: number;
+          completed: boolean;
+          notes: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          created_at?: string;
+          session_date?: string;
+          session_type?: string;
+          duration_seconds: number;
+          completed?: boolean;
+          notes?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          created_at?: string;
+          session_date?: string;
+          session_type?: string;
+          duration_seconds?: number;
+          completed?: boolean;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_habit_streaks: {
