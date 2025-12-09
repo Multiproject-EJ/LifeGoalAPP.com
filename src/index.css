@@ -4403,30 +4403,7 @@ body {
     color: #ef4444;
   }
 
-  /* Scroll hint for mobile days */
-  .habit-monthly__mobile-scroll-hint {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    width: 30px;
-    height: 100%;
-    background: linear-gradient(to left, rgba(255, 255, 255, 0.95), transparent);
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 0.25rem;
-  }
-
-  .habit-monthly__mobile-scroll-hint::after {
-    content: '›';
-    font-size: 1.25rem;
-    color: #64748b;
-    opacity: 0.6;
-  }
-
-  /* Add padding to accommodate scroll hint */
+  /* Mobile card positioning */
   .habit-monthly__mobile-card {
     position: relative;
   }

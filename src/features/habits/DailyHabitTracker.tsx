@@ -1066,6 +1066,26 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     );
   };
 
+  // Helper function to extract and format life wheel domain info
+  const getHabitDomainInfo = (habitSchedule: Json | null) => {
+    const domainMeta = extractLifeWheelDomain(habitSchedule);
+    const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
+    const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
+    const displayLabel = domainLabel || 'Habit';
+    
+    return { domainMeta, domainLabel, domainColor, displayLabel };
+  };
+
+  // Helper function to create a minimal habit object for schedule checking
+  const createHabitForSchedule = (habitId: string, habitName: string, habitSchedule: Json | null): HabitWithGoal => {
+    return {
+      id: habitId,
+      name: habitName,
+      frequency: 'daily', // Default, will be overridden by schedule
+      schedule: habitSchedule,
+    } as HabitWithGoal;
+  };
+
   const renderMonthlyGrid = () => {
     if (monthDays.length === 0) {
       return null;
@@ -1224,10 +1244,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 
                 // Extract scheduling info if available
                 const habitSchedule = habitStat.schedule ?? null;
-                const domainMeta = extractLifeWheelDomain(habitSchedule);
-                const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
-                const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
-                const displayLabel = domainLabel || 'Habit';
+                const { domainColor, displayLabel } = getHabitDomainInfo(habitSchedule);
 
                 return (
                   <tr key={habitStat.habitId} className="habit-monthly__row" style={{ borderLeftColor: domainColor }}>
@@ -1254,13 +1271,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       const dayLabel = formatDateLabel(dateIso);
                       
                       // Check if habit is scheduled for this date
-                      // We need to create a minimal habit object for the schedule checker
-                      const habitForSchedule = {
-                        id: habitStat.habitId,
-                        name: habitStat.habitName,
-                        frequency: 'daily', // Default, will be overridden by schedule
-                        schedule: habitSchedule,
-                      } as HabitWithGoal;
+                      const habitForSchedule = createHabitForSchedule(habitStat.habitId, habitStat.habitName, habitSchedule);
                       const scheduled = isHabitScheduledOnDate(habitForSchedule, dateIso);
 
                       const cellClassNames = ['habit-monthly__cell'];
@@ -1313,10 +1324,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             (monthlyStats?.habits || []).map((habitStat) => {
               const habitCompletionGrid = monthlyCompletionsV2[habitStat.habitId] ?? {};
               const habitSchedule = habitStat.schedule ?? null;
-              const domainMeta = extractLifeWheelDomain(habitSchedule);
-              const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
-              const domainColor = getLifeWheelColor(domainMeta?.key ?? null);
-              const displayLabel = domainLabel || 'Habit';
+              const { domainColor, displayLabel } = getHabitDomainInfo(habitSchedule);
 
               // Calculate completion percentage
               const completedDays = Object.values(habitCompletionGrid).filter(Boolean).length;
@@ -1351,12 +1359,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       const isSavingCell = Boolean(monthlySaving[cellKey]);
                       const dayLabel = formatDateLabel(dateIso);
                       
-                      const habitForSchedule = {
-                        id: habitStat.habitId,
-                        name: habitStat.habitName,
-                        frequency: 'daily',
-                        schedule: habitSchedule,
-                      } as HabitWithGoal;
+                      const habitForSchedule = createHabitForSchedule(habitStat.habitId, habitStat.habitName, habitSchedule);
                       const scheduled = isHabitScheduledOnDate(habitForSchedule, dateIso);
 
                       const dayClassNames = ['habit-monthly__mobile-day'];
