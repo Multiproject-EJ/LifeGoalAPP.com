@@ -932,8 +932,6 @@ export default function App() {
               <ProgressDashboard session={activeSession} />
               <GoalWorkspace session={activeSession} />
               <GoalReflectionJournal session={activeSession} />
-              <DailyHabitTracker session={activeSession} />
-              <LifeWheelCheckins session={activeSession} />
             </div>
           ) : (
             <p className="workspace-onboarding-hint">
