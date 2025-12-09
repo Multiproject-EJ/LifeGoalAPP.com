@@ -991,7 +991,6 @@ export default function App() {
         return (
           <div className="workspace-content">
             <LifeWheelCheckins session={activeSession} />
-            <GoalReflectionJournal session={activeSession} />
           </div>
         );
       case 'habits':
