@@ -3,11 +3,12 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchGoals } from '../../services/goals';
 import {
-  fetchHabitLogsForRange,
-  fetchHabitsForUser,
-  type LegacyHabitWithGoal as HabitWithGoal,
-} from '../../compat/legacyHabitsAdapter';
-import { quickAddDailyHabit } from '../../services/habitsV2';
+  listHabitsV2,
+  listHabitLogsForRangeMultiV2,
+  quickAddDailyHabit,
+  type HabitV2Row,
+  type HabitLogV2Row,
+} from '../../services/habitsV2';
 import type { Database } from '../../lib/database.types';
 import {
   GOAL_STATUS_META,
@@ -20,7 +21,17 @@ import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
 import { isDemoSession } from '../../services/demoSession';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
-type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
+// Use V2 habit types
+type HabitRow = HabitV2Row;
+type HabitLogRow = HabitLogV2Row;
+// Adapt V2 habit to include goal data for compatibility
+type HabitWithGoal = HabitV2Row & {
+  goal: {
+    id: string;
+    title: string;
+    target_date: string | null;
+  } | null;
+};
 
 type ProgressDashboardProps = {
   session: Session;
@@ -174,7 +185,7 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
     try {
       const [{ data: goalData, error: goalError }, { data: habitData, error: habitError }] = await Promise.all([
         fetchGoals(),
-        fetchHabitsForUser(session.user.id),
+        listHabitsV2(),
       ]);
 
       if (goalError) throw goalError;
@@ -183,7 +194,13 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
       const ownedGoals = (goalData ?? []).filter((goal) => goal.user_id === session.user.id);
       setGoals(ownedGoals);
 
-      const nextHabits = habitData ?? [];
+      // Map V2 habits to include goal data
+      const habitsV2 = habitData ?? [];
+      const goalsMap = new Map(ownedGoals.map(g => [g.id, { id: g.id, title: g.title, target_date: g.target_date }]));
+      const nextHabits: HabitWithGoal[] = habitsV2.map(h => ({
+        ...h,
+        goal: h.goal_id ? (goalsMap.get(h.goal_id) ?? null) : null,
+      }));
       setHabits(nextHabits);
 
       if (nextHabits.length === 0) {
@@ -192,11 +209,12 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
       }
 
       const habitIds = nextHabits.map((habit) => habit.id);
-      const { data: logData, error: logError } = await fetchHabitLogsForRange(
+      const { data: logData, error: logError } = await listHabitLogsForRangeMultiV2({
+        userId: session.user.id,
         habitIds,
-        formatISODate(monthStart),
-        formatISODate(monthEnd),
-      );
+        startDate: formatISODate(monthStart),
+        endDate: formatISODate(monthEnd),
+      });
       if (logError) throw logError;
       setLogs(logData ?? []);
     } catch (error) {
@@ -283,7 +301,8 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
 
   const completionMap = useMemo(() => {
     return logs.reduce<Record<string, number>>((acc, log) => {
-      if (!log.completed) {
+      // V2 uses 'done' field instead of 'completed'
+      if (!log.done) {
         return acc;
       }
       acc[log.date] = (acc[log.date] ?? 0) + 1;

@@ -30,18 +30,16 @@ export async function fetchWorkspaceStats(userId: string): Promise<WorkspaceStat
 
   const goalIds = (goalsResult.data ?? []).map((goal) => goal.id);
 
-  let habitCount = 0;
-  if (goalIds.length > 0) {
-    const habitsResult = await supabase
-      .from('habits')
-      .select('id', { count: 'exact', head: true })
-      .in('goal_id', goalIds);
+  // Use habits_v2 instead of legacy habits table
+  const habitsResult = await supabase
+    .from('habits_v2')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
 
-    if (habitsResult.error) {
-      return { data: null, error: habitsResult.error };
-    }
-    habitCount = habitsResult.count ?? 0;
+  if (habitsResult.error) {
+    return { data: null, error: habitsResult.error };
   }
+  const habitCount = habitsResult.count ?? 0;
 
   const checkinsResult = await supabase
     .from('checkins')

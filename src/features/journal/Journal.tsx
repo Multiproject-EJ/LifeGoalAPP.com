@@ -36,7 +36,8 @@ const MOOD_OPTIONS: JournalMoodOption[] = [
 ];
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
-type HabitRow = Database['public']['Tables']['habits']['Row'];
+// Use V2 habits
+type HabitRow = HabitV2Row;
 type JournalEntryInsertPayload = Database['public']['Tables']['journal_entries']['Insert'];
 type JournalEntryUpdatePayload = Database['public']['Tables']['journal_entries']['Update'];
 
@@ -149,7 +150,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
       setHabits([]);
       return;
     }
-    fetchHabitsForUser(session.user.id).then(({ data }) => {
+    listHabitsV2().then(({ data }) => {
       setHabits(data ?? []);
     });
   }, [session, journalDisabled]);

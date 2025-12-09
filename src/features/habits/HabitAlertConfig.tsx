@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react';
 import type { Database } from '../../lib/database.types';
 import {
-  fetchHabitAlerts,
-  upsertHabitAlert,
-  deleteHabitAlert,
-  toggleHabitAlert,
-  getAlertScheduleDescription,
-} from '../../compat/legacyAlertsAdapter';
+  fetchHabitReminderPrefs,
+  updateHabitReminderPref,
+  formatTimeForDisplay,
+  type HabitWithReminderPref,
+} from '../../services/habitReminderPrefs';
 
-type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
+// Type for displaying the single habit reminder pref as an "alert" in the UI
+type HabitAlertRow = {
+  id: string;
+  habit_id: string;
+  alert_time: string;
+  days_of_week: number[] | null;
+  enabled: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+};
 
 type HabitAlertConfigProps = {
   habitId: string;
@@ -27,110 +35,86 @@ const DAYS_OF_WEEK = [
 ];
 
 export function HabitAlertConfig({ habitId, habitName, onClose }: HabitAlertConfigProps) {
-  const [alerts, setAlerts] = useState<HabitAlertRow[]>([]);
+  // V2 uses a single reminder pref per habit, but we display it like the legacy "alert" UI
+  const [reminderPref, setReminderPref] = useState<HabitWithReminderPref | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
   
-  // Form state for adding new alert
-  const [newAlertTime, setNewAlertTime] = useState('08:00');
-  const [newAlertDays, setNewAlertDays] = useState<number[]>([]);
-  const [frequencyMode, setFrequencyMode] = useState<'daily' | 'custom'>('daily');
+  // Form state for editing reminder
+  const [editTime, setEditTime] = useState('08:00');
+  const [editEnabled, setEditEnabled] = useState(true);
 
   useEffect(() => {
-    loadAlerts();
+    loadReminderPref();
   }, [habitId]);
 
-  const loadAlerts = async () => {
+  const loadReminderPref = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fetchError } = await fetchHabitAlerts(habitId);
+      const { data, error: fetchError } = await fetchHabitReminderPrefs();
       if (fetchError) throw fetchError;
-      setAlerts(data || []);
+      
+      // Find the pref for this habit
+      const pref = (data || []).find(p => p.habit_id === habitId);
+      setReminderPref(pref || null);
+      
+      if (pref) {
+        setEditEnabled(pref.enabled);
+        setEditTime(formatTimeForDisplay(pref.preferred_time) || '08:00');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load alerts');
+      setError(err instanceof Error ? err.message : 'Failed to load reminder preferences');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddAlert = async () => {
-    if (!newAlertTime) {
-      setError('Please select a time');
-      return;
-    }
-
+  const handleSaveReminder = async () => {
     setSaving(true);
     setError(null);
     try {
-      const { data, error: saveError } = await upsertHabitAlert({
-        habit_id: habitId,
-        alert_time: newAlertTime,
-        days_of_week: frequencyMode === 'daily' ? null : newAlertDays.length > 0 ? newAlertDays : null,
-        enabled: true,
+      const { data, error: saveError } = await updateHabitReminderPref(habitId, {
+        enabled: editEnabled,
+        preferred_time: editTime,
       });
       
       if (saveError) throw saveError;
-      if (data) {
-        setAlerts((prev) => [...prev, data]);
-        setShowAddForm(false);
-        setNewAlertTime('08:00');
-        setNewAlertDays([]);
-        setFrequencyMode('daily');
-      }
+      
+      // Reload to get the updated pref
+      await loadReminderPref();
+      setShowEditForm(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add alert');
+      setError(err instanceof Error ? err.message : 'Failed to update reminder');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleToggleAlert = async (alertId: string, currentEnabled: boolean) => {
+  const handleToggleEnabled = async () => {
+    if (!reminderPref) return;
+    
     setSaving(true);
     setError(null);
     try {
-      const { data, error: toggleError } = await toggleHabitAlert(alertId, !currentEnabled);
+      const { error: toggleError } = await updateHabitReminderPref(habitId, {
+        enabled: !reminderPref.enabled,
+      });
       if (toggleError) throw toggleError;
-      if (data) {
-        setAlerts((prev) =>
-          prev.map((alert) => (alert.id === alertId ? data : alert))
-        );
-      }
+      await loadReminderPref();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to toggle alert');
+      setError(err instanceof Error ? err.message : 'Failed to toggle reminder');
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleDeleteAlert = async (alertId: string) => {
-    setSaving(true);
-    setError(null);
-    try {
-      const { error: deleteError } = await deleteHabitAlert(alertId);
-      if (deleteError) throw deleteError;
-      setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
-      setDeleteConfirmId(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete alert');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const toggleDay = (day: number) => {
-    setNewAlertDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
-    );
   };
 
   return (
     <div className="habit-alert-config">
       <div className="habit-alert-config__header">
-        <h3>Alerts for &quot;{habitName}&quot;</h3>
+        <h3>Reminders for &quot;{habitName}&quot;</h3>
         {onClose && (
           <button
             type="button"
@@ -150,170 +134,109 @@ export function HabitAlertConfig({ habitId, habitName, onClose }: HabitAlertConf
       )}
 
       {loading ? (
-        <div className="habit-alert-config__loading">Loading alerts...</div>
+        <div className="habit-alert-config__loading">Loading reminder preferences...</div>
       ) : (
         <>
-          {alerts.length === 0 && !showAddForm ? (
+          {!reminderPref && !showEditForm ? (
             <div className="habit-alert-config__empty">
-              <p>No alerts configured for this habit yet.</p>
+              <p>No reminder configured for this habit yet.</p>
               <p className="habit-alert-config__hint">
-                Add alerts to receive notifications when it&apos;s time to work on this habit.
+                Set a preferred time to receive notifications for this habit.
               </p>
+              <button
+                type="button"
+                className="habit-alert-config__add-btn"
+                onClick={() => setShowEditForm(true)}
+                disabled={saving}
+              >
+                + Set Reminder Time
+              </button>
             </div>
-          ) : (
+          ) : reminderPref && !showEditForm ? (
             <div className="habit-alert-config__list">
-              {alerts.map((alert) => (
-                <div key={alert.id} className="habit-alert-config__item">
-                  <div className="habit-alert-config__item-info">
-                    <div className="habit-alert-config__item-time">
-                      {getAlertScheduleDescription(alert)}
-                    </div>
-                    <div className="habit-alert-config__item-status">
-                      {alert.enabled ? (
-                        <span className="habit-alert-config__badge habit-alert-config__badge--enabled">
-                          Enabled
-                        </span>
-                      ) : (
-                        <span className="habit-alert-config__badge habit-alert-config__badge--disabled">
-                          Disabled
-                        </span>
-                      )}
-                    </div>
+              <div className="habit-alert-config__item">
+                <div className="habit-alert-config__item-info">
+                  <div className="habit-alert-config__item-time">
+                    Daily at {formatTimeForDisplay(reminderPref.preferred_time) || 'Not set'}
                   </div>
-                  <div className="habit-alert-config__item-actions">
-                    <button
-                      type="button"
-                      className="habit-alert-config__btn habit-alert-config__btn--toggle"
-                      onClick={() => handleToggleAlert(alert.id, alert.enabled)}
-                      disabled={saving}
-                    >
-                      {alert.enabled ? 'Disable' : 'Enable'}
-                    </button>
-                    {deleteConfirmId === alert.id ? (
-                      <>
-                        <button
-                          type="button"
-                          className="habit-alert-config__btn habit-alert-config__btn--delete"
-                          onClick={() => handleDeleteAlert(alert.id)}
-                          disabled={saving}
-                        >
-                          Confirm Delete
-                        </button>
-                        <button
-                          type="button"
-                          className="habit-alert-config__btn habit-alert-config__btn--secondary"
-                          onClick={() => setDeleteConfirmId(null)}
-                          disabled={saving}
-                        >
-                          Cancel
-                        </button>
-                      </>
+                  <div className="habit-alert-config__item-status">
+                    {reminderPref.enabled ? (
+                      <span className="habit-alert-config__badge habit-alert-config__badge--enabled">
+                        Enabled
+                      </span>
                     ) : (
-                      <button
-                        type="button"
-                        className="habit-alert-config__btn habit-alert-config__btn--delete"
-                        onClick={() => setDeleteConfirmId(alert.id)}
-                        disabled={saving}
-                      >
-                        Delete
-                      </button>
+                      <span className="habit-alert-config__badge habit-alert-config__badge--disabled">
+                        Disabled
+                      </span>
                     )}
                   </div>
                 </div>
-              ))}
+                <div className="habit-alert-config__item-actions">
+                  <button
+                    type="button"
+                    className="habit-alert-config__btn habit-alert-config__btn--toggle"
+                    onClick={handleToggleEnabled}
+                    disabled={saving}
+                  >
+                    {reminderPref.enabled ? 'Disable' : 'Enable'}
+                  </button>
+                  <button
+                    type="button"
+                    className="habit-alert-config__btn habit-alert-config__btn--secondary"
+                    onClick={() => setShowEditForm(true)}
+                    disabled={saving}
+                  >
+                    Edit Time
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
+          ) : null}
 
-          {!showAddForm ? (
-            <button
-              type="button"
-              className="habit-alert-config__add-btn"
-              onClick={() => setShowAddForm(true)}
-              disabled={saving}
-            >
-              + Add Alert
-            </button>
-          ) : (
+          {showEditForm ? (
             <div className="habit-alert-config__form">
-              <h4>Add New Alert</h4>
+              <h4>{reminderPref ? 'Edit Reminder' : 'Set Reminder'}</h4>
 
               <div className="habit-alert-config__form-group">
-                <label htmlFor="alert-time">Alert Time</label>
+                <label htmlFor="reminder-time">Preferred Time</label>
                 <input
-                  id="alert-time"
+                  id="reminder-time"
                   type="time"
-                  value={newAlertTime}
-                  onChange={(e) => setNewAlertTime(e.target.value)}
+                  value={editTime}
+                  onChange={(e) => setEditTime(e.target.value)}
                   className="habit-alert-config__input"
                 />
               </div>
 
               <div className="habit-alert-config__form-group">
-                <label>Frequency</label>
-                <div className="habit-alert-config__radio-group">
-                  <label className="habit-alert-config__radio">
-                    <input
-                      type="radio"
-                      name="frequency"
-                      value="daily"
-                      checked={frequencyMode === 'daily'}
-                      onChange={() => {
-                        setFrequencyMode('daily');
-                        setNewAlertDays([]);
-                      }}
-                    />
-                    <span>Daily</span>
-                  </label>
-                  <label className="habit-alert-config__radio">
-                    <input
-                      type="radio"
-                      name="frequency"
-                      value="custom"
-                      checked={frequencyMode === 'custom'}
-                      onChange={() => setFrequencyMode('custom')}
-                    />
-                    <span>Custom days</span>
-                  </label>
-                </div>
+                <label className="habit-alert-config__checkbox">
+                  <input
+                    type="checkbox"
+                    checked={editEnabled}
+                    onChange={(e) => setEditEnabled(e.target.checked)}
+                  />
+                  <span>Enable reminder</span>
+                </label>
               </div>
-
-              {frequencyMode === 'custom' && (
-                <div className="habit-alert-config__form-group">
-                  <label>Select Days</label>
-                  <div className="habit-alert-config__days">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <button
-                        key={day.value}
-                        type="button"
-                        className={`habit-alert-config__day ${
-                          newAlertDays.includes(day.value) ? 'habit-alert-config__day--selected' : ''
-                        }`}
-                        onClick={() => toggleDay(day.value)}
-                      >
-                        {day.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="habit-alert-config__form-actions">
                 <button
                   type="button"
                   className="habit-alert-config__btn habit-alert-config__btn--primary"
-                  onClick={handleAddAlert}
-                  disabled={saving || (frequencyMode === 'custom' && newAlertDays.length === 0)}
+                  onClick={handleSaveReminder}
+                  disabled={saving}
                 >
-                  {saving ? 'Adding...' : 'Add Alert'}
+                  {saving ? 'Saving...' : 'Save Reminder'}
                 </button>
                 <button
                   type="button"
                   className="habit-alert-config__btn habit-alert-config__btn--secondary"
                   onClick={() => {
-                    setShowAddForm(false);
-                    setNewAlertTime('08:00');
-                    setNewAlertDays([]);
-                    setFrequencyMode('daily');
+                    setShowEditForm(false);
+                    if (reminderPref) {
+                      setEditEnabled(reminderPref.enabled);
+                      setEditTime(formatTimeForDisplay(reminderPref.preferred_time) || '08:00');
+                    }
                   }}
                   disabled={saving}
                 >
@@ -321,7 +244,7 @@ export function HabitAlertConfig({ habitId, habitName, onClose }: HabitAlertConf
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
         </>
       )}
     </div>
