@@ -122,6 +122,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
   // State for intentions journal
   const [isIntentionsJournalOpen, setIsIntentionsJournalOpen] = useState(false);
+  const [intentionsJournalType, setIntentionsJournalType] = useState<'today' | 'tomorrow'>('today');
   const [intentionsJournalContent, setIntentionsJournalContent] = useState('');
   const [intentionsJournalSaving, setIntentionsJournalSaving] = useState(false);
   const [intentionsJournalError, setIntentionsJournalError] = useState<string | null>(null);
@@ -835,8 +836,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const quickJournalDateLabel = formatDateLabel(activeDate);
 
-    const handleOpenIntentionsJournal = () => {
+    const handleOpenIntentionsJournal = (type: 'today' | 'tomorrow') => {
       setIsIntentionsJournalOpen(true);
+      setIntentionsJournalType(type);
       setIntentionsJournalContent('');
       setIntentionsJournalError(null);
       setIntentionsJournalStatus(null);
@@ -854,10 +856,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setIntentionsJournalStatus(null);
 
       try {
+        // Calculate the target date based on the type
+        const targetDate = intentionsJournalType === 'tomorrow' 
+          ? formatISODate(addDays(parseISODate(activeDate), 1))
+          : activeDate;
+        
+        const title = intentionsJournalType === 'tomorrow' 
+          ? "Tomorrow's Intentions" 
+          : "Today's Intentions";
+
         const payload: Database['public']['Tables']['journal_entries']['Insert'] = {
           user_id: session.user.id,
-          entry_date: activeDate,
-          title: "Today's Intentions",
+          entry_date: targetDate,
+          title,
           content,
           mood: null,
           tags: ['intentions', 'todos'],
@@ -994,7 +1005,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               <div className="habit-quick-journal__header">
                 <div>
                   <p className="habit-quick-journal__eyebrow">Plan for this day</p>
-                  <h3 className="habit-quick-journal__title">Today's Intentions & Todos</h3>
+                  <h3 className="habit-quick-journal__title">Intentions & Todos</h3>
                 </div>
                 <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
               </div>
@@ -1002,22 +1013,33 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 Set your intentions and list your key todos for the day ahead.
               </p>
               {!isIntentionsJournalOpen ? (
-                <button
-                  type="button"
-                  className="habit-quick-journal__button"
-                  onClick={handleOpenIntentionsJournal}
-                >
-                  + Add intentions & todos
-                </button>
+                <div className="habit-quick-journal__button-group">
+                  <button
+                    type="button"
+                    className="habit-quick-journal__button habit-quick-journal__button--half"
+                    onClick={() => handleOpenIntentionsJournal('today')}
+                  >
+                    + Today's intentions
+                  </button>
+                  <button
+                    type="button"
+                    className="habit-quick-journal__button habit-quick-journal__button--half"
+                    onClick={() => handleOpenIntentionsJournal('tomorrow')}
+                  >
+                    + Tomorrow's intentions
+                  </button>
+                </div>
               ) : (
                 <div className="habit-quick-journal__sheet">
                   <label className="habit-quick-journal__field">
-                    <span className="habit-quick-journal__field-label">Intentions for {quickJournalDateLabel}</span>
+                    <span className="habit-quick-journal__field-label">
+                      {intentionsJournalType === 'tomorrow' ? "Tomorrow's Intentions" : "Today's Intentions"} ({intentionsJournalType === 'tomorrow' ? formatDateLabel(formatISODate(addDays(parseISODate(activeDate), 1))) : quickJournalDateLabel})
+                    </span>
                     <textarea
                       rows={4}
                       value={intentionsJournalContent}
                       onChange={(event) => setIntentionsJournalContent(event.target.value)}
-                      placeholder="What do you intend to accomplish today? What's most important?"
+                      placeholder={intentionsJournalType === 'tomorrow' ? "What do you intend to accomplish tomorrow? What's most important?" : "What do you intend to accomplish today? What's most important?"}
                     />
                   </label>
                   {intentionsJournalError ? (

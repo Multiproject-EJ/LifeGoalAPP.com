@@ -3658,6 +3658,18 @@ body {
   text-align: center;
 }
 
+.habit-quick-journal__button-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.habit-quick-journal__button--half {
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.6rem 0.7rem;
+}
+
 .habit-quick-journal__sheet {
   display: grid;
   gap: 0.6rem;
