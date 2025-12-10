@@ -125,8 +125,10 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         <ReminderCard />
       </div>
 
-      {/* Progress Snapshot */}
-      <div className="breathing-space__card breathing-space__progress">
+      {/* Right Column: Progress & Library */}
+      <div className="breathing-space__right-column">
+        {/* Progress Snapshot */}
+        <div className="breathing-space__card breathing-space__progress">
         <div className="breathing-space__card-header">
           <span className="breathing-space__card-icon">📊</span>
           <h3 className="breathing-space__card-title">Your Progress</h3>
@@ -175,6 +177,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           ))}
         </div>
       </div>
+      </div>
 
       {/* Session Player Modal */}
       {selectedSession && (
@@ -197,6 +200,12 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         }
 
         .breathing-space__left-column {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .breathing-space__right-column {
           display: flex;
           flex-direction: column;
           gap: 1.5rem;
