@@ -1131,6 +1131,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      meditation_reminders: {
+        Row: {
+          id: string;
+          user_id: string;
+          enabled: boolean;
+          time_of_day: string;
+          timezone: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          enabled?: boolean;
+          time_of_day?: string;
+          timezone?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          enabled?: boolean;
+          time_of_day?: string;
+          timezone?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_habit_streaks: {
