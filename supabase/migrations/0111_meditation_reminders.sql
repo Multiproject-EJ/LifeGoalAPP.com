@@ -47,9 +47,6 @@ CREATE POLICY "own meditation reminders" ON public.meditation_reminders
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- Create index for better query performance
-CREATE INDEX IF NOT EXISTS idx_meditation_reminders_user_id ON public.meditation_reminders(user_id);
-
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_meditation_reminders_updated_at()
 RETURNS TRIGGER AS $$

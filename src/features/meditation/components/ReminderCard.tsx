@@ -85,7 +85,12 @@ export function ReminderCard() {
       } else if (result.data) {
         setReminder(result.data);
         setSuccessMessage('Reminder saved successfully!');
-        // TODO: Integrate with existing reminder worker/cron to schedule server-side push notifications
+        // TODO: Integrate with push notification service (e.g., Supabase Edge Functions or existing 
+        // send-reminders worker) to schedule daily push notifications at the selected time.
+        // This will require:
+        // 1. Setting up a scheduled cron job or edge function
+        // 2. Implementing push notification delivery using Web Push API
+        // 3. Handling user timezone conversions for accurate delivery
       }
     } catch (err) {
       setError('Failed to save reminder');
@@ -278,15 +283,15 @@ export function ReminderCard() {
         }
 
         .breathing-space__alert--error {
-          background: #fef2f2;
-          color: #991b1b;
-          border: 1px solid #fca5a5;
+          background: var(--color-error-bg, #fef2f2);
+          color: var(--color-error-text, #991b1b);
+          border: 1px solid var(--color-error-border, #fca5a5);
         }
 
         .breathing-space__alert--success {
-          background: #f0fdf4;
-          color: #166534;
-          border: 1px solid #86efac;
+          background: var(--color-success-bg, #f0fdf4);
+          color: var(--color-success-text, #166534);
+          border: 1px solid var(--color-success-border, #86efac);
         }
       `}</style>
     </div>
