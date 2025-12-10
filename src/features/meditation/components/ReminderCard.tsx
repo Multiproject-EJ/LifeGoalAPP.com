@@ -4,56 +4,37 @@ import {
   upsertMeditationReminder,
   deleteMeditationReminder,
   getCurrentUserId,
-  type MeditationReminder,
 } from '../../../services/meditationReminders';
 import { DEFAULT_BREATHING_REMINDER_TIME } from '../constants';
 
-export function ReminderCard() {
-  const [reminder, setReminder] = useState<MeditationReminder | null>(null);
+type ReminderCardProps = {
+  userId: string;
+};
+
+export function ReminderCard({ userId }: ReminderCardProps) {
+  const [enabled, setEnabled] = useState(false);
+  const [timeOfDay, setTimeOfDay] = useState(DEFAULT_BREATHING_REMINDER_TIME);
+  const [reminderId, setReminderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  
-  // Form state
-  const [enabled, setEnabled] = useState(true);
-  const [timeOfDay, setTimeOfDay] = useState(DEFAULT_BREATHING_REMINDER_TIME);
 
   useEffect(() => {
     loadReminder();
-  }, []);
-
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
+  }, [userId]);
 
   const loadReminder = async () => {
     setLoading(true);
-    setError(null);
-
-    const userId = getCurrentUserId();
-    if (!userId) {
-      setError('Not authenticated');
-      setLoading(false);
-      return;
-    }
-
     try {
       const result = await listMeditationReminders(userId);
       if (result.error) {
-        setError('Failed to load reminder settings');
         console.error('Failed to load reminder:', result.error);
       } else if (result.data && result.data.length > 0) {
-        const firstReminder = result.data[0];
-        setReminder(firstReminder);
-        setEnabled(firstReminder.enabled);
-        setTimeOfDay(firstReminder.time_of_day);
+        const reminder = result.data[0];
+        setReminderId(reminder.id);
+        setEnabled(reminder.enabled);
+        setTimeOfDay(reminder.time_of_day);
       }
     } catch (err) {
-      setError('Failed to load reminder settings');
       console.error('Failed to load reminder:', err);
     } finally {
       setLoading(false);
@@ -61,239 +42,228 @@ export function ReminderCard() {
   };
 
   const handleSave = async () => {
-    const userId = getCurrentUserId();
-    if (!userId) {
-      setError('Not authenticated');
-      return;
-    }
-
     setSaving(true);
-    setError(null);
-    setSuccessMessage(null);
-
     try {
-      const result = await upsertMeditationReminder({
+      const payload = {
         user_id: userId,
         enabled,
         time_of_day: timeOfDay,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      });
+      };
 
+      const result = await upsertMeditationReminder(payload);
       if (result.error) {
-        setError('Failed to save reminder');
         console.error('Failed to save reminder:', result.error);
+        alert('Failed to save reminder. Please try again.');
       } else if (result.data) {
-        setReminder(result.data);
-        setSuccessMessage('Reminder saved successfully!');
-        // TODO: Integrate with push notification service (e.g., Supabase Edge Functions or existing 
-        // send-reminders worker) to schedule daily push notifications at the selected time.
-        // This will require:
-        // 1. Setting up a scheduled cron job or edge function
-        // 2. Implementing push notification delivery using Web Push API
-        // 3. Handling user timezone conversions for accurate delivery
+        setReminderId(result.data.id);
+        alert('Reminder saved successfully!');
       }
     } catch (err) {
-      setError('Failed to save reminder');
       console.error('Failed to save reminder:', err);
+      alert('Failed to save reminder. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!reminder) return;
-
-    if (!confirm('Are you sure you want to delete this reminder?')) {
+  const handleClear = async () => {
+    if (!reminderId) {
+      // Nothing to clear
+      setEnabled(false);
+      setTimeOfDay(DEFAULT_BREATHING_REMINDER_TIME);
       return;
     }
 
-    const userId = getCurrentUserId();
     setSaving(true);
-    setError(null);
-    setSuccessMessage(null);
-
     try {
-      const result = await deleteMeditationReminder(reminder.id, userId ?? undefined);
-
+      const result = await deleteMeditationReminder(reminderId);
       if (result.error) {
-        setError('Failed to delete reminder');
         console.error('Failed to delete reminder:', result.error);
+        alert('Failed to clear reminder. Please try again.');
       } else {
-        setReminder(null);
-        setEnabled(true);
+        setReminderId(null);
+        setEnabled(false);
         setTimeOfDay(DEFAULT_BREATHING_REMINDER_TIME);
-        setSuccessMessage('Reminder deleted successfully!');
+        alert('Reminder cleared successfully!');
       }
     } catch (err) {
-      setError('Failed to delete reminder');
       console.error('Failed to delete reminder:', err);
+      alert('Failed to clear reminder. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <div className="breathing-space__card breathing-space__reminder">
-      <div className="breathing-space__card-header">
-        <span className="breathing-space__card-icon">🔔</span>
-        <h3 className="breathing-space__card-title">Daily Reminder</h3>
+  if (loading) {
+    return (
+      <div className="reminder-card">
+        <div className="reminder-card__header">
+          <span className="reminder-card__icon">⏰</span>
+          <h3 className="reminder-card__title">Daily Reminder</h3>
+        </div>
+        <p className="reminder-card__loading">Loading...</p>
+        <style>{cardStyles}</style>
       </div>
+    );
+  }
 
-      {loading ? (
-        <p className="breathing-space__loading">Loading reminder settings...</p>
-      ) : (
-        <>
-          <p className="breathing-space__card-description">
-            Set a daily reminder to practice mindful breathing.
-          </p>
+  return (
+    <div className="reminder-card">
+      <div className="reminder-card__header">
+        <span className="reminder-card__icon">⏰</span>
+        <h3 className="reminder-card__title">Daily Reminder</h3>
+      </div>
+      <p className="reminder-card__description">
+        Get a daily reminder to practice breathing exercises.
+      </p>
 
-          {error && (
-            <div className="breathing-space__alert breathing-space__alert--error">
-              <span className="breathing-space__alert-icon">⚠️</span>
-              {error}
-            </div>
-          )}
+      <div className="reminder-card__form">
+        <div className="reminder-card__field">
+          <label className="reminder-card__label">
+            <input
+              type="checkbox"
+              checked={enabled}
+              onChange={(e) => setEnabled(e.target.checked)}
+              className="reminder-card__checkbox"
+            />
+            Enable daily reminder
+          </label>
+        </div>
 
-          {successMessage && (
-            <div className="breathing-space__alert breathing-space__alert--success">
-              <span className="breathing-space__alert-icon">✓</span>
-              {successMessage}
-            </div>
-          )}
-
-          <div className="breathing-space__reminder-form">
-            <label className="breathing-space__reminder-toggle">
-              <input
-                type="checkbox"
-                checked={enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
-                disabled={saving}
-              />
-              <span>Enable daily reminder</span>
-            </label>
-
-            <label className="breathing-space__reminder-time">
-              <span>Time of day:</span>
+        {enabled && (
+          <div className="reminder-card__field">
+            <label className="reminder-card__label">
+              Reminder time
               <input
                 type="time"
                 value={timeOfDay}
                 onChange={(e) => setTimeOfDay(e.target.value)}
-                disabled={saving || !enabled}
+                className="reminder-card__time-input"
               />
             </label>
-
-            <div className="breathing-space__reminder-actions">
-              <button
-                className="btn btn--primary"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? 'Saving...' : 'Save Reminder'}
-              </button>
-
-              {reminder && (
-                <button
-                  className="btn btn--secondary"
-                  onClick={handleDelete}
-                  disabled={saving}
-                >
-                  Clear
-                </button>
-              )}
-            </div>
           </div>
-        </>
-      )}
+        )}
 
-      <style>{`
-        .breathing-space__reminder {
-          background: linear-gradient(135deg, #fef3c722 0%, #fbbf2422 100%);
-          border: 1px solid #fbbf2444;
-        }
+        <div className="reminder-card__actions">
+          <button
+            className="btn btn--primary reminder-card__save-button"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+          {reminderId && (
+            <button
+              className="btn btn--secondary reminder-card__clear-button"
+              onClick={handleClear}
+              disabled={saving}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
 
-        .breathing-space__reminder-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .breathing-space__reminder-toggle {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          font-size: 1rem;
-        }
-
-        .breathing-space__reminder-toggle input[type="checkbox"] {
-          width: 1.25rem;
-          height: 1.25rem;
-          cursor: pointer;
-        }
-
-        .breathing-space__reminder-time {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .breathing-space__reminder-time span {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--color-text-primary, #000);
-        }
-
-        .breathing-space__reminder-time input[type="time"] {
-          padding: 0.5rem;
-          font-size: 1rem;
-          border: 1px solid var(--color-border, #ddd);
-          border-radius: 6px;
-          background: var(--color-bg, #fff);
-          color: var(--color-text-primary, #000);
-        }
-
-        .breathing-space__reminder-time input[type="time"]:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .breathing-space__reminder-actions {
-          display: flex;
-          gap: 0.75rem;
-          margin-top: 0.5rem;
-        }
-
-        .breathing-space__reminder-actions .btn {
-          flex: 1;
-        }
-
-        .breathing-space__alert {
-          padding: 0.75rem;
-          border-radius: 6px;
-          font-size: 0.875rem;
-          margin-bottom: 1rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .breathing-space__alert-icon {
-          flex-shrink: 0;
-          font-size: 1rem;
-        }
-
-        .breathing-space__alert--error {
-          background: var(--color-error-bg, #fef2f2);
-          color: var(--color-error-text, #991b1b);
-          border: 1px solid var(--color-error-border, #fca5a5);
-        }
-
-        .breathing-space__alert--success {
-          background: var(--color-success-bg, #f0fdf4);
-          color: var(--color-success-text, #166534);
-          border: 1px solid var(--color-success-border, #86efac);
-        }
-      `}</style>
+      {/* TODO: Integrate with reminder-worker/cron for actual push notification scheduling */}
+      
+      <style>{cardStyles}</style>
     </div>
   );
 }
+
+const cardStyles = `
+  .reminder-card {
+    background: var(--color-bg-elevated, #fff);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .reminder-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .reminder-card__icon {
+    font-size: 1.5rem;
+  }
+
+  .reminder-card__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text-primary, #000);
+  }
+
+  .reminder-card__description {
+    margin: 0 0 1.5rem 0;
+    color: var(--color-text-secondary, #666);
+    font-size: 0.875rem;
+  }
+
+  .reminder-card__loading {
+    text-align: center;
+    color: var(--color-text-secondary, #666);
+    padding: 1rem;
+  }
+
+  .reminder-card__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .reminder-card__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .reminder-card__label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-primary, #000);
+    font-weight: 500;
+  }
+
+  .reminder-card__checkbox {
+    margin-right: 0.5rem;
+  }
+
+  .reminder-card__time-input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .reminder-card__time-input:focus {
+    outline: none;
+    border-color: var(--color-primary, #667eea);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .reminder-card__actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .reminder-card__save-button,
+  .reminder-card__clear-button {
+    flex: 1;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .reminder-card__save-button:disabled,
+  .reminder-card__clear-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;

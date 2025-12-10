@@ -1,5 +1,4 @@
 -- Meditation reminders table and policies
--- Description: Create meditation_reminders table for user-specific breathing space reminder preferences
 
 -- Ensure pgcrypto for gen_random_uuid
 DO $$
@@ -9,6 +8,15 @@ EXCEPTION
   WHEN undefined_function THEN
     CREATE EXTENSION IF NOT EXISTS pgcrypto;
 END$$;
+
+-- Helper function to maintain updated_at
+CREATE OR REPLACE FUNCTION public.set_meditation_reminders_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS public.meditation_reminders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -20,14 +28,17 @@ CREATE TABLE IF NOT EXISTS public.meditation_reminders (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Create unique index on user_id to support single reminder per user
-CREATE UNIQUE INDEX IF NOT EXISTS meditation_reminders_user_id_key 
-ON public.meditation_reminders (user_id);
+-- Add index on user_id for fast lookups
+CREATE INDEX IF NOT EXISTS idx_meditation_reminders_user_id ON public.meditation_reminders(user_id);
 
--- Enable RLS
+DROP TRIGGER IF EXISTS set_meditation_reminders_updated_at ON public.meditation_reminders;
+CREATE TRIGGER set_meditation_reminders_updated_at
+BEFORE UPDATE ON public.meditation_reminders
+FOR EACH ROW
+EXECUTE FUNCTION public.set_meditation_reminders_updated_at();
+
 ALTER TABLE public.meditation_reminders ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policy if it exists
 DO $$
 BEGIN
   IF EXISTS (
@@ -41,29 +52,13 @@ BEGIN
   END IF;
 END$$;
 
--- Create policy: users can only access their own meditation reminders
 CREATE POLICY "own meditation reminders" ON public.meditation_reminders
   FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_meditation_reminders_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to automatically update updated_at
-CREATE TRIGGER update_meditation_reminders_updated_at
-  BEFORE UPDATE ON public.meditation_reminders
-  FOR EACH ROW
-  EXECUTE FUNCTION update_meditation_reminders_updated_at();
-
 -- Add helpful comments
-COMMENT ON TABLE public.meditation_reminders IS 'Stores user preferences for breathing space meditation reminders';
-COMMENT ON COLUMN public.meditation_reminders.enabled IS 'Whether reminders are enabled for this user';
-COMMENT ON COLUMN public.meditation_reminders.time_of_day IS 'Preferred time of day for reminder in HH:MM format';
-COMMENT ON COLUMN public.meditation_reminders.timezone IS 'User timezone for scheduling reminders';
+COMMENT ON TABLE public.meditation_reminders IS 'Stores daily reminder preferences for meditation/breathing space feature';
+COMMENT ON COLUMN public.meditation_reminders.enabled IS 'Whether the daily reminder is enabled';
+COMMENT ON COLUMN public.meditation_reminders.time_of_day IS 'Time of day for the reminder in HH:MM format';
+COMMENT ON COLUMN public.meditation_reminders.timezone IS 'User timezone for scheduling (optional)';

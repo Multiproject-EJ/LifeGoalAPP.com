@@ -1156,7 +1156,6 @@ export interface Database {
           enabled?: boolean;
           time_of_day?: string;
           timezone?: string | null;
-          created_at?: string;
           updated_at?: string;
         };
         Relationships: [];

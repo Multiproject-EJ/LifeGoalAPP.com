@@ -7,7 +7,7 @@ import {
   getMeditationStats,
   PLACEHOLDER_SESSIONS,
 } from '../../services/meditation';
-import { FEATURE_BREATHING_SPACE } from './constants';
+import { ReminderCard } from './components/ReminderCard';
 
 type BreathingSpaceProps = {
   session: Session;
@@ -69,6 +69,12 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   };
 
   const handleStartSession = (title: string, duration: number) => {
+    // Dispatch custom event for MeditationSessionPlayer or other listeners
+    // that may want to track when a breathing session is initiated
+    window.dispatchEvent(new CustomEvent('breathing:open', {
+      detail: { title, duration }
+    }));
+    
     setSelectedSession({ title, duration });
     setPlayerOpen(true);
     // Dispatch custom event for breathing session open
@@ -113,84 +119,80 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
 
   return (
     <div className="breathing-space">
-      {FEATURE_BREATHING_SPACE && (
-        <>
-          {/* Left Column - Quick Actions */}
-          <div className="breathing-space__left-column">
-            {/* Quick Start Card */}
-            <div className="breathing-space__card breathing-space__quick-start">
-              <div className="breathing-space__card-header">
-                <span className="breathing-space__card-icon">🌬️</span>
-                <h3 className="breathing-space__card-title">Quick Start</h3>
-              </div>
-              <p className="breathing-space__card-description">
-                Take a moment to center yourself with a quick breathing exercise.
-              </p>
-              <button
-                className="btn btn--primary breathing-space__start-button"
-                onClick={() => handleStartSession('3-Minute Breathing', 180)}
-              >
-                Start 3-minute breathing
-              </button>
-            </div>
-
-            {/* Reminder Card */}
-            <ReminderCard />
+      {/* Left Column: Quick Start & Reminder */}
+      <div className="breathing-space__left-column">
+        {/* Quick Start Card */}
+        <div className="breathing-space__card breathing-space__quick-start">
+          <div className="breathing-space__card-header">
+            <span className="breathing-space__card-icon">🌬️</span>
+            <h3 className="breathing-space__card-title">Quick Start</h3>
           </div>
+          <p className="breathing-space__card-description">
+            Take a moment to center yourself with a quick breathing exercise.
+          </p>
+          <button
+            className="btn btn--primary breathing-space__start-button"
+            onClick={() => handleStartSession('3-Minute Breathing', 180)}
+          >
+            Start 3-minute breathing
+          </button>
+        </div>
 
-          {/* Right Column - Progress */}
-          <div className="breathing-space__right-column">
-            {/* Progress Snapshot */}
-            <div className="breathing-space__card breathing-space__progress">
-              <div className="breathing-space__card-header">
-                <span className="breathing-space__card-icon">📊</span>
-                <h3 className="breathing-space__card-title">Your Progress</h3>
+        {/* Daily Reminder Card */}
+        <ReminderCard userId={session.user.id} />
+      </div>
+
+      {/* Right Column: Progress & Library */}
+      <div className="breathing-space__right-column">
+        {/* Progress Snapshot */}
+        <div className="breathing-space__card breathing-space__progress">
+          <div className="breathing-space__card-header">
+            <span className="breathing-space__card-icon">📊</span>
+            <h3 className="breathing-space__card-title">Your Progress</h3>
+          </div>
+          {loading ? (
+            <p className="breathing-space__loading">Loading stats...</p>
+          ) : error ? (
+            <p className="breathing-space__error">{error}</p>
+          ) : (
+            <div className="breathing-space__stats">
+              <div className="breathing-space__stat">
+                <div className="breathing-space__stat-value">{stats.totalMinutes}</div>
+                <div className="breathing-space__stat-label">Total Minutes</div>
               </div>
-              {loading ? (
-                <p className="breathing-space__loading">Loading stats...</p>
-              ) : error ? (
-                <p className="breathing-space__error">{error}</p>
-              ) : (
-                <div className="breathing-space__stats">
-                  <div className="breathing-space__stat">
-                    <div className="breathing-space__stat-value">{stats.totalMinutes}</div>
-                    <div className="breathing-space__stat-label">Total Minutes</div>
-                  </div>
-                  <div className="breathing-space__stat">
-                    <div className="breathing-space__stat-value">{stats.totalSessions}</div>
-                    <div className="breathing-space__stat-label">Sessions</div>
-                  </div>
-                  <div className="breathing-space__stat">
-                    <div className="breathing-space__stat-value">{stats.currentStreak}</div>
-                    <div className="breathing-space__stat-label">Day Streak</div>
-                  </div>
+              <div className="breathing-space__stat">
+                <div className="breathing-space__stat-value">{stats.totalSessions}</div>
+                <div className="breathing-space__stat-label">Sessions</div>
+              </div>
+              <div className="breathing-space__stat">
+                <div className="breathing-space__stat-value">{stats.currentStreak}</div>
+                <div className="breathing-space__stat-label">Day Streak</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Meditation Library */}
+        <div className="breathing-space__library">
+          <h3 className="breathing-space__library-title">Meditation Library</h3>
+          <div className="breathing-space__library-grid">
+            {PLACEHOLDER_SESSIONS.map((session) => (
+              <div key={session.id} className="breathing-space__library-card">
+                <div className="breathing-space__library-card-icon">{session.icon}</div>
+                <h4 className="breathing-space__library-card-title">{session.title}</h4>
+                <p className="breathing-space__library-card-description">{session.description}</p>
+                <div className="breathing-space__library-card-duration">
+                  {Math.floor(session.duration / 60)} minutes
                 </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Meditation Library */}
-      <div className="breathing-space__library">
-        <h3 className="breathing-space__library-title">Meditation Library</h3>
-        <div className="breathing-space__library-grid">
-          {PLACEHOLDER_SESSIONS.map((session) => (
-            <div key={session.id} className="breathing-space__library-card">
-              <div className="breathing-space__library-card-icon">{session.icon}</div>
-              <h4 className="breathing-space__library-card-title">{session.title}</h4>
-              <p className="breathing-space__library-card-description">{session.description}</p>
-              <div className="breathing-space__library-card-duration">
-                {Math.floor(session.duration / 60)} minutes
+                <button
+                  className="btn btn--secondary breathing-space__library-card-button"
+                  onClick={() => handleStartSession(session.title, session.duration)}
+                >
+                  Start
+                </button>
               </div>
-              <button
-                className="btn btn--secondary breathing-space__library-card-button"
-                onClick={() => handleStartSession(session.title, session.duration)}
-              >
-                Start
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
       </div>
@@ -209,8 +211,10 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
       <style>{`
         .breathing-space {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr 2fr;
           gap: 1.5rem;
+          max-width: 1400px;
+          margin: 0 auto;
         }
 
         .breathing-space__left-column {
@@ -223,11 +227,6 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           display: flex;
           flex-direction: column;
           gap: 1.5rem;
-        }
-
-        .breathing-space__library {
-          grid-column: 1 / -1;
-          margin-top: 1rem;
         }
 
         .breathing-space__card {
@@ -309,7 +308,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         }
 
         .breathing-space__library {
-          margin-top: 1rem;
+          margin-top: 0;
         }
 
         .breathing-space__library-title {
@@ -370,6 +369,11 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         @media (max-width: 768px) {
           .breathing-space {
             grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .breathing-space__left-column,
+          .breathing-space__right-column {
             gap: 1rem;
           }
 
