@@ -1,18 +1,26 @@
-# Supabase schema and policy scripts
+# Supabase schema and policy scripts (LEGACY - ARCHIVED)
 
-These SQL files provision the Supabase project for LifeGoalAPP (project id `muanayogiboxooftkyny`).
+> **Note**: This is a legacy README archived for historical reference. For current SQL documentation, see `sql/README.md` in the repository root.
 
-## Source of truth
+These SQL files provisioned the Supabase project for LifeGoalAPP (project id `muanayogiboxooftkyny`).
 
-- The authoritative schema lives under `supabase/migrations/`. Each feature ships as its own migration file.
-- The manual SQL scripts inside this folder are generated artifacts. Do **not** hand-edit them; instead update or add a migration and re-run the bundler described below.
+## Legacy Structure (Deprecated)
 
-## Manual SQL bundle
+This directory previously contained SQL migration files that have been consolidated into `supabase/migrations/`.
+
+## Current Structure
+
+- The authoritative schema now lives under `supabase/migrations/`. Each feature ships as its own migration file.
+- The manual SQL scripts inside the `sql/` folder are generated artifacts. Do **not** hand-edit them; instead update or add a migration and re-run the bundler described in `sql/README.md`.
+
+## Manual SQL bundle (Current Location)
+
+For current instructions on using the manual SQL bundle, see `sql/README.md` in the repository root.
 
 When you want to configure Supabase without the CLI, run the prebuilt bundle:
 
 1. Open the [Supabase SQL editor](https://app.supabase.com/project/muanayogiboxooftkyny/editor/sql).
-2. Paste the contents of `sql/manual.sql`.
+2. Paste the contents of `sql/manual.sql` (from the repository root).
 3. Execute the script. It contains every migration (in order) so running it once will fully provision the database.
 
 The bundle is idempotent; policies are dropped before re-creation so you can re-run it safely.

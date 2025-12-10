@@ -41,11 +41,11 @@ jobs:
           fi
           
           # Additional check for numbered migration-style files
-          if ls sql/[0-9]*.sql 2>/dev/null | grep -v "manual.sql" | grep -q .; then
+          if find sql/ -maxdepth 1 -name '[0-9]*.sql' ! -name 'manual.sql' 2>/dev/null | grep -q .; then
             echo "❌ FAILED: Found numbered migration files in sql/ directory!"
             echo ""
             echo "Found:"
-            ls sql/[0-9]*.sql 2>/dev/null | grep -v "manual.sql"
+            find sql/ -maxdepth 1 -name '[0-9]*.sql' ! -name 'manual.sql' 2>/dev/null
             echo ""
             FOUND_SQL_FILES=1
           fi
