@@ -1,12 +1,13 @@
 -- Migration: Add habit alerts/notifications support to the habits table
 -- Original path: sql/005_habit_alerts.sql
 -- Original commit: bbcd9421a1dc27f7bee231a5568d24c458943c7a (2025-12-10 11:57:36 +0000)
--- This extends the original habits table (tied to goals) with notification scheduling
+-- This extends the habits_v2 table with notification scheduling
+-- NOTE: Updated to reference habits_v2 instead of legacy habits table
 
--- Create habit_alerts table for scheduling reminders on the original habits table
+-- Create habit_alerts table for scheduling reminders on habits_v2 table
 create table if not exists public.habit_alerts (
   id uuid primary key default gen_random_uuid(),
-  habit_id uuid not null references public.habits (id) on delete cascade,
+  habit_id uuid not null references public.habits_v2 (id) on delete cascade,
   alert_time time not null,
   -- days of week: 0=Sunday, 1=Monday, ..., 6=Saturday
   -- null means every day
@@ -28,10 +29,9 @@ create policy "Users can view alerts for their own habits"
   on public.habit_alerts for select
   using (
     exists (
-      select 1 from public.habits h
-      join public.goals g on g.id = h.goal_id
+      select 1 from public.habits_v2 h
       where h.id = habit_alerts.habit_id
-      and g.user_id = auth.uid()
+      and h.user_id = auth.uid()
     )
   );
 
@@ -40,10 +40,9 @@ create policy "Users can insert alerts for their own habits"
   on public.habit_alerts for insert
   with check (
     exists (
-      select 1 from public.habits h
-      join public.goals g on g.id = h.goal_id
+      select 1 from public.habits_v2 h
       where h.id = habit_alerts.habit_id
-      and g.user_id = auth.uid()
+      and h.user_id = auth.uid()
     )
   );
 
@@ -52,10 +51,9 @@ create policy "Users can update alerts for their own habits"
   on public.habit_alerts for update
   using (
     exists (
-      select 1 from public.habits h
-      join public.goals g on g.id = h.goal_id
+      select 1 from public.habits_v2 h
       where h.id = habit_alerts.habit_id
-      and g.user_id = auth.uid()
+      and h.user_id = auth.uid()
     )
   );
 
@@ -64,10 +62,9 @@ create policy "Users can delete alerts for their own habits"
   on public.habit_alerts for delete
   using (
     exists (
-      select 1 from public.habits h
-      join public.goals g on g.id = h.goal_id
+      select 1 from public.habits_v2 h
       where h.id = habit_alerts.habit_id
-      and g.user_id = auth.uid()
+      and h.user_id = auth.uid()
     )
   );
 
