@@ -57,7 +57,8 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   };
 
   const handleStartSession = (title: string, duration: number) => {
-    // Dispatch custom event for MeditationSessionPlayer
+    // Dispatch custom event for MeditationSessionPlayer or other listeners
+    // that may want to track when a breathing session is initiated
     window.dispatchEvent(new CustomEvent('breathing:open', {
       detail: { title, duration }
     }));

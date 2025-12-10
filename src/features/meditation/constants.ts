@@ -4,6 +4,7 @@
 
 /**
  * Feature flag for Breathing Space functionality
+ * Can be used to conditionally enable/disable the feature
  */
 export const FEATURE_BREATHING_SPACE = true;
 
