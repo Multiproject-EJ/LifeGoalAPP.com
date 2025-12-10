@@ -1,0 +1,4 @@
+# Prevent any SQL files from being added to sql/ directory
+# except the auto-generated manual.sql bundle
+*.sql
+!manual.sql

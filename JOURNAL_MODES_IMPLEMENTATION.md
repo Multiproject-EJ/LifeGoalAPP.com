@@ -6,7 +6,7 @@ This implementation successfully extends the journal feature to support multiple
 
 ## What Was Delivered
 
-### 1. SQL Migration (`sql/006_journal_modes.sql`)
+### 1. SQL Migration (`supabase/migrations/0112_journal_modes.sql`)
 
 A production-ready Supabase migration that adds:
 
@@ -200,14 +200,14 @@ Add type filter in JournalEntryList:
 
 1. **Backup your database** (always recommended before migrations)
 2. Open Supabase Dashboard → SQL Editor
-3. Copy contents of `sql/006_journal_modes.sql`
+3. Copy contents of `supabase/migrations/0112_journal_modes.sql`
 4. Paste and execute
 5. Verify success message
 6. Test creating a journal entry in your app
 
 ## Questions?
 
-See `sql/006_journal_modes_README.md` for detailed migration documentation.
+See `supabase/reference/legacy_006_journal_modes_README.md` for detailed migration documentation.
 
 ---
 

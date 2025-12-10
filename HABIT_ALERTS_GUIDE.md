@@ -97,17 +97,13 @@ In the monthly view:
 
 ### Running the Migration
 
-Execute the SQL migration in your Supabase SQL Editor:
-
-```sql
--- Run this file: sql/005_habit_alerts.sql
-```
-
-Or run the bundled manual.sql which includes all migrations:
+Execute the bundled manual.sql which includes all migrations:
 
 ```sql
 -- Run this file: sql/manual.sql
 ```
+
+Note: Legacy file `sql/005_habit_alerts.sql` has been archived to `supabase/reference/legacy_005_habit_alerts.sql` and is for the deprecated legacy habits table.
 
 ### Verify Installation
 

@@ -12,7 +12,7 @@ Successfully extended the Habits Setup tab to support comprehensive alert/notifi
 - Enabled/disabled state
 - Complete RLS policies for security
 
-**Migration File**: `sql/005_habit_alerts.sql`
+**Migration File**: Legacy file archived at `supabase/reference/legacy_005_habit_alerts.sql` (for legacy habits table, now deprecated)
 
 ### 2. Service Layer
 ✅ Created three service modules:
@@ -126,7 +126,7 @@ TODO items marked in code for:
 ## Files Changed
 
 ### Added Files (11 files)
-1. `sql/005_habit_alerts.sql` - Database migration
+1. `supabase/reference/legacy_005_habit_alerts.sql` - Database migration (archived, for legacy habits)
 2. `src/services/habitAlerts.ts` - CRUD operations
 3. `src/services/habitAlertNotifications.ts` - Notification integration
 4. `src/services/habitAlertUtils.ts` - Shared utilities
