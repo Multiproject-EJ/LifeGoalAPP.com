@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { MeditationSessionPlayer } from './MeditationSessionPlayer';
+import { ReminderCard } from './components/ReminderCard';
 import {
   createMeditationSession,
   getMeditationStats,
   PLACEHOLDER_SESSIONS,
 } from '../../services/meditation';
+import { FEATURE_BREATHING_SPACE } from './constants';
 
 type BreathingSpaceProps = {
   session: Session;
@@ -58,6 +60,8 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   const handleStartSession = (title: string, duration: number) => {
     setSelectedSession({ title, duration });
     setPlayerOpen(true);
+    // Dispatch custom event for breathing session open
+    window.dispatchEvent(new CustomEvent('breathing:open', { detail: { title, duration } }));
   };
 
   const handleSessionComplete = async () => {
@@ -92,27 +96,39 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     setSelectedSession(null);
   };
 
+  if (!FEATURE_BREATHING_SPACE) {
+    return null;
+  }
+
   return (
     <div className="breathing-space">
-      {/* Quick Start Card */}
-      <div className="breathing-space__card breathing-space__quick-start">
-        <div className="breathing-space__card-header">
-          <span className="breathing-space__card-icon">🌬️</span>
-          <h3 className="breathing-space__card-title">Quick Start</h3>
+      {/* Left Column: Quick Start & Reminder */}
+      <div className="breathing-space__left-column">
+        {/* Quick Start Card */}
+        <div className="breathing-space__card breathing-space__quick-start">
+          <div className="breathing-space__card-header">
+            <span className="breathing-space__card-icon">🌬️</span>
+            <h3 className="breathing-space__card-title">Quick Start</h3>
+          </div>
+          <p className="breathing-space__card-description">
+            Take a moment to center yourself with a quick breathing exercise.
+          </p>
+          <button
+            className="btn btn--primary breathing-space__start-button"
+            onClick={() => handleStartSession('3-Minute Breathing', 180)}
+          >
+            Start 3-minute breathing
+          </button>
         </div>
-        <p className="breathing-space__card-description">
-          Take a moment to center yourself with a quick breathing exercise.
-        </p>
-        <button
-          className="btn btn--primary breathing-space__start-button"
-          onClick={() => handleStartSession('3-Minute Breathing', 180)}
-        >
-          Start 3-minute breathing
-        </button>
+
+        {/* Reminder Card */}
+        <ReminderCard />
       </div>
 
-      {/* Progress Snapshot */}
-      <div className="breathing-space__card breathing-space__progress">
+      {/* Right Column: Progress & Library */}
+      <div className="breathing-space__right-column">
+        {/* Progress Snapshot */}
+        <div className="breathing-space__card breathing-space__progress">
         <div className="breathing-space__card-header">
           <span className="breathing-space__card-icon">📊</span>
           <h3 className="breathing-space__card-title">Your Progress</h3>
@@ -161,6 +177,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           ))}
         </div>
       </div>
+      </div>
 
       {/* Session Player Modal */}
       {selectedSession && (
@@ -175,11 +192,23 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
 
       <style>{`
         .breathing-space {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 1.5rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+
+        .breathing-space__left-column {
           display: flex;
           flex-direction: column;
           gap: 1.5rem;
-          max-width: 1200px;
-          margin: 0 auto;
+        }
+
+        .breathing-space__right-column {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
         }
 
         .breathing-space__card {
@@ -321,6 +350,11 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
 
         @media (max-width: 768px) {
           .breathing-space {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .breathing-space__left-column {
             gap: 1rem;
           }
 
