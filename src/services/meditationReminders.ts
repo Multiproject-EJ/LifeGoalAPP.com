@@ -113,13 +113,26 @@ export async function upsertMeditationReminder(
  */
 export async function deleteMeditationReminder(
   id: string,
+  userId?: string,
 ): Promise<ServiceResponse<void>> {
   if (!canUseSupabaseData()) {
-    // Demo mode - find and remove from all users
-    for (const [userId, reminders] of demoMeditationReminders.entries()) {
+    // Demo mode - find and remove from user's reminders
+    // If userId is provided, search only that user's reminders for better performance
+    if (userId) {
+      const reminders = getDemoMeditationReminders(userId);
       const filtered = reminders.filter(r => r.id !== id);
       if (filtered.length !== reminders.length) {
         setDemoMeditationReminders(userId, filtered);
+        return { data: null, error: null };
+      }
+      return { data: null, error: new Error('Reminder not found') };
+    }
+    
+    // Fallback: search all users (less efficient but handles edge cases)
+    for (const [uid, reminders] of demoMeditationReminders.entries()) {
+      const filtered = reminders.filter(r => r.id !== id);
+      if (filtered.length !== reminders.length) {
+        setDemoMeditationReminders(uid, filtered);
         return { data: null, error: null };
       }
     }

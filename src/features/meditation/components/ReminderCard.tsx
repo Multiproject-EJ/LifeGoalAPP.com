@@ -102,12 +102,13 @@ export function ReminderCard() {
       return;
     }
 
+    const userId = getCurrentUserId();
     setSaving(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      const result = await deleteMeditationReminder(reminder.id);
+      const result = await deleteMeditationReminder(reminder.id, userId ?? undefined);
 
       if (result.error) {
         setError('Failed to delete reminder');
@@ -143,12 +144,14 @@ export function ReminderCard() {
 
           {error && (
             <div className="breathing-space__alert breathing-space__alert--error">
+              <span className="breathing-space__alert-icon">⚠️</span>
               {error}
             </div>
           )}
 
           {successMessage && (
             <div className="breathing-space__alert breathing-space__alert--success">
+              <span className="breathing-space__alert-icon">✓</span>
               {successMessage}
             </div>
           )}
@@ -264,18 +267,26 @@ export function ReminderCard() {
           border-radius: 6px;
           font-size: 0.875rem;
           margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .breathing-space__alert-icon {
+          flex-shrink: 0;
+          font-size: 1rem;
         }
 
         .breathing-space__alert--error {
-          background: #fee;
-          color: #c33;
-          border: 1px solid #fcc;
+          background: #fef2f2;
+          color: #991b1b;
+          border: 1px solid #fca5a5;
         }
 
         .breathing-space__alert--success {
-          background: #efe;
-          color: #3c3;
-          border: 1px solid #cfc;
+          background: #f0fdf4;
+          color: #166534;
+          border: 1px solid #86efac;
         }
       `}</style>
     </div>
