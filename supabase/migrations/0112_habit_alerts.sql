@@ -1,4 +1,4 @@
--- Migration: Add habit alerts/notifications support to the habits table
+-- Migration: Add habit alerts/notifications support to the habits_v2 table
 -- Original path: sql/005_habit_alerts.sql
 -- Original commit: bbcd9421a1dc27f7bee231a5568d24c458943c7a (2025-12-10 11:57:36 +0000)
 -- This extends the habits_v2 table with notification scheduling
