@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { MeditationSessionPlayer } from './MeditationSessionPlayer';
+import { ReminderCard } from './components/ReminderCard';
 import {
   createMeditationSession,
   getMeditationStats,
@@ -35,6 +36,17 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
 
   useEffect(() => {
     loadStats();
+
+    // Listen for 'breathing:open' event to open the meditation player
+    const handleBreathingOpen = () => {
+      handleStartSession('3-Minute Breathing', 180);
+    };
+
+    window.addEventListener('breathing:open', handleBreathingOpen);
+
+    return () => {
+      window.removeEventListener('breathing:open', handleBreathingOpen);
+    };
   }, [session.user.id]);
 
   const loadStats = async () => {
@@ -65,6 +77,8 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     
     setSelectedSession({ title, duration });
     setPlayerOpen(true);
+    // Dispatch custom event for breathing session open
+    window.dispatchEvent(new CustomEvent('breathing:open', { detail: { title, duration } }));
   };
 
   const handleSessionComplete = async () => {
@@ -98,6 +112,10 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     setPlayerOpen(false);
     setSelectedSession(null);
   };
+
+  if (!FEATURE_BREATHING_SPACE) {
+    return null;
+  }
 
   return (
     <div className="breathing-space">
@@ -176,6 +194,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
             ))}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Session Player Modal */}
@@ -356,6 +375,10 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           .breathing-space__left-column,
           .breathing-space__right-column {
             gap: 1rem;
+          }
+
+          .breathing-space__library {
+            grid-column: 1;
           }
 
           .breathing-space__library-grid {
