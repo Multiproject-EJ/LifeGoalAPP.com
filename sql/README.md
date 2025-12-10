@@ -1,11 +1,13 @@
-# Supabase schema and policy scripts
+# Supabase SQL Manual Bundle
 
-These SQL files provision the Supabase project for LifeGoalAPP (project id `muanayogiboxooftkyny`).
+**IMPORTANT**: This directory contains only auto-generated SQL bundles.
 
 ## Source of truth
 
-- The authoritative schema lives under `supabase/migrations/`. Each feature ships as its own migration file.
-- The manual SQL scripts inside this folder are generated artifacts. Do **not** hand-edit them; instead update or add a migration and re-run the bundler described below.
+- The **authoritative schema lives under `supabase/migrations/`**. Each feature ships as its own migration file.
+- All new migrations should be added to `supabase/migrations/` following the numeric prefix format (e.g., `0113_feature_name.sql`)
+- The manual SQL script in this folder (`manual.sql`) is a generated artifact. Do **not** hand-edit it; instead update or add a migration in `supabase/migrations/` and re-run the bundler described below.
+- Legacy SQL files that were previously in this directory have been archived to `supabase/reference/` for historical reference.
 
 ## Manual SQL bundle
 
@@ -23,9 +25,7 @@ The bundle is idempotent; policies are dropped before re-creation so you can re-
 npm run build:manual-sql
 ```
 
-This command concatenates all migration files in lexical order, skips `demo_data.sql`, and writes the result to `sql/manual.sql` with helpful delimiters so you can inspect where each migration starts/stops.
-
-> Legacy scripts (`001_schema.sql`, `002_policies.sql`, `003_life_goals_extended.sql`) remain checked in for reference, but `manual.sql` is the recommended way to run the schema manually.
+This command concatenates all migration files from `supabase/migrations/` in lexical order, skips `demo_data.sql`, and writes the result to `sql/manual.sql` with helpful delimiters so you can inspect where each migration starts/stops.
 
 ## Loading demo data
 

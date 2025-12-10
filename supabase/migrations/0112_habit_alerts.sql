@@ -1,4 +1,6 @@
 -- Migration: Add habit alerts/notifications support to the habits table
+-- Original path: sql/005_habit_alerts.sql
+-- Original commit: bbcd9421a1dc27f7bee231a5568d24c458943c7a (2025-12-10 11:57:36 +0000)
 -- This extends the original habits table (tied to goals) with notification scheduling
 
 -- Create habit_alerts table for scheduling reminders on the original habits table

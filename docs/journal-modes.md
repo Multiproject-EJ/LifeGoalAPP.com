@@ -19,7 +19,7 @@ The journal system supports 8 different modes, each designed for a specific jour
 
 ## Fields by Mode
 
-Each mode uses a different combination of fields from the `journal_entries` table. See `sql/006_journal_modes.sql` and `sql/006_journal_modes_README.md` for the complete schema.
+Each mode uses a different combination of fields from the `journal_entries` table. See `supabase/migrations/0106_journal_feature.sql` (canonical migration) and `docs/journal_modes_migration.md` for the complete schema.
 
 ### Standard (`standard`)
 - All standard fields: `title`, `content`, `mood`, `tags`, `linked_goal_ids`, `linked_habit_ids`
@@ -123,7 +123,7 @@ Implemented in `JournalEntryEditor.tsx`:
 To add a new journal mode, follow these steps:
 
 ### 1. Update Database Schema
-- Add new type value to CHECK constraint in `sql/006_journal_modes.sql`
+- Add new type value to CHECK constraint in `supabase/migrations/0106_journal_feature.sql` (or create a new migration)
 - Add any new mode-specific columns if needed
 - Create migration script and test locally
 
@@ -173,8 +173,9 @@ In `Journal.tsx`:
 
 ## References
 
-- **Schema Migration**: `sql/006_journal_modes.sql`
-- **Migration Docs**: `sql/006_journal_modes_README.md`
+- **Schema Migration**: `supabase/migrations/0106_journal_feature.sql` (canonical)
+- **Migration Docs**: `docs/journal_modes_migration.md`
+- **Legacy Reference**: `supabase/reference/legacy_006_journal_modes.sql` (archived)
 - **Implementation Guide**: `JOURNAL_MODES_IMPLEMENTATION.md`
 - **Constants**: `src/features/journal/constants.ts`
 - **Type Definitions**: `src/lib/database.types.ts`

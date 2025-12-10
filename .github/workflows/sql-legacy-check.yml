@@ -1,0 +1,133 @@
+name: SQL Legacy Check
+
+# This workflow prevents accidental reintroduction of SQL files in the legacy sql/ folder
+# after consolidation into supabase/migrations/
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check-legacy-sql:
+    name: Check for Legacy SQL Files
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for SQL files in sql/ directory
+        run: |
+          echo "🔍 Scanning for SQL files in sql/ directory..."
+          
+          # Files that are allowed to exist in sql/
+          ALLOWED_FILES=(
+            "sql/README.md"
+            "sql/manual.sql"
+          )
+          
+          # Track if any violations found
+          FOUND_VIOLATIONS=0
+          
+          # Check if sql/ directory exists
+          if [ ! -d "sql" ]; then
+            echo "✅ sql/ directory does not exist (expected after consolidation)"
+            exit 0
+          fi
+          
+          # Find all SQL files in sql/ directory (not subdirectories)
+          SQL_FILES=$(find sql/ -maxdepth 1 -type f -name "*.sql" 2>/dev/null || true)
+          
+          if [ -z "$SQL_FILES" ]; then
+            echo "✅ No SQL files found in sql/ directory"
+          else
+            echo ""
+            echo "Found SQL files in sql/:"
+            echo "$SQL_FILES"
+            echo ""
+            
+            # Check each SQL file against allowed list
+            while IFS= read -r file; do
+              IS_ALLOWED=0
+              for allowed in "${ALLOWED_FILES[@]}"; do
+                if [ "$file" = "$allowed" ]; then
+                  IS_ALLOWED=1
+                  echo "  ✓ $file (allowed auto-generated file)"
+                  break
+                fi
+              done
+              
+              if [ $IS_ALLOWED -eq 0 ]; then
+                echo "  ✗ $file (VIOLATION: SQL files should be in supabase/migrations/)"
+                FOUND_VIOLATIONS=1
+              fi
+            done <<< "$SQL_FILES"
+          fi
+          
+          # Check for any .sql files beyond allowed ones
+          if [ -f "sql/README.md" ]; then
+            echo "  ✓ sql/README.md (documentation)"
+          fi
+          
+          echo ""
+          
+          if [ $FOUND_VIOLATIONS -eq 1 ]; then
+            echo "❌ FAILED: Found SQL migration files in legacy sql/ directory!"
+            echo ""
+            echo "📋 Migration Guide:"
+            echo "   - SQL migration files belong in 'supabase/migrations/'"
+            echo "   - Use the next available migration number (e.g., 0113_feature_name.sql)"
+            echo "   - Include a header comment with original path and commit info if migrating an old file"
+            echo "   - After adding migration, run 'npm run build:manual-sql' to regenerate sql/manual.sql"
+            echo ""
+            echo "📖 The sql/ directory should only contain:"
+            echo "   - README.md (documentation)"
+            echo "   - manual.sql (auto-generated bundle from supabase/migrations/)"
+            echo ""
+            echo "📚 See sql/README.md for more information"
+            echo ""
+            exit 1
+          else
+            echo "✅ PASSED: No legacy SQL migration files found in sql/ directory"
+          fi
+
+      - name: Verify supabase/migrations exists
+        run: |
+          echo "🔍 Verifying supabase/migrations/ structure..."
+          
+          if [ ! -d "supabase/migrations" ]; then
+            echo "❌ ERROR: supabase/migrations/ directory does not exist!"
+            echo "This is the canonical location for all SQL migrations."
+            exit 1
+          fi
+          
+          # Count migration files
+          MIGRATION_COUNT=$(find supabase/migrations/ -maxdepth 1 -type f -name "*.sql" | wc -l)
+          echo "✅ Found $MIGRATION_COUNT migration files in supabase/migrations/"
+          
+          if [ $MIGRATION_COUNT -eq 0 ]; then
+            echo "⚠️  WARNING: No migration files found in supabase/migrations/"
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          echo "  SQL Legacy Check Complete"
+          echo "═══════════════════════════════════════════════════════"
+          echo ""
+          echo "This check ensures that SQL migrations are maintained in"
+          echo "the canonical location (supabase/migrations/) and not in"
+          echo "the legacy sql/ directory."
+          echo ""
+          echo "Canonical location: supabase/migrations/"
+          echo "Auto-generated bundle: sql/manual.sql"
+          echo "Archived legacy files: supabase/reference/"
+          echo ""

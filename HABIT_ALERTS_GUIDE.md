@@ -100,13 +100,13 @@ In the monthly view:
 Execute the SQL migration in your Supabase SQL Editor:
 
 ```sql
--- Run this file: sql/005_habit_alerts.sql
+-- Run this file: supabase/migrations/0112_habit_alerts.sql
 ```
 
 Or run the bundled manual.sql which includes all migrations:
 
 ```sql
--- Run this file: sql/manual.sql
+-- Run this file: sql/manual.sql (auto-generated from supabase/migrations/)
 ```
 
 ### Verify Installation

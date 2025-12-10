@@ -54,7 +54,7 @@
 - **Observed error**: Network tab shows `https://muanayogiboxooftkyny.supabase.co/auth/v1/token?grant_type=password` failing with HTTP 500 alongside the console message `Supabase returned "Database error querying schema"`.
 - **Root cause**: The auth service asks Postgres for workspace tables (profiles, plans, RLS policies) immediately after exchanging the password grant. Because those tables/policies do not exist yet, Postgres throws `relation does not exist`, Supabase proxies the failure as an internal error, and the SDK reports the 500.
 - **Remediation steps** (repeatable/safe):
-  1. In Supabase → **SQL Editor**, run `sql/manual.sql` from this repo. That script creates the base tables, RLS policies, and helper functions the app expects.
+  1. In Supabase → **SQL Editor**, run `sql/manual.sql` from this repo. That auto-generated script bundles all migrations from `supabase/migrations/` and creates the base tables, RLS policies, and helper functions the app expects.
   2. Still inside the SQL editor, run each file under `supabase/migrations/` in order (they are timestamped). If a statement reports that an object already exists, move on to the next file—everything is idempotent.
   3. Re-run the Account → Supabase diagnostics test; you should now see Credentials Configured ✅, Session Active ✅, and Database Connected ✅.
   4. Re-test sign-in/sign-up. The UI now shows a precise explanation whenever Supabase returns HTTP 500 for the password grant so operators immediately know to apply the schema.

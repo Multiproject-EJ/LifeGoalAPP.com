@@ -12,7 +12,7 @@ Successfully extended the Habits Setup tab to support comprehensive alert/notifi
 - Enabled/disabled state
 - Complete RLS policies for security
 
-**Migration File**: `sql/005_habit_alerts.sql`
+**Migration File**: `supabase/migrations/0112_habit_alerts.sql` (previously `sql/005_habit_alerts.sql`)
 
 ### 2. Service Layer
 ✅ Created three service modules:
@@ -126,7 +126,7 @@ TODO items marked in code for:
 ## Files Changed
 
 ### Added Files (11 files)
-1. `sql/005_habit_alerts.sql` - Database migration
+1. `supabase/migrations/0112_habit_alerts.sql` - Database migration (previously `sql/005_habit_alerts.sql`)
 2. `src/services/habitAlerts.ts` - CRUD operations
 3. `src/services/habitAlertNotifications.ts` - Notification integration
 4. `src/services/habitAlertUtils.ts` - Shared utilities
@@ -138,7 +138,7 @@ TODO items marked in code for:
 1. `src/lib/database.types.ts` - Added habit_alerts table types
 2. `src/services/demoData.ts` - Added demo data support
 3. `src/features/habits/DailyHabitTracker.tsx` - Integrated alert UI
-4. `sql/manual.sql` - Updated with new migration
+4. `sql/manual.sql` - Auto-regenerated bundle with new migration
 
 ### Total Lines of Code
 - **New Code**: ~1,500 lines

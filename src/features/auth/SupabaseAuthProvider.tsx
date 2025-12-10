@@ -38,13 +38,13 @@ function mapSupabaseAuthError(error: SupabaseLikeError): Error {
 
   if (lowerMessage.includes('database error querying schema')) {
     return new Error(
-      'Supabase returned "Database error querying schema". This means your project database is missing the latest tables or policies. Open the Supabase SQL editor and run the SQL in supabase/migrations (or sql/manual.sql) to apply the schema, then try again.',
+      'Supabase returned "Database error querying schema". This means your project database is missing the latest tables or policies. Open the Supabase SQL editor and run the SQL in supabase/migrations/ (or use the bundled sql/manual.sql) to apply the schema, then try again.',
     );
   }
 
   if (status === 500) {
     return new Error(
-      'Supabase responded with HTTP 500 while exchanging credentials (grant_type=password). This almost always happens when the latest tables, policies, or RPCs have not been applied. Run the SQL in supabase/migrations or sql/manual.sql inside the Supabase SQL editor, then rerun the sign-in.',
+      'Supabase responded with HTTP 500 while exchanging credentials (grant_type=password). This almost always happens when the latest tables, policies, or RPCs have not been applied. Run the SQL in supabase/migrations/ or use the bundled sql/manual.sql inside the Supabase SQL editor, then rerun the sign-in.',
     );
   }
 
