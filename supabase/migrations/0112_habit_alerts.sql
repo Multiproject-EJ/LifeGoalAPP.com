@@ -2,9 +2,13 @@
 -- Original path: sql/005_habit_alerts.sql
 -- Original commit: bbcd9421a1dc27f7bee231a5568d24c458943c7a (2025-12-10 11:57:36 +0000)
 -- This extends the habits_v2 table with notification scheduling
--- NOTE: Updated to reference habits_v2 instead of legacy habits table
+-- 
+-- IMPORTANT: This migration requires habits_v2 table to exist (created in migration 0004)
+-- Should run after migrations 0001-0012 which establish and consolidate the habits system
+-- NOTE: Updated from original to reference habits_v2 instead of legacy habits table
 
 -- Create habit_alerts table for scheduling reminders on habits_v2 table
+-- References habits_v2 (not legacy habits table which was dropped in migration 0012)
 create table if not exists public.habit_alerts (
   id uuid primary key default gen_random_uuid(),
   habit_id uuid not null references public.habits_v2 (id) on delete cascade,
