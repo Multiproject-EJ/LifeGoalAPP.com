@@ -71,6 +71,8 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   const handleStartSession = (title: string, duration: number) => {
     setSelectedSession({ title, duration });
     setPlayerOpen(true);
+    // Dispatch custom event for breathing session open
+    window.dispatchEvent(new CustomEvent('breathing:open', { detail: { title, duration } }));
   };
 
   const handleSessionComplete = async () => {
@@ -104,6 +106,10 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     setPlayerOpen(false);
     setSelectedSession(null);
   };
+
+  if (!FEATURE_BREATHING_SPACE) {
+    return null;
+  }
 
   return (
     <div className="breathing-space">
@@ -187,6 +193,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           ))}
         </div>
       </div>
+      </div>
 
       {/* Session Player Modal */}
       {selectedSession && (
@@ -204,8 +211,6 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1.5rem;
-          max-width: 1200px;
-          margin: 0 auto;
         }
 
         .breathing-space__left-column {
