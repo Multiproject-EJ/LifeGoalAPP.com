@@ -1,38 +1,50 @@
-# Supabase schema and policy scripts
+# Supabase Schema Bundle
 
-These SQL files provision the Supabase project for LifeGoalAPP (project id `muanayogiboxooftkyny`).
+This directory contains the auto-generated SQL bundle for manual Supabase setup.
 
-## Source of truth
+## Source of Truth
 
-- The authoritative schema lives under `supabase/migrations/`. Each feature ships as its own migration file.
-- The manual SQL scripts inside this folder are generated artifacts. Do **not** hand-edit them; instead update or add a migration and re-run the bundler described below.
+**The authoritative schema lives under `supabase/migrations/`**. Each feature ships as its own migration file with sequential numbering (e.g., `0001_*.sql`, `0002_*.sql`, etc.).
 
-## Manual SQL bundle
+## Manual SQL Bundle
 
-When you want to configure Supabase without the CLI, run the prebuilt bundle:
+The `manual.sql` file in this directory is a **generated artifact** that concatenates all migrations from `supabase/migrations/` in order. 
 
-1. Open the [Supabase SQL editor](https://app.supabase.com/project/muanayogiboxooftkyny/editor/sql).
-2. Paste the contents of `sql/manual.sql`.
-3. Execute the script. It contains every migration (in order) so running it once will fully provision the database.
+### To configure Supabase without the CLI:
+
+1. Open the [Supabase SQL editor](https://app.supabase.com/project/muanayogiboxooftkyny/editor/sql)
+2. Paste the contents of `sql/manual.sql`
+3. Execute the script
 
 The bundle is idempotent; policies are dropped before re-creation so you can re-run it safely.
 
-### Regenerating the bundle
+### Regenerating the Bundle
 
-```
+```bash
 npm run build:manual-sql
 ```
 
-This command concatenates all migration files in lexical order, skips `demo_data.sql`, and writes the result to `sql/manual.sql` with helpful delimiters so you can inspect where each migration starts/stops.
+This command:
+- Reads all `*.sql` files from `supabase/migrations/` (excluding `demo_data.sql`)
+- Sorts them lexically
+- Concatenates them with delimiters
+- Writes the output to `sql/manual.sql`
 
-> Legacy scripts (`001_schema.sql`, `002_policies.sql`, `003_life_goals_extended.sql`) remain checked in for reference, but `manual.sql` is the recommended way to run the schema manually.
+**Do not hand-edit `manual.sql`** - instead update or add a migration in `supabase/migrations/` and re-run the bundler.
 
-## Loading demo data
+## Legacy Scripts
 
-`supabase/migrations/demo_data.sql` seeds realistic habits, logs, and challenge data so you can test the UI against Supabase. To target a specific account without editing the file:
+Historical SQL files from the `sql/` directory have been archived in `supabase/reference/` for reference. These legacy scripts are no longer maintained and should not be used.
 
-1. In the SQL editor, run `select set_config('app.demo_email', 'your@email.com', false);`
+## Loading Demo Data
+
+`supabase/migrations/demo_data.sql` seeds realistic habits, logs, and challenge data. To use it:
+
+1. In the SQL editor, run: `select set_config('app.demo_email', 'your@email.com', false);`
 2. Run the contents of `supabase/migrations/demo_data.sql`
 
-If you skip step 1 the script automatically uses the earliest `auth.users` record, so you can keep re-running it without manual edits.
+If you skip step 1, the script uses the earliest `auth.users` record automatically.
 
+## CI Protection
+
+A GitHub Actions workflow (`legacy-sql-guard.yml`) prevents accidental re-introduction of SQL files in this directory. All schema changes must be made through `supabase/migrations/`.

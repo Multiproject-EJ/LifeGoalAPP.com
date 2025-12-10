@@ -1,4 +1,6 @@
--- Migration: Add support for multiple journal modes
+-- Migration 0112: Add support for multiple journal modes
+-- Original path: sql/006_journal_modes.sql
+-- Original commit: bbcd9421a1dc27f7bee231a5568d24c458943c7a (2025-12-10 11:57:36 +0000)
 -- This migration extends the journal_entries table to support different journaling modes
 -- (quick, deep, brain_dump, life_wheel, secret, goal, time_capsule, standard)
 

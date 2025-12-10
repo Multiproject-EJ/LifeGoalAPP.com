@@ -1,0 +1,131 @@
+name: Legacy SQL Files Check
+
+# This workflow prevents accidental addition of SQL files to the sql/ directory.
+# All SQL migrations must be created in supabase/migrations/ instead.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check-legacy-sql:
+    name: Check for SQL Files in sql/ Directory
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for SQL files in sql/ directory
+        run: |
+          echo "🔍 Scanning for SQL files in sql/ directory..."
+          echo ""
+          
+          # Find any .sql files in sql/ directory except manual.sql
+          FOUND_SQL_FILES=0
+          
+          # Check for SQL files, excluding manual.sql
+          if find sql/ -maxdepth 1 -type f -name "*.sql" ! -name "manual.sql" 2>/dev/null | grep -q .; then
+            echo "❌ FAILED: Found SQL files in sql/ directory!"
+            echo ""
+            echo "The following SQL files were found:"
+            find sql/ -maxdepth 1 -type f -name "*.sql" ! -name "manual.sql"
+            echo ""
+            FOUND_SQL_FILES=1
+          fi
+          
+          # Additional check for numbered migration-style files
+          if ls sql/[0-9]*.sql 2>/dev/null | grep -v "manual.sql" | grep -q .; then
+            echo "❌ FAILED: Found numbered migration files in sql/ directory!"
+            echo ""
+            echo "Found:"
+            ls sql/[0-9]*.sql 2>/dev/null | grep -v "manual.sql"
+            echo ""
+            FOUND_SQL_FILES=1
+          fi
+          
+          echo ""
+          
+          if [ $FOUND_SQL_FILES -eq 1 ]; then
+            echo "═══════════════════════════════════════════════════════"
+            echo "  ❌ SQL Consolidation Policy Violation"
+            echo "═══════════════════════════════════════════════════════"
+            echo ""
+            echo "📋 Migration Guide:"
+            echo ""
+            echo "  The sql/ directory should ONLY contain:"
+            echo "    - manual.sql (auto-generated bundle)"
+            echo "    - README.md (documentation)"
+            echo "    - .gitignore"
+            echo ""
+            echo "  All SQL migrations must be created in:"
+            echo "    supabase/migrations/"
+            echo ""
+            echo "  To add a new migration:"
+            echo "    1. Create a new file: supabase/migrations/NNNN_description.sql"
+            echo "    2. Use the next available migration number (NNNN)"
+            echo "    3. Run: npm run build:manual-sql"
+            echo ""
+            echo "  Legacy SQL files have been archived in:"
+            echo "    supabase/reference/"
+            echo ""
+            exit 1
+          else
+            echo "✅ PASSED: No SQL files found in sql/ directory"
+            echo ""
+            echo "═══════════════════════════════════════════════════════"
+            echo "  ✅ SQL Consolidation Check Complete"
+            echo "═══════════════════════════════════════════════════════"
+            echo ""
+            echo "The sql/ directory is clean. All migrations are properly"
+            echo "located in supabase/migrations/ as required."
+            echo ""
+            echo "Allowed in sql/:"
+            echo "  - manual.sql (auto-generated)"
+            echo "  - README.md"
+            echo "  - .gitignore"
+            echo ""
+          fi
+
+      - name: Verify manual.sql is up-to-date
+        run: |
+          echo "🔍 Verifying manual.sql is up-to-date..."
+          echo ""
+          
+          # Generate a fresh bundle
+          npm run build:manual-sql
+          
+          # Check if there are any differences
+          if git diff --exit-code sql/manual.sql; then
+            echo "✅ PASSED: manual.sql is up-to-date"
+          else
+            echo "❌ FAILED: manual.sql is out of date!"
+            echo ""
+            echo "Please run 'npm run build:manual-sql' and commit the changes."
+            echo ""
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          echo "  SQL Consolidation Policy"
+          echo "═══════════════════════════════════════════════════════"
+          echo ""
+          echo "This check ensures all SQL migrations are maintained in"
+          echo "the canonical location: supabase/migrations/"
+          echo ""
+          echo "The sql/ directory contains only auto-generated artifacts"
+          echo "and must not contain hand-written SQL migration files."
+          echo ""
+          echo "Documentation: sql/README.md"
+          echo "Legacy files: supabase/reference/"
+          echo ""
