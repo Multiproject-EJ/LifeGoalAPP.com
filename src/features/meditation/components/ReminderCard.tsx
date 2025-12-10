@@ -93,6 +93,7 @@ export function ReminderCard() {
       return;
     }
 
+    // TODO: Replace with custom modal component for better UX
     if (!confirm('Are you sure you want to delete this reminder?')) {
       return;
     }

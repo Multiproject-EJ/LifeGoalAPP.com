@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS public.meditation_reminders (
   time_of_day text NOT NULL DEFAULT '08:00',
   timezone text,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT meditation_reminders_user_id_unique UNIQUE (user_id)
 );
 
 -- Function to update updated_at timestamp
