@@ -917,6 +917,7 @@ export default function App() {
 
   const shouldForceAuthOverlay = shouldRequireAuthentication && !isMobileViewport;
   const isAuthOverlayVisible = shouldForceAuthOverlay || showAuthPanel;
+  const isAnyModalVisible = isAuthOverlayVisible || showHabitsSetupModal;
 
   const renderWorkspaceSection = () => {
     if (activeWorkspaceNav === 'goals') {
@@ -1177,9 +1178,9 @@ export default function App() {
     );
   }
 
-  const appClassName = `app app--workspace ${isAuthOverlayVisible ? 'app--auth-overlay' : ''}`;
+  const appClassName = `app app--workspace ${isAnyModalVisible ? 'app--auth-overlay' : ''}`;
   const workspaceShellClassName = `workspace-shell ${
-    isAuthOverlayVisible ? 'workspace-shell--blurred' : ''
+    isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }`;
 
   const canDismissOverlay = isAuthOverlayVisible && !shouldForceAuthOverlay;
@@ -1392,6 +1393,7 @@ export default function App() {
               className="auth-overlay__close" 
               onClick={() => setShowHabitsSetupModal(false)}
               aria-label="Close habits setup modal"
+              autoFocus
             >
               <span aria-hidden="true">×</span>
               <span className="sr-only">Close habits setup</span>
