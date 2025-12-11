@@ -7,7 +7,7 @@ import {
   getMeditationStats,
   PLACEHOLDER_SESSIONS,
 } from '../../services/meditation';
-import { ReminderCard } from './components/ReminderCard';
+import { FEATURE_BREATHING_SPACE } from './constants';
 
 type BreathingSpaceProps = {
   session: Session;
@@ -38,8 +38,12 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     loadStats();
 
     // Listen for 'breathing:open' event to open the meditation player
-    const handleBreathingOpen = () => {
-      handleStartSession('3-Minute Breathing', 180);
+    const handleBreathingOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<{ title: string; duration: number }>;
+      if (customEvent.detail) {
+        setSelectedSession({ title: customEvent.detail.title, duration: customEvent.detail.duration });
+        setPlayerOpen(true);
+      }
     };
 
     window.addEventListener('breathing:open', handleBreathingOpen);
@@ -69,16 +73,8 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   };
 
   const handleStartSession = (title: string, duration: number) => {
-    // Dispatch custom event for MeditationSessionPlayer or other listeners
-    // that may want to track when a breathing session is initiated
-    window.dispatchEvent(new CustomEvent('breathing:open', {
-      detail: { title, duration }
-    }));
-    
     setSelectedSession({ title, duration });
     setPlayerOpen(true);
-    // Dispatch custom event for breathing session open
-    window.dispatchEvent(new CustomEvent('breathing:open', { detail: { title, duration } }));
   };
 
   const handleSessionComplete = async () => {
@@ -194,7 +190,6 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
             ))}
           </div>
         </div>
-      </div>
       </div>
 
       {/* Session Player Modal */}
