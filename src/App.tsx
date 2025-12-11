@@ -1127,9 +1127,6 @@ export default function App() {
             <h3 className="mobile-menu-overlay__settings-title">Settings</h3>
             <div className="mobile-menu-overlay__settings-row">
               <span className="mobile-menu-overlay__settings-label">
-                <span className="mobile-menu-overlay__settings-icon" aria-hidden="true">
-                  {/* Theme icon will be handled by ThemeToggle component */}
-                </span>
                 Theme
               </span>
               <ThemeToggle className="theme-toggle--compact" />

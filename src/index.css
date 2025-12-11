@@ -7347,13 +7347,6 @@ body {
   font-weight: 600;
   font-size: 0.9rem;
   color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.mobile-menu-overlay__settings-icon {
-  font-size: 1.1rem;
 }
 
 .mobile-menu-overlay__account-button {
