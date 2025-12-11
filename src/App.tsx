@@ -1386,16 +1386,17 @@ export default function App() {
             onClick={() => setShowHabitsSetupModal(false)}
             role="presentation"
           />
-          <div className="auth-overlay__dialog" style={{ maxWidth: '1400px', width: '95%' }}>
+          <div className="auth-overlay__dialog auth-overlay__dialog--habits">
             <button 
               type="button" 
               className="auth-overlay__close" 
               onClick={() => setShowHabitsSetupModal(false)}
+              aria-label="Close habits setup modal"
             >
               <span aria-hidden="true">×</span>
               <span className="sr-only">Close habits setup</span>
             </button>
-            <div style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="habits-modal__content">
               <HabitsModule session={activeSession} />
             </div>
           </div>
