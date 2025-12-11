@@ -37,13 +37,13 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   useEffect(() => {
     loadStats();
 
-    // Listen for 'breathing:open' custom events from other parts of the app
-    const handleBreathingOpen = (e: Event) => {
-      const detail = (e as CustomEvent)?.detail as { title?: string; duration?: number } | undefined;
-      const title = detail?.title ?? '3-Minute Breathing';
-      const duration = detail?.duration ?? 180;
-      setSelectedSession({ title, duration });
-      setPlayerOpen(true);
+    // Listen for 'breathing:open' event to open the meditation player
+    const handleBreathingOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<{ title: string; duration: number }>;
+      if (customEvent.detail) {
+        setSelectedSession({ title: customEvent.detail.title, duration: customEvent.detail.duration });
+        setPlayerOpen(true);
+      }
     };
 
     window.addEventListener('breathing:open', handleBreathingOpen as EventListener);
@@ -73,7 +73,6 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   };
 
   const handleStartSession = (title: string, duration: number) => {
-    // Start a session locally (do not re-dispatch the custom event here)
     setSelectedSession({ title, duration });
     setPlayerOpen(true);
   };
