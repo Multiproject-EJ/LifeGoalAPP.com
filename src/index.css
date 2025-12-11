@@ -1464,6 +1464,85 @@ body {
   border-color: rgba(148, 163, 184, 0.4);
 }
 
+/* Toggle Row Styles */
+.account-panel__toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.account-panel__toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.account-panel__toggle-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 48px;
+  height: 26px;
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.account-panel__toggle-input:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.account-panel__toggle-input:checked {
+  background: linear-gradient(135deg, #06b6d4, #7c3aed);
+}
+
+.account-panel__toggle-input::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.account-panel__toggle-input:checked::before {
+  transform: translateX(22px);
+}
+
+.account-panel__toggle-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.account-panel__toggle-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+[data-theme='dark-glass'] .account-panel__toggle-text {
+  color: rgba(248, 250, 252, 0.9);
+}
+
+.account-panel__saving-indicator {
+  font-size: 0.85rem;
+  color: rgba(100, 116, 139, 0.8);
+  font-style: italic;
+}
+
+[data-theme='dark-glass'] .account-panel__saving-indicator {
+  color: rgba(148, 163, 184, 0.8);
+}
+
 /* Connection Test Styles */
 .connection-test {
   display: grid;

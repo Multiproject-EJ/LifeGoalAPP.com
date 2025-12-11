@@ -8,6 +8,7 @@ import { SettingsFolderButton } from '../../components/SettingsFolderButton';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
+import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -18,6 +19,7 @@ type MyAccountPanelProps = {
   profile: WorkspaceProfileRow | null;
   stats: WorkspaceStats | null;
   profileLoading: boolean;
+  onProfileUpdate?: (profile: WorkspaceProfileRow) => void;
 };
 
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
@@ -38,9 +40,11 @@ export function MyAccountPanel({
   profile,
   stats,
   profileLoading,
+  onProfileUpdate,
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
+  const [savingPreference, setSavingPreference] = useState(false);
   
   const user = session.user;
   const displayName =
@@ -48,6 +52,7 @@ export function MyAccountPanel({
   const email = user.email || 'No email on file';
   const avatarInitial = displayName.trim().charAt(0).toUpperCase() || 'U';
   const workspaceName = profile?.workspace_name || 'Personal rituals workspace';
+  const userInitials = profile?.initials || '';
 
   const planName =
     (user.user_metadata?.subscription_plan as string | undefined) ||
@@ -71,6 +76,34 @@ export function MyAccountPanel({
   const workspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
   const showDemoNotice = isDemoExperience;
 
+  const handleToggleInitialsInMenu = async (enabled: boolean) => {
+    if (!profile || isDemoExperience) return;
+    
+    setSavingPreference(true);
+    try {
+      const { data, error } = await upsertWorkspaceProfile({
+        user_id: session.user.id,
+        full_name: profile.full_name,
+        workspace_name: profile.workspace_name,
+        initials: profile.initials,
+        show_initials_in_menu: enabled,
+      });
+      
+      if (error) {
+        console.error('Failed to update initials preference:', error);
+        return;
+      }
+      
+      if (data && onProfileUpdate) {
+        onProfileUpdate(data);
+      }
+    } catch (error) {
+      console.error('Failed to update initials preference:', error);
+    } finally {
+      setSavingPreference(false);
+    }
+  };
+
   return (
     <div className="account-panel">
       {showDemoNotice ? (
@@ -90,6 +123,10 @@ export function MyAccountPanel({
             <div>
               <dt>Name</dt>
               <dd>{displayName}</dd>
+            </div>
+            <div>
+              <dt>Initials</dt>
+              <dd>{userInitials || 'Not set'}</dd>
             </div>
             <div>
               <dt>Email</dt>
@@ -141,6 +178,34 @@ export function MyAccountPanel({
       <section className="account-panel__card" aria-labelledby="account-theme">
         <p className="account-panel__eyebrow">Appearance</p>
         <ThemeSelector />
+      </section>
+
+      <section className="account-panel__card" aria-labelledby="account-menu-icon">
+        <p className="account-panel__eyebrow">Menu Icon</p>
+        <h3 id="account-menu-icon">Display Preferences</h3>
+        <p className="account-panel__hint">
+          Choose whether to display your initials or the default icon in the main menu when signed in.
+        </p>
+        <div className="account-panel__toggle-row">
+          <label className="account-panel__toggle-label">
+            <input
+              type="checkbox"
+              checked={profile?.show_initials_in_menu ?? false}
+              onChange={(e) => handleToggleInitialsInMenu(e.target.checked)}
+              disabled={savingPreference || !profile || !userInitials || isDemoExperience}
+              className="account-panel__toggle-input"
+            />
+            <span className="account-panel__toggle-text">
+              Show my initials ({userInitials || '--'}) in main menu
+            </span>
+          </label>
+          {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
+        </div>
+        {!userInitials && !isDemoExperience && (
+          <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>
+            Set your name in the account details to enable this feature.
+          </p>
+        )}
       </section>
 
       <AiSettingsSection session={session} />
