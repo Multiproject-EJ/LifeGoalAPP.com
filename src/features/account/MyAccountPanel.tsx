@@ -82,10 +82,7 @@ export function MyAccountPanel({
     setSavingPreference(true);
     try {
       const { data, error } = await upsertWorkspaceProfile({
-        user_id: session.user.id,
-        full_name: profile.full_name,
-        workspace_name: profile.workspace_name,
-        initials: profile.initials,
+        ...profile,
         show_initials_in_menu: enabled,
       });
       
@@ -192,7 +189,7 @@ export function MyAccountPanel({
               type="checkbox"
               checked={profile?.show_initials_in_menu ?? false}
               onChange={(e) => handleToggleInitialsInMenu(e.target.checked)}
-              disabled={savingPreference || !profile || !userInitials || isDemoExperience}
+              disabled={savingPreference || !profile?.full_name || isDemoExperience}
               className="account-panel__toggle-input"
             />
             <span className="account-panel__toggle-text">
@@ -201,7 +198,7 @@ export function MyAccountPanel({
           </label>
           {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
         </div>
-        {!userInitials && !isDemoExperience && (
+        {!profile?.full_name && !isDemoExperience && (
           <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>
             Set your name in the account details to enable this feature.
           </p>

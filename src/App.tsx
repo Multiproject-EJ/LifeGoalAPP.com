@@ -834,11 +834,10 @@ export default function App() {
           },
         }),
         upsertWorkspaceProfile({
+          ...workspaceProfile,
           user_id: supabaseSession.user.id,
           full_name: trimmed,
-          workspace_name: workspaceProfile?.workspace_name ?? null,
           initials: generateInitials(trimmed),
-          show_initials_in_menu: workspaceProfile?.show_initials_in_menu ?? false,
         }),
       ]);
 
