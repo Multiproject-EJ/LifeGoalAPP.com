@@ -46,10 +46,10 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
       }
     };
 
-    window.addEventListener('breathing:open', handleBreathingOpen);
+    window.addEventListener('breathing:open', handleBreathingOpen as EventListener);
 
     return () => {
-      window.removeEventListener('breathing:open', handleBreathingOpen);
+      window.removeEventListener('breathing:open', handleBreathingOpen as EventListener);
     };
   }, [session.user.id]);
 
@@ -172,17 +172,17 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         <div className="breathing-space__library">
           <h3 className="breathing-space__library-title">Meditation Library</h3>
           <div className="breathing-space__library-grid">
-            {PLACEHOLDER_SESSIONS.map((session) => (
-              <div key={session.id} className="breathing-space__library-card">
-                <div className="breathing-space__library-card-icon">{session.icon}</div>
-                <h4 className="breathing-space__library-card-title">{session.title}</h4>
-                <p className="breathing-space__library-card-description">{session.description}</p>
+            {PLACEHOLDER_SESSIONS.map((s) => (
+              <div key={s.id} className="breathing-space__library-card">
+                <div className="breathing-space__library-card-icon">{s.icon}</div>
+                <h4 className="breathing-space__library-card-title">{s.title}</h4>
+                <p className="breathing-space__library-card-description">{s.description}</p>
                 <div className="breathing-space__library-card-duration">
-                  {Math.floor(session.duration / 60)} minutes
+                  {Math.floor(s.duration / 60)} minutes
                 </div>
                 <button
                   className="btn btn--secondary breathing-space__library-card-button"
-                  onClick={() => handleStartSession(session.title, session.duration)}
+                  onClick={() => handleStartSession(s.title, s.duration)}
                 >
                   Start
                 </button>
