@@ -11,7 +11,11 @@ export type Theme =
   | 'desert-sand'
   | 'arctic-frost'
   | 'autumn-harvest'
-  | 'lavender-dream';
+  | 'lavender-dream'
+  | 'flow-day'
+  | 'flow-night'
+  | 'bio-day'
+  | 'bio-night';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -125,6 +129,22 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     metaColor: '#c084fc',
     category: 'light',
   },
+  {
+    id: 'flow-day',
+    name: 'Flow Day',
+    icon: '🌀',
+    description: 'Focused productivity with calm blue-grays',
+    metaColor: '#0891b2',
+    category: 'light',
+  },
+  {
+    id: 'bio-day',
+    name: 'Bio Day',
+    icon: '🌿',
+    description: 'Organic greens inspired by nature',
+    metaColor: '#16a34a',
+    category: 'light',
+  },
 ];
 
 // Dark themes
@@ -143,6 +163,22 @@ export const DARK_THEMES: ThemeMetadata[] = [
     icon: '🔮',
     description: 'Deep purple with mystical vibes',
     metaColor: '#7c3aed',
+    category: 'dark',
+  },
+  {
+    id: 'flow-night',
+    name: 'Flow Night',
+    icon: '🌊',
+    description: 'Deep focus mode with cool blue tones',
+    metaColor: '#0c1222',
+    category: 'dark',
+  },
+  {
+    id: 'bio-night',
+    name: 'Bio Night',
+    icon: '🌲',
+    description: 'Dark forest greens for natural calm',
+    metaColor: '#0a1e0a',
     category: 'dark',
   },
 ];
