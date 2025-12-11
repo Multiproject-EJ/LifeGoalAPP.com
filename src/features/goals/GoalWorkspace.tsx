@@ -486,10 +486,6 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       <header className="goal-workspace__header">
         <div>
           <h2>Goals &amp; Habits workspace</h2>
-          <p>
-            Map your long-term goals and align the habits that will make them real. Everything saved here syncs with your
-            Supabase project.
-          </p>
         </div>
         <button
           type="button"
