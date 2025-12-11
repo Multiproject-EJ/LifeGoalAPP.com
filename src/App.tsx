@@ -130,8 +130,8 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
   {
     id: 'setup-goals',
-    label: 'Set Up Goals',
-    summary: 'Define clear, motivating goals to guide your next steps.',
+    label: 'Settings & Account',
+    summary: 'Manage your preferences and account settings.',
     icon: '🛠️',
     shortLabel: 'PLANS',
   },
