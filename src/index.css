@@ -7148,6 +7148,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  animation: mobileMenuFadeIn 0.25s ease-out;
 }
 
 .mobile-menu-overlay__backdrop {
@@ -7155,6 +7156,7 @@ body {
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(4px);
+  animation: backdropFadeIn 0.25s ease-out;
 }
 
 .mobile-menu-overlay__panel {
@@ -7167,6 +7169,43 @@ body {
   box-shadow: 0 -6px 32px rgba(15, 23, 42, 0.2);
   padding: 1rem clamp(1rem, 5vw, 1.5rem) calc(1rem + env(safe-area-inset-bottom, 0));
   backdrop-filter: blur(16px);
+  animation: slideUpSpring 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes mobileMenuFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpSpring {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-2%);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .mobile-menu-overlay__header {
@@ -7201,27 +7240,37 @@ body {
   transform: translateY(-1px);
 }
 
+.mobile-menu-overlay__content {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
 .mobile-menu-overlay__list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.6rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
 }
 
 .mobile-menu-overlay__item button {
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  min-height: 90px;
 }
 
 .mobile-menu-overlay__item button:hover,
@@ -7229,11 +7278,15 @@ body {
   background: rgba(255, 255, 255, 0.82);
   border-color: rgba(59, 130, 246, 0.35);
   outline: none;
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.mobile-menu-overlay__item button:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .mobile-menu-overlay__icon {
-  font-size: 1.35rem;
+  font-size: 2rem;
   line-height: 1;
 }
 
@@ -7241,18 +7294,110 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  width: 100%;
 }
 
 .mobile-menu-overlay__label {
-  font-weight: 800;
+  font-weight: 700;
   color: #0f172a;
   letter-spacing: 0.01em;
+  font-size: 0.85rem;
 }
 
 .mobile-menu-overlay__summary {
   margin: 0;
   color: #475569;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  display: none;
+}
+
+.mobile-menu-overlay__settings {
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+  padding-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  background: linear-gradient(145deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.8));
+  border-radius: 16px;
+  padding: 1rem;
+  margin-top: auto;
+}
+
+.mobile-menu-overlay__settings-title {
+  font-weight: 700;
   font-size: 0.85rem;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem;
+}
+
+.mobile-menu-overlay__settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.mobile-menu-overlay__settings-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobile-menu-overlay__settings-icon {
+  font-size: 1.1rem;
+}
+
+.mobile-menu-overlay__account-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(168, 85, 247, 0.12));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.mobile-menu-overlay__account-button:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(168, 85, 247, 0.18));
+  transform: translateY(-1px);
+}
+
+.mobile-menu-overlay__account-icon {
+  font-size: 1.2rem;
+}
+
+@media (max-width: 420px) {
+  .mobile-menu-overlay__list {
+    gap: 0.5rem;
+  }
+  
+  .mobile-menu-overlay__item button {
+    min-height: 80px;
+    padding: 0.75rem 0.35rem;
+  }
+  
+  .mobile-menu-overlay__icon {
+    font-size: 1.75rem;
+  }
+  
+  .mobile-menu-overlay__label {
+    font-size: 0.75rem;
+  }
 }
 
 /* =====================================================

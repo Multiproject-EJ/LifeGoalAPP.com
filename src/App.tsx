@@ -1104,21 +1104,48 @@ export default function App() {
               ×
             </button>
           </div>
-          <ul className="mobile-menu-overlay__list">
-            {mobileMenuNavItems.map((item) => (
-              <li key={item.id} className="mobile-menu-overlay__item">
-                <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
-                  <span aria-hidden="true" className="mobile-menu-overlay__icon">
-                    {item.icon}
-                  </span>
-                  <span className="mobile-menu-overlay__texts">
-                    <span className="mobile-menu-overlay__label">{item.label}</span>
-                    <span className="mobile-menu-overlay__summary">{item.summary}</span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="mobile-menu-overlay__content">
+            <ul className="mobile-menu-overlay__list">
+              {mobileMenuNavItems
+                .filter((item) => item.id !== 'account')
+                .map((item) => (
+                  <li key={item.id} className="mobile-menu-overlay__item">
+                    <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
+                      <span aria-hidden="true" className="mobile-menu-overlay__icon">
+                        {item.icon}
+                      </span>
+                      <span className="mobile-menu-overlay__texts">
+                        <span className="mobile-menu-overlay__label">{item.label}</span>
+                        <span className="mobile-menu-overlay__summary">{item.summary}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          </div>
+          <div className="mobile-menu-overlay__settings">
+            <h3 className="mobile-menu-overlay__settings-title">Settings</h3>
+            <div className="mobile-menu-overlay__settings-row">
+              <span className="mobile-menu-overlay__settings-label">
+                <span className="mobile-menu-overlay__settings-icon" aria-hidden="true">
+                  {/* Theme icon will be handled by ThemeToggle component */}
+                </span>
+                Theme
+              </span>
+              <ThemeToggle className="theme-toggle--compact" />
+            </div>
+            <button
+              type="button"
+              className="mobile-menu-overlay__account-button"
+              onClick={() => handleMobileNavSelect('account')}
+              aria-label="Open account settings"
+            >
+              <span className="mobile-menu-overlay__account-icon" aria-hidden="true">
+                👤
+              </span>
+              <span>My Account</span>
+            </button>
+          </div>
         </div>
       </div>
     ) : null;
