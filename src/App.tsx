@@ -38,6 +38,7 @@ import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceSt
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import './styles/workspace.css';
+import './styles/settings-folders.css';
 
 type AuthMode = 'password' | 'signup';
 
@@ -949,7 +950,7 @@ export default function App() {
 
           {canAccessWorkspace ? (
             <div className="workspace-content">
-              <ProgressDashboard session={activeSession} />
+              <ProgressDashboard session={activeSession} stats={workspaceStats} />
               <GoalWorkspace session={activeSession} />
             </div>
           ) : (
@@ -1065,7 +1066,16 @@ export default function App() {
       case 'setup-goals':
         return (
           <div className="workspace-content">
-            <GoalWorkspace session={activeSession} />
+            <MyAccountPanel
+              session={activeSession}
+              isDemoExperience={isDemoExperience}
+              isAuthenticated={isAuthenticated}
+              onSignOut={handleSignOut}
+              onEditProfile={handleEditAccountDetails}
+              profile={workspaceProfile}
+              stats={workspaceStats}
+              profileLoading={workspaceProfileLoading}
+            />
           </div>
         );
       default:

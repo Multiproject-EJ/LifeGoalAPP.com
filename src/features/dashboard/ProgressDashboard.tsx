@@ -33,8 +33,11 @@ type HabitWithGoal = HabitV2Row & {
   } | null;
 };
 
+import type { WorkspaceStats } from '../../services/workspaceStats';
+
 type ProgressDashboardProps = {
   session: Session;
+  stats?: WorkspaceStats | null;
 };
 
 type CalendarDay = {
@@ -145,7 +148,7 @@ function buildWeeklySnapshot(reference: Date, completions: Record<string, number
   });
 }
 
-export function ProgressDashboard({ session }: ProgressDashboardProps) {
+export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const [goals, setGoals] = useState<GoalRow[]>([]);
@@ -444,6 +447,32 @@ export function ProgressDashboard({ session }: ProgressDashboardProps) {
           </button>
         </div>
       </header>
+
+      {/* Workspace Snapshot Section */}
+      <section className="workspace-snapshot" aria-labelledby="workspace-snapshot-heading">
+        <div className="workspace-snapshot__header">
+          <h3 id="workspace-snapshot-heading">Workspace snapshot</h3>
+          <p>Track your stored rituals & goals at a glance</p>
+        </div>
+        {stats ? (
+          <div className="workspace-snapshot__stats">
+            <div className="workspace-snapshot__stat">
+              <span className="workspace-snapshot__stat-label">Goals saved</span>
+              <span className="workspace-snapshot__stat-value">{stats.goalCount}</span>
+            </div>
+            <div className="workspace-snapshot__stat">
+              <span className="workspace-snapshot__stat-label">Habits tracked</span>
+              <span className="workspace-snapshot__stat-value">{stats.habitCount}</span>
+            </div>
+            <div className="workspace-snapshot__stat">
+              <span className="workspace-snapshot__stat-label">Check-ins logged</span>
+              <span className="workspace-snapshot__stat-value">{stats.checkinCount}</span>
+            </div>
+          </div>
+        ) : (
+          <p className="workspace-snapshot__hint">Sign in to Supabase to see your synced ritual stats.</p>
+        )}
+      </section>
 
       <section className="urgent-tasks" aria-label="Urgent tasks">
         <div className="urgent-tasks__header">

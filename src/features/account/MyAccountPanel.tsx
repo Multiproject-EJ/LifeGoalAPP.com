@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
 import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel, ReminderAnalyticsDashboard } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
+import { SettingsFolderButton } from '../../components/SettingsFolderButton';
+import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 
@@ -36,6 +39,9 @@ export function MyAccountPanel({
   stats,
   profileLoading,
 }: MyAccountPanelProps) {
+  const [folder1Open, setFolder1Open] = useState(false);
+  const [folder2Open, setFolder2Open] = useState(false);
+  
   const user = session.user;
   const displayName =
     profile?.full_name || (user.user_metadata?.full_name as string | undefined) || user.email || 'Workspace member';
@@ -110,32 +116,6 @@ export function MyAccountPanel({
         </div>
       </section>
 
-      <section className="account-panel__card" aria-labelledby="account-workspace-overview">
-        <p className="account-panel__eyebrow">Workspace snapshot</p>
-        <h3 id="account-workspace-overview">Stored rituals & goals</h3>
-        <p className="account-panel__hint">
-          These counts update automatically each time you create or complete new goals, habits, or wellbeing check-ins.
-        </p>
-        {stats ? (
-          <dl className="account-panel__details account-panel__details--grid">
-            <div>
-              <dt>Goals saved</dt>
-              <dd>{stats.goalCount}</dd>
-            </div>
-            <div>
-              <dt>Habits tracked</dt>
-              <dd>{stats.habitCount}</dd>
-            </div>
-            <div>
-              <dt>Check-ins logged</dt>
-              <dd>{stats.checkinCount}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="account-panel__hint">Sign in to Supabase to see your synced ritual stats.</p>
-        )}
-      </section>
-
       <section className="account-panel__card" aria-labelledby="account-subscription">
         <p className="account-panel__eyebrow">Subscription</p>
         <h3 id="account-subscription">Plan overview</h3>
@@ -158,28 +138,6 @@ export function MyAccountPanel({
         </dl>
       </section>
 
-      <section className="account-panel__card" aria-labelledby="account-data">
-        <p className="account-panel__eyebrow">Data &amp; security</p>
-        <h3 id="account-data">Workspace data</h3>
-        <p className="account-panel__hint">
-          View high-level metadata about your profile. Detailed exports are available through Supabase.
-        </p>
-        <dl className="account-panel__details">
-          <div>
-            <dt>Member since</dt>
-            <dd>{memberSince}</dd>
-          </div>
-          <div>
-            <dt>Last sign-in</dt>
-            <dd>{lastSignIn}</dd>
-          </div>
-          <div>
-            <dt>Account ID</dt>
-            <dd className="account-panel__code">{user.id}</dd>
-          </div>
-        </dl>
-      </section>
-
       <section className="account-panel__card" aria-labelledby="account-theme">
         <p className="account-panel__eyebrow">Appearance</p>
         <ThemeSelector />
@@ -187,22 +145,80 @@ export function MyAccountPanel({
 
       <AiSettingsSection session={session} />
 
-      <NotificationSettingsSection session={session} />
+      {/* Collapsible Folder 1: Developer & Analytics Tools */}
+      <section className="account-panel__card">
+        <SettingsFolderButton
+          title="Developer & Analytics Tools"
+          description="Advanced settings for workspace data, analytics, debugging, and testing"
+          icon="🔧"
+          itemCount={5}
+          onClick={() => setFolder1Open(true)}
+        />
+      </section>
 
-      <DailyReminderPreferences session={session} />
+      {/* Collapsible Folder 2: Notification Settings */}
+      <section className="account-panel__card">
+        <SettingsFolderButton
+          title="Notification Settings"
+          description="Configure habit notifications, daily reminders, and per-habit reminder preferences"
+          icon="🔔"
+          itemCount={3}
+          onClick={() => setFolder2Open(true)}
+        />
+      </section>
 
-      <PerHabitReminderPrefs session={session} />
+      {/* Folder 1 Popup */}
+      <SettingsFolderPopup
+        isOpen={folder1Open}
+        onClose={() => setFolder1Open(false)}
+        title="Developer & Analytics Tools"
+      >
+        <section className="account-panel__card" aria-labelledby="account-data">
+          <p className="account-panel__eyebrow">Data &amp; security</p>
+          <h3 id="account-data">Workspace data</h3>
+          <p className="account-panel__hint">
+            View high-level metadata about your profile. Detailed exports are available through Supabase.
+          </p>
+          <dl className="account-panel__details">
+            <div>
+              <dt>Member since</dt>
+              <dd>{memberSince}</dd>
+            </div>
+            <div>
+              <dt>Last sign-in</dt>
+              <dd>{lastSignIn}</dd>
+            </div>
+            <div>
+              <dt>Account ID</dt>
+              <dd className="account-panel__code">{user.id}</dd>
+            </div>
+          </dl>
+        </section>
 
-      <ReminderAnalyticsDashboard session={session} />
+        <ReminderAnalyticsDashboard session={session} />
 
-      <PushNotificationTestPanel session={session} />
+        <PushNotificationTestPanel session={session} />
 
-      <ReminderActionDebugPanel session={session} />
+        <ReminderActionDebugPanel session={session} />
 
-      <SupabaseConnectionTest 
-        session={session} 
-        isDemoExperience={isDemoExperience} 
-      />
+        <SupabaseConnectionTest 
+          session={session} 
+          isDemoExperience={isDemoExperience} 
+        />
+      </SettingsFolderPopup>
+
+      {/* Folder 2 Popup */}
+      <SettingsFolderPopup
+        isOpen={folder2Open}
+        onClose={() => setFolder2Open(false)}
+        title="Notification Settings"
+      >
+        <NotificationSettingsSection session={session} />
+
+        <DailyReminderPreferences session={session} />
+
+        <PerHabitReminderPrefs session={session} />
+      </SettingsFolderPopup>
 
       <div className="account-panel__actions">
         <div>
