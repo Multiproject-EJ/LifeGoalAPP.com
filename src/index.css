@@ -565,6 +565,16 @@ body {
   line-height: 1;
 }
 
+.auth-overlay__dialog--habits {
+  max-width: 1400px;
+  width: 95%;
+}
+
+.habits-modal__content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 .app--preview {
   position: relative;
   min-height: 100vh;

@@ -124,13 +124,6 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     icon: '🤖',
     shortLabel: 'AI',
   },
-  {
-    id: 'setup-habits',
-    label: 'Set Up Habits',
-    summary: 'Create or refine the habits that support your life goals.',
-    icon: '🔁',
-    shortLabel: 'HABITS',
-  },
 ];
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
@@ -186,6 +179,7 @@ export default function App() {
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
+  const [showHabitsSetupModal, setShowHabitsSetupModal] = useState(false);
 
   const mobileMenuNavItems: MobileMenuNavItem[] = useMemo(() => {
     const findWorkspaceItem = (navId: string) =>
@@ -923,6 +917,7 @@ export default function App() {
 
   const shouldForceAuthOverlay = shouldRequireAuthentication && !isMobileViewport;
   const isAuthOverlayVisible = shouldForceAuthOverlay || showAuthPanel;
+  const isAnyModalVisible = isAuthOverlayVisible || showHabitsSetupModal;
 
   const renderWorkspaceSection = () => {
     if (activeWorkspaceNav === 'goals') {
@@ -1050,12 +1045,6 @@ export default function App() {
             <AiSupportAssistant session={activeSession} />
           </div>
         );
-      case 'setup-habits':
-        return (
-          <div className="workspace-content">
-            <HabitsModule session={activeSession} />
-          </div>
-        );
       default:
         return (
           <div className="workspace-stage__placeholder">
@@ -1145,6 +1134,20 @@ export default function App() {
                 <button
                   type="button"
                   className="mobile-menu-overlay__account-button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setShowHabitsSetupModal(true);
+                  }}
+                  aria-label="Set Up Habits"
+                >
+                  <span className="mobile-menu-overlay__account-icon" aria-hidden="true">
+                    🔁
+                  </span>
+                  <span>Set Up Habits</span>
+                </button>
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__account-button"
                   onClick={() => handleMobileNavSelect('account')}
                   aria-label="Open account settings"
                 >
@@ -1175,9 +1178,9 @@ export default function App() {
     );
   }
 
-  const appClassName = `app app--workspace ${isAuthOverlayVisible ? 'app--auth-overlay' : ''}`;
+  const appClassName = `app app--workspace ${isAnyModalVisible ? 'app--auth-overlay' : ''}`;
   const workspaceShellClassName = `workspace-shell ${
-    isAuthOverlayVisible ? 'workspace-shell--blurred' : ''
+    isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }`;
 
   const canDismissOverlay = isAuthOverlayVisible && !shouldForceAuthOverlay;
@@ -1274,6 +1277,18 @@ export default function App() {
               <div className="workspace-sidebar__actions-divider" role="presentation" />
               <button
                 type="button"
+                className="workspace-sidebar__account-button"
+                onClick={() => setShowHabitsSetupModal(true)}
+                aria-label="Set Up Habits"
+                title="Set Up Habits • Create or refine the habits that support your life goals."
+              >
+                <span aria-hidden="true" className="workspace-sidebar__nav-icon">
+                  🔁
+                </span>
+                <span className="sr-only">Set Up Habits</span>
+              </button>
+              <button
+                type="button"
                 className={`workspace-sidebar__account-button ${
                   isAuthenticated && activeWorkspaceNav === 'account'
                     ? 'workspace-sidebar__account-button--active'
@@ -1362,6 +1377,32 @@ export default function App() {
             setAuthMessage('Profile saved!');
           }}
         />
+      ) : null}
+
+      {/* Habits Setup Modal */}
+      {showHabitsSetupModal ? (
+        <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Set Up Habits">
+          <div
+            className="auth-overlay__backdrop"
+            onClick={() => setShowHabitsSetupModal(false)}
+            role="presentation"
+          />
+          <div className="auth-overlay__dialog auth-overlay__dialog--habits">
+            <button 
+              type="button" 
+              className="auth-overlay__close" 
+              onClick={() => setShowHabitsSetupModal(false)}
+              aria-label="Close habits setup modal"
+              autoFocus
+            >
+              <span aria-hidden="true">×</span>
+              <span className="sr-only">Close habits setup</span>
+            </button>
+            <div className="habits-modal__content">
+              <HabitsModule session={activeSession} />
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {/* Quick Actions FAB - visible app-wide */}
