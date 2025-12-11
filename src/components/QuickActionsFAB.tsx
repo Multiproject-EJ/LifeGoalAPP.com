@@ -1,5 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { 
+  fetchHabitsForUser, 
+  fetchHabitLogsForRange,
+  logHabitCompletion,
+  clearHabitCompletion,
+  type LegacyHabitWithGoal as HabitWithGoal 
+} from '../compat/legacyHabitsAdapter';
 
 type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule';
 
@@ -36,6 +43,11 @@ export function QuickActionsFAB({
   const [isOpen, setIsOpen] = useState(false);
   const [showJournalTypes, setShowJournalTypes] = useState(false);
   const [showLifeCoach, setShowLifeCoach] = useState(false);
+  const [showHabitsSubmenu, setShowHabitsSubmenu] = useState(false);
+  const [habits, setHabits] = useState<HabitWithGoal[]>([]);
+  const [habitCompletions, setHabitCompletions] = useState<Record<string, { logId: string | null; completed: boolean }>>({});
+  const [loadingHabits, setLoadingHabits] = useState(false);
+  const [savingHabitId, setSavingHabitId] = useState<string | null>(null);
   const fabRef = useRef<HTMLDivElement>(null);
 
   // Close FAB menu and reset all states on click outside
@@ -44,6 +56,7 @@ export function QuickActionsFAB({
       if (fabRef.current && !fabRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setShowJournalTypes(false);
+        setShowHabitsSubmenu(false);
         // Note: showLifeCoach is not reset here because the Life Coach modal
         // has its own backdrop click handler for closing
       }
@@ -62,16 +75,71 @@ export function QuickActionsFAB({
     setIsOpen(!isOpen);
     if (isOpen) {
       setShowJournalTypes(false);
+      setShowHabitsSubmenu(false);
     }
   };
 
-  const handleCheckHabit = () => {
-    onCheckHabit?.();
-    setIsOpen(false);
+  // Load habits and their completion status
+  const loadHabits = useCallback(async () => {
+    setLoadingHabits(true);
+    try {
+      // Get today's date in ISO format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Fetch habits
+      const { data: habitsData, error: habitsError } = await fetchHabitsForUser(session.user.id);
+      if (habitsError) throw habitsError;
+      
+      const fetchedHabits = habitsData ?? [];
+      setHabits(fetchedHabits);
+      
+      if (fetchedHabits.length === 0) {
+        setHabitCompletions({});
+        return;
+      }
+      
+      // Fetch completion logs for today
+      const habitIds = fetchedHabits.map(h => h.id);
+      const { data: logs, error: logsError } = await fetchHabitLogsForRange(habitIds, today, today);
+      if (logsError) throw logsError;
+      
+      // Build completion state
+      const completions: Record<string, { logId: string | null; completed: boolean }> = {};
+      habitIds.forEach(id => {
+        completions[id] = { logId: null, completed: false };
+      });
+      
+      (logs ?? []).forEach(log => {
+        if (log.date === today) {
+          completions[log.habit_id] = {
+            logId: log.id,
+            completed: Boolean(log.completed),
+          };
+        }
+      });
+      
+      setHabitCompletions(completions);
+    } catch (error) {
+      console.error('Failed to load habits:', error);
+    } finally {
+      setLoadingHabits(false);
+    }
+  }, [session.user.id]);
+
+  const handleCheckHabit = async () => {
+    // Toggle the habits submenu instead of navigating
+    const newShowHabitsSubmenu = !showHabitsSubmenu;
+    setShowHabitsSubmenu(newShowHabitsSubmenu);
+    
+    // Load habits when opening the submenu
+    if (newShowHabitsSubmenu && habits.length === 0) {
+      await loadHabits();
+    }
   };
 
   const handleJournalClick = () => {
     setShowJournalTypes(!showJournalTypes);
+    setShowHabitsSubmenu(false);
   };
 
   const handleJournalTypeSelect = (type: JournalType) => {
@@ -87,6 +155,43 @@ export function QuickActionsFAB({
 
   const closeLifeCoach = () => {
     setShowLifeCoach(false);
+  };
+
+  const toggleHabitCompletion = async (habitId: string) => {
+    setSavingHabitId(habitId);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const currentState = habitCompletions[habitId];
+      const wasCompleted = currentState?.completed ?? false;
+
+      if (wasCompleted) {
+        // Clear the completion
+        const { error } = await clearHabitCompletion(habitId, today);
+        if (error) throw error;
+        
+        setHabitCompletions(prev => ({
+          ...prev,
+          [habitId]: { logId: null, completed: false },
+        }));
+      } else {
+        // Log the completion
+        const { data, error } = await logHabitCompletion({
+          habit_id: habitId,
+          date: today,
+          completed: true,
+        });
+        if (error) throw error;
+        
+        setHabitCompletions(prev => ({
+          ...prev,
+          [habitId]: { logId: data?.id ?? null, completed: true },
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to toggle habit:', error);
+    } finally {
+      setSavingHabitId(null);
+    }
   };
 
   const quickActions: QuickAction[] = [
@@ -160,6 +265,48 @@ export function QuickActionsFAB({
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Habits sub-menu */}
+              {action.id === 'check-habit' && showHabitsSubmenu && (
+                <div className="quick-actions-fab__submenu quick-actions-fab__submenu--habits">
+                  <div className="quick-actions-fab__submenu-title">
+                    {loadingHabits ? 'Loading habits...' : "Today's habits:"}
+                  </div>
+                  {loadingHabits ? (
+                    <div className="quick-actions-fab__submenu-loading">
+                      <span>⏳</span>
+                    </div>
+                  ) : habits.length === 0 ? (
+                    <div className="quick-actions-fab__submenu-empty">
+                      <p>No habits scheduled for today.</p>
+                      <p>Add habits to your goals to track them here.</p>
+                    </div>
+                  ) : (
+                    <div className="quick-actions-fab__submenu-habits">
+                      {habits.map((habit) => {
+                        const isCompleted = habitCompletions[habit.id]?.completed ?? false;
+                        const isSaving = savingHabitId === habit.id;
+                        
+                        return (
+                          <button
+                            key={habit.id}
+                            type="button"
+                            className={`quick-actions-fab__habit-item ${isCompleted ? 'quick-actions-fab__habit-item--completed' : ''}`}
+                            onClick={() => !isSaving && toggleHabitCompletion(habit.id)}
+                            disabled={isSaving}
+                            aria-label={`${isCompleted ? 'Uncheck' : 'Check'} ${habit.name}`}
+                          >
+                            <span className="quick-actions-fab__habit-checkbox" aria-hidden="true">
+                              {isSaving ? '⏳' : isCompleted ? '✅' : '☐'}
+                            </span>
+                            <span className="quick-actions-fab__habit-name">{habit.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
