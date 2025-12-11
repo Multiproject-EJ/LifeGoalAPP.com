@@ -133,8 +133,8 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     id: 'flow-day',
     name: 'Flow Day',
     icon: '🌀',
-    description: 'Focused productivity with calm blue-grays',
-    metaColor: '#0891b2',
+    description: 'Neumorphic glass with airy silver gradients and soft glow',
+    metaColor: '#f2f4fb',
     category: 'light',
   },
   {
