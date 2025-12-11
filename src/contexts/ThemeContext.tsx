@@ -149,9 +149,9 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
   {
     id: 'bio-day',
     name: 'Bio Day',
-    icon: '🌿',
-    description: 'Clean white canvas for natural background imagery',
-    metaColor: '#ffffff',
+    icon: bioDayIcons,
+    description: 'Organic greens inspired by nature',
+    metaColor: '#16a34a',
     category: 'light',
   },
 ];

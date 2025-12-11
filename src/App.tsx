@@ -8,6 +8,8 @@ import {
   useMemo,
   useState,
 } from 'react';
+import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
+import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalReflectionJournal, GoalWorkspace, LifeGoalsSection } from './features/goals';
@@ -60,7 +62,7 @@ type MobileMenuNavItem = {
   summary: string;
 };
 
-const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
+const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'goals',
     label: 'Dashboard',
@@ -181,9 +183,29 @@ export default function App() {
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showHabitsSetupModal, setShowHabitsSetupModal] = useState(false);
 
+  const workspaceNavItems = useMemo(() => {
+    if (theme === 'bio-day') {
+      const createNavImage = (src: string) => (
+        <img src={src} alt="" className="workspace-sidebar__nav-image" />
+      );
+
+      return BASE_WORKSPACE_NAV_ITEMS.map((item) => {
+        if (item.id === 'goals') {
+          return { ...item, icon: createNavImage(bioDayChartIcon) } satisfies WorkspaceNavItem;
+        }
+        if (item.id === 'planning') {
+          return { ...item, icon: createNavImage(bioDayCheckIcon) } satisfies WorkspaceNavItem;
+        }
+        return item;
+      });
+    }
+
+    return BASE_WORKSPACE_NAV_ITEMS;
+  }, [theme]);
+
   const mobileMenuNavItems: MobileMenuNavItem[] = useMemo(() => {
     const findWorkspaceItem = (navId: string) =>
-      WORKSPACE_NAV_ITEMS.find((item) => item.id === navId);
+      workspaceNavItems.find((item) => item.id === navId);
 
     return MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
       const item = findWorkspaceItem(navId);
@@ -211,7 +233,7 @@ export default function App() {
         summary: item?.summary ?? 'Open this section.',
       } satisfies MobileMenuNavItem;
     });
-  }, []);
+  }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(
     () => mobileMenuNavItems.slice(0, 4),
@@ -792,8 +814,8 @@ export default function App() {
     activeSession.user.email;
   const userInitial = (userDisplay || '').trim().charAt(0).toUpperCase() || 'U';
   const activeWorkspaceItem =
-    WORKSPACE_NAV_ITEMS.find((item) => item.id === activeWorkspaceNav) ??
-    WORKSPACE_NAV_ITEMS[WORKSPACE_NAV_ITEMS.length - 1];
+    workspaceNavItems.find((item) => item.id === activeWorkspaceNav) ??
+    workspaceNavItems[workspaceNavItems.length - 1];
 
   const isDemoExperience = isDemoSession(activeSession);
   const normalizedDisplayName =
@@ -1233,7 +1255,7 @@ export default function App() {
 
             <nav className="workspace-sidebar__nav">
               <div className="workspace-sidebar__nav-list">
-                {WORKSPACE_NAV_ITEMS.map((item) => {
+                {workspaceNavItems.map((item) => {
                   const isActive = activeWorkspaceNav === item.id;
                   const handleNavButtonClick = () => {
                     if (item.id === 'account' && !isAuthenticated) {

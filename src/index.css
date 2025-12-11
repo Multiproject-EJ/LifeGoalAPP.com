@@ -1095,6 +1095,13 @@ body {
   justify-content: center;
 }
 
+.workspace-sidebar__nav-icon img {
+  width: 26px;
+  height: 26px;
+  display: block;
+  object-fit: contain;
+}
+
 .workspace-sidebar__nav-button:hover .workspace-sidebar__nav-icon,
 .workspace-sidebar__nav-button:focus-visible .workspace-sidebar__nav-icon {
   filter: brightness(1.2);
@@ -7108,6 +7115,13 @@ body {
   line-height: 1;
 }
 
+.mobile-footer-nav__icon img {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
+  object-fit: contain;
+}
+
 .mobile-footer-nav__label {
   font-size: 0.72rem;
 }
@@ -7298,6 +7312,13 @@ body {
 .mobile-menu-overlay__icon {
   font-size: 2rem;
   line-height: 1;
+}
+
+.mobile-menu-overlay__icon img {
+  width: 2rem;
+  height: 2rem;
+  display: block;
+  object-fit: contain;
 }
 
 .mobile-menu-overlay__texts {
