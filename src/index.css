@@ -7021,10 +7021,10 @@ body {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  top: 0;
   z-index: 30;
   padding: clamp(0.35rem, 1.5vw, 0.65rem) clamp(0.9rem, 5vw, 1.5rem)
-    calc(0.4rem + env(safe-area-inset-bottom, 0));
+    clamp(0.4rem, 1.5vw, 0.65rem);
   display: flex;
   justify-content: center;
   pointer-events: none;
