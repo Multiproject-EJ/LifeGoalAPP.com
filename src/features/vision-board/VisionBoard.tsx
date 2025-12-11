@@ -321,7 +321,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
                 <input
                   id="vision-board-file"
                   type="file"
-                  accept="image/png, image/jpeg, image/jpg, image/webp"
+                  accept="image/png, image/jpeg, image/webp"
                   onChange={handleFileChange}
                   disabled={(!isConfigured && !isDemoExperience) || uploading}
                   required

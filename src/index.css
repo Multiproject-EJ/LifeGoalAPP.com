@@ -5614,6 +5614,7 @@ body {
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
 .vision-board__card img {
@@ -5766,18 +5767,7 @@ body {
   }
 }
 
-/* Card updates for Pinterest style */
-.vision-board__card {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-}
-
+/* Card hover effects */
 .vision-board__card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
@@ -5796,21 +5786,28 @@ body {
   display: block;
 }
 
-/* Masonry layout specific card heights */
+/* Masonry layout specific card heights - uses CSS custom property for flexibility */
+:root {
+  --masonry-base-height: 20;
+  --masonry-variant-1: 25;
+  --masonry-variant-2: 30;
+  --masonry-variant-3: 22;
+}
+
 .vision-board__grid--masonry .vision-board__card {
-  grid-row-end: span 20;
+  grid-row-end: span var(--masonry-base-height);
 }
 
 .vision-board__grid--masonry .vision-board__card:nth-child(3n + 1) {
-  grid-row-end: span 25;
+  grid-row-end: span var(--masonry-variant-1);
 }
 
 .vision-board__grid--masonry .vision-board__card:nth-child(3n + 2) {
-  grid-row-end: span 30;
+  grid-row-end: span var(--masonry-variant-2);
 }
 
 .vision-board__grid--masonry .vision-board__card:nth-child(3n + 3) {
-  grid-row-end: span 22;
+  grid-row-end: span var(--masonry-variant-3);
 }
 
 /* Overlay caption on hover */
