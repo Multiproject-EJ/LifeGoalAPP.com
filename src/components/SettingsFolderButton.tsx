@@ -1,5 +1,3 @@
-import { ReactNode } from 'react';
-
 type SettingsFolderButtonProps = {
   title: string;
   description: string;
