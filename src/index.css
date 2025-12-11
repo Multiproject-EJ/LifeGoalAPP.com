@@ -7419,6 +7419,29 @@ body {
   line-height: 1;
 }
 
+.theme-icon-stack {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.theme-icon-image {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.08);
+  object-fit: contain;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(226, 232, 240, 0.5));
+}
+
+.theme-selector__icon .theme-icon-image,
+.mobile-theme-selector__icon .theme-icon-image,
+.mobile-menu-overlay__theme-selector-icon .theme-icon-image {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
 /* Mobile Theme Selector */
 .mobile-theme-selector {
   display: flex;
