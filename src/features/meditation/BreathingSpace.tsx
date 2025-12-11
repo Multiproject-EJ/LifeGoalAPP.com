@@ -7,7 +7,7 @@ import {
   getMeditationStats,
   PLACEHOLDER_SESSIONS,
 } from '../../services/meditation';
-import { ReminderCard } from './components/ReminderCard';
+import { FEATURE_BREATHING_SPACE } from './constants';
 
 type BreathingSpaceProps = {
   session: Session;
@@ -37,15 +37,19 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   useEffect(() => {
     loadStats();
 
-    // Listen for 'breathing:open' event to open the meditation player
-    const handleBreathingOpen = () => {
-      handleStartSession('3-Minute Breathing', 180);
+    // Listen for 'breathing:open' custom events from other parts of the app
+    const handleBreathingOpen = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail as { title?: string; duration?: number } | undefined;
+      const title = detail?.title ?? '3-Minute Breathing';
+      const duration = detail?.duration ?? 180;
+      setSelectedSession({ title, duration });
+      setPlayerOpen(true);
     };
 
-    window.addEventListener('breathing:open', handleBreathingOpen);
+    window.addEventListener('breathing:open', handleBreathingOpen as EventListener);
 
     return () => {
-      window.removeEventListener('breathing:open', handleBreathingOpen);
+      window.removeEventListener('breathing:open', handleBreathingOpen as EventListener);
     };
   }, [session.user.id]);
 
@@ -69,16 +73,9 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   };
 
   const handleStartSession = (title: string, duration: number) => {
-    // Dispatch custom event for MeditationSessionPlayer or other listeners
-    // that may want to track when a breathing session is initiated
-    window.dispatchEvent(new CustomEvent('breathing:open', {
-      detail: { title, duration }
-    }));
-    
+    // Start a session locally (do not re-dispatch the custom event here)
     setSelectedSession({ title, duration });
     setPlayerOpen(true);
-    // Dispatch custom event for breathing session open
-    window.dispatchEvent(new CustomEvent('breathing:open', { detail: { title, duration } }));
   };
 
   const handleSessionComplete = async () => {
@@ -176,17 +173,17 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         <div className="breathing-space__library">
           <h3 className="breathing-space__library-title">Meditation Library</h3>
           <div className="breathing-space__library-grid">
-            {PLACEHOLDER_SESSIONS.map((session) => (
-              <div key={session.id} className="breathing-space__library-card">
-                <div className="breathing-space__library-card-icon">{session.icon}</div>
-                <h4 className="breathing-space__library-card-title">{session.title}</h4>
-                <p className="breathing-space__library-card-description">{session.description}</p>
+            {PLACEHOLDER_SESSIONS.map((s) => (
+              <div key={s.id} className="breathing-space__library-card">
+                <div className="breathing-space__library-card-icon">{s.icon}</div>
+                <h4 className="breathing-space__library-card-title">{s.title}</h4>
+                <p className="breathing-space__library-card-description">{s.description}</p>
                 <div className="breathing-space__library-card-duration">
-                  {Math.floor(session.duration / 60)} minutes
+                  {Math.floor(s.duration / 60)} minutes
                 </div>
                 <button
                   className="btn btn--secondary breathing-space__library-card-button"
-                  onClick={() => handleStartSession(session.title, session.duration)}
+                  onClick={() => handleStartSession(s.title, s.duration)}
                 >
                   Start
                 </button>
@@ -194,7 +191,6 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
             ))}
           </div>
         </div>
-      </div>
       </div>
 
       {/* Session Player Modal */}
