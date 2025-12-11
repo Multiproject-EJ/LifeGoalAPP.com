@@ -1,10 +1,11 @@
 import type { JournalEntry } from '../../services/journal';
 import type { JournalMoodOption } from './JournalEntryEditor';
 import type { Database } from '../../lib/database.types';
+import type { HabitV2Row } from '../../services/habitsV2';
 import { entryDetailDateFormatter, unlockDateFormatter } from './utils';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
-type HabitRow = Database['public']['Tables']['habits']['Row'];
+type HabitRow = HabitV2Row;
 
 type JournalEntryDetailProps = {
   entry: JournalEntry | null;
@@ -166,7 +167,7 @@ export function JournalEntryDetail({
                 onClick={() => onNavigateToHabit?.(habitId)}
                 disabled={disabled}
               >
-                {habitMap[habitId]?.name ?? 'View habit'}
+                {habitMap[habitId]?.title ?? 'View habit'}
               </button>
             ))}
           </div>
