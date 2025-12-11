@@ -9861,8 +9861,8 @@ body {
 
 @media (max-width: 720px) {
   .quick-actions-fab {
-    /* Position FAB above mobile footer nav */
-    bottom: calc(var(--fab-mobile-footer-offset) + 1rem);
+    /* Hide FAB on small phone screens - mobile menu is adequate for navigation */
+    display: none;
   }
 }
 
