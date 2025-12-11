@@ -131,13 +131,6 @@ const WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     icon: '🔁',
     shortLabel: 'HABITS',
   },
-  {
-    id: 'setup-goals',
-    label: 'Settings & Account',
-    summary: 'Manage your preferences and account settings.',
-    icon: '🛠️',
-    shortLabel: 'PLANS',
-  },
 ];
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
@@ -1061,21 +1054,6 @@ export default function App() {
         return (
           <div className="workspace-content">
             <HabitsModule session={activeSession} />
-          </div>
-        );
-      case 'setup-goals':
-        return (
-          <div className="workspace-content">
-            <MyAccountPanel
-              session={activeSession}
-              isDemoExperience={isDemoExperience}
-              isAuthenticated={isAuthenticated}
-              onSignOut={handleSignOut}
-              onEditProfile={handleEditAccountDetails}
-              profile={workspaceProfile}
-              stats={workspaceStats}
-              profileLoading={workspaceProfileLoading}
-            />
           </div>
         );
       default:
