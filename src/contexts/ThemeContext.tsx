@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import bioDayChartIcon from '../assets/theme-icons/bio-day-chart.svg';
+import bioDayCheckIcon from '../assets/theme-icons/bio-day-check.svg';
 
-export type Theme = 
-  | 'bright-sky' 
+export type Theme =
+  | 'bright-sky'
   | 'dark-glass'
   | 'ocean-breeze'
   | 'forest-green'
@@ -24,11 +26,18 @@ export type ThemeCategory = 'light' | 'dark';
 export interface ThemeMetadata {
   id: Theme;
   name: string;
-  icon: string;
+  icon: ReactNode;
   description: string;
   metaColor: string;
   category: ThemeCategory;
 }
+
+const bioDayIcons = (
+  <span className="theme-icon-stack">
+    <img src={bioDayChartIcon} alt="" className="theme-icon-image" />
+    <img src={bioDayCheckIcon} alt="" className="theme-icon-image" />
+  </span>
+);
 
 interface ThemeContextValue {
   theme: Theme;
