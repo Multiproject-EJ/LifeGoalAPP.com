@@ -521,6 +521,8 @@ export interface Database {
           display_name: string | null;
           full_name: string | null;
           workspace_name: string | null;
+          initials: string | null;
+          show_initials_in_menu: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -530,6 +532,8 @@ export interface Database {
           display_name?: string | null;
           full_name?: string | null;
           workspace_name?: string | null;
+          initials?: string | null;
+          show_initials_in_menu?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -539,6 +543,8 @@ export interface Database {
           display_name?: string | null;
           full_name?: string | null;
           workspace_name?: string | null;
+          initials?: string | null;
+          show_initials_in_menu?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };

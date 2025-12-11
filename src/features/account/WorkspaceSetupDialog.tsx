@@ -1,9 +1,10 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
 import { getSupabaseClient } from '../../lib/supabaseClient';
+import { generateInitials } from '../../utils/initials';
 
 type WorkspaceSetupDialogProps = {
   isOpen: boolean;
@@ -26,6 +27,9 @@ export function WorkspaceSetupDialog({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Auto-generate initials from full name
+  const initials = useMemo(() => generateInitials(fullName), [fullName]);
 
   useEffect(() => {
     if (!profile) {
@@ -65,6 +69,7 @@ export function WorkspaceSetupDialog({
         user_id: session.user.id,
         full_name: trimmedName,
         workspace_name: workspaceName.trim() || null,
+        initials: generateInitials(trimmedName),
       });
       if (error || !data) {
         throw error ?? new Error('Unable to save profile.');
@@ -113,6 +118,17 @@ export function WorkspaceSetupDialog({
               onChange={(event) => setFullName(event.target.value)}
               placeholder={session.user.email ?? 'you@example.com'}
               required
+            />
+          </label>
+          <label className="supabase-auth__field">
+            <span>Initials (auto-generated)</span>
+            <input
+              type="text"
+              value={initials}
+              placeholder="--"
+              disabled
+              readOnly
+              style={{ backgroundColor: 'var(--color-bg-subtle, #f5f5f5)', cursor: 'not-allowed' }}
             />
           </label>
           <label className="supabase-auth__field">

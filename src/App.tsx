@@ -39,6 +39,7 @@ import {
 import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceStats';
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
+import { generateInitials } from './utils/initials';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 
@@ -813,6 +814,11 @@ export default function App() {
     (activeSession.user.user_metadata?.full_name as string | undefined) ||
     activeSession.user.email;
   const userInitial = (userDisplay || '').trim().charAt(0).toUpperCase() || 'U';
+  
+  // Use initials from profile if enabled, otherwise use first letter
+  const shouldShowInitials = isAuthenticated && workspaceProfile?.show_initials_in_menu && workspaceProfile?.initials;
+  const menuIconContent = shouldShowInitials ? workspaceProfile.initials : '🌿';
+  
   const activeWorkspaceItem =
     workspaceNavItems.find((item) => item.id === activeWorkspaceNav) ??
     workspaceNavItems[workspaceNavItems.length - 1];
@@ -850,9 +856,10 @@ export default function App() {
           },
         }),
         upsertWorkspaceProfile({
+          ...workspaceProfile,
           user_id: supabaseSession.user.id,
           full_name: trimmed,
-          workspace_name: workspaceProfile?.workspace_name ?? null,
+          initials: generateInitials(trimmed),
         }),
       ]);
 
@@ -984,6 +991,7 @@ export default function App() {
             profile={workspaceProfile}
             stats={workspaceStats}
             profileLoading={workspaceProfileLoading}
+            onProfileUpdate={setWorkspaceProfile}
           />
         </div>
       );
@@ -1214,7 +1222,7 @@ export default function App() {
           <aside className="workspace-sidebar" aria-label="Workspace navigation">
             <div className="workspace-sidebar__masthead">
               <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
-                <span aria-hidden="true">🌿</span>
+                <span aria-hidden="true">{menuIconContent}</span>
                 <span className="sr-only">LifeGoalApp</span>
               </a>
               <div className="workspace-sidebar__masthead-actions">
