@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { JournalEntry } from '../../services/journal';
 import type { Database, JournalEntryType } from '../../lib/database.types';
+import type { HabitV2Row } from '../../services/habitsV2';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
 import type { JournalType } from './Journal';
 import {
@@ -30,7 +31,7 @@ export type JournalEntryDraft = {
 };
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
-type HabitRow = Database['public']['Tables']['habits']['Row'];
+type HabitRow = HabitV2Row;
 
 type JournalEntryEditorProps = {
   open: boolean;
@@ -226,7 +227,7 @@ export function JournalEntryEditor({
   const moodValue = draft.mood ?? '';
 
   const goalOptions = useMemo(() => [...goals].sort((a, b) => a.title.localeCompare(b.title)), [goals]);
-  const habitOptions = useMemo(() => [...habits].sort((a, b) => a.name.localeCompare(b.name)), [habits]);
+  const habitOptions = useMemo(() => [...habits].sort((a, b) => a.title.localeCompare(b.title)), [habits]);
 
   const addTagsFromInput = (value: string) => {
     value
@@ -732,7 +733,7 @@ export function JournalEntryEditor({
                 <select multiple value={draft.linkedHabitIds} onChange={handleHabitChange}>
                   {habitOptions.map((habit) => (
                     <option key={habit.id} value={habit.id}>
-                      {habit.name}
+                      {habit.title}
                     </option>
                   ))}
                 </select>

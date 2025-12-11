@@ -12,6 +12,7 @@ import {
 } from '../../services/journal';
 import { fetchGoals } from '../../services/goals';
 import { fetchHabitsForUser } from '../../compat/legacyHabitsAdapter';
+import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import { JournalEntryList } from './JournalEntryList';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
