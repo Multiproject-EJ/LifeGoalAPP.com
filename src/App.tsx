@@ -25,8 +25,10 @@ import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
+import { MobileThemeSelector } from './components/MobileThemeSelector';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { useMediaQuery } from './hooks/useMediaQuery';
+import { useTheme, AVAILABLE_THEMES } from './contexts/ThemeContext';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -163,6 +165,7 @@ export default function App() {
     signInWithGoogle,
     signOut,
   } = useSupabaseAuth();
+  const { theme, themeMode } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -188,6 +191,7 @@ export default function App() {
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
 
   const mobileMenuNavItems: MobileMenuNavItem[] = useMemo(() => {
     const findWorkspaceItem = (navId: string) =>
@@ -1089,60 +1093,81 @@ export default function App() {
       >
         <div
           className="mobile-menu-overlay__backdrop"
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={() => {
+            setIsMobileMenuOpen(false);
+            setIsMobileThemeSelectorOpen(false);
+          }}
           role="presentation"
         />
         <div className="mobile-menu-overlay__panel">
-          <div className="mobile-menu-overlay__header">
-            <h2 className="mobile-menu-overlay__title">Quick menu</h2>
-            <button
-              type="button"
-              className="mobile-menu-overlay__close"
-              aria-label="Close menu"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              ×
-            </button>
-          </div>
-          <div className="mobile-menu-overlay__content">
-            <ul className="mobile-menu-overlay__list">
-              {mobileMenuNavItems
-                .filter((item) => item.id !== 'account')
-                .map((item) => (
-                  <li key={item.id} className="mobile-menu-overlay__item">
-                    <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
-                      <span aria-hidden="true" className="mobile-menu-overlay__icon">
-                        {item.icon}
-                      </span>
-                      <span className="mobile-menu-overlay__texts">
-                        <span className="mobile-menu-overlay__label">{item.label}</span>
-                        <span className="mobile-menu-overlay__summary">{item.summary}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-            </ul>
-          </div>
-          <div className="mobile-menu-overlay__settings">
-            <h3 className="mobile-menu-overlay__settings-title">Settings</h3>
-            <div className="mobile-menu-overlay__settings-row">
-              <span className="mobile-menu-overlay__settings-label">
-                Theme
-              </span>
-              <ThemeToggle className="theme-toggle--compact" />
-            </div>
-            <button
-              type="button"
-              className="mobile-menu-overlay__account-button"
-              onClick={() => handleMobileNavSelect('account')}
-              aria-label="Open account settings"
-            >
-              <span className="mobile-menu-overlay__account-icon" aria-hidden="true">
-                👤
-              </span>
-              <span>My Account</span>
-            </button>
-          </div>
+          {isMobileThemeSelectorOpen ? (
+            <MobileThemeSelector onClose={() => setIsMobileThemeSelectorOpen(false)} />
+          ) : (
+            <>
+              <div className="mobile-menu-overlay__header">
+                <h2 className="mobile-menu-overlay__title">Quick menu</h2>
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__close"
+                  aria-label="Close menu"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="mobile-menu-overlay__content">
+                <ul className="mobile-menu-overlay__list">
+                  {mobileMenuNavItems
+                    .filter((item) => item.id !== 'account')
+                    .map((item) => (
+                      <li key={item.id} className="mobile-menu-overlay__item">
+                        <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
+                          <span aria-hidden="true" className="mobile-menu-overlay__icon">
+                            {item.icon}
+                          </span>
+                          <span className="mobile-menu-overlay__texts">
+                            <span className="mobile-menu-overlay__label">{item.label}</span>
+                            <span className="mobile-menu-overlay__summary">{item.summary}</span>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+              <div className="mobile-menu-overlay__settings">
+                <h3 className="mobile-menu-overlay__settings-title">Settings</h3>
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__theme-selector-button"
+                  onClick={() => setIsMobileThemeSelectorOpen(true)}
+                  aria-label="Open theme selector"
+                >
+                  <span className="mobile-menu-overlay__theme-selector-label">
+                    <span className="mobile-menu-overlay__theme-selector-title">Theme</span>
+                    <span className="mobile-menu-overlay__theme-selector-current">
+                      {AVAILABLE_THEMES.find(t => t.id === theme)?.name || 'Theme'} 
+                      {' • '}
+                      {themeMode === 'system' ? '💻 System' : themeMode === 'dark' ? '🌙 Dark' : '☀️ Light'}
+                    </span>
+                  </span>
+                  <span className="mobile-menu-overlay__theme-selector-icon" aria-hidden="true">
+                    {AVAILABLE_THEMES.find(t => t.id === theme)?.icon || '🎨'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__account-button"
+                  onClick={() => handleMobileNavSelect('account')}
+                  aria-label="Open account settings"
+                >
+                  <span className="mobile-menu-overlay__account-icon" aria-hidden="true">
+                    👤
+                  </span>
+                  <span>My Account</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     ) : null;
