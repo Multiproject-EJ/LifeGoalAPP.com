@@ -131,8 +131,8 @@ export function QuickActionsFAB({
     const newShowHabitsSubmenu = !showHabitsSubmenu;
     setShowHabitsSubmenu(newShowHabitsSubmenu);
     
-    // Load habits when opening the submenu
-    if (newShowHabitsSubmenu && habits.length === 0) {
+    // Load habits when opening the submenu (only if not already loading or loaded)
+    if (newShowHabitsSubmenu && habits.length === 0 && !loadingHabits) {
       await loadHabits();
     }
   };
