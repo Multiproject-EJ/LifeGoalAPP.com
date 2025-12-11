@@ -19,6 +19,8 @@ type VisionBoardProps = {
 
 type SortMode = 'newest' | 'oldest' | 'caption';
 
+type GridLayout = '2-column' | '3-column' | 'masonry';
+
 type VisionImage = VisionImageRow & { publicUrl: string };
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
@@ -36,6 +38,9 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [captionDraft, setCaptionDraft] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [gridLayout, setGridLayout] = useState<GridLayout>('masonry');
+  const [isAddEditOpen, setIsAddEditOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const loadImages = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -93,6 +98,27 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     setFileDraft(file);
+    
+    // Generate preview for file upload
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  const handleUrlChange = (value: string) => {
+    setUrlDraft(value);
+    // Set preview URL for URL-based uploads
+    if (value.trim()) {
+      setPreviewUrl(value.trim());
+    } else {
+      setPreviewUrl(null);
+    }
   };
 
   const handleUpload = async (event: FormEvent<HTMLFormElement>) => {
@@ -169,6 +195,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
       setFileDraft(null);
       setUrlDraft('');
       setCaptionDraft('');
+      setPreviewUrl(null);
       (event.target as HTMLFormElement).reset();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to upload the image right now.');
@@ -206,17 +233,31 @@ export function VisionBoard({ session }: VisionBoardProps) {
             whenever you need a boost.
           </p>
         </div>
-        <div className="vision-board__sort">
-          <label htmlFor="vision-board-sort">Sort by</label>
-          <select
-            id="vision-board-sort"
-            value={sortMode}
-            onChange={(event) => setSortMode(event.target.value as SortMode)}
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="caption">Caption (A–Z)</option>
-          </select>
+        <div className="vision-board__controls">
+          <div className="vision-board__sort">
+            <label htmlFor="vision-board-sort">Sort by</label>
+            <select
+              id="vision-board-sort"
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value as SortMode)}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="caption">Caption (A–Z)</option>
+            </select>
+          </div>
+          <div className="vision-board__layout">
+            <label htmlFor="vision-board-layout">Grid layout</label>
+            <select
+              id="vision-board-layout"
+              value={gridLayout}
+              onChange={(event) => setGridLayout(event.target.value as GridLayout)}
+            >
+              <option value="2-column">2 Columns</option>
+              <option value="3-column">3 Columns</option>
+              <option value="masonry">Masonry</option>
+            </select>
+          </div>
         </div>
       </header>
 
@@ -234,83 +275,103 @@ export function VisionBoard({ session }: VisionBoardProps) {
 
       {errorMessage && <p className="vision-board__status vision-board__status--error">{errorMessage}</p>}
 
-      <form className="vision-board__form" onSubmit={handleUpload}>
-        <div className="vision-board__field">
-          <label>Upload method</label>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <input
-                type="radio"
-                name="upload-mode"
-                value="file"
-                checked={uploadMode === 'file'}
-                onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
-                disabled={(!isConfigured && !isDemoExperience) || uploading}
-              />
-              <span>File upload</span>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <input
-                type="radio"
-                name="upload-mode"
-                value="url"
-                checked={uploadMode === 'url'}
-                onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
-                disabled={(!isConfigured && !isDemoExperience) || uploading}
-              />
-              <span>Image URL</span>
-            </label>
-          </div>
-        </div>
-        {uploadMode === 'file' ? (
-          <div className="vision-board__field">
-            <label htmlFor="vision-board-file">Image file</label>
-            <input
-              id="vision-board-file"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              disabled={(!isConfigured && !isDemoExperience) || uploading}
-              required
-            />
-            <span className="vision-board__hint">PNG, JPG, or WEBP up to 5MB.</span>
-          </div>
-        ) : (
-          <div className="vision-board__field">
-            <label htmlFor="vision-board-url">Image URL</label>
-            <input
-              id="vision-board-url"
-              type="url"
-              value={urlDraft}
-              onChange={(event) => setUrlDraft(event.target.value)}
-              placeholder="https://example.com/image.jpg"
-              disabled={(!isConfigured && !isDemoExperience) || uploading}
-              required
-            />
-            <span className="vision-board__hint">Enter a direct link to an image.</span>
-          </div>
-        )}
-        <div className="vision-board__field">
-          <label htmlFor="vision-board-caption">Caption</label>
-          <input
-            id="vision-board-caption"
-            type="text"
-            value={captionDraft}
-            onChange={(event) => setCaptionDraft(event.target.value)}
-            placeholder="Describe why this image matters"
-            disabled={(!isConfigured && !isDemoExperience) || uploading}
-          />
-        </div>
+      <div className="vision-board__add-edit">
         <button
-          type="submit"
-          className="vision-board__submit"
-          disabled={uploading || (!isConfigured && !isDemoExperience)}
+          type="button"
+          className="vision-board__add-edit-toggle"
+          onClick={() => setIsAddEditOpen(!isAddEditOpen)}
+          aria-expanded={isAddEditOpen}
         >
-          {uploading ? 'Uploading…' : 'Add to board'}
+          <span className="vision-board__add-edit-icon">{isAddEditOpen ? '−' : '+'}</span>
+          Add/Edit
         </button>
-      </form>
+        
+        {isAddEditOpen && (
+          <form className="vision-board__form" onSubmit={handleUpload}>
+            <div className="vision-board__field">
+              <label>Upload method</label>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="upload-mode"
+                    value="file"
+                    checked={uploadMode === 'file'}
+                    onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
+                    disabled={(!isConfigured && !isDemoExperience) || uploading}
+                  />
+                  <span>File upload</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="upload-mode"
+                    value="url"
+                    checked={uploadMode === 'url'}
+                    onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
+                    disabled={(!isConfigured && !isDemoExperience) || uploading}
+                  />
+                  <span>Image URL</span>
+                </label>
+              </div>
+            </div>
+            {uploadMode === 'file' ? (
+              <div className="vision-board__field">
+                <label htmlFor="vision-board-file">Image file</label>
+                <input
+                  id="vision-board-file"
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleFileChange}
+                  disabled={(!isConfigured && !isDemoExperience) || uploading}
+                  required
+                />
+                <span className="vision-board__hint">PNG, JPG, or WEBP up to 5MB.</span>
+              </div>
+            ) : (
+              <div className="vision-board__field">
+                <label htmlFor="vision-board-url">Image URL</label>
+                <input
+                  id="vision-board-url"
+                  type="url"
+                  value={urlDraft}
+                  onChange={(event) => handleUrlChange(event.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  disabled={(!isConfigured && !isDemoExperience) || uploading}
+                  required
+                />
+                <span className="vision-board__hint">Enter a direct link to an image.</span>
+              </div>
+            )}
+            <div className="vision-board__field">
+              <label htmlFor="vision-board-caption">Caption</label>
+              <input
+                id="vision-board-caption"
+                type="text"
+                value={captionDraft}
+                onChange={(event) => setCaptionDraft(event.target.value)}
+                placeholder="Describe why this image matters"
+                disabled={(!isConfigured && !isDemoExperience) || uploading}
+              />
+            </div>
+            {previewUrl && (
+              <div className="vision-board__preview">
+                <label>Preview</label>
+                <img src={previewUrl} alt="Upload preview" className="vision-board__preview-image" />
+              </div>
+            )}
+            <button
+              type="submit"
+              className="vision-board__submit"
+              disabled={uploading || (!isConfigured && !isDemoExperience)}
+            >
+              {uploading ? 'Uploading…' : 'Add to board'}
+            </button>
+          </form>
+        )}
+      </div>
 
-      <div className="vision-board__grid" role="list">
+      <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
         {!isConfigured && !isDemoExperience ? (
           <p className="vision-board__empty">Connect Supabase to sync your gallery.</p>
         ) : loading && !hasLoadedOnce ? (
@@ -320,20 +381,27 @@ export function VisionBoard({ session }: VisionBoardProps) {
         ) : (
           sortedImages.map((image) => (
             <article key={image.id} className="vision-board__card" role="listitem">
-              {image.publicUrl ? (
-                <img src={image.publicUrl} alt={image.caption ?? 'Vision board entry'} loading="lazy" />
-              ) : (
-                <div className="vision-board__placeholder" aria-hidden>
-                  <span>No preview</span>
-                </div>
-              )}
-              <div className="vision-board__card-body">
-                <p>{image.caption ?? 'Untitled inspiration'}</p>
+              <div className="vision-board__card-image-container">
+                {image.publicUrl ? (
+                  <img src={image.publicUrl} alt={image.caption ?? 'Vision board entry'} loading="lazy" />
+                ) : (
+                  <div className="vision-board__placeholder" aria-hidden>
+                    <span>No preview</span>
+                  </div>
+                )}
+                {image.caption && (
+                  <div className="vision-board__card-overlay">
+                    <p>{image.caption}</p>
+                  </div>
+                )}
+              </div>
+              <div className="vision-board__card-actions">
                 <button
                   type="button"
                   onClick={() => handleDelete(image)}
                   className="vision-board__delete"
                   disabled={!isConfigured && !isDemoExperience}
+                  title="Remove image"
                 >
                   Remove
                 </button>

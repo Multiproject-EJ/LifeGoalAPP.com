@@ -5618,8 +5618,10 @@ body {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.25);
-  display: grid;
-  grid-template-rows: minmax(160px, 1fr) auto;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
 .vision-board__card img {
@@ -5634,20 +5636,7 @@ body {
   background: linear-gradient(135deg, rgba(148, 163, 184, 0.25), rgba(203, 213, 225, 0.5));
   color: #475569;
   font-weight: 600;
-}
-
-.vision-board__card-body {
-  padding: 0.85rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.vision-board__card-body p {
-  margin: 0;
-  font-weight: 600;
-  color: #0f172a;
+  min-height: 200px;
 }
 
 .vision-board__delete {
@@ -5659,11 +5648,205 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
+  font-size: 0.85rem;
 }
 
 .vision-board__delete:hover {
   background: rgba(239, 68, 68, 0.25);
   transform: translateY(-1px);
+}
+
+.vision-board__delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Add/Edit collapsible panel */
+.vision-board__add-edit {
+  display: grid;
+  gap: 1rem;
+}
+
+.vision-board__add-edit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  justify-self: start;
+}
+
+.vision-board__add-edit-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+}
+
+.vision-board__add-edit-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Controls wrapper for sort and layout selectors */
+.vision-board__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.vision-board__layout {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.vision-board__layout select {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  background: white;
+  color: #0f172a;
+}
+
+/* Preview image thumbnail */
+.vision-board__preview {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.vision-board__preview label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.vision-board__preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 12px;
+  border: 2px solid rgba(148, 163, 184, 0.35);
+  object-fit: cover;
+}
+
+/* Pinterest-style grid layouts */
+.vision-board__grid--2-column {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.vision-board__grid--3-column {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.vision-board__grid--masonry {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  grid-auto-rows: 10px;
+}
+
+/* Responsive adjustments for grid layouts */
+@media (max-width: 768px) {
+  .vision-board__grid--2-column,
+  .vision-board__grid--3-column,
+  .vision-board__grid--masonry {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .vision-board__grid--2-column,
+  .vision-board__grid--3-column,
+  .vision-board__grid--masonry {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card hover effects */
+.vision-board__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.vision-board__card-image-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.vision-board__card-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Masonry layout specific card heights - uses CSS custom property for flexibility */
+:root {
+  --masonry-base-height: 20;
+  --masonry-variant-1: 25;
+  --masonry-variant-2: 30;
+  --masonry-variant-3: 22;
+}
+
+.vision-board__grid--masonry .vision-board__card {
+  grid-row-end: span var(--masonry-base-height);
+}
+
+.vision-board__grid--masonry .vision-board__card:nth-child(3n + 1) {
+  grid-row-end: span var(--masonry-variant-1);
+}
+
+.vision-board__grid--masonry .vision-board__card:nth-child(3n + 2) {
+  grid-row-end: span var(--masonry-variant-2);
+}
+
+.vision-board__grid--masonry .vision-board__card:nth-child(3n + 3) {
+  grid-row-end: span var(--masonry-variant-3);
+}
+
+/* Overlay caption on hover */
+.vision-board__card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.5), transparent);
+  color: white;
+  padding: 2rem 1rem 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.vision-board__card-image-container:hover .vision-board__card-overlay {
+  opacity: 1;
+}
+
+.vision-board__card-overlay p {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.vision-board__card-actions {
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: flex-end;
+  background: white;
 }
 
 .life-wheel {
