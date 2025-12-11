@@ -35,7 +35,6 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // loadStats is defined below; safe to call here
     loadStats();
 
     // Listen for 'breathing:open' custom events from other parts of the app
