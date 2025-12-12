@@ -50,7 +50,7 @@
 .breathing-space__card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), var(--shadow-glow);
-  border-color: var(--color-border-glow, var(--accent));
+  border-color: var(--accent);
 }
 
 .breathing-space__card:hover::before {
@@ -121,7 +121,7 @@
   font-weight: 700;
   color: var(--text);
   line-height: 1.2;
-  background: linear-gradient(135deg, var(--accent), var(--color-primary-dark, #0891b2));
+  background: linear-gradient(135deg, var(--accent), #0891b2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -181,7 +181,7 @@
 .breathing-space__library-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), var(--shadow-glow);
-  border-color: var(--color-border-glow, var(--accent));
+  border-color: var(--accent);
 }
 
 .breathing-space__library-card-icon {
