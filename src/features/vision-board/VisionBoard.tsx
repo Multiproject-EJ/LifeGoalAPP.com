@@ -10,7 +10,7 @@ import {
 } from '../../services/visionBoard';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
-import { convertToWebP, isWebPSupported } from '../../utils/imageConverter';
+import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/imageConverter';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
@@ -223,9 +223,9 @@ export function VisionBoard({ session }: VisionBoardProps) {
         // Convert to WebP if supported and not already WebP
         let fileToUpload: File | Blob = fileDraft;
         let fileNameToUpload = fileDraft.name;
-        let originalFormat = fileDraft.name.split('.').pop()?.toLowerCase() || 'unknown';
+        let originalFormat = getFileFormat(fileDraft);
 
-        if (isWebPSupported() && !fileDraft.type.includes('webp')) {
+        if (isWebPSupported() && fileDraft.type !== 'image/webp') {
           try {
             setConvertingImage(true);
             const converted = await convertToWebP(fileDraft, 0.85);

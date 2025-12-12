@@ -12,20 +12,30 @@ export type ConversionResult = {
 /**
  * Extract file format from a File object
  */
-function getFileFormat(file: File): string {
+export function getFileFormat(file: File): string {
   const extension = file.name.split('.').pop()?.toLowerCase();
-  if (extension === 'jpg' || extension === 'jpeg') return 'jpeg';
-  if (extension === 'png') return 'png';
-  if (extension === 'webp') return 'webp';
-  if (extension === 'gif') return 'gif';
+  
+  // Map of extensions to formats
+  const extensionMap: Record<string, string> = {
+    'jpg': 'jpeg',
+    'jpeg': 'jpeg',
+    'png': 'png',
+    'webp': 'webp',
+    'gif': 'gif',
+  };
+  
+  const formatFromExt = extension ? extensionMap[extension] : undefined;
+  if (formatFromExt) return formatFromExt;
   
   // Fallback to MIME type
-  if (file.type.includes('jpeg')) return 'jpeg';
-  if (file.type.includes('png')) return 'png';
-  if (file.type.includes('webp')) return 'webp';
-  if (file.type.includes('gif')) return 'gif';
+  const mimeMap: Record<string, string> = {
+    'image/jpeg': 'jpeg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+  };
   
-  return 'unknown';
+  return mimeMap[file.type] || 'unknown';
 }
 
 /**
