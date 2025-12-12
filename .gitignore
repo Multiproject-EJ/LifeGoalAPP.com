@@ -1,6 +1,7 @@
 node_modules
 .DS_Store
 dist
+preview-bundle
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
