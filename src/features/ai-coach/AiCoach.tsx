@@ -41,7 +41,7 @@ const COACHING_TOPICS: CoachingTopic[] = [
     icon: '📊',
     title: 'Progress Review',
     description: 'Reflect on your journey so far',
-    prompt: 'Let\'s review my progress and identify areas for improvement.',
+    prompt: "Let's review my progress and identify areas for improvement.",
   },
   {
     id: 'mindfulness',
@@ -62,7 +62,7 @@ const COACHING_TOPICS: CoachingTopic[] = [
     icon: '🚧',
     title: 'Overcome Obstacles',
     description: 'Navigate challenges and setbacks',
-    prompt: 'I\'m facing challenges with my goals. Can you help me strategize?',
+    prompt: "I'm facing challenges with my goals. Can you help me strategize?",
   },
 ];
 
@@ -70,13 +70,13 @@ const INITIAL_MESSAGES: Message[] = [
   {
     id: 'welcome-1',
     role: 'assistant',
-    content: 'Hi there! 👋 I\'m your AI Life Coach.',
+    content: "Hi there! 👋 I'm your AI Life Coach.",
     timestamp: new Date(),
   },
   {
     id: 'welcome-2',
     role: 'assistant',
-    content: 'I\'m here to help you with motivation, goal setting, habit building, and navigating life\'s challenges. What would you like to work on today?',
+    content: "I'm here to help you with motivation, goal setting, habit building, and navigating life's challenges. What would you like to work on today?",
     timestamp: new Date(),
   },
 ];
@@ -89,7 +89,8 @@ export function AiCoach({ session, onClose }: AiCoachProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const userName = (session.user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] || 'there';
+  const fullName = session.user?.user_metadata?.full_name;
+  const userName = (typeof fullName === 'string' ? fullName.split(' ')[0] : null) || 'there';
 
   useEffect(() => {
     scrollToBottom();
@@ -172,6 +173,7 @@ export function AiCoach({ session, onClose }: AiCoachProps) {
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
+      // TODO: Replace with centralized error reporting/logging service
       console.error('Error generating AI response:', error);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
