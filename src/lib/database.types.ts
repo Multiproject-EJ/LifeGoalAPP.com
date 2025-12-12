@@ -439,6 +439,8 @@ export interface Database {
           image_source: string;
           caption: string | null;
           created_at: string;
+          file_path: string | null;
+          file_format: string | null;
         };
         Insert: {
           id?: string;
@@ -448,6 +450,8 @@ export interface Database {
           image_source?: string;
           caption?: string | null;
           created_at?: string;
+          file_path?: string | null;
+          file_format?: string | null;
         };
         Update: {
           id?: string;
@@ -457,6 +461,8 @@ export interface Database {
           image_source?: string;
           caption?: string | null;
           created_at?: string;
+          file_path?: string | null;
+          file_format?: string | null;
         };
         Relationships: [];
       };

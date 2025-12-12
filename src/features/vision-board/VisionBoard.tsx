@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
@@ -10,6 +10,7 @@ import {
 } from '../../services/visionBoard';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/imageConverter';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
@@ -41,6 +42,8 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [gridLayout, setGridLayout] = useState<GridLayout>('masonry');
   const [isAddEditOpen, setIsAddEditOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [convertingImage, setConvertingImage] = useState(false);
 
   const loadImages = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -111,6 +114,56 @@ export function VisionBoard({ session }: VisionBoardProps) {
     }
   };
 
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!uploading && (isConfigured || isDemoExperience)) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+
+    if (!isConfigured && !isDemoExperience) {
+      return;
+    }
+
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+
+    // Check if it's an image
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Please drop an image file (PNG, JPG, or WEBP).');
+      return;
+    }
+
+    // Check file size
+    if (file.size > MAX_UPLOAD_SIZE) {
+      setErrorMessage('Images must be 5MB or smaller.');
+      return;
+    }
+
+    // Set file and generate preview
+    setFileDraft(file);
+    setUploadMode('file');
+    setIsAddEditOpen(true);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleUrlChange = (value: string) => {
     setUrlDraft(value);
     // Set preview URL for URL-based uploads
@@ -167,11 +220,32 @@ export function VisionBoard({ session }: VisionBoardProps) {
       let data, error;
 
       if (uploadMode === 'file' && fileDraft) {
+        // Convert to WebP if supported and not already WebP
+        let fileToUpload: File | Blob = fileDraft;
+        let fileNameToUpload = fileDraft.name;
+        let originalFormat = getFileFormat(fileDraft);
+
+        if (isWebPSupported() && fileDraft.type !== 'image/webp') {
+          try {
+            setConvertingImage(true);
+            const converted = await convertToWebP(fileDraft, 0.85);
+            fileToUpload = converted.blob;
+            fileNameToUpload = converted.fileName;
+            originalFormat = converted.originalFormat;
+          } catch (conversionError) {
+            console.warn('WebP conversion failed, uploading original:', conversionError);
+            // Continue with original file if conversion fails
+          } finally {
+            setConvertingImage(false);
+          }
+        }
+
         ({ data, error } = await uploadVisionImage({
           userId: session.user.id,
-          file: fileDraft,
-          fileName: fileDraft.name,
+          file: fileToUpload,
+          fileName: fileNameToUpload,
           caption: captionDraft,
+          originalFormat,
         }));
       } else {
         ({ data, error } = await uploadVisionImageFromUrl({
@@ -316,18 +390,41 @@ export function VisionBoard({ session }: VisionBoardProps) {
               </div>
             </div>
             {uploadMode === 'file' ? (
-              <div className="vision-board__field">
-                <label htmlFor="vision-board-file">Image file</label>
-                <input
-                  id="vision-board-file"
-                  type="file"
-                  accept="image/png, image/jpeg, image/webp"
-                  onChange={handleFileChange}
-                  disabled={(!isConfigured && !isDemoExperience) || uploading}
-                  required
-                />
-                <span className="vision-board__hint">PNG, JPG, or WEBP up to 5MB.</span>
-              </div>
+              <>
+                <div 
+                  className={`vision-board__drop-zone ${isDragging ? 'vision-board__drop-zone--active' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <div className="vision-board__drop-zone-content">
+                    <p className="vision-board__drop-zone-text">
+                      {isDragging ? '📥 Drop image here' : '📁 Drag & drop an image here'}
+                    </p>
+                    <p className="vision-board__drop-zone-divider">or</p>
+                    <label htmlFor="vision-board-file" className="vision-board__file-button">
+                      Choose File
+                    </label>
+                    <input
+                      id="vision-board-file"
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp, image/gif"
+                      onChange={handleFileChange}
+                      disabled={(!isConfigured && !isDemoExperience) || uploading}
+                      style={{ display: 'none' }}
+                      required
+                    />
+                  </div>
+                  {fileDraft && (
+                    <p className="vision-board__file-selected">
+                      Selected: {fileDraft.name} ({(fileDraft.size / 1024).toFixed(1)} KB)
+                    </p>
+                  )}
+                </div>
+                <span className="vision-board__hint">
+                  PNG, JPG, WEBP, or GIF up to 5MB. Images will be converted to WebP format for optimal performance.
+                </span>
+              </>
             ) : (
               <div className="vision-board__field">
                 <label htmlFor="vision-board-url">Image URL</label>
@@ -363,9 +460,9 @@ export function VisionBoard({ session }: VisionBoardProps) {
             <button
               type="submit"
               className="vision-board__submit"
-              disabled={uploading || (!isConfigured && !isDemoExperience)}
+              disabled={uploading || convertingImage || (!isConfigured && !isDemoExperience)}
             >
-              {uploading ? 'Uploading…' : 'Add to board'}
+              {convertingImage ? 'Converting to WebP…' : uploading ? 'Uploading…' : 'Add to board'}
             </button>
           </form>
         )}

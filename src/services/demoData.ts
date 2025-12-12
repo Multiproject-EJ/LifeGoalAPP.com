@@ -496,6 +496,8 @@ const defaultState: DemoState = {
       image_source: 'url',
       caption: 'Morning deep work setup to stay consistent with focus ritual.',
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 5)),
+      file_path: null,
+      file_format: null,
     },
     {
       id: createId('vision'),
@@ -505,6 +507,8 @@ const defaultState: DemoState = {
       image_source: 'url',
       caption: 'Community celebration after the beta launch milestone.',
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 20)),
+      file_path: null,
+      file_format: null,
     },
   ];
 
@@ -982,6 +986,8 @@ export function addDemoVisionImage(payload: VisionImageInsert): VisionImageRow {
     image_source: payload.image_source ?? 'file',
     caption: payload.caption ?? null,
     created_at: payload.created_at ?? new Date().toISOString(),
+    file_path: payload.file_path ?? null,
+    file_format: payload.file_format ?? null,
   };
   updateState((current) => ({ ...current, visionImages: [record, ...current.visionImages] }));
   return clone(record);

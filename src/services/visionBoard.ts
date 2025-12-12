@@ -63,6 +63,7 @@ type UploadPayload = {
   file: File | Blob;
   fileName: string;
   caption?: string | null;
+  originalFormat?: string | null;
 };
 
 export async function uploadVisionImage({
@@ -70,6 +71,7 @@ export async function uploadVisionImage({
   file,
   fileName,
   caption,
+  originalFormat,
 }: UploadPayload): Promise<ServiceResponse<VisionImageRow>> {
   if (!canUseSupabaseData()) {
     try {
@@ -78,6 +80,7 @@ export async function uploadVisionImage({
         user_id: userId || DEMO_USER_ID,
         image_path: dataUrl,
         caption: caption?.trim() ? caption.trim() : null,
+        file_format: originalFormat || null,
       });
       return { data: record, error: null };
     } catch (error) {
@@ -87,7 +90,7 @@ export async function uploadVisionImage({
 
   const supabase = getSupabaseClient();
 
-  const fileExtension = fileName.split('.').pop()?.toLowerCase() ?? 'jpeg';
+  const fileExtension = fileName.split('.').pop()?.toLowerCase() ?? 'webp';
   const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`;
   const sanitizedBaseName = fileName.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
   const storagePath = `${userId}/${randomId}-${sanitizedBaseName || 'vision-image'}.${fileExtension}`;
@@ -97,7 +100,7 @@ export async function uploadVisionImage({
     .upload(storagePath, file, {
       cacheControl: '3600',
       upsert: false,
-      contentType: file instanceof File ? file.type : undefined,
+      contentType: file instanceof File ? file.type : 'image/webp',
     });
 
   if (storageError) {
@@ -109,6 +112,8 @@ export async function uploadVisionImage({
     image_path: storageData?.path ?? storagePath,
     image_source: 'file',
     caption: caption?.trim() ? caption.trim() : null,
+    file_path: storageData?.path ?? storagePath,
+    file_format: originalFormat || fileExtension,
   };
 
   const { data, error } = await supabase
