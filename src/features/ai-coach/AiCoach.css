@@ -1,4 +1,17 @@
 /* AI Coach Modal Styles - Enhanced Modern Design */
+
+/* Custom Properties */
+:root {
+  --ai-coach-gradient-start: #667eea;
+  --ai-coach-gradient-end: #764ba2;
+  --ai-coach-primary-gradient: linear-gradient(135deg, var(--ai-coach-gradient-start) 0%, var(--ai-coach-gradient-end) 100%);
+  --ai-coach-focus-color: #667eea;
+  --ai-coach-focus-shadow: rgba(102, 126, 234, 0.15);
+  --ai-coach-hover-shadow: rgba(102, 126, 234, 0.25);
+  --ai-coach-button-shadow: rgba(102, 126, 234, 0.3);
+  --ai-coach-button-hover-shadow: rgba(102, 126, 234, 0.4);
+}
+
 .ai-coach-modal {
   position: fixed;
   top: 0;
@@ -68,7 +81,7 @@
 /* Header */
 .ai-coach-modal__header {
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ai-coach-primary-gradient);
   color: white;
   display: flex;
   align-items: center;
@@ -307,7 +320,7 @@
 }
 
 .ai-coach-modal__message--user .ai-coach-modal__message-content {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ai-coach-primary-gradient);
   color: white;
   border-bottom-right-radius: 6px;
 }
@@ -353,10 +366,10 @@
 .ai-coach-modal__typing span {
   width: 10px;
   height: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ai-coach-primary-gradient);
   border-radius: 50%;
   animation: ai-coach-typing-bounce 1.4s ease-in-out infinite;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 4px var(--ai-coach-button-shadow);
 }
 
 .ai-coach-modal__typing span:nth-child(2) {
@@ -459,8 +472,8 @@
 
 .ai-coach-modal__topic-card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
-  border-color: #667eea;
+  box-shadow: 0 8px 24px var(--ai-coach-hover-shadow);
+  border-color: var(--ai-coach-focus-color);
 }
 
 .ai-coach-modal__topic-card:hover::before {
@@ -545,8 +558,8 @@
 
 .ai-coach-modal__input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+  border-color: var(--ai-coach-focus-color);
+  box-shadow: 0 0 0 4px var(--ai-coach-focus-shadow);
   background: var(--color-surface, white);
 }
 
@@ -566,7 +579,7 @@
   height: 52px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ai-coach-primary-gradient);
   color: white;
   font-size: 1.5rem;
   cursor: pointer;
@@ -575,12 +588,12 @@
   justify-content: center;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px var(--ai-coach-button-shadow);
 }
 
 .ai-coach-modal__send-btn:hover:not(:disabled) {
   transform: scale(1.08) rotate(5deg);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px var(--ai-coach-button-hover-shadow);
 }
 
 .ai-coach-modal__send-btn:active:not(:disabled) {
@@ -751,28 +764,55 @@
 .ai-coach-modal__reset-btn:focus-visible,
 .ai-coach-modal__close-btn:focus-visible,
 .ai-coach-modal__send-btn:focus-visible {
-  outline: 3px solid #667eea;
+  outline: 3px solid var(--ai-coach-focus-color);
   outline-offset: 2px;
 }
 
 .ai-coach-modal__input:focus-visible {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+  border-color: var(--ai-coach-focus-color);
+  box-shadow: 0 0 0 4px var(--ai-coach-focus-shadow);
 }
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .ai-coach-modal,
-  .ai-coach-modal__container,
-  .ai-coach-modal__message,
-  .ai-coach-modal__robot-face,
-  .ai-coach-modal__robot-glow,
-  .ai-coach-modal__typing span,
-  .ai-coach-modal__topic-card,
+  .ai-coach-modal {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+  
+  .ai-coach-modal__container {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+  
+  .ai-coach-modal__message {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+  
+  .ai-coach-modal__robot-face {
+    animation: none;
+  }
+  
+  .ai-coach-modal__robot-glow {
+    animation: none;
+  }
+  
+  .ai-coach-modal__typing span {
+    animation: none;
+  }
+  
+  .ai-coach-modal__topic-card {
+    transition-duration: 0.01ms;
+  }
+  
   .ai-coach-modal__send-btn {
-    animation: none !important;
-    transition: none !important;
+    transition-duration: 0.01ms;
+  }
+  
+  .ai-coach-modal__header::before {
+    animation: none;
   }
   
   .ai-coach-modal__messages {
