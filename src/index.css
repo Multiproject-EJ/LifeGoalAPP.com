@@ -3776,6 +3776,24 @@ body {
   gap: 0.35rem;
 }
 
+.habit-quick-journal__field--morning {
+  background: rgba(251, 191, 36, 0.08);
+  padding: 0.75rem;
+  border-radius: 12px;
+}
+
+.habit-quick-journal__field--day {
+  background: rgba(59, 130, 246, 0.08);
+  padding: 0.75rem;
+  border-radius: 12px;
+}
+
+.habit-quick-journal__field--evening {
+  background: rgba(99, 102, 241, 0.08);
+  padding: 0.75rem;
+  border-radius: 12px;
+}
+
 .habit-quick-journal__field-label {
   font-weight: 700;
   color: #0f172a;
