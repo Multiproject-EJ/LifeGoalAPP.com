@@ -21,6 +21,7 @@ import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiSupportAssistant } from './features/assistant';
+import { AiCoach } from './features/ai-coach';
 import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
@@ -42,6 +43,7 @@ import { useContinuousSave } from './hooks/useContinuousSave';
 import { generateInitials } from './utils/initials';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
+import './features/ai-coach/AiCoach.css';
 
 type AuthMode = 'password' | 'signup';
 
@@ -127,6 +129,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     icon: '🤖',
     shortLabel: 'AI',
   },
+  {
+    id: 'ai-coach',
+    label: 'AI Life Coach',
+    summary: 'Chat with your personal AI coach for motivation, advice, and guidance.',
+    icon: '💬',
+    shortLabel: 'COACH',
+  },
 ];
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
@@ -134,6 +143,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'habits',
   'support',
   'assistant',
+  'ai-coach',
   'journal',
   'breathing-space',
   'insights',
@@ -182,6 +192,7 @@ export default function App() {
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
+  const [showAiCoachModal, setShowAiCoachModal] = useState(false);
 
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
@@ -535,6 +546,11 @@ export default function App() {
 
     if (navId === 'account' && !isAuthenticated) {
       handleAccountClick();
+      return;
+    }
+
+    if (navId === 'ai-coach') {
+      setShowAiCoachModal(true);
       return;
     }
 
@@ -1257,6 +1273,10 @@ export default function App() {
                       handleAccountClick();
                       return;
                     }
+                    if (item.id === 'ai-coach') {
+                      setShowAiCoachModal(true);
+                      return;
+                    }
                     setActiveWorkspaceNav(item.id);
                   };
                   return (
@@ -1383,6 +1403,11 @@ export default function App() {
           }}
         />
       ) : null}
+
+      {/* AI Coach Modal from Main Menu */}
+      {showAiCoachModal && (
+        <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
+      )}
 
       {/* Quick Actions FAB - visible app-wide */}
       {!shouldRequireAuthentication && (

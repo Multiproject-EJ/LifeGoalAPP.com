@@ -7,6 +7,8 @@ import {
   clearHabitCompletion,
   type LegacyHabitWithGoal as HabitWithGoal 
 } from '../compat/legacyHabitsAdapter';
+import { AiCoach } from '../features/ai-coach';
+import '../features/ai-coach/AiCoach.css';
 
 type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule';
 
@@ -329,49 +331,7 @@ export function QuickActionsFAB({
 
       {/* Life Coach AI Modal */}
       {showLifeCoach && (
-        <div className="life-coach-modal">
-          <div
-            className="life-coach-modal__backdrop"
-            onClick={closeLifeCoach}
-            role="presentation"
-          />
-          <div className="life-coach-modal__content">
-            <button
-              type="button"
-              className="life-coach-modal__close"
-              onClick={closeLifeCoach}
-              aria-label="Close Life Coach"
-            >
-              ×
-            </button>
-            <div className="life-coach-modal__avatar">
-              <div className="life-coach-modal__robot">
-                <span className="life-coach-modal__robot-face">🤖</span>
-                <div className="life-coach-modal__robot-glow" />
-              </div>
-            </div>
-            <div className="life-coach-modal__messages">
-              <div className="life-coach-modal__bubble life-coach-modal__bubble--greeting">
-                <p>Hi there! 👋 I'm your Life Coach AI.</p>
-              </div>
-              <div className="life-coach-modal__bubble life-coach-modal__bubble--main">
-                <p>How can I help you today with your goals and habits?</p>
-              </div>
-              <div className="life-coach-modal__bubble life-coach-modal__bubble--suggestions">
-                <p>Here are some things I can help with:</p>
-                <ul>
-                  <li>💪 Motivation boost</li>
-                  <li>🎯 Goal setting advice</li>
-                  <li>📊 Progress review</li>
-                  <li>🧘 Mindfulness tips</li>
-                </ul>
-              </div>
-            </div>
-            <div className="life-coach-modal__hint">
-              <p>Coming soon: Full AI conversation capabilities!</p>
-            </div>
-          </div>
-        </div>
+        <AiCoach session={session} onClose={closeLifeCoach} />
       )}
     </>
   );
