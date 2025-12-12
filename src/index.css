@@ -5,6 +5,8 @@
   font-weight: 400;
   color: #0f172a;
   background-color: #f1f5f9;
+  --workspace-fab-offset: 4.75rem;
+  --workspace-mobile-breakpoint: 720px;
   
   /* Enhanced font smoothing */
   -webkit-font-smoothing: antialiased;
@@ -1276,7 +1278,7 @@ body {
   position: fixed;
   bottom: clamp(1.5rem, 5vw, 2rem);
   /* Offset accounts for the FAB button width (~60px) plus default gap */
-  right: calc(clamp(1.5rem, 5vw, 2rem) + 4.75rem);
+  right: calc(clamp(1.5rem, 5vw, 2rem) + var(--workspace-fab-offset));
   z-index: 1100;
 }
 
@@ -1285,7 +1287,7 @@ body {
 }
 
 /* Match mobile layout breakpoint used across workspace shell */
-@media (max-width: 720px) {
+@media (max-width: var(--workspace-mobile-breakpoint)) {
   .workspace-status {
     position: static;
     width: min(100%, 1050px);
