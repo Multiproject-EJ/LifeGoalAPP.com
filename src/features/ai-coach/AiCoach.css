@@ -41,6 +41,8 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
+  /* Performance note: backdrop-filter can be intensive on mobile.
+     Fallback to solid background works if not supported. */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -56,6 +58,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Performance note: Spring curve (1.56 > 1) creates playful overshoot.
+     Reduced motion preference disables this for better performance/accessibility. */
   animation: ai-coach-slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -453,7 +457,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ai-coach-primary-gradient);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -575,6 +579,8 @@
 }
 
 .ai-coach-modal__send-btn {
+  /* Touch target: 52px exceeds WCAG 44px minimum for better usability.
+     Reduced to 48px on mobile for better screen space balance. */
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -774,21 +780,18 @@
   box-shadow: 0 0 0 4px var(--ai-coach-focus-shadow);
 }
 
-/* Reduced motion preference */
+/* Reduced motion preference - improves accessibility and performance */
 @media (prefers-reduced-motion: reduce) {
   .ai-coach-modal {
-    animation-duration: 0.01ms;
-    animation-iteration-count: 1;
+    animation: none;
   }
   
   .ai-coach-modal__container {
-    animation-duration: 0.01ms;
-    animation-iteration-count: 1;
+    animation: none;
   }
   
   .ai-coach-modal__message {
-    animation-duration: 0.01ms;
-    animation-iteration-count: 1;
+    animation: none;
   }
   
   .ai-coach-modal__robot-face {
@@ -804,11 +807,11 @@
   }
   
   .ai-coach-modal__topic-card {
-    transition-duration: 0.01ms;
+    transition-duration: 0s;
   }
   
   .ai-coach-modal__send-btn {
-    transition-duration: 0.01ms;
+    transition-duration: 0s;
   }
   
   .ai-coach-modal__header::before {
