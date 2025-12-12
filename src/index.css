@@ -1209,10 +1209,8 @@ body {
   flex-direction: column;
   gap: clamp(1.25rem, 3vw, 2.25rem);
   height: calc(100vh - (var(--workspace-shell-padding) * 2));
-  max-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   width: 100%;
   min-width: 0;
-  min-height: 0;
   overflow: hidden;
   padding: 0 clamp(0.5rem, 1vw, 0.85rem);
   align-items: stretch;
