@@ -814,10 +814,12 @@ export default function App() {
     (activeSession.user.user_metadata?.full_name as string | undefined) ||
     activeSession.user.email;
   const userInitial = (userDisplay || '').trim().charAt(0).toUpperCase() || 'U';
-  
+
+  const profileInitials =
+    workspaceProfile?.initials || generateInitials(workspaceProfile?.full_name || '');
   // Use initials from profile if enabled, otherwise use first letter
-  const shouldShowInitials = isAuthenticated && workspaceProfile?.show_initials_in_menu && workspaceProfile?.initials;
-  const menuIconContent = shouldShowInitials ? workspaceProfile.initials : '🌿';
+  const shouldShowInitials = isAuthenticated && workspaceProfile?.show_initials_in_menu && profileInitials;
+  const menuIconContent = shouldShowInitials ? profileInitials : '🌿';
   
   const activeWorkspaceItem =
     workspaceNavItems.find((item) => item.id === activeWorkspaceNav) ??
