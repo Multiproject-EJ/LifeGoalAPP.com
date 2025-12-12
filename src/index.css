@@ -6,7 +6,8 @@
   color: #0f172a;
   background-color: #f1f5f9;
   --workspace-edge-spacing: clamp(1.5rem, 5vw, 2rem);
-  --workspace-fab-offset: clamp(3.5rem, 5vw, 4.75rem);
+  --workspace-fab-width: 60px;
+  --workspace-fab-offset: calc(var(--workspace-fab-width) + clamp(1rem, 3vw, 1.5rem));
   --workspace-mobile-breakpoint: 720px;
   
   /* Enhanced font smoothing */
@@ -1278,7 +1279,7 @@ body {
   width: min(90vw, 420px);
   position: fixed;
   bottom: var(--workspace-edge-spacing);
-  /* Offset accounts for the FAB button width (~60px) plus default gap */
+  /* Offset accounts for the FAB button width plus default gap */
   right: calc(var(--workspace-edge-spacing) + var(--workspace-fab-offset));
   z-index: 1100;
 }
@@ -1291,7 +1292,6 @@ body {
 @media (max-width: var(--workspace-mobile-breakpoint)) {
   .workspace-status {
     position: static;
-    width: min(90vw, 420px);
     right: auto;
     bottom: auto;
   }
