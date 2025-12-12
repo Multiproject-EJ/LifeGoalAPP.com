@@ -1294,7 +1294,6 @@ body {
 /* Match mobile layout breakpoint used across workspace shell */
 @media (max-width: var(--workspace-mobile-breakpoint)) {
   .workspace-status {
-    position: fixed;
     bottom: var(--workspace-edge-spacing);
     left: 50%;
     transform: translateX(-50%);
