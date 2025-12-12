@@ -1275,6 +1275,7 @@ body {
   width: min(90vw, 420px);
   position: fixed;
   bottom: clamp(1.5rem, 5vw, 2rem);
+  /* Offset accounts for the FAB button width (~60px) plus default gap */
   right: calc(clamp(1.5rem, 5vw, 2rem) + 4.75rem);
   z-index: 1100;
 }
@@ -1283,6 +1284,7 @@ body {
   margin: 0;
 }
 
+/* Match mobile layout breakpoint used across workspace shell */
 @media (max-width: 720px) {
   .workspace-status {
     position: static;
