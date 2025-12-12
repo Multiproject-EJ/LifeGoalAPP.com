@@ -7,6 +7,7 @@
   background-color: #f1f5f9;
   --workspace-edge-spacing: clamp(1.5rem, 5vw, 2rem);
   --workspace-fab-width: 60px;
+  /* FAB offset = button width + responsive gutter to keep status bubble clear of launcher */
   --workspace-fab-offset: calc(var(--workspace-fab-width) + clamp(1rem, 3vw, 1.5rem));
   --workspace-mobile-breakpoint: 720px;
   --workspace-status-z: 1100;
@@ -1293,10 +1294,6 @@ body {
 @media (max-width: var(--workspace-mobile-breakpoint)) {
   .workspace-status {
     position: static;
-    right: auto;
-    bottom: auto;
-    left: auto;
-    top: auto;
   }
 }
 
