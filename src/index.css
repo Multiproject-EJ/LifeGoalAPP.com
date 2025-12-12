@@ -1272,11 +1272,24 @@ body {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(20px);
   color: rgba(248, 250, 252, 0.9);
-  width: min(100%, 1050px);
+  width: min(90vw, 420px);
+  position: fixed;
+  bottom: clamp(1.5rem, 5vw, 2rem);
+  right: calc(clamp(1.5rem, 5vw, 2rem) + 4.75rem);
+  z-index: 1100;
 }
 
 .workspace-status .supabase-auth__status {
   margin: 0;
+}
+
+@media (max-width: 720px) {
+  .workspace-status {
+    position: static;
+    width: min(100%, 1050px);
+    right: auto;
+    bottom: auto;
+  }
 }
 
 .workspace-stage {
@@ -1321,6 +1334,16 @@ body {
   max-width: 52ch;
   font-size: 1.05rem;
   line-height: 1.6;
+}
+
+.workspace-stage--detail .workspace-stage__header h1 {
+  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+}
+
+.workspace-stage--detail .workspace-stage__header p {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  max-width: 46ch;
 }
 
 .workspace-stage__body {
