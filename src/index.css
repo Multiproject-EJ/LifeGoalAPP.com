@@ -9,6 +9,7 @@
   --workspace-fab-width: 60px;
   --workspace-fab-offset: calc(var(--workspace-fab-width) + clamp(1rem, 3vw, 1.5rem));
   --workspace-mobile-breakpoint: 720px;
+  --workspace-status-z: 1100;
   
   /* Enhanced font smoothing */
   -webkit-font-smoothing: antialiased;
@@ -1281,7 +1282,7 @@ body {
   bottom: var(--workspace-edge-spacing);
   /* Offset accounts for the FAB button width plus default gap */
   right: calc(var(--workspace-edge-spacing) + var(--workspace-fab-offset));
-  z-index: 1100;
+  z-index: var(--workspace-status-z);
 }
 
 .workspace-status .supabase-auth__status {
@@ -1294,6 +1295,8 @@ body {
     position: static;
     right: auto;
     bottom: auto;
+    left: auto;
+    top: auto;
   }
 }
 
