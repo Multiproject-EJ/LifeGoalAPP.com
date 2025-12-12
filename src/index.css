@@ -5,7 +5,7 @@
   font-weight: 400;
   color: #0f172a;
   background-color: #f1f5f9;
-  --workspace-fab-offset: 4.75rem;
+  --workspace-fab-offset: clamp(3.5rem, 5vw, 4.75rem);
   --workspace-mobile-breakpoint: 720px;
   
   /* Enhanced font smoothing */
@@ -1290,7 +1290,7 @@ body {
 @media (max-width: var(--workspace-mobile-breakpoint)) {
   .workspace-status {
     position: static;
-    width: min(100%, 1050px);
+    width: min(100%, 420px);
     right: auto;
     bottom: auto;
   }
