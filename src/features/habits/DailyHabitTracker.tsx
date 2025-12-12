@@ -116,7 +116,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   // State for habit alert summaries (which days have alerts scheduled)
   const [habitAlertSummaries, setHabitAlertSummaries] = useState<Map<string, Map<string, HabitAlertRow[]>>>(new Map());
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
-  const [quickJournalContent, setQuickJournalContent] = useState('');
+  const [quickJournalMorning, setQuickJournalMorning] = useState('');
+  const [quickJournalDay, setQuickJournalDay] = useState('');
+  const [quickJournalEvening, setQuickJournalEvening] = useState('');
+  const [quickJournalInteractions, setQuickJournalInteractions] = useState('');
+  const [quickJournalFreeform, setQuickJournalFreeform] = useState('');
   const [quickJournalSaving, setQuickJournalSaving] = useState(false);
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
@@ -785,15 +789,39 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const handleOpenQuickJournal = () => {
       setIsQuickJournalOpen(true);
-      setQuickJournalContent('');
+      setQuickJournalMorning('');
+      setQuickJournalDay('');
+      setQuickJournalEvening('');
+      setQuickJournalInteractions('');
+      setQuickJournalFreeform('');
       setQuickJournalError(null);
       setQuickJournalStatus(null);
     };
 
     const handleSaveQuickJournal = async () => {
-      const content = quickJournalContent.trim();
+      // Build concatenated content from all fields
+      const parts: string[] = [];
+      
+      if (quickJournalMorning.trim()) {
+        parts.push(`🌅 Morning:\n${quickJournalMorning.trim()}`);
+      }
+      if (quickJournalDay.trim()) {
+        parts.push(`☀️ Day:\n${quickJournalDay.trim()}`);
+      }
+      if (quickJournalEvening.trim()) {
+        parts.push(`🌙 Evening:\n${quickJournalEvening.trim()}`);
+      }
+      if (quickJournalInteractions.trim()) {
+        parts.push(`👥 Interactions:\n${quickJournalInteractions.trim()}`);
+      }
+      if (quickJournalFreeform.trim()) {
+        parts.push(`📝 Notes:\n${quickJournalFreeform.trim()}`);
+      }
+      
+      const content = parts.join('\n\n');
+      
       if (!content) {
-        setQuickJournalError('Add a few thoughts before saving.');
+        setQuickJournalError('Add at least one entry before saving.');
         return;
       }
 
@@ -825,7 +853,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         }
 
         setIsQuickJournalOpen(false);
-        setQuickJournalContent('');
+        setQuickJournalMorning('');
+        setQuickJournalDay('');
+        setQuickJournalEvening('');
+        setQuickJournalInteractions('');
+        setQuickJournalFreeform('');
         setQuickJournalStatus('Saved to your journal.');
       } catch (err) {
         setQuickJournalError(err instanceof Error ? err.message : 'Unable to save your journal entry.');
@@ -955,15 +987,56 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 </button>
               ) : (
                 <div className="habit-quick-journal__sheet">
-                  <label className="habit-quick-journal__field">
-                    <span className="habit-quick-journal__field-label">Entry for {quickJournalDateLabel}</span>
+                  <label className="habit-quick-journal__field habit-quick-journal__field--morning">
+                    <span className="habit-quick-journal__field-label">🌅 Morning</span>
                     <textarea
-                      rows={4}
-                      value={quickJournalContent}
-                      onChange={(event) => setQuickJournalContent(event.target.value)}
+                      rows={3}
+                      value={quickJournalMorning}
+                      onChange={(event) => setQuickJournalMorning(event.target.value)}
+                      placeholder="How did you start your day?"
+                    />
+                  </label>
+                  
+                  <label className="habit-quick-journal__field habit-quick-journal__field--day">
+                    <span className="habit-quick-journal__field-label">☀️ Day</span>
+                    <textarea
+                      rows={3}
+                      value={quickJournalDay}
+                      onChange={(event) => setQuickJournalDay(event.target.value)}
+                      placeholder="What happened during the day?"
+                    />
+                  </label>
+                  
+                  <label className="habit-quick-journal__field habit-quick-journal__field--evening">
+                    <span className="habit-quick-journal__field-label">🌙 Evening</span>
+                    <textarea
+                      rows={3}
+                      value={quickJournalEvening}
+                      onChange={(event) => setQuickJournalEvening(event.target.value)}
+                      placeholder="How did you wind down?"
+                    />
+                  </label>
+                  
+                  <label className="habit-quick-journal__field">
+                    <span className="habit-quick-journal__field-label">👥 Who did I interact with?</span>
+                    <textarea
+                      rows={2}
+                      value={quickJournalInteractions}
+                      onChange={(event) => setQuickJournalInteractions(event.target.value)}
+                      placeholder="People you spent time with or talked to..."
+                    />
+                  </label>
+                  
+                  <label className="habit-quick-journal__field">
+                    <span className="habit-quick-journal__field-label">📝 Additional notes</span>
+                    <textarea
+                      rows={3}
+                      value={quickJournalFreeform}
+                      onChange={(event) => setQuickJournalFreeform(event.target.value)}
                       placeholder="What stood out about this day?"
                     />
                   </label>
+                  
                   {quickJournalError ? (
                     <p className="habit-quick-journal__status habit-quick-journal__status--error">
                       {quickJournalError}
@@ -983,7 +1056,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       className="habit-quick-journal__cancel"
                       onClick={() => {
                         setIsQuickJournalOpen(false);
-                        setQuickJournalContent('');
+                        setQuickJournalMorning('');
+                        setQuickJournalDay('');
+                        setQuickJournalEvening('');
+                        setQuickJournalInteractions('');
+                        setQuickJournalFreeform('');
                         setQuickJournalError(null);
                       }}
                       disabled={quickJournalSaving}
