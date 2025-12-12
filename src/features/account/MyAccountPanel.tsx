@@ -9,6 +9,7 @@ import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
+import { generateInitials } from '../../utils/initials';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -52,7 +53,7 @@ export function MyAccountPanel({
   const email = user.email || 'No email on file';
   const avatarInitial = displayName.trim().charAt(0).toUpperCase() || 'U';
   const workspaceName = profile?.workspace_name || 'Personal rituals workspace';
-  const userInitials = profile?.initials || '';
+  const userInitials = profile?.initials || generateInitials(profile?.full_name || '');
 
   const planName =
     (user.user_metadata?.subscription_plan as string | undefined) ||
