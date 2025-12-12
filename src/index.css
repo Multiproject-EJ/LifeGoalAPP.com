@@ -1269,6 +1269,7 @@ body {
 }
 
 .workspace-status {
+  /* Status is non-interactive and intentionally fixed near the FAB for visibility */
   display: grid;
   gap: 0.5rem;
   padding: 1.25rem 1.5rem;
@@ -1293,7 +1294,12 @@ body {
 /* Match mobile layout breakpoint used across workspace shell */
 @media (max-width: var(--workspace-mobile-breakpoint)) {
   .workspace-status {
-    position: static;
+    position: fixed;
+    bottom: var(--workspace-edge-spacing);
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    width: min(92vw, 420px);
   }
 }
 
