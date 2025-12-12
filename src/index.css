@@ -5,6 +5,12 @@
   font-weight: 400;
   color: #0f172a;
   background-color: #f1f5f9;
+  --workspace-edge-spacing: clamp(1.5rem, 5vw, 2rem);
+  --workspace-fab-width: 60px;
+  /* FAB offset = button width + responsive gutter to keep status bubble clear of launcher */
+  --workspace-fab-offset: calc(var(--workspace-fab-width) + clamp(1rem, 3vw, 1.5rem));
+  --workspace-mobile-breakpoint: 720px;
+  --workspace-status-z: 1100;
   
   /* Enhanced font smoothing */
   -webkit-font-smoothing: antialiased;
@@ -1263,6 +1269,7 @@ body {
 }
 
 .workspace-status {
+  /* Status is non-interactive and intentionally fixed near the FAB for visibility */
   display: grid;
   gap: 0.5rem;
   padding: 1.25rem 1.5rem;
@@ -1272,11 +1279,27 @@ body {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(20px);
   color: rgba(248, 250, 252, 0.9);
-  width: min(100%, 1050px);
+  width: min(90vw, 420px);
+  position: fixed;
+  bottom: var(--workspace-edge-spacing);
+  /* Offset accounts for the FAB button width plus default gap */
+  right: calc(var(--workspace-edge-spacing) + var(--workspace-fab-offset));
+  z-index: var(--workspace-status-z);
 }
 
 .workspace-status .supabase-auth__status {
   margin: 0;
+}
+
+/* Match mobile layout breakpoint used across workspace shell */
+@media (max-width: var(--workspace-mobile-breakpoint)) {
+  .workspace-status {
+    bottom: var(--workspace-edge-spacing);
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    width: min(92vw, 420px);
+  }
 }
 
 .workspace-stage {
@@ -1321,6 +1344,16 @@ body {
   max-width: 52ch;
   font-size: 1.05rem;
   line-height: 1.6;
+}
+
+.workspace-stage--detail .workspace-stage__header h1 {
+  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+}
+
+.workspace-stage--detail .workspace-stage__header p {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  max-width: 46ch;
 }
 
 .workspace-stage__body {
