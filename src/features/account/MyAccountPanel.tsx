@@ -77,6 +77,9 @@ export function MyAccountPanel({
   });
   const workspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
   const showDemoNotice = isDemoExperience;
+  const profileCardClassName = `account-panel__card account-panel__profile ${
+    profileExpanded ? 'account-panel__profile--expanded' : ''
+  }`;
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -111,7 +114,7 @@ export function MyAccountPanel({
         </p>
       ) : null}
       <section
-        className={`account-panel__card account-panel__profile ${profileExpanded ? 'account-panel__profile--expanded' : 'account-panel__profile--collapsed'}`}
+        className={profileCardClassName}
         aria-labelledby="account-profile"
       >
         <button
@@ -129,9 +132,7 @@ export function MyAccountPanel({
             <h2 id="account-profile">My account</h2>
             <p className="account-panel__lead">Review your identity details and workspace access.</p>
           </div>
-          <span className="account-panel__chevron" aria-hidden="true">
-            {profileExpanded ? '▾' : '▸'}
-          </span>
+          <span className="account-panel__chevron" aria-hidden="true" />
         </button>
         <div
           id="account-profile-details"
