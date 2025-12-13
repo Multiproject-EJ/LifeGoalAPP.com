@@ -33,6 +33,6 @@ h1{ font-size: var(--fs-xl); } h2{ font-size: var(--fs-lg); } p{ margin:0 0 var(
   backdrop-filter: saturate(var(--glass-sat)) blur(var(--glass-blur));
   -webkit-backdrop-filter: saturate(var(--glass-sat)) blur(var(--glass-blur));
   border: 1px solid var(--border);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), var(--shadow-glow);
+  box-shadow: none;
   border-radius: var(--radius-lg);
 }
