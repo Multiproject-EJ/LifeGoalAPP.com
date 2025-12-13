@@ -234,7 +234,7 @@ export function AiCoach({ session, onClose }: AiCoachProps) {
               </button>
               <button
                 type="button"
-                className="ai-coach-modal__reset-btn"
+                className="ai-coach-modal__reset-btn ai-coach-modal__strategy-btn"
                 onClick={() => setShowStrategyAssistant(true)}
                 aria-label="Open AI Strategy Assistant"
                 title="Open AI Strategy Assistant"
