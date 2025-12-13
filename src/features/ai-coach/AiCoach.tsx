@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 export interface AiCoachProps {
   session: Session;
   onClose: () => void;
+  starterQuestion?: string;
 }
 
 interface Message {
@@ -81,7 +82,7 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
-export function AiCoach({ session, onClose }: AiCoachProps) {
+export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -299,7 +300,7 @@ export function AiCoach({ session, onClose }: AiCoachProps) {
               ref={inputRef}
               type="text"
               className="ai-coach-modal__input"
-              placeholder="Type your message here..."
+              placeholder={starterQuestion || 'Type your message here...'}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               disabled={isTyping}

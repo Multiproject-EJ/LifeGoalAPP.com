@@ -36,6 +36,14 @@ const JOURNAL_TYPES: { type: JournalType; icon: string; label: string }[] = [
   { type: 'goal', icon: '🎪', label: 'Goal' },
 ];
 
+const QUICK_JOURNAL_SHORTCUTS = JOURNAL_TYPES.filter((jt) =>
+  ['quick', 'brain_dump'].includes(jt.type),
+);
+
+const EXTENDED_JOURNAL_TYPES = JOURNAL_TYPES.filter(
+  (jt) => !['quick', 'brain_dump'].includes(jt.type),
+);
+
 export function QuickActionsFAB({
   session,
   onCheckHabit,
@@ -132,6 +140,8 @@ export function QuickActionsFAB({
     // Toggle the habits submenu instead of navigating
     const newShowHabitsSubmenu = !showHabitsSubmenu;
     setShowHabitsSubmenu(newShowHabitsSubmenu);
+    setShowJournalTypes(false);
+    setShowLifeCoach(false);
     
     // Load habits when opening the submenu (only if not already loading or loaded)
     if (newShowHabitsSubmenu && habits.length === 0 && !loadingHabits) {
@@ -142,6 +152,7 @@ export function QuickActionsFAB({
   const handleJournalClick = () => {
     setShowJournalTypes(!showJournalTypes);
     setShowHabitsSubmenu(false);
+    setShowLifeCoach(false);
   };
 
   const handleJournalTypeSelect = (type: JournalType) => {
@@ -151,12 +162,26 @@ export function QuickActionsFAB({
   };
 
   const handleLifeCoachClick = () => {
+    setShowHabitsSubmenu(false);
+    setShowJournalTypes(false);
     setShowLifeCoach(true);
     setIsOpen(false);
   };
 
   const closeLifeCoach = () => {
     setShowLifeCoach(false);
+  };
+
+  const openFullHabits = () => {
+    setIsOpen(false);
+    setShowHabitsSubmenu(false);
+    onCheckHabit?.();
+  };
+
+  const openFullJournal = () => {
+    onJournalNow?.('standard');
+    setIsOpen(false);
+    setShowJournalTypes(false);
   };
 
   const toggleHabitCompletion = async (habitId: string) => {
@@ -253,9 +278,9 @@ export function QuickActionsFAB({
               {/* Journal type sub-menu */}
               {action.id === 'journal' && showJournalTypes && (
                 <div className="quick-actions-fab__submenu">
-                  <div className="quick-actions-fab__submenu-title">Choose journal type:</div>
+                  <div className="quick-actions-fab__submenu-title">Quick journals</div>
                   <div className="quick-actions-fab__submenu-items">
-                    {JOURNAL_TYPES.map((jt) => (
+                    {QUICK_JOURNAL_SHORTCUTS.map((jt) => (
                       <button
                         key={jt.type}
                         type="button"
@@ -267,6 +292,36 @@ export function QuickActionsFAB({
                       </button>
                     ))}
                   </div>
+
+                  {EXTENDED_JOURNAL_TYPES.length > 0 && (
+                    <>
+                      <div className="quick-actions-fab__submenu-title">More modes</div>
+                      <div className="quick-actions-fab__submenu-items">
+                        {EXTENDED_JOURNAL_TYPES.map((jt) => (
+                          <button
+                            key={jt.type}
+                            type="button"
+                            className="quick-actions-fab__submenu-item"
+                            onClick={() => handleJournalTypeSelect(jt.type)}
+                          >
+                            <span aria-hidden="true">{jt.icon}</span>
+                            {jt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {onJournalNow && (
+                    <button
+                      type="button"
+                      className="quick-actions-fab__submenu-item quick-actions-fab__submenu-item--full"
+                      onClick={openFullJournal}
+                    >
+                      <span aria-hidden="true">📔</span>
+                      Open full journal
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -276,6 +331,16 @@ export function QuickActionsFAB({
                   <div className="quick-actions-fab__submenu-title">
                     {loadingHabits ? 'Loading habits...' : "Today's habits:"}
                   </div>
+                  {onCheckHabit && !loadingHabits && (
+                    <button
+                      type="button"
+                      className="quick-actions-fab__submenu-item quick-actions-fab__submenu-item--full"
+                      onClick={openFullHabits}
+                    >
+                      <span aria-hidden="true">📋</span>
+                      Open full checklist
+                    </button>
+                  )}
                   {loadingHabits ? (
                     <div className="quick-actions-fab__submenu-loading">
                       <span>⏳</span>
@@ -331,7 +396,11 @@ export function QuickActionsFAB({
 
       {/* Life Coach AI Modal */}
       {showLifeCoach && (
-        <AiCoach session={session} onClose={closeLifeCoach} />
+        <AiCoach
+          session={session}
+          onClose={closeLifeCoach}
+          starterQuestion="What's one thing you want help with today?"
+        />
       )}
     </>
   );

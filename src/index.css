@@ -10658,6 +10658,12 @@ body {
   color: white;
 }
 
+.quick-actions-fab__submenu-item--full {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.35rem;
+}
+
 /* Habits Submenu Specific Styles */
 .quick-actions-fab__submenu--habits {
   min-width: 240px;
