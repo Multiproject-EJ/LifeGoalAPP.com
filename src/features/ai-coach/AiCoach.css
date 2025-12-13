@@ -10,6 +10,8 @@
   --ai-coach-hover-shadow: rgba(102, 126, 234, 0.25);
   --ai-coach-button-shadow: rgba(102, 126, 234, 0.3);
   --ai-coach-button-hover-shadow: rgba(102, 126, 234, 0.4);
+  --ai-coach-modal-z: 10000;
+  --ai-coach-strategy-overlay-z: 10002;
 }
 
 .ai-coach-modal {
@@ -18,7 +20,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 10000;
+  z-index: var(--ai-coach-modal-z);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,7 +159,7 @@
   z-index: 1;
 }
 
-.ai-coach-modal__reset-btn,
+.ai-coach-modal__header-btn,
 .ai-coach-modal__close-btn {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -176,7 +178,7 @@
   flex-shrink: 0;
 }
 
-.ai-coach-modal__reset-btn:hover,
+.ai-coach-modal__header-btn:hover,
 .ai-coach-modal__close-btn:hover {
   background: rgba(255, 255, 255, 0.25);
   border-color: rgba(255, 255, 255, 0.3);
@@ -192,7 +194,7 @@
   background: rgba(255, 255, 255, 0.28);
 }
 
-.ai-coach-modal__reset-btn:active,
+.ai-coach-modal__header-btn:active,
 .ai-coach-modal__close-btn:active {
   transform: translateY(0);
 }
@@ -727,7 +729,7 @@
     font-size: 1.375rem;
   }
 
-  .ai-coach-modal__reset-btn,
+  .ai-coach-modal__header-btn,
   .ai-coach-modal__close-btn {
     width: 36px;
     height: 36px;
@@ -775,7 +777,7 @@
 
 /* Focus visible states for accessibility */
 .ai-coach-modal__topic-card:focus-visible,
-.ai-coach-modal__reset-btn:focus-visible,
+.ai-coach-modal__header-btn:focus-visible,
 .ai-coach-modal__close-btn:focus-visible,
 .ai-coach-modal__send-btn:focus-visible {
   outline: 3px solid var(--ai-coach-focus-color);
@@ -834,7 +836,7 @@
 .ai-coach-modal__strategy-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10002;
+  z-index: var(--ai-coach-strategy-overlay-z);
   display: flex;
   align-items: center;
   justify-content: center;
