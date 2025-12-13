@@ -10464,6 +10464,16 @@ body {
    QUICK ACTIONS FAB
    ============================================ */
 
+/* Shared animation for gradient shifting effect */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 .quick-actions-fab {
   position: fixed;
   bottom: clamp(1.5rem, 5vw, 2rem);
@@ -10508,6 +10518,13 @@ body {
 .quick-actions-fab__main--open {
   transform: rotate(45deg);
   background: linear-gradient(135deg, #ef4444, #f97316);
+}
+
+/* Shared animated open state for dark themes */
+.quick-actions-fab__main--open-animated {
+  background: linear-gradient(135deg, #f472b6, #fb923c, #ef4444);
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
 }
 
 .quick-actions-fab__main--open:hover {
@@ -10945,11 +10962,11 @@ body {
 }
 
 /* Dark theme adjustments */
-/* Enhanced highlighted launcher icon for dark theme */
+/* Enhanced highlighted launcher icon for dark-glass theme */
 [data-theme='dark-glass'] .quick-actions-fab__main {
   background: linear-gradient(135deg, #22d3ee, #a855f7, #06b6d4);
   background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
+  animation: gradientShift 3s ease infinite; /* Animation defined at line ~10467 */
   box-shadow: 
     0 0 20px rgba(34, 211, 238, 0.6),
     0 0 40px rgba(168, 85, 247, 0.4),
@@ -10971,15 +10988,6 @@ body {
   background: linear-gradient(135deg, #f472b6, #fb923c, #ef4444);
   background-size: 200% 200%;
   animation: gradientShift 3s ease infinite;
-}
-
-@keyframes gradientShift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
 }
 
 [data-theme='dark-glass'] .quick-actions-fab__action-label,
