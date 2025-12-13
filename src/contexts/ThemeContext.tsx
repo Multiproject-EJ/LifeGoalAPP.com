@@ -336,6 +336,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (typeof document === 'undefined') {
       return;
     }
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     const root = document.documentElement;
     if (theme !== 'flow-day' && theme !== 'flow-night') {
