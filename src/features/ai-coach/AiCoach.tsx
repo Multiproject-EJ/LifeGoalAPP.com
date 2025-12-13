@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { AiSupportAssistant } from '../assistant';
 
 export interface AiCoachProps {
   session: Session;
@@ -86,6 +87,7 @@ export function AiCoach({ session, onClose }: AiCoachProps) {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showTopics, setShowTopics] = useState(true);
+  const [showStrategyAssistant, setShowStrategyAssistant] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -220,21 +222,30 @@ export function AiCoach({ session, onClose }: AiCoachProps) {
               <p className="ai-coach-modal__subtitle">Your personal guide to achieving your goals</p>
             </div>
           </div>
-          <div className="ai-coach-modal__header-actions">
-            <button
-              type="button"
-              className="ai-coach-modal__reset-btn"
-              onClick={handleReset}
-              aria-label="Reset conversation"
-              title="Start new conversation"
-            >
-              🔄
-            </button>
-            <button
-              type="button"
-              className="ai-coach-modal__close-btn"
-              onClick={onClose}
-              aria-label="Close AI Coach"
+            <div className="ai-coach-modal__header-actions">
+              <button
+                type="button"
+                className="ai-coach-modal__reset-btn"
+                onClick={handleReset}
+                aria-label="Reset conversation"
+                title="Start new conversation"
+              >
+                🔄
+              </button>
+              <button
+                type="button"
+                className="ai-coach-modal__reset-btn"
+                onClick={() => setShowStrategyAssistant(true)}
+                aria-label="Open AI Strategy Assistant"
+                title="Open AI Strategy Assistant"
+              >
+                🧭
+              </button>
+              <button
+                type="button"
+                className="ai-coach-modal__close-btn"
+                onClick={onClose}
+                aria-label="Close AI Coach"
             >
               ×
             </button>
@@ -320,6 +331,40 @@ export function AiCoach({ session, onClose }: AiCoachProps) {
             💡 This is a simulated AI coach for demonstration purposes. Responses are generated based on common coaching principles.
           </p>
         </div>
+
+        {showStrategyAssistant && (
+          <div
+            className="ai-coach-modal__strategy-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="AI Strategy Assistant"
+          >
+            <div
+              className="ai-coach-modal__strategy-backdrop"
+              onClick={() => setShowStrategyAssistant(false)}
+              role="presentation"
+            />
+            <div className="ai-coach-modal__strategy-panel">
+              <div className="ai-coach-modal__strategy-header">
+                <div>
+                  <p className="ai-coach-modal__strategy-eyebrow">AI Strategy Assistant</p>
+                  <h3>Momentum resets, travel buffers, and forecasts</h3>
+                </div>
+                <button
+                  type="button"
+                  className="ai-coach-modal__strategy-close"
+                  onClick={() => setShowStrategyAssistant(false)}
+                  aria-label="Close AI Strategy Assistant"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="ai-coach-modal__strategy-body">
+                <AiSupportAssistant session={session} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
