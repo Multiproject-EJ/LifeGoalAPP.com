@@ -1395,10 +1395,59 @@ body {
 }
 
 .account-panel__profile {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-panel__profile-summary {
   display: flex;
   gap: 1.25rem;
   align-items: flex-start;
-  flex-wrap: wrap;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-panel__profile-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-panel__chevron {
+  margin-left: auto;
+  color: rgba(15, 23, 42, 0.45);
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-panel__chevron::before {
+  content: '';
+  display: block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.account-panel__profile--expanded .account-panel__chevron::before {
+  transform: rotate(135deg);
+}
+
+[data-theme='dark-glass'] .account-panel__chevron {
+  color: rgba(248, 250, 252, 0.65);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .account-panel__chevron::before {
+    transition: transform 0.2s ease;
+  }
 }
 
 .account-panel__notice {

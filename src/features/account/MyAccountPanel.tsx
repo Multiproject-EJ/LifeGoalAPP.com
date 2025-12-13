@@ -43,6 +43,7 @@ export function MyAccountPanel({
   profileLoading,
   onProfileUpdate,
 }: MyAccountPanelProps) {
+  const [profileExpanded, setProfileExpanded] = useState(false);
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
@@ -76,6 +77,9 @@ export function MyAccountPanel({
   });
   const workspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
   const showDemoNotice = isDemoExperience;
+  const profileCardClassName = `account-panel__card account-panel__profile ${
+    profileExpanded ? 'account-panel__profile--expanded' : ''
+  }`;
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -109,14 +113,32 @@ export function MyAccountPanel({
           You’re exploring demo data. Sign in to sync with your Supabase project.
         </p>
       ) : null}
-      <section className="account-panel__card account-panel__profile" aria-labelledby="account-profile">
-        <div className="account-panel__avatar" aria-hidden="true">
-          {avatarInitial}
-        </div>
-        <div className="account-panel__profile-text">
-          <p className="account-panel__eyebrow">Profile</p>
-          <h2 id="account-profile">My account</h2>
-          <p className="account-panel__lead">Review your identity details and workspace access.</p>
+      <section
+        className={profileCardClassName}
+        aria-labelledby="account-profile"
+      >
+        <button
+          type="button"
+          className="account-panel__profile-summary"
+          onClick={() => setProfileExpanded((prev) => !prev)}
+          aria-expanded={profileExpanded}
+          aria-controls="account-profile-details"
+        >
+          <div className="account-panel__avatar" aria-hidden="true">
+            {avatarInitial}
+          </div>
+          <div className="account-panel__profile-text">
+            <p className="account-panel__eyebrow">Profile</p>
+            <h2 id="account-profile">My account</h2>
+            <p className="account-panel__lead">Review your identity details and workspace access.</p>
+          </div>
+          <span className="account-panel__chevron" aria-hidden="true" />
+        </button>
+        <div
+          id="account-profile-details"
+          className="account-panel__profile-body"
+          hidden={!profileExpanded}
+        >
           <dl className="account-panel__details">
             <div>
               <dt>Name</dt>
