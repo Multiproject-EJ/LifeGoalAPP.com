@@ -17,7 +17,7 @@
   background: var(--card-hover-background, #f9fafb);
   border-color: var(--border-hover-color, #d1d5db);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .settings-folder-button:active {
@@ -88,7 +88,7 @@
   padding: 0;
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 0.75rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   background: var(--background, #ffffff);
   overflow: hidden;
 }
