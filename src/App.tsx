@@ -753,7 +753,7 @@ export default function App() {
         without creating an account.
       </p>
       <ul className="auth-demo-list">
-        <li>Preview Today&apos;s Habits and goal dashboards.</li>
+        <li>Preview Today's Habits and goal dashboards.</li>
         <li>Make changes locally without affecting production data.</li>
         <li>Decide later if you want to connect your own Supabase project.</li>
       </ul>
@@ -945,7 +945,7 @@ export default function App() {
             <ul className="auth-hero__list">
               <li>
                 <h3>Daily rituals, anywhere</h3>
-                <p>Review Today&apos;s Habits once you&apos;re signed in to your workspace.</p>
+                <p>Review Today's Habits once you're signed in to your workspace.</p>
               </li>
               <li>
                 <h3>Private progress</h3>
@@ -1054,8 +1054,8 @@ export default function App() {
           <div className="workspace-content">
             <div className="workspace-stage__placeholder">
               <div className="workspace-stage__placeholder-content">
-                <h2>Habits &amp; Routines moved</h2>
-                <p>Find all routines inside Today&apos;s Habits &amp; Routines.</p>
+                <h2>Habits & Routines moved</h2>
+                <p>Find all routines inside Today's Habits & Routines.</p>
                 <button
                   type="button"
                   className="btn btn--primary"
@@ -1122,7 +1122,7 @@ export default function App() {
               <h2>{activeWorkspaceItem.label}</h2>
               <p>{activeWorkspaceItem.summary}</p>
               <p className="workspace-stage__placeholder-hint">
-                Select "Goals &amp; Habits" to access the full workspace preview.
+                Select "Goals & Habits" to access the full workspace preview.
               </p>
             </div>
           </div>
