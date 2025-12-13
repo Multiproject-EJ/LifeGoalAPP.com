@@ -264,6 +264,7 @@ function getSystemPreference(): ThemeCategory {
 const getFlowVariantForHour = (hour: number): FlowVariant => {
   const windowIndex = FLOW_VARIANT_WINDOWS.findIndex((window, idx) => {
     const nextStart = FLOW_VARIANT_WINDOWS[(idx + 1) % FLOW_VARIANT_WINDOWS.length].startHour;
+    // Handles normal ranges and the overnight window that wraps from late evening to early morning.
     if (window.startHour < nextStart) {
       return hour >= window.startHour && hour < nextStart;
     }
