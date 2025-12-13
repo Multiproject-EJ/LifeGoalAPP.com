@@ -1374,11 +1374,6 @@ export default function App() {
             }`}
             aria-live="polite"
           >
-            <header className="workspace-stage__header">
-              <h1>{activeWorkspaceItem.label}</h1>
-              {activeWorkspaceItem.summary ? <p>{activeWorkspaceItem.summary}</p> : null}
-            </header>
-
             <div className="workspace-stage__body">{renderWorkspaceSection()}</div>
           </section>
         </main>
