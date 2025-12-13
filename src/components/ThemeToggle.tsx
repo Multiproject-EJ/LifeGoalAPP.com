@@ -1,18 +1,15 @@
-import { AVAILABLE_THEMES, useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type ThemeToggleProps = {
   className?: string;
 };
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
-  const { theme, toggleTheme, effectiveCategory, lightTheme, darkTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
-  const isLight = effectiveCategory === 'light';
-  const nextThemeId = isLight ? darkTheme : lightTheme;
-  const nextThemeName =
-    AVAILABLE_THEMES.find(t => t.id === nextThemeId)?.name ?? (isLight ? 'Dark theme' : 'Light theme');
-  const labelText = isLight ? 'Dark mode' : 'Light mode';
-  const icon = isLight ? '🌙' : '☀️';
+  const nextThemeName = theme === 'bright-sky' ? 'Dark Glass' : 'Bright Sky';
+  const labelText = theme === 'bright-sky' ? 'Dark mode' : 'Light mode';
+  const icon = theme === 'bright-sky' ? '🌙' : '☀️';
 
   return (
     <button
@@ -21,7 +18,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       onClick={toggleTheme}
       aria-label={`Switch to the ${nextThemeName} theme`}
       title={`Switch to the ${nextThemeName} theme`}
-      aria-pressed={!isLight}
+      aria-pressed={theme !== 'bright-sky'}
     >
       <span className="theme-toggle__icon" aria-hidden="true">
         {icon}
