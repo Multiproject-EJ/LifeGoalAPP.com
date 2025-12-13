@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { MeditationSessionPlayer } from './MeditationSessionPlayer';
+import { GuidedMeditationPlayer } from './GuidedMeditationPlayer';
 import { ReminderCard } from './components/ReminderCard';
 import {
   createMeditationSession,
   getMeditationStats,
   PLACEHOLDER_SESSIONS,
 } from '../../services/meditation';
+import { GUIDED_MEDITATIONS } from '../../data/meditationContent';
+import type { RevealMode } from '../../types/meditation';
 import { FEATURE_BREATHING_SPACE } from './constants';
 import './BreathingSpace.css';
 
@@ -34,6 +37,12 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     duration: number;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  // Guided meditation state
+  const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
+  const [selectedMeditationId, setSelectedMeditationId] = useState<string>('attempting-breath');
+  const [meditationDuration, setMeditationDuration] = useState<number>(5);
+  const [revealMode, setRevealMode] = useState<RevealMode>('sentence');
 
   useEffect(() => {
     loadStats();
@@ -110,6 +119,39 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     setSelectedSession(null);
   };
 
+  const handleStartGuidedMeditation = (meditationId: string) => {
+    setSelectedMeditationId(meditationId);
+    setGuidedPlayerOpen(true);
+  };
+
+  const handleGuidedSessionComplete = async () => {
+    setSaving(true);
+    try {
+      const result = await createMeditationSession({
+        user_id: session.user.id,
+        duration_seconds: meditationDuration * 60,
+        session_type: 'guided',
+        completed: true,
+      });
+
+      if (result.error) {
+        console.error('Failed to save session:', result.error);
+      } else {
+        // Reload stats after successful save
+        await loadStats();
+      }
+    } catch (err) {
+      console.error('Failed to save session:', err);
+    } finally {
+      setSaving(false);
+      setGuidedPlayerOpen(false);
+    }
+  };
+
+  const handleCloseGuidedPlayer = () => {
+    setGuidedPlayerOpen(false);
+  };
+
   if (!FEATURE_BREATHING_SPACE) {
     return null;
   }
@@ -171,7 +213,81 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
 
         {/* Meditation Library */}
         <div className="breathing-space__library">
-          <h3 className="breathing-space__library-title">Meditation Library</h3>
+          <h3 className="breathing-space__library-title">Guided Meditations</h3>
+          
+          {/* Meditation Controls */}
+          <div className="breathing-space__guided-controls">
+            <div className="breathing-space__control-group">
+              <label htmlFor="meditation-select" className="breathing-space__control-label">
+                Meditation
+              </label>
+              <select
+                id="meditation-select"
+                className="breathing-space__control-select"
+                value={selectedMeditationId}
+                onChange={(e) => setSelectedMeditationId(e.target.value)}
+              >
+                {GUIDED_MEDITATIONS.map((med) => (
+                  <option key={med.id} value={med.id}>
+                    {med.title} {med.isPlaceholder ? '(Coming Soon)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="breathing-space__control-group">
+              <label htmlFor="duration-select" className="breathing-space__control-label">
+                Duration
+              </label>
+              <select
+                id="duration-select"
+                className="breathing-space__control-select"
+                value={meditationDuration}
+                onChange={(e) => setMeditationDuration(Number(e.target.value))}
+              >
+                <option value={2}>2 minutes</option>
+                <option value={5}>5 minutes</option>
+                <option value={10}>10 minutes</option>
+              </select>
+            </div>
+
+            <div className="breathing-space__control-group">
+              <label htmlFor="reveal-mode-select" className="breathing-space__control-label">
+                Reveal Mode
+              </label>
+              <select
+                id="reveal-mode-select"
+                className="breathing-space__control-select"
+                value={revealMode}
+                onChange={(e) => setRevealMode(e.target.value as RevealMode)}
+              >
+                <option value="word">Word by Word</option>
+                <option value="sentence">Sentence by Sentence</option>
+                <option value="paragraph">Paragraph by Paragraph</option>
+              </select>
+            </div>
+
+            <button
+              className="btn btn--primary breathing-space__guided-start-button"
+              onClick={() => handleStartGuidedMeditation(selectedMeditationId)}
+            >
+              Begin Meditation
+            </button>
+          </div>
+
+          {/* Selected meditation details */}
+          {GUIDED_MEDITATIONS.find((m) => m.id === selectedMeditationId) && (
+            <div className="breathing-space__meditation-preview">
+              <p className="breathing-space__meditation-theme">
+                {GUIDED_MEDITATIONS.find((m) => m.id === selectedMeditationId)?.theme}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Breathing Exercises Library */}
+        <div className="breathing-space__library">
+          <h3 className="breathing-space__library-title">Breathing Exercises</h3>
           <div className="breathing-space__library-grid">
             {PLACEHOLDER_SESSIONS.map((s) => (
               <div key={s.id} className="breathing-space__library-card">
@@ -203,6 +319,16 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           onComplete={handleSessionComplete}
         />
       )}
+
+      {/* Guided Meditation Player Modal */}
+      <GuidedMeditationPlayer
+        isOpen={guidedPlayerOpen}
+        onClose={handleCloseGuidedPlayer}
+        meditationId={selectedMeditationId}
+        durationMinutes={meditationDuration}
+        revealMode={revealMode}
+        onComplete={handleGuidedSessionComplete}
+      />
     </div>
   );
 }
