@@ -23,6 +23,8 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 
 export type ThemeCategory = 'light' | 'dark';
 
+type FlowVariant = 'sunrise' | 'morning' | 'day' | 'sunset' | 'midnight';
+
 export interface ThemeMetadata {
   id: Theme;
   name: string;
@@ -63,6 +65,16 @@ const THEME_STORAGE_KEY = 'lifegoal-theme';
 const THEME_MODE_STORAGE_KEY = 'lifegoal-theme-mode';
 const LIGHT_THEME_STORAGE_KEY = 'lifegoal-light-theme';
 const DARK_THEME_STORAGE_KEY = 'lifegoal-dark-theme';
+
+const FLOW_VARIANT_INTERVAL_MS = 5 * 60 * 1000;
+
+const FLOW_VARIANT_WINDOWS: Array<{ variant: FlowVariant; startHour: number }> = [
+  { variant: 'sunrise', startHour: 4 },
+  { variant: 'morning', startHour: 8 },
+  { variant: 'day', startHour: 12 },
+  { variant: 'sunset', startHour: 17 },
+  { variant: 'midnight', startHour: 21 },
+];
 
 // Light themes
 export const LIGHT_THEMES: ThemeMetadata[] = [
@@ -249,6 +261,19 @@ function getSystemPreference(): ThemeCategory {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+const getFlowVariantForHour = (hour: number): FlowVariant => {
+  const windowIndex = FLOW_VARIANT_WINDOWS.findIndex((variantWindow, idx) => {
+    const nextStart = FLOW_VARIANT_WINDOWS[(idx + 1) % FLOW_VARIANT_WINDOWS.length].startHour;
+    // Handles normal ranges and the overnight window that wraps from late evening to early morning.
+    if (variantWindow.startHour < nextStart) {
+      return hour >= variantWindow.startHour && hour < nextStart;
+    }
+    return hour >= variantWindow.startHour || hour < nextStart;
+  });
+
+  return windowIndex >= 0 ? FLOW_VARIANT_WINDOWS[windowIndex].variant : 'day';
+};
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
     const stored = readStoredValue<ThemeMode>(THEME_MODE_STORAGE_KEY);
@@ -306,6 +331,34 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       metaThemeColor.setAttribute('content', themeData?.metaColor || '#e0f2fe');
     }
   }, [theme, themeMode, lightTheme, darkTheme]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const root = document.documentElement;
+    if (theme !== 'flow-day' && theme !== 'flow-night') {
+      root.removeAttribute('data-flow-variant');
+      return;
+    }
+
+    const applyVariant = () => {
+      const now = new Date();
+      root.setAttribute('data-flow-variant', getFlowVariantForHour(now.getHours()));
+    };
+
+    applyVariant();
+    const interval = window.setInterval(applyVariant, FLOW_VARIANT_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(interval);
+      root.removeAttribute('data-flow-variant');
+    };
+  }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
     const category = getThemeCategory(newTheme);
