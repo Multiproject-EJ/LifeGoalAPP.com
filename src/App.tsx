@@ -20,7 +20,6 @@ import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
-import { AiSupportAssistant } from './features/assistant';
 import { AiCoach } from './features/ai-coach';
 import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
@@ -69,7 +68,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'goals',
     label: 'Dashboard',
-    summary: 'Review upcoming milestones and daily focus from a unified dashboard.',
+    summary: '',
     icon: '📊',
     shortLabel: 'HOME',
   },
@@ -84,20 +83,20 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     id: 'habits',
     label: 'Habits & Routines',
     summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
-    icon: '📆',
+    icon: '🧍',
     shortLabel: 'ROUTINES',
   },
   {
     id: 'rituals',
     label: 'Wellbeing Wheel Check-in',
-    summary: 'Reflect on your wellbeing balance with a quick wheel check-in.',
+    summary: '',
     icon: '🧭',
     shortLabel: 'CHECK-IN',
   },
   {
     id: 'journal',
     label: 'Journal',
-    summary: 'Capture private reflections, moods, and links to your goals.',
+    summary: '',
     icon: '📔',
     shortLabel: 'JOURNAL',
   },
@@ -111,7 +110,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'insights',
     label: 'Vision Board',
-    summary: 'Stay inspired with highlights from your evolving vision board.',
+    summary: '',
     icon: '🖼️',
     shortLabel: 'VISION',
   },
@@ -125,7 +124,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'assistant',
     label: 'AI Strategy Assistant',
-    summary: 'Tap into momentum resets, vacation modes, and scenario planning.',
+    summary: '',
     icon: '🤖',
     shortLabel: 'AI',
   },
@@ -754,7 +753,7 @@ export default function App() {
         without creating an account.
       </p>
       <ul className="auth-demo-list">
-        <li>Preview Today&apos;s Habits and goal dashboards.</li>
+        <li>Preview Today's Habits and goal dashboards.</li>
         <li>Make changes locally without affecting production data.</li>
         <li>Decide later if you want to connect your own Supabase project.</li>
       </ul>
@@ -946,7 +945,7 @@ export default function App() {
             <ul className="auth-hero__list">
               <li>
                 <h3>Daily rituals, anywhere</h3>
-                <p>Review Today&apos;s Habits once you&apos;re signed in to your workspace.</p>
+                <p>Review Today's Habits once you're signed in to your workspace.</p>
               </li>
               <li>
                 <h3>Private progress</h3>
@@ -1041,6 +1040,7 @@ export default function App() {
               </div>
             ) : null}
             <DailyHabitTracker session={activeSession} />
+            <HabitsModule session={activeSession} />
           </div>
         );
       case 'rituals':
@@ -1052,8 +1052,19 @@ export default function App() {
       case 'habits':
         return (
           <div className="workspace-content">
-            <DailyHabitTracker session={activeSession} />
-            <HabitsModule session={activeSession} />
+            <div className="workspace-stage__placeholder">
+              <div className="workspace-stage__placeholder-content">
+                <h2>Habits & Routines moved</h2>
+                <p>Find all routines inside Today's Habits & Routines.</p>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => setActiveWorkspaceNav('planning')}
+                >
+                  Go to Today
+                </button>
+              </div>
+            </div>
           </div>
         );
       case 'journal':
@@ -1089,7 +1100,19 @@ export default function App() {
       case 'assistant':
         return (
           <div className="workspace-content">
-            <AiSupportAssistant session={activeSession} />
+            <div className="workspace-stage__placeholder">
+              <div className="workspace-stage__placeholder-content">
+                <h2>AI Strategy Assistant</h2>
+                <p>Open the AI Life Coach popup to access strategy playbooks.</p>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => setShowAiCoachModal(true)}
+                >
+                  Launch AI Life Coach
+                </button>
+              </div>
+            </div>
           </div>
         );
       default:
@@ -1099,7 +1122,7 @@ export default function App() {
               <h2>{activeWorkspaceItem.label}</h2>
               <p>{activeWorkspaceItem.summary}</p>
               <p className="workspace-stage__placeholder-hint">
-                Select "Goals &amp; Habits" to access the full workspace preview.
+                Select "Goals & Habits" to access the full workspace preview.
               </p>
             </div>
           </div>
@@ -1279,6 +1302,7 @@ export default function App() {
                     }
                     setActiveWorkspaceNav(item.id);
                   };
+                  const navButtonTitle = item.summary ? `${item.label} • ${item.summary}` : item.label;
                   return (
                     <button
                       key={item.id}
@@ -1289,7 +1313,7 @@ export default function App() {
                       onClick={handleNavButtonClick}
                       aria-pressed={isActive}
                       aria-label={item.label}
-                      title={`${item.label} • ${item.summary}`}
+                      title={navButtonTitle}
                     >
                       <span className="workspace-sidebar__nav-icon" aria-hidden="true">
                         {item.icon}
@@ -1352,7 +1376,7 @@ export default function App() {
           >
             <header className="workspace-stage__header">
               <h1>{activeWorkspaceItem.label}</h1>
-              <p>{activeWorkspaceItem.summary}</p>
+              {activeWorkspaceItem.summary ? <p>{activeWorkspaceItem.summary}</p> : null}
             </header>
 
             <div className="workspace-stage__body">{renderWorkspaceSection()}</div>
