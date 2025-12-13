@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'lifegoal-theme';
 const DEFAULT_THEME = 'dark-glass';
-const LIGHT_THEME = 'bright-sky';
+const LIGHT_THEME = 'flow-day';
 
 const prefersDark = () =>
   window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -31,7 +31,7 @@ const applyTheme = (theme) => {
 
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
   if (metaThemeColor) {
-    metaThemeColor.setAttribute('content', theme === LIGHT_THEME ? '#dbeafe' : '#0a0e1a');
+    metaThemeColor.setAttribute('content', theme === LIGHT_THEME ? '#f2f4fb' : '#0a0e1a');
   }
 
   const toggle = document.querySelector('[data-action="toggle-theme"]');

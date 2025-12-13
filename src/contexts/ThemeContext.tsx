@@ -257,7 +257,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   const [lightTheme, setLightThemeState] = useState<Theme>(() => {
     const stored = readStoredValue<Theme>(LIGHT_THEME_STORAGE_KEY);
-    return stored && LIGHT_THEMES.some(t => t.id === stored) ? stored : 'bright-sky';
+    return stored && LIGHT_THEMES.some(t => t.id === stored) ? stored : 'flow-day';
   });
 
   const [darkTheme, setDarkThemeState] = useState<Theme>(() => {
