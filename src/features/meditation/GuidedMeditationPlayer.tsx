@@ -72,7 +72,7 @@ export function GuidedMeditationPlayer({
   // Main timer for tracking elapsed time
   useEffect(() => {
     if (isRunning && !isPaused && !isComplete) {
-      timerRef.current = setInterval(() => {
+      timerRef.current = window.setInterval(() => {
         const elapsed = Date.now() - startTimeRef.current;
         setTimeElapsed(elapsed);
 
@@ -97,17 +97,23 @@ export function GuidedMeditationPlayer({
       return;
     }
 
+    // Define minimum time per chunk based on reveal mode
+    const minTimePerChunk = revealMode === 'word' ? 1000 : revealMode === 'sentence' ? 2000 : 3000;
+    
     // Calculate time per chunk
     const timePerChunk = contentDurationMs / chunks.length;
     
     // Add a small pause between chunks (500ms to 1500ms based on mode)
     const pauseDuration = revealMode === 'word' ? 500 : revealMode === 'sentence' ? 1000 : 1500;
-    const adjustedTimePerChunk = Math.max(timePerChunk - pauseDuration, pauseDuration);
+    
+    // Use the maximum of calculated time and minimum time
+    const adjustedTimePerChunk = Math.max(timePerChunk - pauseDuration, minTimePerChunk);
 
-    chunkTimerRef.current = setTimeout(() => {
-      if (isRunning && !isPaused && !isComplete) {
-        setCurrentChunkIndex((prev) => Math.min(prev + 1, chunks.length - 1));
-      }
+    chunkTimerRef.current = window.setTimeout(() => {
+      // Check state again before advancing to prevent race conditions
+      if (!isRunning || isPaused || isComplete) return;
+      
+      setCurrentChunkIndex((prev) => Math.min(prev + 1, chunks.length - 1));
     }, adjustedTimePerChunk);
   }, [chunks.length, currentChunkIndex, contentDurationMs, revealMode, isRunning, isPaused, isComplete]);
 

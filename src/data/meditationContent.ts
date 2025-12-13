@@ -209,9 +209,9 @@ export function splitIntoChunks(content: string, mode: 'word' | 'sentence' | 'pa
 
     case 'sentence':
       // Split by sentence boundaries (., !, ?) while preserving the punctuation
-      // This regex looks for sentence-ending punctuation followed by whitespace
+      // This regex looks for sentence-ending punctuation followed by whitespace or end of string
       const sentences = content
-        .split(/([.!?]+\s+)/)
+        .split(/([.!?]+(?:\s+|$))/)
         .reduce((acc: string[], part, i, arr) => {
           if (i % 2 === 0 && part.trim()) {
             // Combine sentence with its punctuation
