@@ -122,13 +122,6 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'GOALS',
   },
   {
-    id: 'assistant',
-    label: 'AI Strategy Assistant',
-    summary: '',
-    icon: '🤖',
-    shortLabel: 'AI',
-  },
-  {
     id: 'ai-coach',
     label: 'AI Life Coach',
     summary: 'Chat with your personal AI coach for motivation, advice, and guidance.',
@@ -141,7 +134,6 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'planning',
   'habits',
   'support',
-  'assistant',
   'ai-coach',
   'journal',
   'breathing-space',
@@ -1013,9 +1005,7 @@ export default function App() {
       );
     }
 
-    const isAssistantView = activeWorkspaceNav === 'assistant';
-
-    if (!canAccessWorkspace && !isAssistantView) {
+    if (!canAccessWorkspace) {
       return (
         <p className="workspace-onboarding-hint">
           Finish onboarding to unlock this area.
@@ -1095,24 +1085,6 @@ export default function App() {
             <LifeGoalsSection session={activeSession} />
             <GoalWorkspace session={activeSession} />
             <GoalReflectionJournal session={activeSession} />
-          </div>
-        );
-      case 'assistant':
-        return (
-          <div className="workspace-content">
-            <div className="workspace-stage__placeholder">
-              <div className="workspace-stage__placeholder-content">
-                <h2>AI Strategy Assistant</h2>
-                <p>Open the AI Life Coach popup to access strategy playbooks.</p>
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  onClick={() => setShowAiCoachModal(true)}
-                >
-                  Launch AI Life Coach
-                </button>
-              </div>
-            </div>
           </div>
         );
       default:
