@@ -156,7 +156,7 @@
 /* Workspace Snapshot in Dashboard */
 .workspace-snapshot {
   margin: 2rem 0;
-  padding: 1.5rem;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
   background: var(--card-background, #ffffff);
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 0.75rem;
