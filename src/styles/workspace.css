@@ -1,7 +1,7 @@
 :root {
   --workspace-max-width: 1200px;
-  --workspace-padding: 2rem;
-  --workspace-padding-sm: 1rem;
+  --workspace-padding: 0.5rem;
+  --workspace-padding-sm: 0.5rem;
 }
 
 .workspace-content {
