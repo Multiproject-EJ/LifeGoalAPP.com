@@ -1040,23 +1040,7 @@ export default function App() {
           </div>
         );
       case 'habits':
-        return (
-          <div className="workspace-content">
-            <div className="workspace-stage__placeholder">
-              <div className="workspace-stage__placeholder-content">
-                <h2>Habits & Routines moved</h2>
-                <p>Find all routines inside Today's Habits & Routines.</p>
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  onClick={() => setActiveWorkspaceNav('planning')}
-                >
-                  Go to Today
-                </button>
-              </div>
-            </div>
-          </div>
-        );
+        return <div className="workspace-content" />;
       case 'journal':
         return (
           <div className="workspace-content">
