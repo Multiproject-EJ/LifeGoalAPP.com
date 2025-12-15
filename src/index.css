@@ -9885,13 +9885,43 @@ body {
 
 .journal-secret__timer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 0.75rem 1rem;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
   border-radius: 12px;
   margin-bottom: 0.5rem;
+}
+
+.journal-secret__timer-config {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.journal-secret__timer-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.journal-secret__timer-option input[type="radio"] {
+  cursor: pointer;
+  accent-color: #dc2626;
+}
+
+.journal-secret__timer-option span {
+  user-select: none;
+}
+
+.journal-secret__timer-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .journal-secret__timer-label {

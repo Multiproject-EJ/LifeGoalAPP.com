@@ -53,7 +53,9 @@ const BRAIN_DUMP_BLUR_DIVISOR = 10;
 const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this time. Please try again.';
 
 // Secret mode constants
-const SECRET_DURATION_SECONDS = 30;
+const SECRET_DURATION_25_SECONDS = 25;
+const SECRET_DURATION_10_MINUTES = 600; // 10 minutes in seconds
+const DEFAULT_SECRET_DURATION = SECRET_DURATION_25_SECONDS;
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -154,7 +156,8 @@ export function JournalEntryEditor({
 
   // Secret mode state
   const [secretText, setSecretText] = useState('');
-  const [secretTimeLeft, setSecretTimeLeft] = useState(SECRET_DURATION_SECONDS);
+  const [secretTimerDuration, setSecretTimerDuration] = useState(DEFAULT_SECRET_DURATION);
+  const [secretTimeLeft, setSecretTimeLeft] = useState(DEFAULT_SECRET_DURATION);
   const [isFading, setIsFading] = useState(false);
   const secretDestroyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -172,7 +175,8 @@ export function JournalEntryEditor({
     // Reset secret mode state when opening/changing entries in secret mode
     if (journalType === 'secret') {
       setSecretText('');
-      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setSecretTimerDuration(DEFAULT_SECRET_DURATION);
+      setSecretTimeLeft(DEFAULT_SECRET_DURATION);
       setIsFading(false);
     }
   }, [entry, open, journalType]);
@@ -218,11 +222,11 @@ export function JournalEntryEditor({
     const destroyTimeout = setTimeout(() => {
       setSecretText('');
       setIsFading(false);
-      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setSecretTimeLeft(secretTimerDuration);
     }, 500);
 
     return () => clearTimeout(destroyTimeout);
-  }, [open, draft.type, secretTimeLeft]);
+  }, [open, draft.type, secretTimeLeft, secretTimerDuration]);
 
   const moodValue = draft.mood ?? '';
 
@@ -354,13 +358,18 @@ export function JournalEntryEditor({
     secretDestroyTimeoutRef.current = setTimeout(() => {
       setSecretText('');
       setIsFading(false);
-      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setSecretTimeLeft(secretTimerDuration);
       secretDestroyTimeoutRef.current = null;
     }, 500); // Match animation duration
   };
 
   const handleSecretTextChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setSecretText(event.target.value);
+  };
+
+  const handleSecretTimerDurationChange = (duration: number) => {
+    setSecretTimerDuration(duration);
+    setSecretTimeLeft(duration);
   };
 
   const isQuickMode = draft.type === 'quick';
@@ -391,19 +400,54 @@ export function JournalEntryEditor({
 
   const renderSecretModeTimer = () => {
     if (!isSecretMode) return null;
+    
+    // Format the time left for display
+    const formatTimeLeft = (seconds: number): string => {
+      if (seconds >= 60) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+      }
+      return `${seconds}s`;
+    };
+    
     return (
       <div className="journal-secret__timer">
-        <span className="journal-secret__timer-label" aria-live="polite">
-          Self-destruct in: {secretTimeLeft}s
-        </span>
-        <button
-          type="button"
-          className="journal-secret__destroy-button"
-          onClick={handleSecretDestroy}
-          aria-label="Destroy secret text now"
-        >
-          🔥 Destroy now
-        </button>
+        <div className="journal-secret__timer-config">
+          <label className="journal-secret__timer-option">
+            <input
+              type="radio"
+              name="secret-timer"
+              value={SECRET_DURATION_25_SECONDS}
+              checked={secretTimerDuration === SECRET_DURATION_25_SECONDS}
+              onChange={() => handleSecretTimerDurationChange(SECRET_DURATION_25_SECONDS)}
+            />
+            <span>25 seconds</span>
+          </label>
+          <label className="journal-secret__timer-option">
+            <input
+              type="radio"
+              name="secret-timer"
+              value={SECRET_DURATION_10_MINUTES}
+              checked={secretTimerDuration === SECRET_DURATION_10_MINUTES}
+              onChange={() => handleSecretTimerDurationChange(SECRET_DURATION_10_MINUTES)}
+            />
+            <span>10 minutes</span>
+          </label>
+        </div>
+        <div className="journal-secret__timer-display">
+          <span className="journal-secret__timer-label" aria-live="polite">
+            Self-destruct in: {formatTimeLeft(secretTimeLeft)}
+          </span>
+          <button
+            type="button"
+            className="journal-secret__destroy-button"
+            onClick={handleSecretDestroy}
+            aria-label="Destroy secret text now"
+          >
+            🔥 Destroy now
+          </button>
+        </div>
       </div>
     );
   };
