@@ -11,6 +11,15 @@ import {
   getContentLabel,
   getContentPlaceholder,
 } from './utils';
+import {
+  createSecretEntry,
+  updateSecretEntry,
+  destroySecretEntry,
+  getRemainingTime,
+  formatRemainingTime,
+  subscribeToEntry,
+  type SecretJournalEntry,
+} from '../../services/secretJournal';
 
 export type JournalMoodOption = { value: string; label: string; icon: string };
 
@@ -52,8 +61,8 @@ const BRAIN_DUMP_DURATION_SECONDS = 60;
 const BRAIN_DUMP_BLUR_DIVISOR = 10;
 const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this time. Please try again.';
 
-// Secret mode constants
-const SECRET_DURATION_SECONDS = 30;
+// Secret mode constants - 10 minutes
+const SECRET_DURATION_SECONDS = 600;
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -153,6 +162,7 @@ export function JournalEntryEditor({
   const [analysis, setAnalysis] = useState<string | null>(null);
 
   // Secret mode state
+  const [secretEntry, setSecretEntry] = useState<SecretJournalEntry | null>(null);
   const [secretText, setSecretText] = useState('');
   const [secretTimeLeft, setSecretTimeLeft] = useState(SECRET_DURATION_SECONDS);
   const [isFading, setIsFading] = useState(false);
@@ -169,11 +179,16 @@ export function JournalEntryEditor({
     setTimeLeft(BRAIN_DUMP_DURATION_SECONDS);
     setHasFinished(false);
     setAnalysis(null);
-    // Reset secret mode state when opening/changing entries in secret mode
+    // Initialize or reset secret mode state when opening/changing entries in secret mode
     if (journalType === 'secret') {
+      // Create a new secret entry when opening the editor
+      const newSecretEntry = createSecretEntry('');
+      setSecretEntry(newSecretEntry);
       setSecretText('');
-      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setSecretTimeLeft(getRemainingTime(newSecretEntry.id));
       setIsFading(false);
+    } else {
+      setSecretEntry(null);
     }
   }, [entry, open, journalType]);
 
@@ -194,35 +209,38 @@ export function JournalEntryEditor({
     return () => clearInterval(timer);
   }, [open, draft.type, hasFinished]);
 
-  // Secret mode countdown timer
+  // Secret mode countdown timer - subscribe to persistent entry
   useEffect(() => {
-    if (!open || draft.type !== 'secret' || secretTimeLeft <= 0) return;
+    if (!open || draft.type !== 'secret' || !secretEntry) return;
 
-    const timer = setInterval(() => {
-      setSecretTimeLeft((prev) => {
-        if (prev <= 1) {
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Subscribe to timer updates
+    const unsubscribe = subscribeToEntry(secretEntry.id, (remainingSeconds) => {
+      setSecretTimeLeft(remainingSeconds);
+      
+      // Trigger fade when time is up
+      if (remainingSeconds <= 0) {
+        setIsFading(true);
+      }
+    });
 
-    return () => clearInterval(timer);
-  }, [open, draft.type, secretTimeLeft]);
+    return unsubscribe;
+  }, [open, draft.type, secretEntry]);
 
   // Handle auto-destruct when timer reaches 0
   useEffect(() => {
-    if (!open || draft.type !== 'secret' || secretTimeLeft !== 0) return;
+    if (!open || draft.type !== 'secret' || secretTimeLeft !== 0 || !secretEntry) return;
     
     setIsFading(true);
     const destroyTimeout = setTimeout(() => {
+      // Destroy the entry from storage
+      destroySecretEntry(secretEntry.id);
       setSecretText('');
       setIsFading(false);
-      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setSecretEntry(null);
     }, 500);
 
     return () => clearTimeout(destroyTimeout);
-  }, [open, draft.type, secretTimeLeft]);
+  }, [open, draft.type, secretTimeLeft, secretEntry]);
 
   const moodValue = draft.mood ?? '';
 
@@ -345,6 +363,8 @@ export function JournalEntryEditor({
   };
 
   const handleSecretDestroy = () => {
+    if (!secretEntry) return;
+    
     // Clear any existing timeout
     if (secretDestroyTimeoutRef.current) {
       clearTimeout(secretDestroyTimeoutRef.current);
@@ -352,15 +372,23 @@ export function JournalEntryEditor({
     
     setIsFading(true);
     secretDestroyTimeoutRef.current = setTimeout(() => {
+      // Destroy the entry from storage
+      destroySecretEntry(secretEntry.id);
       setSecretText('');
       setIsFading(false);
-      setSecretTimeLeft(SECRET_DURATION_SECONDS);
+      setSecretEntry(null);
       secretDestroyTimeoutRef.current = null;
     }, 500); // Match animation duration
   };
 
   const handleSecretTextChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setSecretText(event.target.value);
+    const newText = event.target.value;
+    setSecretText(newText);
+    
+    // Update the persistent entry
+    if (secretEntry) {
+      updateSecretEntry(secretEntry.id, newText);
+    }
   };
 
   const isQuickMode = draft.type === 'quick';
@@ -383,7 +411,7 @@ export function JournalEntryEditor({
     return (
       <div className="journal-secret__notice">
         <p className="journal-secret__notice-text">
-          🔒 <strong>Secret mode:</strong> Nothing you write here is saved. It will self-destruct.
+          🔒 <strong>Secret mode:</strong> Your entry will self-destruct in 10 minutes. Close and reopen the app - the timer continues. Nothing is saved permanently.
         </p>
       </div>
     );
@@ -391,10 +419,12 @@ export function JournalEntryEditor({
 
   const renderSecretModeTimer = () => {
     if (!isSecretMode) return null;
+    const formattedTime = formatRemainingTime(secretTimeLeft);
+    const isUrgent = secretTimeLeft <= 60; // Less than 1 minute
     return (
-      <div className="journal-secret__timer">
+      <div className={`journal-secret__timer ${isUrgent ? 'journal-secret__timer--urgent' : ''}`}>
         <span className="journal-secret__timer-label" aria-live="polite">
-          Self-destruct in: {secretTimeLeft}s
+          Self-destruct in: {formattedTime}
         </span>
         <button
           type="button"

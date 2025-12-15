@@ -9892,12 +9892,29 @@ body {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
   border-radius: 12px;
   margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.journal-secret__timer--urgent {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.15));
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  animation: pulseUrgent 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseUrgent {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
 }
 
 .journal-secret__timer-label {
   font-weight: 600;
   font-size: 1rem;
   color: #dc2626;
+  font-variant-numeric: tabular-nums;
 }
 
 .journal-secret__destroy-button {
