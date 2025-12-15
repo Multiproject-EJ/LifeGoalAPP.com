@@ -101,6 +101,22 @@ function calculateBrainDumpBlur(timeLeft: number): number {
   return Math.max((BRAIN_DUMP_DURATION_SECONDS - timeLeft) / BRAIN_DUMP_BLUR_DIVISOR, 0);
 }
 
+/**
+ * Format remaining time for display in secret mode.
+ * Shows seconds for times under 60s, and MM:SS format for 60s and above.
+ * 
+ * @param seconds - Seconds remaining in the countdown
+ * @returns Formatted time string
+ */
+function formatSecretTimeLeft(seconds: number): string {
+  if (seconds >= 60) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+  return `${seconds}s`;
+}
+
 function createDraft(entry: JournalEntry | null, journalType?: JournalType): JournalEntryDraft {
   return {
     id: entry?.id,
@@ -401,16 +417,6 @@ export function JournalEntryEditor({
   const renderSecretModeTimer = () => {
     if (!isSecretMode) return null;
     
-    // Format the time left for display
-    const formatTimeLeft = (seconds: number): string => {
-      if (seconds >= 60) {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${minutes}:${secs.toString().padStart(2, '0')}`;
-      }
-      return `${seconds}s`;
-    };
-    
     return (
       <div className="journal-secret__timer">
         <div className="journal-secret__timer-config">
@@ -437,7 +443,7 @@ export function JournalEntryEditor({
         </div>
         <div className="journal-secret__timer-display">
           <span className="journal-secret__timer-label" aria-live="polite">
-            Self-destruct in: {formatTimeLeft(secretTimeLeft)}
+            Self-destruct in: {formatSecretTimeLeft(secretTimeLeft)}
           </span>
           <button
             type="button"
