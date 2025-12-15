@@ -46,8 +46,13 @@ Each mode uses a different combination of fields from the `journal_entries` tabl
 
 ### Secret (`secret`)
 - **Special**: No database persistence - local-only
-- UI: 30-second self-destruct timer, manual destroy button
+- UI: Configurable self-destruct timer (25 seconds default or 10 minutes), manual destroy button
+- Timer options:
+  - **25 seconds** (default): Quick thoughts that need immediate privacy
+  - **10 minutes**: Extended reflection with more time to process
 - Content is never saved to `journal_entries`
+- Timer can be changed at any time before destruction
+- Closing the editor resets the timer and clears the content
 
 ### Goal (`goal`)
 - Required: `goal_id` (single goal reference)
@@ -105,10 +110,22 @@ function isEntryLocked(entry: JournalEntry): boolean {
 ### Secret Mode (Local-Only)
 Implemented in `JournalEntryEditor.tsx`:
 - Content stored in local component state (`secretText`)
-- 30-second countdown timer with auto-destruct
-- Manual "Destroy now" button
-- Fading animation on destruction
+- Configurable countdown timer with two options:
+  - **25 seconds** (default): Quick private thoughts with immediate destruction
+  - **10 minutes** (600 seconds): Extended reflection time for deeper processing
+- Timer duration selector with radio buttons
+- User can switch between timer durations at any time before destruction
+- Time display format:
+  - Under 60 seconds: Shows as "Xs" (e.g., "25s")
+  - 60 seconds or more: Shows as "M:SS" (e.g., "10:00", "5:30")
+- Manual "Destroy now" button for immediate destruction
+- Fading animation on destruction (500ms)
+- Auto-destruct when timer reaches 0
 - **Never persisted to database** - handled by skipping save in `handleSubmit()`
+- Timer state resets when:
+  - Opening/closing the editor
+  - Switching to a different timer duration
+  - After content destruction (timer resets to selected duration)
 
 ### Brain Dump Timer & Reflection
 Implemented in `JournalEntryEditor.tsx`:
