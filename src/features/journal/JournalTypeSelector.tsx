@@ -20,6 +20,7 @@ const JOURNAL_MODE_OPTIONS: JournalModeOption[] = [
   { value: 'secret', label: 'Secret' },
   { value: 'goal', label: 'Goal' },
   { value: 'time_capsule', label: 'Time Capsule' },
+  { value: 'problem', label: 'Problem' },
 ];
 
 export function JournalTypeSelector({ journalType, onChange }: JournalTypeSelectorProps) {

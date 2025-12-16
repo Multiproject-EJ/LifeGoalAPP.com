@@ -14,7 +14,8 @@ export type JournalEntryType =
   | 'secret' 
   | 'goal' 
   | 'time_capsule' 
-  | 'standard';
+  | 'standard'
+  | 'problem';
 
 export interface Database {
   public: {
@@ -138,6 +139,9 @@ export interface Database {
           category: string | null;
           unlock_date: string | null;
           goal_id: string | null;
+          irrational_fears: string | null;
+          training_solutions: string | null;
+          concrete_steps: string | null;
         };
         Insert: {
           id?: string;
@@ -158,6 +162,9 @@ export interface Database {
           category?: string | null;
           unlock_date?: string | null;
           goal_id?: string | null;
+          irrational_fears?: string | null;
+          training_solutions?: string | null;
+          concrete_steps?: string | null;
         };
         Update: {
           id?: string;
@@ -178,6 +185,9 @@ export interface Database {
           category?: string | null;
           unlock_date?: string | null;
           goal_id?: string | null;
+          irrational_fears?: string | null;
+          training_solutions?: string | null;
+          concrete_steps?: string | null;
         };
         Relationships: [];
       };
