@@ -236,9 +236,21 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   };
 
   const handleSaveEntry = async (draft: JournalEntryDraft) => {
-    // For problem mode, content is optional (brain dump self-destructs)
-    // For other modes, require content
+    // For problem mode, validate that at least one section has content
     const isProblemMode = draft.type === 'problem';
+    if (isProblemMode) {
+      const hasAnyProblemContent = 
+        (draft.irrationalFears?.trim() || '') ||
+        (draft.trainingSolutions?.trim() || '') ||
+        (draft.concreteSteps?.trim() || '');
+      
+      if (!hasAnyProblemContent) {
+        setEditorError('Please fill in at least one problem-solving section before saving.');
+        return;
+      }
+    }
+    
+    // For other modes, require content
     if (!isProblemMode && !draft.content.trim()) {
       setEditorError('Write a few lines before saving.');
       return;
