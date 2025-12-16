@@ -3427,13 +3427,16 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   color: #78350f;
+  min-height: 72px; /* Ensure consistent height */
 }
 
 .habit-checklist-card__date-group {
   display: grid;
   gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .habit-checklist-card__date {
@@ -3441,12 +3444,16 @@ body {
   font-weight: 700;
   color: #7c2d12;
   font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .habit-checklist-card__time {
   margin: 0;
   font-weight: 600;
   color: rgba(124, 45, 18, 0.9);
+  white-space: nowrap;
 }
 
 .habit-checklist-card__head-actions {
@@ -3454,7 +3461,8 @@ body {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.3rem;
-  min-width: 0;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .habit-checklist-card__progress {

@@ -249,6 +249,9 @@ export async function logHabitCompletion(
     done: payload.completed ?? true,
     value: null,
     date: payload.date,
+    // Set timestamp to midnight UTC for the target date to ensure the trigger sets the correct date
+    // The database trigger converts ts to UTC timezone before extracting the date
+    ts: payload.date ? new Date(payload.date + 'T00:00:00Z').toISOString() : undefined,
   };
   
   const { data, error } = await logHabitCompletionV2(v2Payload, userId);
