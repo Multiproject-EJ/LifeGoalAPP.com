@@ -666,6 +666,9 @@ const defaultState: DemoState = {
       category: null,
       unlock_date: null,
       goal_id: null,
+      irrational_fears: null,
+      training_solutions: null,
+      concrete_steps: null,
     },
     {
       id: createId('journal'),
@@ -687,6 +690,9 @@ const defaultState: DemoState = {
       category: null,
       unlock_date: null,
       goal_id: null,
+      irrational_fears: null,
+      training_solutions: null,
+      concrete_steps: null,
     },
     {
       id: createId('journal'),
@@ -708,6 +714,9 @@ const defaultState: DemoState = {
       category: null,
       unlock_date: null,
       goal_id: null,
+      irrational_fears: null,
+      training_solutions: null,
+      concrete_steps: null,
     },
   ];
 })();
@@ -1208,6 +1217,9 @@ export function addDemoJournalEntry(payload: JournalEntryInsert): JournalEntryRo
     category: payload.category ?? null,
     unlock_date: payload.unlock_date ?? null,
     goal_id: payload.goal_id ?? null,
+    irrational_fears: payload.irrational_fears ?? null,
+    training_solutions: payload.training_solutions ?? null,
+    concrete_steps: payload.concrete_steps ?? null,
   };
 
   updateState((current) => ({
