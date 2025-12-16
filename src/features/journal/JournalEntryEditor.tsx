@@ -28,6 +28,9 @@ export type JournalEntryDraft = {
   category?: string | null;
   unlockDate?: string | null;
   goalId?: string | null;
+  irrationalFears?: string | null;
+  trainingSolutions?: string | null;
+  concreteSteps?: string | null;
 };
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -56,6 +59,10 @@ const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this t
 const SECRET_DURATION_25_SECONDS = 25;
 const SECRET_DURATION_10_MINUTES = 600; // 10 minutes in seconds
 const DEFAULT_SECRET_DURATION = SECRET_DURATION_25_SECONDS;
+
+// Problem mode constants - for brain dump section with self-destruct
+const PROBLEM_BRAIN_DUMP_DURATION_SECONDS = 60;
+const PROBLEM_BRAIN_DUMP_BLUR_DIVISOR = 10;
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -132,6 +139,9 @@ function createDraft(entry: JournalEntry | null, journalType?: JournalType): Jou
     category: entry?.category ?? null,
     unlockDate: entry?.unlock_date ?? null,
     goalId: entry?.goal_id ?? null,
+    irrationalFears: entry?.irrational_fears ?? null,
+    trainingSolutions: entry?.training_solutions ?? null,
+    concreteSteps: entry?.concrete_steps ?? null,
   };
 }
 
@@ -180,6 +190,11 @@ export function JournalEntryEditor({
   // Deep mode focus state
   const [isFocusMode, setIsFocusMode] = useState(false);
 
+  // Problem mode state - for brain dump timer
+  const [problemBrainDumpText, setProblemBrainDumpText] = useState('');
+  const [problemTimeLeft, setProblemTimeLeft] = useState(PROBLEM_BRAIN_DUMP_DURATION_SECONDS);
+  const [problemHasFinished, setProblemHasFinished] = useState(false);
+
   useEffect(() => {
     if (!open) return;
     setDraft(createDraft(entry, journalType));
@@ -194,6 +209,12 @@ export function JournalEntryEditor({
       setSecretTimerDuration(DEFAULT_SECRET_DURATION);
       setSecretTimeLeft(DEFAULT_SECRET_DURATION);
       setIsFading(false);
+    }
+    // Reset problem mode state when opening/changing entries in problem mode
+    if (journalType === 'problem') {
+      setProblemBrainDumpText('');
+      setProblemTimeLeft(PROBLEM_BRAIN_DUMP_DURATION_SECONDS);
+      setProblemHasFinished(false);
     }
   }, [entry, open, journalType]);
 
@@ -243,6 +264,25 @@ export function JournalEntryEditor({
 
     return () => clearTimeout(destroyTimeout);
   }, [open, draft.type, secretTimeLeft, secretTimerDuration]);
+
+  // Problem mode brain dump countdown timer
+  useEffect(() => {
+    if (!open || draft.type !== 'problem' || problemHasFinished) return;
+
+    const timer = setInterval(() => {
+      setProblemTimeLeft((prev) => {
+        if (prev <= 1) {
+          setProblemHasFinished(true);
+          // Auto-clear brain dump text when timer finishes
+          setProblemBrainDumpText('');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [open, draft.type, problemHasFinished]);
 
   const moodValue = draft.mood ?? '';
 
@@ -395,6 +435,7 @@ export function JournalEntryEditor({
   const isBrainDumpMode = draft.type === 'brain_dump';
   const isSecretMode = draft.type === 'secret';
   const isDeepMode = draft.type === 'deep';
+  const isProblemMode = draft.type === 'problem';
 
   // Memoize blur calculation to avoid unnecessary computations on every render
   const blurAmount = useMemo(() => {
@@ -637,6 +678,89 @@ export function JournalEntryEditor({
     return null;
   };
 
+  const renderProblemModeSection = () => {
+    if (!isProblemMode) return null;
+
+    return (
+      <div className="journal-problem-mode">
+        {/* Brain dump section with timer */}
+        <div className="journal-problem-mode__section">
+          <div className="journal-problem-mode__section-header">
+            <h3 className="journal-problem-mode__section-title">1. Brain Dump (Self-Destructs)</h3>
+            {!problemHasFinished && (
+              <span className="journal-problem-mode__timer" aria-live="polite">
+                Time left: {problemTimeLeft}s
+              </span>
+            )}
+            {problemHasFinished && (
+              <span className="journal-problem-mode__timer-complete">✅ Cleared!</span>
+            )}
+          </div>
+          <p className="journal-problem-mode__section-description">
+            Write freely to get your thoughts out quickly. This section will self-destruct after the timer runs out.
+          </p>
+          <textarea
+            value={problemBrainDumpText}
+            onChange={(e) => setProblemBrainDumpText(e.target.value)}
+            placeholder="Write your thoughts freely here. Don't hold back..."
+            rows={4}
+            readOnly={problemHasFinished}
+            className="journal-problem-mode__textarea"
+            style={{
+              filter: `blur(${Math.max((PROBLEM_BRAIN_DUMP_DURATION_SECONDS - problemTimeLeft) / PROBLEM_BRAIN_DUMP_BLUR_DIVISOR, 0)}px)`,
+              transition: 'filter 0.3s'
+            }}
+          />
+        </div>
+
+        {/* Irrational Fears section */}
+        <div className="journal-problem-mode__section">
+          <h3 className="journal-problem-mode__section-title">2. Irrational Fears</h3>
+          <p className="journal-problem-mode__section-description">
+            Identify and acknowledge potential irrational fears. This content is saved.
+          </p>
+          <textarea
+            value={draft.irrationalFears ?? ''}
+            onChange={(e) => setDraft((current) => ({ ...current, irrationalFears: e.target.value }))}
+            placeholder="What fears might be irrational? What am I worried about that might not be realistic?"
+            rows={4}
+            className="journal-problem-mode__textarea"
+          />
+        </div>
+
+        {/* Training on Solutions section */}
+        <div className="journal-problem-mode__section">
+          <h3 className="journal-problem-mode__section-title">3. Training on Solutions</h3>
+          <p className="journal-problem-mode__section-description">
+            Write dialogues, visualize solutions, or practice resolutions. This content is saved.
+          </p>
+          <textarea
+            value={draft.trainingSolutions ?? ''}
+            onChange={(e) => setDraft((current) => ({ ...current, trainingSolutions: e.target.value }))}
+            placeholder="How would you handle this? Visualize the solution, write a dialogue, or practice your response..."
+            rows={6}
+            className="journal-problem-mode__textarea"
+          />
+        </div>
+
+        {/* Concrete Steps section */}
+        <div className="journal-problem-mode__section">
+          <h3 className="journal-problem-mode__section-title">4. Concrete Steps for Action</h3>
+          <p className="journal-problem-mode__section-description">
+            Take actionable steps: set alarms, book appointments, write hints to yourself. This content is saved.
+          </p>
+          <textarea
+            value={draft.concreteSteps ?? ''}
+            onChange={(e) => setDraft((current) => ({ ...current, concreteSteps: e.target.value }))}
+            placeholder="What specific actions will you take? Set reminders, make appointments, create hints..."
+            rows={5}
+            className="journal-problem-mode__textarea"
+          />
+        </div>
+      </div>
+    );
+  };
+
   if (!open) {
     return null;
   }
@@ -699,7 +823,9 @@ export function JournalEntryEditor({
 
           {renderLifeWheelSection()}
 
-          {!isSecretMode && !isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
+          {renderProblemModeSection()}
+
+          {!isSecretMode && !isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && !isProblemMode && (
             <label className="journal-editor__field">
               <span>Title</span>
               <input
@@ -715,6 +841,7 @@ export function JournalEntryEditor({
 
           {renderDeepModeSection()}
 
+          {!isProblemMode && (
           <label className="journal-editor__field">
             <span>{getContentLabel(draft.type)}</span>
             <textarea
@@ -731,12 +858,13 @@ export function JournalEntryEditor({
               } : undefined}
             />
           </label>
+          )}
 
           {renderBrainDumpReflection()}
 
           {renderQuickModeActions()}
 
-          {!isSecretMode && !isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && (
+          {!isSecretMode && !isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && !isProblemMode && (
             <>
               <div className="journal-editor__field">
                 <span>Tags</span>

@@ -82,6 +82,7 @@ export const CONTENT_LABELS: Record<JournalEntryType, string> = {
   secret: "Secret thoughts (not saved)",
   deep: "Full entry",
   standard: "Content",
+  problem: "Brain dump (self-destructs after timer)",
 } as const;
 
 /**
@@ -96,6 +97,7 @@ export const CONTENT_PLACEHOLDERS: Record<JournalEntryType, string> = {
   secret: "Write anything you need to get off your chest. It will disappear...",
   deep: "Write deeply and thoughtfully. Take your time to explore your thoughts...",
   standard: "Capture what unfolded, how you felt, and any momentum you want to carry forward.",
+  problem: "Write freely to get your thoughts out quickly. This will self-destruct...",
 } as const;
 
 /**
@@ -110,6 +112,7 @@ export const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'goal': 'Goal',
   'time_capsule': 'Time Capsule',
   'standard': 'Standard',
+  'problem': 'Problem',
 };
 
 /**

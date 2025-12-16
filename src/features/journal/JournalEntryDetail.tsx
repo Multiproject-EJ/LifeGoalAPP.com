@@ -23,6 +23,17 @@ type JournalEntryDetailProps = {
   isLocked: boolean;
 };
 
+/**
+ * Helper function to render paragraphs from multi-line text content.
+ * Splits by newlines, trims whitespace, and filters out empty lines.
+ */
+function renderParagraphs(text: string, keyPrefix: string) {
+  return text.split(/\n+/).map((line, index) => {
+    const trimmed = line.trim();
+    return trimmed ? <p key={`${keyPrefix}-${index}`}>{trimmed}</p> : null;
+  }).filter(Boolean);
+}
+
 export function JournalEntryDetail({
   entry,
   getMoodMeta,
@@ -55,6 +66,7 @@ export function JournalEntryDetail({
   const habitIds = entry.linked_habit_ids ?? [];
   const isGoalMode = entry.type === 'goal';
   const isLifeWheelMode = entry.type === 'life_wheel';
+  const isProblemMode = entry.type === 'problem';
   const primaryGoalId = entry.goal_id ?? null;
   const primaryGoal = (primaryGoalId && goalMap[primaryGoalId]) ?? null;
   const paragraphs = entry.content
@@ -112,6 +124,43 @@ export function JournalEntryDetail({
           <h3>🔒 Time capsule locked</h3>
           <p>This time capsule will unlock on {unlockDateFormatter.format(new Date(entry.unlock_date))}.</p>
           <p>Come back then to read your message to your future self.</p>
+        </div>
+      ) : isProblemMode ? (
+        <div className="journal-detail__problem-sections">
+          <div className="journal-detail__problem-notice">
+            <p>💡 <strong>Problem Journal:</strong> This entry used the structured problem-solving approach.</p>
+          </div>
+          
+          {entry.irrational_fears && (
+            <div className="journal-detail__problem-section">
+              <h3>Irrational Fears</h3>
+              <article className="journal-detail__content">
+                {renderParagraphs(entry.irrational_fears, 'fears')}
+              </article>
+            </div>
+          )}
+          
+          {entry.training_solutions && (
+            <div className="journal-detail__problem-section">
+              <h3>Training on Solutions</h3>
+              <article className="journal-detail__content">
+                {renderParagraphs(entry.training_solutions, 'solutions')}
+              </article>
+            </div>
+          )}
+          
+          {entry.concrete_steps && (
+            <div className="journal-detail__problem-section">
+              <h3>Concrete Steps for Action</h3>
+              <article className="journal-detail__content">
+                {renderParagraphs(entry.concrete_steps, 'steps')}
+              </article>
+            </div>
+          )}
+          
+          {!entry.irrational_fears && !entry.training_solutions && !entry.concrete_steps && (
+            <p className="journal-detail__placeholder">No problem-solving sections filled in for this entry.</p>
+          )}
         </div>
       ) : (
         <article className="journal-detail__content">

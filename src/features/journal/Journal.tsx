@@ -236,7 +236,23 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   };
 
   const handleSaveEntry = async (draft: JournalEntryDraft) => {
-    if (!draft.content.trim()) {
+    // For problem mode, validate that at least one section has content
+    const isProblemMode = draft.type === 'problem';
+    if (isProblemMode) {
+      const hasAnyProblemContent = [
+        draft.irrationalFears,
+        draft.trainingSolutions,
+        draft.concreteSteps
+      ].some(field => field?.trim());
+      
+      if (!hasAnyProblemContent) {
+        setEditorError('Please fill in at least one problem-solving section before saving.');
+        return;
+      }
+    }
+    
+    // For other modes, require content
+    if (!isProblemMode && !draft.content.trim()) {
       setEditorError('Write a few lines before saving.');
       return;
     }
@@ -248,7 +264,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
       const basePayload: Omit<JournalEntryInsertPayload, 'user_id'> = {
         entry_date: draft.entryDate,
         title: draft.title.trim() ? draft.title.trim() : null,
-        content: draft.content.trim(),
+        content: draft.content.trim() || (isProblemMode ? 'Problem journal entry' : ''),
         mood: draft.mood ?? null,
         tags: draft.tags.length ? draft.tags : null,
         linked_goal_ids: draft.linkedGoalIds.length ? draft.linkedGoalIds : null,
@@ -259,6 +275,9 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
         category: draft.category ?? null,
         unlock_date: draft.unlockDate ?? null,
         goal_id: draft.goalId ?? null,
+        irrational_fears: draft.irrationalFears ?? null,
+        training_solutions: draft.trainingSolutions ?? null,
+        concrete_steps: draft.concreteSteps ?? null,
       };
 
       let saved: JournalEntry | null = null;
