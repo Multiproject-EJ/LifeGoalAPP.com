@@ -240,9 +240,9 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
     const isProblemMode = draft.type === 'problem';
     if (isProblemMode) {
       const hasAnyProblemContent = 
-        (draft.irrationalFears?.trim() || '') ||
-        (draft.trainingSolutions?.trim() || '') ||
-        (draft.concreteSteps?.trim() || '');
+        (draft.irrationalFears?.trim()) ||
+        (draft.trainingSolutions?.trim()) ||
+        (draft.concreteSteps?.trim());
       
       if (!hasAnyProblemContent) {
         setEditorError('Please fill in at least one problem-solving section before saving.');
