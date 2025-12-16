@@ -23,6 +23,17 @@ type JournalEntryDetailProps = {
   isLocked: boolean;
 };
 
+/**
+ * Helper function to render paragraphs from multi-line text content.
+ * Splits by newlines, trims whitespace, and filters out empty lines.
+ */
+function renderParagraphs(text: string, keyPrefix: string) {
+  return text.split(/\n+/).map((line, index) => {
+    const trimmed = line.trim();
+    return trimmed ? <p key={`${keyPrefix}-${index}`}>{trimmed}</p> : null;
+  }).filter(Boolean);
+}
+
 export function JournalEntryDetail({
   entry,
   getMoodMeta,
@@ -124,10 +135,7 @@ export function JournalEntryDetail({
             <div className="journal-detail__problem-section">
               <h3>Irrational Fears</h3>
               <article className="journal-detail__content">
-                {entry.irrational_fears.split(/\n+/).map((text, index) => {
-                  const trimmed = text.trim();
-                  return trimmed ? <p key={`fears-${index}`}>{trimmed}</p> : null;
-                }).filter(Boolean)}
+                {renderParagraphs(entry.irrational_fears, 'fears')}
               </article>
             </div>
           )}
@@ -136,10 +144,7 @@ export function JournalEntryDetail({
             <div className="journal-detail__problem-section">
               <h3>Training on Solutions</h3>
               <article className="journal-detail__content">
-                {entry.training_solutions.split(/\n+/).map((text, index) => {
-                  const trimmed = text.trim();
-                  return trimmed ? <p key={`solutions-${index}`}>{trimmed}</p> : null;
-                }).filter(Boolean)}
+                {renderParagraphs(entry.training_solutions, 'solutions')}
               </article>
             </div>
           )}
@@ -148,10 +153,7 @@ export function JournalEntryDetail({
             <div className="journal-detail__problem-section">
               <h3>Concrete Steps for Action</h3>
               <article className="journal-detail__content">
-                {entry.concrete_steps.split(/\n+/).map((text, index) => {
-                  const trimmed = text.trim();
-                  return trimmed ? <p key={`steps-${index}`}>{trimmed}</p> : null;
-                }).filter(Boolean)}
+                {renderParagraphs(entry.concrete_steps, 'steps')}
               </article>
             </div>
           )}
