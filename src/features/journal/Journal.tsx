@@ -239,10 +239,11 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
     // For problem mode, validate that at least one section has content
     const isProblemMode = draft.type === 'problem';
     if (isProblemMode) {
-      const hasAnyProblemContent = 
-        (draft.irrationalFears?.trim()) ||
-        (draft.trainingSolutions?.trim()) ||
-        (draft.concreteSteps?.trim());
+      const hasAnyProblemContent = [
+        draft.irrationalFears,
+        draft.trainingSolutions,
+        draft.concreteSteps
+      ].some(field => field?.trim());
       
       if (!hasAnyProblemContent) {
         setEditorError('Please fill in at least one problem-solving section before saving.');
