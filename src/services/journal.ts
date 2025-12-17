@@ -1,4 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
@@ -13,9 +14,21 @@ export type JournalEntry = Database['public']['Tables']['journal_entries']['Row'
 type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Insert'];
 type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
 
+type AuthError = {
+  message: string;
+  details: string;
+  hint: string;
+  code: string;
+};
+
 type ServiceResponse<T> = {
   data: T | null;
-  error: PostgrestError | null;
+  error: PostgrestError | AuthError | null;
+};
+
+type SessionValidationResult = {
+  session: Session | null;
+  error: AuthError | null;
 };
 
 export type JournalListFilters = {
@@ -28,6 +41,32 @@ export type JournalListFilters = {
 };
 
 const DEFAULT_LIST_LIMIT = 200;
+
+/**
+ * Validates that a Supabase session is active before performing database operations.
+ * This prevents RLS policy violations due to expired or missing auth tokens.
+ * 
+ * @param operation - The operation being performed (for error messages)
+ * @returns An object containing either the session or an error
+ */
+async function validateSession(operation: string): Promise<SessionValidationResult> {
+  const supabase = getSupabaseClient();
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session) {
+    return {
+      session: null,
+      error: {
+        message: `Please sign in again to ${operation} journal entries.`,
+        details: sessionError?.message || 'No active session',
+        hint: 'Your session may have expired',
+        code: 'AUTH_SESSION_MISSING',
+      },
+    };
+  }
+  
+  return { session, error: null };
+}
 
 function normalizeSearchTerm(search?: string | null): string | null {
   if (!search) return null;
@@ -120,6 +159,27 @@ export async function createJournalEntry(
     return { data: addDemoJournalEntry(payload), error: null };
   }
 
+  // Validate session before attempting the insert
+  const { session, error: authError } = await validateSession('save');
+  if (authError) {
+    return { data: null, error: authError };
+  }
+  
+  // At this point, session is guaranteed to be non-null
+  // Verify the user_id in the payload matches the authenticated user
+  // This prevents accidental permission issues
+  if (payload.user_id !== session!.user.id) {
+    return {
+      data: null,
+      error: {
+        message: 'Authentication mismatch. Please refresh the page and try again.',
+        details: `Payload user_id (${payload.user_id}) does not match session user id (${session!.user.id})`,
+        hint: 'This may indicate a stale session',
+        code: 'AUTH_USER_MISMATCH',
+      },
+    };
+  }
+  
   const supabase = getSupabaseClient();
   return supabase.from('journal_entries').insert(payload).select().single();
 }
@@ -132,6 +192,12 @@ export async function updateJournalEntry(
     return { data: updateDemoJournalEntry(id, payload), error: null };
   }
 
+  // Validate session before attempting the update
+  const { error: authError } = await validateSession('update');
+  if (authError) {
+    return { data: null, error: authError };
+  }
+
   const supabase = getSupabaseClient();
   return supabase.from('journal_entries').update(payload).eq('id', id).select().single();
 }
@@ -139,6 +205,12 @@ export async function updateJournalEntry(
 export async function deleteJournalEntry(id: string): Promise<ServiceResponse<JournalEntry>> {
   if (!canUseSupabaseData()) {
     return { data: removeDemoJournalEntry(id), error: null };
+  }
+
+  // Validate session before attempting the delete
+  const { error: authError } = await validateSession('delete');
+  if (authError) {
+    return { data: null, error: authError };
   }
 
   const supabase = getSupabaseClient();
