@@ -161,18 +161,19 @@ export async function createJournalEntry(
 
   // Validate session before attempting the insert
   const { session, error: authError } = await validateSession('save');
-  if (authError || !session) {
+  if (authError) {
     return { data: null, error: authError };
   }
   
+  // At this point, session is guaranteed to be non-null
   // Verify the user_id in the payload matches the authenticated user
   // This prevents accidental permission issues
-  if (payload.user_id !== session.user.id) {
+  if (payload.user_id !== session!.user.id) {
     return {
       data: null,
       error: {
         message: 'Authentication mismatch. Please refresh the page and try again.',
-        details: `Payload user_id (${payload.user_id}) does not match session user id (${session.user.id})`,
+        details: `Payload user_id (${payload.user_id}) does not match session user id (${session!.user.id})`,
         hint: 'This may indicate a stale session',
         code: 'AUTH_USER_MISMATCH',
       },
