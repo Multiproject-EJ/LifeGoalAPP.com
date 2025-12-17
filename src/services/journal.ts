@@ -121,6 +121,37 @@ export async function createJournalEntry(
   }
 
   const supabase = getSupabaseClient();
+  
+  // Ensure we have a valid session before attempting the insert
+  // This prevents RLS policy violations due to expired or missing auth tokens
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session) {
+    return {
+      data: null,
+      error: {
+        message: 'Please sign in again to save journal entries.',
+        details: sessionError?.message || 'No active session',
+        hint: 'Your session may have expired',
+        code: 'PGRST301',
+      } as unknown as PostgrestError,
+    };
+  }
+  
+  // Verify the user_id in the payload matches the authenticated user
+  // This prevents accidental permission issues
+  if (payload.user_id !== session.user.id) {
+    return {
+      data: null,
+      error: {
+        message: 'Authentication mismatch. Please refresh the page and try again.',
+        details: `Payload user_id (${payload.user_id}) does not match session user id (${session.user.id})`,
+        hint: 'This may indicate a stale session',
+        code: 'PGRST301',
+      } as unknown as PostgrestError,
+    };
+  }
+  
   return supabase.from('journal_entries').insert(payload).select().single();
 }
 
