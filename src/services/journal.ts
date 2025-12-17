@@ -1,4 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
@@ -13,16 +14,21 @@ export type JournalEntry = Database['public']['Tables']['journal_entries']['Row'
 type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Insert'];
 type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
 
-type ServiceResponse<T> = {
-  data: T | null;
-  error: PostgrestError | null;
-};
-
 type AuthError = {
   message: string;
   details: string;
   hint: string;
   code: string;
+};
+
+type ServiceResponse<T> = {
+  data: T | null;
+  error: PostgrestError | AuthError | null;
+};
+
+type SessionValidationResult = {
+  session: Session | null;
+  error: AuthError | null;
 };
 
 export type JournalListFilters = {
@@ -41,22 +47,25 @@ const DEFAULT_LIST_LIMIT = 200;
  * This prevents RLS policy violations due to expired or missing auth tokens.
  * 
  * @param operation - The operation being performed (for error messages)
- * @returns An error object if session is invalid, null otherwise
+ * @returns An object containing either the session or an error
  */
-async function validateSession(operation: string): Promise<AuthError | null> {
+async function validateSession(operation: string): Promise<SessionValidationResult> {
   const supabase = getSupabaseClient();
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   
   if (sessionError || !session) {
     return {
-      message: `Please sign in again to ${operation} journal entries.`,
-      details: sessionError?.message || 'No active session',
-      hint: 'Your session may have expired',
-      code: 'AUTH_SESSION_MISSING',
+      session: null,
+      error: {
+        message: `Please sign in again to ${operation} journal entries.`,
+        details: sessionError?.message || 'No active session',
+        hint: 'Your session may have expired',
+        code: 'AUTH_SESSION_MISSING',
+      },
     };
   }
   
-  return null;
+  return { session, error: null };
 }
 
 function normalizeSearchTerm(search?: string | null): string | null {
@@ -151,26 +160,26 @@ export async function createJournalEntry(
   }
 
   // Validate session before attempting the insert
-  const authError = await validateSession('save');
-  if (authError) {
-    return { data: null, error: authError as unknown as PostgrestError };
+  const { session, error: authError } = await validateSession('save');
+  if (authError || !session) {
+    return { data: null, error: authError };
   }
-
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
   
   // Verify the user_id in the payload matches the authenticated user
   // This prevents accidental permission issues
-  if (session && payload.user_id !== session.user.id) {
-    const mismatchError: AuthError = {
-      message: 'Authentication mismatch. Please refresh the page and try again.',
-      details: `Payload user_id (${payload.user_id}) does not match session user id (${session.user.id})`,
-      hint: 'This may indicate a stale session',
-      code: 'AUTH_USER_MISMATCH',
+  if (payload.user_id !== session.user.id) {
+    return {
+      data: null,
+      error: {
+        message: 'Authentication mismatch. Please refresh the page and try again.',
+        details: `Payload user_id (${payload.user_id}) does not match session user id (${session.user.id})`,
+        hint: 'This may indicate a stale session',
+        code: 'AUTH_USER_MISMATCH',
+      },
     };
-    return { data: null, error: mismatchError as unknown as PostgrestError };
   }
   
+  const supabase = getSupabaseClient();
   return supabase.from('journal_entries').insert(payload).select().single();
 }
 
@@ -183,9 +192,9 @@ export async function updateJournalEntry(
   }
 
   // Validate session before attempting the update
-  const authError = await validateSession('update');
+  const { error: authError } = await validateSession('update');
   if (authError) {
-    return { data: null, error: authError as unknown as PostgrestError };
+    return { data: null, error: authError };
   }
 
   const supabase = getSupabaseClient();
@@ -198,9 +207,9 @@ export async function deleteJournalEntry(id: string): Promise<ServiceResponse<Jo
   }
 
   // Validate session before attempting the delete
-  const authError = await validateSession('delete');
+  const { error: authError } = await validateSession('delete');
   if (authError) {
-    return { data: null, error: authError as unknown as PostgrestError };
+    return { data: null, error: authError };
   }
 
   const supabase = getSupabaseClient();
