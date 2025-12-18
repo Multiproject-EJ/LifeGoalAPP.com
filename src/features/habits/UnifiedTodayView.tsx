@@ -19,6 +19,7 @@ import {
   type HabitLogV2Row,
 } from '../../services/habitsV2';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress } from './scheduleInterpreter';
+import { updateSpinsAvailable } from '../../services/dailySpin';
 
 type ViewVariant = 'full' | 'compact' | 'minimal';
 
@@ -118,6 +119,36 @@ export function UnifiedTodayView({
     return { total, completed, percentage };
   }, [todaysHabits, todayLogs]);
 
+  // Helper to check and award spins after habit completion
+  const checkAndAwardSpins = useCallback(async (completedHabits: HabitV2Row[], logs: HabitLogV2Row[]) => {
+    if (!session) return;
+
+    try {
+      const totalHabits = completedHabits.length;
+      const completedCount = completedHabits.filter(habit =>
+        logs.some(log => log.habit_id === habit.id && log.done)
+      ).length;
+
+      // Award spins based on completion
+      // 1 spin for completing at least 1 habit
+      // 2 spins for completing all habits
+      let spinsToAward = 0;
+      if (completedCount > 0) {
+        spinsToAward = 1;
+      }
+      if (totalHabits > 0 && completedCount === totalHabits) {
+        spinsToAward = 2;
+      }
+
+      if (spinsToAward > 0) {
+        await updateSpinsAvailable(session.user.id, spinsToAward);
+      }
+    } catch (err) {
+      // Silently fail - don't interrupt the habit completion flow
+      console.error('Failed to award spins:', err);
+    }
+  }, [session]);
+
   // Handler for marking a habit as done
   const handleMarkDone = useCallback(async (habitId: string, type: HabitV2Row['type']) => {
     if (type !== 'boolean') return;
@@ -141,6 +172,9 @@ export function UnifiedTodayView({
       const { data: logsData } = await listTodayHabitLogsV2(session.user.id);
       setTodayLogs(logsData ?? []);
 
+      // Check and award spins
+      await checkAndAwardSpins(todaysHabits, logsData ?? []);
+
       // Callback
       onHabitComplete?.(habitId);
     } catch (err) {
@@ -152,7 +186,7 @@ export function UnifiedTodayView({
         return next;
       });
     }
-  }, [session, onHabitComplete]);
+  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins]);
 
   // Handler for logging a value (quantity/duration)
   const handleLogValue = useCallback(async (habit: HabitV2Row, value: number) => {
@@ -181,6 +215,9 @@ export function UnifiedTodayView({
         return next;
       });
 
+      // Check and award spins
+      await checkAndAwardSpins(todaysHabits, logsData ?? []);
+
       onHabitComplete?.(habit.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to log habit');
@@ -191,7 +228,7 @@ export function UnifiedTodayView({
         return next;
       });
     }
-  }, [session, onHabitComplete]);
+  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins]);
 
   // Date display
   const dateLabel = useMemo(() => {
