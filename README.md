@@ -63,6 +63,30 @@ Add to your HTML page:
 <script defer src="/src/scripts/ui-components.js"></script>
 ```
 
+## 🎮 Gamification Features (NEW!)
+
+LifeGoalApp now includes optional gamification to make goal tracking more engaging and fun!
+
+### Features
+- **XP & Leveling**: Earn experience points and level up by completing habits and goals
+- **Achievement System**: Unlock 10+ badges for milestones (streaks, completions, goals)
+- **Streak Tracking**: Build daily streaks with fire icons 🔥
+- **Lives & Streak Freezes**: Protect your progress with smart mechanics
+- **Progress Notifications**: Celebrate achievements with toast notifications
+
+### Quick Start
+1. Enable in **Settings → Gamification**
+2. Complete habits to earn **XP**
+3. Build **streaks** for bonus rewards
+4. Unlock **achievements** and **level up**!
+
+👉 **[Full Gamification Guide](./docs/GAMIFICATION_SHOWCASE.md)**
+
+### Toggle On/Off
+Don't want game features? Simply toggle OFF in settings. Your progress is preserved.
+
+---
+
 ## Troubleshooting
 
 Having issues? Check the [Common Error Database](./docs/common-errors/README.md) for solutions to frequently encountered problems.
