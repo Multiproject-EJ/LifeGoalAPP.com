@@ -11,7 +11,7 @@ export function XPBar({ levelInfo }: XPBarProps) {
   const xpNeeded = xpForNextLevel - xpForCurrentLevel;
 
   return (
-    <div className="xp-bar-container" role="progressbar" aria-valuenow={progressPercentage} aria-valuemin={0} aria-valuemax={100} aria-label={`Level ${currentLevel} progress`}>
+    <div className="xp-bar-container" role="progressbar" aria-valuenow={Math.round(progressPercentage)} aria-valuemin={0} aria-valuemax={100} aria-label={`Level ${currentLevel} progress`}>
       <div className="xp-bar-header">
         <span className="xp-bar-label">Level {currentLevel}</span>
         <span className="xp-bar-stats">

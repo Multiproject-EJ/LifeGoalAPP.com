@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import type { GamificationNotification } from '../types/gamification';
-import { TIER_COLORS } from '../types/gamification';
 
 interface AchievementToastProps {
   notification: GamificationNotification;
@@ -30,11 +29,6 @@ export function AchievementToast({ notification, onDismiss }: AchievementToastPr
     setTimeout(() => {
       onDismiss(notification.id);
     }, 300);
-  };
-
-  const getTierColor = () => {
-    // Default to gold if no specific tier
-    return TIER_COLORS.gold.border;
   };
 
   const toastClassName = `achievement-toast ${isVisible ? 'achievement-toast--visible' : ''} ${

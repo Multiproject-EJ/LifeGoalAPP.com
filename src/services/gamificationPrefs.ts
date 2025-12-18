@@ -16,8 +16,10 @@ export async function fetchGamificationEnabled(userId: string): Promise<{
     // Demo mode: use localStorage
     if (!canUseSupabaseData()) {
       const enabled = localStorage.getItem(DEMO_ENABLED_KEY);
+      // Default to true if not set, otherwise parse the stored value
+      const isEnabled = enabled === null ? true : JSON.parse(enabled);
       return { 
-        data: enabled === null ? true : enabled === 'true', 
+        data: isEnabled, 
         error: null 
       };
     }
@@ -62,7 +64,7 @@ export async function updateGamificationEnabled(
   try {
     // Demo mode: use localStorage
     if (!canUseSupabaseData()) {
-      localStorage.setItem(DEMO_ENABLED_KEY, enabled.toString());
+      localStorage.setItem(DEMO_ENABLED_KEY, JSON.stringify(enabled));
       return { data: enabled, error: null };
     }
 

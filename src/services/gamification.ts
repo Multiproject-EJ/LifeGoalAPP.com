@@ -284,12 +284,16 @@ export async function updateStreak(userId: string): Promise<UpdateStreakResult> 
     let xpAwarded = 0;
     let streakMilestoneReached = false;
 
-    // Check for streak milestones
-    if (newStreak === 7 || newStreak === 30 || newStreak === 100) {
+    // Check for streak milestones using object mapping
+    const STREAK_MILESTONES: Record<number, number> = {
+      7: XP_REWARDS.STREAK_7_DAYS,
+      30: XP_REWARDS.STREAK_30_DAYS,
+      100: XP_REWARDS.STREAK_100_DAYS,
+    };
+
+    if (newStreak in STREAK_MILESTONES) {
       streakMilestoneReached = true;
-      if (newStreak === 7) xpAwarded = XP_REWARDS.STREAK_7_DAYS;
-      if (newStreak === 30) xpAwarded = XP_REWARDS.STREAK_30_DAYS;
-      if (newStreak === 100) xpAwarded = XP_REWARDS.STREAK_100_DAYS;
+      xpAwarded = STREAK_MILESTONES[newStreak];
 
       // Award XP
       await awardXP(userId, xpAwarded, 'streak_milestone', `${newStreak}_days`);

@@ -28,48 +28,7 @@ export function useGamification(session: Session | null) {
 
   const userId = session?.user?.id;
 
-  // Load initial data
-  useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    loadGamificationData();
-  }, [userId]);
-
-  // Subscribe to real-time notifications (Supabase only)
-  useEffect(() => {
-    if (!userId || !canUseSupabaseData()) {
-      return;
-    }
-
-    const supabase = getSupabaseClient();
-
-    // Subscribe to notifications
-    const notificationChannel = supabase
-      .channel('gamification_notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'gamification_notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const newNotification = payload.new as GamificationNotification;
-          setNotifications((prev) => [...prev, newNotification]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(notificationChannel);
-    };
-  }, [userId]);
-
-  const loadGamificationData = async () => {
+  const loadGamificationData = useCallback(async () => {
     if (!userId) return;
 
     setLoading(true);
@@ -108,7 +67,48 @@ export function useGamification(session: Session | null) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  // Load initial data
+  useEffect(() => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    loadGamificationData();
+  }, [userId, loadGamificationData]);
+
+  // Subscribe to real-time notifications (Supabase only)
+  useEffect(() => {
+    if (!userId || !canUseSupabaseData()) {
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+
+    // Subscribe to notifications
+    const notificationChannel = supabase
+      .channel('gamification_notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gamification_notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newNotification = payload.new as GamificationNotification;
+          setNotifications((prev) => [...prev, newNotification]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationChannel);
+    };
+  }, [userId]);
 
   const earnXP = useCallback(
     async (xpAmount: number, sourceType: string, sourceId?: string, description?: string) => {
