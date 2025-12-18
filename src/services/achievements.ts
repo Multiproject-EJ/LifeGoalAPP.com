@@ -36,9 +36,9 @@ export async function fetchAchievementsWithProgress(
   }
 
   // Merge achievement data with user progress
-  const achievementsWithProgress = (achievements || []).map(achievement => {
-    const userProgress = userAchievements?.find(
-      ua => ua.achievement_id === achievement.id
+  const achievementsWithProgress: AchievementWithProgress[] = (achievements as Achievement[] || []).map((achievement: Achievement) => {
+    const userProgress = (userAchievements as UserAchievement[] || []).find(
+      (ua: UserAchievement) => ua.achievement_id === achievement.id
     );
 
     return {
@@ -48,7 +48,7 @@ export async function fetchAchievementsWithProgress(
       unlockedAt: userProgress?.unlocked_at || null,
       progressPercent: Math.min(
         100,
-        Math.floor((userProgress?.progress || 0) / achievement.requirement_value * 100)
+        Math.floor(((userProgress?.progress || 0) / achievement.requirement_value) * 100)
       ),
     };
   });
