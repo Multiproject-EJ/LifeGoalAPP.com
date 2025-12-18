@@ -406,10 +406,184 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
   try {
     const supabase = getSupabaseClient();
     
-    // This is a simplified version - in production, you'd check specific achievement criteria
-    // based on user stats and unlock achievements accordingly
+    // Fetch all achievements
+    const { data: achievements, error: achievementsError } = await supabase
+      .from('achievements')
+      .select('*');
     
-    return [];
+    if (achievementsError) throw achievementsError;
+    
+    if (!achievements || achievements.length === 0) {
+      return [];
+    }
+
+    // Fetch user's current profile
+    const { data: profile } = await supabase
+      .from('gamification_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    // Fetch habit count
+    const { count: habitsCount } = await supabase
+      .from('habits_v2')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('completed', true);
+
+    // Fetch goals count
+    const { count: goalsCount } = await supabase
+      .from('goals')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status_tag', 'achieved');
+
+    const unlockedAchievements: Achievement[] = [];
+
+    for (const achievement of achievements as Achievement[]) {
+      let progress = 0;
+      let qualified = false;
+
+      // Check qualification based on requirement type
+      switch (achievement.requirement_type) {
+        case 'streak':
+          progress = profile?.current_streak || 0;
+          qualified = (profile?.current_streak || 0) >= achievement.requirement_value;
+          break;
+          
+        case 'habits_completed':
+          progress = habitsCount || 0;
+          qualified = (habitsCount || 0) >= achievement.requirement_value;
+          break;
+          
+        case 'goals_achieved':
+          progress = goalsCount || 0;
+          qualified = (goalsCount || 0) >= achievement.requirement_value;
+          break;
+          
+        case 'journal_entries':
+          // Count all journal entries
+          const { count: journalCount } = await supabase
+            .from('journal_entries')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId);
+          progress = journalCount || 0;
+          qualified = (journalCount || 0) >= achievement.requirement_value;
+          break;
+          
+        case 'journal_long_entries':
+          // Count journal entries with 500+ words
+          const { data: journalEntries } = await supabase
+            .from('journal_entries')
+            .select('content')
+            .eq('user_id', userId);
+          const longEntries = (journalEntries || []).filter(entry => {
+            const content = entry.content?.trim() || '';
+            const wordCount = content ? content.split(/\s+/).length : 0;
+            return wordCount >= 500;
+          });
+          progress = longEntries.length;
+          qualified = longEntries.length >= achievement.requirement_value;
+          break;
+          
+        case 'checkins_completed':
+          const { count: checkinsCount } = await supabase
+            .from('checkins')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId);
+          progress = checkinsCount || 0;
+          qualified = (checkinsCount || 0) >= achievement.requirement_value;
+          break;
+          
+        case 'vision_uploads':
+          const { count: visionCount } = await supabase
+            .from('vision_images')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId);
+          progress = visionCount || 0;
+          qualified = (visionCount || 0) >= achievement.requirement_value;
+          break;
+          
+        default:
+          // Unknown requirement type, skip
+          continue;
+      }
+
+      // Check if user already has this achievement
+      const { data: existing } = await supabase
+        .from('user_achievements')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('achievement_id', achievement.id)
+        .maybeSingle();
+
+      if (existing) {
+        // Update progress if not unlocked yet
+        if (!existing.unlocked && qualified) {
+          await supabase
+            .from('user_achievements')
+            .update({
+              progress,
+              unlocked: true,
+              unlocked_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id);
+          
+          // Award XP for achievement
+          await awardXP(userId, achievement.xp_reward, 'achievement', achievement.id);
+          
+          // Create notification
+          await supabase.from('gamification_notifications').insert({
+            user_id: userId,
+            notification_type: 'achievement_unlock',
+            title: `Achievement Unlocked! ${achievement.icon}`,
+            message: `${achievement.name}: ${achievement.description}`,
+            icon: achievement.icon,
+            xp_reward: achievement.xp_reward,
+            achievement_id: achievement.id,
+          });
+          
+          unlockedAchievements.push(achievement);
+        } else if (!existing.unlocked) {
+          // Just update progress
+          await supabase
+            .from('user_achievements')
+            .update({ progress })
+            .eq('id', existing.id);
+        }
+      } else {
+        // Create new user achievement record
+        await supabase
+          .from('user_achievements')
+          .insert({
+            user_id: userId,
+            achievement_id: achievement.id,
+            progress,
+            unlocked: qualified,
+            unlocked_at: qualified ? new Date().toISOString() : null,
+          });
+        
+        if (qualified) {
+          // Award XP for achievement
+          await awardXP(userId, achievement.xp_reward, 'achievement', achievement.id);
+          
+          // Create notification
+          await supabase.from('gamification_notifications').insert({
+            user_id: userId,
+            notification_type: 'achievement_unlock',
+            title: `Achievement Unlocked! ${achievement.icon}`,
+            message: `${achievement.name}: ${achievement.description}`,
+            icon: achievement.icon,
+            xp_reward: achievement.xp_reward,
+            achievement_id: achievement.id,
+          });
+          
+          unlockedAchievements.push(achievement);
+        }
+      }
+    }
+    
+    return unlockedAchievements;
   } catch (error) {
     console.error('Failed to check achievements:', error);
     return [];

@@ -11,6 +11,8 @@ import {
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/imageConverter';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
@@ -29,6 +31,7 @@ const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 export function VisionBoard({ session }: VisionBoardProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
+  const { earnXP, recordActivity } = useGamification(session);
   const [images, setImages] = useState<VisionImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -265,6 +268,15 @@ export function VisionBoard({ session }: VisionBoardProps) {
           },
           ...current,
         ]);
+
+        // Award XP for vision board upload
+        const hasCaption = Boolean(captionDraft?.trim());
+        const xpAmount = hasCaption
+          ? XP_REWARDS.VISION_BOARD + XP_REWARDS.VISION_BOARD_CAPTION  // 15 XP with caption
+          : XP_REWARDS.VISION_BOARD;  // 10 XP base
+
+        await earnXP(xpAmount, 'vision_board_upload', data.id);
+        await recordActivity();
       }
       setFileDraft(null);
       setUrlDraft('');

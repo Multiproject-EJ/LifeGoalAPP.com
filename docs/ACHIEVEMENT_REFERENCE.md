@@ -298,6 +298,189 @@ Only the most dedicated users reach this milestone. Your name could be on the le
 
 ---
 
+### 📝 Journal-Based Achievements
+
+#### Reflection Master (Silver) 🥈
+
+**Requirement:** Write 30 journal entries
+
+**Rewards:**
+- 200 XP
+- 100 Points
+
+**Description:** "Master of self-reflection"
+
+**Tips:**
+- Journal daily for a month to unlock quickly
+- Any journal entry type counts (free-form, problem-solving, etc.)
+- Combine with daily streak for bonus XP
+- Use journaling as a reflection tool for goals and habits
+
+**Unlock Strategy:**
+1. Create journal entries regularly
+2. Average 1 entry per day over a month
+3. Achievement unlocks at 30 entries
+4. Progress tracked automatically
+
+**Milestone Significance:**
+- Shows commitment to self-reflection
+- Journal becomes a powerful growth tool
+- Silver tier = intermediate journaling mastery
+
+---
+
+#### Wordsmith (Gold) 🥇
+
+**Requirement:** Write 10 journal entries with 500+ words
+
+**Rewards:**
+- 300 XP
+- 150 Points
+
+**Description:** "Deep thinker and detailed writer"
+
+**Tips:**
+- This is a gold-tier achievement - quality over quantity
+- 500+ words = deep reflection and detailed thoughts
+- Use journal prompts to inspire longer entries
+- Review and reflect on past entries for inspiration
+- Each long entry awards 25 XP vs 15 XP for short entries
+
+**Unlock Strategy:**
+1. Take time for thoughtful, detailed journal entries
+2. Explore topics deeply rather than surface-level
+3. Average 500+ words = about 1-2 pages
+4. Achievement unlocks at 10 long entries
+
+**Milestone Significance:**
+- Demonstrates commitment to deep reflection
+- You're in the top tier of journal users
+- Gold tier = advanced introspection skills
+
+---
+
+### 🧘 Check-in Based Achievements
+
+#### Self-Aware (Bronze) 🥉
+
+**Requirement:** Complete your first life wheel check-in
+
+**Rewards:**
+- 30 XP
+- 15 Points
+
+**Description:** "Beginning the journey of self-awareness"
+
+**Tips:**
+- This unlocks automatically with your first check-in
+- Use the guided questionnaire for best results
+- Be honest in your self-assessment
+- Your first step toward life balance
+
+**Unlock Strategy:**
+1. Navigate to Life Wheel Check-ins
+2. Complete the questionnaire or manual sliders
+3. Save your first check-in
+4. Achievement unlocks instantly
+
+**What's Next:**
+- Schedule regular weekly check-ins
+- Track improvements over time
+- Target Balanced Life next
+
+---
+
+#### Balanced Life (Silver) 🥈
+
+**Requirement:** Complete 10 life wheel check-ins
+
+**Rewards:**
+- 150 XP
+- 75 Points
+
+**Description:** "Consistently monitoring life balance"
+
+**Tips:**
+- Check in weekly for consistent tracking
+- Use insights to identify areas for improvement
+- Each check-in awards 20 XP base
+- Earn +5 XP per improved category from last check-in
+- Track trends to see your progress over time
+
+**Unlock Strategy:**
+1. Complete regular check-ins (weekly recommended)
+2. 10 check-ins = about 2-3 months of weekly tracking
+3. Use radar chart to visualize balance
+4. Achievement unlocks at 10 completions
+
+**Milestone Significance:**
+- Shows commitment to holistic self-improvement
+- Silver tier = balanced life mastery
+- Top-tier self-awareness achievement
+
+---
+
+### 🖼️ Vision Board Achievements
+
+#### Inspired (Bronze) 🥉
+
+**Requirement:** Upload your first vision board image
+
+**Rewards:**
+- 20 XP
+- 10 Points
+
+**Description:** "Visualizing your dreams"
+
+**Tips:**
+- This unlocks automatically with your first upload
+- Start with what inspires you most
+- Add a caption for extra 5 XP (15 XP total)
+- Images help manifest your goals
+
+**Unlock Strategy:**
+1. Navigate to Vision Board
+2. Upload an inspiring image
+3. Optional: Add a meaningful caption
+4. Achievement unlocks instantly
+
+**What's Next:**
+- Build your visual inspiration gallery
+- Link images to specific goals
+- Target Vision Board Master next
+
+---
+
+#### Vision Board Master (Silver) 🥈
+
+**Requirement:** Upload 20 vision board images
+
+**Rewards:**
+- 200 XP
+- 100 Points
+
+**Description:** "A gallery of aspirations"
+
+**Tips:**
+- Each upload awards 10 XP (15 XP with caption)
+- Organize images by life area or goal
+- Use high-quality, meaningful images
+- Review your board weekly for motivation
+- Add images as your goals evolve
+
+**Unlock Strategy:**
+1. Build your vision board over time
+2. Upload 1-2 images per week = unlock in 2-3 months
+3. Focus on quality and personal meaning
+4. Achievement unlocks at 20 uploads
+
+**Milestone Significance:**
+- Demonstrates commitment to visualization
+- Your board becomes a powerful motivation tool
+- Silver tier = advanced manifestation practice
+
+---
+
 ## 🗺️ Achievement Progression Path
 
 ### Recommended Path for New Users
@@ -525,7 +708,10 @@ These achievements are not visible until unlocked! Can you discover them?
 | Streak | 4 | 2 | 0 | 1 | 1 |
 | Habit | 4 | 2 | 2 | 0 | 0 |
 | Goal | 2 | 1 | 0 | 1 | 0 |
-| **Total** | **10** | **5** | **2** | **2** | **1** |
+| Journal | 2 | 0 | 1 | 1 | 0 |
+| Check-in | 2 | 1 | 1 | 0 | 0 |
+| Vision Board | 2 | 1 | 1 | 0 | 0 |
+| **Total** | **16** | **7** | **5** | **3** | **1** |
 
 ---
 
@@ -533,11 +719,11 @@ These achievements are not visible until unlocked! Can you discover them?
 
 | Tier | Achievements | Avg. Time to Unlock | Total XP Available |
 |------|--------------|---------------------|-------------------|
-| Bronze 🥉 | 5 | 1-14 days | 410 XP |
-| Silver 🥈 | 2 | 2-8 weeks | 450 XP |
-| Gold 🥇 | 2 | 1-3 months | 900 XP |
+| Bronze 🥉 | 7 | 1-14 days | 520 XP |
+| Silver 🥈 | 5 | 2-8 weeks | 1,000 XP |
+| Gold 🥇 | 3 | 1-3 months | 1,200 XP |
 | Diamond 💎 | 1 | 3+ months | 1000 XP |
-| **Total** | **10** | - | **2,760 XP** |
+| **Total** | **16** | - | **3,720 XP** |
 
 ---
 
@@ -550,14 +736,14 @@ Unlock achievements to climb the global leaderboards!
 Score = (Bronze × 1) + (Silver × 3) + (Gold × 5) + (Diamond × 10)
 ```
 
-**Maximum Possible Score:** 26 points
+**Maximum Possible Score:** 42 points
 
 **Leaderboard Tiers:**
-- **0-5 points:** Novice
-- **6-10 points:** Apprentice
-- **11-15 points:** Expert
-- **16-20 points:** Master
-- **21-26 points:** Grandmaster 👑
+- **0-8 points:** Novice
+- **9-16 points:** Apprentice
+- **17-25 points:** Expert
+- **26-35 points:** Master
+- **36-42 points:** Grandmaster 👑
 
 ---
 

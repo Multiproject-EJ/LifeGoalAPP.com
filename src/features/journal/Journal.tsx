@@ -20,6 +20,8 @@ import { JournalTypeSelector } from './JournalTypeSelector';
 import type { Database, JournalEntryType } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
 import { isEntryLocked } from './utils';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
 
 /**
  * Journal mode type representing different journaling experiences.
@@ -65,6 +67,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const isDemoExperience = isDemoSession(session);
   const journalDisabled = !isConfigured && !isDemoExperience;
   const isCompactLayout = useMediaQuery('(max-width: 960px)');
+  const { earnXP, recordActivity } = useGamification(session);
 
   // Journal mode state for different journaling experiences
   const [journalType, setJournalType] = useState<JournalType>(DEFAULT_JOURNAL_TYPE);
@@ -305,6 +308,19 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
       }
 
       if (saved) {
+        // Award XP for journal entry (only for new entries, not edits)
+        if (editorMode === 'create') {
+          const content = draft.content.trim();
+          const wordCount = content ? content.split(/\s+/).length : 0;
+          const isLongEntry = wordCount >= 500;
+          const xpAmount = isLongEntry 
+            ? XP_REWARDS.JOURNAL_ENTRY + XP_REWARDS.JOURNAL_LONG_ENTRY  // 25 XP for 500+ words
+            : XP_REWARDS.JOURNAL_ENTRY;  // 15 XP base
+
+          await earnXP(xpAmount, 'journal_entry', saved.id);
+          await recordActivity(); // Update daily streak
+        }
+
         setSelectedEntryId(saved.id);
         setStatus({ kind: 'success', message: editorMode === 'create' ? 'Entry saved.' : 'Entry updated.' });
         setEditorOpen(false);
