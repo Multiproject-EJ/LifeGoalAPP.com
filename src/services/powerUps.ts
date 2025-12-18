@@ -150,7 +150,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('power_ups')
+    .from('power_ups' as any)
     .select('*')
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
@@ -178,7 +178,7 @@ export async function fetchUserPowerUps(userId: string): Promise<ServiceResponse
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('user_power_ups')
+    .from('user_power_ups' as any)
     .select(`
       *,
       power_up:power_ups(*)
@@ -342,7 +342,7 @@ export async function purchasePowerUp(
 
   // Insert user power-up
   const { data: newUserPowerUp, error: insertError } = await supabase
-    .from('user_power_ups')
+    .from('user_power_ups' as any)
     .insert({
       user_id: userId,
       power_up_id: powerUpId,
@@ -369,7 +369,7 @@ export async function purchasePowerUp(
   }
 
   // Log transaction
-  await supabase.from('power_up_transactions').insert({
+  await supabase.from('power_up_transactions' as any).insert({
     user_id: userId,
     power_up_id: powerUpId,
     action: 'purchase',
@@ -385,7 +385,7 @@ export async function purchasePowerUp(
   return {
     data: {
       success: true,
-      userPowerUp: mapRowToUserPowerUp({ ...newUserPowerUp, power_up: powerUp }),
+      userPowerUp: mapRowToUserPowerUp({ ...(newUserPowerUp as any), power_up: powerUp }),
       newPointsBalance: profile.total_points - powerUp.costPoints,
       effectApplied,
     },
@@ -427,16 +427,16 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
       } else {
         // Get current spin state
         const { data: spinState } = await supabase
-          .from('daily_spin_state')
+          .from('daily_spin_state' as any)
           .select('spins_available')
           .eq('user_id', userId)
           .single();
 
         if (spinState) {
           await supabase
-            .from('daily_spin_state')
+            .from('daily_spin_state' as any)
             .update({
-              spins_available: spinState.spins_available + powerUp.effectValue,
+              spins_available: (spinState as any).spins_available + powerUp.effectValue,
             })
             .eq('user_id', userId);
         }
@@ -518,7 +518,7 @@ export async function activatePowerUp(userPowerUpId: string, userId: string): Pr
 
   // Get power-up details to calculate expiration
   const { data: userPowerUp } = await supabase
-    .from('user_power_ups')
+    .from('user_power_ups' as any)
     .select('*, power_up:power_ups(*)')
     .eq('id', userPowerUpId)
     .eq('user_id', userId)
@@ -529,12 +529,12 @@ export async function activatePowerUp(userPowerUpId: string, userId: string): Pr
   }
 
   const now = new Date();
-  const expiresAt = userPowerUp.power_up.duration_minutes
-    ? new Date(now.getTime() + userPowerUp.power_up.duration_minutes * 60000).toISOString()
+  const expiresAt = (userPowerUp as any).power_up.duration_minutes
+    ? new Date(now.getTime() + (userPowerUp as any).power_up.duration_minutes * 60000).toISOString()
     : null;
 
   const { error } = await supabase
-    .from('user_power_ups')
+    .from('user_power_ups' as any)
     .update({
       is_active: true,
       activated_at: now.toISOString(),
@@ -548,9 +548,9 @@ export async function activatePowerUp(userPowerUpId: string, userId: string): Pr
   }
 
   // Log activation
-  await supabase.from('power_up_transactions').insert({
+  await supabase.from('power_up_transactions' as any).insert({
     user_id: userId,
-    power_up_id: userPowerUp.power_up_id,
+    power_up_id: (userPowerUp as any).power_up_id,
     action: 'activate',
     points_spent: 0,
   });
@@ -567,22 +567,22 @@ async function deactivatePowerUp(userPowerUpId: string, userId: string): Promise
   const supabase = getSupabaseClient();
 
   await supabase
-    .from('user_power_ups')
+    .from('user_power_ups' as any)
     .update({ is_active: false })
     .eq('id', userPowerUpId)
     .eq('user_id', userId);
 
   // Log expiration
   const { data } = await supabase
-    .from('user_power_ups')
+    .from('user_power_ups' as any)
     .select('power_up_id')
     .eq('id', userPowerUpId)
     .single();
 
   if (data) {
-    await supabase.from('power_up_transactions').insert({
+    await supabase.from('power_up_transactions' as any).insert({
       user_id: userId,
-      power_up_id: data.power_up_id,
+      power_up_id: (data as any).power_up_id,
       action: 'expire',
       points_spent: 0,
     });

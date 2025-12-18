@@ -431,7 +431,7 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
       .from('gamification_profiles')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .single() as { data: GamificationProfile | null };
 
     // Fetch habit count
     const { count: habitsCount } = await supabase
@@ -524,7 +524,7 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
         .select('*')
         .eq('user_id', userId)
         .eq('achievement_id', achievement.id)
-        .maybeSingle();
+        .maybeSingle() as { data: UserAchievement | null };
 
       if (existing) {
         // Update progress if not unlocked yet
