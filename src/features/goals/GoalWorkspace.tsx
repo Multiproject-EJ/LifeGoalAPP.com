@@ -15,6 +15,8 @@ import { isDemoSession } from '../../services/demoSession';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
 import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
 import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
@@ -78,6 +80,7 @@ const initialDraft: GoalDraft = {
 export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
+  const { earnXP, recordActivity } = useGamification(session);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -305,6 +308,12 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     setStatusMessage(null);
 
     try {
+      // Get the current goal to check if status is changing to "achieved"
+      const currentGoal = goals.find(g => g.id === editingGoalId);
+      const wasAchieved = currentGoal?.status_tag === 'achieved';
+      const isNowAchieved = editDraft.statusTag === 'achieved';
+      const justAchieved = !wasAchieved && isNowAchieved;
+
       const payload: Database['public']['Tables']['goals']['Update'] = {
         title,
         description: editDraft.description.trim() || null,
@@ -327,7 +336,28 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         }),
       );
 
-      setStatusMessage(isDemoExperience ? 'Goal updated in demo data.' : 'Goal updated.');
+      // Award XP if goal was just achieved
+      if (justAchieved && currentGoal) {
+        const today = new Date();
+        const targetDate = currentGoal.target_date ? new Date(currentGoal.target_date) : null;
+        const isEarly = targetDate && today < targetDate;
+        
+        const xpAmount = isEarly
+          ? XP_REWARDS.GOAL_COMPLETE + XP_REWARDS.GOAL_COMPLETE_EARLY  // 300 XP if early
+          : XP_REWARDS.GOAL_COMPLETE;  // 200 XP normal
+        
+        await earnXP(xpAmount, 'goal_achieve', editingGoalId);
+        await recordActivity();
+
+        setStatusMessage(
+          isEarly 
+            ? `Goal achieved early! Earned ${xpAmount} XP 🎉`
+            : `Goal achieved! Earned ${xpAmount} XP ✅`
+        );
+      } else {
+        setStatusMessage(isDemoExperience ? 'Goal updated in demo data.' : 'Goal updated.');
+      }
+
       setEditingGoalId(null);
       setEditDraft(initialDraft);
     } catch (error) {

@@ -4,6 +4,8 @@ import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchCheckinsForUser, insertCheckin, updateCheckin } from '../../services/checkins';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
@@ -285,6 +287,7 @@ function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
 export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
+  const { earnXP, recordActivity } = useGamification(session);
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -426,6 +429,16 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
             return next.sort((a, b) => b.date.localeCompare(a.date));
           });
           setSelectedCheckinId(data.id);
+
+          // Award XP for check-in (only for new check-ins)
+          // Calculate improvement bonus
+          const previousScores = checkins.length > 0 ? parseCheckinScores(checkins[0].scores) : null;
+          const improvedCategories = calculateImprovedCategories(formScores, previousScores);
+          const bonusXP = improvedCategories * XP_REWARDS.CHECKIN_IMPROVEMENT; // +5 XP per improved category
+          const totalXP = XP_REWARDS.CHECKIN + bonusXP; // 20 base + bonuses
+
+          await earnXP(totalXP, 'checkin_complete', data.id);
+          await recordActivity();
         }
         setSuccessMessage('Check-in saved! Revisit the history to spot your trends.');
       }
@@ -442,6 +455,18 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
       return;
     }
     setFormScores(parseCheckinScores(checkins[0].scores));
+  };
+
+  // Helper function to calculate improved categories
+  const calculateImprovedCategories = (
+    current: CheckinScores, 
+    previous: CheckinScores | null
+  ): number => {
+    if (!previous) return 0;
+    
+    return Object.keys(current).filter(key => {
+      return current[key as LifeWheelCategoryKey] > (previous[key as LifeWheelCategoryKey] || 0);
+    }).length;
   };
 
   const startQuestionnaire = () => {
@@ -528,6 +553,12 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
           return next.sort((a, b) => b.date.localeCompare(a.date));
         });
         setSelectedCheckinId(data.id);
+
+        // Award XP for questionnaire completion
+        // For questionnaire, we don't have previous scores to compare
+        // So we just award the base XP
+        await earnXP(XP_REWARDS.CHECKIN, 'checkin_complete', data.id);
+        await recordActivity();
       }
       
       setSuccessMessage('Wellbeing check-in completed! Your life wheel has been updated.');

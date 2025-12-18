@@ -179,6 +179,32 @@ export interface AchievementWithProgress extends Achievement {
 }
 
 // =====================================================
+// TYPE DEFINITIONS
+// =====================================================
+
+export type RequirementType = 
+  | 'streak' 
+  | 'habits_completed' 
+  | 'goals_achieved'
+  | 'journal_entries'
+  | 'journal_long_entries'
+  | 'checkins_completed'
+  | 'vision_uploads'
+  | 'challenge_won';
+
+export type XPSource =
+  | 'habit_complete'
+  | 'goal_achieve'
+  | 'goal_milestone'
+  | 'streak_milestone'
+  | 'journal_entry'
+  | 'checkin_complete'
+  | 'vision_board_upload'
+  | 'achievement'
+  | 'challenge_complete'
+  | 'daily_login';
+
+// =====================================================
 // DEMO MODE TYPES
 // =====================================================
 

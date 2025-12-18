@@ -199,10 +199,10 @@ CREATE TRIGGER update_user_achievements_updated_at
 INSERT INTO achievements (achievement_key, name, description, icon, tier, category, xp_reward, requirement_type, requirement_value)
 VALUES
   -- Streak Achievements
-  ('week_warrior', 'Week Warrior', 'Maintain a 7-day streak', '🔥', 'bronze', 'streak', 100, 'streak_days', 7),
-  ('fortnight_fighter', 'Fortnight Fighter', 'Maintain a 14-day streak', '💪', 'bronze', 'streak', 200, 'streak_days', 14),
-  ('consistency_king', 'Consistency King', 'Maintain a 30-day streak', '👑', 'gold', 'streak', 500, 'streak_days', 30),
-  ('century_streak', 'Century Streak', 'Maintain a 100-day streak', '💯', 'diamond', 'streak', 1000, 'streak_days', 100),
+  ('week_warrior', 'Week Warrior', 'Maintain a 7-day streak', '🔥', 'bronze', 'streak', 100, 'streak', 7),
+  ('fortnight_fighter', 'Fortnight Fighter', 'Maintain a 14-day streak', '💪', 'bronze', 'streak', 200, 'streak', 14),
+  ('consistency_king', 'Consistency King', 'Maintain a 30-day streak', '👑', 'gold', 'streak', 500, 'streak', 30),
+  ('century_streak', 'Century Streak', 'Maintain a 100-day streak', '💯', 'diamond', 'streak', 1000, 'streak', 100),
   
   -- Habit Achievements
   ('getting_started', 'Getting Started', 'Complete your first habit', '✅', 'bronze', 'habit', 10, 'habits_completed', 1),
@@ -211,8 +211,20 @@ VALUES
   ('century_club', 'Century Club', 'Complete 100 habits', '💯', 'silver', 'habit', 300, 'habits_completed', 100),
   
   -- Goal Achievements
-  ('visionary', 'Visionary', 'Achieve your first goal', '🎯', 'bronze', 'goal', 50, 'goals_completed', 1),
-  ('goal_crusher', 'Goal Crusher', 'Achieve 5 goals', '🏆', 'gold', 'goal', 400, 'goals_completed', 5)
+  ('visionary', 'Visionary', 'Achieve your first goal', '🎯', 'bronze', 'goal', 50, 'goals_achieved', 1),
+  ('goal_crusher', 'Goal Crusher', 'Achieve 5 goals', '🏆', 'gold', 'goal', 400, 'goals_achieved', 5),
+  
+  -- Journal-based achievements
+  ('reflection_master', 'Reflection Master', 'Write 30 journal entries', '📝', 'silver', 'journal', 200, 'journal_entries', 30),
+  ('wordsmith', 'Wordsmith', 'Write 10 journal entries with 500+ words', '✍️', 'gold', 'journal', 300, 'journal_long_entries', 10),
+  
+  -- Check-in achievements  
+  ('self_aware', 'Self-Aware', 'Complete your first life wheel check-in', '🧘', 'bronze', 'general', 30, 'checkins_completed', 1),
+  ('balanced_life', 'Balanced Life', 'Complete 10 life wheel check-ins', '⚖️', 'silver', 'general', 150, 'checkins_completed', 10),
+  
+  -- Vision board achievements
+  ('inspired', 'Inspired', 'Upload your first vision board image', '✨', 'bronze', 'general', 20, 'vision_uploads', 1),
+  ('visionary_board', 'Vision Board Master', 'Upload 20 vision board images', '🖼️', 'silver', 'general', 200, 'vision_uploads', 20)
 ON CONFLICT (achievement_key) DO NOTHING;
 
 -- =====================================================
