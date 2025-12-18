@@ -200,6 +200,9 @@ export type RequirementType =
   | 'vision_uploads'
   | 'spins_used'
   | 'mystery_wins'
+  | 'powerups_purchased'
+  | 'triple_boost_used'
+  | 'mystery_chests'
   | 'challenge_won';
 
 export type XPSource =
@@ -296,4 +299,72 @@ export const PRIZE_WEIGHTS: Record<number, number> = {
   6: 2,   // Extra Life - 2%
   7: 1,   // Mystery - 1%
 };
+
+// =====================================================
+// POWER-UPS STORE TYPES
+// =====================================================
+
+// Power-up types
+export type PowerUpEffectType = 
+  | 'xp_multiplier' 
+  | 'streak_freeze' 
+  | 'instant_xp' 
+  | 'extra_life' 
+  | 'spin_token' 
+  | 'mystery';
+
+export interface PowerUp {
+  id: string;
+  powerUpKey: string;
+  name: string;
+  description: string;
+  icon: string;
+  costPoints: number;
+  effectType: PowerUpEffectType;
+  effectValue: number;
+  durationMinutes: number | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface UserPowerUp {
+  id: string;
+  userId: string;
+  powerUpId: string;
+  purchasedAt: string;
+  activatedAt: string | null;
+  expiresAt: string | null;
+  isActive: boolean;
+  isConsumed: boolean;
+  createdAt: string;
+  powerUp?: PowerUp; // Joined data
+}
+
+export interface PowerUpTransaction {
+  id: string;
+  userId: string;
+  powerUpId: string;
+  action: 'purchase' | 'activate' | 'expire' | 'consume';
+  pointsSpent: number;
+  createdAt: string;
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  userPowerUp?: UserPowerUp;
+  newPointsBalance: number;
+  effectApplied?: string; // Description of what happened
+}
+
+export interface ActiveBoost {
+  id: string;
+  name: string;
+  icon: string;
+  effectType: PowerUpEffectType;
+  effectValue: number;
+  expiresAt: string | null;
+  minutesRemaining: number | null;
+}
+
 

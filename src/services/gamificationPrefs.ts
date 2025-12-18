@@ -173,3 +173,13 @@ export async function fetchGamificationProfile(userId: string): Promise<{
     };
   }
 }
+
+/**
+ * Save demo profile to localStorage
+ */
+export function saveDemoProfile(profile: Partial<GamificationProfile>): void {
+  const profileJson = localStorage.getItem('lifegoal_demo_gamification_profile');
+  const currentProfile = profileJson ? JSON.parse(profileJson) : {};
+  const updatedProfile = { ...currentProfile, ...profile };
+  localStorage.setItem('lifegoal_demo_gamification_profile', JSON.stringify(updatedProfile));
+}

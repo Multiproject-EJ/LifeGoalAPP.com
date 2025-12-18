@@ -73,9 +73,18 @@ export async function awardXP(
   description?: string
 ): Promise<AwardXPResult> {
   try {
+    // Apply XP multiplier from active power-ups (if not from power-up itself)
+    let finalXPAmount = xpAmount;
+    if (!description?.includes('Power-up:') && !description?.includes('Mystery Chest')) {
+      // Dynamically import to avoid circular dependency
+      const { getActiveXPMultiplier } = await import('./powerUps');
+      const multiplier = await getActiveXPMultiplier(userId);
+      finalXPAmount = Math.floor(xpAmount * multiplier);
+    }
+
     // Demo mode
     if (!canUseSupabaseData()) {
-      return await awardXPDemo(userId, xpAmount, sourceType, sourceId, description);
+      return await awardXPDemo(userId, finalXPAmount, sourceType, sourceId, description);
     }
 
     // Supabase mode
@@ -103,7 +112,7 @@ export async function awardXP(
     }
 
     const oldXP = currentProfile.total_xp;
-    const newXP = oldXP + xpAmount;
+    const newXP = oldXP + finalXPAmount;
     const oldLevel = currentProfile.current_level;
     const newLevel = calculateLevelFromXP(newXP);
     const leveledUp = newLevel > oldLevel;
@@ -114,7 +123,7 @@ export async function awardXP(
       .update({
         total_xp: newXP,
         current_level: newLevel,
-        total_points: currentProfile.total_points + xpAmount,
+        total_points: currentProfile.total_points + finalXPAmount,
       })
       .eq('user_id', userId);
 
@@ -123,7 +132,7 @@ export async function awardXP(
     // Log transaction
     await supabase.from('xp_transactions').insert({
       user_id: userId,
-      xp_amount: xpAmount,
+      xp_amount: finalXPAmount,
       source_type: sourceType,
       source_id: sourceId || null,
       description: description || null,
@@ -146,7 +155,7 @@ export async function awardXP(
 
     return {
       success: true,
-      xpAwarded: xpAmount,
+      xpAwarded: finalXPAmount,
       newTotalXP: newXP,
       leveledUp,
       oldLevel,
@@ -422,7 +431,7 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
       .from('gamification_profiles')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .single() as { data: GamificationProfile | null };
 
     // Fetch habit count
     const { count: habitsCount } = await supabase
@@ -515,7 +524,7 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
         .select('*')
         .eq('user_id', userId)
         .eq('achievement_id', achievement.id)
-        .maybeSingle();
+        .maybeSingle() as { data: UserAchievement | null };
 
       if (existing) {
         // Update progress if not unlocked yet
