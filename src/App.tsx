@@ -24,6 +24,7 @@ import { AiCoach } from './features/ai-coach';
 import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
+import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -136,6 +137,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     summary: 'View your unlocked achievements and track progress',
     icon: '🏆',
     shortLabel: 'ACHIEVEMENTS',
+  },
+  {
+    id: 'power-ups',
+    label: 'Power-ups Store',
+    summary: 'Spend points on XP boosts, streak shields, and special items',
+    icon: '💎',
+    shortLabel: 'STORE',
   },
 ];
 
@@ -1084,6 +1092,12 @@ export default function App() {
         return (
           <div className="workspace-content">
             <AchievementsPage session={activeSession} />
+          </div>
+        );
+      case 'power-ups':
+        return (
+          <div className="workspace-content">
+            <PowerUpsStore session={activeSession} />
           </div>
         );
       default:
