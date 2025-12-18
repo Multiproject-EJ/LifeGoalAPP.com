@@ -1,0 +1,407 @@
+/* =====================================================
+   DAILY SPIN WHEEL - Main Container
+   ===================================================== */
+.daily-spin-wheel {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  color: white;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.daily-spin-wheel__header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.daily-spin-wheel__header h2 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: bold;
+}
+
+.daily-spin-wheel__subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.daily-spin-wheel__loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+}
+
+/* =====================================================
+   SPIN TOKEN INDICATOR
+   ===================================================== */
+.spin-token-indicator {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.spin-token-indicator__available {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.spin-token-indicator__icon {
+  font-size: 2rem;
+}
+
+.spin-token-indicator__count {
+  font-size: 2.5rem;
+  color: #ffd700;
+}
+
+.spin-token-indicator__label {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.spin-token-indicator__total {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* =====================================================
+   SPIN WHEEL
+   ===================================================== */
+.daily-spin-wheel__wheel-container {
+  position: relative;
+  margin: 2rem auto;
+  width: 100%;
+  max-width: 400px;
+}
+
+.spin-wheel {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%; /* 1:1 aspect ratio */
+}
+
+.spin-wheel__pointer {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.spin-wheel__disc {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8px solid #ffd700;
+  background: white;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  transition: transform 3.5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+.spin-wheel__disc--spinning {
+  /* Animation is controlled via inline styles */
+}
+
+.spin-wheel__segment {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 50%;
+  transform-origin: left bottom;
+  overflow: hidden;
+}
+
+.spin-wheel__segment::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, 
+    hsl(calc(var(--segment-index, 0) * 45), 80%, 60%) 0%,
+    hsl(calc(var(--segment-index, 0) * 45), 70%, 50%) 100%
+  );
+  transform-origin: bottom left;
+  transform: rotate(45deg) skewX(-45deg);
+}
+
+.spin-wheel__segment:nth-child(1) { --segment-index: 0; }
+.spin-wheel__segment:nth-child(2) { --segment-index: 1; }
+.spin-wheel__segment:nth-child(3) { --segment-index: 2; }
+.spin-wheel__segment:nth-child(4) { --segment-index: 3; }
+.spin-wheel__segment:nth-child(5) { --segment-index: 4; }
+.spin-wheel__segment:nth-child(6) { --segment-index: 5; }
+.spin-wheel__segment:nth-child(7) { --segment-index: 6; }
+.spin-wheel__segment:nth-child(8) { --segment-index: 7; }
+
+.spin-wheel__segment-content {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: rotate(-22.5deg); /* Center content in segment */
+}
+
+.spin-wheel__segment-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.spin-wheel__segment-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* =====================================================
+   ACTIONS
+   ===================================================== */
+.daily-spin-wheel__actions {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.daily-spin-wheel__spin-button {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+  border: none;
+  border-radius: 50px;
+  padding: 1rem 3rem;
+  font-size: 1.3rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.daily-spin-wheel__spin-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+}
+
+.daily-spin-wheel__spin-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.daily-spin-wheel__spin-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.daily-spin-wheel__message {
+  font-size: 1.1rem;
+  margin: 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.daily-spin-wheel__locked {
+  padding: 1rem;
+}
+
+.daily-spin-wheel__locked p {
+  margin: 0.5rem 0;
+}
+
+.daily-spin-wheel__hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.daily-spin-wheel__error {
+  background: rgba(239, 68, 68, 0.2);
+  border: 2px solid rgb(239, 68, 68);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* =====================================================
+   REWARD DISPLAY MODAL
+   ===================================================== */
+.spin-reward-display {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.spin-reward-display__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.spin-reward-display__content {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  color: white;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.spin-reward-display__mystery-badge {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  padding: 0.5rem 1.5rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.spin-reward-display__icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  animation: prizeFloat 2s ease-in-out infinite;
+}
+
+@keyframes prizeFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.spin-reward-display__title {
+  font-size: 2rem;
+  margin: 0 0 1rem 0;
+  font-weight: bold;
+}
+
+.spin-reward-display__prize {
+  font-size: 1.5rem;
+  margin: 0 0 1.5rem 0;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.spin-reward-display__remaining {
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.9;
+}
+
+.spin-reward-display__close-button {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+  border: none;
+  border-radius: 50px;
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  transition: transform 0.2s;
+}
+
+.spin-reward-display__close-button:hover {
+  transform: translateY(-2px);
+}
+
+.spin-reward-display__close-button:active {
+  transform: translateY(0);
+}
+
+/* =====================================================
+   RESPONSIVE DESIGN
+   ===================================================== */
+@media (max-width: 640px) {
+  .daily-spin-wheel {
+    padding: 1.5rem 1rem;
+  }
+
+  .daily-spin-wheel__header h2 {
+    font-size: 1.5rem;
+  }
+
+  .daily-spin-wheel__wheel-container {
+    max-width: 300px;
+  }
+
+  .spin-wheel__segment-icon {
+    font-size: 1.2rem;
+  }
+
+  .spin-wheel__segment-label {
+    font-size: 0.6rem;
+  }
+
+  .daily-spin-wheel__spin-button {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  .spin-reward-display__content {
+    padding: 2rem 1.5rem;
+  }
+
+  .spin-reward-display__icon {
+    font-size: 4rem;
+  }
+
+  .spin-reward-display__title {
+    font-size: 1.5rem;
+  }
+
+  .spin-reward-display__prize {
+    font-size: 1.2rem;
+  }
+}

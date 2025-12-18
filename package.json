@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
+    "canvas-confetti": "^1.9.4",
     "idb": "^8.0.3",
     "openai": "^6.9.1",
     "react": "^18.3.1",
@@ -22,6 +23,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.26",
     "@types/uuid": "^10.0.0",

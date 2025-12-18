@@ -198,6 +198,8 @@ export type RequirementType =
   | 'journal_long_entries'
   | 'checkins_completed'
   | 'vision_uploads'
+  | 'spins_used'
+  | 'mystery_wins'
   | 'challenge_won';
 
 export type XPSource =
@@ -232,3 +234,66 @@ export const DEMO_PROFILE_KEY = 'lifegoal_demo_gamification_profile';
 export const DEMO_ENABLED_KEY = 'lifegoal_demo_gamification_enabled';
 export const DEMO_TRANSACTIONS_KEY = 'lifegoal_demo_xp_transactions';
 export const DEMO_ACHIEVEMENTS_KEY = 'lifegoal_demo_user_achievements';
+
+// =====================================================
+// DAILY SPIN WHEEL TYPES
+// =====================================================
+
+// Daily Spin types
+export type PrizeType = 'xp' | 'points' | 'streak_freeze' | 'life' | 'mystery';
+
+export interface DailySpinState {
+  userId: string;
+  lastSpinDate: string | null;
+  spinsAvailable: number;
+  totalSpinsUsed: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SpinHistoryEntry {
+  id: string;
+  userId: string;
+  prizeType: PrizeType;
+  prizeValue: number;
+  prizeDetails: Record<string, unknown>;
+  spunAt: string;
+}
+
+export interface SpinPrize {
+  type: PrizeType;
+  value: number;
+  label: string;
+  icon: string;
+  details?: Record<string, unknown>;
+}
+
+export interface SpinResult {
+  prize: SpinPrize;
+  spinsRemaining: number;
+}
+
+// Prize configuration
+export const SPIN_PRIZES: SpinPrize[] = [
+  { type: 'xp', value: 50, label: '50 XP', icon: '💰' },
+  { type: 'xp', value: 100, label: '100 XP', icon: '💰' },
+  { type: 'xp', value: 200, label: '200 XP', icon: '💰' },
+  { type: 'points', value: 25, label: '25 Points', icon: '💎' },
+  { type: 'points', value: 50, label: '50 Points', icon: '💎' },
+  { type: 'streak_freeze', value: 1, label: 'Streak Freeze', icon: '🛡️' },
+  { type: 'life', value: 1, label: 'Extra Life', icon: '❤️' },
+  { type: 'mystery', value: 0, label: 'Mystery Box', icon: '🎁' },
+];
+
+// Weighted prize probabilities (must sum to 100)
+export const PRIZE_WEIGHTS: Record<number, number> = {
+  0: 30,  // 50 XP - 30%
+  1: 25,  // 100 XP - 25%
+  2: 10,  // 200 XP - 10%
+  3: 20,  // 25 Points - 20%
+  4: 8,   // 50 Points - 8%
+  5: 4,   // Streak Freeze - 4%
+  6: 2,   // Extra Life - 2%
+  7: 1,   // Mystery - 1%
+};
+
