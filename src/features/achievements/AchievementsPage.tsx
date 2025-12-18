@@ -165,10 +165,6 @@ export function AchievementsPage({ session }: Props) {
                 <span className="achievements-stats__reward-value">{stats.totalXPEarned.toLocaleString()}</span>
                 <span className="achievements-stats__reward-label">Total XP Earned</span>
               </div>
-              <div className="achievements-stats__reward">
-                <span className="achievements-stats__reward-value">{stats.totalPointsEarned.toLocaleString()}</span>
-                <span className="achievements-stats__reward-label">Total Points Earned</span>
-              </div>
             </div>
           </div>
         </div>

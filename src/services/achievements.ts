@@ -89,10 +89,6 @@ export async function getAchievementStats(userId: string): Promise<ServiceRespon
     .filter(a => a.unlocked)
     .reduce((sum, a) => sum + a.xp_reward, 0);
 
-  const totalPointsEarned = achievementsData
-    .filter(a => a.unlocked)
-    .reduce((sum, a) => sum + a.xp_reward, 0);
-
   return {
     data: {
       total,
@@ -100,7 +96,6 @@ export async function getAchievementStats(userId: string): Promise<ServiceRespon
       percentComplete,
       tierCounts,
       totalXPEarned,
-      totalPointsEarned,
     },
     error: null,
   };
@@ -130,5 +125,4 @@ export interface AchievementStats {
     diamond: { total: number; unlocked: number };
   };
   totalXPEarned: number;
-  totalPointsEarned: number;
 }
