@@ -105,7 +105,7 @@ export const XP_REWARDS = {
 } as const;
 
 // =====================================================
-// TIER COLORS
+// TIER COLORS AND LABELS
 // =====================================================
 
 export const TIER_COLORS = {
@@ -129,6 +129,13 @@ export const TIER_COLORS = {
     background: 'linear-gradient(135deg, #B9F2FF 0%, #81D4FA 100%)',
     glow: 'rgba(185, 242, 255, 0.3)',
   },
+} as const;
+
+export const TIER_LABELS = {
+  bronze: '🥉 Bronze',
+  silver: '🥈 Silver',
+  gold: '🥇 Gold',
+  diamond: '💎 Diamond',
 } as const;
 
 // =====================================================
