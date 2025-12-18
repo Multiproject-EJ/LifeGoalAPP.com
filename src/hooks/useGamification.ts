@@ -100,7 +100,7 @@ export function useGamification(session: Session | null) {
           .limit(10);
 
         if (notificationsData) {
-          setNotifications(notificationsData);
+          setNotifications(notificationsData as GamificationNotification[]);
         }
       }
     } catch (error) {

@@ -5,6 +5,7 @@ import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import type {
   GamificationProfile,
   Achievement,
+  UserAchievement,
   AchievementWithProgress,
   LevelInfo,
   AwardXPResult,
@@ -89,7 +90,7 @@ export async function awardXP(
 
     if (profileError) throw profileError;
 
-    let currentProfile = profile;
+    let currentProfile: GamificationProfile | null = profile as GamificationProfile | null;
     if (!currentProfile) {
       const { data: newProfile, error: insertError } = await supabase
         .from('gamification_profiles')
@@ -98,7 +99,7 @@ export async function awardXP(
         .single();
 
       if (insertError) throw insertError;
-      currentProfile = newProfile;
+      currentProfile = newProfile as GamificationProfile;
     }
 
     const oldXP = currentProfile.total_xp;
@@ -250,15 +251,16 @@ export async function updateStreak(userId: string): Promise<UpdateStreakResult> 
       throw new Error('Profile not found');
     }
 
+    const typedProfile = profile as GamificationProfile;
     const today = new Date().toISOString().split('T')[0];
-    const lastActivityDate = profile.last_activity_date;
+    const lastActivityDate = typedProfile.last_activity_date;
 
     // If already active today, no change
     if (lastActivityDate === today) {
       return {
         success: true,
-        currentStreak: profile.current_streak,
-        longestStreak: profile.longest_streak,
+        currentStreak: typedProfile.current_streak,
+        longestStreak: typedProfile.longest_streak,
         streakMilestoneReached: false,
         xpAwarded: 0,
       };
@@ -273,12 +275,12 @@ export async function updateStreak(userId: string): Promise<UpdateStreakResult> 
 
       if (diffDays === 1) {
         // Consecutive day
-        newStreak = profile.current_streak + 1;
+        newStreak = typedProfile.current_streak + 1;
       }
       // If diffDays > 1, streak is broken, reset to 1
     }
 
-    const newLongest = Math.max(newStreak, profile.longest_streak);
+    const newLongest = Math.max(newStreak, typedProfile.longest_streak);
     let xpAwarded = 0;
     let streakMilestoneReached = false;
 
@@ -442,8 +444,11 @@ export async function fetchAchievementsWithProgress(userId: string): Promise<{
     if (userError) throw userError;
 
     // Combine data
-    const achievementsWithProgress: AchievementWithProgress[] = (achievements || []).map((achievement) => {
-      const userAchievement = (userAchievements || []).find(
+    const typedAchievements = (achievements || []) as Achievement[];
+    const typedUserAchievements = (userAchievements || []) as UserAchievement[];
+    
+    const achievementsWithProgress: AchievementWithProgress[] = typedAchievements.map((achievement) => {
+      const userAchievement = typedUserAchievements.find(
         (ua) => ua.achievement_id === achievement.id
       );
 

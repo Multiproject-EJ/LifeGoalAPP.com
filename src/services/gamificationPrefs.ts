@@ -159,10 +159,10 @@ export async function fetchGamificationProfile(userId: string): Promise<{
         throw insertError;
       }
 
-      return { data: newProfile, error: null };
+      return { data: newProfile as GamificationProfile, error: null };
     }
 
-    return { data, error: null };
+    return { data: data as GamificationProfile, error: null };
   } catch (error) {
     console.error('Failed to fetch gamification profile:', error);
     return {
