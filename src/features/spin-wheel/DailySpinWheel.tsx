@@ -91,8 +91,6 @@ export function DailySpinWheel({ session }: Props) {
   }
 
   const canSpin = spinState && spinState.spinsAvailable > 0 && !spinning;
-  const today = new Date().toISOString().split('T')[0];
-  const alreadySpun = spinState?.lastSpinDate === today;
 
   return (
     <div className="daily-spin-wheel">
@@ -124,11 +122,7 @@ export function DailySpinWheel({ session }: Props) {
       )}
 
       <div className="daily-spin-wheel__actions">
-        {alreadySpun ? (
-          <p className="daily-spin-wheel__message">
-            ✅ You've already spun today! Come back tomorrow for another spin.
-          </p>
-        ) : canSpin ? (
+        {canSpin ? (
           <button
             type="button"
             className="daily-spin-wheel__spin-button"

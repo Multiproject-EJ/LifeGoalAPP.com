@@ -83,10 +83,11 @@ export async function updateSpinsAvailable(userId: string, spinsEarned: number):
 
   const today = new Date().toISOString().split('T')[0];
   
-  // Reset spins if it's a new day
-  const newSpins = currentState.lastSpinDate === today 
-    ? Math.max(currentState.spinsAvailable, spinsEarned)
-    : spinsEarned;
+  // Reset spins if it's a new day, otherwise add to existing
+  const isNewDay = !currentState.lastSpinDate || currentState.lastSpinDate !== today;
+  const newSpins = isNewDay 
+    ? spinsEarned
+    : Math.max(currentState.spinsAvailable, spinsEarned);
 
   if (!canUseSupabaseData()) {
     const updated: DailySpinState = {
@@ -168,11 +169,6 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Check cooldown (can't spin twice on same day)
-  if (spinState.lastSpinDate === today) {
-    return { data: null, error: new Error('Already spun today') };
-  }
-
   // Select prize
   let prize = selectRandomPrize();
 
@@ -209,8 +205,8 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
 
   const supabase = getSupabaseClient();
 
-  // Update state
-  await supabase
+  // Update state with error handling
+  const { error: updateError } = await supabase
     .from('daily_spin_state' as any)
     .update({
       last_spin_date: today,
@@ -219,6 +215,10 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
       updated_at: new Date().toISOString(),
     })
     .eq('user_id', userId);
+
+  if (updateError) {
+    return { data: null, error: updateError };
+  }
 
   // Log spin history
   await supabase.from('spin_history' as any).insert({
