@@ -1,0 +1,172 @@
+// React hook for gamification features
+// Manages profile loading, XP earning, notifications, and real-time updates
+
+import { useState, useEffect, useCallback } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
+import type {
+  GamificationProfile,
+  GamificationNotification,
+  LevelInfo,
+} from '../types/gamification';
+import {
+  fetchGamificationProfile,
+  fetchGamificationEnabled,
+} from '../services/gamificationPrefs';
+import {
+  awardXP,
+  updateStreak,
+  getLevelInfo,
+} from '../services/gamification';
+
+export function useGamification(session: Session | null) {
+  const [enabled, setEnabled] = useState<boolean>(true);
+  const [profile, setProfile] = useState<GamificationProfile | null>(null);
+  const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
+  const [notifications, setNotifications] = useState<GamificationNotification[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const userId = session?.user?.id;
+
+  const loadGamificationData = useCallback(async () => {
+    if (!userId) return;
+
+    setLoading(true);
+
+    try {
+      // Fetch enabled status
+      const { data: enabledData } = await fetchGamificationEnabled(userId);
+      if (enabledData !== null) {
+        setEnabled(enabledData);
+      }
+
+      // Fetch profile
+      const { data: profileData } = await fetchGamificationProfile(userId);
+      if (profileData) {
+        setProfile(profileData);
+        setLevelInfo(getLevelInfo(profileData.total_xp));
+      }
+
+      // Fetch notifications (Supabase only)
+      if (canUseSupabaseData()) {
+        const supabase = getSupabaseClient();
+        const { data: notificationsData } = await supabase
+          .from('gamification_notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_dismissed', false)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (notificationsData) {
+          setNotifications(notificationsData as GamificationNotification[]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load gamification data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  // Load initial data
+  useEffect(() => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    loadGamificationData();
+  }, [userId, loadGamificationData]);
+
+  // Subscribe to real-time notifications (Supabase only)
+  useEffect(() => {
+    if (!userId || !canUseSupabaseData()) {
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+
+    // Subscribe to notifications
+    const notificationChannel = supabase
+      .channel('gamification_notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gamification_notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newNotification = payload.new as GamificationNotification;
+          setNotifications((prev) => [...prev, newNotification]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationChannel);
+    };
+  }, [userId]);
+
+  const earnXP = useCallback(
+    async (xpAmount: number, sourceType: string, sourceId?: string, description?: string) => {
+      if (!userId || !enabled) return;
+
+      const result = await awardXP(userId, xpAmount, sourceType, sourceId, description);
+
+      if (result.success) {
+        // Refresh profile
+        await loadGamificationData();
+      }
+
+      return result;
+    },
+    [userId, enabled]
+  );
+
+  const recordActivity = useCallback(async () => {
+    if (!userId || !enabled) return;
+
+    const result = await updateStreak(userId);
+
+    if (result.success) {
+      // Refresh profile
+      await loadGamificationData();
+    }
+
+    return result;
+  }, [userId, enabled]);
+
+  const dismissNotification = useCallback(
+    async (notificationId: string) => {
+      if (!userId) return;
+
+      // Update local state immediately
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+
+      // Update in database (Supabase only)
+      if (canUseSupabaseData()) {
+        const supabase = getSupabaseClient();
+        await supabase
+          .from('gamification_notifications')
+          .update({ is_dismissed: true })
+          .eq('id', notificationId);
+      }
+    },
+    [userId]
+  );
+
+  return {
+    enabled,
+    profile,
+    levelInfo,
+    notifications,
+    loading,
+    earnXP,
+    recordActivity,
+    dismissNotification,
+    refreshProfile: loadGamificationData,
+  };
+}

@@ -566,6 +566,204 @@ export interface Database {
         };
         Relationships: [];
       };
+      gamification_profiles: {
+        Row: {
+          user_id: string;
+          total_xp: number;
+          current_level: number;
+          current_streak: number;
+          longest_streak: number;
+          last_activity_date: string | null;
+          lives: number;
+          max_lives: number;
+          last_life_refill: string | null;
+          streak_freezes: number;
+          total_points: number;
+          gamification_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          total_xp?: number;
+          current_level?: number;
+          current_streak?: number;
+          longest_streak?: number;
+          last_activity_date?: string | null;
+          lives?: number;
+          max_lives?: number;
+          last_life_refill?: string | null;
+          streak_freezes?: number;
+          total_points?: number;
+          gamification_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          total_xp?: number;
+          current_level?: number;
+          current_streak?: number;
+          longest_streak?: number;
+          last_activity_date?: string | null;
+          lives?: number;
+          max_lives?: number;
+          last_life_refill?: string | null;
+          streak_freezes?: number;
+          total_points?: number;
+          gamification_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      achievements: {
+        Row: {
+          id: string;
+          achievement_key: string;
+          name: string;
+          description: string;
+          icon: string;
+          tier: 'bronze' | 'silver' | 'gold' | 'diamond';
+          category: 'streak' | 'habit' | 'goal' | 'journal' | 'general';
+          xp_reward: number;
+          requirement_type: string;
+          requirement_value: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          achievement_key: string;
+          name: string;
+          description: string;
+          icon: string;
+          tier: 'bronze' | 'silver' | 'gold' | 'diamond';
+          category: 'streak' | 'habit' | 'goal' | 'journal' | 'general';
+          xp_reward?: number;
+          requirement_type: string;
+          requirement_value: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          achievement_key?: string;
+          name?: string;
+          description?: string;
+          icon?: string;
+          tier?: 'bronze' | 'silver' | 'gold' | 'diamond';
+          category?: 'streak' | 'habit' | 'goal' | 'journal' | 'general';
+          xp_reward?: number;
+          requirement_type?: string;
+          requirement_value?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_achievements: {
+        Row: {
+          id: string;
+          user_id: string;
+          achievement_id: string;
+          progress: number;
+          unlocked: boolean;
+          unlocked_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          achievement_id: string;
+          progress?: number;
+          unlocked?: boolean;
+          unlocked_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          achievement_id?: string;
+          progress?: number;
+          unlocked?: boolean;
+          unlocked_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      xp_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          xp_amount: number;
+          source_type: string;
+          source_id: string | null;
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          xp_amount: number;
+          source_type: string;
+          source_id?: string | null;
+          description?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          xp_amount?: number;
+          source_type?: string;
+          source_id?: string | null;
+          description?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      gamification_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          notification_type: 'level_up' | 'achievement_unlock' | 'streak_milestone' | 'life_refill';
+          title: string;
+          message: string;
+          icon: string | null;
+          xp_reward: number | null;
+          achievement_id: string | null;
+          is_read: boolean;
+          is_dismissed: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          notification_type: 'level_up' | 'achievement_unlock' | 'streak_milestone' | 'life_refill';
+          title: string;
+          message: string;
+          icon?: string | null;
+          xp_reward?: number | null;
+          achievement_id?: string | null;
+          is_read?: boolean;
+          is_dismissed?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          notification_type?: 'level_up' | 'achievement_unlock' | 'streak_milestone' | 'life_refill';
+          title?: string;
+          message?: string;
+          icon?: string | null;
+          xp_reward?: number | null;
+          achievement_id?: string | null;
+          is_read?: boolean;
+          is_dismissed?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       vb_boards: {
         Row: {
           id: string;

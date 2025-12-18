@@ -42,6 +42,7 @@ import { useContinuousSave } from './hooks/useContinuousSave';
 import { generateInitials } from './utils/initials';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
+import './styles/gamification.css';
 import './features/ai-coach/AiCoach.css';
 
 type AuthMode = 'password' | 'signup';
