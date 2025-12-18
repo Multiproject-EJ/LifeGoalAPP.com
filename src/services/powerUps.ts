@@ -459,7 +459,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
         await awardXP(userId, randomReward.value, 'daily_login', undefined, 'Mystery Chest');
       } else if (randomReward.type === 'points') {
         if (!canUseSupabaseData()) {
-          saveDemoProfile({ total_points: profile.total_points + randomReward.value });
+          saveDemoProfile({ ...profile, total_points: profile.total_points + randomReward.value });
         } else {
           await supabase
             .from('gamification_profiles')
@@ -469,6 +469,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
       } else if (randomReward.type === 'freeze') {
         if (!canUseSupabaseData()) {
           saveDemoProfile({
+            ...profile,
             streak_freezes: profile.streak_freezes + randomReward.value,
           });
         } else {
