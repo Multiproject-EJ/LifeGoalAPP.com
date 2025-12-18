@@ -464,8 +464,10 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   ): number => {
     if (!previous) return 0;
     
-    return Object.keys(current).filter(key => {
-      return current[key as LifeWheelCategoryKey] > (previous[key as LifeWheelCategoryKey] || 0);
+    return LIFE_WHEEL_CATEGORIES.filter(category => {
+      const currentScore = current[category.key];
+      const previousScore = previous[category.key] || 0;
+      return currentScore > previousScore;
     }).length;
   };
 

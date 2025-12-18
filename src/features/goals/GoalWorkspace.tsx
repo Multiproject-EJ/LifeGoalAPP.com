@@ -310,7 +310,14 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     try {
       // Get the current goal to check if status is changing to "achieved"
       const currentGoal = goals.find(g => g.id === editingGoalId);
-      const wasAchieved = currentGoal?.status_tag === 'achieved';
+      
+      if (!currentGoal) {
+        setErrorMessage('Goal not found. Please refresh and try again.');
+        setUpdatingGoalId(null);
+        return;
+      }
+      
+      const wasAchieved = currentGoal.status_tag === 'achieved';
       const isNowAchieved = editDraft.statusTag === 'achieved';
       const justAchieved = !wasAchieved && isNowAchieved;
 
@@ -337,7 +344,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       );
 
       // Award XP if goal was just achieved
-      if (justAchieved && currentGoal) {
+      if (justAchieved) {
         const today = new Date();
         const targetDate = currentGoal.target_date ? new Date(currentGoal.target_date) : null;
         const isEarly = targetDate && today < targetDate;

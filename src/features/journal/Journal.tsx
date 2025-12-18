@@ -310,7 +310,8 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
       if (saved) {
         // Award XP for journal entry (only for new entries, not edits)
         if (editorMode === 'create') {
-          const wordCount = draft.content.trim().split(/\s+/).length;
+          const content = draft.content.trim();
+          const wordCount = content ? content.split(/\s+/).length : 0;
           const isLongEntry = wordCount >= 500;
           const xpAmount = isLongEntry 
             ? XP_REWARDS.JOURNAL_ENTRY + XP_REWARDS.JOURNAL_LONG_ENTRY  // 25 XP for 500+ words

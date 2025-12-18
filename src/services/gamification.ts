@@ -478,7 +478,8 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
             .select('content')
             .eq('user_id', userId);
           const longEntries = (journalEntries || []).filter(entry => {
-            const wordCount = entry.content?.trim().split(/\s+/).length || 0;
+            const content = entry.content?.trim() || '';
+            const wordCount = content ? content.split(/\s+/).length : 0;
             return wordCount >= 500;
           });
           progress = longEntries.length;
