@@ -1,4 +1,4 @@
-import type { AchievementWithProgress } from '../../services/achievements';
+import type { AchievementWithProgress } from '../../types/gamification';
 import { TIER_COLORS } from '../../types/gamification';
 import { AchievementProgress } from './AchievementProgress';
 
@@ -9,7 +9,7 @@ type Props = {
 
 export function AchievementCard({ achievement, onClick }: Props) {
   const tierColor = TIER_COLORS[achievement.tier as keyof typeof TIER_COLORS]?.border || '#667EEA';
-  const isLocked = !achievement.isUnlocked;
+  const isLocked = !achievement.unlocked;
 
   return (
     <button
@@ -32,21 +32,19 @@ export function AchievementCard({ achievement, onClick }: Props) {
 
       {isLocked && (
         <AchievementProgress
-          current={achievement.currentProgress}
+          current={achievement.progress}
           required={achievement.requirement_value}
-          percent={achievement.progressPercent}
+          percent={achievement.progressPercent || 0}
         />
       )}
 
       <div className="achievement-card__rewards">
         <span>+{achievement.xp_reward} XP</span>
-        <span>•</span>
-        <span>+{achievement.xp_reward} Points</span>
       </div>
 
-      {achievement.unlockedAt && (
+      {achievement.unlocked_at && (
         <div className="achievement-card__unlocked-date">
-          Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
+          Unlocked {new Date(achievement.unlocked_at).toLocaleDateString()}
         </div>
       )}
     </button>

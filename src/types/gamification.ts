@@ -183,6 +183,7 @@ export interface AchievementWithProgress extends Achievement {
   progress: number;
   unlocked: boolean;
   unlocked_at: string | null;
+  progressPercent?: number; // Optional: Percentage of progress (0-100)
 }
 
 // =====================================================

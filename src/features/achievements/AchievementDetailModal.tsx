@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { AchievementWithProgress } from '../../services/achievements';
+import type { AchievementWithProgress } from '../../types/gamification';
 import { TIER_LABELS } from '../../types/gamification';
 
 type Props = {
@@ -63,15 +63,15 @@ export function AchievementDetailModal({ achievement, onClose }: Props) {
 
       <div className="achievement-detail-modal__content">
         <div className="achievement-detail-modal__status">
-          <span className={`achievement-detail-modal__badge ${achievement.isUnlocked ? 'achievement-detail-modal__badge--unlocked' : 'achievement-detail-modal__badge--locked'}`}>
-            {achievement.isUnlocked ? '✅ UNLOCKED' : '🔒 LOCKED'}
+          <span className={`achievement-detail-modal__badge ${achievement.unlocked ? 'achievement-detail-modal__badge--unlocked' : 'achievement-detail-modal__badge--locked'}`}>
+            {achievement.unlocked ? '✅ UNLOCKED' : '🔒 LOCKED'}
           </span>
           <span className="achievement-detail-modal__tier">{tierLabel}</span>
         </div>
 
-        {achievement.unlockedAt && (
+        {achievement.unlocked_at && (
           <p className="achievement-detail-modal__unlocked-date">
-            Unlocked on {new Date(achievement.unlockedAt).toLocaleDateString('en-US', {
+            Unlocked on {new Date(achievement.unlocked_at).toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -90,9 +90,9 @@ export function AchievementDetailModal({ achievement, onClose }: Props) {
           <p>
             {achievement.requirement_type.replace(/_/g, ' ')}: {achievement.requirement_value}
           </p>
-          {!achievement.isUnlocked && (
+          {!achievement.unlocked && (
             <p className="achievement-detail-modal__progress-text">
-              Progress: {achievement.currentProgress}/{achievement.requirement_value} ({achievement.progressPercent}%)
+              Progress: {achievement.progress}/{achievement.requirement_value} ({achievement.progressPercent || 0}%)
             </p>
           )}
         </div>
@@ -101,11 +101,10 @@ export function AchievementDetailModal({ achievement, onClose }: Props) {
           <h3>Rewards</h3>
           <ul className="achievement-detail-modal__rewards">
             <li>✨ {achievement.xp_reward} XP</li>
-            <li>💎 {achievement.xp_reward} Points</li>
           </ul>
         </div>
 
-        {achievement.isUnlocked && (
+        {achievement.unlocked && (
           <div className="achievement-detail-modal__actions">
             <button
               type="button"

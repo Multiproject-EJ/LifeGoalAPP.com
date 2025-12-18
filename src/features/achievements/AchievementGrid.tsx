@@ -1,4 +1,4 @@
-import type { AchievementWithProgress } from '../../services/achievements';
+import type { AchievementWithProgress } from '../../types/gamification';
 import { AchievementCard } from './AchievementCard';
 
 type Props = {

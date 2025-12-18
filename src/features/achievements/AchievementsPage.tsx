@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import type { AchievementWithProgress } from '../../types/gamification';
 import {
   fetchAchievementsWithProgress,
   getAchievementStats,
   getNextAchievement,
-  type AchievementWithProgress,
   type AchievementStats,
 } from '../../services/achievements';
 import { AchievementGrid } from './AchievementGrid';
@@ -57,8 +57,8 @@ export function AchievementsPage({ session }: Props) {
 
   const filteredAchievements = achievements.filter(achievement => {
     // Status filter
-    if (filterStatus === 'unlocked' && !achievement.isUnlocked) return false;
-    if (filterStatus === 'locked' && achievement.isUnlocked) return false;
+    if (filterStatus === 'unlocked' && !achievement.unlocked) return false;
+    if (filterStatus === 'locked' && achievement.unlocked) return false;
 
     // Tier filter
     if (filterTier && achievement.tier !== filterTier) return false;
@@ -174,14 +174,14 @@ export function AchievementsPage({ session }: Props) {
         </div>
       )}
 
-      {nextAchievement && !nextAchievement.isUnlocked && (
+      {nextAchievement && !nextAchievement.unlocked && (
         <div className="achievements-page__next">
           <div className="achievements-next">
             <p className="achievements-next__label">💡 Next Achievement</p>
             <p className="achievements-next__name">{nextAchievement.icon} {nextAchievement.name}</p>
             <p className="achievements-next__progress">
-              {nextAchievement.currentProgress}/{nextAchievement.requirement_value} •{' '}
-              {nextAchievement.requirement_value - nextAchievement.currentProgress} to go!
+              {nextAchievement.progress}/{nextAchievement.requirement_value} •{' '}
+              {nextAchievement.requirement_value - nextAchievement.progress} to go!
             </p>
           </div>
         </div>

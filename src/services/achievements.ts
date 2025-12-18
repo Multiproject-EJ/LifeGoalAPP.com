@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../lib/supabaseClient';
-import type { Achievement, UserAchievement } from '../types/gamification';
+import type { Achievement, UserAchievement, AchievementWithProgress } from '../types/gamification';
 import type { PostgrestError } from '@supabase/supabase-js';
 
 type ServiceResponse<T> = {
@@ -43,9 +43,9 @@ export async function fetchAchievementsWithProgress(
 
     return {
       ...achievement,
-      currentProgress: userProgress?.progress || 0,
-      isUnlocked: userProgress?.unlocked || false,
-      unlockedAt: userProgress?.unlocked_at || null,
+      progress: userProgress?.progress || 0,
+      unlocked: userProgress?.unlocked || false,
+      unlocked_at: userProgress?.unlocked_at || null,
       progressPercent: Math.min(
         100,
         Math.floor(((userProgress?.progress || 0) / achievement.requirement_value) * 100)
@@ -67,7 +67,7 @@ export async function getAchievementStats(userId: string): Promise<ServiceRespon
   }
 
   const total = achievementsData.length;
-  const unlocked = achievementsData.filter(a => a.isUnlocked).length;
+  const unlocked = achievementsData.filter(a => a.unlocked).length;
   const percentComplete = total > 0 ? Math.floor((unlocked / total) * 100) : 0;
 
   const tierCounts = {
@@ -80,18 +80,18 @@ export async function getAchievementStats(userId: string): Promise<ServiceRespon
   achievementsData.forEach(achievement => {
     const tier = achievement.tier as keyof typeof tierCounts;
     tierCounts[tier].total++;
-    if (achievement.isUnlocked) {
+    if (achievement.unlocked) {
       tierCounts[tier].unlocked++;
     }
   });
 
   const totalXPEarned = achievementsData
-    .filter(a => a.isUnlocked)
+    .filter(a => a.unlocked)
     .reduce((sum, a) => sum + a.xp_reward, 0);
 
   const totalPointsEarned = achievementsData
-    .filter(a => a.isUnlocked)
-    .reduce((sum, a) => sum + a.xp_reward, 0); // Use xp_reward as points since points_reward doesn't exist
+    .filter(a => a.unlocked)
+    .reduce((sum, a) => sum + a.xp_reward, 0);
 
   return {
     data: {
@@ -110,22 +110,15 @@ export async function getAchievementStats(userId: string): Promise<ServiceRespon
  * Get next closest achievement to unlock
  */
 export function getNextAchievement(achievements: AchievementWithProgress[]): AchievementWithProgress | null {
-  const locked = achievements.filter(a => !a.isUnlocked);
+  const locked = achievements.filter(a => !a.unlocked);
   if (locked.length === 0) return null;
 
   // Sort by progress percent descending
-  const sorted = locked.sort((a, b) => b.progressPercent - a.progressPercent);
+  const sorted = locked.sort((a, b) => (b.progressPercent || 0) - (a.progressPercent || 0));
   return sorted[0];
 }
 
 // Types
-export interface AchievementWithProgress extends Achievement {
-  currentProgress: number;
-  isUnlocked: boolean;
-  unlockedAt: string | null;
-  progressPercent: number;
-}
-
 export interface AchievementStats {
   total: number;
   unlocked: number;
