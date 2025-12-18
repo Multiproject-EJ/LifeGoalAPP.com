@@ -23,6 +23,7 @@ import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiCoach } from './features/ai-coach';
 import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
+import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -128,6 +129,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     summary: 'Chat with your personal AI coach for motivation, advice, and guidance.',
     icon: '💬',
     shortLabel: 'COACH',
+  },
+  {
+    id: 'achievements',
+    label: 'Achievements',
+    summary: 'View your unlocked achievements and track progress',
+    icon: '🏆',
+    shortLabel: 'ACHIEVEMENTS',
   },
 ];
 
@@ -1070,6 +1078,12 @@ export default function App() {
             <LifeGoalsSection session={activeSession} />
             <GoalWorkspace session={activeSession} />
             <GoalReflectionJournal session={activeSession} />
+          </div>
+        );
+      case 'achievements':
+        return (
+          <div className="workspace-content">
+            <AchievementsPage session={activeSession} />
           </div>
         );
       default:
