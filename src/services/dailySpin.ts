@@ -40,7 +40,7 @@ export async function fetchDailySpinState(userId: string): Promise<ServiceRespon
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('daily_spin_state')
+    .from('daily_spin_state' as any)
     .select('*')
     .eq('user_id', userId)
     .maybeSingle();
@@ -52,7 +52,7 @@ export async function fetchDailySpinState(userId: string): Promise<ServiceRespon
   if (!data) {
     // Initialize state
     const { data: newState, error: insertError } = await supabase
-      .from('daily_spin_state')
+      .from('daily_spin_state' as any)
       .insert({
         user_id: userId,
         spins_available: 0,
@@ -100,7 +100,7 @@ export async function updateSpinsAvailable(userId: string, spinsEarned: number):
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('daily_spin_state')
+    .from('daily_spin_state' as any)
     .update({
       spins_available: newSpins,
       updated_at: new Date().toISOString(),
@@ -211,7 +211,7 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
 
   // Update state
   await supabase
-    .from('daily_spin_state')
+    .from('daily_spin_state' as any)
     .update({
       last_spin_date: today,
       spins_available: newSpinsAvailable,
@@ -221,7 +221,7 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
     .eq('user_id', userId);
 
   // Log spin history
-  await supabase.from('spin_history').insert({
+  await supabase.from('spin_history' as any).insert({
     user_id: userId,
     prize_type: prize.type,
     prize_value: prize.value,

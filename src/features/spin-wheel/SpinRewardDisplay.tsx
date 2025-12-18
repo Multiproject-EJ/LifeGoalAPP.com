@@ -18,7 +18,7 @@ export function SpinRewardDisplay({ prize, spinsRemaining, onClose }: Props) {
     });
   }, []);
 
-  const wasMystery = prize.details?.wasMystery;
+  const wasMystery = prize.details?.wasMystery as boolean | undefined;
 
   return (
     <div className="spin-reward-display" role="dialog" aria-modal="true">

@@ -19,6 +19,7 @@ import {
 import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
 import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
 import { isDemoSession } from '../../services/demoSession';
+import { DailySpinWheel } from '../spin-wheel/DailySpinWheel';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habit types
@@ -751,6 +752,11 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
                 ))}
               </ul>
             )}
+          </article>
+
+          {/* Daily Spin Wheel Widget */}
+          <article className="progress-card progress-card--spin-wheel">
+            <DailySpinWheel session={session} />
           </article>
         </div>
     </section>
