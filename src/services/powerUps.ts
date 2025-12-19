@@ -16,7 +16,7 @@ const DEMO_POWERUPS_KEY = 'demo_user_powerups';
  */
 export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>> {
   if (!canUseSupabaseData()) {
-    // Return demo catalog
+    // Return full demo catalog
     const demoCatalog: PowerUp[] = [
       {
         id: 'demo-1',
@@ -149,17 +149,29 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
   }
 
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('power_ups' as any)
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
+  
+  try {
+    const { data, error } = await supabase
+      .from('power_ups' as any)
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
 
-  if (error) {
-    return { data: null, error };
+    if (error) {
+      console.error('Error fetching power-ups catalog:', error);
+      return { data: null, error };
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('No power-ups found in catalog. Run migration 0111_power_ups_store.sql');
+      return { data: [], error: null };
+    }
+
+    return { data: data.map(mapRowToPowerUp), error: null };
+  } catch (err) {
+    console.error('Unexpected error fetching power-ups:', err);
+    return { data: null, error: err as Error };
   }
-
-  return { data: data.map(mapRowToPowerUp), error: null };
 }
 
 /**

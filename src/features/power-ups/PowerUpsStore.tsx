@@ -27,11 +27,17 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
 
   const loadData = async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       // Load catalog
       const { data: catalogData, error: catalogError } = await fetchPowerUpsCatalog();
-      if (catalogError) throw catalogError;
-      setCatalog(catalogData || []);
+      if (catalogError) {
+        console.error('Error loading power-ups catalog:', catalogError);
+        setErrorMessage('Failed to load power-ups catalog. Please ensure migration 0111_power_ups_store.sql has been run.');
+        setCatalog([]);
+      } else {
+        setCatalog(catalogData || []);
+      }
 
       // Load user's profile for points balance
       const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
@@ -111,6 +117,26 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
     return (
       <div className="power-ups-store">
         <div className="power-ups-store__loading">Loading store...</div>
+      </div>
+    );
+  }
+
+  if (errorMessage && catalog.length === 0) {
+    return (
+      <div className="power-ups-store">
+        <div className="power-ups-store__error">
+          <h2>⚠️ Unable to Load Store</h2>
+          <p>{errorMessage}</p>
+          <details>
+            <summary>Troubleshooting</summary>
+            <ul>
+              <li>Ensure migration <code>0111_power_ups_store.sql</code> has been run successfully</li>
+              <li>Check browser console for detailed errors</li>
+              <li>Verify Supabase connection</li>
+            </ul>
+          </details>
+          <button onClick={loadData}>Try Again</button>
+        </div>
       </div>
     );
   }

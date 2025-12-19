@@ -123,11 +123,11 @@ VALUES
 ON CONFLICT (power_up_key) DO NOTHING;
 
 -- Add power-up achievements
-INSERT INTO public.achievements (achievement_key, name, description, icon, xp_reward, points_reward, requirement_type, requirement_value, tier, sort_order)
+INSERT INTO public.achievements (achievement_key, name, description, icon, tier, category, xp_reward, requirement_type, requirement_value, points_reward, sort_order)
 VALUES
-  ('shopaholic', 'Shopaholic', 'Purchase 10 power-ups from the store', '🛍️', 150, 75, 'powerups_purchased', 10, 'bronze', 70),
-  ('power_user', 'Power User', 'Activate a 3X XP boost', '💫', 200, 100, 'triple_boost_used', 1, 'silver', 71),
-  ('mystery_hunter', 'Mystery Hunter', 'Purchase 3 mystery chests', '🔮', 300, 150, 'mystery_chests', 3, 'gold', 72)
+  ('shopaholic', 'Shopaholic', 'Purchase 10 power-ups from the store', '🛍️', 'bronze', 'engagement', 150, 'powerups_purchased', 10, 75, 70),
+  ('power_user', 'Power User', 'Activate a 3X XP boost', '💫', 'silver', 'engagement', 200, 'triple_boost_used', 1, 100, 71),
+  ('mystery_hunter', 'Mystery Hunter', 'Purchase 3 mystery chests', '🔮', 'gold', 'engagement', 300, 'mystery_chests', 3, 150, 72)
 ON CONFLICT (achievement_key) DO NOTHING;
 
 -- Comments

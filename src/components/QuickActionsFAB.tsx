@@ -7,6 +7,8 @@ import {
   clearHabitCompletion,
   type LegacyHabitWithGoal as HabitWithGoal 
 } from '../compat/legacyHabitsAdapter';
+import { useGamification } from '../hooks/useGamification';
+import { XP_REWARDS } from '../types/gamification';
 import { AiCoach } from '../features/ai-coach';
 import '../features/ai-coach/AiCoach.css';
 
@@ -59,6 +61,8 @@ export function QuickActionsFAB({
   const [loadingHabits, setLoadingHabits] = useState(false);
   const [savingHabitId, setSavingHabitId] = useState<string | null>(null);
   const fabRef = useRef<HTMLDivElement>(null);
+
+  const { earnXP, recordActivity } = useGamification(session);
 
   // Close FAB menu and reset all states on click outside
   useEffect(() => {
@@ -213,6 +217,16 @@ export function QuickActionsFAB({
           ...prev,
           [habitId]: { logId: data?.id ?? null, completed: true },
         }));
+
+        // ✨ Award XP for habit completion
+        const now = new Date();
+        const isEarlyMorning = now.getHours() < 9;
+        const xpAmount = isEarlyMorning 
+          ? XP_REWARDS.HABIT_COMPLETE_EARLY  // 5 XP bonus
+          : XP_REWARDS.HABIT_COMPLETE;        // 10 XP
+        
+        await earnXP(xpAmount, 'habit_complete', habitId);
+        await recordActivity();
       }
     } catch (error) {
       console.error('Failed to toggle habit:', error);

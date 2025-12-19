@@ -25,6 +25,7 @@ export function useGamification(session: Session | null) {
   const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
   const [notifications, setNotifications] = useState<GamificationNotification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [xpToasts, setXpToasts] = useState<Array<{ id: string; amount: number; source?: string }>>([]);
 
   const userId = session?.user?.id;
 
@@ -117,13 +118,17 @@ export function useGamification(session: Session | null) {
       const result = await awardXP(userId, xpAmount, sourceType, sourceId, description);
 
       if (result.success) {
+        // Add XP toast notification
+        const toastId = `xp-${Date.now()}`;
+        setXpToasts(prev => [...prev, { id: toastId, amount: xpAmount, source: sourceType }]);
+        
         // Refresh profile
         await loadGamificationData();
       }
 
       return result;
     },
-    [userId, enabled]
+    [userId, enabled, loadGamificationData]
   );
 
   const recordActivity = useCallback(async () => {
@@ -158,6 +163,10 @@ export function useGamification(session: Session | null) {
     [userId]
   );
 
+  const dismissXPToast = useCallback((toastId: string) => {
+    setXpToasts(prev => prev.filter(toast => toast.id !== toastId));
+  }, []);
+
   return {
     enabled,
     profile,
@@ -167,6 +176,8 @@ export function useGamification(session: Session | null) {
     earnXP,
     recordActivity,
     dismissNotification,
+    dismissXPToast,
+    xpToasts,
     refreshProfile: loadGamificationData,
   };
 }
