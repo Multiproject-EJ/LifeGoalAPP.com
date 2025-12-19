@@ -222,7 +222,7 @@ export function QuickActionsFAB({
         const now = new Date();
         const isEarlyMorning = now.getHours() < 9;
         const xpAmount = isEarlyMorning 
-          ? XP_REWARDS.HABIT_COMPLETE_EARLY  // 5 XP bonus
+          ? XP_REWARDS.HABIT_COMPLETE_EARLY  // 15 XP for early morning
           : XP_REWARDS.HABIT_COMPLETE;        // 10 XP
         
         await earnXP(xpAmount, 'habit_complete', habitId);
