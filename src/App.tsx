@@ -31,8 +31,10 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { MobileThemeSelector } from './components/MobileThemeSelector';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
+import { XPToast } from './components/XPToast';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useTheme, AVAILABLE_THEMES } from './contexts/ThemeContext';
+import { useGamification } from './hooks/useGamification';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -201,6 +203,8 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
+
+  const { xpToasts, dismissXPToast } = useGamification(supabaseSession);
 
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
@@ -1422,6 +1426,16 @@ export default function App() {
           onOpenLifeCoach={handleOpenLifeCoach}
         />
       )}
+
+      {/* XP Toast Notifications */}
+      {xpToasts.map(toast => (
+        <XPToast
+          key={toast.id}
+          amount={toast.amount}
+          source={toast.source}
+          onComplete={() => dismissXPToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

@@ -77,7 +77,7 @@ export interface GamificationNotification {
 export const XP_REWARDS = {
   // Habit completion rewards
   HABIT_COMPLETE: 10,
-  HABIT_COMPLETE_EARLY: 5, // Bonus if completed before 9am
+  HABIT_COMPLETE_EARLY: 15, // Total XP if completed before 9am
   ALL_DAILY_HABITS: 25, // Bonus for completing all daily habits
   
   // Goal rewards

@@ -33,22 +33,27 @@ CREATE INDEX IF NOT EXISTS idx_spin_history_spun_at ON public.spin_history(spun_
 ALTER TABLE public.daily_spin_state ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.spin_history ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own spin state" ON public.daily_spin_state;
 CREATE POLICY "Users can view their own spin state"
   ON public.daily_spin_state FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own spin state" ON public.daily_spin_state;
 CREATE POLICY "Users can insert their own spin state"
   ON public.daily_spin_state FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own spin state" ON public.daily_spin_state;
 CREATE POLICY "Users can update their own spin state"
   ON public.daily_spin_state FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own spin history" ON public.spin_history;
 CREATE POLICY "Users can view their own spin history"
   ON public.spin_history FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own spin history" ON public.spin_history;
 CREATE POLICY "Users can insert their own spin history"
   ON public.spin_history FOR INSERT
   WITH CHECK (auth.uid() = user_id);
