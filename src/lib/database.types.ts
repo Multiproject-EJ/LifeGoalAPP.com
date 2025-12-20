@@ -440,6 +440,96 @@ export interface Database {
         };
         Relationships: [];
       };
+      vision_board_daily_items: {
+        Row: {
+          id: string;
+          session_id: string;
+          user_id: string;
+          title: string | null;
+          description: string | null;
+          suggested_area: string | null;
+          final_area: string | null;
+          order_index: number | null;
+          status: string;
+          image_storage_path: string | null;
+          legacy_image_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          user_id: string;
+          title?: string | null;
+          description?: string | null;
+          suggested_area?: string | null;
+          final_area?: string | null;
+          order_index?: number | null;
+          status?: string;
+          image_storage_path?: string | null;
+          legacy_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          user_id?: string;
+          title?: string | null;
+          description?: string | null;
+          suggested_area?: string | null;
+          final_area?: string | null;
+          order_index?: number | null;
+          status?: string;
+          image_storage_path?: string | null;
+          legacy_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      vision_board_daily_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          session_date: string;
+          status: string;
+          total_points: number | null;
+          balance_score: number | null;
+          insight_area: string | null;
+          insight_text: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          session_date?: string;
+          status?: string;
+          total_points?: number | null;
+          balance_score?: number | null;
+          insight_area?: string | null;
+          insight_text?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          session_date?: string;
+          status?: string;
+          total_points?: number | null;
+          balance_score?: number | null;
+          insight_area?: string | null;
+          insight_text?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       vision_images: {
         Row: {
           id: string;
