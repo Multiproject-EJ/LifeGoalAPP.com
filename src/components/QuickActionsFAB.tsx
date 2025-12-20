@@ -11,6 +11,7 @@ import { useGamification } from '../hooks/useGamification';
 import { XP_REWARDS } from '../types/gamification';
 import { AiCoach } from '../features/ai-coach';
 import '../features/ai-coach/AiCoach.css';
+import { GamificationHeader } from './GamificationHeader';
 
 type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule';
 
@@ -56,13 +57,22 @@ export function QuickActionsFAB({
   const [showJournalTypes, setShowJournalTypes] = useState(false);
   const [showLifeCoach, setShowLifeCoach] = useState(false);
   const [showHabitsSubmenu, setShowHabitsSubmenu] = useState(false);
+  const [showGamificationCard, setShowGamificationCard] = useState(false);
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [habitCompletions, setHabitCompletions] = useState<Record<string, { logId: string | null; completed: boolean }>>({});
   const [loadingHabits, setLoadingHabits] = useState(false);
   const [savingHabitId, setSavingHabitId] = useState<string | null>(null);
   const fabRef = useRef<HTMLDivElement>(null);
 
-  const { earnXP, recordActivity } = useGamification(session);
+  const {
+    earnXP,
+    recordActivity,
+    profile: gamificationProfile,
+    levelInfo,
+    enabled: gamificationEnabled,
+    loading: gamificationLoading,
+    refreshProfile,
+  } = useGamification(session);
 
   // Close FAB menu and reset all states on click outside
   useEffect(() => {
@@ -71,6 +81,7 @@ export function QuickActionsFAB({
         setIsOpen(false);
         setShowJournalTypes(false);
         setShowHabitsSubmenu(false);
+        setShowGamificationCard(false);
         // Note: showLifeCoach is not reset here because the Life Coach modal
         // has its own backdrop click handler for closing
       }
@@ -90,6 +101,7 @@ export function QuickActionsFAB({
     if (isOpen) {
       setShowJournalTypes(false);
       setShowHabitsSubmenu(false);
+      setShowGamificationCard(false);
     }
   };
 
@@ -146,6 +158,7 @@ export function QuickActionsFAB({
     setShowHabitsSubmenu(newShowHabitsSubmenu);
     setShowJournalTypes(false);
     setShowLifeCoach(false);
+    setShowGamificationCard(false);
     
     // Load habits when opening the submenu (only if not already loading or loaded)
     if (newShowHabitsSubmenu && habits.length === 0 && !loadingHabits) {
@@ -157,6 +170,7 @@ export function QuickActionsFAB({
     setShowJournalTypes(!showJournalTypes);
     setShowHabitsSubmenu(false);
     setShowLifeCoach(false);
+    setShowGamificationCard(false);
   };
 
   const handleJournalTypeSelect = (type: JournalType) => {
@@ -169,7 +183,17 @@ export function QuickActionsFAB({
     setShowHabitsSubmenu(false);
     setShowJournalTypes(false);
     setShowLifeCoach(true);
+    setShowGamificationCard(false);
     setIsOpen(false);
+  };
+
+  const handleGamificationClick = () => {
+    setShowHabitsSubmenu(false);
+    setShowJournalTypes(false);
+    setShowLifeCoach(false);
+    setShowGamificationCard(true);
+    setIsOpen(false);
+    refreshProfile?.();
   };
 
   const closeLifeCoach = () => {
@@ -186,6 +210,10 @@ export function QuickActionsFAB({
     onJournalNow?.('standard');
     setIsOpen(false);
     setShowJournalTypes(false);
+  };
+
+  const closeGamificationCard = () => {
+    setShowGamificationCard(false);
   };
 
   const toggleHabitCompletion = async (habitId: string) => {
@@ -256,6 +284,13 @@ export function QuickActionsFAB({
       label: 'Life Coach AI',
       color: '#0ea5e9',
       onClick: handleLifeCoachClick,
+    },
+    {
+      id: 'gamification',
+      icon: '🎮',
+      label: 'Scorecard',
+      color: '#f97316',
+      onClick: handleGamificationClick,
     },
   ];
 
@@ -415,6 +450,108 @@ export function QuickActionsFAB({
           onClose={closeLifeCoach}
           starterQuestion="What's one thing you want help with today?"
         />
+      )}
+
+      {showGamificationCard && (
+        <div
+          className="gamification-scorecard-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Gamification scorecard"
+          onClick={closeGamificationCard}
+        >
+          <div
+            className="gamification-scorecard"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="gamification-scorecard__header">
+              <div className="gamification-scorecard__title">
+                <span className="gamification-scorecard__badge" aria-hidden="true">🎮</span>
+                <div>
+                  <p className="gamification-scorecard__eyebrow">Game Mode</p>
+                  <h3 className="gamification-scorecard__headline">Scorecard & progress</h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="gamification-scorecard__close"
+                onClick={closeGamificationCard}
+                aria-label="Close gamification scorecard"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="gamification-scorecard__body">
+              {gamificationLoading && (
+                <div className="gamification-scorecard__loading">Fetching your XP story...</div>
+              )}
+
+              {!gamificationLoading && !gamificationEnabled && (
+                <div className="gamification-scorecard__empty">
+                  <p>Gamification is currently turned off.</p>
+                  <p className="gamification-scorecard__muted">
+                    Enable it from Settings to unlock XP, streaks, and rewards.
+                  </p>
+                </div>
+              )}
+
+              {!gamificationLoading && gamificationEnabled && gamificationProfile && levelInfo && (
+                <>
+                  <GamificationHeader profile={gamificationProfile} levelInfo={levelInfo} />
+
+                  <div className="gamification-scorecard__grid">
+                    <div className="gamification-scorecard__tile">
+                      <p className="gamification-scorecard__label">XP to next level</p>
+                      <p className="gamification-scorecard__value">
+                        {Math.max(levelInfo.xpForNextLevel - gamificationProfile.total_xp, 0)} XP
+                      </p>
+                      <p className="gamification-scorecard__hint">Keep checking off habits to climb faster.</p>
+                    </div>
+
+                    <div className="gamification-scorecard__tile">
+                      <p className="gamification-scorecard__label">Current streak</p>
+                      <p className="gamification-scorecard__value">🔥 {gamificationProfile.current_streak} days</p>
+                      <p className="gamification-scorecard__hint">Longest streak: {gamificationProfile.longest_streak} days</p>
+                    </div>
+
+                    <div className="gamification-scorecard__tile">
+                      <p className="gamification-scorecard__label">Lives & freezes</p>
+                      <p className="gamification-scorecard__value">
+                        ❤️ {gamificationProfile.lives}/{gamificationProfile.max_lives} · ❄️ {gamificationProfile.streak_freezes}
+                      </p>
+                      <p className="gamification-scorecard__hint">Use freezes to protect your streak on busy days.</p>
+                    </div>
+
+                    <div className="gamification-scorecard__tile">
+                      <p className="gamification-scorecard__label">Points bank</p>
+                      <p className="gamification-scorecard__value">💎 {gamificationProfile.total_points}</p>
+                      <p className="gamification-scorecard__hint">Spend points on boosters in the store.</p>
+                    </div>
+                  </div>
+
+                  <div className="gamification-scorecard__next-steps">
+                    <h4>Quick wins to boost XP</h4>
+                    <ul>
+                      <li>✔️ Check off another habit today</li>
+                      <li>📔 Add a journal entry to keep momentum</li>
+                      <li>🏆 Visit Achievements to review unlocks</li>
+                    </ul>
+                  </div>
+                </>
+              )}
+
+              {!gamificationLoading && gamificationEnabled && (!gamificationProfile || !levelInfo) && (
+                <div className="gamification-scorecard__empty">
+                  <p>No scorecard data yet.</p>
+                  <p className="gamification-scorecard__muted">
+                    Start completing habits and journals to build your gamification profile.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

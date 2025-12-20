@@ -458,3 +458,210 @@
   outline: 2px solid #667eea;
   outline-offset: 2px;
 }
+
+/* Gamification Scorecard (Quick Actions FAB) */
+.gamification-scorecard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(14, 165, 233, 0.35));
+  backdrop-filter: blur(6px);
+}
+
+.gamification-scorecard {
+  width: min(960px, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow: auto;
+  background: var(--color-surface-primary, #ffffff);
+  color: var(--color-text-primary, #0f172a);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+  padding: 1.5rem;
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: scorecardPop 0.25s ease;
+}
+
+@keyframes scorecardPop {
+  from {
+    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.gamification-scorecard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gamification-scorecard__title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gamification-scorecard__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.35);
+  font-size: 1.25rem;
+}
+
+.gamification-scorecard__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748b);
+}
+
+.gamification-scorecard__headline {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+}
+
+.gamification-scorecard__close {
+  background: transparent;
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.1));
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--color-text-primary, #0f172a);
+  transition: all 0.2s ease;
+}
+
+.gamification-scorecard__close:hover {
+  background: var(--color-surface-secondary, #f8fafc);
+  transform: rotate(3deg);
+}
+
+.gamification-scorecard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gamification-scorecard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.gamification-scorecard__tile {
+  background: var(--color-surface-secondary, #f8fafc);
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.05));
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.gamification-scorecard__tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(14, 165, 233, 0.08), rgba(168, 85, 247, 0.04));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gamification-scorecard__tile:hover::before {
+  opacity: 1;
+}
+
+.gamification-scorecard__label {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #64748b);
+}
+
+.gamification-scorecard__value {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.gamification-scorecard__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.gamification-scorecard__next-steps {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(16, 185, 129, 0.08));
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 10px 28px rgba(14, 165, 233, 0.12);
+}
+
+.gamification-scorecard__next-steps h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.gamification-scorecard__next-steps ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: var(--color-text-primary, #0f172a);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.gamification-scorecard__loading,
+.gamification-scorecard__empty {
+  text-align: center;
+  padding: 1.25rem;
+  background: var(--color-surface-secondary, #f8fafc);
+  border-radius: 12px;
+  color: var(--color-text-muted, #64748b);
+  border: 1px dashed var(--color-border-primary, rgba(15, 23, 42, 0.08));
+}
+
+.gamification-scorecard__muted {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted, #64748b);
+}
+
+@media (max-width: 768px) {
+  .gamification-scorecard {
+    padding: 1.1rem;
+    max-height: calc(100vh - 1.5rem);
+  }
+
+  .gamification-scorecard__header {
+    align-items: flex-start;
+  }
+
+  .gamification-scorecard__grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
