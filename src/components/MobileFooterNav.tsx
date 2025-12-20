@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 type MobileFooterNavItem = {
   id: string;
@@ -14,6 +14,8 @@ type MobileFooterStatus = {
   progress?: number;
 };
 
+type FooterListItem = MobileFooterNavItem | { type: 'status' };
+
 type MobileFooterNavProps = {
   items: MobileFooterNavItem[];
   activeId: string | null;
@@ -22,17 +24,20 @@ type MobileFooterNavProps = {
   status?: MobileFooterStatus;
 };
 
+const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
+
 export function MobileFooterNav({ items, activeId, onSelect, onOpenMenu, status }: MobileFooterNavProps) {
-  const listItems: Array<MobileFooterNavItem | { type: 'status' }> = status && items.length
+  const listItems: FooterListItem[] = status && items.length
     ? [items[0], { type: 'status' }, ...items.slice(1)]
     : items;
 
   const totalColumns = listItems.length || items.length;
+  const listStyle = { '--mobile-footer-columns': totalColumns } as CSSProperties;
 
   return (
     <nav className="mobile-footer-nav" aria-label="Primary navigation">
       <div className="mobile-footer-nav__surface">
-        <ul className="mobile-footer-nav__list" style={{ ['--mobile-footer-columns' as const]: totalColumns }}>
+        <ul className="mobile-footer-nav__list" style={listStyle}>
           {listItems.map((item) => {
             if ('type' in item && item.type === 'status' && status) {
               return (
@@ -56,6 +61,10 @@ export function MobileFooterNav({ items, activeId, onSelect, onOpenMenu, status 
                   </div>
                 </li>
               );
+            }
+
+            if (!isNavItem(item)) {
+              return null;
             }
 
             const isActive = item.id === activeId;
