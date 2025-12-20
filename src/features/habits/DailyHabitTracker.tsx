@@ -8,6 +8,8 @@ import {
   logHabitCompletion,
   type LegacyHabitWithGoal as HabitWithGoal,
 } from '../../compat/legacyHabitsAdapter';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
 import {
   getHabitCompletionsByMonth,
   getMonthlyCompletionGrid,
@@ -132,6 +134,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [intentionsJournalSaving, setIntentionsJournalSaving] = useState(false);
   const [intentionsJournalError, setIntentionsJournalError] = useState<string | null>(null);
   const [intentionsJournalStatus, setIntentionsJournalStatus] = useState<string | null>(null);
+  const { earnXP, recordActivity } = useGamification(session);
 
   useEffect(() => {
     const parsedDate = parseISODate(activeDate);
@@ -419,6 +422,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
 
     const isActiveDay = dateISO === activeDate;
+    const isToday = dateISO === today;
     const cellKey = `${habit.id}:${dateISO}`;
 
     if (isActiveDay) {
@@ -490,6 +494,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
           return nextLogs;
         });
+
+        // 🎮 Award XP for completing today's habits
+        if (isToday) {
+          const now = new Date();
+          const xpAmount = now.getHours() < 9
+            ? XP_REWARDS.HABIT_COMPLETE_EARLY
+            : XP_REWARDS.HABIT_COMPLETE;
+
+          await earnXP(xpAmount, 'habit_complete', habit.id);
+          await recordActivity();
+        }
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update the habit.');

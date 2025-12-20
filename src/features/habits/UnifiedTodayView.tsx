@@ -20,6 +20,8 @@ import {
 } from '../../services/habitsV2';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress } from './scheduleInterpreter';
 import { updateSpinsAvailable } from '../../services/dailySpin';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
 
 type ViewVariant = 'full' | 'compact' | 'minimal';
 
@@ -48,6 +50,7 @@ export function UnifiedTodayView({
   const [error, setError] = useState<string | null>(null);
   const [loggingHabitIds, setLoggingHabitIds] = useState<Set<string>>(new Set());
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  const { earnXP, recordActivity } = useGamification(session);
 
   // Load habits and logs on mount
   useEffect(() => {
@@ -175,6 +178,14 @@ export function UnifiedTodayView({
       // Check and award spins
       await checkAndAwardSpins(todaysHabits, logsData ?? []);
 
+      // 🎮 Award XP for habit completion
+      const now = new Date();
+      const xpAmount = now.getHours() < 9
+        ? XP_REWARDS.HABIT_COMPLETE_EARLY
+        : XP_REWARDS.HABIT_COMPLETE;
+      await earnXP(xpAmount, 'habit_complete', habitId);
+      await recordActivity();
+
       // Callback
       onHabitComplete?.(habitId);
     } catch (err) {
@@ -217,6 +228,14 @@ export function UnifiedTodayView({
 
       // Check and award spins
       await checkAndAwardSpins(todaysHabits, logsData ?? []);
+
+      // 🎮 Award XP for logged habit completion
+      const now = new Date();
+      const xpAmount = now.getHours() < 9
+        ? XP_REWARDS.HABIT_COMPLETE_EARLY
+        : XP_REWARDS.HABIT_COMPLETE;
+      await earnXP(xpAmount, 'habit_complete', habit.id);
+      await recordActivity();
 
       onHabitComplete?.(habit.id);
     } catch (err) {
