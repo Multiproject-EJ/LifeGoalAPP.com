@@ -8,6 +8,7 @@ import {
   uploadVisionImage,
   uploadVisionImageFromUrl,
 } from '../../services/visionBoard';
+import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGame';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/imageConverter';
@@ -47,6 +48,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [convertingImage, setConvertingImage] = useState(false);
+  const [showDailyGame, setShowDailyGame] = useState(false);
 
   const loadImages = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -344,6 +346,14 @@ export function VisionBoard({ session }: VisionBoardProps) {
               <option value="masonry">Masonry</option>
             </select>
           </div>
+          <button
+            type="button"
+            className="vision-board__daily-game-button"
+            onClick={() => setShowDailyGame(true)}
+            disabled={!isConfigured}
+          >
+            🎮 Daily Vision Game
+          </button>
         </div>
       </header>
 
@@ -519,6 +529,14 @@ export function VisionBoard({ session }: VisionBoardProps) {
           ))
         )}
       </div>
+
+      {showDailyGame && (
+        <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
+          <div className="vision-board__modal">
+            <VisionBoardDailyGame session={session} onClose={() => setShowDailyGame(false)} isConfigured={isConfigured} />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
