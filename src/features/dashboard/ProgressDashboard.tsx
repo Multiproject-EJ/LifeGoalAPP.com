@@ -1,4 +1,5 @@
-import { FormEvent, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import type { FormEvent, TouchEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchGoals } from '../../services/goals';
@@ -17,6 +18,7 @@ import {
   normalizeGoalStatus,
 } from '../goals/goalStatus';
 import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
+import { LifeWheelCheckins } from '../checkins/LifeWheelCheckins';
 import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
 import { isDemoSession } from '../../services/demoSession';
 import { DailySpinWheel } from '../spin-wheel/DailySpinWheel';
@@ -166,6 +168,8 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const [habitFormError, setHabitFormError] = useState<string | null>(null);
   const [creatingHabit, setCreatingHabit] = useState(false);
   const [showIdeasPage, setShowIdeasPage] = useState(false);
+  const [activePanel, setActivePanel] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const today = useMemo(() => new Date(), []);
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBoundaries(today), [today]);
@@ -420,9 +424,8 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     [],
   );
 
-  return (
-    <section className="progress-dashboard">
-      {showIdeasPage ? <DeveloperIdeasPage onClose={() => setShowIdeasPage(false)} /> : null}
+  const fullDashboardPanel = (
+    <div className="progress-dashboard__panel-content">
       <header className="progress-dashboard__header">
         <div>
           <h2>Progress dashboard</h2>
@@ -759,6 +762,142 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             <DailySpinWheel session={session} />
           </article>
         </div>
+      </div>
+    );
+
+  const panels = [
+    {
+      id: 'life-wheel',
+      title: 'Life wheel',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--life-wheel">
+          <LifeWheelCheckins session={session} />
+        </div>
+      ),
+    },
+    {
+      id: 'visionboard',
+      title: 'Visionboard peak + gamefication',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--title">
+          <h2>visionboard peak + gamefication</h2>
+        </div>
+      ),
+    },
+    {
+      id: 'improvements',
+      title: 'Improvements and game stats',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--title">
+          <h2>improvements and game stats</h2>
+        </div>
+      ),
+    },
+    {
+      id: 'full-dashboard',
+      title: 'Progress dashboard',
+      content: fullDashboardPanel,
+    },
+  ];
+
+  const maxPanelIndex = panels.length - 1;
+
+  const handlePrevPanel = useCallback(
+    () => setActivePanel((current) => Math.max(0, current - 1)),
+    [],
+  );
+
+  const handleNextPanel = useCallback(
+    () => setActivePanel((current) => Math.min(maxPanelIndex, current + 1)),
+    [maxPanelIndex],
+  );
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    setTouchStartX(event.touches[0]?.clientX ?? null);
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchStartX === null) return;
+
+    const endX = event.changedTouches[0]?.clientX ?? touchStartX;
+    const deltaX = endX - touchStartX;
+    const swipeThreshold = 40;
+
+    if (Math.abs(deltaX) > swipeThreshold) {
+      if (deltaX < 0) {
+        handleNextPanel();
+      } else {
+        handlePrevPanel();
+      }
+    }
+
+    setTouchStartX(null);
+  };
+
+  return (
+    <section className="progress-dashboard">
+      {showIdeasPage ? <DeveloperIdeasPage onClose={() => setShowIdeasPage(false)} /> : null}
+
+      <div
+        className="progress-dashboard__carousel"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          className="progress-dashboard__track"
+          style={{ transform: `translateX(-${activePanel * 100}%)` }}
+        >
+          {panels.map((panel) => (
+            <div
+              key={panel.id}
+              className="progress-dashboard__panel"
+              role="group"
+              aria-roledescription="slide"
+              aria-label={panel.title}
+            >
+              {panel.content}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="progress-dashboard__controls" aria-label="Dashboard panel navigation">
+        <button
+          type="button"
+          className="progress-dashboard__control-button"
+          onClick={handlePrevPanel}
+          disabled={activePanel === 0}
+          aria-label="Show previous panel"
+        >
+          ←
+        </button>
+
+        <div className="progress-dashboard__dots" role="tablist" aria-label="Dashboard panels">
+          {panels.map((panel, index) => (
+            <button
+              key={panel.id}
+              type="button"
+              className={`progress-dashboard__dot ${
+                activePanel === index ? 'progress-dashboard__dot--active' : ''
+              }`}
+              onClick={() => setActivePanel(index)}
+              aria-label={`Go to ${panel.title}`}
+              aria-pressed={activePanel === index}
+              role="tab"
+            />
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className="progress-dashboard__control-button"
+          onClick={handleNextPanel}
+          disabled={activePanel === maxPanelIndex}
+          aria-label="Show next panel"
+        >
+          →
+        </button>
+      </div>
     </section>
   );
 }

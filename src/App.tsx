@@ -151,6 +151,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
   'planning',
+  'goals',
   'habits',
   'support',
   'ai-coach',
