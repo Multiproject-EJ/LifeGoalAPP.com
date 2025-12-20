@@ -124,6 +124,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalSaving, setQuickJournalSaving] = useState(false);
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
+  const [isGlassModeEnabled, setIsGlassModeEnabled] = useState(false);
   // State for intentions journal
   const [isIntentionsJournalOpen, setIsIntentionsJournalOpen] = useState(false);
   const [intentionsJournalType, setIntentionsJournalType] = useState<'today' | 'tomorrow'>('today');
@@ -929,13 +930,32 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       }
     };
 
+    const checklistCardClassName = `habit-checklist-card${isGlassModeEnabled ? ' habit-checklist-card--glass' : ''}`;
+
     return (
-      <div className="habit-checklist-card" role="region" aria-label={ariaLabel}>
+      <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
         <div className="habit-checklist-card__board">
           <div className="habit-checklist-card__board-head">
-            <div className="habit-checklist-card__date-group">
-              <p className="habit-checklist-card__date">{dateLabel}</p>
-              <p className="habit-checklist-card__time">{timeLabel}</p>
+            <div className="habit-checklist-card__date-wrap">
+              <div className="habit-checklist-card__date-group">
+                <p className="habit-checklist-card__date">{dateLabel}</p>
+                <p className="habit-checklist-card__time">{timeLabel}</p>
+              </div>
+              <button
+                type="button"
+                className={`habit-checklist-card__glass-toggle ${
+                  isGlassModeEnabled ? 'habit-checklist-card__glass-toggle--active' : ''
+                }`}
+                onClick={() => setIsGlassModeEnabled((previous) => !previous)}
+                aria-pressed={isGlassModeEnabled}
+              >
+                <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
+                  <span className="habit-checklist-card__glass-toggle-thumb" />
+                </span>
+                <span className="habit-checklist-card__glass-toggle-label">
+                  {isGlassModeEnabled ? 'Liquid glass' : 'Cozy paper'}
+                </span>
+              </button>
             </div>
             <div className="habit-checklist-card__head-actions">
               <span className="habit-checklist-card__progress">{progressLabel}</span>

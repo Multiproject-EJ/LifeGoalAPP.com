@@ -204,7 +204,7 @@ export default function App() {
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
 
-  const { xpToasts, dismissXPToast } = useGamification(supabaseSession);
+  const { xpToasts, dismissXPToast, levelInfo } = useGamification(supabaseSession);
 
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
@@ -259,9 +259,21 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(
-    () => mobileMenuNavItems.slice(0, 4),
+    () => mobileMenuNavItems.filter((item) => item.id === 'planning' || item.id === 'ai-coach'),
     [mobileMenuNavItems],
   );
+
+  const mobileFooterStatus = useMemo(() => {
+    const levelNumber = levelInfo?.currentLevel ?? 1;
+    const progressPercent = Math.round(levelInfo?.progressPercentage ?? 0);
+
+    return {
+      label: `Level ${levelNumber}`,
+      description: progressPercent > 0 ? `${progressPercent}% to L${levelNumber + 1}` : 'Keep building your streak',
+      icon: '⚡️',
+      progress: progressPercent,
+    } as const;
+  }, [levelInfo]);
 
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
 
@@ -1214,6 +1226,7 @@ export default function App() {
         <MobileHabitHome session={activeSession} />
         <MobileFooterNav
           items={mobileFooterNavItems}
+          status={mobileFooterStatus}
           activeId={null}
           onSelect={handleMobileNavSelect}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
@@ -1370,6 +1383,7 @@ export default function App() {
       {isMobileViewport ? (
         <MobileFooterNav
           items={mobileFooterNavItems}
+          status={mobileFooterStatus}
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
