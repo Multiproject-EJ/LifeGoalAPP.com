@@ -22,11 +22,19 @@ type MobileFooterNavProps = {
   onSelect: (itemId: string) => void;
   onOpenMenu?: () => void;
   status?: MobileFooterStatus;
+  onStatusClick?: () => void;
 };
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
 
-export function MobileFooterNav({ items, activeId, onSelect, onOpenMenu, status }: MobileFooterNavProps) {
+export function MobileFooterNav({
+  items,
+  activeId,
+  onSelect,
+  onOpenMenu,
+  status,
+  onStatusClick,
+}: MobileFooterNavProps) {
   const listItems: FooterListItem[] = status && items.length
     ? [items[0], { type: 'status' }, ...items.slice(1)]
     : items;
@@ -42,7 +50,15 @@ export function MobileFooterNav({ items, activeId, onSelect, onOpenMenu, status 
             if ('type' in item && item.type === 'status' && status) {
               return (
                 <li key="status" className="mobile-footer-nav__item mobile-footer-nav__status" aria-live="polite">
-                  <div className="mobile-footer-nav__status-card">
+                  <button
+                    type="button"
+                    className={`mobile-footer-nav__status-card ${
+                      onStatusClick ? 'mobile-footer-nav__status-card--interactive' : ''
+                    }`}
+                    onClick={onStatusClick}
+                    aria-label={`View gamification details for ${status.label}`}
+                    aria-pressed={false}
+                  >
                     <div className="mobile-footer-nav__status-header">
                       <span className="mobile-footer-nav__status-icon" aria-hidden="true">{status.icon ?? '⭐️'}</span>
                       <span className="mobile-footer-nav__status-label">{status.label}</span>
@@ -58,7 +74,10 @@ export function MobileFooterNav({ items, activeId, onSelect, onOpenMenu, status 
                         />
                       </div>
                     ) : null}
-                  </div>
+                    {onStatusClick ? (
+                      <span className="mobile-footer-nav__status-cta">Tap for insights</span>
+                    ) : null}
+                  </button>
                 </li>
               );
             }

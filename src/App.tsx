@@ -202,6 +202,7 @@ export default function App() {
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
 
@@ -262,6 +263,16 @@ export default function App() {
   const mobileFooterNavItems = useMemo(
     () => mobileMenuNavItems.filter((item) => item.id === 'planning' || item.id === 'ai-coach'),
     [mobileMenuNavItems],
+  );
+
+  const todayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+      }).format(new Date()),
+    [],
   );
 
   const mobileFooterStatus = useMemo(() => {
@@ -1221,6 +1232,91 @@ export default function App() {
       </div>
     ) : null;
 
+  const mobileGamificationOverlay =
+    isMobileViewport && showMobileGamification ? (
+      <div
+        className="mobile-gamification-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Gamification insights"
+      >
+        <div
+          className="mobile-gamification-overlay__backdrop"
+          onClick={() => setShowMobileGamification(false)}
+          role="presentation"
+        />
+        <div className="mobile-gamification-overlay__panel">
+          <header className="mobile-gamification-overlay__header">
+            <div>
+              <p className="mobile-gamification-overlay__eyebrow">Today</p>
+              <h2 className="mobile-gamification-overlay__title">Keep building your streak</h2>
+              <p className="mobile-gamification-overlay__subtitle">{todayLabel}</p>
+            </div>
+            <button
+              type="button"
+              className="mobile-gamification-overlay__close"
+              aria-label="Close gamification insights"
+              onClick={() => setShowMobileGamification(false)}
+            >
+              ×
+            </button>
+          </header>
+
+          <div className="mobile-gamification-overlay__status">
+            <div className="mobile-gamification-overlay__status-icon" aria-hidden="true">
+              {mobileFooterStatus?.icon ?? '⚡️'}
+            </div>
+            <div className="mobile-gamification-overlay__status-content">
+              <p className="mobile-gamification-overlay__status-label">{mobileFooterStatus?.label ?? 'Level 1'}</p>
+              <p className="mobile-gamification-overlay__status-desc">
+                {mobileFooterStatus?.description ?? 'Power through your daily checklist to rank up.'}
+              </p>
+              {mobileFooterStatus?.progress !== undefined ? (
+                <div className="mobile-gamification-overlay__status-progress" aria-hidden="true">
+                  <span style={{ width: `${Math.min(Math.max(mobileFooterStatus.progress, 0), 100)}%` }} />
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mobile-gamification-overlay__grid" role="list">
+            <div className="mobile-gamification-overlay__stat" role="listitem">
+              <p className="mobile-gamification-overlay__stat-label">Goals</p>
+              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.goalCount ?? 0}</p>
+              <p className="mobile-gamification-overlay__stat-hint">Tracked in your workspace</p>
+            </div>
+            <div className="mobile-gamification-overlay__stat" role="listitem">
+              <p className="mobile-gamification-overlay__stat-label">Habits</p>
+              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.habitCount ?? 0}</p>
+              <p className="mobile-gamification-overlay__stat-hint">Active routines to keep you steady</p>
+            </div>
+            <div className="mobile-gamification-overlay__stat" role="listitem">
+              <p className="mobile-gamification-overlay__stat-label">Check-ins</p>
+              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.checkinCount ?? 0}</p>
+              <p className="mobile-gamification-overlay__stat-hint">Moments you showed up</p>
+            </div>
+            <div className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta" role="listitem">
+              <div className="mobile-gamification-overlay__stat-icon" aria-hidden="true">💬</div>
+              <div>
+                <p className="mobile-gamification-overlay__stat-label">Coach</p>
+                <p className="mobile-gamification-overlay__stat-hint">Ask for quick strategies or encouragement</p>
+              </div>
+              <button
+                type="button"
+                className="mobile-gamification-overlay__coach-button"
+                onClick={() => {
+                  setShowMobileGamification(false);
+                  handleMobileNavSelect('ai-coach');
+                }}
+              >
+                Open coach
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : null;
+
   if (isMobileViewport && showMobileHome) {
     return (
       <>
@@ -1230,9 +1326,11 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={null}
           onSelect={handleMobileNavSelect}
+          onStatusClick={() => setShowMobileGamification(true)}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
         {mobileMenuOverlay}
+        {mobileGamificationOverlay}
       </>
     );
   }
@@ -1387,11 +1485,13 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
+          onStatusClick={() => setShowMobileGamification(true)}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
       ) : null}
 
       {mobileMenuOverlay}
+      {mobileGamificationOverlay}
 
       {isAuthOverlayVisible ? (
         <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with LifeGoalApp">
