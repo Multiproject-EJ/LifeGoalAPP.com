@@ -863,9 +863,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           goal_id: null,
         };
 
-        const { error } = await createJournalEntry(payload);
+        const { data, error } = await createJournalEntry(payload);
         if (error) {
           throw new Error(error.message);
+        }
+
+        // 🎮 Award XP for quick journal entry
+        if (data) {
+          await earnXP(XP_REWARDS.JOURNAL_ENTRY, 'journal_entry', data.id);
+          await recordActivity();
         }
 
         setIsQuickJournalOpen(false);
@@ -930,9 +936,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           goal_id: null,
         };
 
-        const { error } = await createJournalEntry(payload);
+        const { data, error } = await createJournalEntry(payload);
         if (error) {
           throw new Error(error.message);
+        }
+
+        // 🎮 Award XP for intentions journal entry
+        if (data) {
+          await earnXP(XP_REWARDS.JOURNAL_ENTRY, 'journal_entry', data.id);
+          await recordActivity();
         }
 
         setIsIntentionsJournalOpen(false);
