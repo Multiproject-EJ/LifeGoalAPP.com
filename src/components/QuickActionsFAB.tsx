@@ -523,9 +523,14 @@ export function QuickActionsFAB({
                       <p className="gamification-scorecard__hint">Use freezes to protect your streak on busy days.</p>
                     </div>
 
-                    <div className="gamification-scorecard__tile">
-                      <p className="gamification-scorecard__label">Points bank</p>
-                      <p className="gamification-scorecard__value">💎 {gamificationProfile.total_points}</p>
+                    <div className="gamification-scorecard__tile gamification-scorecard__tile--points">
+                      <div className="gamification-scorecard__tile-header">
+                        <p className="gamification-scorecard__label">Points bank</p>
+                        <span className="gamification-scorecard__pill">Bonus ready</span>
+                      </div>
+                      <p className="gamification-scorecard__value gamification-scorecard__value--glow">
+                        💎 {gamificationProfile.total_points}
+                      </p>
                       <p className="gamification-scorecard__hint">Spend points on boosters in the store.</p>
                     </div>
                   </div>
