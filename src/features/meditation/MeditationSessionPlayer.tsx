@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './MeditationSessionPlayer.css';
 
 type MeditationSessionPlayerProps = {
@@ -19,14 +19,48 @@ export function MeditationSessionPlayer({
   const [timeRemaining, setTimeRemaining] = useState(durationSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+  const [hasStarted, setHasStarted] = useState(false);
+  const [nextGongAt, setNextGongAt] = useState(60);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    return () => {
+      audioContextRef.current?.close();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
       setTimeRemaining(durationSeconds);
       setIsRunning(false);
       setBreathPhase('inhale');
+      setHasStarted(false);
+      setNextGongAt(60);
     }
   }, [isOpen, durationSeconds]);
+
+  const playGong = useCallback(() => {
+    const context = audioContextRef.current ?? new AudioContext();
+    audioContextRef.current = context;
+
+    const now = context.currentTime;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(520, now);
+    oscillator.frequency.exponentialRampToValueAtTime(180, now + 1.5);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+
+    oscillator.start(now);
+    oscillator.stop(now + 2);
+  }, []);
 
   useEffect(() => {
     if (!isRunning || timeRemaining <= 0) return;
@@ -44,6 +78,17 @@ export function MeditationSessionPlayer({
 
     return () => clearInterval(timer);
   }, [isRunning, timeRemaining, onComplete]);
+
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const elapsed = durationSeconds - timeRemaining;
+
+    if (elapsed >= nextGongAt && nextGongAt <= durationSeconds) {
+      playGong();
+      setNextGongAt((prev) => prev + 60);
+    }
+  }, [isRunning, durationSeconds, timeRemaining, nextGongAt, playGong]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -67,6 +112,10 @@ export function MeditationSessionPlayer({
   const progressPercentage = ((durationSeconds - timeRemaining) / durationSeconds) * 100;
 
   const handleStart = () => {
+    if (!hasStarted) {
+      playGong();
+      setHasStarted(true);
+    }
     setIsRunning(true);
   };
 
