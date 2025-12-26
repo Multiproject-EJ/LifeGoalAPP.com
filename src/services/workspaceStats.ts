@@ -5,6 +5,7 @@ export type WorkspaceStats = {
   goalCount: number;
   habitCount: number;
   checkinCount: number;
+  journalCount: number;
 };
 
 export type WorkspaceStatsResponse = {
@@ -50,11 +51,21 @@ export async function fetchWorkspaceStats(userId: string): Promise<WorkspaceStat
     return { data: null, error: checkinsResult.error };
   }
 
+  const journalsResult = await supabase
+    .from('journal_entries')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+
+  if (journalsResult.error) {
+    return { data: null, error: journalsResult.error };
+  }
+
   return {
     data: {
       goalCount: goalsResult.count ?? 0,
       habitCount,
       checkinCount: checkinsResult.count ?? 0,
+      journalCount: journalsResult.count ?? 0,
     },
     error: null,
   };
