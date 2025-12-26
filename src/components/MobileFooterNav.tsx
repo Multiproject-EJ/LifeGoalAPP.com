@@ -74,9 +74,6 @@ export function MobileFooterNav({
                         />
                       </div>
                     ) : null}
-                    {onStatusClick ? (
-                      <span className="mobile-footer-nav__status-cta">Tap for insights</span>
-                    ) : null}
                   </button>
                 </li>
               );
@@ -114,7 +111,6 @@ export function MobileFooterNav({
               <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
                 ☰
               </span>
-              <span className="mobile-footer-nav__menu-label">Menu</span>
               <span className="sr-only">Open full navigation</span>
             </button>
           </div>

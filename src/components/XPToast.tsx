@@ -4,10 +4,11 @@ import './XPToast.css';
 type Props = {
   amount: number;
   source?: string;
+  celebration?: string;
   onComplete?: () => void;
 };
 
-export function XPToast({ amount, source, onComplete }: Props) {
+export function XPToast({ amount, source, celebration, onComplete }: Props) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -25,6 +26,11 @@ export function XPToast({ amount, source, onComplete }: Props) {
     <div className={`xp-toast ${visible ? 'xp-toast--visible' : 'xp-toast--hidden'}`}>
       <span className="xp-toast__icon">✨</span>
       <span className="xp-toast__amount">+{amount} XP</span>
+      {celebration && (
+        <span className="xp-toast__celebration" aria-label="Level up celebration">
+          {celebration}
+        </span>
+      )}
       {source && <span className="xp-toast__source">{source}</span>}
     </div>
   );

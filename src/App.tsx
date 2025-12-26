@@ -1548,6 +1548,7 @@ export default function App() {
           key={toast.id}
           amount={toast.amount}
           source={toast.source}
+          celebration={toast.celebration}
           onComplete={() => dismissXPToast(toast.id)}
         />
       ))}

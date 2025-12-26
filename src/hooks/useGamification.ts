@@ -25,7 +25,12 @@ export function useGamification(session: Session | null) {
   const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
   const [notifications, setNotifications] = useState<GamificationNotification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [xpToasts, setXpToasts] = useState<Array<{ id: string; amount: number; source?: string }>>([]);
+  const [xpToasts, setXpToasts] = useState<Array<{
+    id: string;
+    amount: number;
+    source?: string;
+    celebration?: string;
+  }>>([]);
 
   const userId = session?.user?.id;
 
@@ -120,7 +125,11 @@ export function useGamification(session: Session | null) {
       if (result.success) {
         // Add XP toast notification
         const toastId = `xp-${Date.now()}`;
-        setXpToasts(prev => [...prev, { id: toastId, amount: xpAmount, source: sourceType }]);
+        const celebration = result.leveledUp ? '🎉🥳✨' : undefined;
+        setXpToasts(prev => [
+          ...prev,
+          { id: toastId, amount: xpAmount, source: sourceType, celebration },
+        ]);
         
         // Refresh profile
         await loadGamificationData();
