@@ -12,7 +12,7 @@ import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
-import { GoalReflectionJournal, GoalWorkspace, LifeGoalsSection } from './features/goals';
+import { GoalWorkspace, LifeGoalsSection } from './features/goals';
 import { DailyHabitTracker, HabitsModule, MobileHabitHome } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
@@ -1113,7 +1113,6 @@ export default function App() {
           <div className="workspace-content">
             <LifeGoalsSection session={activeSession} />
             <GoalWorkspace session={activeSession} />
-            <GoalReflectionJournal session={activeSession} />
           </div>
         );
       case 'achievements':
