@@ -1463,16 +1463,10 @@ export default function App() {
         <main className="workspace-main">
           {(authMessage || authError) && <div className="workspace-status">{statusElements}</div>}
 
-          {isMobileViewport ? (
-            <button type="button" className="workspace-main__mobile-cta" onClick={openTodayHome}>
-              Back to daily checklist
-            </button>
-          ) : null}
-
           <section
             className={`workspace-stage ${
               activeWorkspaceNav === 'goals' ? 'workspace-stage--detail' : 'workspace-stage--placeholder'
-            }`}
+            }${activeWorkspaceNav === 'account' ? ' workspace-stage--account' : ''}`}
             aria-live="polite"
           >
             <div className="workspace-stage__body">{renderWorkspaceSection()}</div>
