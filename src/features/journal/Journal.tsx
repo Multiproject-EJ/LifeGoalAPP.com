@@ -22,6 +22,7 @@ import { DEFAULT_JOURNAL_TYPE } from './constants';
 import { isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { GoalReflectionJournal } from '../goals/GoalReflectionJournal';
 
 /**
  * Journal mode type representing different journaling experiences.
@@ -71,6 +72,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
 
   // Journal mode state for different journaling experiences
   const [journalType, setJournalType] = useState<JournalType>(DEFAULT_JOURNAL_TYPE);
+  const isGoalReflectionMode = journalType === 'goal';
 
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -395,14 +397,16 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
         </div>
         <div className="journal__header-actions">
           <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
-          <button
-            type="button"
-            className="journal__new"
-            onClick={() => handleOpenEditor('create', null)}
-            disabled={journalDisabled}
-          >
-            + New entry
-          </button>
+          {!isGoalReflectionMode ? (
+            <button
+              type="button"
+              className="journal__new"
+              onClick={() => handleOpenEditor('create', null)}
+              disabled={journalDisabled}
+            >
+              + New entry
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -415,62 +419,68 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
       {status ? <p className={`journal__status journal__status--${status.kind}`}>{status.message}</p> : null}
       {error ? <p className="journal__status journal__status--error">{error}</p> : null}
 
-      <div className="journal__layout">
-        <div className={`journal__column journal__column--list ${
-          isCompactLayout && showMobileDetail ? 'journal__column--hidden' : ''
-        }`}>
-          <JournalEntryList
-            entries={entries}
-            filteredEntries={filteredEntries}
-            selectedEntryId={selectedEntryId}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedTag={selectedTag}
-            onSelectTag={setSelectedTag}
-            availableTags={availableTags}
-            loading={loading}
-            disabled={journalDisabled}
-            isCollapsed={isCompactLayout && showMobileDetail}
-            emptyStateMessage={listEmptyState}
-            getMoodMeta={getMoodMeta}
-            onSelectEntry={handleSelectEntry}
-            isEntryLocked={isEntryLocked}
-          />
-        </div>
-        <div className={`journal__column journal__column--detail ${
-          isCompactLayout && !showMobileDetail ? 'journal__column--hidden' : ''
-        }`}>
-          <JournalEntryDetail
-            entry={activeEntry}
-            getMoodMeta={getMoodMeta}
-            goalMap={goalMap}
-            habitMap={habitMap}
-            onEdit={() => handleOpenEditor('edit', activeEntry)}
-            onDelete={handleDeleteEntry}
-            showBackButton={isCompactLayout}
-            onBack={() => setShowMobileDetail(false)}
-            onNavigateToGoal={handleNavigateGoal}
-            onNavigateToHabit={handleNavigateHabit}
-            disabled={journalDisabled || actionLoading}
-            unavailableMessage={journalDisabled ? listEmptyState : null}
-            isLocked={activeEntry ? isEntryLocked(activeEntry) : false}
-          />
-        </div>
-      </div>
+      {isGoalReflectionMode ? (
+        <GoalReflectionJournal session={session} />
+      ) : (
+        <>
+          <div className="journal__layout">
+            <div className={`journal__column journal__column--list ${
+              isCompactLayout && showMobileDetail ? 'journal__column--hidden' : ''
+            }`}>
+              <JournalEntryList
+                entries={entries}
+                filteredEntries={filteredEntries}
+                selectedEntryId={selectedEntryId}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedTag={selectedTag}
+                onSelectTag={setSelectedTag}
+                availableTags={availableTags}
+                loading={loading}
+                disabled={journalDisabled}
+                isCollapsed={isCompactLayout && showMobileDetail}
+                emptyStateMessage={listEmptyState}
+                getMoodMeta={getMoodMeta}
+                onSelectEntry={handleSelectEntry}
+                isEntryLocked={isEntryLocked}
+              />
+            </div>
+            <div className={`journal__column journal__column--detail ${
+              isCompactLayout && !showMobileDetail ? 'journal__column--hidden' : ''
+            }`}>
+              <JournalEntryDetail
+                entry={activeEntry}
+                getMoodMeta={getMoodMeta}
+                goalMap={goalMap}
+                habitMap={habitMap}
+                onEdit={() => handleOpenEditor('edit', activeEntry)}
+                onDelete={handleDeleteEntry}
+                showBackButton={isCompactLayout}
+                onBack={() => setShowMobileDetail(false)}
+                onNavigateToGoal={handleNavigateGoal}
+                onNavigateToHabit={handleNavigateHabit}
+                disabled={journalDisabled || actionLoading}
+                unavailableMessage={journalDisabled ? listEmptyState : null}
+                isLocked={activeEntry ? isEntryLocked(activeEntry) : false}
+              />
+            </div>
+          </div>
 
-      <JournalEntryEditor
-        open={editorOpen}
-        mode={editorMode}
-        entry={editorMode === 'edit' ? editingEntry : null}
-        goals={goals}
-        habits={habits}
-        moodOptions={MOOD_OPTIONS}
-        saving={editorSaving}
-        error={editorError}
-        journalType={journalType}
-        onClose={() => setEditorOpen(false)}
-        onSave={handleSaveEntry}
-      />
+          <JournalEntryEditor
+            open={editorOpen}
+            mode={editorMode}
+            entry={editorMode === 'edit' ? editingEntry : null}
+            goals={goals}
+            habits={habits}
+            moodOptions={MOOD_OPTIONS}
+            saving={editorSaving}
+            error={editorError}
+            journalType={journalType}
+            onClose={() => setEditorOpen(false)}
+            onSave={handleSaveEntry}
+          />
+        </>
+      )}
     </section>
   );
 }
