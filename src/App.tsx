@@ -876,7 +876,7 @@ export default function App() {
     workspaceNavItems.find((item) => item.id === activeWorkspaceNav) ??
     workspaceNavItems[workspaceNavItems.length - 1];
 
-  const isDemoExperience = isDemoSession(activeSession);
+  const isDemoExperience = isDemoMode && isDemoSession(activeSession);
   const normalizedDisplayName =
     displayName.trim() ||
     workspaceProfile?.full_name ||
@@ -947,7 +947,7 @@ export default function App() {
   const isOnboardingGateActive = !isDemoExperience;
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
 
-  const shouldRequireAuthentication = !isDemoExperience && !isAuthenticated && !isDemoMode;
+  const shouldRequireAuthentication = !isAuthenticated && !isDemoMode;
 
   useEffect(() => {
     if (profileAutosaveError) {
