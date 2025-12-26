@@ -1295,22 +1295,10 @@ export default function App() {
               <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.checkinCount ?? 0}</p>
               <p className="mobile-gamification-overlay__stat-hint">Moments you showed up</p>
             </div>
-            <div className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta" role="listitem">
-              <div className="mobile-gamification-overlay__stat-icon" aria-hidden="true">💬</div>
-              <div>
-                <p className="mobile-gamification-overlay__stat-label">Coach</p>
-                <p className="mobile-gamification-overlay__stat-hint">Ask for quick strategies or encouragement</p>
-              </div>
-              <button
-                type="button"
-                className="mobile-gamification-overlay__coach-button"
-                onClick={() => {
-                  setShowMobileGamification(false);
-                  handleMobileNavSelect('ai-coach');
-                }}
-              >
-                Open coach
-              </button>
+            <div className="mobile-gamification-overlay__stat" role="listitem">
+              <p className="mobile-gamification-overlay__stat-label">Journals</p>
+              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.journalCount ?? 0}</p>
+              <p className="mobile-gamification-overlay__stat-hint">Reflections you’ve captured</p>
             </div>
           </div>
         </div>
