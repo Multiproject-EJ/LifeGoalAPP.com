@@ -2272,6 +2272,24 @@ body {
     backdrop-filter: none;
   }
 
+  .account-panel {
+    padding-inline: clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .account-panel__card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .account-panel__actions {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
   .workspace-content,
   .habit-tracker,
   .habit-monthly,
