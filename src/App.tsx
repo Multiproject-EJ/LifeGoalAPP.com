@@ -1319,6 +1319,9 @@ export default function App() {
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
+        {showAiCoachModal && (
+          <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
+        )}
       </>
     );
   }
