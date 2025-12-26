@@ -61,6 +61,21 @@ type HabitInsights = {
   lastCompletedOn: string | null;
 };
 
+type QuickJournalDraft = {
+  isOpen: boolean;
+  morning: string;
+  day: string;
+  evening: string;
+  interactions: string;
+  freeform: string;
+};
+
+type IntentionsJournalDraft = {
+  isOpen: boolean;
+  type: 'today' | 'tomorrow';
+  content: string;
+};
+
 const STREAK_LOOKBACK_DAYS = 60;
 
 const LIFE_WHEEL_COLORS: Record<string, string> = {
@@ -82,6 +97,32 @@ const LIFE_WHEEL_COLORS: Record<string, string> = {
 
 const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatically once you reconnect.';
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
+
+const quickJournalDraftKey = (userId: string, dateISO: string) =>
+  `lifegoal.quick-journal:${userId}:${dateISO}`;
+const intentionsJournalDraftKey = (userId: string, dateISO: string) =>
+  `lifegoal.intentions-journal:${userId}:${dateISO}`;
+
+const loadDraft = <T,>(key: string): T | null => {
+  if (typeof window === 'undefined') return null;
+  const stored = window.localStorage.getItem(key);
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored) as T;
+  } catch {
+    return null;
+  }
+};
+
+const saveDraft = (key: string, value: unknown) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+};
+
+const removeDraft = (key: string) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(key);
+};
 
 export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
@@ -143,6 +184,102 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setSelectedYear(parsedDate.getFullYear());
     }
   }, [activeDate, selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    const draftKey = quickJournalDraftKey(session.user.id, activeDate);
+    const draft = loadDraft<QuickJournalDraft>(draftKey);
+    if (draft) {
+      setQuickJournalMorning(draft.morning ?? '');
+      setQuickJournalDay(draft.day ?? '');
+      setQuickJournalEvening(draft.evening ?? '');
+      setQuickJournalInteractions(draft.interactions ?? '');
+      setQuickJournalFreeform(draft.freeform ?? '');
+      const hasContent = Boolean(
+        draft.morning || draft.day || draft.evening || draft.interactions || draft.freeform
+      );
+      setIsQuickJournalOpen(draft.isOpen || hasContent);
+    } else {
+      setQuickJournalMorning('');
+      setQuickJournalDay('');
+      setQuickJournalEvening('');
+      setQuickJournalInteractions('');
+      setQuickJournalFreeform('');
+      setIsQuickJournalOpen(false);
+    }
+    setQuickJournalError(null);
+    setQuickJournalStatus(null);
+  }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    const draftKey = quickJournalDraftKey(session.user.id, activeDate);
+    const hasContent = Boolean(
+      quickJournalMorning ||
+        quickJournalDay ||
+        quickJournalEvening ||
+        quickJournalInteractions ||
+        quickJournalFreeform
+    );
+
+    if (!hasContent && !isQuickJournalOpen) {
+      removeDraft(draftKey);
+      return;
+    }
+
+    saveDraft(draftKey, {
+      isOpen: isQuickJournalOpen,
+      morning: quickJournalMorning,
+      day: quickJournalDay,
+      evening: quickJournalEvening,
+      interactions: quickJournalInteractions,
+      freeform: quickJournalFreeform,
+    } satisfies QuickJournalDraft);
+  }, [
+    activeDate,
+    session.user.id,
+    isQuickJournalOpen,
+    quickJournalMorning,
+    quickJournalDay,
+    quickJournalEvening,
+    quickJournalInteractions,
+    quickJournalFreeform,
+  ]);
+
+  useEffect(() => {
+    const draftKey = intentionsJournalDraftKey(session.user.id, activeDate);
+    const draft = loadDraft<IntentionsJournalDraft>(draftKey);
+    if (draft) {
+      setIntentionsJournalContent(draft.content ?? '');
+      setIntentionsJournalType(draft.type ?? 'today');
+      const hasContent = Boolean(draft.content);
+      setIsIntentionsJournalOpen(draft.isOpen || hasContent);
+    } else {
+      setIntentionsJournalContent('');
+      setIntentionsJournalType('today');
+      setIsIntentionsJournalOpen(false);
+    }
+    setIntentionsJournalError(null);
+    setIntentionsJournalStatus(null);
+  }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    const draftKey = intentionsJournalDraftKey(session.user.id, activeDate);
+    if (!intentionsJournalContent && !isIntentionsJournalOpen) {
+      removeDraft(draftKey);
+      return;
+    }
+
+    saveDraft(draftKey, {
+      isOpen: isIntentionsJournalOpen,
+      type: intentionsJournalType,
+      content: intentionsJournalContent,
+    } satisfies IntentionsJournalDraft);
+  }, [
+    activeDate,
+    session.user.id,
+    intentionsJournalContent,
+    intentionsJournalType,
+    isIntentionsJournalOpen,
+  ]);
 
   const monthlySummary = useMemo(() => {
     if (!habits.length || !monthDays.length) {
@@ -874,6 +1011,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           await recordActivity();
         }
 
+        removeDraft(quickJournalDraftKey(session.user.id, activeDate));
         setIsQuickJournalOpen(false);
         setQuickJournalMorning('');
         setQuickJournalDay('');
@@ -947,6 +1085,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           await recordActivity();
         }
 
+        removeDraft(intentionsJournalDraftKey(session.user.id, activeDate));
         setIsIntentionsJournalOpen(false);
         setIntentionsJournalContent('');
         setIntentionsJournalStatus('Saved to your journal.');
@@ -1102,6 +1241,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       type="button"
                       className="habit-quick-journal__cancel"
                       onClick={() => {
+                        removeDraft(quickJournalDraftKey(session.user.id, activeDate));
                         setIsQuickJournalOpen(false);
                         setQuickJournalMorning('');
                         setQuickJournalDay('');
@@ -1184,6 +1324,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       type="button"
                       className="habit-quick-journal__cancel"
                       onClick={() => {
+                        removeDraft(intentionsJournalDraftKey(session.user.id, activeDate));
                         setIsIntentionsJournalOpen(false);
                         setIntentionsJournalContent('');
                         setIntentionsJournalError(null);
