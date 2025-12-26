@@ -49,6 +49,11 @@
   font-weight: 700;
 }
 
+.xp-toast__celebration {
+  font-size: 18px;
+  letter-spacing: 2px;
+}
+
 .xp-toast__source {
   font-size: 12px;
   opacity: 0.9;
