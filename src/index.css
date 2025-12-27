@@ -6340,48 +6340,6 @@ body {
   gap: clamp(1.25rem, 2.5vw, 2rem);
 }
 
-.life-wheel__header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-.life-wheel__header h2 {
-  margin: 0 0 0.35rem;
-  font-size: clamp(1.4rem, 3vw, 1.8rem);
-}
-
-.life-wheel__header p {
-  margin: 0;
-  color: #475569;
-  max-width: 48ch;
-}
-
-.life-wheel__refresh {
-  align-self: center;
-  border: none;
-  border-radius: 999px;
-  padding: 0.65rem 1.4rem;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-}
-
-.life-wheel__refresh:disabled {
-  cursor: not-allowed;
-  filter: grayscale(0.35);
-  opacity: 0.8;
-}
-
-.life-wheel__refresh:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.28);
-}
-
 .life-wheel__status {
   margin: 0;
   padding: 0.85rem 1rem;
@@ -7212,38 +7170,43 @@ body {
   text-align: center;
 }
 
-.life-wheel__start-section {
+.life-wheel__chart-actions {
   display: flex;
   justify-content: center;
-  padding: 3rem 0;
+  margin-top: 0.75rem;
 }
 
 .life-wheel__start-questionnaire {
-  padding: 1.5rem 3rem;
+  padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
-  border-radius: 16px;
-  font-size: 1.125rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.25);
   font-family: inherit;
 }
 
 .life-wheel__start-questionnaire:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.35);
 }
 
 .life-wheel__start-questionnaire:active:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(0);
 }
 
 .life-wheel__start-questionnaire:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.life-wheel__insights-panel {
+  display: grid;
+  gap: 1.5rem;
 }
 
 @media (max-width: 1024px) {

@@ -17,8 +17,7 @@ import {
   type GoalStatusTag,
   normalizeGoalStatus,
 } from '../goals/goalStatus';
-import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
-import { LifeWheelCheckins } from '../checkins/LifeWheelCheckins';
+import { LIFE_WHEEL_CATEGORIES, LifeWheelCheckins, LifeWheelInsightsPanel } from '../checkins/LifeWheelCheckins';
 import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
 import { isDemoSession } from '../../services/demoSession';
 import { DailySpinWheel } from '../spin-wheel/DailySpinWheel';
@@ -790,6 +789,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
       content: (
         <div className="progress-dashboard__panel-content progress-dashboard__panel-content--title">
           <h2>improvements and game stats</h2>
+          <LifeWheelInsightsPanel session={session} />
         </div>
       ),
     },
