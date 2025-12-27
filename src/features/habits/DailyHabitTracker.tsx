@@ -16,10 +16,9 @@ import {
   toggleHabitCompletionForDate,
   type MonthlyHabitCompletions,
 } from '../../services/habitMonthlyQueries';
-import type { Database, Json } from '../../lib/database.types';
+import type { Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { HabitAlertConfig } from './HabitAlertConfig';
-import { getHabitAlertSummary } from '../../services/habitAlertNotifications';
 import { createJournalEntry } from '../../services/journal';
 import './HabitAlertConfig.css';
 
@@ -29,8 +28,6 @@ type DailyHabitTrackerProps = {
   session: Session;
   variant?: DailyHabitTrackerVariant;
 };
-
-type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
 
 type HabitCompletionState = {
   logId: string | null;
@@ -50,9 +47,19 @@ type HabitCompletionState = {
  */
 type HabitMonthlyCompletionState = Record<string, HabitCompletionState>;
 
-type HabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
+type HabitLogInsert = {
+  habit_id: string;
+  date: string;
+  completed: boolean;
+  id?: string;
+};
 
-type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
+type HabitLogRow = {
+  id: string;
+  habit_id: string;
+  date: string;
+  completed: boolean;
+};
 
 type HabitInsights = {
   scheduledToday: boolean;
@@ -156,8 +163,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   >({});
   // State for alert configuration modal
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
-  // State for habit alert summaries (which days have alerts scheduled)
-  const [habitAlertSummaries, setHabitAlertSummaries] = useState<Map<string, Map<string, HabitAlertRow[]>>>(new Map());
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
   const [quickJournalMorning, setQuickJournalMorning] = useState('');
   const [quickJournalDay, setQuickJournalDay] = useState('');
@@ -459,32 +464,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   useEffect(() => {
     void loadMonthlyStats(selectedYear, selectedMonth);
   }, [selectedYear, selectedMonth, loadMonthlyStats]);
-
-  // Load habit alert summaries for the selected month
-  useEffect(() => {
-    if (habits.length === 0 || monthDays.length === 0) {
-      setHabitAlertSummaries(new Map());
-      return;
-    }
-
-    const monthStartDate = new Date(selectedYear, selectedMonth, 1);
-    const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
-
-    const loadAlertSummaries = async () => {
-      const summaries = new Map<string, Map<string, HabitAlertRow[]>>();
-      
-      for (const habit of habits) {
-        const summary = await getHabitAlertSummary(habit.id, monthStartDate, monthEndDate);
-        if (summary.size > 0) {
-          summaries.set(habit.id, summary);
-        }
-      }
-      
-      setHabitAlertSummaries(summaries);
-    };
-
-    void loadAlertSummaries();
-  }, [habits, monthDays, selectedYear, selectedMonth]);
 
   useEffect(() => {
     if (!isConfigured && !isDemoExperience) {

@@ -1,8 +1,11 @@
-import type { Database } from '../lib/database.types';
-import { fetchHabitAlerts, shouldAlertOnDay } from './habitAlerts';
+import { fetchHabitReminderPrefs } from './habitReminderPrefs';
 import { formatTime, formatDateKey, parseTimeToDate } from './habitAlertUtils';
 
-type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
+type HabitAlertRow = {
+  habit_id: string;
+  alert_time: string;
+  enabled: boolean;
+};
 
 /**
  * Service for integrating habit alerts with the PWA notification system.
@@ -17,17 +20,25 @@ type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
  */
 export async function getHabitAlertsForDate(
   habitId: string,
-  date: Date
+  _date: Date
 ): Promise<HabitAlertRow[]> {
-  const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, etc.
-  
-  const { data: alerts, error } = await fetchHabitAlerts(habitId);
-  if (error || !alerts) {
+  const { data: prefs, error } = await fetchHabitReminderPrefs();
+  if (error || !prefs) {
     return [];
   }
-  
-  // Filter alerts to only those that should fire on this day
-  return alerts.filter((alert) => shouldAlertOnDay(alert, dayOfWeek));
+
+  const pref = prefs.find((entry) => entry.habit_id === habitId);
+  if (!pref || !pref.enabled || !pref.preferred_time) {
+    return [];
+  }
+
+  return [
+    {
+      habit_id: pref.habit_id,
+      alert_time: pref.preferred_time,
+      enabled: pref.enabled,
+    },
+  ];
 }
 
 /**
@@ -94,7 +105,7 @@ export async function getNextAlertTime(habitId: string): Promise<Date | null> {
  * 
  * Example implementation flow:
  * - Server-side: Edge function runs periodically (e.g., every minute)
- * - Query habit_alerts table for alerts due in the next minute
+ * - Query habit_reminder_prefs for reminders due in the next minute
  * - For each alert, send a push notification to subscribed users
  * - Use the subscription data stored in notification_preferences table
  * 
@@ -103,7 +114,7 @@ export async function getNextAlertTime(habitId: string): Promise<Date | null> {
 export async function scheduleHabitNotifications(habitId: string): Promise<void> {
   // TODO: Implement server-side notification scheduling
   // This would typically be handled by an edge function or backend service
-  // that queries the habit_alerts table and sends push notifications
+  // that queries reminder preferences and sends push notifications
   
   console.log('scheduleHabitNotifications called for habit:', habitId);
   console.log('Platform-specific notification scheduling not yet implemented.');
@@ -160,24 +171,31 @@ export async function getHabitAlertSummary(
   startDate: Date,
   endDate: Date
 ): Promise<Map<string, HabitAlertRow[]>> {
-  const { data: alerts, error } = await fetchHabitAlerts(habitId);
-  if (error || !alerts) {
+  const { data: prefs, error } = await fetchHabitReminderPrefs();
+  if (error || !prefs) {
     return new Map();
   }
-  
+
+  const pref = prefs.find((entry) => entry.habit_id === habitId);
+  if (!pref || !pref.enabled || !pref.preferred_time) {
+    return new Map();
+  }
+
+  const alertRow: HabitAlertRow = {
+    habit_id: pref.habit_id,
+    alert_time: pref.preferred_time,
+    enabled: pref.enabled,
+  };
+
   const summary = new Map<string, HabitAlertRow[]>();
   
   // Create a new date for each iteration to avoid mutation issues
   let current = new Date(startDate);
   
   while (current <= endDate) {
-    const dayOfWeek = current.getDay();
     const dateKey = formatDateKey(current);
     
-    const dayAlerts = alerts.filter((alert) => shouldAlertOnDay(alert, dayOfWeek));
-    if (dayAlerts.length > 0) {
-      summary.set(dateKey, dayAlerts);
-    }
+    summary.set(dateKey, [alertRow]);
     
     // Create new Date object for next iteration
     current = new Date(current);

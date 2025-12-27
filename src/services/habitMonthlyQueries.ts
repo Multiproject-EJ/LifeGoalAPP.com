@@ -7,7 +7,7 @@ import {
   getDemoHabitsForUser,
 } from './demoData';
 
-type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
+type HabitLogRow = Database['public']['Tables']['habit_logs_v2']['Row'];
 type HabitCompletionRow = Database['public']['Tables']['habit_completions']['Row'];
 type HabitCompletionInsert = Database['public']['Tables']['habit_completions']['Insert'];
 type HabitCompletionUpdate = Database['public']['Tables']['habit_completions']['Update'];
@@ -272,7 +272,7 @@ function getHabitCompletionsByMonthDemo(
     // Build completion data for each habit
     const habitCompletions: HabitMonthlyCompletion[] = habits.map(habit => {
       // Count completed logs for this habit
-      const habitLogs = logs.filter(log => log.habit_id === habit.id && log.completed);
+      const habitLogs = logs.filter(log => log.habit_id === habit.id && log.done);
       const completedDays = habitLogs.length;
       
       // Calculate completion percentage
@@ -282,7 +282,7 @@ function getHabitCompletionsByMonthDemo(
       
       return {
         habitId: habit.id,
-        habitName: habit.name,
+        habitName: habit.title,
         totalDays: totalDaysInMonth,
         completedDays,
         completionPercentage,
@@ -425,9 +425,7 @@ function toggleHabitCompletionForDateDemo(
   date: string,
 ): ServiceResponse<HabitCompletionRow> {
   try {
-    // In demo mode, we simulate the toggle behavior
-    // Since we're using the old habit_logs structure in demo mode,
-    // we need to create a mock HabitCompletionRow
+    // In demo mode, we simulate the toggle behavior and return a mock completion row.
     const effectiveUserId = userId || DEMO_USER_ID;
     
     // Create a mock completion row
@@ -532,7 +530,7 @@ function getMonthlyCompletionGridDemo(
       if (!grid[log.habit_id]) {
         grid[log.habit_id] = {};
       }
-      grid[log.habit_id][log.date] = log.completed;
+      grid[log.habit_id][log.date] = log.done;
     }
     
     return { data: grid, error: null };
