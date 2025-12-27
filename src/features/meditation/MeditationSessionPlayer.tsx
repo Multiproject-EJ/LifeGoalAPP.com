@@ -21,7 +21,10 @@ export function MeditationSessionPlayer({
   const [breathPhase, setBreathPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [hasStarted, setHasStarted] = useState(false);
   const [nextGongAt, setNextGongAt] = useState(60);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [gongIntervalSeconds, setGongIntervalSeconds] = useState<number | null>(60);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const lastIntervalRef = useRef<number | null>(gongIntervalSeconds);
 
   useEffect(() => {
     return () => {
@@ -36,6 +39,9 @@ export function MeditationSessionPlayer({
       setBreathPhase('inhale');
       setHasStarted(false);
       setNextGongAt(60);
+      setSoundEnabled(true);
+      setGongIntervalSeconds(60);
+      lastIntervalRef.current = 60;
     }
   }, [isOpen, durationSeconds]);
 
@@ -69,6 +75,9 @@ export function MeditationSessionPlayer({
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           setIsRunning(false);
+          if (soundEnabled) {
+            playGong();
+          }
           onComplete();
           return 0;
         }
@@ -77,18 +86,42 @@ export function MeditationSessionPlayer({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isRunning, timeRemaining, onComplete]);
+  }, [isRunning, timeRemaining, onComplete, playGong, soundEnabled]);
 
   useEffect(() => {
     if (!isRunning) return;
 
     const elapsed = durationSeconds - timeRemaining;
 
+    if (!soundEnabled || !gongIntervalSeconds) return;
+
     if (elapsed >= nextGongAt && nextGongAt <= durationSeconds) {
       playGong();
-      setNextGongAt((prev) => prev + 60);
+      setNextGongAt((prev) => prev + gongIntervalSeconds);
     }
-  }, [isRunning, durationSeconds, timeRemaining, nextGongAt, playGong]);
+  }, [
+    isRunning,
+    durationSeconds,
+    timeRemaining,
+    nextGongAt,
+    playGong,
+    soundEnabled,
+    gongIntervalSeconds,
+  ]);
+
+  useEffect(() => {
+    if (lastIntervalRef.current === gongIntervalSeconds) return;
+    lastIntervalRef.current = gongIntervalSeconds;
+
+    if (!gongIntervalSeconds) {
+      setNextGongAt(Number.POSITIVE_INFINITY);
+      return;
+    }
+
+    const elapsed = durationSeconds - timeRemaining;
+    const next = elapsed === 0 ? gongIntervalSeconds : elapsed + gongIntervalSeconds - (elapsed % gongIntervalSeconds);
+    setNextGongAt(next);
+  }, [gongIntervalSeconds, durationSeconds, timeRemaining]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -113,7 +146,9 @@ export function MeditationSessionPlayer({
 
   const handleStart = () => {
     if (!hasStarted) {
-      playGong();
+      if (soundEnabled) {
+        playGong();
+      }
       setHasStarted(true);
     }
     setIsRunning(true);
@@ -163,6 +198,35 @@ export function MeditationSessionPlayer({
                 className="meditation-timer__progress-bar"
                 style={{ width: `${progressPercentage}%` }}
               />
+            </div>
+          </div>
+
+          <div className="meditation-audio-settings">
+            <label className="meditation-audio-settings__toggle">
+              <input
+                type="checkbox"
+                checked={soundEnabled}
+                onChange={(event) => setSoundEnabled(event.target.checked)}
+              />
+              Sound on
+            </label>
+            <div className="meditation-audio-settings__interval">
+              <label htmlFor="gong-interval" className="meditation-audio-settings__label">
+                Gong interval
+              </label>
+              <select
+                id="gong-interval"
+                className="meditation-audio-settings__select"
+                value={gongIntervalSeconds ?? 0}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  setGongIntervalSeconds(value === 0 ? null : value);
+                }}
+                disabled={!soundEnabled}
+              >
+                <option value={0}>No interval</option>
+                <option value={60}>Every 1 minute</option>
+              </select>
             </div>
           </div>
 
