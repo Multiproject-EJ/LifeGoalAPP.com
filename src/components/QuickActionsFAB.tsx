@@ -20,7 +20,7 @@ type QuickActionsFABProps = {
   onCheckHabit?: () => void;
   onJournalNow?: (type: JournalType) => void;
   onOpenLifeCoach?: () => void;
-  onToggleWorkspaceMenu?: () => void;
+  onToggleWorkspaceMenu?: (isFabOpen: boolean) => void;
 };
 
 type QuickAction = {
@@ -108,7 +108,7 @@ export function QuickActionsFAB({
       }
       return nextIsOpen;
     });
-    onToggleWorkspaceMenu?.();
+    onToggleWorkspaceMenu?.(nextIsOpen);
   };
 
   // Load habits and their completion status
