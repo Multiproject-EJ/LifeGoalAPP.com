@@ -36,7 +36,9 @@ export function MobileFooterNav({
   onStatusClick,
 }: MobileFooterNavProps) {
   const listItems: FooterListItem[] = status && items.length
-    ? [items[0], { type: 'status' }, ...items.slice(1)]
+    ? items.length > 1
+      ? [items[0], items[1], { type: 'status' }, ...items.slice(2)]
+      : [items[0], { type: 'status' }]
     : items;
 
   const totalColumns = listItems.length || items.length;
