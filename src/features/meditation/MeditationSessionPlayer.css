@@ -219,6 +219,51 @@
   justify-content: center;
 }
 
+.meditation-audio-settings {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.meditation-audio-settings__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.meditation-audio-settings__toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.meditation-audio-settings__interval {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.meditation-audio-settings__label {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.meditation-audio-settings__select {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+
 .meditation-controls__button {
   min-width: 140px;
   padding: var(--space-4) var(--space-5);
