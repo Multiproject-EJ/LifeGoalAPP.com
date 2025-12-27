@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
@@ -206,6 +207,7 @@ export default function App() {
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
+  const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
 
   const { xpToasts, dismissXPToast, levelInfo } = useGamification(supabaseSession);
 
@@ -420,9 +422,27 @@ export default function App() {
     setAuthMode(activeAuthTab === 'signup' ? 'signup' : 'password');
   }, [activeAuthTab]);
 
+  useEffect(() => () => {
+    if (desktopMenuAutoHideTimeoutRef.current !== null) {
+      window.clearTimeout(desktopMenuAutoHideTimeoutRef.current);
+      desktopMenuAutoHideTimeoutRef.current = null;
+    }
+  }, []);
+
   const isOnboardingComplete = useMemo(() => {
     return Boolean(activeSession.user.user_metadata?.onboarding_complete);
   }, [activeSession]);
+
+  const scheduleDesktopMenuAutoHide = useCallback(() => {
+    if (isMobileViewport || !isDesktopMenuOpen) return;
+    if (desktopMenuAutoHideTimeoutRef.current !== null) {
+      window.clearTimeout(desktopMenuAutoHideTimeoutRef.current);
+    }
+    desktopMenuAutoHideTimeoutRef.current = window.setTimeout(() => {
+      setIsDesktopMenuOpen(false);
+      desktopMenuAutoHideTimeoutRef.current = null;
+    }, 3000);
+  }, [isDesktopMenuOpen, isMobileViewport]);
 
   const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1387,6 +1407,7 @@ export default function App() {
                 {workspaceNavItems.map((item) => {
                   const isActive = activeWorkspaceNav === item.id;
                   const handleNavButtonClick = () => {
+                    scheduleDesktopMenuAutoHide();
                     if (item.id === 'account' && !isAuthenticated) {
                       handleAccountClick();
                       return;
@@ -1527,9 +1548,9 @@ export default function App() {
           onCheckHabit={handleQuickCheckHabit}
           onJournalNow={handleQuickJournalNow}
           onOpenLifeCoach={handleOpenLifeCoach}
-          onToggleWorkspaceMenu={() => {
+          onToggleWorkspaceMenu={(isFabOpen) => {
             if (!isMobileViewport) {
-              setIsDesktopMenuOpen((prev) => !prev);
+              setIsDesktopMenuOpen(isFabOpen);
             }
           }}
         />
