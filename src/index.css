@@ -855,6 +855,12 @@ body {
   padding-left: calc(var(--workspace-shell-offset) + clamp(0.5rem, 1vw, 1rem));
   padding-right: clamp(1rem, 3vw, 1.75rem);
   box-sizing: border-box;
+  transition: padding-left 0.3s ease;
+}
+
+.workspace-shell--menu-collapsed {
+  --workspace-shell-offset: 0px;
+  padding-left: clamp(1rem, 3vw, 1.75rem);
 }
 
 .workspace-sidebar {
@@ -879,6 +885,13 @@ body {
   color: rgba(248, 250, 252, 0.95);
   overflow: hidden;
   z-index: 999;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.workspace-shell--menu-collapsed .workspace-sidebar {
+  transform: translateX(-120%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .workspace-sidebar::before {

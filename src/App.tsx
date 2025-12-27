@@ -205,6 +205,7 @@ export default function App() {
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
 
   const { xpToasts, dismissXPToast, levelInfo } = useGamification(supabaseSession);
 
@@ -1328,7 +1329,7 @@ export default function App() {
   const appClassName = `app app--workspace ${isAnyModalVisible ? 'app--auth-overlay' : ''}`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
-  }`;
+  }${!isMobileViewport && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;
 
   const canDismissOverlay = isAuthOverlayVisible && !shouldForceAuthOverlay;
 
@@ -1336,7 +1337,11 @@ export default function App() {
     <div className={appClassName}>
       <div className={workspaceShellClassName}>
         {!isMobileViewport && (
-          <aside className="workspace-sidebar" aria-label="Workspace navigation">
+          <aside
+            className="workspace-sidebar"
+            aria-label="Workspace navigation"
+            aria-hidden={!isDesktopMenuOpen}
+          >
             <div className="workspace-sidebar__masthead">
               <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
                 <span aria-hidden="true">{menuIconContent}</span>
@@ -1523,6 +1528,11 @@ export default function App() {
           onCheckHabit={handleQuickCheckHabit}
           onJournalNow={handleQuickJournalNow}
           onOpenLifeCoach={handleOpenLifeCoach}
+          onToggleWorkspaceMenu={() => {
+            if (!isMobileViewport) {
+              setIsDesktopMenuOpen((prev) => !prev);
+            }
+          }}
         />
       )}
 
