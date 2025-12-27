@@ -13,6 +13,10 @@ type LifeWheelCheckinsProps = {
   session: Session;
 };
 
+type LifeWheelInsightsPanelProps = {
+  session: Session;
+};
+
 export const LIFE_WHEEL_CATEGORIES = [
   { key: 'spirituality_community', label: 'Spirituality & Community' },
   { key: 'finance_wealth', label: 'Finance & Wealth' },
@@ -293,7 +297,6 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const isDemoExperience = isDemoSession(session);
   const { earnXP, recordActivity } = useGamification(session);
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -301,13 +304,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const [formScores, setFormScores] = useState<CheckinScores>(() => createDefaultScores());
   const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
   const [selectedHistoryYear, setSelectedHistoryYear] = useState<string>('all');
-  const [celebrationNote, setCelebrationNote] = useState('');
-  const [growthNote, setGrowthNote] = useState('');
-  const [bestRightNow, setBestRightNow] = useState('');
-  const [needsAttention, setNeedsAttention] = useState('');
-  const [improvementIdeas, setImprovementIdeas] = useState('');
-  const [supportIdeas, setSupportIdeas] = useState('');
-  
+
   // Questionnaire state
   const [isInQuestionnaireMode, setIsInQuestionnaireMode] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -322,7 +319,6 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
       return;
     }
 
-    setLoading(true);
     setErrorMessage(null);
     try {
       const { data, error } = await fetchCheckinsForUser(session.user.id);
@@ -340,8 +336,6 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
           ? error.message
           : 'Unable to load check-in history right now. Please try again soon.',
       );
-    } finally {
-      setLoading(false);
     }
   }, [isConfigured, isDemoExperience, session.user.id]);
 
@@ -387,7 +381,6 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     return selectedScores ? calculateAverage(selectedScores) : 0;
   }, [selectedScores]);
 
-  const trendInsights = useMemo(() => createTrendInsights(checkins), [checkins]);
   const radarCheckins = useMemo(() => {
     const uniqueCheckins: CheckinRow[] = [];
     const seen = new Set<string>();
@@ -767,23 +760,6 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
   return (
     <section className="life-wheel">
-      <header className="life-wheel__header">
-        <div>
-          <h2>Wellbeing Wheel Check-in</h2>
-          <p>
-            Take a calming questionnaire to reflect on your wellbeing across 8 life categories.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="life-wheel__refresh"
-          onClick={() => void loadCheckins()}
-          disabled={loading || (!isConfigured && !isDemoExperience)}
-        >
-          {loading ? 'Refreshing…' : 'Refresh history'}
-        </button>
-      </header>
-
       {isDemoExperience ? (
         <p className="life-wheel__status life-wheel__status--info">
           Life wheel entries are stored locally in demo mode. Connect Supabase when you&apos;re ready to sync check-ins across
@@ -797,17 +773,6 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
       {errorMessage && <p className="life-wheel__status life-wheel__status--error">{errorMessage}</p>}
       {successMessage && <p className="life-wheel__status life-wheel__status--success">{successMessage}</p>}
-
-      <div className="life-wheel__start-section">
-        <button
-          type="button"
-          className="life-wheel__start-questionnaire"
-          onClick={startQuestionnaire}
-          disabled={!isConfigured && !isDemoExperience}
-        >
-          Start New Wellbeing Check-in
-        </button>
-      </div>
 
       <div className="life-wheel__grid">
         <div className="life-wheel__panel life-wheel__panel--chart">
@@ -854,6 +819,16 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                   ))}
                 </g>
               </svg>
+              <div className="life-wheel__chart-actions">
+                <button
+                  type="button"
+                  className="life-wheel__start-questionnaire"
+                  onClick={startQuestionnaire}
+                  disabled={!isConfigured && !isDemoExperience}
+                >
+                  Start New Wellbeing Check-in
+                </button>
+              </div>
               <div className="life-wheel__snapshot">
                 <h3>{dateFormatter.format(new Date(selectedCheckin.date))}</h3>
                 <p>
@@ -954,156 +929,25 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
               </div>
             </>
           ) : (
-            <div className="life-wheel__empty">
-              <p>Log your first check-in to unlock the radar chart and trend history.</p>
-            </div>
+            <>
+              <div className="life-wheel__empty">
+                <p>Log your first check-in to unlock the radar chart and trend history.</p>
+              </div>
+              <div className="life-wheel__chart-actions">
+                <button
+                  type="button"
+                  className="life-wheel__start-questionnaire"
+                  onClick={startQuestionnaire}
+                  disabled={!isConfigured && !isDemoExperience}
+                >
+                  Start New Wellbeing Check-in
+                </button>
+              </div>
+            </>
           )}
-
-          <div className="life-wheel__insights">
-            <div className="life-wheel__insights-header">
-              <h3>Trend insights</h3>
-              <p>
-                {trendInsights
-                  ? trendInsights.averageDirection === 'steady'
-                    ? `Overall balance held steady compared to ${trendInsights.previousLabel}.`
-                    : `Overall balance ${
-                        trendInsights.averageDirection === 'up' ? 'improved' : 'dipped'
-                      } by ${formatSignedDecimal(trendInsights.averageDelta)} points compared to ${
-                        trendInsights.previousLabel
-                      }.`
-                  : 'Log at least two check-ins to unlock week-over-week highlights.'}
-              </p>
-            </div>
-
-            {trendInsights ? (
-              <>
-                <p className="life-wheel__insights-meta">
-                  Latest average <strong>{trendInsights.latestAverage.toFixed(1)}</strong>/10 • Previous{' '}
-                  <strong>{trendInsights.previousAverage.toFixed(1)}</strong>/10
-                </p>
-                <div className="life-wheel__insight-cards">
-                  <section className="life-wheel__insight-card life-wheel__insight-card--lift">
-                    <h4>Where you gained momentum</h4>
-                    {trendInsights.improvements.length > 0 ? (
-                      <ul className="life-wheel__insight-list">
-                        {trendInsights.improvements.map((item) => (
-                          <li key={item.key}>
-                            <span className="life-wheel__insight-label">{item.label}</span>
-                            <span className="life-wheel__insight-delta life-wheel__insight-delta--positive">
-                              {formatSignedInteger(item.delta)}
-                            </span>
-                            <span className="life-wheel__insight-score">Now {item.latest}/10</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="life-wheel__insight-empty">No gains yet—celebrate a win with your next check-in.</p>
-                    )}
-                  </section>
-
-                  <section className="life-wheel__insight-card life-wheel__insight-card--dip">
-                    <h4>Where to focus next</h4>
-                    {trendInsights.declines.length > 0 ? (
-                      <ul className="life-wheel__insight-list">
-                        {trendInsights.declines.map((item) => (
-                          <li key={item.key}>
-                            <span className="life-wheel__insight-label">{item.label}</span>
-                            <span className="life-wheel__insight-delta life-wheel__insight-delta--negative">
-                              {formatSignedInteger(item.delta)}
-                            </span>
-                            <span className="life-wheel__insight-score">Now {item.latest}/10</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="life-wheel__insight-empty">No dips detected—keep nurturing these areas.</p>
-                    )}
-                  </section>
-                </div>
-                {trendInsights.stableCount > 0 ? (
-                  <p className="life-wheel__insights-stable">
-                    {trendInsights.stableCount} {trendInsights.stableCount === 1 ? 'area' : 'areas'} held steady. Consistency
-                    counts.
-                  </p>
-                ) : null}
-              </>
-            ) : null}
-          </div>
         </div>
 
         <div className="life-wheel__panel life-wheel__panel--form">
-          <div className="life-wheel__focus">
-            <h3>Life wheel focus</h3>
-            <p>Capture quick reflections and next steps while your insights are fresh.</p>
-            <div className="life-wheel__focus-grid">
-              <div className="life-wheel__focus-card life-wheel__focus-card--positive">
-                <h4>What&apos;s working right now</h4>
-                <textarea
-                  value={celebrationNote}
-                  onChange={(event) => setCelebrationNote(event.target.value)}
-                  placeholder="Name a win, a bright spot, or a supportive habit."
-                  rows={3}
-                />
-                <button type="button" className="life-wheel__claim life-wheel__claim--positive" disabled>
-                  Claim 100 points
-                </button>
-                <span className="life-wheel__claim-note">Future feature</span>
-              </div>
-              <div className="life-wheel__focus-card life-wheel__focus-card--improve">
-                <h4>What needs improvement</h4>
-                <textarea
-                  value={growthNote}
-                  onChange={(event) => setGrowthNote(event.target.value)}
-                  placeholder="Call out the area that needs the most care."
-                  rows={3}
-                />
-                <button type="button" className="life-wheel__claim life-wheel__claim--improve" disabled>
-                  Claim / Do 1000 points
-                </button>
-                <span className="life-wheel__claim-note">Future feature</span>
-              </div>
-            </div>
-            <div className="life-wheel__focus-notes">
-              <label>
-                Best area right now
-                <textarea
-                  value={bestRightNow}
-                  onChange={(event) => setBestRightNow(event.target.value)}
-                  placeholder="Which life area feels the strongest today?"
-                  rows={2}
-                />
-              </label>
-              <label>
-                Toughest area right now
-                <textarea
-                  value={needsAttention}
-                  onChange={(event) => setNeedsAttention(event.target.value)}
-                  placeholder="Which area feels the most challenging?"
-                  rows={2}
-                />
-              </label>
-            </div>
-            <div className="life-wheel__focus-notes life-wheel__focus-notes--ideas">
-              <label>
-                Suggestions for improvement
-                <textarea
-                  value={improvementIdeas}
-                  onChange={(event) => setImprovementIdeas(event.target.value)}
-                  placeholder="List one or two small actions that could help."
-                  rows={2}
-                />
-              </label>
-              <label>
-                Support that could help
-                <textarea
-                  value={supportIdeas}
-                  onChange={(event) => setSupportIdeas(event.target.value)}
-                  placeholder="People, routines, or resources to lean on."
-                  rows={2}
-                />
-              </label>
-            </div>
-          </div>
           <div className="life-wheel__form-header">
             <h3>Manual check-in</h3>
             <p>Prefer sliders? Record a check-in directly here.</p>
@@ -1153,5 +997,198 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+export function LifeWheelInsightsPanel({ session }: LifeWheelInsightsPanelProps) {
+  const { isConfigured } = useSupabaseAuth();
+  const isDemoExperience = isDemoSession(session);
+  const [checkins, setCheckins] = useState<CheckinRow[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [celebrationNote, setCelebrationNote] = useState('');
+  const [growthNote, setGrowthNote] = useState('');
+  const [bestRightNow, setBestRightNow] = useState('');
+  const [needsAttention, setNeedsAttention] = useState('');
+  const [improvementIdeas, setImprovementIdeas] = useState('');
+  const [supportIdeas, setSupportIdeas] = useState('');
+
+  const loadCheckins = useCallback(async () => {
+    if (!isConfigured && !isDemoExperience) {
+      setCheckins([]);
+      return;
+    }
+
+    setErrorMessage(null);
+    try {
+      const { data, error } = await fetchCheckinsForUser(session.user.id);
+      if (error) throw error;
+      setCheckins(data ?? []);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Unable to load check-in history right now. Please try again soon.',
+      );
+    }
+  }, [isConfigured, isDemoExperience, session.user.id]);
+
+  useEffect(() => {
+    if (!isConfigured && !isDemoExperience) {
+      setCheckins([]);
+      return;
+    }
+
+    void loadCheckins();
+  }, [isConfigured, isDemoExperience, loadCheckins]);
+
+  const trendInsights = useMemo(() => createTrendInsights(checkins), [checkins]);
+
+  return (
+    <div className="life-wheel__insights-panel">
+      {errorMessage ? <p className="life-wheel__status life-wheel__status--error">{errorMessage}</p> : null}
+      <div className="life-wheel__focus">
+        <h3>Life wheel focus</h3>
+        <p>Capture quick reflections and next steps while your insights are fresh.</p>
+        <div className="life-wheel__focus-grid">
+          <div className="life-wheel__focus-card life-wheel__focus-card--positive">
+            <h4>What&apos;s working right now</h4>
+            <textarea
+              value={celebrationNote}
+              onChange={(event) => setCelebrationNote(event.target.value)}
+              placeholder="Name a win, a bright spot, or a supportive habit."
+              rows={3}
+            />
+            <button type="button" className="life-wheel__claim life-wheel__claim--positive" disabled>
+              Claim 100 points
+            </button>
+            <span className="life-wheel__claim-note">Future feature</span>
+          </div>
+          <div className="life-wheel__focus-card life-wheel__focus-card--improve">
+            <h4>What needs improvement</h4>
+            <textarea
+              value={growthNote}
+              onChange={(event) => setGrowthNote(event.target.value)}
+              placeholder="Call out the area that needs the most care."
+              rows={3}
+            />
+            <button type="button" className="life-wheel__claim life-wheel__claim--improve" disabled>
+              Claim / Do 1000 points
+            </button>
+            <span className="life-wheel__claim-note">Future feature</span>
+          </div>
+        </div>
+        <div className="life-wheel__focus-notes">
+          <label>
+            Best area right now
+            <textarea
+              value={bestRightNow}
+              onChange={(event) => setBestRightNow(event.target.value)}
+              placeholder="Which life area feels the strongest today?"
+              rows={2}
+            />
+          </label>
+          <label>
+            Toughest area right now
+            <textarea
+              value={needsAttention}
+              onChange={(event) => setNeedsAttention(event.target.value)}
+              placeholder="Which area feels the most challenging?"
+              rows={2}
+            />
+          </label>
+        </div>
+        <div className="life-wheel__focus-notes life-wheel__focus-notes--ideas">
+          <label>
+            Suggestions for improvement
+            <textarea
+              value={improvementIdeas}
+              onChange={(event) => setImprovementIdeas(event.target.value)}
+              placeholder="List one or two small actions that could help."
+              rows={2}
+            />
+          </label>
+          <label>
+            Support that could help
+            <textarea
+              value={supportIdeas}
+              onChange={(event) => setSupportIdeas(event.target.value)}
+              placeholder="People, routines, or resources to lean on."
+              rows={2}
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="life-wheel__insights">
+        <div className="life-wheel__insights-header">
+          <h3>Trend insights</h3>
+          <p>
+            {trendInsights
+              ? trendInsights.averageDirection === 'steady'
+                ? `Overall balance held steady compared to ${trendInsights.previousLabel}.`
+                : `Overall balance ${
+                    trendInsights.averageDirection === 'up' ? 'improved' : 'dipped'
+                  } by ${formatSignedDecimal(trendInsights.averageDelta)} points compared to ${
+                    trendInsights.previousLabel
+                  }.`
+              : 'Log at least two check-ins to unlock week-over-week highlights.'}
+          </p>
+        </div>
+
+        {trendInsights ? (
+          <>
+            <p className="life-wheel__insights-meta">
+              Latest average <strong>{trendInsights.latestAverage.toFixed(1)}</strong>/10 • Previous{' '}
+              <strong>{trendInsights.previousAverage.toFixed(1)}</strong>/10
+            </p>
+            <div className="life-wheel__insight-cards">
+              <section className="life-wheel__insight-card life-wheel__insight-card--lift">
+                <h4>Where you gained momentum</h4>
+                {trendInsights.improvements.length > 0 ? (
+                  <ul className="life-wheel__insight-list">
+                    {trendInsights.improvements.map((item) => (
+                      <li key={item.key}>
+                        <span className="life-wheel__insight-label">{item.label}</span>
+                        <span className="life-wheel__insight-delta life-wheel__insight-delta--positive">
+                          {formatSignedInteger(item.delta)}
+                        </span>
+                        <span className="life-wheel__insight-score">Now {item.latest}/10</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="life-wheel__insight-empty">No gains yet—celebrate a win with your next check-in.</p>
+                )}
+              </section>
+
+              <section className="life-wheel__insight-card life-wheel__insight-card--dip">
+                <h4>Where to focus next</h4>
+                {trendInsights.declines.length > 0 ? (
+                  <ul className="life-wheel__insight-list">
+                    {trendInsights.declines.map((item) => (
+                      <li key={item.key}>
+                        <span className="life-wheel__insight-label">{item.label}</span>
+                        <span className="life-wheel__insight-delta life-wheel__insight-delta--negative">
+                          {formatSignedInteger(item.delta)}
+                        </span>
+                        <span className="life-wheel__insight-score">Now {item.latest}/10</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="life-wheel__insight-empty">No dips detected—keep nurturing these areas.</p>
+                )}
+              </section>
+            </div>
+            {trendInsights.stableCount > 0 ? (
+              <p className="life-wheel__insights-stable">
+                {trendInsights.stableCount} {trendInsights.stableCount === 1 ? 'area' : 'areas'} held steady. Consistency
+                counts.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+    </div>
   );
 }
