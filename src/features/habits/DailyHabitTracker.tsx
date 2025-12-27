@@ -16,7 +16,7 @@ import {
   toggleHabitCompletionForDate,
   type MonthlyHabitCompletions,
 } from '../../services/habitMonthlyQueries';
-import type { Json } from '../../lib/database.types';
+import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { HabitAlertConfig } from './HabitAlertConfig';
 import { createJournalEntry } from '../../services/journal';
