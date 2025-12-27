@@ -205,7 +205,7 @@ export default function App() {
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
-  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
 
   const { xpToasts, dismissXPToast, levelInfo } = useGamification(supabaseSession);
 
@@ -1529,7 +1529,7 @@ export default function App() {
           onOpenLifeCoach={handleOpenLifeCoach}
           onToggleWorkspaceMenu={(isFabOpen) => {
             if (!isMobileViewport) {
-              setIsDesktopMenuOpen(!isFabOpen);
+              setIsDesktopMenuOpen(isFabOpen);
             }
           }}
         />
