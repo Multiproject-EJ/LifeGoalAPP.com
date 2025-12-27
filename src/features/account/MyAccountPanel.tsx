@@ -114,6 +114,10 @@ export function MyAccountPanel({
           You’re exploring demo data. Sign in to sync with your Supabase project.
         </p>
       ) : null}
+      <section className="account-panel__card" aria-labelledby="account-theme">
+        <p className="account-panel__eyebrow">Appearance</p>
+        <ThemeSelector />
+      </section>
       <section
         className={profileCardClassName}
         aria-labelledby="account-profile"
@@ -194,11 +198,6 @@ export function MyAccountPanel({
             <dd>{renewsOn}</dd>
           </div>
         </dl>
-      </section>
-
-      <section className="account-panel__card" aria-labelledby="account-theme">
-        <p className="account-panel__eyebrow">Appearance</p>
-        <ThemeSelector />
       </section>
 
       <section className="account-panel__card" aria-labelledby="account-menu-icon">
