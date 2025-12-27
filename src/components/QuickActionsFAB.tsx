@@ -53,6 +53,7 @@ export function QuickActionsFAB({
   onCheckHabit,
   onJournalNow,
   onOpenLifeCoach,
+  onToggleWorkspaceMenu,
 }: QuickActionsFABProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showJournalTypes, setShowJournalTypes] = useState(false);
