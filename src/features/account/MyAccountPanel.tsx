@@ -118,115 +118,117 @@ export function MyAccountPanel({
         <p className="account-panel__eyebrow">Appearance</p>
         <ThemeSelector />
       </section>
-      <section
-        className={profileCardClassName}
-        aria-labelledby="account-profile"
-      >
-        <button
-          type="button"
-          className="account-panel__profile-summary"
-          onClick={() => setProfileExpanded((prev) => !prev)}
-          aria-expanded={profileExpanded}
-          aria-controls="account-profile-details"
+      <div className="account-panel__summary-grid">
+        <section
+          className={profileCardClassName}
+          aria-labelledby="account-profile"
         >
-          <div className="account-panel__avatar" aria-hidden="true">
-            {avatarInitial}
+          <button
+            type="button"
+            className="account-panel__profile-summary"
+            onClick={() => setProfileExpanded((prev) => !prev)}
+            aria-expanded={profileExpanded}
+            aria-controls="account-profile-details"
+          >
+            <div className="account-panel__avatar" aria-hidden="true">
+              {avatarInitial}
+            </div>
+            <div className="account-panel__profile-text">
+              <p className="account-panel__eyebrow">Profile</p>
+              <h2 id="account-profile">My account</h2>
+              <p className="account-panel__lead">Review your identity details and workspace access.</p>
+            </div>
+            <span className="account-panel__chevron" aria-hidden="true" />
+          </button>
+          <div
+            id="account-profile-details"
+            className="account-panel__profile-body"
+            hidden={!profileExpanded}
+          >
+            <dl className="account-panel__details">
+              <div>
+                <dt>Name</dt>
+                <dd>{displayName}</dd>
+              </div>
+              <div>
+                <dt>Initials</dt>
+                <dd>{userInitials || 'Not set'}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{email}</dd>
+              </div>
+              <div>
+                <dt>Workspace name</dt>
+                <dd>{workspaceName}</dd>
+              </div>
+              <div>
+                <dt>Workspace mode</dt>
+                <dd>{workspaceMode}</dd>
+              </div>
+              <div>
+                <dt>Onboarding</dt>
+                <dd>{onboardingComplete ? 'Complete' : 'In progress'}</dd>
+              </div>
+            </dl>
+            <div className="account-panel__actions-row">
+              <button type="button" className="btn" onClick={onEditProfile} disabled={profileLoading}>
+                {profileLoading ? 'Loading…' : 'Edit account details'}
+              </button>
+            </div>
           </div>
-          <div className="account-panel__profile-text">
-            <p className="account-panel__eyebrow">Profile</p>
-            <h2 id="account-profile">My account</h2>
-            <p className="account-panel__lead">Review your identity details and workspace access.</p>
-          </div>
-          <span className="account-panel__chevron" aria-hidden="true" />
-        </button>
-        <div
-          id="account-profile-details"
-          className="account-panel__profile-body"
-          hidden={!profileExpanded}
-        >
+        </section>
+
+        <section className="account-panel__card" aria-labelledby="account-subscription">
+          <p className="account-panel__eyebrow">Subscription</p>
+          <h3 id="account-subscription">Plan overview</h3>
+          <p className="account-panel__hint">
+            Manage billing from your Supabase dashboard. Updates sync instantly to this workspace.
+          </p>
           <dl className="account-panel__details">
             <div>
-              <dt>Name</dt>
-              <dd>{displayName}</dd>
+              <dt>Plan</dt>
+              <dd>{planName}</dd>
             </div>
             <div>
-              <dt>Initials</dt>
-              <dd>{userInitials || 'Not set'}</dd>
+              <dt>Status</dt>
+              <dd>{planStatus}</dd>
             </div>
             <div>
-              <dt>Email</dt>
-              <dd>{email}</dd>
-            </div>
-            <div>
-              <dt>Workspace name</dt>
-              <dd>{workspaceName}</dd>
-            </div>
-            <div>
-              <dt>Workspace mode</dt>
-              <dd>{workspaceMode}</dd>
-            </div>
-            <div>
-              <dt>Onboarding</dt>
-              <dd>{onboardingComplete ? 'Complete' : 'In progress'}</dd>
+              <dt>Renews</dt>
+              <dd>{renewsOn}</dd>
             </div>
           </dl>
-          <div className="account-panel__actions-row">
-            <button type="button" className="btn" onClick={onEditProfile} disabled={profileLoading}>
-              {profileLoading ? 'Loading…' : 'Edit account details'}
-            </button>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="account-panel__card" aria-labelledby="account-subscription">
-        <p className="account-panel__eyebrow">Subscription</p>
-        <h3 id="account-subscription">Plan overview</h3>
-        <p className="account-panel__hint">
-          Manage billing from your Supabase dashboard. Updates sync instantly to this workspace.
-        </p>
-        <dl className="account-panel__details">
-          <div>
-            <dt>Plan</dt>
-            <dd>{planName}</dd>
-          </div>
-          <div>
-            <dt>Status</dt>
-            <dd>{planStatus}</dd>
-          </div>
-          <div>
-            <dt>Renews</dt>
-            <dd>{renewsOn}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="account-panel__card" aria-labelledby="account-menu-icon">
-        <p className="account-panel__eyebrow">Menu Icon</p>
-        <h3 id="account-menu-icon">Display Preferences</h3>
-        <p className="account-panel__hint">
-          Choose whether to display your initials or the default icon in the main menu when signed in.
-        </p>
-        <div className="account-panel__toggle-row">
-          <label className="account-panel__toggle-label">
-            <input
-              type="checkbox"
-              checked={profile?.show_initials_in_menu ?? false}
-              onChange={(e) => handleToggleInitialsInMenu(e.target.checked)}
-              disabled={savingPreference || !profile?.full_name || isDemoExperience}
-              className="account-panel__toggle-input"
-            />
-            <span className="account-panel__toggle-text">
-              Show my initials ({userInitials || '--'}) in main menu
-            </span>
-          </label>
-          {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
-        </div>
-        {!profile?.full_name && !isDemoExperience && (
-          <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>
-            Set your name in the account details to enable this feature.
+        <section className="account-panel__card" aria-labelledby="account-menu-icon">
+          <p className="account-panel__eyebrow">Menu Icon</p>
+          <h3 id="account-menu-icon">Display Preferences</h3>
+          <p className="account-panel__hint">
+            Choose whether to display your initials or the default icon in the main menu when signed in.
           </p>
-        )}
-      </section>
+          <div className="account-panel__toggle-row">
+            <label className="account-panel__toggle-label">
+              <input
+                type="checkbox"
+                checked={profile?.show_initials_in_menu ?? false}
+                onChange={(e) => handleToggleInitialsInMenu(e.target.checked)}
+                disabled={savingPreference || !profile?.full_name || isDemoExperience}
+                className="account-panel__toggle-input"
+              />
+              <span className="account-panel__toggle-text">
+                Show my initials ({userInitials || '--'}) in main menu
+              </span>
+            </label>
+            {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
+          </div>
+          {!profile?.full_name && !isDemoExperience && (
+            <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>
+              Set your name in the account details to enable this feature.
+            </p>
+          )}
+        </section>
+      </div>
 
       <AiSettingsSection session={session} />
 

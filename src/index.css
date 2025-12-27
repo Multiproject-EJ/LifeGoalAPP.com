@@ -1393,6 +1393,17 @@ body {
   gap: clamp(1.25rem, 3vw, 2rem);
 }
 
+.account-panel__summary-grid {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.account-panel__summary-grid .account-panel__card,
+.account-panel__summary-grid .account-panel__profile {
+  height: 100%;
+}
+
 .account-panel__card {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 28px;
@@ -2322,6 +2333,12 @@ body {
 @media (min-width: 721px) {
   .mobile-footer-nav {
     display: none;
+  }
+}
+
+@media (max-width: 1080px) {
+  .account-panel__summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }
 .goal-workspace {
