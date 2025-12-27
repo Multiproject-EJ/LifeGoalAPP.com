@@ -6438,6 +6438,13 @@ body {
   fill: rgba(79, 70, 229, 0.25);
   stroke: #4f46e5;
   stroke-width: 2;
+  opacity: 0.35;
+}
+
+.life-wheel__radar-shape--active {
+  opacity: 1;
+  fill: rgba(79, 70, 229, 0.35);
+  stroke-width: 2.5;
 }
 
 .life-wheel__radar-labels text {
@@ -6464,25 +6471,122 @@ body {
   color: #475569;
 }
 
+.life-wheel__picker {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.18);
+}
+
+.life-wheel__picker details {
+  display: grid;
+  gap: 1rem;
+}
+
+.life-wheel__picker summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1f2937;
+  list-style: none;
+}
+
+.life-wheel__picker summary::-webkit-details-marker {
+  display: none;
+}
+
+.life-wheel__picker-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.life-wheel__picker-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.life-wheel__picker-header h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.life-wheel__picker-header p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.life-wheel__picker-header label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.life-wheel__picker-header select {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  padding: 0.45rem 0.65rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.life-wheel__picker-label {
+  font-weight: 600;
+  color: #334155;
+}
+
+.life-wheel__timeline {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.life-wheel__timeline h5 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #1f2937;
+}
+
+.life-wheel__timeline-chart {
+  width: 100%;
+  height: auto;
+}
+
+.life-wheel__timeline-line {
+  fill: none;
+  stroke: #6366f1;
+  stroke-width: 2;
+}
+
+.life-wheel__timeline-point {
+  fill: #4338ca;
+}
+
+.life-wheel__timeline-empty {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.life-wheel__picker-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
 .life-wheel__empty {
   border-radius: 14px;
   background: rgba(191, 219, 254, 0.2);
   padding: 1.25rem;
   color: #1d4ed8;
   font-weight: 500;
-}
-
-.life-wheel__history h3 {
-  margin: 0 0 0.5rem;
-  color: #1f2937;
-}
-
-.life-wheel__history ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.5rem;
 }
 
 .life-wheel__history-item {
@@ -6515,6 +6619,123 @@ body {
 .life-wheel__form {
   display: grid;
   gap: 1rem;
+}
+
+.life-wheel__focus {
+  display: grid;
+  gap: 1rem;
+}
+
+.life-wheel__focus h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.life-wheel__focus p {
+  margin: 0;
+  color: #475569;
+}
+
+.life-wheel__focus-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.life-wheel__focus-card {
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+}
+
+.life-wheel__focus-card h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.life-wheel__focus-card textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  padding: 0.65rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.life-wheel__focus-card--positive {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(187, 247, 208, 0.4));
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.life-wheel__focus-card--improve {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.16), rgba(254, 202, 202, 0.4));
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.life-wheel__claim {
+  border-radius: 999px;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.life-wheel__claim--positive {
+  background: #22c55e;
+  color: #052e16;
+}
+
+.life-wheel__claim--improve {
+  background: #ef4444;
+  color: #7f1d1d;
+}
+
+.life-wheel__claim-note {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.life-wheel__focus-notes {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.life-wheel__focus-notes label {
+  display: grid;
+  gap: 0.45rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.life-wheel__focus-notes textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.life-wheel__form-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.life-wheel__form-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.life-wheel__form-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
 }
 
 .life-wheel__field {
