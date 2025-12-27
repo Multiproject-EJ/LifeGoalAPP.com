@@ -109,6 +109,7 @@ export function QuickActionsFAB({
       onToggleWorkspaceMenu?.(nextIsOpen);
       return nextIsOpen;
     });
+    onToggleWorkspaceMenu?.(nextIsOpen);
   };
 
   // Load habits and their completion status
