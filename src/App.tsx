@@ -76,7 +76,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     label: 'Dashboard',
     summary: '',
     icon: '📊',
-    shortLabel: 'HOME',
+    shortLabel: 'DASHBOARD',
   },
   {
     id: 'planning',
@@ -90,7 +90,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     label: 'Habits & Routines',
     summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
     icon: '🧍',
-    shortLabel: 'ROUTINES',
+    shortLabel: 'BODY',
   },
   {
     id: 'rituals',
@@ -263,10 +263,12 @@ export default function App() {
     });
   }, [workspaceNavItems]);
 
-  const mobileFooterNavItems = useMemo(
-    () => mobileMenuNavItems.filter((item) => item.id === 'planning' || item.id === 'ai-coach'),
-    [mobileMenuNavItems],
-  );
+  const mobileFooterNavItems = useMemo(() => {
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'ai-coach'];
+    return footerIds
+      .map((id) => mobileMenuNavItems.find((item) => item.id === id))
+      .filter((item): item is MobileMenuNavItem => Boolean(item));
+  }, [mobileMenuNavItems]);
 
   const todayLabel = useMemo(
     () =>
@@ -1197,7 +1199,7 @@ export default function App() {
               <div className="mobile-menu-overlay__content">
                 <ul className="mobile-menu-overlay__list">
                   {mobileMenuNavItems
-                    .filter((item) => item.id !== 'account')
+                    .filter((item) => item.id !== 'account' && item.id !== 'breathing-space')
                     .map((item) => (
                       <li key={item.id} className="mobile-menu-overlay__item">
                         <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
