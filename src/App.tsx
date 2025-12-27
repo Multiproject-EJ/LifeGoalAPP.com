@@ -1527,9 +1527,9 @@ export default function App() {
           onCheckHabit={handleQuickCheckHabit}
           onJournalNow={handleQuickJournalNow}
           onOpenLifeCoach={handleOpenLifeCoach}
-          onToggleWorkspaceMenu={() => {
+          onToggleWorkspaceMenu={(isFabOpen) => {
             if (!isMobileViewport) {
-              setIsDesktopMenuOpen((prev) => !prev);
+              setIsDesktopMenuOpen(!isFabOpen);
             }
           }}
         />
