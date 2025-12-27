@@ -1529,7 +1529,7 @@ export default function App() {
           onOpenLifeCoach={handleOpenLifeCoach}
           onToggleWorkspaceMenu={(isFabOpen) => {
             if (!isMobileViewport) {
-              setIsDesktopMenuOpen(isFabOpen);
+              setIsDesktopMenuOpen(!isFabOpen);
             }
           }}
         />
