@@ -14,8 +14,6 @@ type TableKey =
   | 'profiles'
   | 'goals'
   | 'goal_reflections'
-  | 'habits'
-  | 'habit_logs'
   | 'vision_images'
   | 'checkins'
   | 'notification_preferences'
@@ -87,8 +85,6 @@ const tableReadConfigs: TableReadConfig[] = [
   { key: 'profiles', label: 'Profiles', table: 'profiles', column: 'user_id', optional: true },
   { key: 'goals', label: 'Goals', table: 'goals', column: 'id' },
   { key: 'goal_reflections', label: 'Goal reflections', table: 'goal_reflections', column: 'id' },
-  { key: 'habits', label: 'Habits (legacy)', table: 'habits', column: 'id', optional: true },
-  { key: 'habit_logs', label: 'Habit logs (legacy)', table: 'habit_logs', column: 'id', optional: true },
   { key: 'vision_images', label: 'Vision images', table: 'vision_images', column: 'id' },
   { key: 'checkins', label: 'Life wheel check-ins', table: 'checkins', column: 'id' },
   { key: 'notification_preferences', label: 'Notification preferences', table: 'notification_preferences', column: 'user_id' },
@@ -182,55 +178,6 @@ const writeTestDefinitions: Partial<Record<TableKey, WriteTestDefinition>> = {
       if (error) throw error;
       ctx.cleanup.push(async () => {
         await ctx.client.from('goal_reflections').delete().eq('id', data.id);
-      });
-    },
-  },
-  habits: {
-    optional: true,
-    async run(ctx) {
-      if (!ctx.goalId) {
-        throw new SkipTestError('Goal write test failed, so legacy habits cannot be inserted.');
-      }
-
-      const dailySchedule: Json = { mode: 'daily' };
-      const { data, error } = await ctx.client
-        .from('habits')
-        .insert({
-          goal_id: ctx.goalId,
-          name: 'Diagnostics habit',
-          frequency: 'daily',
-          schedule: dailySchedule,
-        })
-        .select('id')
-        .single();
-
-      if (error) throw error;
-      ctx.habitId = data.id;
-      ctx.cleanup.push(async () => {
-        await ctx.client.from('habits').delete().eq('id', data.id);
-      });
-    },
-  },
-  habit_logs: {
-    optional: true,
-    async run(ctx) {
-      if (!ctx.habitId) {
-        throw new SkipTestError('Legacy habit insert failed, so legacy habit logs cannot be tested.');
-      }
-
-      const { data, error } = await ctx.client
-        .from('habit_logs')
-        .insert({
-          habit_id: ctx.habitId,
-          date: farFutureDate(3),
-          completed: true,
-        })
-        .select('id')
-        .single();
-
-      if (error) throw error;
-      ctx.cleanup.push(async () => {
-        await ctx.client.from('habit_logs').delete().eq('id', data.id);
       });
     },
   },
@@ -659,14 +606,14 @@ async function runTableReadTests(client: TypedSupabaseClient) {
     }
   }
 
-  const habitsOk = ['habits', 'habits_v2'].some((key) => results.get(key as TableKey)?.status === 'success');
-  const habitLogsOk = ['habit_logs', 'habit_logs_v2'].some((key) => results.get(key as TableKey)?.status === 'success');
+  const habitsOk = results.get('habits_v2')?.status === 'success';
+  const habitLogsOk = results.get('habit_logs_v2')?.status === 'success';
 
   if (!habitsOk) {
-    errors.push('Neither the legacy nor the v2 habits table is accessible. Run the latest migrations before testing again.');
+    errors.push('The habits_v2 table is not accessible. Run the latest migrations before testing again.');
   }
   if (!habitLogsOk) {
-    errors.push('Neither the legacy nor the v2 habit logs table is accessible. Run the latest migrations before testing again.');
+    errors.push('The habit_logs_v2 table is not accessible. Run the latest migrations before testing again.');
   }
 
   return { results, errors, habitsOk, habitLogsOk };

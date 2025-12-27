@@ -7,11 +7,11 @@ import { DEFAULT_JOURNAL_TYPE } from '../features/journal/constants';
 export type GoalRow = Database['public']['Tables']['goals']['Row'];
 export type GoalInsert = Database['public']['Tables']['goals']['Insert'];
 export type GoalUpdate = Database['public']['Tables']['goals']['Update'];
-export type HabitRow = Database['public']['Tables']['habits']['Row'];
-export type HabitInsert = Database['public']['Tables']['habits']['Insert'];
-export type HabitUpdate = Database['public']['Tables']['habits']['Update'];
-export type HabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
-export type HabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
+export type HabitRow = Database['public']['Tables']['habits_v2']['Row'];
+export type HabitInsert = Database['public']['Tables']['habits_v2']['Insert'];
+export type HabitUpdate = Database['public']['Tables']['habits_v2']['Update'];
+export type HabitLogRow = Database['public']['Tables']['habit_logs_v2']['Row'];
+export type HabitLogInsert = Database['public']['Tables']['habit_logs_v2']['Insert'];
 export type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 export type VisionImageInsert = Database['public']['Tables']['vision_images']['Insert'];
 export type VisionImageUpdate = Database['public']['Tables']['vision_images']['Update'];
@@ -27,9 +27,6 @@ export type GoalReflectionUpdate = Database['public']['Tables']['goal_reflection
 export type JournalEntryRow = Database['public']['Tables']['journal_entries']['Row'];
 export type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Insert'];
 export type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
-export type HabitAlertRow = Database['public']['Tables']['habit_alerts']['Row'];
-export type HabitAlertInsert = Database['public']['Tables']['habit_alerts']['Insert'];
-export type HabitAlertUpdate = Database['public']['Tables']['habit_alerts']['Update'];
 
 export const DEMO_USER_ID = 'demo-user-0001';
 export const DEMO_USER_EMAIL = 'demo@lifegoalapp.com';
@@ -41,7 +38,6 @@ type DemoState = {
   goals: GoalRow[];
   habits: HabitRow[];
   habitLogs: HabitLogRow[];
-  habitAlerts: HabitAlertRow[];
   visionImages: VisionImageRow[];
   checkins: CheckinRow[];
   notificationPreferences: NotificationPreferencesRow | null;
@@ -73,6 +69,35 @@ function createId(prefix: string): string {
 const today = new Date();
 const iso = (date: Date) => date.toISOString();
 const isoDateOnly = (date: Date) => date.toISOString().slice(0, 10);
+
+type DemoHabitSeed = {
+  id: string;
+  goalId: string;
+  title: string;
+  schedule: Json;
+  domainKey?: string | null;
+  createdAt?: string | null;
+};
+
+function createDemoHabit(seed: DemoHabitSeed): HabitRow {
+  return {
+    id: seed.id,
+    user_id: DEMO_USER_ID,
+    title: seed.title,
+    emoji: null,
+    type: 'boolean',
+    target_num: null,
+    target_unit: null,
+    schedule: seed.schedule,
+    allow_skip: null,
+    start_date: null,
+    archived: false,
+    created_at: seed.createdAt ?? iso(new Date()),
+    autoprog: null,
+    domain_key: seed.domainKey ?? null,
+    goal_id: seed.goalId,
+  };
+}
 
 const defaultState: DemoState = {
   goals: [
@@ -123,7 +148,6 @@ const defaultState: DemoState = {
   ],
   habits: [],
   habitLogs: [],
-  habitAlerts: [],
   visionImages: [],
   checkins: [],
   notificationPreferences: null,
@@ -142,327 +166,216 @@ const defaultState: DemoState = {
   const visionBoardId = createId('habit');
 
   defaultState.habits = [
-    {
+    createDemoHabit({
       id: morningRitualId,
-      goal_id: goalLaunch.id,
-      name: 'Morning focus ritual',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Morning focus ritual',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'career',
+    }),
+    createDemoHabit({
       id: outreachHabitId,
-      goal_id: goalLaunch.id,
-      name: 'Reach out to a beta tester',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['mon', 'wed', 'fri'],
-        life_wheel_domain: { key: 'relationships', label: 'Relationships & Community' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Reach out to a beta tester',
+      schedule: { mode: 'specific_days', days: ['mon', 'wed', 'fri'] } as Json,
+      domainKey: 'relationships',
+    }),
+    createDemoHabit({
       id: visionBoardId,
-      goal_id: goalVision.id,
-      name: 'Source a new inspiration image',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['sat'],
-        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Source a new inspiration image',
+      schedule: { mode: 'specific_days', days: ['sat'] } as Json,
+      domainKey: 'creativity',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Hydrate with 80 oz of water',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Hydrate with 80 oz of water',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'health',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Midday stretch walk',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['mon', 'tue', 'wed', 'thu', 'fri'],
-        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Midday stretch walk',
+      schedule: { mode: 'specific_days', days: ['mon', 'tue', 'wed', 'thu', 'fri'] } as Json,
+      domainKey: 'health',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Inbox zero sweep',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['mon', 'tue', 'wed', 'thu'],
-        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Inbox zero sweep',
+      schedule: { mode: 'specific_days', days: ['mon', 'tue', 'wed', 'thu'] } as Json,
+      domainKey: 'career',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Review tomorrow\'s priorities',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'mindset', label: 'Mindset & Clarity' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Review tomorrow\'s priorities',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'mindset',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Capture product insight',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['mon', 'wed', 'fri'],
-        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Capture product insight',
+      schedule: { mode: 'specific_days', days: ['mon', 'wed', 'fri'] } as Json,
+      domainKey: 'career',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Update roadmap milestone',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['mon'],
-        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Update roadmap milestone',
+      schedule: { mode: 'specific_days', days: ['mon'] } as Json,
+      domainKey: 'career',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Host accountability check-in',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['wed'],
-        life_wheel_domain: { key: 'relationships', label: 'Relationships & Community' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Host accountability check-in',
+      schedule: { mode: 'specific_days', days: ['wed'] } as Json,
+      domainKey: 'relationships',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Share progress update with community',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['fri'],
-        life_wheel_domain: { key: 'community', label: 'Community & Impact' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Share progress update with community',
+      schedule: { mode: 'specific_days', days: ['fri'] } as Json,
+      domainKey: 'community',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Schedule deep work block',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['tue', 'thu'],
-        life_wheel_domain: { key: 'career', label: 'Career & Mission' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Schedule deep work block',
+      schedule: { mode: 'specific_days', days: ['tue', 'thu'] } as Json,
+      domainKey: 'career',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Strength training circuit',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['tue', 'thu'],
-        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Strength training circuit',
+      schedule: { mode: 'specific_days', days: ['tue', 'thu'] } as Json,
+      domainKey: 'health',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Digital sunset ritual',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'wellness', label: 'Rest & Recovery' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Digital sunset ritual',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'wellness',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Sleep by 10:30 routine',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'wellness', label: 'Rest & Recovery' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Sleep by 10:30 routine',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'wellness',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalLaunch.id,
-      name: 'Balanced breakfast prep',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'health', label: 'Health & Vitality' },
-      } as Json,
-    },
-    {
+      goalId: goalLaunch.id,
+      title: 'Balanced breakfast prep',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'health',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Reflect in vision journal',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['sun'],
-        life_wheel_domain: { key: 'personal_growth', label: 'Personal Growth' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Reflect in vision journal',
+      schedule: { mode: 'specific_days', days: ['sun'] } as Json,
+      domainKey: 'personal_growth',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Curate mood board snippet',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['thu'],
-        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Curate mood board snippet',
+      schedule: { mode: 'specific_days', days: ['thu'] } as Json,
+      domainKey: 'creativity',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Capture photo inspiration',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['sat', 'sun'],
-        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Capture photo inspiration',
+      schedule: { mode: 'specific_days', days: ['sat', 'sun'] } as Json,
+      domainKey: 'creativity',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Schedule creative play session',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['sat'],
-        life_wheel_domain: { key: 'fun', label: 'Fun & Adventure' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Schedule creative play session',
+      schedule: { mode: 'specific_days', days: ['sat'] } as Json,
+      domainKey: 'fun',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Sketch storyboard concept',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['tue'],
-        life_wheel_domain: { key: 'creativity', label: 'Creativity & Expression' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Sketch storyboard concept',
+      schedule: { mode: 'specific_days', days: ['tue'] } as Json,
+      domainKey: 'creativity',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Practice gratitude note',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'mindset', label: 'Mindset & Clarity' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Practice gratitude note',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'mindset',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: '10-minute mindful breathing',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'personal_growth', label: 'Personal Growth' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: '10-minute mindful breathing',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'personal_growth',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Write 3 lines in reflection journal',
-      frequency: 'daily',
-      schedule: {
-        type: 'daily',
-        life_wheel_domain: { key: 'personal_growth', label: 'Personal Growth' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Write 3 lines in reflection journal',
+      schedule: { mode: 'daily' } as Json,
+      domainKey: 'personal_growth',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalVision.id,
-      name: 'Plan weekend adventure',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['thu'],
-        life_wheel_domain: { key: 'fun', label: 'Fun & Adventure' },
-      } as Json,
-    },
-    {
+      goalId: goalVision.id,
+      title: 'Plan weekend adventure',
+      schedule: { mode: 'specific_days', days: ['thu'] } as Json,
+      domainKey: 'fun',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalArchive.id,
-      name: 'Review financial dashboard',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['mon'],
-        life_wheel_domain: { key: 'finances', label: 'Finances & Wealth' },
-      } as Json,
-    },
-    {
+      goalId: goalArchive.id,
+      title: 'Review financial dashboard',
+      schedule: { mode: 'specific_days', days: ['mon'] } as Json,
+      domainKey: 'finances',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalArchive.id,
-      name: 'Reconcile budget entries',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['fri'],
-        life_wheel_domain: { key: 'finances', label: 'Finances & Wealth' },
-      } as Json,
-    },
-    {
+      goalId: goalArchive.id,
+      title: 'Reconcile budget entries',
+      schedule: { mode: 'specific_days', days: ['fri'] } as Json,
+      domainKey: 'finances',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalArchive.id,
-      name: 'Offer mentorship comment',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['wed'],
-        life_wheel_domain: { key: 'giving_back', label: 'Giving Back' },
-      } as Json,
-    },
-    {
+      goalId: goalArchive.id,
+      title: 'Offer mentorship comment',
+      schedule: { mode: 'specific_days', days: ['wed'] } as Json,
+      domainKey: 'giving_back',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalArchive.id,
-      name: 'Declutter workspace reset',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['fri'],
-        life_wheel_domain: { key: 'environment', label: 'Environment & Surroundings' },
-      } as Json,
-    },
-    {
+      goalId: goalArchive.id,
+      title: 'Declutter workspace reset',
+      schedule: { mode: 'specific_days', days: ['fri'] } as Json,
+      domainKey: 'environment',
+    }),
+    createDemoHabit({
       id: createId('habit'),
-      goal_id: goalArchive.id,
-      name: 'Tend to plant watering',
-      frequency: 'weekly',
-      schedule: {
-        type: 'weekly',
-        days: ['wed'],
-        life_wheel_domain: { key: 'environment', label: 'Environment & Surroundings' },
-      } as Json,
-    },
+      goalId: goalArchive.id,
+      title: 'Tend to plant watering',
+      schedule: { mode: 'specific_days', days: ['wed'] } as Json,
+      domainKey: 'environment',
+    }),
   ];
 
   const start = new Date(today);
@@ -475,14 +388,24 @@ const defaultState: DemoState = {
       {
         id: createId('habit-log'),
         habit_id: morningRitualId,
+        user_id: DEMO_USER_ID,
+        ts: iso(date),
         date: dateIso,
-        completed: i % 7 !== 2,
+        value: null,
+        done: i % 7 !== 2,
+        note: null,
+        mood: null,
       },
       {
         id: createId('habit-log'),
         habit_id: outreachHabitId,
+        user_id: DEMO_USER_ID,
+        ts: iso(date),
         date: dateIso,
-        completed: i % 3 === 0,
+        value: null,
+        done: i % 3 === 0,
+        note: null,
+        mood: null,
       },
     );
   }
@@ -751,7 +674,6 @@ function loadState(): DemoState {
       goals,
       habits: parsed.habits ?? clone(defaultState.habits),
       habitLogs: parsed.habitLogs ?? clone(defaultState.habitLogs),
-      habitAlerts: parsed.habitAlerts ?? clone(defaultState.habitAlerts),
       visionImages: parsed.visionImages ?? clone(defaultState.visionImages),
       checkins: parsed.checkins ?? clone(defaultState.checkins),
       notificationPreferences:
@@ -874,12 +796,20 @@ export function removeDemoGoal(id: string): GoalRow | null {
 }
 
 export function getDemoHabitsByGoal(goalId: string): HabitRow[] {
-  return clone(state.habits.filter((habit) => habit.goal_id === goalId).sort((a, b) => a.name.localeCompare(b.name)));
+  return clone(
+    state.habits
+      .filter((habit) => habit.goal_id === goalId)
+      .sort((a, b) => a.title.localeCompare(b.title)),
+  );
 }
 
 export function getDemoHabitsForUser(userId: string): HabitRow[] {
   const goalIds = new Set(state.goals.filter((goal) => goal.user_id === userId).map((goal) => goal.id));
-  return clone(state.habits.filter((habit) => goalIds.has(habit.goal_id)).sort((a, b) => a.name.localeCompare(b.name)));
+  return clone(
+    state.habits
+      .filter((habit) => habit.goal_id && goalIds.has(habit.goal_id))
+      .sort((a, b) => a.title.localeCompare(b.title)),
+  );
 }
 
 export function upsertDemoHabit(payload: HabitInsert | HabitUpdate): HabitRow {
@@ -902,13 +832,23 @@ export function upsertDemoHabit(payload: HabitInsert | HabitUpdate): HabitRow {
 
     nextRecord = {
       id: payload.id ?? createId('habit'),
-      goal_id: payload.goal_id ?? (payload as HabitInsert).goal_id,
-      name: payload.name ?? (payload as HabitInsert).name,
-      frequency: payload.frequency ?? (payload as HabitInsert).frequency,
-      schedule: (payload.schedule ?? null) as Json,
+      user_id: payload.user_id ?? (payload as HabitInsert).user_id ?? DEMO_USER_ID,
+      title: payload.title ?? (payload as HabitInsert).title ?? 'New habit',
+      emoji: payload.emoji ?? (payload as HabitInsert).emoji ?? null,
+      type: payload.type ?? (payload as HabitInsert).type ?? 'boolean',
+      target_num: payload.target_num ?? (payload as HabitInsert).target_num ?? null,
+      target_unit: payload.target_unit ?? (payload as HabitInsert).target_unit ?? null,
+      schedule: (payload.schedule ?? (payload as HabitInsert).schedule ?? { mode: 'daily' }) as Json,
+      allow_skip: payload.allow_skip ?? (payload as HabitInsert).allow_skip ?? null,
+      start_date: payload.start_date ?? (payload as HabitInsert).start_date ?? null,
+      archived: payload.archived ?? (payload as HabitInsert).archived ?? false,
+      created_at: payload.created_at ?? (payload as HabitInsert).created_at ?? new Date().toISOString(),
+      autoprog: payload.autoprog ?? (payload as HabitInsert).autoprog ?? null,
+      domain_key: payload.domain_key ?? (payload as HabitInsert).domain_key ?? null,
+      goal_id: payload.goal_id ?? (payload as HabitInsert).goal_id ?? null,
     };
     habits.push(nextRecord);
-    habits.sort((a, b) => a.name.localeCompare(b.name));
+    habits.sort((a, b) => a.title.localeCompare(b.title));
     return { ...current, habits };
   });
 
@@ -939,8 +879,13 @@ export function logDemoHabitCompletion(payload: HabitLogInsert): HabitLogRow {
   const record: HabitLogRow = {
     id: payload.id ?? createId('habit-log'),
     habit_id: payload.habit_id,
-    date: payload.date,
-    completed: payload.completed ?? true,
+    user_id: payload.user_id ?? DEMO_USER_ID,
+    ts: payload.ts ?? new Date().toISOString(),
+    date: payload.date ?? isoDateOnly(new Date()),
+    value: payload.value ?? null,
+    done: payload.done ?? true,
+    note: payload.note ?? null,
+    mood: payload.mood ?? null,
   };
   updateState((current) => ({ ...current, habitLogs: [...current.habitLogs, record] }));
   return clone(record);
@@ -1270,66 +1215,6 @@ export function removeDemoJournalEntry(id: string): JournalEntryRow | null {
       return true;
     });
     return { ...current, journalEntries };
-  });
-  return removed ? clone(removed) : null;
-}
-
-export function getDemoHabitAlerts(habitId?: string): HabitAlertRow[] {
-  if (habitId) {
-    return clone(state.habitAlerts.filter((alert) => alert.habit_id === habitId));
-  }
-  return clone(state.habitAlerts);
-}
-
-export function upsertDemoHabitAlert(payload: HabitAlertInsert | HabitAlertUpdate): HabitAlertRow {
-  let nextRecord: HabitAlertRow | null = null;
-  updateState((current) => {
-    const habitAlerts = [...current.habitAlerts];
-    if (payload.id) {
-      const index = habitAlerts.findIndex((alert) => alert.id === payload.id);
-      if (index >= 0) {
-        const existing = habitAlerts[index];
-        nextRecord = {
-          ...existing,
-          ...payload,
-          updated_at: iso(new Date()),
-        } as HabitAlertRow;
-        habitAlerts[index] = nextRecord;
-        return { ...current, habitAlerts };
-      }
-    }
-
-    nextRecord = {
-      id: payload.id ?? createId('alert'),
-      habit_id: (payload as HabitAlertInsert).habit_id,
-      alert_time: (payload as HabitAlertInsert).alert_time,
-      days_of_week: payload.days_of_week ?? null,
-      enabled: payload.enabled ?? true,
-      created_at: iso(new Date()),
-      updated_at: iso(new Date()),
-    };
-    habitAlerts.push(nextRecord);
-    return { ...current, habitAlerts };
-  });
-
-  if (!nextRecord) {
-    throw new Error('Unable to resolve habit alert payload.');
-  }
-
-  return clone(nextRecord);
-}
-
-export function deleteDemoHabitAlert(id: string): HabitAlertRow | null {
-  let removed: HabitAlertRow | null = null;
-  updateState((current) => {
-    const habitAlerts = current.habitAlerts.filter((alert) => {
-      if (alert.id === id) {
-        removed = alert;
-        return false;
-      }
-      return true;
-    });
-    return { ...current, habitAlerts };
   });
   return removed ? clone(removed) : null;
 }
