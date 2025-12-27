@@ -106,9 +106,9 @@ export function QuickActionsFAB({
         setShowHabitsSubmenu(false);
         setShowGamificationCard(false);
       }
+      onToggleWorkspaceMenu?.(nextIsOpen);
       return nextIsOpen;
     });
-    onToggleWorkspaceMenu?.(nextIsOpen);
   };
 
   // Load habits and their completion status
