@@ -255,17 +255,31 @@ const writeTestDefinitions: Partial<Record<TableKey, WriteTestDefinition>> = {
   },
   checkins: {
     async run(ctx) {
-      const { data, error } = await ctx.client
-        .from('checkins')
-        .insert({
-          user_id: ctx.userId,
-          date: farFutureDate(4),
-          scores: { energy: 6, mood: 7 } as Json,
-        })
-        .select('id')
-        .single();
+      let data: { id: string } | null = null;
+      let error: PostgrestError | null = null;
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const offsetDays = 4 + Math.floor(Math.random() * 365) + attempt;
+        const result = await ctx.client
+          .from('checkins')
+          .insert({
+            user_id: ctx.userId,
+            date: farFutureDate(offsetDays),
+            scores: { energy: 6, mood: 7 } as Json,
+          })
+          .select('id')
+          .single();
+
+        data = result.data;
+        error = result.error;
+
+        if (!error || error.code !== '23505') {
+          break;
+        }
+      }
 
       if (error) throw error;
+      if (!data) throw new Error('Life wheel check-in insert did not return a record.');
       ctx.cleanup.push(async () => {
         await ctx.client.from('checkins').delete().eq('id', data.id);
       });
