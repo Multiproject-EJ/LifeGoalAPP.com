@@ -99,16 +99,13 @@ export function QuickActionsFAB({
   }, [isOpen]);
 
   const handleToggle = () => {
-    setIsOpen((prev) => {
-      const nextIsOpen = !prev;
-      if (!nextIsOpen) {
-        setShowJournalTypes(false);
-        setShowHabitsSubmenu(false);
-        setShowGamificationCard(false);
-      }
-      onToggleWorkspaceMenu?.(nextIsOpen);
-      return nextIsOpen;
-    });
+    const nextIsOpen = !isOpen;
+    setIsOpen(nextIsOpen);
+    if (!nextIsOpen) {
+      setShowJournalTypes(false);
+      setShowHabitsSubmenu(false);
+      setShowGamificationCard(false);
+    }
     onToggleWorkspaceMenu?.(nextIsOpen);
   };
 

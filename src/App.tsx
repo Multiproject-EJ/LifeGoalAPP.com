@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
