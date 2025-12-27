@@ -1022,7 +1022,6 @@ export default function App() {
           {canAccessWorkspace ? (
             <div className="workspace-content">
               <ProgressDashboard session={activeSession} stats={workspaceStats} />
-              <GoalWorkspace session={activeSession} />
             </div>
           ) : (
             <p className="workspace-onboarding-hint">
