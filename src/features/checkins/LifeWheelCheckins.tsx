@@ -135,6 +135,10 @@ function calculateAverage(scores: CheckinScores): number {
   return Number((total / LIFE_WHEEL_CATEGORIES.length).toFixed(1));
 }
 
+function calculateTotal(scores: CheckinScores): number {
+  return LIFE_WHEEL_CATEGORIES.reduce((sum, category) => sum + (scores[category.key] ?? 0), 0);
+}
+
 type TrendDelta = {
   key: LifeWheelCategoryKey;
   label: string;
@@ -296,6 +300,13 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const [formDate, setFormDate] = useState(() => formatISODate(new Date()));
   const [formScores, setFormScores] = useState<CheckinScores>(() => createDefaultScores());
   const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
+  const [selectedHistoryYear, setSelectedHistoryYear] = useState<string>('all');
+  const [celebrationNote, setCelebrationNote] = useState('');
+  const [growthNote, setGrowthNote] = useState('');
+  const [bestRightNow, setBestRightNow] = useState('');
+  const [needsAttention, setNeedsAttention] = useState('');
+  const [improvementIdeas, setImprovementIdeas] = useState('');
+  const [supportIdeas, setSupportIdeas] = useState('');
   
   // Questionnaire state
   const [isInQuestionnaireMode, setIsInQuestionnaireMode] = useState(false);
@@ -377,6 +388,49 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   }, [selectedScores]);
 
   const trendInsights = useMemo(() => createTrendInsights(checkins), [checkins]);
+  const radarCheckins = useMemo(() => {
+    const uniqueCheckins: CheckinRow[] = [];
+    const seen = new Set<string>();
+    [selectedCheckin, ...checkins].forEach((checkin) => {
+      if (checkin && !seen.has(checkin.id)) {
+        seen.add(checkin.id);
+        uniqueCheckins.push(checkin);
+      }
+    });
+    return uniqueCheckins.slice(0, 3);
+  }, [selectedCheckin, checkins]);
+
+  const historyYears = useMemo(() => {
+    const years = Array.from(
+      new Set(
+        checkins.map((checkin) => new Date(checkin.date).getFullYear().toString()),
+      ),
+    );
+    return years.sort((a, b) => Number(b) - Number(a));
+  }, [checkins]);
+
+  const filteredCheckins = useMemo(() => {
+    if (selectedHistoryYear === 'all') {
+      return checkins;
+    }
+    return checkins.filter(
+      (checkin) => new Date(checkin.date).getFullYear().toString() === selectedHistoryYear,
+    );
+  }, [checkins, selectedHistoryYear]);
+
+  const checkinTimeline = useMemo(() => {
+    const ordered = [...filteredCheckins].sort((a, b) => a.date.localeCompare(b.date));
+    return ordered.map((checkin) => {
+      const scores = parseCheckinScores(checkin.scores);
+      return {
+        id: checkin.id,
+        date: checkin.date,
+        label: dateFormatter.format(new Date(checkin.date)),
+        average: calculateAverage(scores),
+        total: calculateTotal(scores),
+      };
+    });
+  }, [filteredCheckins]);
 
   const handleScoreChange = (categoryKey: LifeWheelCategoryKey) =>
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -775,7 +829,17 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                     <line key={axis.key} x1={axis.x1} y1={axis.y1} x2={axis.x2} y2={axis.y2} />
                   ))}
                 </g>
-                <polygon className="life-wheel__radar-shape" points={radarGeometry.polygonPoints} />
+                {radarCheckins.map((checkin, index) => {
+                  const scores = parseCheckinScores(checkin.scores);
+                  const geometry = buildRadarGeometry(scores);
+                  return (
+                    <polygon
+                      key={checkin.id}
+                      className={`life-wheel__radar-shape ${index === 0 ? 'life-wheel__radar-shape--active' : ''}`}
+                      points={geometry.polygonPoints}
+                    />
+                  );
+                })}
                 <g className="life-wheel__radar-labels">
                   {radarGeometry.labels.map((label) => (
                     <text
@@ -797,39 +861,103 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                   your priorities shift.
                 </p>
               </div>
+              <div className="life-wheel__picker">
+                <details>
+                  <summary>Change check-in</summary>
+                  <div className="life-wheel__picker-panel">
+                    <div className="life-wheel__picker-header">
+                      <div>
+                        <h4>Check-in history</h4>
+                        <p>Select a date to update the radar view.</p>
+                      </div>
+                      <label>
+                        <span className="life-wheel__picker-label">Year</span>
+                        <select
+                          value={selectedHistoryYear}
+                          onChange={(event) => setSelectedHistoryYear(event.target.value)}
+                        >
+                          <option value="all">All</option>
+                          {historyYears.map((year) => (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="life-wheel__timeline">
+                      <h5>Total score trend</h5>
+                      {checkinTimeline.length > 0 ? (
+                        <svg className="life-wheel__timeline-chart" viewBox="0 0 260 100" role="img">
+                          {(() => {
+                            const padding = 16;
+                            const width = 260;
+                            const height = 100;
+                            const totals = checkinTimeline.map((item) => item.total);
+                            const min = Math.min(...totals);
+                            const max = Math.max(...totals);
+                            const range = Math.max(1, max - min);
+                            const step = checkinTimeline.length > 1 ? (width - padding * 2) / (checkinTimeline.length - 1) : 0;
+                            const points = checkinTimeline.map((item, index) => {
+                              const x = padding + step * index;
+                              const y = height - padding - ((item.total - min) / range) * (height - padding * 2);
+                              return `${x},${y}`;
+                            });
+                            return (
+                              <>
+                                <polyline className="life-wheel__timeline-line" points={points.join(' ')} />
+                                {points.map((point, index) => (
+                                  <circle
+                                    key={checkinTimeline[index].id}
+                                    className="life-wheel__timeline-point"
+                                    cx={Number(point.split(',')[0])}
+                                    cy={Number(point.split(',')[1])}
+                                    r={3}
+                                  />
+                                ))}
+                              </>
+                            );
+                          })()}
+                        </svg>
+                      ) : (
+                        <p className="life-wheel__timeline-empty">No check-ins in this year yet.</p>
+                      )}
+                    </div>
+                    <div className="life-wheel__picker-list">
+                      {checkinTimeline.length > 0 ? (
+                        <ul>
+                          {checkinTimeline
+                            .slice()
+                            .reverse()
+                            .map((item) => {
+                              const isActive = selectedCheckin ? item.id === selectedCheckin.id : false;
+                              return (
+                                <li key={item.id}>
+                                  <button
+                                    type="button"
+                                    className={`life-wheel__history-item ${isActive ? 'life-wheel__history-item--active' : ''}`}
+                                    onClick={() => setSelectedCheckinId(item.id)}
+                                  >
+                                    <span>{item.label}</span>
+                                    <span>{item.total}/80 total</span>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                        </ul>
+                      ) : (
+                        <p className="life-wheel__timeline-empty">Log a check-in to populate this timeline.</p>
+                      )}
+                    </div>
+                  </div>
+                </details>
+              </div>
             </>
           ) : (
             <div className="life-wheel__empty">
               <p>Log your first check-in to unlock the radar chart and trend history.</p>
             </div>
           )}
-
-          <div className="life-wheel__history">
-            <h3>Recent check-ins</h3>
-            {checkins.length === 0 ? (
-              <p>No check-ins yet. Share how each area feels to begin your streak.</p>
-            ) : (
-              <ul>
-                {checkins.map((checkin) => {
-                  const isActive = selectedCheckin ? checkin.id === selectedCheckin.id : false;
-                  const scores = parseCheckinScores(checkin.scores);
-                  const average = calculateAverage(scores);
-                  return (
-                    <li key={checkin.id}>
-                      <button
-                        type="button"
-                        className={`life-wheel__history-item ${isActive ? 'life-wheel__history-item--active' : ''}`}
-                        onClick={() => setSelectedCheckinId(checkin.id)}
-                      >
-                        <span>{dateFormatter.format(new Date(checkin.date))}</span>
-                        <span>{average}/10 avg</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
 
           <div className="life-wheel__insights">
             <div className="life-wheel__insights-header">
@@ -904,6 +1032,82 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         </div>
 
         <div className="life-wheel__panel life-wheel__panel--form">
+          <div className="life-wheel__focus">
+            <h3>Life wheel focus</h3>
+            <p>Capture quick reflections and next steps while your insights are fresh.</p>
+            <div className="life-wheel__focus-grid">
+              <div className="life-wheel__focus-card life-wheel__focus-card--positive">
+                <h4>What&apos;s working right now</h4>
+                <textarea
+                  value={celebrationNote}
+                  onChange={(event) => setCelebrationNote(event.target.value)}
+                  placeholder="Name a win, a bright spot, or a supportive habit."
+                  rows={3}
+                />
+                <button type="button" className="life-wheel__claim life-wheel__claim--positive" disabled>
+                  Claim 100 points
+                </button>
+                <span className="life-wheel__claim-note">Future feature</span>
+              </div>
+              <div className="life-wheel__focus-card life-wheel__focus-card--improve">
+                <h4>What needs improvement</h4>
+                <textarea
+                  value={growthNote}
+                  onChange={(event) => setGrowthNote(event.target.value)}
+                  placeholder="Call out the area that needs the most care."
+                  rows={3}
+                />
+                <button type="button" className="life-wheel__claim life-wheel__claim--improve" disabled>
+                  Claim / Do 1000 points
+                </button>
+                <span className="life-wheel__claim-note">Future feature</span>
+              </div>
+            </div>
+            <div className="life-wheel__focus-notes">
+              <label>
+                Best area right now
+                <textarea
+                  value={bestRightNow}
+                  onChange={(event) => setBestRightNow(event.target.value)}
+                  placeholder="Which life area feels the strongest today?"
+                  rows={2}
+                />
+              </label>
+              <label>
+                Toughest area right now
+                <textarea
+                  value={needsAttention}
+                  onChange={(event) => setNeedsAttention(event.target.value)}
+                  placeholder="Which area feels the most challenging?"
+                  rows={2}
+                />
+              </label>
+            </div>
+            <div className="life-wheel__focus-notes life-wheel__focus-notes--ideas">
+              <label>
+                Suggestions for improvement
+                <textarea
+                  value={improvementIdeas}
+                  onChange={(event) => setImprovementIdeas(event.target.value)}
+                  placeholder="List one or two small actions that could help."
+                  rows={2}
+                />
+              </label>
+              <label>
+                Support that could help
+                <textarea
+                  value={supportIdeas}
+                  onChange={(event) => setSupportIdeas(event.target.value)}
+                  placeholder="People, routines, or resources to lean on."
+                  rows={2}
+                />
+              </label>
+            </div>
+          </div>
+          <div className="life-wheel__form-header">
+            <h3>Manual check-in</h3>
+            <p>Prefer sliders? Record a check-in directly here.</p>
+          </div>
           <form className="life-wheel__form" onSubmit={handleFormSubmit}>
             <div className="life-wheel__field">
               <label htmlFor="life-wheel-date">Check-in date</label>
