@@ -58,7 +58,7 @@ export function MobileFooterNav({
                       onStatusClick ? 'mobile-footer-nav__status-card--interactive' : ''
                     }`}
                     onClick={onStatusClick}
-                    aria-label={`View gamification details for ${status.label}`}
+                    aria-label={`View Game of Life details for ${status.label}`}
                     aria-pressed={false}
                   >
                     <div className="mobile-footer-nav__status-header">

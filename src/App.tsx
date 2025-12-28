@@ -1275,7 +1275,7 @@ export default function App() {
         className="mobile-gamification-overlay"
         role="dialog"
         aria-modal="true"
-        aria-label="Gamification insights"
+        aria-label="Game of Life insights"
       >
         <div
           className="mobile-gamification-overlay__backdrop"
@@ -1292,7 +1292,7 @@ export default function App() {
             <button
               type="button"
               className="mobile-gamification-overlay__close"
-              aria-label="Close gamification insights"
+              aria-label="Close Game of Life insights"
               onClick={() => setShowMobileGamification(false)}
             >
               ×
