@@ -1,14 +1,15 @@
 import type { Session, User } from '@supabase/supabase-js';
-import { DEMO_USER_EMAIL, DEMO_USER_ID, DEMO_USER_NAME } from './demoData';
+import { DEMO_USER_EMAIL, DEMO_USER_ID, getDemoProfile } from './demoData';
 
 export function createDemoSession(): Session {
   const isoNow = new Date().toISOString();
   const unixNow = Math.floor(Date.now() / 1000);
+  const profile = getDemoProfile();
 
   const demoUser: User = {
     id: DEMO_USER_ID,
     app_metadata: { provider: 'demo', providers: ['demo'] },
-    user_metadata: { full_name: DEMO_USER_NAME, onboarding_complete: true },
+    user_metadata: { full_name: profile.displayName, onboarding_complete: profile.onboardingComplete },
     aud: 'authenticated',
     confirmation_sent_at: isoNow,
     confirmed_at: isoNow,
@@ -25,7 +26,7 @@ export function createDemoSession(): Session {
     role: 'authenticated',
     updated_at: isoNow,
     raw_app_meta_data: { provider: 'demo', providers: ['demo'] },
-    raw_user_meta_data: { full_name: DEMO_USER_NAME, onboarding_complete: true },
+    raw_user_meta_data: { full_name: profile.displayName, onboarding_complete: profile.onboardingComplete },
   } as unknown as User;
 
   return {

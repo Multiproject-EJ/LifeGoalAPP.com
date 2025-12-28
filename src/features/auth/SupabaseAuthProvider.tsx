@@ -7,7 +7,7 @@ import {
   setSupabaseSession,
   type TypedSupabaseClient,
 } from '../../lib/supabaseClient';
-import { DEMO_USER_EMAIL, DEMO_USER_NAME } from '../../services/demoData';
+import { DEMO_USER_EMAIL } from '../../services/demoData';
 import { createDemoSession } from '../../services/demoSession';
 
 type AuthProviderMode = 'supabase' | 'demo';

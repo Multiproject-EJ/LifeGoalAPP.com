@@ -1,8 +1,6 @@
 import {
-  Dispatch,
   FormEvent,
   ReactNode,
-  SetStateAction,
   useCallback,
   useEffect,
   useMemo,
@@ -26,7 +24,7 @@ import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
-import { DEMO_USER_EMAIL, DEMO_USER_NAME } from './services/demoData';
+import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
@@ -45,6 +43,7 @@ import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceSt
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { generateInitials } from './utils/initials';
+import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -295,13 +294,14 @@ export default function App() {
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
 
   const isDemoMode = mode === 'demo';
+  const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
 
   const activeSession = useMemo(() => {
     if (supabaseSession) {
       return supabaseSession;
     }
     return createDemoSession();
-  }, [supabaseSession]);
+  }, [supabaseSession, demoProfile]);
 
   useEffect(() => {
     if (!supabaseSession) {
@@ -434,6 +434,14 @@ export default function App() {
   const isOnboardingComplete = useMemo(() => {
     return Boolean(activeSession.user.user_metadata?.onboarding_complete);
   }, [activeSession]);
+
+  const handleDemoProfileSave = useCallback(
+    (payload: { displayName: string; onboardingComplete: boolean }) => {
+      updateDemoProfile(payload);
+      setDemoProfile(getDemoProfile());
+    },
+    [],
+  );
 
   const scheduleDesktopMenuAutoHide = useCallback(() => {
     if (isMobileViewport || !isDesktopMenuOpen) return;
@@ -983,7 +991,7 @@ export default function App() {
   });
 
   const profileSaving = manualProfileSaving || isProfileAutosaving;
-  const isOnboardingGateActive = !isDemoExperience;
+  const isOnboardingGateActive = true;
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
 
   const shouldRequireAuthentication = !isAuthenticated && !isDemoMode;
@@ -1045,7 +1053,7 @@ export default function App() {
       return (
         <>
           {isOnboardingGateActive && !isOnboardingComplete && (
-            <OnboardingCard
+            <GameOfLifeOnboarding
               session={activeSession}
               displayName={displayName}
               setDisplayName={setDisplayName}
@@ -1053,7 +1061,10 @@ export default function App() {
               setProfileSaving={setManualProfileSaving}
               setAuthMessage={setAuthMessage}
               setAuthError={setAuthError}
-              isOnboardingComplete={isOnboardingComplete}
+              isDemoExperience={isDemoExperience}
+              onSaveDemoProfile={handleDemoProfileSave}
+              onNavigateDashboard={() => setActiveWorkspaceNav('goals')}
+              onOpenCoach={() => setShowAiCoachModal(true)}
             />
           )}
 
@@ -1584,88 +1595,6 @@ export default function App() {
           onComplete={() => dismissXPToast(toast.id)}
         />
       ))}
-    </div>
-  );
-}
-
-type OnboardingCardProps = {
-  session: Session;
-  displayName: string;
-  setDisplayName: Dispatch<SetStateAction<string>>;
-  profileSaving: boolean;
-  setProfileSaving: Dispatch<SetStateAction<boolean>>;
-  setAuthMessage: Dispatch<SetStateAction<string | null>>;
-  setAuthError: Dispatch<SetStateAction<string | null>>;
-  isOnboardingComplete: boolean;
-};
-
-function OnboardingCard({
-  session,
-  displayName,
-  setDisplayName,
-  profileSaving,
-  setProfileSaving,
-  setAuthMessage,
-  setAuthError,
-  isOnboardingComplete,
-}: OnboardingCardProps) {
-  const { client } = useSupabaseAuth();
-
-  const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!client) {
-      setAuthError('Supabase client is not ready.');
-      return;
-    }
-
-    setProfileSaving(true);
-    setAuthMessage(null);
-    setAuthError(null);
-
-    try {
-      const nextName = displayName.trim();
-      const { error } = await client.auth.updateUser({
-        data: {
-          full_name: nextName || null,
-          onboarding_complete: true,
-        },
-      });
-      if (error) throw error;
-
-      setAuthMessage('Profile saved! Let’s capture your first goal next.');
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Unable to save your profile.');
-    } finally {
-      setProfileSaving(false);
-    }
-  };
-
-  return (
-    <div className="supabase-onboarding">
-      <header className="supabase-onboarding__header">
-        <h3>{isOnboardingComplete ? 'You’re all set 🎉' : 'Finish onboarding'}</h3>
-        <p>
-          {isOnboardingComplete
-            ? 'Jump into the goals workspace to start charting your milestones.'
-            : 'Add a display name so teammates know who is shaping these goals. We will mark onboarding as complete for you.'}
-        </p>
-      </header>
-
-      <form className="supabase-onboarding__form" onSubmit={handleProfileSubmit}>
-        <label className="supabase-auth__field">
-          <span>Display name</span>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder={session.user.email ?? 'you@example.com'}
-          />
-        </label>
-
-        <button type="submit" className="supabase-auth__action" disabled={profileSaving}>
-          {profileSaving ? 'Saving…' : isOnboardingComplete ? 'Update name' : 'Save & complete onboarding'}
-        </button>
-      </form>
     </div>
   );
 }
