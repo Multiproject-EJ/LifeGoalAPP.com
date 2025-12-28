@@ -44,6 +44,64 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
+.habit-legacy-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  padding: 1.5rem;
+}
+
+.habit-legacy-modal-content {
+  background: #ffffff;
+  border-radius: 18px;
+  max-width: 1100px;
+  width: min(1100px, 95vw);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 1.5rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+}
+
+.habit-legacy-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.habit-legacy-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.habit-legacy-modal-close {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.habit-legacy-modal-close:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
 .habit-alert-config {
   background: #ffffff;
   border-radius: 12px;
