@@ -311,6 +311,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const [answers, setAnswers] = useState<Map<string, QuestionAnswer>>(new Map());
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [customNote, setCustomNote] = useState('');
+  const [isQuickCheckinOpen, setIsQuickCheckinOpen] = useState(false);
 
   const loadCheckins = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -527,6 +528,10 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     setFormScores(createDefaultScores());
   };
 
+  const exitQuestionnaire = () => {
+    setIsInQuestionnaireMode(false);
+  };
+
   const handleAnswerSubmit = () => {
     if (selectedOption === null) return;
     
@@ -651,6 +656,9 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     return (
       <section className="life-wheel life-wheel--questionnaire">
         <div className="questionnaire-container">
+          <button type="button" className="questionnaire-back" onClick={exitQuestionnaire}>
+            Back to wellbeing dashboard
+          </button>
           <div className="questionnaire-progress">
             <div className="questionnaire-progress__bar" style={{ width: `${progress}%` }} />
             <span className="questionnaire-progress__text">
@@ -827,6 +835,15 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                   disabled={!isConfigured && !isDemoExperience}
                 >
                   Start New Wellbeing Check-in
+                  <span className="life-wheel__questionnaire-count">(25 questions)</span>
+                </button>
+                <button
+                  type="button"
+                  className="life-wheel__quick-checkin"
+                  onClick={() => setIsQuickCheckinOpen(true)}
+                  disabled={!isConfigured && !isDemoExperience}
+                >
+                  Quick Score Check-in
                 </button>
               </div>
               <div className="life-wheel__snapshot">
@@ -941,16 +958,39 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                   disabled={!isConfigured && !isDemoExperience}
                 >
                   Start New Wellbeing Check-in
+                  <span className="life-wheel__questionnaire-count">(25 questions)</span>
+                </button>
+                <button
+                  type="button"
+                  className="life-wheel__quick-checkin"
+                  onClick={() => setIsQuickCheckinOpen(true)}
+                  disabled={!isConfigured && !isDemoExperience}
+                >
+                  Quick Score Check-in
                 </button>
               </div>
             </>
           )}
         </div>
 
-        <div className="life-wheel__panel life-wheel__panel--form">
-          <div className="life-wheel__form-header">
-            <h3>Manual check-in</h3>
-            <p>Prefer sliders? Record a check-in directly here.</p>
+      </div>
+
+      <div className="modal life-wheel__quick-checkin-modal" open={isQuickCheckinOpen ? true : undefined}>
+        <div className="modal-backdrop" onClick={() => setIsQuickCheckinOpen(false)} />
+        <div className="modal__panel life-wheel__quick-checkin-panel" onClick={(event) => event.stopPropagation()}>
+          <div className="life-wheel__form-header life-wheel__form-header--modal">
+            <div>
+              <h3>Quick Score Check-in</h3>
+              <p>Prefer sliders? Record a check-in directly here.</p>
+            </div>
+            <button
+              type="button"
+              className="life-wheel__quick-checkin-close"
+              onClick={() => setIsQuickCheckinOpen(false)}
+              aria-label="Close quick score check-in"
+            >
+              ✕
+            </button>
           </div>
           <form className="life-wheel__form" onSubmit={handleFormSubmit}>
             <div className="life-wheel__field">
