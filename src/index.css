@@ -3644,6 +3644,46 @@ body {
   flex-shrink: 0;
 }
 
+@media (max-width: 640px) {
+  .habit-checklist-card__board-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .habit-checklist-card__date-wrap {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .habit-checklist-card__date-group {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .habit-checklist-card__date {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .habit-checklist-card__time {
+    font-size: 0.9rem;
+  }
+
+  .habit-checklist-card__head-actions {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .habit-checklist-card__progress {
+    white-space: nowrap;
+  }
+}
+
 .habit-checklist-card__progress {
   font-weight: 700;
   color: #7c2d12;
