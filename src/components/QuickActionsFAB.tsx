@@ -461,7 +461,7 @@ export function QuickActionsFAB({
           className="gamification-scorecard-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Gamification scorecard"
+          aria-label="Game of Life scorecard"
           onClick={closeGamificationCard}
         >
           <div
@@ -472,7 +472,7 @@ export function QuickActionsFAB({
               <div className="gamification-scorecard__title">
                 <span className="gamification-scorecard__badge" aria-hidden="true">🎮</span>
                 <div>
-                  <p className="gamification-scorecard__eyebrow">Game Mode</p>
+                  <p className="gamification-scorecard__eyebrow">Game of Life</p>
                   <h3 className="gamification-scorecard__headline">Scorecard & progress</h3>
                 </div>
               </div>
@@ -480,7 +480,7 @@ export function QuickActionsFAB({
                 type="button"
                 className="gamification-scorecard__close"
                 onClick={closeGamificationCard}
-                aria-label="Close gamification scorecard"
+                aria-label="Close Game of Life scorecard"
               >
                 ✕
               </button>
@@ -493,7 +493,7 @@ export function QuickActionsFAB({
 
               {!gamificationLoading && !gamificationEnabled && (
                 <div className="gamification-scorecard__empty">
-                  <p>Gamification is currently turned off.</p>
+                  <p>Game of Life is currently turned off.</p>
                   <p className="gamification-scorecard__muted">
                     Enable it from Settings to unlock XP, streaks, and rewards.
                   </p>
@@ -554,7 +554,7 @@ export function QuickActionsFAB({
                 <div className="gamification-scorecard__empty">
                   <p>No scorecard data yet.</p>
                   <p className="gamification-scorecard__muted">
-                    Start completing habits and journals to build your gamification profile.
+                    Start completing habits and journals to build your Game of Life profile.
                   </p>
                 </div>
               )}

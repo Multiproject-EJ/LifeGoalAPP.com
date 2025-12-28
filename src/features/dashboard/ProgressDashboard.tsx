@@ -776,11 +776,11 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     },
     {
       id: 'visionboard',
-      title: 'Visionboard peak + gamefication',
+      title: 'Visionboard peak + Game of Life',
       content: (
         <div className="progress-dashboard__panel-content progress-dashboard__panel-content--vision-board">
           <header className="progress-dashboard__panel-header">
-            <h2>Vision board peak + gamification</h2>
+            <h2>Vision board peak + Game of Life</h2>
             <p>Curate themed boards that fuel daily momentum and highlight who inspires you.</p>
           </header>
           <div className="progress-dashboard__vision-board-grid">
@@ -802,10 +802,10 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     },
     {
       id: 'improvements',
-      title: 'Improvements and game stats',
+      title: 'Improvements and Game of Life stats',
       content: (
         <div className="progress-dashboard__panel-content progress-dashboard__panel-content--title">
-          <h2>improvements and game stats</h2>
+          <h2>Improvements and Game of Life stats</h2>
           <LifeWheelInsightsPanel session={session} />
         </div>
       ),

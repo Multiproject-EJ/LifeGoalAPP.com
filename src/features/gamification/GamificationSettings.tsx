@@ -50,8 +50,8 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
         setMessage({ 
           type: 'success', 
           text: newValue 
-            ? 'Gamification features enabled! Refresh to see changes.' 
-            : 'Gamification features disabled. Your progress is saved.' 
+            ? 'Game of Life features enabled! Refresh to see changes.' 
+            : 'Game of Life features disabled. Your progress is saved.' 
         });
         
         // Clear message after 3 seconds
@@ -67,7 +67,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
   if (loading) {
     return (
       <div className="account-panel__section">
-        <h3 className="account-panel__section-title">Gamification</h3>
+        <h3 className="account-panel__section-title">Game of Life</h3>
         <p className="account-panel__loading">Loading...</p>
       </div>
     );
@@ -76,7 +76,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
   return (
     <div className="account-panel__section">
       <h3 className="account-panel__section-title">
-        Gamification
+        Game of Life
         {isDemoMode && <span className="demo-badge">Demo Mode</span>}
       </h3>
 
@@ -90,7 +90,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
             className="account-panel__checkbox"
           />
           <span className="account-panel__setting-text">
-            <strong>Enable Gamification Features</strong>
+            <strong>Enable Game of Life Features</strong>
             <span className="account-panel__setting-description">
               Show XP, levels, streaks, achievements, and progress indicators
             </span>
@@ -113,7 +113,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
 
       {!enabled && (
         <p className="gamification-settings__disabled-note">
-          Your progress is safely stored and will be available when you re-enable gamification.
+          Your progress is safely stored and will be available when you re-enable Game of Life.
         </p>
       )}
 

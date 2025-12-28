@@ -80,7 +80,7 @@ export function AchievementsPage({ session }: Props) {
     return (
       <div className="achievements-page">
         <div className="achievements-page__disabled">
-          <p>🎮 Gamification is disabled. Enable it in Settings to view achievements.</p>
+          <p>🎮 Game of Life is disabled. Enable it in Settings to view achievements.</p>
         </div>
       </div>
     );
