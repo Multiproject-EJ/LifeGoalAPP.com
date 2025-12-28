@@ -866,8 +866,8 @@ body {
 .workspace-sidebar {
   position: fixed;
   left: 20px;
-  top: 20px;
-  bottom: 20px;
+  top: var(--workspace-shell-padding);
+  bottom: var(--workspace-shell-padding);
   align-self: start;
   display: flex;
   flex-direction: column;
@@ -1319,7 +1319,7 @@ body {
   background: linear-gradient(155deg, rgba(255, 255, 255, 0.85), rgba(248, 250, 252, 0.6));
   border: 1px solid rgba(248, 250, 252, 0.6);
   border-radius: 28px;
-  padding: clamp(2.5rem, 5vw, 3.5rem);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
   display: grid;
   grid-template-rows: auto 1fr;
   gap: clamp(2rem, 4vw, 3rem);
