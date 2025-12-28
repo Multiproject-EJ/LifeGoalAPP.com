@@ -97,6 +97,7 @@ export const XP_REWARDS = {
   // Vision board rewards
   VISION_BOARD: 10,
   VISION_BOARD_CAPTION: 5, // Bonus with caption
+  VISION_BOARD_STAR: 5,
   
   // Streak milestone rewards
   STREAK_7_DAYS: 100,
@@ -366,5 +367,4 @@ export interface ActiveBoost {
   expiresAt: string | null;
   minutesRemaining: number | null;
 }
-
 

@@ -18,6 +18,7 @@ import {
 } from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { fetchVisionImages, getVisionImagePublicUrl } from '../../services/visionBoard';
 import { HabitAlertConfig } from './HabitAlertConfig';
 import { createJournalEntry } from '../../services/journal';
 import './HabitAlertConfig.css';
@@ -81,6 +82,16 @@ type IntentionsJournalDraft = {
   isOpen: boolean;
   type: 'today' | 'tomorrow';
   content: string;
+};
+
+type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
+
+type VisionImage = VisionImageRow & { publicUrl: string };
+
+type VisionReward = {
+  imageUrl: string;
+  caption: string | null;
+  xpAwarded: number;
 };
 
 const STREAK_LOOKBACK_DAYS = 60;
@@ -181,6 +192,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [intentionsJournalSaving, setIntentionsJournalSaving] = useState(false);
   const [intentionsJournalError, setIntentionsJournalError] = useState<string | null>(null);
   const [intentionsJournalStatus, setIntentionsJournalStatus] = useState<string | null>(null);
+  const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
+  const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
+  const [visionRewardError, setVisionRewardError] = useState<string | null>(null);
+  const [visionImagesLoading, setVisionImagesLoading] = useState(false);
+  const [visionRewarding, setVisionRewarding] = useState(false);
   const { earnXP, recordActivity } = useGamification(session);
 
   useEffect(() => {
@@ -215,6 +231,87 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     setQuickJournalError(null);
     setQuickJournalStatus(null);
   }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!isConfigured && !isDemoExperience) {
+      setVisionImages([]);
+      setVisionImagesLoading(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    const loadVisionImages = async () => {
+      setVisionImagesLoading(true);
+      try {
+        const { data, error } = await fetchVisionImages(session.user.id);
+        if (!isActive) return;
+        if (error) {
+          throw error;
+        }
+        const mapped = (data ?? [])
+          .map((record) => ({
+            ...record,
+            publicUrl: getVisionImagePublicUrl(record),
+          }))
+          .filter((record) => record.publicUrl);
+        setVisionImages(mapped);
+      } catch (error) {
+        console.error('Failed to load vision board images:', error);
+        if (isActive) {
+          setVisionImages([]);
+        }
+      } finally {
+        if (isActive) {
+          setVisionImagesLoading(false);
+        }
+      }
+    };
+
+    loadVisionImages();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isConfigured, isDemoExperience, session.user.id]);
+
+  const handleVisionReward = useCallback(async () => {
+    setVisionRewardError(null);
+
+    if (!isConfigured && !isDemoExperience) {
+      setVisionRewardError('Connect Supabase to unlock vision board boosts.');
+      return;
+    }
+
+    if (visionImages.length === 0) {
+      setVisionReward(null);
+      setVisionRewardError('Add images to your vision board to unlock a star boost.');
+      return;
+    }
+
+    const selection = visionImages[Math.floor(Math.random() * visionImages.length)];
+    const xpAmount = XP_REWARDS.VISION_BOARD_STAR;
+
+    setVisionRewarding(true);
+    try {
+      const result = await earnXP(
+        xpAmount,
+        'vision_board_star',
+        selection.id,
+        'Vision board star boost'
+      );
+      await recordActivity();
+      setVisionReward({
+        imageUrl: selection.publicUrl,
+        caption: selection.caption ?? null,
+        xpAwarded: result?.xpAwarded ?? xpAmount,
+      });
+    } finally {
+      setVisionRewarding(false);
+    }
+  }, [earnXP, isConfigured, isDemoExperience, recordActivity, visionImages]);
 
   useEffect(() => {
     const draftKey = quickJournalDraftKey(session.user.id, activeDate);
@@ -769,7 +866,34 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 onChange={(event) => handleDateInputChange(event.target.value)}
               />
             </label>
+            <button
+              type="button"
+              className="habit-day-nav__star"
+              onClick={handleVisionReward}
+              disabled={visionImagesLoading || visionRewarding}
+              aria-label="Reveal a vision board star boost"
+            >
+              ★
+            </button>
           </div>
+          <div className="habit-day-nav__bonus">
+            <div className="habit-day-nav__bonus-text">
+              <span className="habit-day-nav__bonus-title">Vision star</span>
+              <span className="habit-day-nav__bonus-subtitle">
+                {visionReward ? `+${visionReward.xpAwarded} XP earned` : `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`}
+              </span>
+            </div>
+            {visionReward ? (
+              <img
+                className="habit-day-nav__bonus-image"
+                src={visionReward.imageUrl}
+                alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
+              />
+            ) : (
+              <span className="habit-day-nav__bonus-placeholder">Tap the star for a random vision board image</span>
+            )}
+          </div>
+          {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
         </div>
 
         <button
