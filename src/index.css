@@ -5177,6 +5177,68 @@ body {
   background: transparent;
   border: none;
   padding: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.progress-dashboard__panel-content--life-wheel .life-wheel {
+  width: min(100%, 1080px);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+.progress-dashboard__panel-content--life-wheel .life-wheel__radar {
+  max-width: 260px;
+  filter: none;
+}
+
+.progress-dashboard__panel-content--vision-board {
+  background: linear-gradient(150deg, #eef2ff, #f8fafc);
+}
+
+.progress-dashboard__panel-header {
+  display: grid;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.progress-dashboard__panel-header h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: #0f172a;
+}
+
+.progress-dashboard__panel-header p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.progress-dashboard__vision-board-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.progress-dashboard__vision-board-card {
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.progress-dashboard__vision-board-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #1e293b;
+}
+
+.progress-dashboard__vision-board-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
 }
 
 .progress-dashboard__panel-content--title {

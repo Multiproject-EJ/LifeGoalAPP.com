@@ -778,8 +778,25 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
       id: 'visionboard',
       title: 'Visionboard peak + gamefication',
       content: (
-        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--title">
-          <h2>visionboard peak + gamefication</h2>
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--vision-board">
+          <header className="progress-dashboard__panel-header">
+            <h2>Vision board peak + gamification</h2>
+            <p>Curate themed boards that fuel daily momentum and highlight who inspires you.</p>
+          </header>
+          <div className="progress-dashboard__vision-board-grid">
+            <article className="progress-dashboard__vision-board-card">
+              <h3>Dream lifestyle</h3>
+              <p>Collect visuals that represent the life you&apos;re building—home, travel, and daily rituals.</p>
+            </article>
+            <article className="progress-dashboard__vision-board-card">
+              <h3>Goals + milestones</h3>
+              <p>Pin achievements, awards, or milestones you want to celebrate so progress stays visible.</p>
+            </article>
+            <article className="progress-dashboard__vision-board-card">
+              <h3>Inspiring people + traits</h3>
+              <p>Highlight mentors, icons, or loved ones and the traits you admire in them.</p>
+            </article>
+          </div>
         </div>
       ),
     },
