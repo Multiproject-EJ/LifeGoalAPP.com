@@ -32,9 +32,15 @@ export const DEMO_USER_ID = 'demo-user-0001';
 export const DEMO_USER_EMAIL = 'demo@lifegoalapp.com';
 export const DEMO_USER_NAME = 'Demo Creator';
 
+export type DemoProfile = {
+  displayName: string;
+  onboardingComplete: boolean;
+};
+
 const STORAGE_KEY = 'lifegoalapp-demo-db-v1';
 
 type DemoState = {
+  profile: DemoProfile;
   goals: GoalRow[];
   habits: HabitRow[];
   habitLogs: HabitLogRow[];
@@ -100,6 +106,10 @@ function createDemoHabit(seed: DemoHabitSeed): HabitRow {
 }
 
 const defaultState: DemoState = {
+  profile: {
+    displayName: DEMO_USER_NAME,
+    onboardingComplete: false,
+  },
   goals: [
     {
       id: createId('goal'),
@@ -670,7 +680,12 @@ function loadState(): DemoState {
     }
     const parsed = JSON.parse(raw) as Partial<DemoState>;
     const goals = (parsed.goals ?? clone(defaultState.goals)).map(normalizeGoalRow);
+    const profile = {
+      ...defaultState.profile,
+      ...(parsed.profile ?? {}),
+    };
     return {
+      profile,
       goals,
       habits: parsed.habits ?? clone(defaultState.habits),
       habitLogs: parsed.habitLogs ?? clone(defaultState.habitLogs),
@@ -703,6 +718,22 @@ type StateUpdater<T> = (current: T) => T;
 function updateState(updater: StateUpdater<DemoState>) {
   state = updater(state);
   persist();
+}
+
+export function getDemoProfile(): DemoProfile {
+  return clone(state.profile);
+}
+
+export function updateDemoProfile(payload: Partial<DemoProfile>): DemoProfile {
+  let nextProfile: DemoProfile = state.profile;
+  updateState((current) => {
+    nextProfile = {
+      ...current.profile,
+      ...payload,
+    };
+    return { ...current, profile: nextProfile };
+  });
+  return clone(nextProfile);
 }
 
 function sortByDateDesc<T extends { created_at?: string | null; date?: string | null }>(rows: T[]): T[] {

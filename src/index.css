@@ -6146,6 +6146,80 @@ body {
   gap: 0.75rem;
 }
 
+.gol-onboarding {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 18px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  display: grid;
+  gap: 1.5rem;
+  color: #f8fafc;
+}
+
+.gol-onboarding__header h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+}
+
+.gol-onboarding__header p {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.8);
+  font-size: 0.98rem;
+}
+
+.gol-onboarding__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 197, 248, 0.9);
+}
+
+.gol-onboarding__panel {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.gol-onboarding__axes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.gol-onboarding__axes li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.gol-onboarding__axes p {
+  margin: 0.25rem 0 0;
+  color: rgba(248, 250, 252, 0.7);
+  font-size: 0.92rem;
+}
+
+.gol-onboarding__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.gol-onboarding__actions--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 @media (max-width: 600px) {
   body {
     align-items: flex-start;
