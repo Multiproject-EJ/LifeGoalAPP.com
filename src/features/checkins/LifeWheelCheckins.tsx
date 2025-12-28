@@ -975,7 +975,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
       </div>
 
-      <div className="modal life-wheel__quick-checkin-modal" open={isQuickCheckinOpen ? true : undefined}>
+      <dialog className="modal life-wheel__quick-checkin-modal" open={isQuickCheckinOpen}>
         <div className="modal-backdrop" onClick={() => setIsQuickCheckinOpen(false)} />
         <div className="modal__panel life-wheel__quick-checkin-panel" onClick={(event) => event.stopPropagation()}>
           <div className="life-wheel__form-header life-wheel__form-header--modal">
@@ -1035,7 +1035,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
             </div>
           </form>
         </div>
-      </div>
+      </dialog>
     </section>
   );
 }
