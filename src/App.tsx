@@ -922,21 +922,37 @@ export default function App() {
       const trimmed = nextName.trim();
       if (!trimmed) return;
 
+      const currentAuthName =
+        ((supabaseSession.user.user_metadata?.full_name as string | undefined) ?? '').trim();
+      const currentProfileName = (workspaceProfile?.full_name ?? '').trim();
+      const isOnboardingComplete = Boolean(supabaseSession.user.user_metadata?.onboarding_complete);
+
+      const shouldUpdateAuth = currentAuthName !== trimmed || !isOnboardingComplete;
+      const shouldUpdateProfile = !workspaceProfile || currentProfileName !== trimmed;
+
+      if (!shouldUpdateAuth && !shouldUpdateProfile) {
+        return;
+      }
+
       const supabaseClient = client ?? getSupabaseClient();
 
       const [authResult, profileResult] = await Promise.all([
-        supabaseClient.auth.updateUser({
-          data: {
-            full_name: trimmed,
-            onboarding_complete: true,
-          },
-        }),
-        upsertWorkspaceProfile({
-          ...workspaceProfile,
-          user_id: supabaseSession.user.id,
-          full_name: trimmed,
-          initials: generateInitials(trimmed),
-        }),
+        shouldUpdateAuth
+          ? supabaseClient.auth.updateUser({
+              data: {
+                full_name: trimmed,
+                onboarding_complete: true,
+              },
+            })
+          : Promise.resolve({ error: null }),
+        shouldUpdateProfile
+          ? upsertWorkspaceProfile({
+              ...workspaceProfile,
+              user_id: supabaseSession.user.id,
+              full_name: trimmed,
+              initials: generateInitials(trimmed),
+            })
+          : Promise.resolve({ data: workspaceProfile ?? null, error: null }),
       ]);
 
       if (authResult.error) throw authResult.error;
