@@ -6,9 +6,16 @@ name: Legacy SQL Files Check
 on:
   push:
     branches: [main]
+    paths:
+      - "sql/**"
+      - "supabase/migrations/**"
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
+    paths:
+      - "sql/**"
+      - "supabase/migrations/**"
+  workflow_dispatch:
 
 permissions:
   contents: read
