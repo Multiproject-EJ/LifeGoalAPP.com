@@ -163,6 +163,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   >({});
   // State for alert configuration modal
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
+  const [showLegacyHabitAssets, setShowLegacyHabitAssets] = useState(false);
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
   const [quickJournalMorning, setQuickJournalMorning] = useState('');
   const [quickJournalDay, setQuickJournalDay] = useState('');
@@ -1691,18 +1692,27 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   return (
     <section className="habit-tracker">
       <header className="habit-tracker__header">
-        <div>
+        <div className="habit-tracker__header-main">
           <h2>{`Monthly habits dashboard • ${formatMonthYearLabel(selectedYear, selectedMonth)} (${monthDays.length} days)`}</h2>
           <p>Use the monthly grid to see every habit alongside the life wheel domains they support.</p>
         </div>
-        <button
-          type="button"
-          className="habit-tracker__refresh"
-          onClick={() => void refreshHabits()}
-          disabled={loading || (!isConfigured && !isDemoExperience)}
-        >
-          {loading ? 'Refreshing…' : 'Refresh habits'}
-        </button>
+        <div className="habit-tracker__actions">
+          <button
+            type="button"
+            className="habit-tracker__refresh"
+            onClick={() => void refreshHabits()}
+            disabled={loading || (!isConfigured && !isDemoExperience)}
+          >
+            {loading ? 'Refreshing…' : 'Refresh habits'}
+          </button>
+          <button
+            type="button"
+            className="habit-tracker__legacy-toggle"
+            onClick={() => setShowLegacyHabitAssets(true)}
+          >
+            Legacy habit assets
+          </button>
+        </div>
       </header>
 
       {isDemoExperience ? (
@@ -1782,9 +1792,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               );
             })}
           </ul>
-          
-          {/* Monthly Grid View with Month Switcher */}
-          {renderMonthlyGrid()}
         </>
       )}
       
@@ -1797,6 +1804,25 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               habitName={alertConfigHabit.name}
               onClose={() => setAlertConfigHabit(null)}
             />
+          </div>
+        </div>
+      )}
+
+      {showLegacyHabitAssets && (
+        <div className="habit-legacy-modal-overlay" onClick={() => setShowLegacyHabitAssets(false)}>
+          <div className="habit-legacy-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="habit-legacy-modal-header">
+              <h3>Legacy habit assets</h3>
+              <button
+                type="button"
+                className="habit-legacy-modal-close"
+                onClick={() => setShowLegacyHabitAssets(false)}
+                aria-label="Close legacy habit assets"
+              >
+                ×
+              </button>
+            </div>
+            {renderMonthlyGrid()}
           </div>
         </div>
       )}
