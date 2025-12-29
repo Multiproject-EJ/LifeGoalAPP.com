@@ -48,6 +48,8 @@ const EXTENDED_JOURNAL_TYPES = JOURNAL_TYPES.filter(
   (jt) => !['quick', 'brain_dump'].includes(jt.type),
 );
 
+const STREAK_LOOKBACK_DAYS = 60;
+
 export function QuickActionsFAB({
   session,
   onCheckHabit,
@@ -75,6 +77,166 @@ export function QuickActionsFAB({
     loading: gamificationLoading,
     refreshProfile,
   } = useGamification(session);
+
+  const parseISODate = (value: string): Date => {
+    const [yearStr, monthStr, dayStr] = value.split('-');
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    const day = Number(dayStr);
+    if ([year, month, day].some((part) => Number.isNaN(part))) {
+      return new Date(value);
+    }
+    return new Date(year, month - 1, day);
+  };
+
+  const createScheduleChecker = (frequency: string, schedule: unknown) => {
+    if (schedule && Array.isArray(schedule)) {
+      const indexes = schedule
+        .map((item) => (typeof item === 'string' ? item.toLowerCase() : undefined))
+        .map((day) => {
+          switch (day) {
+            case 'sunday':
+              return 0;
+            case 'monday':
+              return 1;
+            case 'tuesday':
+              return 2;
+            case 'wednesday':
+              return 3;
+            case 'thursday':
+              return 4;
+            case 'friday':
+              return 5;
+            case 'saturday':
+              return 6;
+            default:
+              return undefined;
+          }
+        })
+        .filter((value): value is number => typeof value === 'number');
+      if (indexes.length > 0) {
+        return (date: Date) => indexes.includes(date.getDay());
+      }
+    }
+
+    if (schedule && typeof schedule === 'object') {
+      const value = schedule as { type?: string; days?: unknown[] };
+      const type = typeof value.type === 'string' ? value.type.toLowerCase() : '';
+      if (type === 'weekly' && Array.isArray(value.days)) {
+        const indexes = value.days
+          .map((item) => (typeof item === 'string' ? item.toLowerCase() : undefined))
+          .map((day) => {
+            switch (day) {
+              case 'sunday':
+                return 0;
+              case 'monday':
+                return 1;
+              case 'tuesday':
+                return 2;
+              case 'wednesday':
+                return 3;
+              case 'thursday':
+                return 4;
+              case 'friday':
+                return 5;
+              case 'saturday':
+                return 6;
+              default:
+                return undefined;
+            }
+          })
+          .filter((value): value is number => typeof value === 'number');
+        if (indexes.length > 0) {
+          return (date: Date) => indexes.includes(date.getDay());
+        }
+      }
+      if (type === 'daily') {
+        return () => true;
+      }
+    }
+
+    if (typeof frequency === 'string' && frequency.toLowerCase().includes('weekly')) {
+      return () => true;
+    }
+
+    return () => true;
+  };
+
+  const formatISODate = (date: Date) => date.toISOString().split('T')[0];
+
+  const subtractDays = (date: Date, days: number) => {
+    const next = new Date(date);
+    next.setDate(next.getDate() - days);
+    return next;
+  };
+
+  const calculateHabitStreaks = (
+    habitsList: HabitWithGoal[],
+    logs: { habit_id: string; date: string; completed: boolean }[],
+    trackingDateISO: string,
+  ) => {
+    const todayDate = parseISODate(trackingDateISO);
+    const lookbackStartDate = subtractDays(todayDate, STREAK_LOOKBACK_DAYS - 1);
+    const lookbackStartISO = formatISODate(lookbackStartDate);
+
+    const completionSets = new Map<string, Set<string>>();
+
+    for (const log of logs) {
+      if (!log.completed) continue;
+      if (log.date < lookbackStartISO || log.date > trackingDateISO) continue;
+      let set = completionSets.get(log.habit_id);
+      if (!set) {
+        set = new Set<string>();
+        completionSets.set(log.habit_id, set);
+      }
+      set.add(log.date);
+    }
+
+    const insights = new Map<string, { currentStreak: number; longestStreak: number }>();
+
+    for (const habit of habitsList) {
+      const scheduleChecker = createScheduleChecker(habit.frequency, habit.schedule);
+      const completionDates = completionSets.get(habit.id) ?? new Set<string>();
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let runningStreak = 0;
+      let withinCurrent = true;
+
+      for (let offset = 0; offset < STREAK_LOOKBACK_DAYS; offset += 1) {
+        const checkDate = subtractDays(todayDate, offset);
+        if (checkDate < lookbackStartDate) {
+          break;
+        }
+        if (!scheduleChecker(checkDate)) {
+          continue;
+        }
+
+        const isoDate = formatISODate(checkDate);
+        const completed = completionDates.has(isoDate);
+        if (completed) {
+          runningStreak += 1;
+          if (withinCurrent) {
+            currentStreak += 1;
+          }
+          if (runningStreak > longestStreak) {
+            longestStreak = runningStreak;
+          }
+        } else {
+          if (withinCurrent) {
+            withinCurrent = false;
+          }
+          runningStreak = 0;
+        }
+      }
+
+      insights.set(habit.id, {
+        currentStreak,
+        longestStreak: Math.max(longestStreak, currentStreak),
+      });
+    }
+
+    return insights;
+  };
 
   // Close FAB menu and reset all states on click outside
   useEffect(() => {
@@ -114,33 +276,56 @@ export function QuickActionsFAB({
     setLoadingHabits(true);
     try {
       // Get today's date in ISO format
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const todayISO = formatISODate(today);
+      const lookbackStartISO = formatISODate(subtractDays(today, STREAK_LOOKBACK_DAYS - 1));
       
       // Fetch habits
       const { data: habitsData, error: habitsError } = await fetchHabitsForUser(session.user.id);
       if (habitsError) throw habitsError;
       
       const fetchedHabits = habitsData ?? [];
-      setHabits(fetchedHabits);
       
       if (fetchedHabits.length === 0) {
         setHabitCompletions({});
+        setHabits([]);
         return;
       }
       
-      // Fetch completion logs for today
-      const habitIds = fetchedHabits.map(h => h.id);
-      const { data: logs, error: logsError } = await fetchHabitLogsForRange(habitIds, today, today);
+      // Fetch completion logs for streak sorting + today completion state
+      const habitIds = fetchedHabits.map((habit) => habit.id);
+      const { data: logs, error: logsError } = await fetchHabitLogsForRange(
+        habitIds,
+        lookbackStartISO,
+        todayISO,
+      );
       if (logsError) throw logsError;
+
+      const streaks = calculateHabitStreaks(fetchedHabits, logs ?? [], todayISO);
+      const sortedHabits = [...fetchedHabits].sort((a, b) => {
+        const aStreak = streaks.get(a.id);
+        const bStreak = streaks.get(b.id);
+        const aCurrent = aStreak?.currentStreak ?? 0;
+        const bCurrent = bStreak?.currentStreak ?? 0;
+        if (aCurrent !== bCurrent) {
+          return bCurrent - aCurrent;
+        }
+        const aLongest = aStreak?.longestStreak ?? 0;
+        const bLongest = bStreak?.longestStreak ?? 0;
+        if (aLongest !== bLongest) {
+          return bLongest - aLongest;
+        }
+        return a.name.localeCompare(b.name);
+      });
       
       // Build completion state
       const completions: Record<string, { logId: string | null; completed: boolean }> = {};
-      habitIds.forEach(id => {
+      habitIds.forEach((id) => {
         completions[id] = { logId: null, completed: false };
       });
       
-      (logs ?? []).forEach(log => {
-        if (log.date === today) {
+      (logs ?? []).forEach((log) => {
+        if (log.date === todayISO) {
           completions[log.habit_id] = {
             logId: log.id,
             completed: Boolean(log.completed),
@@ -149,6 +334,7 @@ export function QuickActionsFAB({
       });
       
       setHabitCompletions(completions);
+      setHabits(sortedHabits);
     } catch (error) {
       console.error('Failed to load habits:', error);
     } finally {
@@ -260,6 +446,8 @@ export function QuickActionsFAB({
         await earnXP(xpAmount, 'habit_complete', habitId);
         await recordActivity();
       }
+
+      await loadHabits();
     } catch (error) {
       console.error('Failed to toggle habit:', error);
     } finally {
