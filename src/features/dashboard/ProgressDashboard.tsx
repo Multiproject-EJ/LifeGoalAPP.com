@@ -1228,8 +1228,8 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
           </header>
           {!gamificationEnabled ? (
             <div className="progress-dashboard__empty">
-              <h3>Enable Game of Life gamification to unlock micro-quests</h3>
-              <p>Turn on gamification in your account settings to earn XP for daily balance steps.</p>
+              <h3>Enable Game of Life XP to unlock micro-quests</h3>
+              <p>Turn on Game of Life in your account settings to earn XP for daily balance steps.</p>
             </div>
           ) : !isConfigured && !isDemoExperience ? (
             <div className="progress-dashboard__empty">
@@ -1265,7 +1265,11 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
               </div>
 
               {microQuestStatus ? (
-                <p className={`micro-quests__status micro-quests__status--${microQuestStatus.kind}`}>
+                <p
+                  className={`micro-quests__status micro-quests__status--${microQuestStatus.kind}`}
+                  role="status"
+                  aria-live="polite"
+                >
                   {microQuestStatus.message}
                 </p>
               ) : null}
@@ -1359,7 +1363,11 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
                   </span>
                 </div>
                 {rationalityStatus ? (
-                  <p className={`rationality-check__status rationality-check__status--${rationalityStatus.kind}`}>
+                  <p
+                    className={`rationality-check__status rationality-check__status--${rationalityStatus.kind}`}
+                    role="status"
+                    aria-live="polite"
+                  >
                     {rationalityStatus.message}
                   </p>
                 ) : null}
