@@ -405,6 +405,171 @@
   }
 }
 
+/* Interventions */
+.ai-coach-modal__interventions {
+  margin: 1rem 0 1.5rem;
+  padding: 1.5rem;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__interventions {
+    background: rgba(30, 41, 59, 0.75);
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+}
+
+.ai-coach-modal__interventions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ai-coach-modal__interventions-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text, #1f2937);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__interventions-header h3 {
+    color: var(--color-text-dark, #f1f5f9);
+  }
+}
+
+.ai-coach-modal__interventions-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748b);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__interventions-status {
+    color: var(--color-text-muted-dark, #94a3b8);
+  }
+}
+
+.ai-coach-modal__interventions-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.ai-coach-modal__intervention-card {
+  background: var(--color-background, #ffffff);
+  border-radius: 16px;
+  padding: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__intervention-card {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(71, 85, 105, 0.6);
+  }
+}
+
+.ai-coach-modal__intervention-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ai-coach-modal__intervention-card-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text, #0f172a);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__intervention-card-header h4 {
+    color: var(--color-text-dark, #e2e8f0);
+  }
+}
+
+.ai-coach-modal__intervention-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #4338ca;
+}
+
+.ai-coach-modal__intervention-tag--habit-struggle {
+  background: rgba(14, 116, 144, 0.15);
+  color: #0e7490;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__intervention-tag {
+    color: #c7d2fe;
+    background: rgba(99, 102, 241, 0.25);
+  }
+
+  .ai-coach-modal__intervention-tag--habit-struggle {
+    color: #bae6fd;
+    background: rgba(14, 116, 144, 0.3);
+  }
+}
+
+.ai-coach-modal__intervention-card p {
+  margin: 0;
+  color: var(--color-text-muted, #475569);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__intervention-card p {
+    color: var(--color-text-muted-dark, #cbd5f5);
+  }
+}
+
+.ai-coach-modal__intervention-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-coach-modal__intervention-button {
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.08);
+  color: #312e81;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.ai-coach-modal__intervention-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ai-coach-modal__intervention-button {
+    color: #e0e7ff;
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.5);
+  }
+}
+
 /* Topics */
 .ai-coach-modal__topics {
   margin-top: 1.5rem;
