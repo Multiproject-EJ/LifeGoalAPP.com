@@ -30,6 +30,13 @@ import {
   getBalanceWeekId,
   hasBalanceBonus,
 } from '../../services/balanceScore';
+import {
+  createRationalityEntry,
+  getUniqueRationalityDates,
+  listRationalityEntries,
+  RATIONALITY_PROMPT,
+} from '../../services/rationality';
+import type { JournalEntry } from '../../services/journal';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habit types
@@ -64,6 +71,8 @@ type WeeklySnapshot = {
   label: string;
   completions: number;
 };
+
+type StatusMessage = { kind: 'success' | 'error'; message: string } | null;
 
 type GoalStatusExample = {
   title: string;
@@ -163,11 +172,12 @@ function buildWeeklySnapshot(reference: Date, completions: Record<string, number
 export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
-  const { earnXP, enabled: gamificationEnabled } = useGamification(session);
+  const { earnXP, enabled: gamificationEnabled, recordActivity } = useGamification(session);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [logs, setLogs] = useState<HabitLogRow[]>([]);
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
+  const [rationalityEntries, setRationalityEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newHabitName, setNewHabitName] = useState('');
@@ -181,12 +191,19 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const [showIdeasPage, setShowIdeasPage] = useState(false);
   const [activePanel, setActivePanel] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [rationalityNote, setRationalityNote] = useState('');
+  const [rationalityStatus, setRationalityStatus] = useState<StatusMessage>(null);
+  const [rationalityLoading, setRationalityLoading] = useState(false);
+  const [rationalitySaving, setRationalitySaving] = useState(false);
 
   const today = useMemo(() => new Date(), []);
+  const todayISO = useMemo(() => formatISODate(today), [today]);
+  const yesterdayISO = useMemo(() => formatISODate(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)), [today]);
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBoundaries(today), [today]);
   const nameFieldId = useId();
   const domainFieldId = useId();
   const goalFieldId = useId();
+  const rationalityFieldId = useId();
   const canCreateHabits = isConfigured || isDemoExperience;
   const hasGoals = goals.length > 0;
 
@@ -270,6 +287,45 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     }
     setSelectedGoalId(goals[0]?.id ?? '');
   }, [goals, selectedGoalId]);
+
+  useEffect(() => {
+    if (!rationalityStatus) return;
+    const timer = window.setTimeout(() => setRationalityStatus(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [rationalityStatus]);
+
+  const loadRationalityEntries = useCallback(async () => {
+    if (!session || (!isConfigured && !isDemoExperience)) {
+      setRationalityEntries([]);
+      return;
+    }
+
+    setRationalityLoading(true);
+    try {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 6);
+      const { data, error } = await listRationalityEntries({
+        fromDate: formatISODate(start),
+        toDate: todayISO,
+        limit: 14,
+      });
+      if (error) {
+        throw new Error(error.message);
+      }
+      setRationalityEntries(data ?? []);
+    } catch (error) {
+      setRationalityStatus({
+        kind: 'error',
+        message: error instanceof Error ? error.message : 'Unable to load today’s rationality prompt.',
+      });
+    } finally {
+      setRationalityLoading(false);
+    }
+  }, [session, isConfigured, isDemoExperience, today, todayISO]);
+
+  useEffect(() => {
+    void loadRationalityEntries();
+  }, [loadRationalityEntries]);
 
   const handleHabitCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -472,6 +528,121 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
 
     void awardBonus();
   }, [balanceSnapshot, balanceWeekId, gamificationEnabled, earnXP, session.user.id]);
+
+  const rationalityRangeStart = useMemo(() => {
+    const start = new Date(today);
+    start.setDate(start.getDate() - 6);
+    return formatISODate(start);
+  }, [today]);
+  const rationalityDates = useMemo(
+    () => getUniqueRationalityDates(rationalityEntries),
+    [rationalityEntries],
+  );
+  const rationalityCompletedToday = rationalityDates.includes(todayISO);
+  const rationalityCompletedYesterday = rationalityDates.includes(yesterdayISO);
+  const rationalityWeekCount = useMemo(
+    () =>
+      rationalityDates.filter((date) => date >= rationalityRangeStart && date <= todayISO).length,
+    [rationalityDates, rationalityRangeStart, todayISO],
+  );
+  const latestRationalityEntry = useMemo(() => {
+    if (rationalityEntries.length === 0) return null;
+    return [...rationalityEntries].sort((a, b) => {
+      const dateCompare = b.entry_date.localeCompare(a.entry_date);
+      if (dateCompare !== 0) return dateCompare;
+      return (b.created_at ?? '').localeCompare(a.created_at ?? '');
+    })[0];
+  }, [rationalityEntries]);
+
+  const handleRationalitySubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      if (!session || (!isConfigured && !isDemoExperience)) {
+        setRationalityStatus({
+          kind: 'error',
+          message: 'Connect Supabase or use demo mode to save today’s rationality check.',
+        });
+        return;
+      }
+
+      if (rationalityCompletedToday) {
+        setRationalityStatus({
+          kind: 'error',
+          message: 'You already completed today’s rationality check.',
+        });
+        return;
+      }
+
+      const trimmed = rationalityNote.trim();
+      if (!trimmed) {
+        setRationalityStatus({
+          kind: 'error',
+          message: 'Add a quick note before saving.',
+        });
+        return;
+      }
+
+      setRationalitySaving(true);
+      try {
+        const { data, error } = await createRationalityEntry({
+          userId: session.user.id,
+          content: trimmed,
+          entryDate: todayISO,
+        });
+        if (error || !data) {
+          throw new Error(error?.message ?? 'Unable to save the rationality check.');
+        }
+
+        setRationalityEntries((current) => [data, ...current]);
+        setRationalityNote('');
+
+        if (gamificationEnabled) {
+          await earnXP(
+            XP_REWARDS.RATIONALITY_CHECKIN,
+            'rationality_checkin',
+            data.id,
+            'Game of Life rationality check completion.',
+          );
+          if (rationalityCompletedYesterday) {
+            await earnXP(
+              XP_REWARDS.RATIONALITY_STREAK,
+              'rationality_streak',
+              data.id,
+              'Game of Life rationality consistency bonus.',
+            );
+          }
+          await recordActivity();
+        }
+
+        setRationalityStatus({
+          kind: 'success',
+          message: rationalityCompletedYesterday
+            ? 'Saved! Game of Life XP earned with a consistency bonus.'
+            : 'Saved! Game of Life XP earned for today.',
+        });
+      } catch (error) {
+        setRationalityStatus({
+          kind: 'error',
+          message: error instanceof Error ? error.message : 'Unable to save the rationality check.',
+        });
+      } finally {
+        setRationalitySaving(false);
+      }
+    },
+    [
+      session,
+      isConfigured,
+      isDemoExperience,
+      rationalityCompletedToday,
+      rationalityNote,
+      todayISO,
+      gamificationEnabled,
+      earnXP,
+      rationalityCompletedYesterday,
+      recordActivity,
+    ],
+  );
 
   const fullDashboardPanel = (
     <div className="progress-dashboard__panel-content">
@@ -898,6 +1069,91 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             <div className="progress-dashboard__empty">
               <h3>No balance snapshot yet</h3>
               <p>Complete a life wheel check-in to unlock your harmony score and axis trends.</p>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 'rationality-check',
+      title: 'Rationality check',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--rationality">
+          <header className="progress-dashboard__panel-header">
+            <h2>Game of Life rationality check</h2>
+            <p>Use a daily prompt to stay correctable and avoid overconfidence traps.</p>
+          </header>
+          {!isConfigured && !isDemoExperience ? (
+            <div className="progress-dashboard__empty">
+              <h3>Connect to start the rationality check</h3>
+              <p>Enable Supabase or demo mode to capture your daily “what might I be wrong about?” reflection.</p>
+            </div>
+          ) : (
+            <div className="rationality-check">
+              <div className="rationality-check__prompt">
+                <p className="rationality-check__question">{RATIONALITY_PROMPT}</p>
+                <p className="rationality-check__hint">
+                  Name one assumption, decision, or belief you want to revisit later.
+                </p>
+              </div>
+              <form className="rationality-check__form" onSubmit={handleRationalitySubmit}>
+                <label className="rationality-check__label" htmlFor={rationalityFieldId}>
+                  Today&apos;s reflection
+                </label>
+                <textarea
+                  id={rationalityFieldId}
+                  value={rationalityNote}
+                  onChange={(event) => setRationalityNote(event.target.value)}
+                  placeholder="Write one sentence that keeps you open to updating."
+                  rows={4}
+                  disabled={rationalityCompletedToday || rationalitySaving || rationalityLoading}
+                />
+                <div className="rationality-check__meta">
+                  <span>Consistency: {rationalityWeekCount}/7 days</span>
+                  <span>
+                    Game of Life XP: {XP_REWARDS.RATIONALITY_CHECKIN}
+                    {rationalityCompletedYesterday ? ` + ${XP_REWARDS.RATIONALITY_STREAK} streak` : ' + streak bonus'}
+                  </span>
+                </div>
+                {rationalityStatus ? (
+                  <p className={`rationality-check__status rationality-check__status--${rationalityStatus.kind}`}>
+                    {rationalityStatus.message}
+                  </p>
+                ) : null}
+                <div className="rationality-check__actions">
+                  <button
+                    type="submit"
+                    className="rationality-check__button"
+                    disabled={
+                      rationalityCompletedToday || rationalitySaving || rationalityLoading || !rationalityNote.trim()
+                    }
+                  >
+                    {rationalityCompletedToday
+                      ? 'Completed today'
+                      : rationalitySaving
+                        ? 'Saving…'
+                        : 'Save reflection'}
+                  </button>
+                </div>
+              </form>
+              <div className="rationality-check__recent">
+                {rationalityLoading ? (
+                  <p>Loading your recent rationality notes…</p>
+                ) : latestRationalityEntry ? (
+                  <>
+                    <h3>Latest entry</h3>
+                    <p className="rationality-check__recent-date">
+                      {formatReadableDate(latestRationalityEntry.entry_date)}
+                    </p>
+                    <p className="rationality-check__recent-note">{latestRationalityEntry.content}</p>
+                  </>
+                ) : (
+                  <>
+                    <h3>No rationality entries yet</h3>
+                    <p>Save your first reflection to build your Game of Life rationality streak.</p>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>

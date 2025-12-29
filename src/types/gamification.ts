@@ -106,6 +106,10 @@ export const XP_REWARDS = {
 
   // Balance rewards
   BALANCE_WEEK: 75,
+
+  // Rationality rewards
+  RATIONALITY_CHECKIN: 20,
+  RATIONALITY_STREAK: 10,
 } as const;
 
 // =====================================================
