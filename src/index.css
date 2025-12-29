@@ -2105,6 +2105,12 @@ body {
   background: rgba(226, 232, 240, 0.95);
 }
 
+.supabase-auth__mode:focus-visible {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
 .supabase-auth__mode--active {
   background: linear-gradient(135deg, rgba(34, 211, 238, 0.35), rgba(99, 102, 241, 0.35));
   border-color: rgba(56, 189, 248, 0.75);
@@ -2159,6 +2165,34 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.supabase-auth__action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.28);
+}
+
+.supabase-auth__secondary {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  background: rgba(15, 23, 42, 0.6);
+  color: rgba(248, 250, 252, 0.92);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.supabase-auth__secondary:hover:not(:disabled) {
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+.supabase-auth__secondary:focus-visible {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
 .supabase-auth__action--google {
@@ -6106,6 +6140,11 @@ body {
   box-shadow: 0 12px 24px rgba(59, 130, 246, 0.25);
 }
 
+.rationality-check__button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25), 0 12px 24px rgba(59, 130, 246, 0.25);
+}
+
 .rationality-check__recent {
   background: #ffffff;
   border-radius: 16px;
@@ -6161,6 +6200,12 @@ body {
   border-color: rgba(99, 102, 241, 0.65);
 }
 
+.progress-dashboard__control-button:focus-visible {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.75);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
 .progress-dashboard__dots {
   display: flex;
   gap: 0.5rem;
@@ -6174,6 +6219,12 @@ body {
   background: #e2e8f0;
   cursor: pointer;
   transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.progress-dashboard__dot:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+  transform: scale(1.1);
 }
 
 .progress-dashboard__dot--active {
@@ -6309,6 +6360,12 @@ body {
   transform: translateY(-1px);
 }
 
+.progress-dashboard__ideas:focus-visible {
+  outline: none;
+  border-color: rgba(79, 70, 229, 0.75);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
 .progress-dashboard__refresh:disabled {
   cursor: not-allowed;
   filter: grayscale(0.4);
@@ -6318,6 +6375,11 @@ body {
 .progress-dashboard__refresh:not(:disabled):hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
+}
+
+.progress-dashboard__refresh:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.28);
 }
 
 .progress-dashboard__status {
