@@ -192,11 +192,19 @@ export async function quickAddDailyHabit(params: {
   goalId?: string | null;
   emoji?: string | null;
 }, userId: string): Promise<ServiceResponse<HabitV2Row>> {
+  const schedule = { mode: 'daily' };
   const habitInput: Omit<HabitV2Insert, 'user_id'> = {
     title: params.title,
     emoji: params.emoji ?? null,
     type: 'boolean',
-    schedule: { mode: 'daily' },
+    schedule,
+    autoprog: {
+      tier: 'standard',
+      baseSchedule: schedule,
+      baseTarget: null,
+      lastShiftAt: null,
+      lastShiftType: null,
+    },
     domain_key: params.domainKey ?? null,
     goal_id: params.goalId ?? null,
     archived: false,
@@ -331,6 +339,7 @@ export async function updateHabitFullV2(
     target_num?: number | null;
     target_unit?: string | null;
     schedule?: Database['public']['Tables']['habits_v2']['Row']['schedule'];
+    autoprog?: Database['public']['Tables']['habits_v2']['Row']['autoprog'];
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();

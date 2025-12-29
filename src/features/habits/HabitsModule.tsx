@@ -11,6 +11,16 @@ import { classifyHabit } from './performanceClassifier';
 import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
+import {
+  AUTO_PROGRESS_TIERS,
+  AUTO_PROGRESS_UPGRADE_RULES,
+  buildAutoProgressPlan,
+  buildDefaultAutoProgressState,
+  getAutoProgressState,
+  getNextDownshiftTier,
+  getNextUpgradeTier,
+  type AutoProgressTier,
+} from './autoProgression';
 
 // Check if habit suggestions feature is enabled via environment variable
 const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
@@ -53,6 +63,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   
   // Archiving state for tracking in-flight archive operations
   const [archivingHabitIds, setArchivingHabitIds] = useState<Set<string>>(new Set());
+
+  // Auto-progress ladder state for tracking in-flight tier changes
+  const [autoProgressHabitIds, setAutoProgressHabitIds] = useState<Set<string>>(new Set());
   
   // Input values for quantity/duration habits
   const [habitInputValues, setHabitInputValues] = useState<Record<string, string>>({});
@@ -483,6 +496,62 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     }
   };
 
+  const handleAutoProgressShift = async (
+    habit: HabitV2Row,
+    targetTier: AutoProgressTier,
+    shiftType: 'downshift' | 'upgrade',
+  ) => {
+    if (autoProgressHabitIds.has(habit.id)) {
+      return;
+    }
+
+    const currentState = getAutoProgressState(habit);
+    if (currentState.tier === targetTier) {
+      setError(`"${habit.title}" is already on the ${AUTO_PROGRESS_TIERS[targetTier].label} tier.`);
+      return;
+    }
+
+    setAutoProgressHabitIds((prev) => new Set(prev).add(habit.id));
+    setError(null);
+
+    try {
+      const plan = buildAutoProgressPlan({ habit, targetTier, shiftType });
+      const scheduleChanged = JSON.stringify(plan.schedule) !== JSON.stringify(habit.schedule);
+      const targetChanged = plan.target !== habit.target_num;
+
+      if (!scheduleChanged && !targetChanged) {
+        throw new Error('This tier matches your current habit settings.');
+      }
+
+      const { data: updatedHabit, error: updateError } = await updateHabitFullV2(habit.id, {
+        schedule: plan.schedule ?? habit.schedule,
+        target_num: plan.target,
+        autoprog: plan.state as Database['public']['Tables']['habits_v2']['Row']['autoprog'],
+      });
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      if (!updatedHabit) {
+        throw new Error('Unable to update the habit tier.');
+      }
+
+      setHabits((prev) => prev.map((entry) => (entry.id === habit.id ? updatedHabit : entry)));
+      const verb = shiftType === 'downshift' ? 'Downshifted' : 'Re-upgraded';
+      setSuccessMessage(`${verb} "${habit.title}" to ${AUTO_PROGRESS_TIERS[targetTier].label}.`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update the habit tier.');
+    } finally {
+      setAutoProgressHabitIds((prev) => {
+        const next = new Set(prev);
+        next.delete(habit.id);
+        return next;
+      });
+    }
+  };
+
   // Handler for editing a habit (opens wizard with pre-filled data)
   const handleEditHabit = (habit: HabitV2Row) => {
     // Build HabitWizardDraft from HabitV2Row
@@ -574,6 +643,10 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+          autoprog: buildDefaultAutoProgressState({
+            schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+            target: draft.targetValue ?? null,
+          }) as Database['public']['Tables']['habits_v2']['Insert']['autoprog'],
           archived: false,
         };
         
@@ -1025,104 +1098,175 @@ export function HabitsModule({ session }: HabitsModuleProps) {
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {habits.map((habit) => (
-                <div
-                  key={habit.id}
-                  className="habit-card"
-                  style={{
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    position: 'relative',
-                  }}
-                >
-                  {/* Action strip in top-right corner */}
-                  {!habit.archived && (
-                    <div 
-                      style={{ 
-                        position: 'absolute', 
-                        top: '0.5rem', 
-                        right: '0.5rem',
-                        display: 'flex',
-                        gap: '0.25rem',
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleEditHabit(habit)}
-                        className="action-btn"
-                        aria-label={`Edit habit: ${habit.title}`}
-                        title="Edit habit"
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '4px',
-                          padding: '0.375rem',
-                          cursor: 'pointer',
+              {habits.map((habit) => {
+                const autoProgressState = getAutoProgressState(habit);
+                const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
+                const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
+                const suggestion = performanceSuggestions[habit.id];
+                const recommendedDownshift = downshiftTier && suggestion?.suggestedAction === 'ease';
+                const canUpgrade = upgradeTier && suggestion?.suggestedAction === 'progress';
+                const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
+
+                return (
+                  <div
+                    key={habit.id}
+                    className="habit-card"
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* Action strip in top-right corner */}
+                    {!habit.archived && (
+                      <div 
+                        style={{ 
+                          position: 'absolute', 
+                          top: '0.5rem', 
+                          right: '0.5rem',
                           display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#64748b',
-                          transition: 'all 0.2s',
+                          gap: '0.25rem',
                         }}
                       >
-                        {/* Pencil icon */}
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleArchiveHabit(habit.id, habit.title)}
-                        disabled={archivingHabitIds.has(habit.id)}
-                        className="action-btn archive"
-                        aria-label={`Archive habit: ${habit.title}`}
-                        title="Archive habit"
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '4px',
-                          padding: '0.375rem',
-                          cursor: archivingHabitIds.has(habit.id) ? 'not-allowed' : 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: archivingHabitIds.has(habit.id) ? '#94a3b8' : '#64748b',
-                          opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
-                          transition: 'all 0.2s',
-                        }}
-                      >
-                        {/* Trash icon */}
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', paddingRight: '4.5rem' }}>
-                    {habit.emoji && (
-                      <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleEditHabit(habit)}
+                          className="action-btn"
+                          aria-label={`Edit habit: ${habit.title}`}
+                          title="Edit habit"
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '4px',
+                            padding: '0.375rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#64748b',
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          {/* Pencil icon */}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleArchiveHabit(habit.id, habit.title)}
+                          disabled={archivingHabitIds.has(habit.id)}
+                          className="action-btn archive"
+                          aria-label={`Archive habit: ${habit.title}`}
+                          title="Archive habit"
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '4px',
+                            padding: '0.375rem',
+                            cursor: archivingHabitIds.has(habit.id) ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: archivingHabitIds.has(habit.id) ? '#94a3b8' : '#64748b',
+                            opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          {/* Trash icon */}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
                     )}
-                    <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
-                      {habit.title}
-                    </h3>
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <div>
-                      <strong>Type:</strong> {habit.type}
-                      {habit.type !== 'boolean' && habit.target_num && (
-                        <span> ({habit.target_num} {habit.target_unit || 'units'})</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', paddingRight: '4.5rem' }}>
+                      {habit.emoji && (
+                        <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
                       )}
+                      <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
+                        {habit.title}
+                      </h3>
                     </div>
-                    <div>
-                      <strong>Schedule:</strong> Custom schedule
+                    <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <div>
+                        <strong>Type:</strong> {habit.type}
+                        {habit.type !== 'boolean' && habit.target_num && (
+                          <span> ({habit.target_num} {habit.target_unit || 'units'})</span>
+                        )}
+                      </div>
+                      <div>
+                        <strong>Schedule:</strong> Custom schedule
+                      </div>
+                    </div>
+
+                    <div className="habit-card__autoprog">
+                      <div className="habit-card__autoprog-header">
+                        <div>
+                          <p className="habit-card__autoprog-label">Game of Life ladder</p>
+                          <h4 className="habit-card__autoprog-tier">
+                            {AUTO_PROGRESS_TIERS[autoProgressState.tier].label} tier
+                          </h4>
+                          <p className="habit-card__autoprog-description">
+                            {AUTO_PROGRESS_TIERS[autoProgressState.tier].description}
+                          </p>
+                        </div>
+                        {autoProgressState.lastShiftAt ? (
+                          <span className="habit-card__autoprog-meta">
+                            Last shift: {new Date(autoProgressState.lastShiftAt).toLocaleDateString()}
+                          </span>
+                        ) : null}
+                      </div>
+                      {recommendedDownshift ? (
+                        <p className="habit-card__autoprog-hint">
+                          Consistency dipped—downshifting will keep momentum without breaking your Game of Life streaks.
+                        </p>
+                      ) : null}
+                      <div className="habit-card__autoprog-actions">
+                        <button
+                          type="button"
+                          className="habit-card__autoprog-button"
+                          disabled={!downshiftTier || isUpdatingAutoProgress}
+                          onClick={() => {
+                            if (!downshiftTier) return;
+                            handleAutoProgressShift(habit, downshiftTier, 'downshift');
+                          }}
+                        >
+                          {downshiftTier
+                            ? `Downshift to ${AUTO_PROGRESS_TIERS[downshiftTier].label}`
+                            : 'At lowest tier'}
+                        </button>
+                        <button
+                          type="button"
+                          className="habit-card__autoprog-button habit-card__autoprog-button--primary"
+                          disabled={!upgradeTier || !canUpgrade || isUpdatingAutoProgress}
+                          onClick={() => {
+                            if (!upgradeTier) return;
+                            handleAutoProgressShift(habit, upgradeTier, 'upgrade');
+                          }}
+                        >
+                          {upgradeTier
+                            ? `Re-upgrade to ${AUTO_PROGRESS_TIERS[upgradeTier].label}`
+                            : 'At standard tier'}
+                        </button>
+                      </div>
+                      <p className="habit-card__autoprog-rules">
+                        Re-upgrade rule: {AUTO_PROGRESS_UPGRADE_RULES.minStreakDays}-day streak and{' '}
+                        {AUTO_PROGRESS_UPGRADE_RULES.minAdherence30}% 30-day adherence.
+                      </p>
+                      {upgradeTier && !canUpgrade ? (
+                        <p className="habit-card__autoprog-locked">
+                          Keep logging to unlock the next tier.
+                        </p>
+                      ) : null}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

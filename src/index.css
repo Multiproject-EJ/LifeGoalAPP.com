@@ -5120,6 +5120,109 @@ body {
   color: #0369a1;
 }
 
+.habit-card__autoprog {
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.habit-card__autoprog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.habit-card__autoprog-label {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.habit-card__autoprog-tier {
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.habit-card__autoprog-description {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.habit-card__autoprog-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+}
+
+.habit-card__autoprog-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #0f766e;
+  background: rgba(20, 184, 166, 0.12);
+  border-radius: 10px;
+  padding: 0.4rem 0.6rem;
+}
+
+.habit-card__autoprog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.habit-card__autoprog-button {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habit-card__autoprog-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+}
+
+.habit-card__autoprog-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+}
+
+.habit-card__autoprog-button--primary {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+}
+
+.habit-card__autoprog-rules {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.habit-card__autoprog-locked {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
 @media (max-width: 640px) {
   .habit-card__streaks {
     flex-direction: column;
