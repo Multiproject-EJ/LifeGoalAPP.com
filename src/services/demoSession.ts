@@ -9,7 +9,11 @@ export function createDemoSession(): Session {
   const demoUser: User = {
     id: DEMO_USER_ID,
     app_metadata: { provider: 'demo', providers: ['demo'] },
-    user_metadata: { full_name: profile.displayName, onboarding_complete: profile.onboardingComplete },
+    user_metadata: {
+      full_name: profile.displayName,
+      onboarding_complete: profile.onboardingComplete,
+      ai_coach_access: profile.aiCoachAccess,
+    },
     aud: 'authenticated',
     confirmation_sent_at: isoNow,
     confirmed_at: isoNow,
@@ -26,7 +30,11 @@ export function createDemoSession(): Session {
     role: 'authenticated',
     updated_at: isoNow,
     raw_app_meta_data: { provider: 'demo', providers: ['demo'] },
-    raw_user_meta_data: { full_name: profile.displayName, onboarding_complete: profile.onboardingComplete },
+    raw_user_meta_data: {
+      full_name: profile.displayName,
+      onboarding_complete: profile.onboardingComplete,
+      ai_coach_access: profile.aiCoachAccess,
+    },
   } as unknown as User;
 
   return {

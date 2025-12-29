@@ -3,6 +3,7 @@ import type {
   Database,
 } from '../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from '../features/journal/constants';
+import { DEFAULT_AI_COACH_ACCESS, type AiCoachDataAccess } from '../types/aiCoach';
 
 export type GoalRow = Database['public']['Tables']['goals']['Row'];
 export type GoalInsert = Database['public']['Tables']['goals']['Insert'];
@@ -35,6 +36,7 @@ export const DEMO_USER_NAME = 'Demo Creator';
 export type DemoProfile = {
   displayName: string;
   onboardingComplete: boolean;
+  aiCoachAccess: AiCoachDataAccess;
 };
 
 const STORAGE_KEY = 'lifegoalapp-demo-db-v1';
@@ -115,6 +117,7 @@ const defaultState: DemoState = {
   profile: {
     displayName: DEMO_USER_NAME,
     onboardingComplete: false,
+    aiCoachAccess: DEFAULT_AI_COACH_ACCESS,
   },
   goals: [
     {

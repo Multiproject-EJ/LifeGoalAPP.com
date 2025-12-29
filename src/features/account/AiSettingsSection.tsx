@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { fetchAiSettings, upsertAiModel } from '../../services/aiSettings';
+import { getAiCoachAccess, updateAiCoachAccess } from '../../services/aiCoachAccess';
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL, type AiModel } from '../../types/aiModel';
+import { AI_COACH_ACCESS_FIELDS, type AiCoachDataAccess } from '../../types/aiCoach';
 
 type Props = {
   session: Session;
@@ -9,15 +11,20 @@ type Props = {
 
 export function AiSettingsSection({ session }: Props) {
   const [selectedModel, setSelectedModel] = useState<AiModel>(DEFAULT_AI_MODEL);
+  const [dataAccess, setDataAccess] = useState<AiCoachDataAccess>(() => getAiCoachAccess(session));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [accessSaving, setAccessSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accessError, setAccessError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [accessSuccessMessage, setAccessSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
 
     setLoading(true);
+    setDataAccess(getAiCoachAccess(session));
     fetchAiSettings(session.user.id)
       .then(({ data, error: fetchError }) => {
         if (!isActive) return;
@@ -76,6 +83,33 @@ export function AiSettingsSection({ session }: Props) {
     }
   };
 
+  const handleAccessToggle = async (key: keyof AiCoachDataAccess, enabled: boolean) => {
+    const previousAccess = dataAccess;
+    const nextAccess = { ...dataAccess, [key]: enabled };
+    setDataAccess(nextAccess);
+    setAccessSaving(true);
+    setAccessError(null);
+    setAccessSuccessMessage(null);
+
+    try {
+      const { error: saveError } = await updateAiCoachAccess(session, nextAccess);
+
+      if (saveError) {
+        throw saveError;
+      }
+
+      setAccessSuccessMessage('AI coach privacy settings saved.');
+      setTimeout(() => setAccessSuccessMessage(null), 3000);
+    } catch (err) {
+      setDataAccess(previousAccess);
+      const message = err instanceof Error ? err.message : 'Failed to save AI coach privacy settings.';
+      setAccessError(message);
+      console.error('Error saving AI coach access:', err);
+    } finally {
+      setAccessSaving(false);
+    }
+  };
+
   return (
     <section className="account-panel__card" aria-labelledby="account-ai-settings">
       <p className="account-panel__eyebrow">AI Settings</p>
@@ -126,6 +160,44 @@ export function AiSettingsSection({ session }: Props) {
           <li><strong>mini:</strong> Balanced quality and cost, recommended for most users</li>
           <li><strong>pro:</strong> Premium quality with highest cost, best for detailed planning</li>
         </ul>
+      </div>
+
+      <div style={{ marginTop: '1.5rem' }}>
+        <p className="account-panel__eyebrow">Game of Life coach privacy</p>
+        <h4>Choose what the coach can read</h4>
+        <p className="account-panel__hint">
+          These toggles control which Game of Life data the coach can reference when offering guidance.
+        </p>
+
+        {accessError && (
+          <p className="notification-preferences__message notification-preferences__message--error" role="alert">
+            {accessError}
+          </p>
+        )}
+
+        {accessSuccessMessage && (
+          <p className="notification-preferences__message notification-preferences__message--success" role="status">
+            {accessSuccessMessage}
+          </p>
+        )}
+
+        {AI_COACH_ACCESS_FIELDS.map((field) => (
+          <div key={field.key} className="account-panel__toggle-row">
+            <label className="account-panel__toggle-label">
+              <input
+                type="checkbox"
+                checked={dataAccess[field.key]}
+                onChange={(event) => handleAccessToggle(field.key, event.target.checked)}
+                disabled={accessSaving}
+                className="account-panel__toggle-input"
+              />
+              <span className="account-panel__toggle-text">{field.label}</span>
+            </label>
+            <p className="account-panel__hint" style={{ marginTop: '0.25rem' }}>
+              {field.description}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );

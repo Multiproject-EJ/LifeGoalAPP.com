@@ -1,6 +1,9 @@
-import { useState, useRef, useEffect, FormEvent } from 'react';
+import { useState, useRef, useEffect, useMemo, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AiSupportAssistant } from '../assistant';
+import { getAiCoachAccess } from '../../services/aiCoachAccess';
+import { loadAiCoachInstructions } from '../../services/aiCoachInstructions';
+import { isDemoSession } from '../../services/demoSession';
 
 export interface AiCoachProps {
   session: Session;
@@ -72,13 +75,14 @@ const INITIAL_MESSAGES: Message[] = [
   {
     id: 'welcome-1',
     role: 'assistant',
-    content: "Hi there! 👋 I'm your AI Life Coach.",
+    content: "Hi there. I’m your AI coach.",
     timestamp: new Date(),
   },
   {
     id: 'welcome-2',
     role: 'assistant',
-    content: "I'm here to help you with motivation, goal setting, habit building, and navigating life's challenges. What would you like to work on today?",
+    content:
+      "I’m here to keep the Game of Life playable: small steps, balance, and clear next moves. What would you like to work on today?",
     timestamp: new Date(),
   },
 ];
@@ -94,6 +98,37 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
 
   const fullName = session.user?.user_metadata?.full_name;
   const userName = (typeof fullName === 'string' ? fullName.split(' ')[0] : null) || 'there';
+  const dataAccess = useMemo(() => getAiCoachAccess(session), [session]);
+  const instructionPayload = useMemo(
+    () => loadAiCoachInstructions(dataAccess, isDemoSession(session)),
+    [dataAccess, session],
+  );
+
+  const accessSummary = useMemo(() => {
+    const allowed: string[] = [];
+    const blocked: string[] = [];
+    const entries = [
+      { label: 'Goals', enabled: dataAccess.goals },
+      { label: 'Habits', enabled: dataAccess.habits },
+      { label: 'Journaling', enabled: dataAccess.journaling },
+      { label: 'Reflections', enabled: dataAccess.reflections },
+      { label: 'Vision board', enabled: dataAccess.visionBoard },
+    ];
+
+    entries.forEach((entry) => {
+      if (entry.enabled) {
+        allowed.push(entry.label);
+      } else {
+        blocked.push(entry.label);
+      }
+    });
+
+    if (blocked.length === 0) {
+      return 'All data sources enabled.';
+    }
+
+    return `Allowed: ${allowed.join(', ')}. Blocked: ${blocked.join(', ')}.`;
+  }, [dataAccess]);
 
   useEffect(() => {
     scrollToBottom();
@@ -114,33 +149,67 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
 
     // Simple response logic based on keywords
     const lowerMessage = userMessage.toLowerCase();
+    const access = instructionPayload.dataAccess;
+
+    const blockedResponse = (topic: string) =>
+      `I don’t have access to your ${topic} data. If you want, share a quick summary and I’ll help you shape a next step.`;
 
     if (lowerMessage.includes('motivat')) {
-      return `Great to hear you're seeking motivation, ${userName}! Remember, every small step forward is progress. Your goals are within reach, and I believe in your ability to achieve them. What specific goal are you working on right now?`;
+      return `Let’s keep it small and playable, ${userName}. Pick one action you can finish in 10 minutes today. Want two quick options or do you already have one in mind?`;
     }
 
     if (lowerMessage.includes('goal') || lowerMessage.includes('plan')) {
-      return `Setting effective goals is crucial for success! I recommend using the SMART framework: Specific, Measurable, Achievable, Relevant, and Time-bound. Would you like help breaking down a specific goal into actionable steps?`;
+      if (!access.goals) {
+        return blockedResponse('goal');
+      }
+      return `Let’s make the goal clear and playable. What’s the outcome, and what’s the smallest next move you can take this week?`;
     }
 
     if (lowerMessage.includes('habit')) {
-      return `Building lasting habits is all about consistency and starting small! Research shows it takes an average of 66 days to form a new habit. What habit would you like to develop? I can help you create a sustainable routine.`;
+      if (!access.habits) {
+        return blockedResponse('habit');
+      }
+      return `This sounds like a habit tweak. Want to pick a tier for today: Seed (1 min), Minimum (5 min), or Standard?`;
     }
 
     if (lowerMessage.includes('stress') || lowerMessage.includes('anxiety') || lowerMessage.includes('overwhelm')) {
-      return `I understand that stress can be challenging. Let's work on some strategies together. Have you tried the 5-4-3-2-1 grounding technique? It helps bring you back to the present moment. Would you like me to guide you through it?`;
+      return `Let’s slow the system down. Try a 60-second reset: inhale 4, hold 2, exhale 6, repeat x5. Want a tiny next action after that, or just a reflection question?`;
     }
 
     if (lowerMessage.includes('challenge') || lowerMessage.includes('difficult') || lowerMessage.includes('struggle')) {
-      return `Challenges are opportunities for growth, ${userName}. Let's break this down together. Can you tell me more about the specific obstacle you're facing? Once we identify it clearly, we can develop a strategy to overcome it.`;
+      return `This looks like friction, not failure. What’s the smallest version of the task that still counts as a win today?`;
     }
 
     if (lowerMessage.includes('progress') || lowerMessage.includes('review')) {
-      return `Reflecting on your progress is wonderful! Let's celebrate your wins, no matter how small. What have you accomplished recently that you're proud of? And what areas do you feel could use more attention?`;
+      if (!access.goals && !access.habits) {
+        return `Want a quick review? Share one win and one place you felt stuck this week, and we’ll rebalance from there.`;
+      }
+      return `Let’s do a short review. What’s one win, one drag, and one tiny rebalance you can do today?`;
     }
 
     // Default response
-    return `That's an interesting point, ${userName}. I'm here to support you on your journey. Could you tell me more about what you're hoping to achieve? The more details you share, the better I can help you create a personalized action plan.`;
+    if (lowerMessage.includes('journal') || lowerMessage.includes('journaling')) {
+      if (!access.journaling) {
+        return blockedResponse('journal');
+      }
+      return `If you want to work from a journal entry, tell me the headline takeaway and one emotion you want to understand.`;
+    }
+
+    if (lowerMessage.includes('reflection')) {
+      if (!access.reflections) {
+        return blockedResponse('reflection');
+      }
+      return `Let’s make the reflection actionable. What assumption might be wrong, and what would you update next time?`;
+    }
+
+    if (lowerMessage.includes('vision') || lowerMessage.includes('board')) {
+      if (!access.visionBoard) {
+        return blockedResponse('vision board');
+      }
+      return `Pick one vision board item that feels most alive right now. What tiny action would move it forward this week?`;
+    }
+
+    return `Got it, ${userName}. Want to keep this short or go deeper? I can offer two small options or ask one clarifying question.`;
   };
 
   const handleTopicClick = (topic: CoachingTopic) => {
@@ -330,6 +399,9 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         <div className="ai-coach-modal__footer">
           <p className="ai-coach-modal__disclaimer">
             💡 This is a simulated AI coach for demonstration purposes. Responses are generated based on common coaching principles.
+          </p>
+          <p className="ai-coach-modal__disclaimer">
+            Privacy controls: {accessSummary} Update in Account → AI Settings.
           </p>
         </div>
 
