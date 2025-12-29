@@ -103,6 +103,9 @@ export const XP_REWARDS = {
   STREAK_7_DAYS: 100,
   STREAK_30_DAYS: 500,
   STREAK_100_DAYS: 1500,
+
+  // Balance rewards
+  BALANCE_WEEK: 75,
 } as const;
 
 // =====================================================
@@ -216,7 +219,8 @@ export type XPSource =
   | 'vision_board_upload'
   | 'achievement'
   | 'challenge_complete'
-  | 'daily_login';
+  | 'daily_login'
+  | 'balance_week';
 
 // =====================================================
 // DEMO MODE TYPES
@@ -367,4 +371,3 @@ export interface ActiveBoost {
   expiresAt: string | null;
   minutesRemaining: number | null;
 }
-

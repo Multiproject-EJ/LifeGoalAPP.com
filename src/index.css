@@ -5195,6 +5195,10 @@ body {
   background: linear-gradient(150deg, #eef2ff, #f8fafc);
 }
 
+.progress-dashboard__panel-content--balance {
+  background: linear-gradient(140deg, rgba(226, 232, 240, 0.7), rgba(244, 247, 255, 0.9));
+}
+
 .progress-dashboard__panel-header {
   display: grid;
   gap: 0.5rem;
@@ -5254,6 +5258,214 @@ body {
   margin: 0;
   font-size: clamp(1.5rem, 5vw, 2.25rem);
   color: #0f172a;
+}
+
+.balance-panel__summary {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: stretch;
+}
+
+.balance-panel__score {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.balance-panel__score-value {
+  font-size: clamp(2rem, 5vw, 2.6rem);
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.balance-panel__score-label {
+  font-weight: 600;
+  color: #334155;
+}
+
+.balance-panel__score-detail {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.balance-panel__status {
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid transparent;
+  display: grid;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.balance-panel__status h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.balance-panel__status p {
+  margin: 0;
+  color: #475569;
+}
+
+.balance-panel__status--harmonized {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(167, 243, 208, 0.2));
+}
+
+.balance-panel__status--steady {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.15), rgba(224, 231, 255, 0.5));
+}
+
+.balance-panel__status--rebalancing {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(254, 243, 199, 0.6));
+}
+
+.balance-panel__trend {
+  border-radius: 16px;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  display: grid;
+  gap: 0.4rem;
+}
+
+.balance-panel__trend-title {
+  font-weight: 600;
+  color: #334155;
+}
+
+.balance-panel__trend-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.balance-panel__trend-value--up {
+  color: #16a34a;
+}
+
+.balance-panel__trend-value--down {
+  color: #dc2626;
+}
+
+.balance-panel__trend-value--steady {
+  color: #475569;
+}
+
+.balance-panel__trend-value--new {
+  color: #6366f1;
+}
+
+.balance-panel__trend-caption {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.balance-panel__axes {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.balance-panel__axis {
+  border-radius: 16px;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.balance-panel__axis-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.balance-panel__axis-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.balance-panel__axis-header p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.balance-panel__axis-score {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #1e293b;
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.balance-panel__axis-score small {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.balance-panel__axis-bar {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+.balance-panel__axis-bar span {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6366f1, #ec4899);
+}
+
+.balance-panel__axis--steady .balance-panel__axis-bar span {
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+}
+
+.balance-panel__axis--strong .balance-panel__axis-bar span {
+  background: linear-gradient(90deg, #22c55e, #14b8a6);
+}
+
+.balance-panel__axis--focus .balance-panel__axis-bar span {
+  background: linear-gradient(90deg, #f97316, #f59e0b);
+}
+
+.balance-panel__axis-delta {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.balance-panel__focus {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.balance-panel__focus h3 {
+  margin: 0;
+}
+
+.balance-panel__focus p {
+  margin: 0;
+  color: #475569;
 }
 
 .progress-dashboard__controls {
