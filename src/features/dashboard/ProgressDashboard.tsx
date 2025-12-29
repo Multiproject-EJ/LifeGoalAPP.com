@@ -3,6 +3,7 @@ import type { FormEvent, TouchEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchGoals } from '../../services/goals';
+import { fetchCheckinsForUser } from '../../services/checkins';
 import {
   listHabitsV2,
   listHabitLogsForRangeMultiV2,
@@ -21,6 +22,14 @@ import { LIFE_WHEEL_CATEGORIES, LifeWheelCheckins, LifeWheelInsightsPanel } from
 import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
 import { isDemoSession } from '../../services/demoSession';
 import { DailySpinWheel } from '../spin-wheel/DailySpinWheel';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
+import {
+  BALANCE_STATUS_META,
+  createBalanceSnapshot,
+  getBalanceWeekId,
+  hasBalanceBonus,
+} from '../../services/balanceScore';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habit types
@@ -32,10 +41,11 @@ type HabitWithGoal = HabitV2Row & {
     id: string;
     title: string;
     target_date: string | null;
-  } | null;
+} | null;
 };
 
 import type { WorkspaceStats } from '../../services/workspaceStats';
+type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
 type ProgressDashboardProps = {
   session: Session;
@@ -153,9 +163,11 @@ function buildWeeklySnapshot(reference: Date, completions: Record<string, number
 export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
+  const { earnXP, enabled: gamificationEnabled } = useGamification(session);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [logs, setLogs] = useState<HabitLogRow[]>([]);
+  const [checkins, setCheckins] = useState<CheckinRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newHabitName, setNewHabitName] = useState('');
@@ -183,6 +195,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
       setGoals([]);
       setHabits([]);
       setLogs([]);
+      setCheckins([]);
       return;
     }
 
@@ -190,16 +203,19 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     setErrorMessage(null);
 
     try {
-      const [{ data: goalData, error: goalError }, { data: habitData, error: habitError }] = await Promise.all([
-        fetchGoals(),
-        listHabitsV2(),
-      ]);
+      const [
+        { data: goalData, error: goalError },
+        { data: habitData, error: habitError },
+        { data: checkinData, error: checkinError },
+      ] = await Promise.all([fetchGoals(), listHabitsV2(), fetchCheckinsForUser(session.user.id, 4)]);
 
       if (goalError) throw goalError;
       if (habitError) throw habitError;
+      if (checkinError) throw checkinError;
 
       const ownedGoals = (goalData ?? []).filter((goal) => goal.user_id === session.user.id);
       setGoals(ownedGoals);
+      setCheckins(checkinData ?? []);
 
       // Map V2 habits to include goal data
       const habitsV2 = habitData ?? [];
@@ -422,6 +438,40 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     ],
     [],
   );
+
+  const balanceSnapshot = useMemo(() => createBalanceSnapshot(checkins), [checkins]);
+  const balanceWeekId = useMemo(() => {
+    if (!balanceSnapshot) return null;
+    return getBalanceWeekId(new Date(balanceSnapshot.referenceDate));
+  }, [balanceSnapshot]);
+
+  useEffect(() => {
+    if (!balanceSnapshot || !balanceWeekId || !gamificationEnabled) {
+      return;
+    }
+
+    if (balanceSnapshot.harmonyStatus !== 'harmonized') {
+      return;
+    }
+
+    const isCurrentWeek = balanceWeekId === getBalanceWeekId(new Date());
+    if (!isCurrentWeek) {
+      return;
+    }
+
+    const awardBonus = async () => {
+      const alreadyAwarded = await hasBalanceBonus(session.user.id, balanceWeekId);
+      if (alreadyAwarded) return;
+      await earnXP(
+        XP_REWARDS.BALANCE_WEEK,
+        'balance_week',
+        balanceWeekId,
+        'Game of Life harmony bonus for a balanced week.',
+      );
+    };
+
+    void awardBonus();
+  }, [balanceSnapshot, balanceWeekId, gamificationEnabled, earnXP, session.user.id]);
 
   const fullDashboardPanel = (
     <div className="progress-dashboard__panel-content">
@@ -765,6 +815,94 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     );
 
   const panels = [
+    {
+      id: 'balance-harmony',
+      title: 'Balance and harmony',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--balance">
+          <header className="progress-dashboard__panel-header">
+            <h2>Game of Life balance check</h2>
+            <p>Track harmony across Agency, Awareness, Rationality, and Vitality.</p>
+          </header>
+          {balanceSnapshot ? (
+            <>
+              <section className="balance-panel__summary">
+                <div className="balance-panel__score">
+                  <span className="balance-panel__score-value">{balanceSnapshot.harmonyScore}</span>
+                  <span className="balance-panel__score-label">Harmony score</span>
+                  <span className="balance-panel__score-detail">
+                    Avg {balanceSnapshot.averageScore} · Spread {balanceSnapshot.spread}
+                  </span>
+                </div>
+                <div
+                  className={`balance-panel__status balance-panel__status--${balanceSnapshot.harmonyStatus}`}
+                >
+                  <h3>{BALANCE_STATUS_META[balanceSnapshot.harmonyStatus].label}</h3>
+                  <p>{BALANCE_STATUS_META[balanceSnapshot.harmonyStatus].description}</p>
+                </div>
+                <div className="balance-panel__trend">
+                  <span className="balance-panel__trend-title">Trend vs last check-in</span>
+                  <span className={`balance-panel__trend-value balance-panel__trend-value--${balanceSnapshot.trendDirection}`}>
+                    {balanceSnapshot.trendDirection === 'new'
+                      ? 'New baseline'
+                      : `${balanceSnapshot.trendDirection === 'up' ? '▲' : balanceSnapshot.trendDirection === 'down' ? '▼' : '●'} ${balanceSnapshot.trendDelta}`}
+                  </span>
+                  <span className="balance-panel__trend-caption">
+                    {balanceSnapshot.trendDirection === 'new'
+                      ? 'Complete another check-in to unlock trend signals.'
+                      : 'Based on your latest life wheel scores.'}
+                  </span>
+                </div>
+              </section>
+              <ul className="balance-panel__axes">
+                {balanceSnapshot.axes.map((axis) => (
+                  <li key={axis.key} className={`balance-panel__axis balance-panel__axis--${axis.band}`}>
+                    <div className="balance-panel__axis-header">
+                      <div>
+                        <h4>{axis.title}</h4>
+                        <p>{axis.description}</p>
+                      </div>
+                      <div className="balance-panel__axis-score">
+                        <span>{axis.score}</span>
+                        <small>/10</small>
+                      </div>
+                    </div>
+                    <div
+                      className="balance-panel__axis-bar"
+                      role="progressbar"
+                      aria-valuenow={axis.score}
+                      aria-valuemin={0}
+                      aria-valuemax={10}
+                    >
+                      <span style={{ width: `${axis.score * 10}%` }} />
+                    </div>
+                    {axis.delta !== null && axis.delta !== undefined ? (
+                      <span className="balance-panel__axis-delta">
+                        {axis.delta === 0
+                          ? 'No change'
+                          : `${axis.delta > 0 ? '+' : ''}${axis.delta} vs last check-in`}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <section className="balance-panel__focus">
+                <h3>Next focus</h3>
+                <p>
+                  Lean into <strong>{balanceSnapshot.nextFocus.title}</strong> next. Small, consistent steps here will
+                  keep your Game of Life balance steady.
+                </p>
+              </section>
+            </>
+          ) : (
+            <div className="progress-dashboard__empty">
+              <h3>No balance snapshot yet</h3>
+              <p>Complete a life wheel check-in to unlock your harmony score and axis trends.</p>
+            </div>
+          )}
+        </div>
+      ),
+    },
     {
       id: 'life-wheel',
       title: 'Life wheel',
