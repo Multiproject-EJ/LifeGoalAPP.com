@@ -99,7 +99,13 @@ function createDemoHabit(seed: DemoHabitSeed): HabitRow {
     start_date: null,
     archived: false,
     created_at: seed.createdAt ?? iso(new Date()),
-    autoprog: null,
+    autoprog: {
+      tier: 'standard',
+      baseSchedule: seed.schedule,
+      baseTarget: null,
+      lastShiftAt: null,
+      lastShiftType: null,
+    },
     domain_key: seed.domainKey ?? null,
     goal_id: seed.goalId,
   };

@@ -11,6 +11,7 @@
 
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Database, Json } from '../lib/database.types';
+import { buildDefaultAutoProgressState } from '../features/habits/autoProgression';
 import {
   listHabitsV2,
   createHabitV2,
@@ -184,6 +185,10 @@ export async function upsertHabit(
     emoji: null,
     type: 'boolean' as const,
     schedule: schedule as Json,
+    autoprog: buildDefaultAutoProgressState({
+      schedule: schedule as Json,
+      target: null,
+    }) as Database['public']['Tables']['habits_v2']['Insert']['autoprog'],
     goal_id: payload.goal_id || null,
     archived: false,
   };
