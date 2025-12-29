@@ -5,17 +5,23 @@ import {
   deleteVisionImage,
   fetchVisionImages,
   getVisionImagePublicUrl,
+  updateVisionImage,
   uploadVisionImage,
   uploadVisionImageFromUrl,
 } from '../../services/visionBoard';
 import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGame';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { fetchGoals } from '../../services/goals';
+import { listHabitsV2 } from '../../services/habitsV2';
+import { getDemoHabitsForUser } from '../../services/demoData';
 import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/imageConverter';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
+type GoalRow = Database['public']['Tables']['goals']['Row'];
+type HabitRow = Database['public']['Tables']['habits_v2']['Row'];
 
 type VisionBoardProps = {
   session: Session;
@@ -28,6 +34,44 @@ type GridLayout = '2-column' | '3-column' | 'masonry';
 type VisionImage = VisionImageRow & { publicUrl: string };
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
+const DEFAULT_VISION_TYPE = 'goal';
+const DEFAULT_REVIEW_INTERVAL = 30;
+
+const VISION_TYPES = [
+  { value: 'goal', label: 'Goal' },
+  { value: 'habit', label: 'Habit' },
+  { value: 'identity', label: 'Identity' },
+  { value: 'experience', label: 'Experience' },
+  { value: 'environment', label: 'Environment' },
+];
+
+const REVIEW_INTERVAL_OPTIONS = [
+  { value: 7, label: 'Weekly (7 days)' },
+  { value: 14, label: 'Biweekly (14 days)' },
+  { value: 30, label: 'Monthly (30 days)' },
+  { value: 60, label: 'Every 2 months (60 days)' },
+  { value: 90, label: 'Quarterly (90 days)' },
+];
+
+function formatDateLabel(value: string | null): string {
+  if (!value) return 'Not scheduled';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Not scheduled';
+  return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function addDays(dateValue: string | null, days: number): string | null {
+  if (!dateValue) return null;
+  const base = new Date(dateValue);
+  if (Number.isNaN(base.getTime())) return null;
+  const next = new Date(base);
+  next.setDate(base.getDate() + days);
+  return next.toISOString();
+}
+
+function getVisionTypeLabel(value: string | null | undefined): string {
+  return VISION_TYPES.find((type) => type.value === value)?.label ?? 'Goal';
+}
 
 export function VisionBoard({ session }: VisionBoardProps) {
   const { isConfigured } = useSupabaseAuth();
@@ -49,6 +93,20 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [convertingImage, setConvertingImage] = useState(false);
   const [showDailyGame, setShowDailyGame] = useState(false);
+  const [goals, setGoals] = useState<GoalRow[]>([]);
+  const [habits, setHabits] = useState<HabitRow[]>([]);
+  const [linkDataLoading, setLinkDataLoading] = useState(false);
+  const [addVisionType, setAddVisionType] = useState(DEFAULT_VISION_TYPE);
+  const [addReviewInterval, setAddReviewInterval] = useState(DEFAULT_REVIEW_INTERVAL);
+  const [addLinkedGoals, setAddLinkedGoals] = useState<string[]>([]);
+  const [addLinkedHabits, setAddLinkedHabits] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState('');
+  const [editVisionType, setEditVisionType] = useState(DEFAULT_VISION_TYPE);
+  const [editReviewInterval, setEditReviewInterval] = useState(DEFAULT_REVIEW_INTERVAL);
+  const [editLinkedGoals, setEditLinkedGoals] = useState<string[]>([]);
+  const [editLinkedHabits, setEditLinkedHabits] = useState<string[]>([]);
+  const [editSavingId, setEditSavingId] = useState<string | null>(null);
 
   const loadImages = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -65,6 +123,10 @@ export function VisionBoard({ session }: VisionBoardProps) {
 
       const mapped = (data ?? []).map((record) => ({
         ...record,
+        vision_type: record.vision_type ?? DEFAULT_VISION_TYPE,
+        review_interval_days: record.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
+        linked_goal_ids: record.linked_goal_ids ?? [],
+        linked_habit_ids: record.linked_habit_ids ?? [],
         publicUrl: getVisionImagePublicUrl(record),
       }));
       setImages(mapped);
@@ -82,6 +144,41 @@ export function VisionBoard({ session }: VisionBoardProps) {
     }
     loadImages();
   }, [session?.user?.id, isConfigured, isDemoExperience, loadImages]);
+
+  useEffect(() => {
+    if (!session || (!isConfigured && !isDemoExperience)) {
+      setGoals([]);
+      setHabits([]);
+      setLinkDataLoading(false);
+      return;
+    }
+
+    const loadLinkData = async () => {
+      setLinkDataLoading(true);
+      try {
+        const { data: goalData, error: goalError } = await fetchGoals();
+        if (goalError) throw goalError;
+
+        let habitData: HabitRow[] = [];
+        if (isDemoExperience) {
+          habitData = getDemoHabitsForUser(session.user.id);
+        } else {
+          const { data: habitsResponse, error: habitsError } = await listHabitsV2();
+          if (habitsError) throw habitsError;
+          habitData = habitsResponse ?? [];
+        }
+
+        setGoals(goalData ?? []);
+        setHabits(habitData);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load linked goals and habits.');
+      } finally {
+        setLinkDataLoading(false);
+      }
+    };
+
+    loadLinkData();
+  }, [session, isConfigured, isDemoExperience]);
 
   useEffect(() => {
     if (!isConfigured && !isDemoExperience) {
@@ -102,6 +199,23 @@ export function VisionBoard({ session }: VisionBoardProps) {
       return sortMode === 'newest' ? bTime - aTime : aTime - bTime;
     });
   }, [images, sortMode]);
+
+  const dueReviewItems = useMemo(() => {
+    const now = new Date();
+    return sortedImages.filter((image) => {
+      const interval = image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL;
+      const baseDate = image.last_reviewed_at ?? image.created_at;
+      const nextReviewIso = addDays(baseDate, interval);
+      if (!nextReviewIso) return false;
+      return new Date(nextReviewIso) <= now;
+    });
+  }, [sortedImages]);
+
+  const toggleSelection = (current: string[], id: string) =>
+    current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+
+  const goalLookup = useMemo(() => new Map(goals.map((goal) => [goal.id, goal.title])), [goals]);
+  const habitLookup = useMemo(() => new Map(habits.map((habit) => [habit.id, habit.title])), [habits]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -179,6 +293,60 @@ export function VisionBoard({ session }: VisionBoardProps) {
     }
   };
 
+  const startEditing = (image: VisionImage) => {
+    setEditingId(image.id);
+    setEditCaption(image.caption ?? '');
+    setEditVisionType(image.vision_type ?? DEFAULT_VISION_TYPE);
+    setEditReviewInterval(image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL);
+    setEditLinkedGoals(image.linked_goal_ids ?? []);
+    setEditLinkedHabits(image.linked_habit_ids ?? []);
+  };
+
+  const stopEditing = () => {
+    setEditingId(null);
+  };
+
+  const handleUpdateImage = async (imageId: string, updates: Partial<VisionImageRow>) => {
+    try {
+      const { data, error } = await updateVisionImage(imageId, updates);
+      if (error) throw error;
+      if (!data) return false;
+      setImages((current) =>
+        current.map((item) =>
+          item.id === data.id
+            ? { ...item, ...data, publicUrl: getVisionImagePublicUrl(data) }
+            : item,
+        ),
+      );
+      return true;
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to update the entry.');
+      return false;
+    }
+  };
+
+  const handleMarkReviewed = async (imageId: string) => {
+    await handleUpdateImage(imageId, {
+      last_reviewed_at: new Date().toISOString(),
+    });
+  };
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>, imageId: string) => {
+    event.preventDefault();
+    setEditSavingId(imageId);
+    const success = await handleUpdateImage(imageId, {
+      caption: editCaption.trim() ? editCaption.trim() : null,
+      vision_type: editVisionType,
+      review_interval_days: editReviewInterval,
+      linked_goal_ids: editLinkedGoals,
+      linked_habit_ids: editLinkedHabits,
+    });
+    setEditSavingId(null);
+    if (success) {
+      stopEditing();
+    }
+  };
+
   const handleUpload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -251,12 +419,20 @@ export function VisionBoard({ session }: VisionBoardProps) {
           fileName: fileNameToUpload,
           caption: captionDraft,
           originalFormat,
+          visionType: addVisionType,
+          reviewIntervalDays: addReviewInterval,
+          linkedGoalIds: addLinkedGoals,
+          linkedHabitIds: addLinkedHabits,
         }));
       } else {
         ({ data, error } = await uploadVisionImageFromUrl({
           userId: session.user.id,
           imageUrl: urlDraft.trim(),
           caption: captionDraft,
+          visionType: addVisionType,
+          reviewIntervalDays: addReviewInterval,
+          linkedGoalIds: addLinkedGoals,
+          linkedHabitIds: addLinkedHabits,
         }));
       }
 
@@ -284,6 +460,10 @@ export function VisionBoard({ session }: VisionBoardProps) {
       setUrlDraft('');
       setCaptionDraft('');
       setPreviewUrl(null);
+      setAddVisionType(DEFAULT_VISION_TYPE);
+      setAddReviewInterval(DEFAULT_REVIEW_INTERVAL);
+      setAddLinkedGoals([]);
+      setAddLinkedHabits([]);
       (event.target as HTMLFormElement).reset();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to upload the image right now.');
@@ -473,6 +653,89 @@ export function VisionBoard({ session }: VisionBoardProps) {
                 disabled={(!isConfigured && !isDemoExperience) || uploading}
               />
             </div>
+            <div className="vision-board__field">
+              <label htmlFor="vision-board-type">Vision type</label>
+              <select
+                id="vision-board-type"
+                value={addVisionType}
+                onChange={(event) => setAddVisionType(event.target.value)}
+                disabled={(!isConfigured && !isDemoExperience) || uploading}
+              >
+                {VISION_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+              <span className="vision-board__hint">
+                Tag each image to reflect the Game of Life focus it supports.
+              </span>
+            </div>
+            <div className="vision-board__field">
+              <label htmlFor="vision-board-review-interval">Review interval</label>
+              <select
+                id="vision-board-review-interval"
+                value={addReviewInterval}
+                onChange={(event) => setAddReviewInterval(Number(event.target.value))}
+                disabled={(!isConfigured && !isDemoExperience) || uploading}
+              >
+                {REVIEW_INTERVAL_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span className="vision-board__hint">
+                Choose how often this vision should be revisited in your review loop.
+              </span>
+            </div>
+            <div className="vision-board__field">
+              <label>Linked goals</label>
+              {linkDataLoading ? (
+                <span className="vision-board__hint">Loading goals…</span>
+              ) : goals.length === 0 ? (
+                <span className="vision-board__hint">No goals available yet.</span>
+              ) : (
+                <div className="vision-board__link-grid">
+                  {goals.map((goal) => (
+                    <label key={goal.id} className="vision-board__link-option">
+                      <input
+                        type="checkbox"
+                        checked={addLinkedGoals.includes(goal.id)}
+                        onChange={() => setAddLinkedGoals((current) => toggleSelection(current, goal.id))}
+                        disabled={(!isConfigured && !isDemoExperience) || uploading}
+                      />
+                      <span>{goal.title}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="vision-board__field">
+              <label>Linked habits</label>
+              {linkDataLoading ? (
+                <span className="vision-board__hint">Loading habits…</span>
+              ) : habits.length === 0 ? (
+                <span className="vision-board__hint">No habits available yet.</span>
+              ) : (
+                <div className="vision-board__link-grid">
+                  {habits.map((habit) => (
+                    <label key={habit.id} className="vision-board__link-option">
+                      <input
+                        type="checkbox"
+                        checked={addLinkedHabits.includes(habit.id)}
+                        onChange={() => setAddLinkedHabits((current) => toggleSelection(current, habit.id))}
+                        disabled={(!isConfigured && !isDemoExperience) || uploading}
+                      />
+                      <span>{habit.title}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              <span className="vision-board__hint">
+                Connect habits and goals to spot orphans that need a clearer Game of Life tie-in.
+              </span>
+            </div>
             {previewUrl && (
               <div className="vision-board__preview">
                 <label>Preview</label>
@@ -489,6 +752,53 @@ export function VisionBoard({ session }: VisionBoardProps) {
           </form>
         )}
       </div>
+
+      {(isConfigured || isDemoExperience) && (
+        <section className="vision-board__review">
+          <div className="vision-board__review-header">
+            <div>
+              <h3>Vision review loop</h3>
+              <p>
+                Review entries due for a refresh to keep your Game of Life board aligned with your active goals and habits.
+              </p>
+            </div>
+            <span className="vision-board__review-count">{dueReviewItems.length} due</span>
+          </div>
+          {dueReviewItems.length === 0 ? (
+            <p className="vision-board__empty">All caught up—no reviews due right now.</p>
+          ) : (
+            <div className="vision-board__review-list">
+              {dueReviewItems.map((image) => {
+                const nextReview = addDays(
+                  image.last_reviewed_at ?? image.created_at,
+                  image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
+                );
+                return (
+                  <article key={image.id} className="vision-board__review-card">
+                    <div className="vision-board__review-info">
+                      <h4>{image.caption || 'Vision board entry'}</h4>
+                      <p className="vision-board__review-meta">
+                        Type: {getVisionTypeLabel(image.vision_type)} · Next review {formatDateLabel(nextReview)}
+                      </p>
+                      <p className="vision-board__review-prompt">
+                        Prompt: Confirm this still supports your Game of Life focus, or update links if it needs a new home.
+                      </p>
+                    </div>
+                    <div className="vision-board__review-actions">
+                      <button type="button" onClick={() => startEditing(image)} disabled={editSavingId === image.id}>
+                        Update details
+                      </button>
+                      <button type="button" onClick={() => handleMarkReviewed(image.id)} disabled={editSavingId === image.id}>
+                        Mark reviewed
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
         {!isConfigured && !isDemoExperience ? (
@@ -514,7 +824,48 @@ export function VisionBoard({ session }: VisionBoardProps) {
                   </div>
                 )}
               </div>
+              {(() => {
+                const linkedGoals = image.linked_goal_ids ?? [];
+                const linkedHabits = image.linked_habit_ids ?? [];
+                const isOrphan = linkedGoals.length === 0 && linkedHabits.length === 0;
+                const nextReview = addDays(
+                  image.last_reviewed_at ?? image.created_at,
+                  image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
+                );
+                const goalLabels = linkedGoals.map((id) => goalLookup.get(id)).filter(Boolean) as string[];
+                const habitLabels = linkedHabits.map((id) => habitLookup.get(id)).filter(Boolean) as string[];
+                return (
+                  <div className="vision-board__card-body">
+                    <div className="vision-board__card-meta">
+                      <span className="vision-board__chip">{getVisionTypeLabel(image.vision_type)}</span>
+                      <span className="vision-board__chip">
+                        Review every {image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL} days
+                      </span>
+                      {isOrphan && <span className="vision-board__chip vision-board__chip--orphan">Orphan</span>}
+                    </div>
+                    <p className="vision-board__card-review">Next review: {formatDateLabel(nextReview)}</p>
+                    {goalLabels.length > 0 && (
+                      <p className="vision-board__card-links">
+                        <strong>Goals:</strong> {goalLabels.join(', ')}
+                      </p>
+                    )}
+                    {habitLabels.length > 0 && (
+                      <p className="vision-board__card-links">
+                        <strong>Habits:</strong> {habitLabels.join(', ')}
+                      </p>
+                    )}
+                    {isOrphan && (
+                      <p className="vision-board__card-links vision-board__card-links--orphan">
+                        No links yet—attach a goal or habit to keep this Game of Life anchor grounded.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
               <div className="vision-board__card-actions">
+                <button type="button" onClick={() => startEditing(image)} className="vision-board__edit">
+                  Edit details
+                </button>
                 <button
                   type="button"
                   onClick={() => handleDelete(image)}
@@ -525,6 +876,98 @@ export function VisionBoard({ session }: VisionBoardProps) {
                   Remove
                 </button>
               </div>
+              {editingId === image.id && (
+                <form className="vision-board__edit-form" onSubmit={(event) => handleEditSubmit(event, image.id)}>
+                  <div className="vision-board__field">
+                    <label htmlFor={`vision-edit-caption-${image.id}`}>Caption</label>
+                    <input
+                      id={`vision-edit-caption-${image.id}`}
+                      type="text"
+                      value={editCaption}
+                      onChange={(event) => setEditCaption(event.target.value)}
+                      disabled={editSavingId === image.id}
+                    />
+                  </div>
+                  <div className="vision-board__field">
+                    <label htmlFor={`vision-edit-type-${image.id}`}>Vision type</label>
+                    <select
+                      id={`vision-edit-type-${image.id}`}
+                      value={editVisionType}
+                      onChange={(event) => setEditVisionType(event.target.value)}
+                      disabled={editSavingId === image.id}
+                    >
+                      {VISION_TYPES.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="vision-board__field">
+                    <label htmlFor={`vision-edit-review-${image.id}`}>Review interval</label>
+                    <select
+                      id={`vision-edit-review-${image.id}`}
+                      value={editReviewInterval}
+                      onChange={(event) => setEditReviewInterval(Number(event.target.value))}
+                      disabled={editSavingId === image.id}
+                    >
+                      {REVIEW_INTERVAL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="vision-board__field">
+                    <label>Linked goals</label>
+                    {goals.length === 0 ? (
+                      <span className="vision-board__hint">No goals available yet.</span>
+                    ) : (
+                      <div className="vision-board__link-grid">
+                        {goals.map((goal) => (
+                          <label key={goal.id} className="vision-board__link-option">
+                            <input
+                              type="checkbox"
+                              checked={editLinkedGoals.includes(goal.id)}
+                              onChange={() => setEditLinkedGoals((current) => toggleSelection(current, goal.id))}
+                              disabled={editSavingId === image.id}
+                            />
+                            <span>{goal.title}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="vision-board__field">
+                    <label>Linked habits</label>
+                    {habits.length === 0 ? (
+                      <span className="vision-board__hint">No habits available yet.</span>
+                    ) : (
+                      <div className="vision-board__link-grid">
+                        {habits.map((habit) => (
+                          <label key={habit.id} className="vision-board__link-option">
+                            <input
+                              type="checkbox"
+                              checked={editLinkedHabits.includes(habit.id)}
+                              onChange={() => setEditLinkedHabits((current) => toggleSelection(current, habit.id))}
+                              disabled={editSavingId === image.id}
+                            />
+                            <span>{habit.title}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="vision-board__edit-actions">
+                    <button type="submit" disabled={editSavingId === image.id}>
+                      {editSavingId === image.id ? 'Saving…' : 'Save updates'}
+                    </button>
+                    <button type="button" onClick={stopEditing} disabled={editSavingId === image.id}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
             </article>
           ))
         )}
