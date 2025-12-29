@@ -31,6 +31,13 @@ import {
   hasBalanceBonus,
 } from '../../services/balanceScore';
 import {
+  completeMicroQuest,
+  countCompletedMicroQuests,
+  ensureMicroQuestState,
+  getMicroQuestDateLabel,
+  type MicroQuestState,
+} from '../../services/microQuests';
+import {
   createRationalityEntry,
   getUniqueRationalityDates,
   listRationalityEntries,
@@ -195,6 +202,9 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const [rationalityStatus, setRationalityStatus] = useState<StatusMessage>(null);
   const [rationalityLoading, setRationalityLoading] = useState(false);
   const [rationalitySaving, setRationalitySaving] = useState(false);
+  const [microQuestState, setMicroQuestState] = useState<MicroQuestState | null>(null);
+  const [microQuestStatus, setMicroQuestStatus] = useState<StatusMessage>(null);
+  const [microQuestLoading, setMicroQuestLoading] = useState(false);
 
   const today = useMemo(() => new Date(), []);
   const todayISO = useMemo(() => formatISODate(today), [today]);
@@ -293,6 +303,12 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     const timer = window.setTimeout(() => setRationalityStatus(null), 4000);
     return () => window.clearTimeout(timer);
   }, [rationalityStatus]);
+
+  useEffect(() => {
+    if (!microQuestStatus) return;
+    const timer = window.setTimeout(() => setMicroQuestStatus(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [microQuestStatus]);
 
   const loadRationalityEntries = useCallback(async () => {
     if (!session || (!isConfigured && !isDemoExperience)) {
@@ -502,6 +518,27 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   }, [balanceSnapshot]);
 
   useEffect(() => {
+    if (!session?.user?.id || !gamificationEnabled) {
+      setMicroQuestState(null);
+      return;
+    }
+    if (!isConfigured && !isDemoExperience) {
+      setMicroQuestState(null);
+      return;
+    }
+    const nextState = ensureMicroQuestState(session.user.id, balanceSnapshot, habits, today);
+    setMicroQuestState(nextState);
+  }, [
+    session?.user?.id,
+    gamificationEnabled,
+    isConfigured,
+    isDemoExperience,
+    balanceSnapshot,
+    habits,
+    today,
+  ]);
+
+  useEffect(() => {
     if (!balanceSnapshot || !balanceWeekId || !gamificationEnabled) {
       return;
     }
@@ -553,6 +590,18 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
       return (b.created_at ?? '').localeCompare(a.created_at ?? '');
     })[0];
   }, [rationalityEntries]);
+
+  const microQuestCompletedCount = useMemo(
+    () => countCompletedMicroQuests(microQuestState),
+    [microQuestState],
+  );
+  const microQuestTotalCount = microQuestState?.quests.length ?? 0;
+  const microQuestDateLabel = useMemo(
+    () => getMicroQuestDateLabel(microQuestState, today),
+    [microQuestState, today],
+  );
+  const microQuestBonusAvailable = microQuestCompletedCount >= 2;
+  const microQuestBonusEarned = microQuestState?.bonusAwarded ?? false;
 
   const handleRationalitySubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -642,6 +691,59 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
       rationalityCompletedYesterday,
       recordActivity,
     ],
+  );
+
+  const handleMicroQuestComplete = useCallback(
+    async (questId: string) => {
+      if (!session?.user?.id) return;
+      if (!microQuestState) return;
+
+      setMicroQuestLoading(true);
+      try {
+        const { state, quest, bonusAwarded, didComplete } = completeMicroQuest(session.user.id, questId);
+        if (!state || !quest) {
+          throw new Error('Unable to update the micro-quest.');
+        }
+
+        setMicroQuestState(state);
+
+        if (!didComplete) {
+          setMicroQuestStatus({
+            kind: 'error',
+            message: 'That micro-quest is already completed.',
+          });
+          return;
+        }
+
+        if (gamificationEnabled) {
+          await earnXP(quest.xpReward, 'micro_quest', quest.id, quest.title);
+          if (bonusAwarded) {
+            await earnXP(
+              XP_REWARDS.MICRO_QUEST_BONUS,
+              'micro_quest_bonus',
+              quest.id,
+              'Game of Life daily path bonus.',
+            );
+          }
+          await recordActivity();
+        }
+
+        setMicroQuestStatus({
+          kind: 'success',
+          message: bonusAwarded
+            ? 'Micro-quest complete! Game of Life daily bonus unlocked.'
+            : 'Micro-quest complete! Game of Life XP earned.',
+        });
+      } catch (error) {
+        setMicroQuestStatus({
+          kind: 'error',
+          message: error instanceof Error ? error.message : 'Unable to complete the micro-quest.',
+        });
+      } finally {
+        setMicroQuestLoading(false);
+      }
+    },
+    [session?.user?.id, microQuestState, gamificationEnabled, earnXP, recordActivity],
   );
 
   const fullDashboardPanel = (
@@ -1069,6 +1171,109 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             <div className="progress-dashboard__empty">
               <h3>No balance snapshot yet</h3>
               <p>Complete a life wheel check-in to unlock your harmony score and axis trends.</p>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 'micro-quests',
+      title: 'Micro-quests',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--micro-quests">
+          <header className="progress-dashboard__panel-header">
+            <h2>Game of Life micro-quests</h2>
+            <p>
+              Your daily path blends balance gaps and habits into tiny, non-compulsive wins. Skip freely—fresh quests
+              arrive each morning.
+            </p>
+          </header>
+          {!gamificationEnabled ? (
+            <div className="progress-dashboard__empty">
+              <h3>Enable Game of Life gamification to unlock micro-quests</h3>
+              <p>Turn on gamification in your account settings to earn XP for daily balance steps.</p>
+            </div>
+          ) : !isConfigured && !isDemoExperience ? (
+            <div className="progress-dashboard__empty">
+              <h3>Connect to unlock today&apos;s micro-quests</h3>
+              <p>Enable Supabase or demo mode to load your Game of Life daily path.</p>
+            </div>
+          ) : !microQuestState ? (
+            <div className="progress-dashboard__empty">
+              <h3>Loading your daily path</h3>
+              <p>We&apos;re preparing today&apos;s Game of Life micro-quests.</p>
+            </div>
+          ) : (
+            <div className="micro-quests">
+              <div className="micro-quests__summary">
+                <div>
+                  <p className="micro-quests__eyebrow">{microQuestDateLabel}</p>
+                  <h3>Daily path</h3>
+                  <p>
+                    Complete any two micro-quests to unlock today&apos;s harmony bonus. No penalties if you pause or
+                    skip.
+                  </p>
+                </div>
+                <div className="micro-quests__progress">
+                  <span>{microQuestCompletedCount}/{microQuestTotalCount} complete</span>
+                  <div className="micro-quests__progress-bar" role="progressbar" aria-valuenow={microQuestCompletedCount} aria-valuemin={0} aria-valuemax={microQuestTotalCount}>
+                    <span
+                      style={{
+                        width: `${microQuestTotalCount === 0 ? 0 : (microQuestCompletedCount / microQuestTotalCount) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {microQuestStatus ? (
+                <p className={`micro-quests__status micro-quests__status--${microQuestStatus.kind}`}>
+                  {microQuestStatus.message}
+                </p>
+              ) : null}
+
+              <ul className="micro-quests__list">
+                {microQuestState.quests.map((quest) => (
+                  <li
+                    key={quest.id}
+                    className={`micro-quests__card micro-quests__card--${quest.status}`}
+                  >
+                    <div className="micro-quests__card-header">
+                      <h4>{quest.title}</h4>
+                      <span className="micro-quests__reward">+{quest.xpReward} XP</span>
+                    </div>
+                    <p>{quest.description}</p>
+                    <button
+                      type="button"
+                      className="micro-quests__button"
+                      disabled={quest.status === 'completed' || microQuestLoading}
+                      onClick={() => handleMicroQuestComplete(quest.id)}
+                    >
+                      {quest.status === 'completed'
+                        ? 'Completed'
+                        : microQuestLoading
+                          ? 'Saving…'
+                          : 'Mark complete'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <div className={`micro-quests__bonus ${microQuestBonusEarned ? 'micro-quests__bonus--earned' : ''}`}>
+                <div>
+                  <h4>Daily harmony bonus</h4>
+                  <p>
+                    Complete any two micro-quests to earn +{XP_REWARDS.MICRO_QUEST_BONUS} Game of Life XP.
+                  </p>
+                </div>
+                <div className="micro-quests__bonus-status">
+                  {microQuestBonusEarned
+                    ? 'Bonus earned'
+                    : microQuestBonusAvailable
+                      ? 'Bonus ready'
+                      : 'Bonus locked'}
+                </div>
+              </div>
             </div>
           )}
         </div>
