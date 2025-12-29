@@ -635,6 +635,51 @@ export interface Database {
         };
         Relationships: [];
       };
+      telemetry_preferences: {
+        Row: {
+          user_id: string;
+          telemetry_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          telemetry_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          telemetry_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      telemetry_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_type: string;
+          metadata: Json;
+          occurred_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_type: string;
+          metadata?: Json;
+          occurred_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_type?: string;
+          metadata?: Json;
+          occurred_at?: string;
+        };
+        Relationships: [];
+      };
       workspace_profiles: {
         Row: {
           id: string;

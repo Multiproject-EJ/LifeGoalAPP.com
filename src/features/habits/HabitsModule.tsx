@@ -8,6 +8,7 @@ import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEveryNDaysNextDue } from './scheduleInterpreter';
 import { classifyHabit } from './performanceClassifier';
+import { getTelemetryDifficultyAdjustment } from '../../services/telemetry';
 import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
@@ -288,6 +289,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     try {
       const snapshots = await buildAdherenceSnapshots(session.user.id, habits);
       setAdherenceSnapshots(snapshots);
+
+      const { minProgressStreak } = await getTelemetryDifficultyAdjustment(session.user.id);
       
       // Build performance suggestions for each habit based on adherence and streaks
       const suggestions: Record<string, HabitSuggestion> = {};
@@ -305,6 +308,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           adherence7: snapshot.window7.percentage,
           adherence30: snapshot.window30.percentage,
           currentStreak: streakData?.current_streak ?? 0,
+          minProgressStreak,
         });
         
         // Build suggestion based on classification

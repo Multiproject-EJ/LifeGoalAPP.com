@@ -22,6 +22,10 @@ export type CheckinUpdate = Database['public']['Tables']['checkins']['Update'];
 export type NotificationPreferencesRow = Database['public']['Tables']['notification_preferences']['Row'];
 export type NotificationPreferencesInsert = Database['public']['Tables']['notification_preferences']['Insert'];
 export type NotificationPreferencesUpdate = Database['public']['Tables']['notification_preferences']['Update'];
+export type TelemetryPreferenceRow = Database['public']['Tables']['telemetry_preferences']['Row'];
+export type TelemetryPreferenceInsert = Database['public']['Tables']['telemetry_preferences']['Insert'];
+export type TelemetryEventRow = Database['public']['Tables']['telemetry_events']['Row'];
+export type TelemetryEventInsert = Database['public']['Tables']['telemetry_events']['Insert'];
 export type GoalReflectionRow = Database['public']['Tables']['goal_reflections']['Row'];
 export type GoalReflectionInsert = Database['public']['Tables']['goal_reflections']['Insert'];
 export type GoalReflectionUpdate = Database['public']['Tables']['goal_reflections']['Update'];
@@ -49,6 +53,8 @@ type DemoState = {
   visionImages: VisionImageRow[];
   checkins: CheckinRow[];
   notificationPreferences: NotificationPreferencesRow | null;
+  telemetryPreferences: TelemetryPreferenceRow | null;
+  telemetryEvents: TelemetryEventRow[];
   goalReflections: GoalReflectionRow[];
   journalEntries: JournalEntryRow[];
 };
@@ -170,6 +176,13 @@ const defaultState: DemoState = {
   visionImages: [],
   checkins: [],
   notificationPreferences: null,
+  telemetryPreferences: {
+    user_id: DEMO_USER_ID,
+    telemetry_enabled: false,
+    created_at: iso(today),
+    updated_at: iso(today),
+  },
+  telemetryEvents: [],
   goalReflections: [],
   journalEntries: [],
 };
@@ -760,6 +773,9 @@ function loadState(): DemoState {
       checkins: parsed.checkins ?? clone(defaultState.checkins),
       notificationPreferences:
         parsed.notificationPreferences ?? clone(defaultState.notificationPreferences),
+      telemetryPreferences:
+        parsed.telemetryPreferences ?? clone(defaultState.telemetryPreferences),
+      telemetryEvents: parsed.telemetryEvents ?? clone(defaultState.telemetryEvents),
       goalReflections: parsed.goalReflections ?? clone(defaultState.goalReflections),
       journalEntries: parsed.journalEntries ?? clone(defaultState.journalEntries),
     } satisfies DemoState;
@@ -801,6 +817,54 @@ export function updateDemoProfile(payload: Partial<DemoProfile>): DemoProfile {
     return { ...current, profile: nextProfile };
   });
   return clone(nextProfile);
+}
+
+export function getDemoTelemetryPreference(userId: string): TelemetryPreferenceRow | null {
+  if (state.telemetryPreferences?.user_id !== userId) {
+    return null;
+  }
+  return clone(state.telemetryPreferences);
+}
+
+export function updateDemoTelemetryPreference(
+  payload: TelemetryPreferenceInsert,
+): TelemetryPreferenceRow {
+  let updated: TelemetryPreferenceRow = {
+    user_id: payload.user_id,
+    telemetry_enabled: payload.telemetry_enabled ?? false,
+    created_at: payload.created_at ?? new Date().toISOString(),
+    updated_at: payload.updated_at ?? new Date().toISOString(),
+  };
+
+  updateState((current) => {
+    const existing = current.telemetryPreferences;
+    updated = {
+      ...updated,
+      created_at: existing?.created_at ?? updated.created_at,
+      updated_at: new Date().toISOString(),
+    };
+    return { ...current, telemetryPreferences: updated };
+  });
+
+  return clone(updated);
+}
+
+export function getDemoTelemetryEvents(userId: string): TelemetryEventRow[] {
+  return clone(state.telemetryEvents.filter((event) => event.user_id === userId));
+}
+
+export function addDemoTelemetryEvent(payload: TelemetryEventInsert): TelemetryEventRow {
+  const record: TelemetryEventRow = {
+    id: payload.id ?? createId('telemetry'),
+    user_id: payload.user_id,
+    event_type: payload.event_type,
+    metadata: payload.metadata ?? {},
+    occurred_at: payload.occurred_at ?? new Date().toISOString(),
+  };
+
+  updateState((current) => ({ ...current, telemetryEvents: [record, ...current.telemetryEvents] }));
+
+  return clone(record);
 }
 
 function sortByDateDesc<T extends { created_at?: string | null; date?: string | null }>(rows: T[]): T[] {

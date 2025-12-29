@@ -11,6 +11,7 @@ import { listHabitLogsForRangeMultiV2, listHabitsV2, type HabitLogV2Row, type Ha
 import { listJournalEntries, type JournalEntry } from '../../services/journal';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
+import { recordTelemetryEvent } from '../../services/telemetry';
 
 export interface AiCoachProps {
   session: Session;
@@ -557,9 +558,20 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     handleSendMessage(topic.prompt);
   };
 
-  const handleInterventionAction = (option: string) => {
+  const handleInterventionAction = (option: string, intervention?: CoachIntervention) => {
     setShowTopics(false);
     handleSendMessage(option);
+    if (intervention) {
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'intervention_accepted',
+        metadata: {
+          interventionId: intervention.id,
+          interventionType: intervention.type,
+          option,
+        },
+      });
+    }
   };
 
   const handleSendMessage = async (messageText?: string) => {
@@ -693,7 +705,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
                             key={option}
                             type="button"
                             className="ai-coach-modal__intervention-button"
-                            onClick={() => handleInterventionAction(option)}
+                            onClick={() => handleInterventionAction(option, intervention)}
                           >
                             {option}
                           </button>

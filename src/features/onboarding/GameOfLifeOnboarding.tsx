@@ -7,6 +7,7 @@ import {
 } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
+import { recordTelemetryEvent } from '../../services/telemetry';
 
 const AXES = [
   {
@@ -123,6 +124,10 @@ export function GameOfLifeOnboarding({
       }
 
       setAuthMessage('Profile saved! Welcome to Game of Life.');
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'onboarding_completed',
+      });
 
       if ((pendingDestination ?? 'dashboard') === 'coach') {
         onOpenCoach();
