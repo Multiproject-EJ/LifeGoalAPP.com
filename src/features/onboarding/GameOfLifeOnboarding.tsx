@@ -145,7 +145,9 @@ export function GameOfLifeOnboarding({
   return (
     <section className="gol-onboarding" aria-label="Game of Life onboarding">
       <header className="gol-onboarding__header">
-        <span className="gol-onboarding__step">{progressLabel}</span>
+        <span className="gol-onboarding__step" aria-live="polite" aria-atomic="true">
+          {progressLabel}
+        </span>
         <h3>{step.title}</h3>
         <p>{step.lead}</p>
       </header>
@@ -189,7 +191,7 @@ export function GameOfLifeOnboarding({
       ) : null}
 
       {isFinalStep ? (
-        <form className="gol-onboarding__panel" onSubmit={handleProfileSubmit}>
+        <form className="gol-onboarding__panel" onSubmit={handleProfileSubmit} aria-busy={profileSaving}>
           <label className="supabase-auth__field">
             <span>Display name</span>
             <input
@@ -197,6 +199,7 @@ export function GameOfLifeOnboarding({
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               placeholder={session.user.email ?? 'you@example.com'}
+              autoFocus
             />
           </label>
           <div className="gol-onboarding__actions gol-onboarding__actions--stack">
