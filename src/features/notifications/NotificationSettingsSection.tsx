@@ -263,6 +263,22 @@ export function NotificationSettingsSection({ session }: Props) {
     await persistPreferences(nextState, subscription);
   };
 
+  const demoScheduleTimezone = timezoneDraft.trim() || preferences.timezone || fallbackTimezone;
+  const demoSchedule = [
+    {
+      title: 'Habit reminder window',
+      detail: `Around ${preferences.reminderTime || '08:00'} (${demoScheduleTimezone})`,
+    },
+    {
+      title: 'Life wheel check-in nudge',
+      detail: `Today at 18:00 (${demoScheduleTimezone})`,
+    },
+    {
+      title: 'Game of Life coach nudge',
+      detail: `Tonight at 20:30 (${demoScheduleTimezone})`,
+    },
+  ];
+
   return (
     <section className="account-panel__card" aria-labelledby="account-notifications">
       <p className="account-panel__eyebrow">Notifications</p>
@@ -277,6 +293,23 @@ export function NotificationSettingsSection({ session }: Props) {
           Demo mode stores notification preferences locally. Connect Supabase and configure web push credentials to deliver
           reminders across your devices.
         </p>
+      )}
+
+      {isDemoExperience && (
+        <div className="notification-preferences__card notification-preferences__card--demo">
+          <div className="notification-preferences__schedule-header">
+            <h3>Demo schedule preview</h3>
+            <p>Mock schedule data shows when reminders would queue based on your settings.</p>
+          </div>
+          <ul className="notification-preferences__schedule">
+            {demoSchedule.map((item) => (
+              <li key={item.title} className="notification-preferences__schedule-item">
+                <span className="notification-preferences__schedule-title">{item.title}</span>
+                <span className="notification-preferences__schedule-detail">{item.detail}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {!supportChecked || loading ? (
