@@ -1313,10 +1313,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: clamp(1.25rem, 3vw, 2.25rem);
-  height: calc(100vh - (var(--workspace-shell-padding) * 2));
+  min-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   padding: 0 clamp(0.5rem, 1vw, 0.85rem);
   align-items: stretch;
 }
@@ -1459,13 +1459,7 @@ body {
   display: grid;
   gap: clamp(1.5rem, 3vw, 2.5rem);
   min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.workspace-stage__body::-webkit-scrollbar {
-  display: none;
+  overflow: visible;
 }
 
 .workspace-content {
