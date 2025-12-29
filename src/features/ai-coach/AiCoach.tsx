@@ -784,6 +784,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
               type="text"
               className="ai-coach-modal__input"
               placeholder={starterQuestion || 'Type your message here...'}
+              aria-label="Message for your Game of Life Coach"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               disabled={isTyping}

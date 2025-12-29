@@ -144,7 +144,7 @@ export function GameOfLifeOnboarding({
 
   return (
     <section className="gol-onboarding" aria-label="Game of Life onboarding">
-      <header className="gol-onboarding__header">
+      <header className="gol-onboarding__header" aria-live="polite" aria-atomic="true">
         <span className="gol-onboarding__step">{progressLabel}</span>
         <h3>{step.title}</h3>
         <p>{step.lead}</p>
