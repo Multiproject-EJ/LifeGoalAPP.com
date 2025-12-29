@@ -33,9 +33,9 @@ const AXES = [
 
 const STEPS = [
   {
-    title: 'Welcome to Game of Life 2.0',
+    title: 'Welcome to Game of Life',
     lead:
-      'Game of Life 2.0 turns your daily rituals into a living strategy board, so you can see progress across every part of your life.',
+      'Game of Life turns your daily rituals into a living strategy board, so you can see progress across every part of your life.',
   },
   {
     title: 'Balance the four axes',
@@ -122,7 +122,7 @@ export function GameOfLifeOnboarding({
         if (error) throw error;
       }
 
-      setAuthMessage('Profile saved! Welcome to Game of Life 2.0.');
+      setAuthMessage('Profile saved! Welcome to Game of Life.');
 
       if ((pendingDestination ?? 'dashboard') === 'coach') {
         onOpenCoach();
