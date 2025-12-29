@@ -863,6 +863,33 @@ body {
   padding-left: clamp(1rem, 3vw, 1.75rem);
 }
 
+.workspace-shell__menu-edge {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: clamp(14px, 2vw, 24px);
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 998;
+}
+
+.workspace-shell__menu-edge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.18), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.workspace-shell__menu-edge:hover::after,
+.workspace-shell__menu-edge:focus-visible::after {
+  opacity: 1;
+}
+
 .workspace-sidebar {
   position: fixed;
   left: 20px;
@@ -892,6 +919,65 @@ body {
   transform: translateX(-120%);
   opacity: 0;
   pointer-events: none;
+}
+
+.game-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.game-hub__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 16px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+}
+
+.game-hub__title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.game-hub__subtitle {
+  margin: 0;
+  color: #475569;
+  max-width: 42rem;
+}
+
+.game-hub__coach-button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(102, 126, 234, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.game-hub__coach-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(102, 126, 234, 0.35);
+}
+
+.game-hub__coach-button:focus-visible {
+  outline: 3px solid rgba(102, 126, 234, 0.5);
+  outline-offset: 3px;
+}
+
+.game-hub__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .workspace-sidebar::before {
