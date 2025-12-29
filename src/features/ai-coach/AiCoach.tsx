@@ -8,6 +8,7 @@ import { loadAiCoachInstructions } from '../../services/aiCoachInstructions';
 import { getDemoCheckins, getDemoHabitLogsForRange, getDemoHabitsForUser } from '../../services/demoData';
 import { isDemoSession } from '../../services/demoSession';
 import { listHabitLogsForRangeMultiV2, listHabitsV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
+import { listJournalEntries, type JournalEntry } from '../../services/journal';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
 
@@ -32,7 +33,7 @@ interface CoachingTopic {
   prompt: string;
 }
 
-type CoachInterventionType = 'imbalance' | 'habit-struggle';
+type CoachInterventionType = 'imbalance' | 'habit-struggle' | 'overconfidence' | 'fixation';
 
 type CoachIntervention = {
   id: string;
@@ -141,6 +142,8 @@ const AXIS_REBALANCE_OPTIONS: Record<BalanceAxisKey, string[]> = {
 const INTERVENTION_LABELS: Record<CoachInterventionType, string> = {
   imbalance: 'Imbalance',
   'habit-struggle': 'Habit friction',
+  overconfidence: 'Overconfidence',
+  fixation: 'Fixation',
 };
 
 const normalizeDateOnly = (date: Date) => date.toISOString().split('T')[0];
@@ -152,6 +155,24 @@ const calculatePercentage = (completed: number, scheduled: number) => {
 
 const matchesPattern = (value: string, patterns: RegExp[]) =>
   patterns.some((pattern) => pattern.test(value));
+
+const getJournalEntryText = (entry: JournalEntry) =>
+  `${entry.title ?? ''} ${entry.content ?? ''}`.trim();
+
+const findEntryByPattern = (
+  entries: JournalEntry[],
+  patterns: RegExp[],
+  excludedIds: Set<string>,
+): JournalEntry | null => {
+  return (
+    entries.find((entry) => {
+      if (excludedIds.has(entry.id)) return false;
+      const text = getJournalEntryText(entry);
+      if (!text) return false;
+      return matchesPattern(text, patterns);
+    }) ?? null
+  );
+};
 
 const buildAdherenceSnapshots = async (
   userId: string,
@@ -282,6 +303,50 @@ const buildHabitStruggleIntervention = async (
   };
 };
 
+const buildOverconfidenceIntervention = (entry: JournalEntry): CoachIntervention => ({
+  id: `overconfidence-${entry.id}`,
+  type: 'overconfidence',
+  title: 'Overconfidence check',
+  description:
+    'You sound very certain. Want to run a 30-second red team on it? What would change your mind?',
+  options: [
+    'Run a 30-second red team: list one counterexample.',
+    'Set a confidence level (40%, 70%, 90%) and name what would update it.',
+    'Ask: what evidence would disconfirm this?',
+  ],
+});
+
+const buildFixationIntervention = (entry: JournalEntry): CoachIntervention => ({
+  id: `fixation-${entry.id}`,
+  type: 'fixation',
+  title: 'Fixation check',
+  description:
+    'When something becomes “must at all costs,” it can narrow the game. What keeps options open?',
+  options: [
+    'Define a flexible version of the goal that still feels meaningful.',
+    'Name one boundary that keeps the Game of Life balanced.',
+    'Write a backup plan that keeps momentum without forcing it.',
+  ],
+});
+
+const buildMindsetInterventions = (entries: JournalEntry[]): CoachIntervention[] => {
+  const interventions: CoachIntervention[] = [];
+  const excludedIds = new Set<string>();
+
+  const overconfidenceEntry = findEntryByPattern(entries, OVERCONFIDENCE_PATTERNS, excludedIds);
+  if (overconfidenceEntry) {
+    interventions.push(buildOverconfidenceIntervention(overconfidenceEntry));
+    excludedIds.add(overconfidenceEntry.id);
+  }
+
+  const fixationEntry = findEntryByPattern(entries, FIXATION_PATTERNS, excludedIds);
+  if (fixationEntry) {
+    interventions.push(buildFixationIntervention(fixationEntry));
+  }
+
+  return interventions;
+};
+
 const INITIAL_MESSAGES: Message[] = [
   {
     id: 'welcome-1',
@@ -378,6 +443,16 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         }
       }
 
+      if (dataAccess.journaling) {
+        const since = new Date();
+        since.setDate(since.getDate() - 14);
+        const fromDate = since.toISOString().slice(0, 10);
+        const { data, error } = await listJournalEntries({ fromDate, limit: 12 });
+        if (!error && data) {
+          nextInterventions.push(...buildMindsetInterventions(data));
+        }
+      }
+
       if (isMounted) {
         setInterventions(nextInterventions);
         setInterventionsLoading(false);
@@ -389,7 +464,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     return () => {
       isMounted = false;
     };
-  }, [dataAccess.habits, dataAccess.reflections, demoMode, session.user.id]);
+  }, [dataAccess.habits, dataAccess.journaling, dataAccess.reflections, demoMode, session.user.id]);
 
   useEffect(() => {
     // Focus input on mount

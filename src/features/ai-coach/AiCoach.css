@@ -513,6 +513,16 @@
   color: #0e7490;
 }
 
+.ai-coach-modal__intervention-tag--overconfidence {
+  background: rgba(251, 146, 60, 0.2);
+  color: #b45309;
+}
+
+.ai-coach-modal__intervention-tag--fixation {
+  background: rgba(244, 63, 94, 0.15);
+  color: #be123c;
+}
+
 @media (prefers-color-scheme: dark) {
   .ai-coach-modal__intervention-tag {
     color: #c7d2fe;
@@ -522,6 +532,16 @@
   .ai-coach-modal__intervention-tag--habit-struggle {
     color: #bae6fd;
     background: rgba(14, 116, 144, 0.3);
+  }
+
+  .ai-coach-modal__intervention-tag--overconfidence {
+    color: #fed7aa;
+    background: rgba(251, 146, 60, 0.3);
+  }
+
+  .ai-coach-modal__intervention-tag--fixation {
+    color: #fecdd3;
+    background: rgba(244, 63, 94, 0.3);
   }
 }
 
