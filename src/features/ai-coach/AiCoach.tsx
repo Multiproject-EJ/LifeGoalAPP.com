@@ -635,7 +635,12 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         onClick={onClose}
         role="presentation"
       />
-      <div className="ai-coach-modal__container">
+      <div
+        className="ai-coach-modal__container"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Game of Life Coach"
+      >
         <div className="ai-coach-modal__header">
           <div className="ai-coach-modal__header-content">
             <div className="ai-coach-modal__avatar">
@@ -680,7 +685,12 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         </div>
 
         <div className="ai-coach-modal__body">
-          <div className="ai-coach-modal__messages">
+          <div
+            className="ai-coach-modal__messages"
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+          >
             {interventions.length > 0 && (
               <section className="ai-coach-modal__interventions">
                 <div className="ai-coach-modal__interventions-header">
