@@ -215,6 +215,8 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const domainFieldId = useId();
   const goalFieldId = useId();
   const rationalityFieldId = useId();
+  const rationalityPromptId = useId();
+  const rationalityHintId = useId();
   const canCreateHabits = isConfigured || isDemoExperience;
   const hasGoals = goals.length > 0;
 
@@ -1338,8 +1340,10 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
           ) : (
             <div className="rationality-check">
               <div className="rationality-check__prompt">
-                <p className="rationality-check__question">{RATIONALITY_PROMPT}</p>
-                <p className="rationality-check__hint">
+                <p className="rationality-check__question" id={rationalityPromptId}>
+                  {RATIONALITY_PROMPT}
+                </p>
+                <p className="rationality-check__hint" id={rationalityHintId}>
                   Name one assumption, decision, or belief you want to revisit later.
                 </p>
               </div>
@@ -1349,6 +1353,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
                 </label>
                 <textarea
                   id={rationalityFieldId}
+                  aria-describedby={`${rationalityPromptId} ${rationalityHintId}`}
                   value={rationalityNote}
                   onChange={(event) => setRationalityNote(event.target.value)}
                   placeholder="Write one sentence that keeps you open to updating."
