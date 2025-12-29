@@ -111,6 +111,10 @@ export const XP_REWARDS = {
   // Rationality rewards
   RATIONALITY_CHECKIN: 20,
   RATIONALITY_STREAK: 10,
+
+  // Micro-quest rewards
+  MICRO_QUEST: 25,
+  MICRO_QUEST_BONUS: 50,
 } as const;
 
 // =====================================================

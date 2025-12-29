@@ -5392,6 +5392,10 @@ body {
   background: linear-gradient(140deg, rgba(241, 245, 249, 0.85), rgba(226, 232, 240, 0.95));
 }
 
+.progress-dashboard__panel-content--micro-quests {
+  background: linear-gradient(140deg, rgba(236, 253, 245, 0.9), rgba(224, 231, 255, 0.85));
+}
+
 .progress-dashboard__panel-header {
   display: grid;
   gap: 0.5rem;
@@ -5436,6 +5440,192 @@ body {
   margin: 0;
   color: #475569;
   font-size: 0.95rem;
+}
+
+.micro-quests {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.micro-quests__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 12px 20px rgba(15, 23, 42, 0.08);
+}
+
+.micro-quests__eyebrow {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: #64748b;
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.micro-quests__summary h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+  color: #0f172a;
+}
+
+.micro-quests__summary p {
+  margin: 0;
+  color: #475569;
+  max-width: 460px;
+}
+
+.micro-quests__progress {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 180px;
+  text-align: right;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.micro-quests__progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+.micro-quests__progress-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(120deg, #22c55e, #38bdf8);
+  border-radius: inherit;
+}
+
+.micro-quests__status {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.micro-quests__status--success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+}
+
+.micro-quests__status--error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+}
+
+.micro-quests__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.micro-quests__card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  box-shadow: 0 12px 18px rgba(15, 23, 42, 0.08);
+}
+
+.micro-quests__card--completed {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(240, 253, 244, 0.8);
+}
+
+.micro-quests__card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.micro-quests__card h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.micro-quests__card p {
+  margin: 0;
+  color: #475569;
+}
+
+.micro-quests__reward {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.micro-quests__button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.95rem;
+  font-weight: 600;
+  background: #0f172a;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.micro-quests__button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.micro-quests__button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+}
+
+.micro-quests__bonus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.micro-quests__bonus--earned {
+  background: linear-gradient(120deg, rgba(34, 197, 94, 0.95), rgba(16, 185, 129, 0.95));
+}
+
+.micro-quests__bonus h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.micro-quests__bonus p {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.8);
+}
+
+.micro-quests__bonus-status {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.2);
+  font-weight: 600;
 }
 
 .progress-dashboard__panel-content--title {
