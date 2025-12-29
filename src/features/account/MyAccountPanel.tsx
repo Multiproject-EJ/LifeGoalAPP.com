@@ -4,6 +4,7 @@ import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
 import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel, ReminderAnalyticsDashboard } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
+import { YesterdayRecapSettings } from './YesterdayRecapSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
 import { SettingsFolderButton } from '../../components/SettingsFolderButton';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
@@ -233,6 +234,8 @@ export function MyAccountPanel({
       <AiSettingsSection session={session} />
 
       <GamificationSettings session={session} />
+
+      <YesterdayRecapSettings session={session} />
 
       {/* Collapsible Folder 1: Developer & Analytics Tools */}
       <section className="account-panel__card">

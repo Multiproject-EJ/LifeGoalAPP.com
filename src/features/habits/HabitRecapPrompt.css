@@ -1,0 +1,209 @@
+.habit-recap-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 9997;
+}
+
+.habit-recap-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  max-width: 720px;
+  width: min(720px, 95vw);
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+.habit-recap-modal__header {
+  padding: 1.75rem 1.75rem 1rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.habit-recap-modal__eyebrow {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: #64748b;
+  margin: 0 0 0.25rem 0;
+}
+
+.habit-recap-modal__header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #0f172a;
+}
+
+.habit-recap-modal__subtitle {
+  margin: 0.5rem 0 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.habit-recap-modal__close {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.habit-recap-modal__close:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.habit-recap-modal__content {
+  padding: 1.5rem 1.75rem 0;
+  overflow-y: auto;
+}
+
+.habit-recap-modal__list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.habit-recap-modal__list-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.habit-recap-modal__select-all {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.habit-recap-modal__select-all:hover {
+  text-decoration: underline;
+}
+
+.habit-recap-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.habit-recap-modal__item {
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.habit-recap-modal__item-label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.habit-recap-modal__item-label input {
+  width: 18px;
+  height: 18px;
+}
+
+.habit-recap-modal__item-title {
+  font-size: 0.98rem;
+}
+
+.habit-recap-modal__item-meta {
+  grid-column: 2;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.habit-recap-modal__status {
+  margin: 1rem 0 0;
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.habit-recap-modal__footer {
+  padding: 1.25rem 1.75rem 1.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+@media (max-width: 640px) {
+  .habit-recap-modal__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .habit-recap-modal__footer {
+    justify-content: stretch;
+  }
+
+  .habit-recap-modal__footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+[data-theme='dark-glass'] .habit-recap-modal {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+[data-theme='dark-glass'] .habit-recap-modal__header h3,
+[data-theme='dark-glass'] .habit-recap-modal__item-label,
+[data-theme='dark-glass'] .habit-recap-modal__list-header h4 {
+  color: #e2e8f0;
+}
+
+[data-theme='dark-glass'] .habit-recap-modal__subtitle,
+[data-theme='dark-glass'] .habit-recap-modal__item-meta,
+[data-theme='dark-glass'] .habit-recap-modal__eyebrow {
+  color: rgba(226, 232, 240, 0.7);
+}
+
+[data-theme='dark-glass'] .habit-recap-modal__item {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+[data-theme='dark-glass'] .habit-recap-modal__close {
+  background: rgba(30, 41, 59, 0.8);
+  color: #cbd5f5;
+}
+
+[data-theme='dark-glass'] .habit-recap-modal__status {
+  background: rgba(59, 130, 246, 0.15);
+  color: #bfdbfe;
+}

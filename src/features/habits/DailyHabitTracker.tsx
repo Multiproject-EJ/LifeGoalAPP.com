@@ -21,7 +21,16 @@ import { isDemoSession } from '../../services/demoSession';
 import { fetchVisionImages, getVisionImagePublicUrl } from '../../services/visionBoard';
 import { HabitAlertConfig } from './HabitAlertConfig';
 import { createJournalEntry } from '../../services/journal';
+import { updateSpinsAvailable } from '../../services/dailySpin';
+import {
+  getYesterdayRecapEnabled,
+  getYesterdayRecapLastCollected,
+  getYesterdayRecapLastShown,
+  setYesterdayRecapLastCollected,
+  setYesterdayRecapLastShown,
+} from '../../services/yesterdayRecapPrefs';
 import './HabitAlertConfig.css';
+import './HabitRecapPrompt.css';
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
@@ -197,7 +206,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [visionRewardError, setVisionRewardError] = useState<string | null>(null);
   const [visionImagesLoading, setVisionImagesLoading] = useState(false);
   const [visionRewarding, setVisionRewarding] = useState(false);
-  const { earnXP, recordActivity } = useGamification(session);
+  const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
+  const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
+  const [yesterdaySelections, setYesterdaySelections] = useState<Record<string, boolean>>({});
+  const [yesterdayActionStatus, setYesterdayActionStatus] = useState<string | null>(null);
+  const [yesterdaySaving, setYesterdaySaving] = useState(false);
+  const [yesterdayCollecting, setYesterdayCollecting] = useState(false);
+  const { earnXP, recordActivity, enabled: gamificationEnabled } = useGamification(session);
 
   useEffect(() => {
     const parsedDate = parseISODate(activeDate);
@@ -206,6 +221,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setSelectedYear(parsedDate.getFullYear());
     }
   }, [activeDate, selectedMonth, selectedYear]);
+
+  const yesterdayISO = useMemo(
+    () => formatISODate(addDays(parseISODate(today), -1)),
+    [today],
+  );
 
   useEffect(() => {
     const draftKey = quickJournalDraftKey(session.user.id, activeDate);
@@ -526,6 +546,36 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     void refreshHabits();
   }, [session?.user?.id, isConfigured, isDemoExperience, refreshHabits]);
 
+  useEffect(() => {
+    if (loading || showYesterdayRecap) return;
+    if (!session?.user?.id) return;
+    if (!habits.length) return;
+    if (!getYesterdayRecapEnabled(session.user.id)) return;
+
+    const todayISO = formatISODate(new Date());
+    const lastShown = getYesterdayRecapLastShown(session.user.id);
+    if (lastShown === todayISO) return;
+
+    const scheduledYesterday = habits.filter((habit) => isHabitScheduledOnDate(habit, yesterdayISO));
+    if (scheduledYesterday.length === 0) return;
+
+    const completedYesterday = historicalLogs.some(
+      (log) => log.date === yesterdayISO && log.completed,
+    );
+    if (completedYesterday) return;
+
+    setYesterdayHabits(scheduledYesterday);
+    setYesterdaySelections(
+      scheduledYesterday.reduce<Record<string, boolean>>((acc, habit) => {
+        acc[habit.id] = false;
+        return acc;
+      }, {}),
+    );
+    setYesterdayActionStatus(null);
+    setShowYesterdayRecap(true);
+    setYesterdayRecapLastShown(session.user.id, todayISO);
+  }, [loading, showYesterdayRecap, session?.user?.id, habits, historicalLogs, yesterdayISO]);
+
   // Extracted function to load monthly statistics (reused in useEffect and handleMonthChange)
   const loadMonthlyStats = useCallback(async (year: number, month: number) => {
     if (!isConfigured || !session?.user?.id) {
@@ -801,6 +851,73 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
   };
 
+  const handleYesterdayToggle = (habitId: string) => {
+    setYesterdaySelections((current) => ({
+      ...current,
+      [habitId]: !current[habitId],
+    }));
+  };
+
+  const closeYesterdayRecap = () => {
+    setShowYesterdayRecap(false);
+    setYesterdayActionStatus(null);
+  };
+
+  const handleApplyYesterday = async () => {
+    if (!yesterdayHabits.length) return;
+
+    const selectedHabits = yesterdayHabits.filter((habit) => yesterdaySelections[habit.id]);
+    if (selectedHabits.length === 0) {
+      setYesterdayActionStatus('Select at least one habit to mark as done.');
+      return;
+    }
+
+    setYesterdaySaving(true);
+    setYesterdayActionStatus(null);
+
+    try {
+      await Promise.all(selectedHabits.map((habit) => toggleHabitForDate(habit, yesterdayISO)));
+      closeYesterdayRecap();
+    } catch (error) {
+      setYesterdayActionStatus(
+        error instanceof Error ? error.message : 'Unable to update yesterday right now.',
+      );
+    } finally {
+      setYesterdaySaving(false);
+    }
+  };
+
+  const handleCollectBonus = async () => {
+    if (!session?.user?.id) return;
+    if (!gamificationEnabled) {
+      setYesterdayActionStatus('Enable Game of Life to collect bonuses.');
+      return;
+    }
+
+    const todayISO = formatISODate(new Date());
+    const lastCollected = getYesterdayRecapLastCollected(session.user.id);
+    if (lastCollected === todayISO) {
+      setYesterdayActionStatus('Bonus already collected today.');
+      return;
+    }
+
+    setYesterdayCollecting(true);
+    setYesterdayActionStatus(null);
+
+    try {
+      await updateSpinsAvailable(session.user.id, 1);
+      await earnXP(XP_REWARDS.YESTERDAY_RECAP_COLLECT, 'yesterday_recap_collect', yesterdayISO);
+      setYesterdayRecapLastCollected(session.user.id, todayISO);
+      closeYesterdayRecap();
+    } catch (error) {
+      setYesterdayActionStatus(
+        error instanceof Error ? error.message : 'Unable to collect bonus right now.',
+      );
+    } finally {
+      setYesterdayCollecting(false);
+    }
+  };
+
   const compactStats = useMemo(() => {
     if (habits.length === 0) {
       return { total: 0, scheduled: 0, completed: 0 } as const;
@@ -822,6 +939,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     return { total: habits.length, scheduled, completed } as const;
   }, [habits, completions, habitInsights, activeDate]);
+
+  const yesterdaySelectedCount = useMemo(
+    () => yesterdayHabits.filter((habit) => Boolean(yesterdaySelections[habit.id])).length,
+    [yesterdayHabits, yesterdaySelections],
+  );
+
+  const allYesterdaySelected =
+    yesterdayHabits.length > 0 && yesterdaySelectedCount === yesterdayHabits.length;
+
+  const yesterdayMarkLabel =
+    yesterdaySelectedCount > 0 ? `Mark ${yesterdaySelectedCount} done` : 'Mark done';
 
   const toggleExpanded = (habitId: string) => {
     setExpandedHabits((current) => ({
@@ -1919,6 +2047,100 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         </>
       )}
       
+      {showYesterdayRecap && (
+        <div className="habit-recap-overlay" onClick={closeYesterdayRecap}>
+          <div className="habit-recap-modal" onClick={(event) => event.stopPropagation()}>
+            <header className="habit-recap-modal__header">
+              <div>
+                <p className="habit-recap-modal__eyebrow">Morning catch-up</p>
+                <h3>Yesterday slipped by</h3>
+                <p className="habit-recap-modal__subtitle">
+                  Quickly mark {formatDateLabel(yesterdayISO)} habits or collect a recovery bonus.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="habit-recap-modal__close"
+                onClick={closeYesterdayRecap}
+                aria-label="Close yesterday recap prompt"
+              >
+                ×
+              </button>
+            </header>
+
+            <div className="habit-recap-modal__content">
+              <div className="habit-recap-modal__list-header">
+                <h4>Habits scheduled yesterday</h4>
+                <button
+                  type="button"
+                  className="habit-recap-modal__select-all"
+                  onClick={() => {
+                    setYesterdaySelections(
+                      yesterdayHabits.reduce<Record<string, boolean>>((acc, habit) => {
+                        acc[habit.id] = !allYesterdaySelected;
+                        return acc;
+                      }, {}),
+                    );
+                  }}
+                >
+                  {allYesterdaySelected ? 'Clear all' : 'Select all'}
+                </button>
+              </div>
+
+              <ul className="habit-recap-modal__list">
+                {yesterdayHabits.map((habit) => (
+                  <li key={habit.id} className="habit-recap-modal__item">
+                    <label className="habit-recap-modal__item-label">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(yesterdaySelections[habit.id])}
+                        onChange={() => handleYesterdayToggle(habit.id)}
+                      />
+                      <span className="habit-recap-modal__item-title">{habit.name}</span>
+                      <span className="habit-recap-modal__item-meta">
+                        {formatHabitMeta(habit.frequency, habit.schedule)}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+
+              {yesterdayActionStatus && (
+                <p className="habit-recap-modal__status" role="status">
+                  {yesterdayActionStatus}
+                </p>
+              )}
+            </div>
+
+            <footer className="habit-recap-modal__footer">
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={closeYesterdayRecap}
+              >
+                Not now
+              </button>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={handleCollectBonus}
+                disabled={yesterdayCollecting || !gamificationEnabled}
+              >
+                {yesterdayCollecting ? 'Collecting…' : 'Collect +50 XP & 1 spin'}
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleApplyYesterday}
+                disabled={yesterdaySaving || yesterdaySelectedCount === 0}
+              >
+                {yesterdaySaving ? 'Saving…' : yesterdayMarkLabel}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
       {/* Alert Configuration Modal */}
       {alertConfigHabit && (
         <div className="habit-alert-modal-overlay" onClick={() => setAlertConfigHabit(null)}>
