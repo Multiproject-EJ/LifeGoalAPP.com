@@ -206,6 +206,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [visionRewardError, setVisionRewardError] = useState<string | null>(null);
   const [visionImagesLoading, setVisionImagesLoading] = useState(false);
   const [visionRewarding, setVisionRewarding] = useState(false);
+  const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
   const [yesterdaySelections, setYesterdaySelections] = useState<Record<string, boolean>>({});
@@ -328,10 +329,59 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         caption: selection.caption ?? null,
         xpAwarded: result?.xpAwarded ?? xpAmount,
       });
+      setIsVisionRewardOpen(true);
     } finally {
       setVisionRewarding(false);
     }
   }, [earnXP, isConfigured, isDemoExperience, recordActivity, visionImages]);
+
+  const closeVisionReward = () => {
+    setIsVisionRewardOpen(false);
+  };
+
+  const visionRewardModal =
+    visionReward && isVisionRewardOpen ? (
+      <div
+        className="habit-day-nav__vision-modal-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Vision star reward"
+        onClick={closeVisionReward}
+      >
+        <div
+          className="habit-day-nav__vision-modal"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="habit-day-nav__vision-modal-close"
+            onClick={closeVisionReward}
+            aria-label="Close reward dialog"
+          >
+            ✕
+          </button>
+          <span className="habit-day-nav__vision-modal-eyebrow">Vision board magic</span>
+          <h3 className="habit-day-nav__vision-modal-title">✨ Your vision star ✨</h3>
+          <img
+            className="habit-day-nav__vision-modal-image"
+            src={visionReward.imageUrl}
+            alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
+          />
+          <div className="habit-day-nav__vision-modal-claim">
+            <p className="habit-day-nav__vision-modal-caption">
+              {visionReward.caption ?? 'A spark for your next win.'}
+            </p>
+            <button
+              type="button"
+              className="habit-day-nav__vision-modal-button"
+              onClick={closeVisionReward}
+            >
+              Claim {visionReward.xpAwarded} XP
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null;
 
   useEffect(() => {
     const draftKey = quickJournalDraftKey(session.user.id, activeDate);
@@ -1960,7 +2010,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   };
 
   if (isCompact) {
-    return <section className="habit-tracker habit-tracker--compact">{renderCompactExperience()}</section>;
+    return (
+      <section className="habit-tracker habit-tracker--compact">
+        {renderCompactExperience()}
+        {visionRewardModal}
+      </section>
+    );
   }
 
   return (
@@ -2079,7 +2134,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           </ul>
         </>
       )}
-      
+      {visionRewardModal}
+
       {showYesterdayRecap && (
         <div className="habit-recap-overlay" onClick={closeYesterdayRecap}>
           <div className="habit-recap-modal" onClick={(event) => event.stopPropagation()}>
