@@ -541,6 +541,11 @@ export interface Database {
           created_at: string;
           file_path: string | null;
           file_format: string | null;
+          vision_type: string | null;
+          review_interval_days: number | null;
+          last_reviewed_at: string | null;
+          linked_goal_ids: string[] | null;
+          linked_habit_ids: string[] | null;
         };
         Insert: {
           id?: string;
@@ -552,6 +557,11 @@ export interface Database {
           created_at?: string;
           file_path?: string | null;
           file_format?: string | null;
+          vision_type?: string | null;
+          review_interval_days?: number | null;
+          last_reviewed_at?: string | null;
+          linked_goal_ids?: string[] | null;
+          linked_habit_ids?: string[] | null;
         };
         Update: {
           id?: string;
@@ -563,6 +573,11 @@ export interface Database {
           created_at?: string;
           file_path?: string | null;
           file_format?: string | null;
+          vision_type?: string | null;
+          review_interval_days?: number | null;
+          last_reviewed_at?: string | null;
+          linked_goal_ids?: string[] | null;
+          linked_habit_ids?: string[] | null;
         };
         Relationships: [];
       };

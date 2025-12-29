@@ -6774,7 +6774,8 @@ body {
 }
 
 .vision-board__field input[type='file'],
-.vision-board__field input[type='text'] {
+.vision-board__field input[type='text'],
+.vision-board__field select {
   border-radius: 12px;
   border: 1px solid rgba(148, 163, 184, 0.5);
   padding: 0.65rem 0.85rem;
@@ -6793,9 +6794,35 @@ body {
   cursor: not-allowed;
 }
 
+.vision-board__field select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .vision-board__hint {
   font-size: 0.85rem;
   color: #64748b;
+}
+
+.vision-board__link-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.vision-board__link-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(226, 232, 240, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.vision-board__link-option input {
+  margin-top: 0.2rem;
 }
 
 .vision-board__submit {
@@ -6845,7 +6872,7 @@ body {
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
+  cursor: default;
 }
 
 .vision-board__card img {
@@ -7083,11 +7110,204 @@ body {
   line-height: 1.4;
 }
 
+.vision-board__card-body {
+  padding: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.vision-board__card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vision-board__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.vision-board__chip--orphan {
+  background: rgba(248, 113, 113, 0.15);
+  color: #b91c1c;
+}
+
+.vision-board__card-review {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.vision-board__card-links {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.vision-board__card-links strong {
+  color: #0f172a;
+}
+
+.vision-board__card-links--orphan {
+  color: #b45309;
+}
+
 .vision-board__card-actions {
   padding: 0.75rem 1rem;
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
   background: white;
+}
+
+.vision-board__edit {
+  border: none;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  font-size: 0.85rem;
+}
+
+.vision-board__edit:hover {
+  background: rgba(59, 130, 246, 0.22);
+  transform: translateY(-1px);
+}
+
+.vision-board__edit-form {
+  margin: 0 1rem 1rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: rgba(226, 232, 240, 0.6);
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.vision-board__edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.vision-board__edit-actions button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #0f172a;
+  color: white;
+}
+
+.vision-board__edit-actions button[type='button'] {
+  background: rgba(148, 163, 184, 0.4);
+  color: #0f172a;
+}
+
+.vision-board__review {
+  background: white;
+  border-radius: 16px;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.vision-board__review-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vision-board__review-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.vision-board__review-header p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  max-width: 52ch;
+}
+
+.vision-board__review-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.vision-board__review-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vision-board__review-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(241, 245, 249, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.vision-board__review-card h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.vision-board__review-meta {
+  margin: 0.25rem 0 0;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.vision-board__review-prompt {
+  margin: 0.35rem 0 0;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.vision-board__review-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.vision-board__review-actions button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #0f172a;
+  color: white;
+  font-size: 0.85rem;
+}
+
+.vision-board__review-actions button:first-child {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
 }
 
 .vision-board__modal-backdrop {

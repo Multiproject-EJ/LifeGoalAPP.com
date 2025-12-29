@@ -7,12 +7,14 @@ import {
   fileToDataUrl,
   getDemoVisionImages,
   removeDemoVisionImage,
+  updateDemoVisionImage,
 } from './demoData';
 
 export const VISION_BOARD_BUCKET = 'vision-board';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 type VisionImageInsert = Database['public']['Tables']['vision_images']['Insert'];
+type VisionImageUpdate = Database['public']['Tables']['vision_images']['Update'];
 
 type ServiceError = PostgrestError | Error | null;
 
@@ -64,6 +66,10 @@ type UploadPayload = {
   fileName: string;
   caption?: string | null;
   originalFormat?: string | null;
+  visionType?: string | null;
+  reviewIntervalDays?: number | null;
+  linkedGoalIds?: string[] | null;
+  linkedHabitIds?: string[] | null;
 };
 
 export async function uploadVisionImage({
@@ -72,6 +78,10 @@ export async function uploadVisionImage({
   fileName,
   caption,
   originalFormat,
+  visionType,
+  reviewIntervalDays,
+  linkedGoalIds,
+  linkedHabitIds,
 }: UploadPayload): Promise<ServiceResponse<VisionImageRow>> {
   if (!canUseSupabaseData()) {
     try {
@@ -81,6 +91,10 @@ export async function uploadVisionImage({
         image_path: dataUrl,
         caption: caption?.trim() ? caption.trim() : null,
         file_format: originalFormat || null,
+        vision_type: visionType ?? null,
+        review_interval_days: reviewIntervalDays ?? null,
+        linked_goal_ids: linkedGoalIds ?? [],
+        linked_habit_ids: linkedHabitIds ?? [],
       });
       return { data: record, error: null };
     } catch (error) {
@@ -114,6 +128,10 @@ export async function uploadVisionImage({
     caption: caption?.trim() ? caption.trim() : null,
     file_path: storageData?.path ?? storagePath,
     file_format: originalFormat || fileExtension,
+    vision_type: visionType ?? null,
+    review_interval_days: reviewIntervalDays ?? null,
+    linked_goal_ids: linkedGoalIds ?? [],
+    linked_habit_ids: linkedHabitIds ?? [],
   };
 
   const { data, error } = await supabase
@@ -134,12 +152,20 @@ type UploadUrlPayload = {
   userId: string;
   imageUrl: string;
   caption?: string | null;
+  visionType?: string | null;
+  reviewIntervalDays?: number | null;
+  linkedGoalIds?: string[] | null;
+  linkedHabitIds?: string[] | null;
 };
 
 export async function uploadVisionImageFromUrl({
   userId,
   imageUrl,
   caption,
+  visionType,
+  reviewIntervalDays,
+  linkedGoalIds,
+  linkedHabitIds,
 }: UploadUrlPayload): Promise<ServiceResponse<VisionImageRow>> {
   // Validate URL format
   try {
@@ -155,6 +181,10 @@ export async function uploadVisionImageFromUrl({
         image_url: imageUrl,
         image_source: 'url',
         caption: caption?.trim() ? caption.trim() : null,
+        vision_type: visionType ?? null,
+        review_interval_days: reviewIntervalDays ?? null,
+        linked_goal_ids: linkedGoalIds ?? [],
+        linked_habit_ids: linkedHabitIds ?? [],
       });
       return { data: record, error: null };
     } catch (error) {
@@ -169,6 +199,10 @@ export async function uploadVisionImageFromUrl({
     image_url: imageUrl,
     image_source: 'url',
     caption: caption?.trim() ? caption.trim() : null,
+    vision_type: visionType ?? null,
+    review_interval_days: reviewIntervalDays ?? null,
+    linked_goal_ids: linkedGoalIds ?? [],
+    linked_habit_ids: linkedHabitIds ?? [],
   };
 
   const { data, error } = await supabase
@@ -183,6 +217,30 @@ export async function uploadVisionImageFromUrl({
   }
 
   return { data, error: null };
+}
+
+export async function updateVisionImage(
+  id: string,
+  payload: VisionImageUpdate,
+): Promise<ServiceResponse<VisionImageRow>> {
+  if (!canUseSupabaseData()) {
+    const record = updateDemoVisionImage(id, payload);
+    if (!record) {
+      return { data: null, error: new Error('Vision board entry not found.') };
+    }
+    return { data: record, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const response = await supabase
+    .from('vision_images')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .returns<VisionImageRow>()
+    .single();
+
+  return { data: response.data, error: response.error };
 }
 
 export async function deleteVisionImage(record: VisionImageRow): Promise<ServiceError> {

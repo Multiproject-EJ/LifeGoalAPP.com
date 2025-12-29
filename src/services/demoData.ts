@@ -437,6 +437,11 @@ const defaultState: DemoState = {
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 5)),
       file_path: null,
       file_format: null,
+      vision_type: 'habit',
+      review_interval_days: 21,
+      last_reviewed_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 20)),
+      linked_goal_ids: [goalLaunch.id],
+      linked_habit_ids: [morningRitualId],
     },
     {
       id: createId('vision'),
@@ -448,6 +453,11 @@ const defaultState: DemoState = {
       created_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 20)),
       file_path: null,
       file_format: null,
+      vision_type: 'goal',
+      review_interval_days: 30,
+      last_reviewed_at: null,
+      linked_goal_ids: [goalLaunch.id],
+      linked_habit_ids: [outreachHabitId],
     },
   ];
 
@@ -979,9 +989,36 @@ export function addDemoVisionImage(payload: VisionImageInsert): VisionImageRow {
     created_at: payload.created_at ?? new Date().toISOString(),
     file_path: payload.file_path ?? null,
     file_format: payload.file_format ?? null,
+    vision_type: payload.vision_type ?? 'goal',
+    review_interval_days: payload.review_interval_days ?? 30,
+    last_reviewed_at: payload.last_reviewed_at ?? null,
+    linked_goal_ids: payload.linked_goal_ids ?? [],
+    linked_habit_ids: payload.linked_habit_ids ?? [],
   };
   updateState((current) => ({ ...current, visionImages: [record, ...current.visionImages] }));
   return clone(record);
+}
+
+export function updateDemoVisionImage(id: string, payload: VisionImageUpdate): VisionImageRow | null {
+  let updated: VisionImageRow | null = null;
+  updateState((current) => {
+    const visionImages = current.visionImages.map((image) => {
+      if (image.id !== id) {
+        return image;
+      }
+      updated = {
+        ...image,
+        ...payload,
+        vision_type: payload.vision_type ?? image.vision_type ?? 'goal',
+        review_interval_days: payload.review_interval_days ?? image.review_interval_days ?? 30,
+        linked_goal_ids: payload.linked_goal_ids ?? image.linked_goal_ids ?? [],
+        linked_habit_ids: payload.linked_habit_ids ?? image.linked_habit_ids ?? [],
+      };
+      return updated;
+    });
+    return { ...current, visionImages };
+  });
+  return updated ? clone(updated) : null;
 }
 
 export function removeDemoVisionImage(id: string): VisionImageRow | null {
