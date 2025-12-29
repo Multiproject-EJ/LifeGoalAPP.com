@@ -6023,7 +6023,7 @@ body {
   display: grid;
   gap: clamp(1.25rem, 3vw, 1.75rem);
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  align-items: stretch;
+  align-items: start;
   width: 100%;
   min-width: 0;
 }
@@ -7468,6 +7468,8 @@ body {
 
 .life-wheel__panel--chart {
   align-content: start;
+  background: transparent;
+  box-shadow: none;
 }
 
 .life-wheel__panel--form {
@@ -8249,7 +8251,7 @@ body {
   position: sticky;
   top: 2rem;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: transparent;
   border-radius: 24px;
   box-shadow: none;
 }
