@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect, useMemo, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AiSupportAssistant } from '../assistant';
+import { createBalanceSnapshot, type BalanceAxisKey, type BalanceSnapshot } from '../../services/balanceScore';
+import { fetchCheckinsForUser } from '../../services/checkins';
 import { getAiCoachAccess } from '../../services/aiCoachAccess';
 import { loadAiCoachInstructions } from '../../services/aiCoachInstructions';
+import { getDemoCheckins, getDemoHabitLogsForRange, getDemoHabitsForUser } from '../../services/demoData';
 import { isDemoSession } from '../../services/demoSession';
+import { listHabitLogsForRangeMultiV2, listHabitsV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
+import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
+import { classifyHabit } from '../habits/performanceClassifier';
 
 export interface AiCoachProps {
   session: Session;
@@ -25,6 +31,31 @@ interface CoachingTopic {
   description: string;
   prompt: string;
 }
+
+type CoachInterventionType = 'imbalance' | 'habit-struggle';
+
+type CoachIntervention = {
+  id: string;
+  type: CoachInterventionType;
+  title: string;
+  description: string;
+  options: string[];
+};
+
+type HabitAdherenceSnapshot = {
+  habitId: string;
+  habitTitle: string;
+  window7: {
+    scheduledCount: number;
+    completedCount: number;
+    percentage: number;
+  };
+  window30: {
+    scheduledCount: number;
+    completedCount: number;
+    percentage: number;
+  };
+};
 
 const COACHING_TOPICS: CoachingTopic[] = [
   {
@@ -71,6 +102,186 @@ const COACHING_TOPICS: CoachingTopic[] = [
   },
 ];
 
+const OVERCONFIDENCE_PATTERNS = [
+  /\b100%\b/i,
+  /\bno doubt\b/i,
+  /\bguarantee(d)?\b/i,
+  /\bcan(?:not|'t) be wrong\b/i,
+  /\babsolutely certain\b/i,
+  /\bfor sure\b/i,
+];
+
+const FIXATION_PATTERNS = [
+  /\bat all costs\b/i,
+  /\bno matter what\b/i,
+  /\bonly way\b/i,
+  /\bcan(?:not|'t) fail\b/i,
+  /\bhas to\b/i,
+];
+
+const AXIS_REBALANCE_OPTIONS: Record<BalanceAxisKey, string[]> = {
+  agency: [
+    'Agency reset: pick one 10-minute action that moves a goal forward.',
+    'Agency reset: block 15 minutes on the calendar for a single decisive task.',
+  ],
+  awareness: [
+    'Awareness reset: do a 60-second breath pause, then name one feeling.',
+    'Awareness reset: write one pattern you notice today, no judgment.',
+  ],
+  rationality: [
+    'Rationality reset: answer “What might I be wrong about today?”',
+    'Rationality reset: run a 30-second red team on your main plan.',
+  ],
+  vitality: [
+    'Vitality reset: take a 10-minute walk or stretch.',
+    'Vitality reset: add one joy token (music, sunlight, or a quick call).',
+  ],
+};
+
+const INTERVENTION_LABELS: Record<CoachInterventionType, string> = {
+  imbalance: 'Imbalance',
+  'habit-struggle': 'Habit friction',
+};
+
+const normalizeDateOnly = (date: Date) => date.toISOString().split('T')[0];
+
+const calculatePercentage = (completed: number, scheduled: number) => {
+  if (scheduled <= 0) return 0;
+  return Math.round((completed / scheduled) * 100);
+};
+
+const matchesPattern = (value: string, patterns: RegExp[]) =>
+  patterns.some((pattern) => pattern.test(value));
+
+const buildAdherenceSnapshots = async (
+  userId: string,
+  habits: HabitV2Row[],
+  isDemo: boolean,
+): Promise<HabitAdherenceSnapshot[]> => {
+  if (habits.length === 0) return [];
+
+  const today = new Date();
+  const endDate = new Date(today);
+  endDate.setHours(23, 59, 59, 999);
+
+  const start7 = new Date(endDate);
+  start7.setDate(start7.getDate() - 6);
+  start7.setHours(0, 0, 0, 0);
+
+  const start30 = new Date(endDate);
+  start30.setDate(start30.getDate() - 29);
+  start30.setHours(0, 0, 0, 0);
+
+  const start7Iso = normalizeDateOnly(start7);
+  const start30Iso = normalizeDateOnly(start30);
+  const endIso = normalizeDateOnly(endDate);
+  const habitIds = habits.map((habit) => habit.id);
+
+  let logs: HabitLogV2Row[] = [];
+
+  if (isDemo) {
+    logs = getDemoHabitLogsForRange(habitIds, start30Iso, endIso) as HabitLogV2Row[];
+  } else {
+    const { data, error } = await listHabitLogsForRangeMultiV2({
+      userId,
+      habitIds,
+      startDate: start30Iso,
+      endDate: endIso,
+    });
+    if (error) {
+      console.error('Error loading habit logs for coach interventions:', error);
+      return habits.map((habit) => ({
+        habitId: habit.id,
+        habitTitle: habit.title,
+        window7: { scheduledCount: 0, completedCount: 0, percentage: 0 },
+        window30: { scheduledCount: 0, completedCount: 0, percentage: 0 },
+      }));
+    }
+    logs = data ?? [];
+  }
+
+  const completedLogs = logs.filter((log) => log.done);
+
+  return habits.map((habit) => {
+    const habitLogs = completedLogs.filter((log) => log.habit_id === habit.id);
+    const logs7 = habitLogs.filter((log) => log.date >= start7Iso);
+    const scheduled7 = getScheduledCountForWindow(habit, 7, endDate);
+    const scheduled30 = getScheduledCountForWindow(habit, 30, endDate);
+    const completed7 = logs7.length;
+    const completed30 = habitLogs.length;
+
+    return {
+      habitId: habit.id,
+      habitTitle: habit.title,
+      window7: {
+        scheduledCount: scheduled7,
+        completedCount: completed7,
+        percentage: calculatePercentage(completed7, scheduled7),
+      },
+      window30: {
+        scheduledCount: scheduled30,
+        completedCount: completed30,
+        percentage: calculatePercentage(completed30, scheduled30),
+      },
+    };
+  });
+};
+
+const buildImbalanceIntervention = (
+  snapshot: BalanceSnapshot,
+): CoachIntervention | null => {
+  if (snapshot.harmonyStatus === 'harmonized' && snapshot.spread < 2.5) {
+    return null;
+  }
+
+  const ordered = [...snapshot.axes].sort((a, b) => b.score - a.score);
+  const strongest = ordered[0];
+  const weakest = ordered[ordered.length - 1];
+  const options = AXIS_REBALANCE_OPTIONS[weakest.key] ?? [];
+
+  return {
+    id: `imbalance-${snapshot.referenceDate}`,
+    type: 'imbalance',
+    title: 'Balance intervention',
+    description: `Quick check: your ${strongest.title} is strong, but ${weakest.title} is dropping. Do you want a tiny rebalance quest for today?`,
+    options,
+  };
+};
+
+const buildHabitStruggleIntervention = async (
+  userId: string,
+  habits: HabitV2Row[],
+  isDemo: boolean,
+): Promise<CoachIntervention | null> => {
+  if (habits.length === 0) return null;
+
+  const snapshots = await buildAdherenceSnapshots(userId, habits, isDemo);
+  const sorted = [...snapshots].sort((a, b) => a.window7.percentage - b.window7.percentage);
+  const candidate = sorted.find((snapshot) => snapshot.window7.scheduledCount >= 2);
+
+  if (!candidate) return null;
+
+  const classification = classifyHabit({
+    adherence7: candidate.window7.percentage,
+    adherence30: candidate.window30.percentage,
+    currentStreak: 0,
+  });
+
+  if (classification.suggestedAction !== 'ease') return null;
+
+  return {
+    id: `habit-struggle-${candidate.habitId}`,
+    type: 'habit-struggle',
+    title: 'Habit ease-up',
+    description: `This looks like friction, not failure. Want to downshift today’s tier for “${candidate.habitTitle}”? We can keep your Game of Life streaks intact.`,
+    options: [
+      `Seed (1 min): ${candidate.habitTitle}`,
+      `Minimum (5 min): ${candidate.habitTitle}`,
+      `Standard: keep ${candidate.habitTitle} as-is`,
+    ],
+  };
+};
+
 const INITIAL_MESSAGES: Message[] = [
   {
     id: 'welcome-1',
@@ -93,15 +304,18 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [showTopics, setShowTopics] = useState(true);
   const [showStrategyAssistant, setShowStrategyAssistant] = useState(false);
+  const [interventions, setInterventions] = useState<CoachIntervention[]>([]);
+  const [interventionsLoading, setInterventionsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fullName = session.user?.user_metadata?.full_name;
   const userName = (typeof fullName === 'string' ? fullName.split(' ')[0] : null) || 'there';
   const dataAccess = useMemo(() => getAiCoachAccess(session), [session]);
+  const demoMode = useMemo(() => isDemoSession(session), [session]);
   const instructionPayload = useMemo(
-    () => loadAiCoachInstructions(dataAccess, isDemoSession(session)),
-    [dataAccess, session],
+    () => loadAiCoachInstructions(dataAccess, demoMode),
+    [dataAccess, demoMode],
   );
 
   const accessSummary = useMemo(() => {
@@ -135,6 +349,49 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   }, [messages]);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const loadInterventions = async () => {
+      setInterventionsLoading(true);
+      const nextInterventions: CoachIntervention[] = [];
+
+      if (dataAccess.reflections) {
+        const checkins = demoMode
+          ? getDemoCheckins(session.user.id, 6)
+          : (await fetchCheckinsForUser(session.user.id, 6)).data ?? [];
+        const snapshot = createBalanceSnapshot(checkins ?? []);
+        if (snapshot) {
+          const imbalance = buildImbalanceIntervention(snapshot);
+          if (imbalance) {
+            nextInterventions.push(imbalance);
+          }
+        }
+      }
+
+      if (dataAccess.habits) {
+        const habits = demoMode
+          ? (getDemoHabitsForUser(session.user.id) as HabitV2Row[])
+          : (await listHabitsV2()).data ?? [];
+        const habitIntervention = await buildHabitStruggleIntervention(session.user.id, habits, demoMode);
+        if (habitIntervention) {
+          nextInterventions.push(habitIntervention);
+        }
+      }
+
+      if (isMounted) {
+        setInterventions(nextInterventions);
+        setInterventionsLoading(false);
+      }
+    };
+
+    void loadInterventions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dataAccess.habits, dataAccess.reflections, demoMode, session.user.id]);
+
+  useEffect(() => {
     // Focus input on mount
     inputRef.current?.focus();
   }, []);
@@ -153,6 +410,14 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
 
     const blockedResponse = (topic: string) =>
       `I don’t have access to your ${topic} data. If you want, share a quick summary and I’ll help you shape a next step.`;
+
+    if (matchesPattern(lowerMessage, OVERCONFIDENCE_PATTERNS)) {
+      return `You sound very certain. Want to run a 30-second red team on it? What’s one reason this might be incomplete, and how confident are you: 40%, 70%, 90%?`;
+    }
+
+    if (matchesPattern(lowerMessage, FIXATION_PATTERNS)) {
+      return `When something becomes “must at all costs,” it can narrow the game. What’s a version of this goal that keeps options open?`;
+    }
 
     if (lowerMessage.includes('motivat')) {
       return `Let’s keep it small and playable, ${userName}. Pick one action you can finish in 10 minutes today. Want two quick options or do you already have one in mind?`;
@@ -215,6 +480,11 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const handleTopicClick = (topic: CoachingTopic) => {
     setShowTopics(false);
     handleSendMessage(topic.prompt);
+  };
+
+  const handleInterventionAction = (option: string) => {
+    setShowTopics(false);
+    handleSendMessage(option);
   };
 
   const handleSendMessage = async (messageText?: string) => {
@@ -324,6 +594,42 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
 
         <div className="ai-coach-modal__body">
           <div className="ai-coach-modal__messages">
+            {interventions.length > 0 && (
+              <section className="ai-coach-modal__interventions">
+                <div className="ai-coach-modal__interventions-header">
+                  <h3>Coach interventions</h3>
+                  {interventionsLoading ? (
+                    <span className="ai-coach-modal__interventions-status">Refreshing</span>
+                  ) : null}
+                </div>
+                <div className="ai-coach-modal__interventions-grid">
+                  {interventions.map((intervention) => (
+                    <article key={intervention.id} className="ai-coach-modal__intervention-card">
+                      <div className="ai-coach-modal__intervention-card-header">
+                        <span className={`ai-coach-modal__intervention-tag ai-coach-modal__intervention-tag--${intervention.type}`}>
+                          {INTERVENTION_LABELS[intervention.type]}
+                        </span>
+                        <h4>{intervention.title}</h4>
+                      </div>
+                      <p>{intervention.description}</p>
+                      <div className="ai-coach-modal__intervention-actions">
+                        {intervention.options.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            className="ai-coach-modal__intervention-button"
+                            onClick={() => handleInterventionAction(option)}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {messages.map((message) => (
               <div
                 key={message.id}
