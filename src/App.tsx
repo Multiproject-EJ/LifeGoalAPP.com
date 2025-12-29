@@ -127,25 +127,11 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'GOALS',
   },
   {
-    id: 'ai-coach',
-    label: 'AI Life Coach',
-    summary: 'Chat with your personal AI coach for motivation, advice, and guidance.',
-    icon: '💬',
-    shortLabel: 'COACH',
-  },
-  {
-    id: 'achievements',
-    label: 'Achievements',
-    summary: 'View your unlocked achievements and track progress',
-    icon: '🏆',
-    shortLabel: 'ACHIEVEMENTS',
-  },
-  {
-    id: 'power-ups',
-    label: 'Power-ups Store',
-    summary: 'Spend points on XP boosts, streak shields, and special items',
-    icon: '💎',
-    shortLabel: 'STORE',
+    id: 'game',
+    label: 'Game of Life',
+    summary: 'View achievements, power-ups, and open your AI coach.',
+    icon: '🎮',
+    shortLabel: 'GAME',
   },
 ];
 
@@ -154,7 +140,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'goals',
   'habits',
   'support',
-  'ai-coach',
+  'game',
   'journal',
   'breathing-space',
   'insights',
@@ -263,7 +249,7 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'ai-coach'];
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'game'];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
@@ -613,11 +599,6 @@ export default function App() {
 
     if (navId === 'account' && !isAuthenticated) {
       handleAccountClick();
-      return;
-    }
-
-    if (navId === 'ai-coach') {
-      setShowAiCoachModal(true);
       return;
     }
 
@@ -1164,16 +1145,30 @@ export default function App() {
             <GoalWorkspace session={activeSession} />
           </div>
         );
-      case 'achievements':
+      case 'game':
         return (
           <div className="workspace-content">
-            <AchievementsPage session={activeSession} />
-          </div>
-        );
-      case 'power-ups':
-        return (
-          <div className="workspace-content">
-            <PowerUpsStore session={activeSession} />
+            <section className="game-hub">
+              <div className="game-hub__header">
+                <div>
+                  <h2 className="game-hub__title">Game of Life</h2>
+                  <p className="game-hub__subtitle">
+                    Track achievements, stock up on power-ups, and tap into your AI coach.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="game-hub__coach-button"
+                  onClick={() => setShowAiCoachModal(true)}
+                >
+                  Open AI Coach chat
+                </button>
+              </div>
+              <div className="game-hub__sections">
+                <AchievementsPage session={activeSession} />
+                <PowerUpsStore session={activeSession} />
+              </div>
+            </section>
           </div>
         );
       default:
@@ -1384,6 +1379,14 @@ export default function App() {
   return (
     <div className={appClassName}>
       <div className={workspaceShellClassName}>
+        {!isMobileViewport && !isDesktopMenuOpen && (
+          <button
+            type="button"
+            className="workspace-shell__menu-edge"
+            aria-label="Open workspace menu"
+            onClick={() => setIsDesktopMenuOpen(true)}
+          />
+        )}
         {!isMobileViewport && (
           <aside
             className="workspace-sidebar"
@@ -1439,10 +1442,6 @@ export default function App() {
                     scheduleDesktopMenuAutoHide();
                     if (item.id === 'account' && !isAuthenticated) {
                       handleAccountClick();
-                      return;
-                    }
-                    if (item.id === 'ai-coach') {
-                      setShowAiCoachModal(true);
                       return;
                     }
                     setActiveWorkspaceNav(item.id);
