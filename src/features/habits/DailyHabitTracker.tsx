@@ -501,6 +501,28 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     });
   }, [habits, habitInsights]);
 
+  const sortedMonthlyHabits = useMemo(() => {
+    if (!monthlyStats?.habits?.length) {
+      return [];
+    }
+
+    return [...monthlyStats.habits].sort((a, b) => {
+      const aInsight = habitInsights[a.habitId];
+      const bInsight = habitInsights[b.habitId];
+      const aCurrent = aInsight?.currentStreak ?? 0;
+      const bCurrent = bInsight?.currentStreak ?? 0;
+      if (aCurrent !== bCurrent) {
+        return bCurrent - aCurrent;
+      }
+      const aLongest = aInsight?.longestStreak ?? 0;
+      const bLongest = bInsight?.longestStreak ?? 0;
+      if (aLongest !== bLongest) {
+        return bLongest - aLongest;
+      }
+      return a.habitName.localeCompare(b.habitName);
+    });
+  }, [monthlyStats, habitInsights]);
+
   const refreshHabits = useCallback(async () => {
     if (!isConfigured) {
       setHabits([]);
@@ -1728,14 +1750,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
         <div id="habit-monthly-grid" role="tabpanel" aria-label={`Habit data for ${monthNames[selectedMonth]} ${selectedYear}`}>
           <div className="habit-monthly__summary">
-            <div>
-              <h3>{formatMonthYearLabel(selectedYear, selectedMonth)}</h3>
-              <p>
-                {monthlySummary.scheduledTotal === 0
-                  ? 'No scheduled habits this month yet. Build your rituals to see them here.'
-                  : `${monthlySummary.scheduledComplete} of ${monthlySummary.scheduledTotal} scheduled check-ins complete (${completionPercent}%).`}
-              </p>
-            </div>
             <div className="habit-monthly__summary-meter" role="img" aria-label={`Monthly completion ${completionPercent}%`}>
               <div
                 className="habit-monthly__summary-meter-bar"
@@ -1745,7 +1759,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           </div>
 
           {/* Monthly Statistics Section - showing per-habit completion percentages */}
-          {monthlyStats && monthlyStats.habits.length > 0 && (
+          {sortedMonthlyHabits.length > 0 && (
             <div className="habit-monthly__stats" style={{ 
               margin: '1rem 0', 
               padding: '1rem', 
@@ -1756,7 +1770,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 Per-Habit Completion for {monthNames[selectedMonth]} {selectedYear}
               </h4>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {monthlyStats.habits.map((habitStat) => (
+                {sortedMonthlyHabits.map((habitStat) => (
                   <div 
                     key={habitStat.habitId} 
                     style={{ 
@@ -1830,7 +1844,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             </thead>
             <tbody>
               {/* Use monthlyStats.habits for the monthly grid if available (from habits_v2) */}
-              {(monthlyStats?.habits || []).map((habitStat) => {
+              {sortedMonthlyHabits.map((habitStat) => {
                 const habitCompletionGrid = monthlyCompletionsV2[habitStat.habitId] ?? {};
                 
                 // Extract scheduling info if available
@@ -1906,13 +1920,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
         {/* Mobile-optimized card view - shown only on mobile */}
         <div className="habit-monthly__mobile-view">
-          {(monthlyStats?.habits || []).length === 0 ? (
+          {sortedMonthlyHabits.length === 0 ? (
             <div className="habit-monthly__mobile-empty">
               <h3>No habits scheduled</h3>
               <p>Add habits to your goals to see them tracked here month by month.</p>
             </div>
           ) : (
-            (monthlyStats?.habits || []).map((habitStat) => {
+            sortedMonthlyHabits.map((habitStat) => {
               const habitCompletionGrid = monthlyCompletionsV2[habitStat.habitId] ?? {};
               const habitSchedule = habitStat.schedule ?? null;
               const { domainColor, displayLabel } = getHabitDomainInfo(habitSchedule);
@@ -2082,12 +2096,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               return (
                 <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''}`}>
                   <div className="habit-card__content">
-                    <div>
+                    <div className="habit-card__details">
                       <h3>{habit.name}</h3>
-                      <p className="habit-card__goal">
-                        Goal: <span>{habit.goal?.title ?? 'Unassigned goal'}</span>
+                      <p className="habit-card__meta-line">
+                        <span className="habit-card__goal">
+                          Goal: <span>{habit.goal?.title ?? 'Unassigned goal'}</span>
+                        </span>
+                        <span className="habit-card__meta-divider">•</span>
+                        <span className="habit-card__meta">{formatHabitMeta(habit.frequency, habit.schedule)}</span>
                       </p>
-                      <p className="habit-card__meta">{formatHabitMeta(habit.frequency, habit.schedule)}</p>
                     </div>
                     <button
                       type="button"
@@ -2099,29 +2116,31 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     </button>
                   </div>
                   <footer className="habit-card__footer">
-                    <div className="habit-card__streaks">
-                      <div className="habit-card__streak habit-card__streak--current">
-                        <span className="habit-card__streak-label">Current streak</span>
-                        <span className="habit-card__streak-value">{formatStreakValue(currentStreak)}</span>
+                    <div className="habit-card__stats-row">
+                      <div className="habit-card__streaks">
+                        <div className="habit-card__streak habit-card__streak--current">
+                          <span className="habit-card__streak-label">Current</span>
+                          <span className="habit-card__streak-value">{formatStreakValue(currentStreak)}</span>
+                        </div>
+                        <div className="habit-card__streak habit-card__streak--longest">
+                          <span className="habit-card__streak-label">Longest</span>
+                          <span className="habit-card__streak-value">{formatStreakValue(longestStreak)}</span>
+                        </div>
                       </div>
-                      <div className="habit-card__streak habit-card__streak--longest">
-                        <span className="habit-card__streak-label">Longest streak</span>
-                        <span className="habit-card__streak-value">{formatStreakValue(longestStreak)}</span>
+                      <div className="habit-card__chain" aria-label={`Current streak ${formatStreakValue(currentStreak)}`}>
+                        <span className="habit-card__chain-label">Streak</span>
+                        <div className="habit-card__chain-squares" aria-hidden="true">
+                          {streakSquares.map((filled, index) => (
+                            <span
+                              key={`${habit.id}-streak-${index}`}
+                              className={`habit-card__chain-square ${
+                                filled ? 'habit-card__chain-square--filled' : ''
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="habit-card__chain-count">{currentStreak}d</span>
                       </div>
-                    </div>
-                    <div className="habit-card__chain" aria-label={`Current streak ${formatStreakValue(currentStreak)}`}>
-                      <span className="habit-card__chain-label">Streak chain</span>
-                      <div className="habit-card__chain-squares" aria-hidden="true">
-                        {streakSquares.map((filled, index) => (
-                          <span
-                            key={`${habit.id}-streak-${index}`}
-                            className={`habit-card__chain-square ${
-                              filled ? 'habit-card__chain-square--filled' : ''
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="habit-card__chain-count">{currentStreak}d</span>
                     </div>
                     <p className={`habit-card__status ${scheduledToday ? '' : 'habit-card__status--rest'}`}>
                       {statusText}
@@ -2368,11 +2387,6 @@ function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-const MONTH_FORMATTER = new Intl.DateTimeFormat(undefined, {
-  month: 'long',
-  year: 'numeric',
-});
-
 const DAY_NUMBER_FORMATTER = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
 });
@@ -2393,14 +2407,6 @@ const COMPACT_TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
   minute: '2-digit',
   hour12: false,
 });
-
-function formatMonthLabel(value: string) {
-  return MONTH_FORMATTER.format(parseISODate(value));
-}
-
-function formatMonthYearLabel(year: number, month: number) {
-  return MONTH_FORMATTER.format(new Date(year, month, 1));
-}
 
 function formatDayOfMonth(value: string) {
   return DAY_NUMBER_FORMATTER.format(parseISODate(value));
