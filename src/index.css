@@ -4032,6 +4032,121 @@ body {
   color: #b91c1c;
 }
 
+.habit-day-nav__vision-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 50;
+}
+
+.habit-day-nav__vision-modal {
+  position: relative;
+  width: min(420px, 100%);
+  background: radial-gradient(circle at top, rgba(253, 230, 138, 0.7), rgba(251, 191, 36, 0.2)),
+    linear-gradient(135deg, #fff7ed, #ecfeff);
+  border-radius: 28px;
+  padding: 2.4rem 1.6rem 1.8rem;
+  text-align: center;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.3);
+  border: 1px solid rgba(253, 230, 138, 0.8);
+}
+
+.habit-day-nav__vision-modal::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border-radius: 24px;
+  border: 2px dashed rgba(251, 191, 36, 0.45);
+  pointer-events: none;
+}
+
+.habit-day-nav__vision-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.15);
+}
+
+.habit-day-nav__vision-modal-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.habit-day-nav__vision-modal-title {
+  margin: 0.4rem 0 1.2rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #7c2d12;
+}
+
+.habit-day-nav__vision-modal-image {
+  width: min(320px, 100%);
+  border-radius: 18px;
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.25);
+  object-fit: cover;
+}
+
+.habit-day-nav__vision-modal-claim {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+
+.habit-day-nav__vision-modal-caption {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #7c2d12;
+}
+
+.habit-day-nav__vision-modal-button {
+  border: none;
+  background: linear-gradient(135deg, #f97316, #facc15);
+  color: #7c2d12;
+  font-weight: 800;
+  padding: 0.75rem 1.8rem;
+  border-radius: 999px;
+  box-shadow: 0 12px 24px rgba(249, 115, 22, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habit-day-nav__vision-modal-button:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 16px 30px rgba(249, 115, 22, 0.4);
+}
+
+@media (max-width: 600px) {
+  .habit-day-nav__vision-modal-backdrop {
+    padding: 1rem;
+  }
+
+  .habit-day-nav__vision-modal {
+    padding: 2rem 1.2rem 1.6rem;
+    border-radius: 24px;
+  }
+
+  .habit-day-nav__vision-modal-title {
+    font-size: 1.4rem;
+  }
+}
+
 .habit-checklist-card__title h2 {
   margin: 0 0 0.35rem;
   font-size: 1.35rem;
