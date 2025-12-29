@@ -429,6 +429,28 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     return { scheduledTotal, scheduledComplete } as const;
   }, [habits, monthDays, monthlyCompletions]);
 
+  const sortedHabits = useMemo(() => {
+    if (!habits.length) {
+      return habits;
+    }
+
+    return [...habits].sort((a, b) => {
+      const aInsight = habitInsights[a.id];
+      const bInsight = habitInsights[b.id];
+      const aCurrent = aInsight?.currentStreak ?? 0;
+      const bCurrent = bInsight?.currentStreak ?? 0;
+      if (aCurrent !== bCurrent) {
+        return bCurrent - aCurrent;
+      }
+      const aLongest = aInsight?.longestStreak ?? 0;
+      const bLongest = bInsight?.longestStreak ?? 0;
+      if (aLongest !== bLongest) {
+        return bLongest - aLongest;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [habits, habitInsights]);
+
   const refreshHabits = useCallback(async () => {
     if (!isConfigured) {
       setHabits([]);
@@ -1038,7 +1060,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
   const renderCompactList = () => (
     <ul className="habit-checklist" role="list">
-      {habits.map((habit) => {
+      {sortedHabits.map((habit) => {
         const state = completions[habit.id];
         const isCompleted = Boolean(state?.completed);
         const isSaving = Boolean(saving[habit.id]);
@@ -1944,10 +1966,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   return (
     <section className="habit-tracker">
       <header className="habit-tracker__header">
-        <div className="habit-tracker__header-main">
-          <h2>{`Monthly habits dashboard • ${formatMonthYearLabel(selectedYear, selectedMonth)} (${monthDays.length} days)`}</h2>
-          <p>Use the monthly grid to see every habit alongside the life wheel domains they support.</p>
-        </div>
         <div className="habit-tracker__actions">
           <button
             type="button"
@@ -1990,7 +2008,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         <>
           {renderDayNavigation('full')}
           <ul className="habit-tracker__list">
-            {habits.map((habit) => {
+            {sortedHabits.map((habit) => {
               const state = completions[habit.id];
               const isCompleted = Boolean(state?.completed);
               const isSaving = Boolean(saving[habit.id]);
@@ -2005,6 +2023,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   : 'Tap the toggle when you finish this habit for the selected day.'
                 : 'This is a rest day for this habit.';
               const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
+              const streakSquares = Array.from({ length: 8 }, (_, index) => index < currentStreak);
               return (
                 <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''}`}>
                   <div className="habit-card__content">
@@ -2034,6 +2053,20 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                         <span className="habit-card__streak-label">Longest streak</span>
                         <span className="habit-card__streak-value">{formatStreakValue(longestStreak)}</span>
                       </div>
+                    </div>
+                    <div className="habit-card__chain" aria-label={`Current streak ${formatStreakValue(currentStreak)}`}>
+                      <span className="habit-card__chain-label">Streak chain</span>
+                      <div className="habit-card__chain-squares" aria-hidden="true">
+                        {streakSquares.map((filled, index) => (
+                          <span
+                            key={`${habit.id}-streak-${index}`}
+                            className={`habit-card__chain-square ${
+                              filled ? 'habit-card__chain-square--filled' : ''
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="habit-card__chain-count">{currentStreak}d</span>
                     </div>
                     <p className={`habit-card__status ${scheduledToday ? '' : 'habit-card__status--rest'}`}>
                       {statusText}
