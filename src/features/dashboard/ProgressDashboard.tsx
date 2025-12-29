@@ -44,6 +44,7 @@ import {
   RATIONALITY_PROMPT,
 } from '../../services/rationality';
 import type { JournalEntry } from '../../services/journal';
+import { recordBalanceShiftEvent, recordTelemetryEvent } from '../../services/telemetry';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habit types
@@ -566,6 +567,32 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     void awardBonus();
   }, [balanceSnapshot, balanceWeekId, gamificationEnabled, earnXP, session.user.id]);
 
+  useEffect(() => {
+    if (!session?.user?.id || !balanceSnapshot) {
+      return;
+    }
+
+    void recordBalanceShiftEvent({
+      userId: session.user.id,
+      harmonyStatus: balanceSnapshot.harmonyStatus,
+      referenceDate: balanceSnapshot.referenceDate,
+      metadata: {
+        harmonyScore: balanceSnapshot.harmonyScore,
+        trendDirection: balanceSnapshot.trendDirection,
+        averageScore: balanceSnapshot.averageScore,
+        spread: balanceSnapshot.spread,
+      },
+    });
+  }, [
+    session?.user?.id,
+    balanceSnapshot?.harmonyStatus,
+    balanceSnapshot?.referenceDate,
+    balanceSnapshot?.harmonyScore,
+    balanceSnapshot?.trendDirection,
+    balanceSnapshot?.averageScore,
+    balanceSnapshot?.spread,
+  ]);
+
   const rationalityRangeStart = useMemo(() => {
     const start = new Date(today);
     start.setDate(start.getDate() - 6);
@@ -733,6 +760,17 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
           message: bonusAwarded
             ? 'Micro-quest complete! Game of Life daily bonus unlocked.'
             : 'Micro-quest complete! Game of Life XP earned.',
+        });
+
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'micro_quest_completed',
+          metadata: {
+            questId: quest.id,
+            questTitle: quest.title,
+            xpReward: quest.xpReward,
+            bonusAwarded,
+          },
         });
       } catch (error) {
         setMicroQuestStatus({

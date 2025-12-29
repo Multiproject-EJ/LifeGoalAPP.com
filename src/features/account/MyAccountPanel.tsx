@@ -6,6 +6,7 @@ import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPr
 import { AiSettingsSection } from './AiSettingsSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
+import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderButton } from '../../components/SettingsFolderButton';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
@@ -234,6 +235,8 @@ export function MyAccountPanel({
       <AiSettingsSection session={session} />
 
       <GamificationSettings session={session} />
+
+      <TelemetrySettingsSection session={session} isDemoExperience={isDemoExperience} />
 
       <YesterdayRecapSettings session={session} />
 
