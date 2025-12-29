@@ -215,6 +215,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const domainFieldId = useId();
   const goalFieldId = useId();
   const rationalityFieldId = useId();
+  const panelIdBase = useId();
   const canCreateHabits = isConfigured || isDemoExperience;
   const hasGoals = goals.length > 0;
 
@@ -1509,17 +1510,24 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
           className="progress-dashboard__track"
           style={{ transform: `translateX(-${activePanel * 100}%)` }}
         >
-          {panels.map((panel) => (
+          {panels.map((panel, index) => {
+            const panelId = `${panelIdBase}-${panel.id}`;
+            const tabId = `${panelId}-tab`;
+
+            return (
             <div
               key={panel.id}
               className="progress-dashboard__panel"
-              role="group"
-              aria-roledescription="slide"
-              aria-label={panel.title}
+              role="tabpanel"
+              id={panelId}
+              aria-labelledby={tabId}
+              aria-hidden={activePanel !== index}
+              tabIndex={activePanel === index ? 0 : -1}
             >
               {panel.content}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -1544,8 +1552,11 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
               }`}
               onClick={() => setActivePanel(index)}
               aria-label={`Go to ${panel.title}`}
-              aria-pressed={activePanel === index}
               role="tab"
+              id={`${panelIdBase}-${panel.id}-tab`}
+              aria-controls={`${panelIdBase}-${panel.id}`}
+              aria-selected={activePanel === index}
+              tabIndex={activePanel === index ? 0 : -1}
             />
           ))}
         </div>
