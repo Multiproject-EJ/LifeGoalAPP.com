@@ -16,6 +16,7 @@ export type HabitLogInsert = Database['public']['Tables']['habit_logs_v2']['Inse
 export type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 export type VisionImageInsert = Database['public']['Tables']['vision_images']['Insert'];
 export type VisionImageUpdate = Database['public']['Tables']['vision_images']['Update'];
+export type VisionImageTagRow = Database['public']['Tables']['vision_board_image_tags']['Row'];
 export type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 export type CheckinInsert = Database['public']['Tables']['checkins']['Insert'];
 export type CheckinUpdate = Database['public']['Tables']['checkins']['Update'];
@@ -51,6 +52,7 @@ type DemoState = {
   habits: HabitRow[];
   habitLogs: HabitLogRow[];
   visionImages: VisionImageRow[];
+  visionImageTags: VisionImageTagRow[];
   checkins: CheckinRow[];
   notificationPreferences: NotificationPreferencesRow | null;
   telemetryPreferences: TelemetryPreferenceRow | null;
@@ -174,6 +176,7 @@ const defaultState: DemoState = {
   habits: [],
   habitLogs: [],
   visionImages: [],
+  visionImageTags: [],
   checkins: [],
   notificationPreferences: null,
   telemetryPreferences: {
@@ -770,6 +773,7 @@ function loadState(): DemoState {
       habits: parsed.habits ?? clone(defaultState.habits),
       habitLogs: parsed.habitLogs ?? clone(defaultState.habitLogs),
       visionImages: parsed.visionImages ?? clone(defaultState.visionImages),
+      visionImageTags: parsed.visionImageTags ?? clone(defaultState.visionImageTags),
       checkins: parsed.checkins ?? clone(defaultState.checkins),
       notificationPreferences:
         parsed.notificationPreferences ?? clone(defaultState.notificationPreferences),
@@ -1146,9 +1150,44 @@ export function removeDemoVisionImage(id: string): VisionImageRow | null {
       }
       return true;
     });
-    return { ...current, visionImages };
+    const visionImageTags = current.visionImageTags.filter((tag) => tag.image_id !== id);
+    return { ...current, visionImages, visionImageTags };
   });
   return removed ? clone(removed) : null;
+}
+
+export function getDemoVisionImageTags(userId: string, imageIds: string[] = []): VisionImageTagRow[] {
+  const imageIdSet = imageIds.length ? new Set(imageIds) : null;
+  return clone(
+    state.visionImageTags.filter((tag) => {
+      if (tag.user_id !== userId) return false;
+      if (imageIdSet && !imageIdSet.has(tag.image_id)) return false;
+      return true;
+    }),
+  );
+}
+
+export function setDemoVisionImageTags(
+  userId: string,
+  imageId: string,
+  categoryKeys: string[],
+): VisionImageTagRow[] {
+  let updatedTags: VisionImageTagRow[] = [];
+  updateState((current) => {
+    const remaining = current.visionImageTags.filter(
+      (tag) => !(tag.user_id === userId && tag.image_id === imageId),
+    );
+    const now = new Date().toISOString();
+    const nextTags = categoryKeys.map((categoryKey) => ({
+      user_id: userId,
+      image_id: imageId,
+      category_key: categoryKey,
+      created_at: now,
+    }));
+    updatedTags = nextTags;
+    return { ...current, visionImageTags: [...remaining, ...nextTags] };
+  });
+  return clone(updatedTags);
 }
 
 export function getDemoCheckins(userId: string, limit = 12): CheckinRow[] {

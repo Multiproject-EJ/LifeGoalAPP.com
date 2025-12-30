@@ -9,6 +9,7 @@ import {
   uploadVisionImage,
   uploadVisionImageFromUrl,
 } from '../../services/visionBoard';
+import { fetchVisionImageTags, setVisionImageCategories } from '../../services/visionBoardTags';
 import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGame';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
@@ -18,6 +19,7 @@ import { getDemoHabitsForUser } from '../../services/demoData';
 import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/imageConverter';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -32,6 +34,8 @@ type SortMode = 'newest' | 'oldest' | 'caption';
 type GridLayout = '2-column' | '3-column' | 'masonry';
 
 type VisionImage = VisionImageRow & { publicUrl: string };
+
+type TagFilter = 'all' | 'untagged' | LifeWheelCategoryKey;
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 const DEFAULT_VISION_TYPE = 'goal';
@@ -107,6 +111,11 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [editLinkedGoals, setEditLinkedGoals] = useState<string[]>([]);
   const [editLinkedHabits, setEditLinkedHabits] = useState<string[]>([]);
   const [editSavingId, setEditSavingId] = useState<string | null>(null);
+  const [tagFilter, setTagFilter] = useState<TagFilter>('all');
+  const [imageTags, setImageTags] = useState<Record<string, LifeWheelCategoryKey[]>>({});
+  const [taggingImage, setTaggingImage] = useState<VisionImage | null>(null);
+  const [tagDraft, setTagDraft] = useState<LifeWheelCategoryKey[]>([]);
+  const [tagSaving, setTagSaving] = useState(false);
 
   const loadImages = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -144,6 +153,40 @@ export function VisionBoard({ session }: VisionBoardProps) {
     }
     loadImages();
   }, [session?.user?.id, isConfigured, isDemoExperience, loadImages]);
+
+  const loadImageTags = useCallback(async () => {
+    if (!session || (!isConfigured && !isDemoExperience) || !categoriesAvailable) {
+      setImageTags({});
+      return;
+    }
+
+    if (images.length === 0) {
+      setImageTags({});
+      return;
+    }
+
+    try {
+      const { data, error } = await fetchVisionImageTags(
+        session.user.id,
+        images.map((image) => image.id),
+      );
+      if (error) throw error;
+
+      const nextTags: Record<string, LifeWheelCategoryKey[]> = {};
+      (data ?? []).forEach((tag) => {
+        if (!categoryLabelLookup.has(tag.category_key)) return;
+        const existing = nextTags[tag.image_id] ?? [];
+        nextTags[tag.image_id] = [...existing, tag.category_key as LifeWheelCategoryKey];
+      });
+      setImageTags(nextTags);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to load vision board tags.');
+    }
+  }, [session, isConfigured, isDemoExperience, categoriesAvailable, images, categoryLabelLookup]);
+
+  useEffect(() => {
+    void loadImageTags();
+  }, [loadImageTags]);
 
   useEffect(() => {
     if (!session || (!isConfigured && !isDemoExperience)) {
@@ -200,6 +243,18 @@ export function VisionBoard({ session }: VisionBoardProps) {
     });
   }, [images, sortMode]);
 
+  const filteredImages = useMemo(() => {
+    if (!categoriesAvailable || tagFilter === 'all') {
+      return sortedImages;
+    }
+
+    if (tagFilter === 'untagged') {
+      return sortedImages.filter((image) => (imageTags[image.id] ?? []).length === 0);
+    }
+
+    return sortedImages.filter((image) => (imageTags[image.id] ?? []).includes(tagFilter));
+  }, [sortedImages, tagFilter, imageTags, categoriesAvailable]);
+
   const dueReviewItems = useMemo(() => {
     const now = new Date();
     return sortedImages.filter((image) => {
@@ -216,6 +271,17 @@ export function VisionBoard({ session }: VisionBoardProps) {
 
   const goalLookup = useMemo(() => new Map(goals.map((goal) => [goal.id, goal.title])), [goals]);
   const habitLookup = useMemo(() => new Map(habits.map((habit) => [habit.id, habit.title])), [habits]);
+  const categoriesAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
+  const categoryLabelLookup = useMemo(
+    () => new Map(LIFE_WHEEL_CATEGORIES.map((category) => [category.key, category.label])),
+    [],
+  );
+
+  useEffect(() => {
+    if (!categoriesAvailable && tagFilter !== 'all') {
+      setTagFilter('all');
+    }
+  }, [categoriesAvailable, tagFilter]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -304,6 +370,43 @@ export function VisionBoard({ session }: VisionBoardProps) {
 
   const stopEditing = () => {
     setEditingId(null);
+  };
+
+  const startTagging = (image: VisionImage) => {
+    setTaggingImage(image);
+    setTagDraft(imageTags[image.id] ?? []);
+  };
+
+  const stopTagging = () => {
+    setTaggingImage(null);
+    setTagDraft([]);
+  };
+
+  const handleSaveTags = async () => {
+    if (!taggingImage || !session) {
+      setErrorMessage('You need to sign in to tag your vision board images.');
+      return;
+    }
+
+    if (!isConfigured && !isDemoExperience) {
+      setErrorMessage('Connect Supabase to save vision board tags.');
+      return;
+    }
+
+    setTagSaving(true);
+    try {
+      const { data, error } = await setVisionImageCategories(session.user.id, taggingImage.id, tagDraft);
+      if (error) throw error;
+      setImageTags((current) => ({
+        ...current,
+        [taggingImage.id]: (data ?? []).map((tag) => tag.category_key as LifeWheelCategoryKey),
+      }));
+      stopTagging();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to save tags for this image.');
+    } finally {
+      setTagSaving(false);
+    }
   };
 
   const handleUpdateImage = async (imageId: string, updates: Partial<VisionImageRow>) => {
@@ -486,6 +589,11 @@ export function VisionBoard({ session }: VisionBoardProps) {
       const error = await deleteVisionImage(record);
       if (error) throw error;
       setImages((current) => current.filter((item) => item.id !== record.id));
+      setImageTags((current) => {
+        const next = { ...current };
+        delete next[record.id];
+        return next;
+      });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the entry.');
     }
@@ -800,6 +908,44 @@ export function VisionBoard({ session }: VisionBoardProps) {
         </section>
       )}
 
+      {(isConfigured || isDemoExperience) && (
+        <div className="vision-board__tabs" role="tablist" aria-label="Vision board categories">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tagFilter === 'all'}
+            className={`vision-board__tab ${tagFilter === 'all' ? 'vision-board__tab--active' : ''}`}
+            onClick={() => setTagFilter('all')}
+          >
+            All
+          </button>
+          {categoriesAvailable &&
+            LIFE_WHEEL_CATEGORIES.map((category) => (
+              <button
+                key={category.key}
+                type="button"
+                role="tab"
+                aria-selected={tagFilter === category.key}
+                className={`vision-board__tab ${tagFilter === category.key ? 'vision-board__tab--active' : ''}`}
+                onClick={() => setTagFilter(category.key)}
+              >
+                {category.label}
+              </button>
+            ))}
+          {categoriesAvailable && (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tagFilter === 'untagged'}
+              className={`vision-board__tab ${tagFilter === 'untagged' ? 'vision-board__tab--active' : ''}`}
+              onClick={() => setTagFilter('untagged')}
+            >
+              Untagged
+            </button>
+          )}
+        </div>
+      )}
+
       <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
         {!isConfigured && !isDemoExperience ? (
           <p className="vision-board__empty">Connect Supabase to sync your gallery.</p>
@@ -807,8 +953,10 @@ export function VisionBoard({ session }: VisionBoardProps) {
           <p className="vision-board__empty">Loading your inspiration…</p>
         ) : sortedImages.length === 0 ? (
           <p className="vision-board__empty">No images yet—upload your first motivator to get started.</p>
+        ) : filteredImages.length === 0 ? (
+          <p className="vision-board__empty">No images match this filter yet.</p>
         ) : (
-          sortedImages.map((image) => (
+          filteredImages.map((image) => (
             <article key={image.id} className="vision-board__card" role="listitem">
               <div className="vision-board__card-image-container">
                 {image.publicUrl ? (
@@ -834,6 +982,10 @@ export function VisionBoard({ session }: VisionBoardProps) {
                 );
                 const goalLabels = linkedGoals.map((id) => goalLookup.get(id)).filter(Boolean) as string[];
                 const habitLabels = linkedHabits.map((id) => habitLookup.get(id)).filter(Boolean) as string[];
+                const tagKeys = imageTags[image.id] ?? [];
+                const tagLabels = tagKeys
+                  .map((key) => categoryLabelLookup.get(key))
+                  .filter(Boolean) as string[];
                 return (
                   <div className="vision-board__card-body">
                     <div className="vision-board__card-meta">
@@ -843,6 +995,19 @@ export function VisionBoard({ session }: VisionBoardProps) {
                       </span>
                       {isOrphan && <span className="vision-board__chip vision-board__chip--orphan">Orphan</span>}
                     </div>
+                    {tagLabels.length > 0 && (
+                      <div className="vision-board__card-tags">
+                        {tagKeys.map((key) => {
+                          const label = categoryLabelLookup.get(key);
+                          if (!label) return null;
+                          return (
+                            <span key={`${image.id}-${key}`} className="vision-board__chip vision-board__chip--category">
+                              {label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                     <p className="vision-board__card-review">Next review: {formatDateLabel(nextReview)}</p>
                     {goalLabels.length > 0 && (
                       <p className="vision-board__card-links">
@@ -865,6 +1030,14 @@ export function VisionBoard({ session }: VisionBoardProps) {
               <div className="vision-board__card-actions">
                 <button type="button" onClick={() => startEditing(image)} className="vision-board__edit">
                   Edit details
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startTagging(image)}
+                  className="vision-board__edit"
+                  disabled={!isConfigured && !isDemoExperience}
+                >
+                  Tag/Edit
                 </button>
                 <button
                   type="button"
@@ -977,6 +1150,42 @@ export function VisionBoard({ session }: VisionBoardProps) {
         <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
           <div className="vision-board__modal">
             <VisionBoardDailyGame session={session} onClose={() => setShowDailyGame(false)} isConfigured={isConfigured} />
+          </div>
+        </div>
+      )}
+
+      {taggingImage && (
+        <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
+          <div className="vision-board__modal vision-board__tag-modal">
+            <header className="vision-board__tag-header">
+              <h3>Tag vision image</h3>
+              <p>Select the life wheel areas this image supports.</p>
+            </header>
+            {categoriesAvailable ? (
+              <div className="vision-board__tag-list">
+                {LIFE_WHEEL_CATEGORIES.map((category) => (
+                  <label key={category.key} className="vision-board__tag-option">
+                    <input
+                      type="checkbox"
+                      checked={tagDraft.includes(category.key)}
+                      onChange={() => setTagDraft((current) => toggleSelection(current, category.key))}
+                      disabled={tagSaving}
+                    />
+                    <span>{category.label}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="vision-board__hint">Life wheel categories are unavailable right now.</p>
+            )}
+            <div className="vision-board__edit-actions">
+              <button type="button" onClick={handleSaveTags} disabled={tagSaving || !categoriesAvailable}>
+                {tagSaving ? 'Saving…' : 'Save tags'}
+              </button>
+              <button type="button" onClick={stopTagging} disabled={tagSaving}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
