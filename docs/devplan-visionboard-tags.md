@@ -9,6 +9,7 @@
 - **Tagging data access** is in `src/services/visionBoardTags.ts`.
 - **Life Wheel category source of truth** is `LIFE_WHEEL_CATEGORIES` in `src/features/checkins/LifeWheelCheckins.tsx` (keys like `spirituality_community`, `finance_wealth`, etc.).
 - **RLS patterns** are in Supabase migrations such as `supabase/migrations/0117_vision_board_daily_game.sql` and legacy reference policies (`supabase/reference/legacy_002_policies.sql`): policies typically enforce `auth.uid() = user_id` or subqueries to ensure ownership.
+- **Category lookup memoization** is initialized before tag-loading hooks in `VisionBoard.tsx` to avoid use-before-init issues.
 
 ## Plan
 ### DB + RLS (Commit 1) ✅
@@ -41,6 +42,7 @@
 - **RLS leaks**: Enforce user ownership in `vision_board_image_tags` policies and confirm with manual SQL checks.
 - **Missing category source**: Reuse `LIFE_WHEEL_CATEGORIES` from `LifeWheelCheckins` to avoid a new source of truth.
 - **Performance/N+1**: Fetch tags in a single batch query for the current image list.
+- **Hook ordering bugs**: Initialize category lookup memoization before tag-loading hooks to avoid use-before-init runtime errors.
 
 ## Manual test checklist
 1. Existing vision board still loads images (before tagging anything).
@@ -49,6 +51,10 @@
 4. Verify **Untagged** shows untagged images.
 5. Verify RLS with a second test account (cannot see/tag others).
 6. Mobile UI: modal opens, tabs scroll if needed.
+7. Load the vision board without console errors after the tagging changes.
+
+## Next step
+- ✅ Reorder the Life Wheel category lookup memoization ahead of tag-loading hooks to avoid use-before-init runtime errors.
 
 ### DB verification queries
 ```sql
