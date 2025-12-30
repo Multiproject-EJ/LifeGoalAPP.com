@@ -116,6 +116,11 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [taggingImage, setTaggingImage] = useState<VisionImage | null>(null);
   const [tagDraft, setTagDraft] = useState<LifeWheelCategoryKey[]>([]);
   const [tagSaving, setTagSaving] = useState(false);
+  const categoriesAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
+  const categoryLabelLookup = useMemo(
+    () => new Map(LIFE_WHEEL_CATEGORIES.map((category) => [category.key, category.label])),
+    [],
+  );
 
   const loadImages = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -271,11 +276,6 @@ export function VisionBoard({ session }: VisionBoardProps) {
 
   const goalLookup = useMemo(() => new Map(goals.map((goal) => [goal.id, goal.title])), [goals]);
   const habitLookup = useMemo(() => new Map(habits.map((habit) => [habit.id, habit.title])), [habits]);
-  const categoriesAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
-  const categoryLabelLookup = useMemo(
-    () => new Map(LIFE_WHEEL_CATEGORIES.map((category) => [category.key, category.label])),
-    [],
-  );
 
   useEffect(() => {
     if (!categoriesAvailable && tagFilter !== 'all') {
