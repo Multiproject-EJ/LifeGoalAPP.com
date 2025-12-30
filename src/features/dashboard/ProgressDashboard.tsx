@@ -1129,6 +1129,20 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
 
   const panels = [
     {
+      id: 'life-wheel',
+      title: 'Life wheel',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--life-wheel">
+          <div className="progress-dashboard__life-wheel-stack">
+            <LifeWheelCheckins session={session} />
+            <article className="progress-card progress-card--spin-wheel progress-dashboard__spin-wheel-card">
+              <DailySpinWheel session={session} />
+            </article>
+          </div>
+        </div>
+      ),
+    },
+    {
       id: 'balance-harmony',
       title: 'Balance and harmony',
       content: (
@@ -1412,15 +1426,6 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
               </div>
             </div>
           )}
-        </div>
-      ),
-    },
-    {
-      id: 'life-wheel',
-      title: 'Life wheel',
-      content: (
-        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--life-wheel">
-          <LifeWheelCheckins session={session} />
         </div>
       ),
     },
