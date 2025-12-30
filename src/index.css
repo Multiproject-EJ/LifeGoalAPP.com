@@ -5603,12 +5603,23 @@ body {
 }
 
 .progress-dashboard__panel-content--life-wheel .life-wheel {
-  width: min(100%, 1080px);
+  width: min(100%, 1200px);
   padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.progress-dashboard__panel-content--life-wheel .life-wheel__panel {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .progress-dashboard__panel-content--life-wheel .life-wheel__radar {
-  max-width: 260px;
+  max-width: 560px;
   filter: none;
 }
 
