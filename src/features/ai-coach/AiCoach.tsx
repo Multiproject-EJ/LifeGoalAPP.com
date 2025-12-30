@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, FormEvent } from 'react';
+import { useState, useRef, useEffect, useMemo, useId, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AiSupportAssistant } from '../assistant';
 import { createBalanceSnapshot, type BalanceAxisKey, type BalanceSnapshot } from '../../services/balanceScore';
@@ -374,6 +374,8 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [interventionsLoading, setInterventionsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogTitleId = useId();
+  const dialogSubtitleId = useId();
 
   const fullName = session.user?.user_metadata?.full_name;
   const userName = (typeof fullName === 'string' ? fullName.split(' ')[0] : null) || 'there';
@@ -471,6 +473,17 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     // Focus input on mount
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -639,7 +652,8 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         className="ai-coach-modal__container"
         role="dialog"
         aria-modal="true"
-        aria-label="Game of Life Coach"
+        aria-labelledby={dialogTitleId}
+        aria-describedby={dialogSubtitleId}
       >
         <div className="ai-coach-modal__header">
           <div className="ai-coach-modal__header-content">
@@ -650,8 +664,12 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
               </div>
             </div>
             <div className="ai-coach-modal__header-text">
-              <h2 className="ai-coach-modal__title">AI Life Coach</h2>
-              <p className="ai-coach-modal__subtitle">Your personal guide to achieving your goals</p>
+              <h2 className="ai-coach-modal__title" id={dialogTitleId}>
+                AI Life Coach
+              </h2>
+              <p className="ai-coach-modal__subtitle" id={dialogSubtitleId}>
+                Your personal guide to achieving your goals
+              </p>
             </div>
           </div>
             <div className="ai-coach-modal__header-actions">
