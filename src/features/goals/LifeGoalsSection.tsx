@@ -24,6 +24,9 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   const [stepsByGoal, setStepsByGoal] = useState<
     Record<string, Database['public']['Tables']['life_goal_steps']['Row'][]>
   >({});
+  const [goalStats, setGoalStats] = useState<
+    Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>
+  >({});
   const isMobile = useMediaQuery('(max-width: 720px)');
 
   const activeCategoryLabel = useMemo(() => {
@@ -122,6 +125,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
         setSuccessMessage('Life goal created successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
         setSelectedCategory(formData.lifeWheelCategory);
+        await refreshGoalStats();
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : 'Failed to save life goal');
         throw error;
@@ -129,8 +133,49 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
         setSaving(false);
       }
     },
-    [session.user.id]
+    [refreshGoalStats, session.user.id]
   );
+
+  const refreshGoalStats = useCallback(async () => {
+    try {
+      const { data, error } = await fetchGoals();
+      if (error) throw error;
+
+      const goals = data ?? [];
+      const grouped = goals.reduce<
+        Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>
+      >((acc, goal) => {
+        const key = goal.life_wheel_category as LifeWheelCategoryKey | null;
+        if (!key) return acc;
+        if (!acc[key]) {
+          acc[key] = { mainCount: 0, subCount: 0 };
+        }
+        acc[key]!.mainCount += 1;
+        return acc;
+      }, {});
+
+      const stepsResults = await Promise.all(
+        goals.map(async (goal) => {
+          const { data: steps, error: stepsError } = await fetchStepsForGoal(goal.id);
+          if (stepsError) throw stepsError;
+          return { categoryKey: goal.life_wheel_category, count: steps?.length ?? 0 };
+        })
+      );
+
+      stepsResults.forEach((result) => {
+        if (!result.categoryKey) return;
+        const key = result.categoryKey as LifeWheelCategoryKey;
+        if (!grouped[key]) {
+          grouped[key] = { mainCount: 0, subCount: 0 };
+        }
+        grouped[key]!.subCount += result.count;
+      });
+
+      setGoalStats(grouped);
+    } catch (error) {
+      setGoalStats({});
+    }
+  }, []);
 
   const loadCategoryGoals = useCallback(
     async (categoryKey: LifeWheelCategoryKey) => {
@@ -174,6 +219,10 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   );
 
   useEffect(() => {
+    refreshGoalStats();
+  }, [refreshGoalStats]);
+
+  useEffect(() => {
     if (!selectedCategory) {
       setCategoryGoals([]);
       setStepsByGoal({});
@@ -197,11 +246,12 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
       setSuccessMessage('Life goal updated successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
 
+      await refreshGoalStats();
       if (selectedCategory) {
         await loadCategoryGoals(selectedCategory);
       }
     },
-    [loadCategoryGoals, selectedCategory]
+    [loadCategoryGoals, refreshGoalStats, selectedCategory]
   );
 
   return (
@@ -238,7 +288,9 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
           <div className="life-goals-section__card-header">
             <div>
               <p className="life-goals-section__card-label">Life wheel</p>
-              <p className="life-goals-section__card-helper">Tap any slice to browse goal prompts for that area.</p>
+              <p className="life-goals-section__card-helper">
+                Tap any slice to browse goal prompts for that area. Badges show main goals and sub goals.
+              </p>
             </div>
             <button type="button" className="life-goals-section__icon-button" onClick={handleAddGoal}>
               +
@@ -248,6 +300,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
             <InteractiveLifeWheel
               onCategorySelect={handleCategorySelect}
               selectedCategory={selectedCategory}
+              goalStats={goalStats}
             />
           </div>
         </div>

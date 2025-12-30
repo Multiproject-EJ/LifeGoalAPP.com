@@ -10858,6 +10858,26 @@ body {
   user-select: none;
 }
 
+.interactive-life-wheel__indicator circle {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.interactive-life-wheel__indicator text {
+  font-size: 0.7rem;
+  font-weight: 700;
+  fill: #ffffff;
+}
+
+.interactive-life-wheel__indicator--sub circle {
+  stroke: #dcfce7;
+}
+
+.interactive-life-wheel__indicator--sub text {
+  fill: #064e3b;
+}
+
 @media (max-width: 720px) {
   .life-goals-section__heading-row {
     flex-direction: column;
