@@ -207,6 +207,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [visionImagesLoading, setVisionImagesLoading] = useState(false);
   const [visionRewarding, setVisionRewarding] = useState(false);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
+  const [isStarBursting, setIsStarBursting] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
   const [yesterdaySelections, setYesterdaySelections] = useState<Record<string, boolean>>({});
@@ -335,6 +336,16 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
   }, [earnXP, isConfigured, isDemoExperience, recordActivity, visionImages]);
 
+  const triggerStarBurst = useCallback(() => {
+    setIsStarBursting(true);
+    window.setTimeout(() => setIsStarBursting(false), 900);
+  }, []);
+
+  const handleVisionRewardClick = () => {
+    triggerStarBurst();
+    void handleVisionReward();
+  };
+
   const closeVisionReward = () => {
     setIsVisionRewardOpen(false);
   };
@@ -362,6 +373,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           </button>
           <span className="habit-day-nav__vision-modal-eyebrow">Vision board magic</span>
           <h3 className="habit-day-nav__vision-modal-title">✨ Your vision star ✨</h3>
+          <div className="habit-day-nav__vision-modal-intro" aria-hidden="true">
+            📸 🖼️ 🎯 ✨ 🚀
+          </div>
           <img
             className="habit-day-nav__vision-modal-image"
             src={visionReward.imageUrl}
@@ -1090,12 +1104,23 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             </label>
             <button
               type="button"
-              className="habit-day-nav__star"
-              onClick={handleVisionReward}
+              className={`habit-day-nav__star ${
+                isStarBursting || visionRewarding ? 'habit-day-nav__star--burst' : ''
+              }`}
+              onClick={handleVisionRewardClick}
               disabled={visionImagesLoading || visionRewarding}
               aria-label="Reveal a vision board star boost"
             >
-              ★
+              <span className="habit-day-nav__star-icon" aria-hidden="true">★</span>
+              <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--one" aria-hidden="true">
+                ✨
+              </span>
+              <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--two" aria-hidden="true">
+                🏆
+              </span>
+              <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--three" aria-hidden="true">
+                📸
+              </span>
             </button>
           </div>
           <div className="habit-day-nav__bonus">
@@ -1237,11 +1262,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
   const renderCompactExperience = () => {
     const dateLabel = formatCompactDateLabel(activeDate);
-    const timeLabel = formatCompactTimeLabel();
     const scheduledTarget = compactStats.scheduled || compactStats.total;
+    const completedCount = Math.min(compactStats.completed, scheduledTarget);
     const progressLabel = scheduledTarget
-      ? `${Math.min(compactStats.completed, scheduledTarget)}/${scheduledTarget} done`
+      ? `${completedCount}/${scheduledTarget} habits done`
       : 'No habits scheduled';
+    const progressRatio = scheduledTarget ? completedCount / scheduledTarget : 0;
+    const progressPercent = Math.round(progressRatio * 100);
     const isViewingToday = activeDate === today;
     const titleText = isViewingToday ? 'Things to do today' : 'Things to do for this day';
     const subtitleText = isViewingToday
@@ -1431,7 +1458,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             <div className="habit-checklist-card__date-wrap">
               <div className="habit-checklist-card__date-group">
                 <p className="habit-checklist-card__date">{dateLabel}</p>
-                <p className="habit-checklist-card__time">{timeLabel}</p>
               </div>
               <button
                 type="button"
@@ -1450,7 +1476,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               </button>
             </div>
             <div className="habit-checklist-card__head-actions">
-              <span className="habit-checklist-card__progress">{progressLabel}</span>
+              <span className="habit-checklist-card__progress" role="img" aria-label={progressLabel}>
+                <span className="sr-only">{progressLabel}</span>
+                <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
+                  <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
+                  <circle
+                    className="habit-checklist-card__progress-value"
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    strokeDasharray={`${progressPercent} 100`}
+                  />
+                </svg>
+              </span>
               <button
                 type="button"
                 className="habit-checklist-card__refresh"
@@ -2402,11 +2440,6 @@ const COMPACT_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
 });
 
-const COMPACT_TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-});
 
 function formatDayOfMonth(value: string) {
   return DAY_NUMBER_FORMATTER.format(parseISODate(value));
@@ -2418,10 +2451,6 @@ function formatDayOfWeekShort(value: string) {
 
 function formatCompactDateLabel(value: string) {
   return COMPACT_DATE_FORMATTER.format(parseISODate(value));
-}
-
-function formatCompactTimeLabel(date: Date = new Date()) {
-  return COMPACT_TIME_FORMATTER.format(date);
 }
 
 function formatDateLabel(value: string) {

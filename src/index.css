@@ -3804,14 +3804,38 @@ body {
   }
 
   .habit-checklist-card__progress {
-    white-space: nowrap;
+    margin-right: auto;
   }
 }
 
 .habit-checklist-card__progress {
-  font-weight: 700;
-  color: #7c2d12;
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(253, 230, 138, 0.35);
+}
+
+.habit-checklist-card__progress-ring {
+  width: 28px;
+  height: 28px;
+  transform: rotate(-90deg);
+}
+
+.habit-checklist-card__progress-track {
+  fill: none;
+  stroke: rgba(120, 53, 15, 0.2);
+  stroke-width: 4;
+}
+
+.habit-checklist-card__progress-value {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.4s ease;
 }
 
 .habit-checklist-card__refresh {
@@ -4003,6 +4027,48 @@ body {
     39% 35%
   );
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.habit-day-nav__star-icon {
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.habit-day-nav__star--burst {
+  transform: translateY(-1px) scale(1.08) rotate(-6deg);
+  box-shadow: 0 16px 30px rgba(245, 158, 11, 0.5);
+}
+
+.habit-day-nav__star--burst .habit-day-nav__star-icon {
+  animation: star-spin 0.9s ease;
+}
+
+.habit-day-nav__star-sparkle {
+  position: absolute;
+  opacity: 0;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.habit-day-nav__star-sparkle--one {
+  top: -12px;
+  left: -6px;
+}
+
+.habit-day-nav__star-sparkle--two {
+  bottom: -10px;
+  right: -8px;
+}
+
+.habit-day-nav__star-sparkle--three {
+  top: -14px;
+  right: -10px;
+}
+
+.habit-day-nav__star--burst .habit-day-nav__star-sparkle {
+  animation: sparkle-pop 0.9s ease;
 }
 
 .habit-day-nav__star:disabled {
@@ -4138,6 +4204,13 @@ body {
   color: #7c2d12;
 }
 
+.habit-day-nav__vision-modal-intro {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  animation: vision-intro-float 2s ease-in-out infinite;
+}
+
 .habit-day-nav__vision-modal-image {
   width: min(320px, 100%);
   border-radius: 18px;
@@ -4174,6 +4247,43 @@ body {
 .habit-day-nav__vision-modal-button:hover {
   transform: translateY(-1px) scale(1.01);
   box-shadow: 0 16px 30px rgba(249, 115, 22, 0.4);
+}
+
+@keyframes star-spin {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  45% {
+    transform: scale(1.25) rotate(12deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes sparkle-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1) translateY(-6px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1) translateY(-12px);
+  }
+}
+
+@keyframes vision-intro-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 @media (max-width: 600px) {
