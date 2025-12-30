@@ -7306,6 +7306,32 @@ body {
   border: 1px solid rgba(248, 113, 113, 0.4);
 }
 
+.vision-board__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.vision-board__tab {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  background: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vision-board__tab--active {
+  background: rgba(79, 70, 229, 0.12);
+  border-color: rgba(79, 70, 229, 0.5);
+  color: #4338ca;
+}
+
 .vision-board__form {
   background: white;
   border-radius: 16px;
@@ -7462,6 +7488,48 @@ body {
 .vision-board__delete:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.vision-board__card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.vision-board__chip--category {
+  background: rgba(14, 116, 144, 0.12);
+  color: #0e7490;
+}
+
+.vision-board__tag-modal {
+  max-width: 520px;
+}
+
+.vision-board__tag-header h3 {
+  margin: 0 0 0.25rem;
+}
+
+.vision-board__tag-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.vision-board__tag-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.vision-board__tag-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(226, 232, 240, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  font-size: 0.95rem;
 }
 
 /* Add/Edit collapsible panel */
