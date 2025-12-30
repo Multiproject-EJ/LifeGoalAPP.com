@@ -1171,17 +1171,19 @@ export function setDemoVisionImageTags(
   userId: string,
   imageId: string,
   categoryKeys: string[],
+  categoryGroup: string,
 ): VisionImageTagRow[] {
   let updatedTags: VisionImageTagRow[] = [];
   updateState((current) => {
     const remaining = current.visionImageTags.filter(
-      (tag) => !(tag.user_id === userId && tag.image_id === imageId),
+      (tag) => !(tag.user_id === userId && tag.image_id === imageId && tag.category_group === categoryGroup),
     );
     const now = new Date().toISOString();
     const nextTags = categoryKeys.map((categoryKey) => ({
       user_id: userId,
       image_id: imageId,
       category_key: categoryKey,
+      category_group: categoryGroup,
       created_at: now,
     }));
     updatedTags = nextTags;

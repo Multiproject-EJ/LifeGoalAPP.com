@@ -7508,6 +7508,11 @@ body {
   color: #0e7490;
 }
 
+.vision-board__chip--visionary {
+  background: rgba(16, 185, 129, 0.12);
+  color: #0f766e;
+}
+
 .vision-board__tag-modal {
   max-width: 520px;
 }
@@ -7525,6 +7530,17 @@ body {
   display: grid;
   gap: 0.5rem;
   margin: 1rem 0;
+}
+
+.vision-board__tag-section {
+  margin-bottom: 1.5rem;
+}
+
+.vision-board__tag-section h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .vision-board__tag-option {

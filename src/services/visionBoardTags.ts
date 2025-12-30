@@ -40,9 +40,10 @@ export async function setVisionImageCategories(
   userId: string,
   imageId: string,
   categoryKeys: string[],
+  categoryGroup: string,
 ): Promise<ServiceResponse<VisionImageTagRow[]>> {
   if (!canUseSupabaseData()) {
-    return { data: setDemoVisionImageTags(userId, imageId, categoryKeys), error: null };
+    return { data: setDemoVisionImageTags(userId, imageId, categoryKeys, categoryGroup), error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -50,7 +51,8 @@ export async function setVisionImageCategories(
     .from('vision_board_image_tags')
     .delete()
     .eq('user_id', userId)
-    .eq('image_id', imageId);
+    .eq('image_id', imageId)
+    .eq('category_group', categoryGroup);
 
   if (deleteError) {
     return { data: null, error: deleteError };
@@ -64,6 +66,7 @@ export async function setVisionImageCategories(
     user_id: userId,
     image_id: imageId,
     category_key: categoryKey,
+    category_group: categoryGroup,
   }));
 
   const { data, error } = await supabase

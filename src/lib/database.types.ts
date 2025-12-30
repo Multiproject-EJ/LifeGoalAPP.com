@@ -586,18 +586,21 @@ export interface Database {
           image_id: string;
           user_id: string;
           category_key: string;
+          category_group: string;
           created_at: string;
         };
         Insert: {
           image_id: string;
           user_id: string;
           category_key: string;
+          category_group?: string;
           created_at?: string;
         };
         Update: {
           image_id?: string;
           user_id?: string;
           category_key?: string;
+          category_group?: string;
           created_at?: string;
         };
         Relationships: [];
