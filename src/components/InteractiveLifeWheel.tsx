@@ -7,6 +7,7 @@ const RADAR_LEVELS = 5;
 type InteractiveLifeWheelProps = {
   onCategorySelect: (categoryKey: LifeWheelCategoryKey) => void;
   selectedCategory: LifeWheelCategoryKey | null;
+  goalStats?: Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>;
 };
 
 type SliceGeometry = {
@@ -73,11 +74,13 @@ function buildSliceGeometry(): SliceGeometry[] {
   });
 }
 
-export function InteractiveLifeWheel({ onCategorySelect, selectedCategory }: InteractiveLifeWheelProps) {
+export function InteractiveLifeWheel({ onCategorySelect, selectedCategory, goalStats }: InteractiveLifeWheelProps) {
   const [hoveredCategory, setHoveredCategory] = useState<LifeWheelCategoryKey | null>(null);
   const slices = useMemo(() => buildSliceGeometry(), []);
   const center = RADAR_SIZE / 2;
   const radius = center - 40;
+  const indicatorRadius = radius * 0.62;
+  const subIndicatorRadius = radius * 0.78;
 
   const handleSliceClick = (categoryKey: LifeWheelCategoryKey) => {
     onCategorySelect(categoryKey);
@@ -181,6 +184,48 @@ export function InteractiveLifeWheel({ onCategorySelect, selectedCategory }: Int
             </text>
           ))}
         </g>
+
+        {/* Goal indicators */}
+        {goalStats && (
+          <g className="interactive-life-wheel__indicators">
+            {slices.map((slice) => {
+              const stats = goalStats[slice.categoryKey];
+              if (!stats) {
+                return null;
+              }
+
+              const mainCount = stats.mainCount ?? 0;
+              const subCount = stats.subCount ?? 0;
+              const mainX = center + Math.cos(slice.angle) * indicatorRadius;
+              const mainY = center + Math.sin(slice.angle) * indicatorRadius;
+              const subX = center + Math.cos(slice.angle) * subIndicatorRadius;
+              const subY = center + Math.sin(slice.angle) * subIndicatorRadius;
+              const subStrength = Math.min(subCount, 10) / 10;
+              const subFill = `rgba(16, 185, 129, ${0.25 + subStrength * 0.55})`;
+
+              return (
+                <g key={slice.categoryKey}>
+                  {mainCount > 0 && (
+                    <g className="interactive-life-wheel__indicator interactive-life-wheel__indicator--main">
+                      <circle cx={mainX} cy={mainY} r={12} />
+                      <text x={mainX} y={mainY} textAnchor="middle" dominantBaseline="central">
+                        {mainCount}
+                      </text>
+                    </g>
+                  )}
+                  {subCount > 0 && (
+                    <g className="interactive-life-wheel__indicator interactive-life-wheel__indicator--sub">
+                      <circle cx={subX} cy={subY} r={10} style={{ fill: subFill }} />
+                      <text x={subX} y={subY} textAnchor="middle" dominantBaseline="central">
+                        {subCount}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        )}
       </svg>
     </div>
   );

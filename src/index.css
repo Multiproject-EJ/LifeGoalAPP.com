@@ -10858,6 +10858,26 @@ body {
   user-select: none;
 }
 
+.interactive-life-wheel__indicator circle {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.interactive-life-wheel__indicator text {
+  font-size: 0.7rem;
+  font-weight: 700;
+  fill: #ffffff;
+}
+
+.interactive-life-wheel__indicator--sub circle {
+  stroke: #dcfce7;
+}
+
+.interactive-life-wheel__indicator--sub text {
+  fill: #064e3b;
+}
+
 @media (max-width: 720px) {
   .life-goals-section__heading-row {
     flex-direction: column;
@@ -10954,31 +10974,77 @@ body {
   margin-bottom: 1.5rem;
 }
 
-.category-info-card__examples {
-  margin-bottom: 2rem;
+.category-info-card__section {
+  margin-bottom: 1.5rem;
 }
 
-.category-info-card__examples h4 {
+.category-info-card__section h4 {
   font-size: 1rem;
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 0.75rem;
 }
 
-.category-info-card__examples ul {
+.category-info-card__list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.category-info-card__examples li {
+.category-info-card__list li + li {
+  margin-top: 0.5rem;
+}
+
+.category-info-card__goal {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 0.75rem 1rem;
-  background: rgba(59, 130, 246, 0.05);
-  border-left: 3px solid rgba(59, 130, 246, 0.4);
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-  color: #334155;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  color: #0f172a;
   font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.category-info-card__goal:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.15);
+}
+
+.category-info-card__goal-meta {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.category-info-card__subgoal {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+  color: #1f2937;
+}
+
+.category-info-card__list--subgoals .category-info-card__goal-meta {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.category-info-card__empty {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
 }
 
 .category-info-card__action {
@@ -11003,6 +11069,124 @@ body {
 
 .category-info-card__action:active {
   transform: translateY(0);
+}
+
+/* =====================================================
+   GOAL EDIT DIALOG
+   ===================================================== */
+
+.goal-edit-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1.5rem;
+}
+
+.goal-edit-dialog {
+  background: white;
+  border-radius: 16px;
+  width: min(560px, 100%);
+  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.25);
+  padding: 1.5rem;
+}
+
+.goal-edit-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.goal-edit-dialog__header h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #0f172a;
+}
+
+.goal-edit-dialog__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.goal-edit-dialog__close {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.goal-edit-dialog__error {
+  background: rgba(248, 113, 113, 0.15);
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.goal-edit-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.goal-edit-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.goal-edit-dialog__field input,
+.goal-edit-dialog__field textarea,
+.goal-edit-dialog__field select {
+  border: 1px solid #cbd5f5;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.goal-edit-dialog__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.goal-edit-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.goal-edit-dialog__cancel {
+  background: #e2e8f0;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.goal-edit-dialog__save {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 /* =====================================================
