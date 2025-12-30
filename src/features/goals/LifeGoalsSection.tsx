@@ -1,12 +1,13 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { InteractiveLifeWheel } from '../../components/InteractiveLifeWheel';
 import { CategoryInfoCard } from '../../components/CategoryInfoCard';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
-import { insertGoal } from '../../services/goals';
-import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
+import { insertGoal, updateGoal, fetchGoals } from '../../services/goals';
+import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import type { Database } from '../../lib/database.types';
 
 type LifeGoalsSectionProps = {
   session: Session;
@@ -16,8 +17,13 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<LifeWheelCategoryKey | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingGoals, setLoadingGoals] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [categoryGoals, setCategoryGoals] = useState<Database['public']['Tables']['goals']['Row'][]>([]);
+  const [stepsByGoal, setStepsByGoal] = useState<
+    Record<string, Database['public']['Tables']['life_goal_steps']['Row'][]>
+  >({});
   const isMobile = useMediaQuery('(max-width: 720px)');
 
   const activeCategoryLabel = useMemo(() => {
@@ -115,6 +121,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
 
         setSuccessMessage('Life goal created successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
+        setSelectedCategory(formData.lifeWheelCategory);
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : 'Failed to save life goal');
         throw error;
@@ -123,6 +130,78 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
       }
     },
     [session.user.id]
+  );
+
+  const loadCategoryGoals = useCallback(
+    async (categoryKey: LifeWheelCategoryKey) => {
+      setLoadingGoals(true);
+      setErrorMessage(null);
+
+      try {
+        const { data, error } = await fetchGoals();
+        if (error) throw error;
+
+        const filteredGoals = (data ?? []).filter((goal) => goal.life_wheel_category === categoryKey);
+        setCategoryGoals(filteredGoals);
+
+        const stepsResults = await Promise.all(
+          filteredGoals.map(async (goal) => {
+            const { data: steps, error: stepsError } = await fetchStepsForGoal(goal.id);
+            if (stepsError) {
+              throw stepsError;
+            }
+            return { goalId: goal.id, steps: steps ?? [] };
+          })
+        );
+
+        const nextStepsByGoal = stepsResults.reduce<
+          Record<string, Database['public']['Tables']['life_goal_steps']['Row'][]>
+        >((acc, result) => {
+          acc[result.goalId] = result.steps;
+          return acc;
+        }, {});
+
+        setStepsByGoal(nextStepsByGoal);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Failed to load goals for this life area.');
+        setCategoryGoals([]);
+        setStepsByGoal({});
+      } finally {
+        setLoadingGoals(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!selectedCategory) {
+      setCategoryGoals([]);
+      setStepsByGoal({});
+      return;
+    }
+
+    loadCategoryGoals(selectedCategory);
+  }, [loadCategoryGoals, selectedCategory]);
+
+  const handleUpdateGoal = useCallback(
+    async (goalId: string, payload: Database['public']['Tables']['goals']['Update']) => {
+      setErrorMessage(null);
+      setSuccessMessage(null);
+
+      const { error } = await updateGoal(goalId, payload);
+      if (error) {
+        setErrorMessage(error.message);
+        throw error;
+      }
+
+      setSuccessMessage('Life goal updated successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+
+      if (selectedCategory) {
+        await loadCategoryGoals(selectedCategory);
+      }
+    },
+    [loadCategoryGoals, selectedCategory]
   );
 
   return (
@@ -173,7 +252,14 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
           </div>
         </div>
         <div className="life-goals-section__info">
-          <CategoryInfoCard categoryKey={selectedCategory} onAddGoal={handleAddGoal} />
+          <CategoryInfoCard
+            categoryKey={selectedCategory}
+            onAddGoal={handleAddGoal}
+            goals={categoryGoals}
+            stepsByGoal={stepsByGoal}
+            isLoading={loadingGoals}
+            onUpdateGoal={handleUpdateGoal}
+          />
         </div>
       </div>
 

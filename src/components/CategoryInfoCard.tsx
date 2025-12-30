@@ -1,8 +1,19 @@
+import { useMemo, useState } from 'react';
 import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
+import { LIFE_WHEEL_CATEGORIES } from '../features/checkins/LifeWheelCheckins';
+import type { Database } from '../lib/database.types';
+import { GoalEditDialog } from './GoalEditDialog';
 
 type CategoryInfoCardProps = {
   categoryKey: LifeWheelCategoryKey | null;
   onAddGoal: () => void;
+  goals: Database['public']['Tables']['goals']['Row'][];
+  stepsByGoal: Record<string, Database['public']['Tables']['life_goal_steps']['Row'][]>;
+  isLoading: boolean;
+  onUpdateGoal: (
+    goalId: string,
+    payload: Database['public']['Tables']['goals']['Update'],
+  ) => Promise<void>;
 };
 
 const CATEGORY_INFO: Record<
@@ -96,7 +107,17 @@ const CATEGORY_INFO: Record<
   },
 };
 
-export function CategoryInfoCard({ categoryKey, onAddGoal }: CategoryInfoCardProps) {
+export function CategoryInfoCard({
+  categoryKey,
+  onAddGoal,
+  goals,
+  stepsByGoal,
+  isLoading,
+  onUpdateGoal,
+}: CategoryInfoCardProps) {
+  const [editingGoal, setEditingGoal] = useState<Database['public']['Tables']['goals']['Row'] | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   if (!categoryKey) {
     return (
       <div className="category-info-card category-info-card--empty">
@@ -108,6 +129,19 @@ export function CategoryInfoCard({ categoryKey, onAddGoal }: CategoryInfoCardPro
   }
 
   const info = CATEGORY_INFO[categoryKey];
+  const categoryLabel =
+    LIFE_WHEEL_CATEGORIES.find((category) => category.key === categoryKey)?.label ?? info.title;
+  const allSteps = useMemo(() => Object.values(stepsByGoal).flat(), [stepsByGoal]);
+
+  const handleOpenDialog = (goal: Database['public']['Tables']['goals']['Row']) => {
+    setEditingGoal(goal);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingGoal(null);
+  };
 
   return (
     <div className="category-info-card">
@@ -118,18 +152,65 @@ export function CategoryInfoCard({ categoryKey, onAddGoal }: CategoryInfoCardPro
 
       <p className="category-info-card__description">{info.description}</p>
 
-      <div className="category-info-card__examples">
-        <h4>Goal Ideas:</h4>
-        <ul>
-          {info.examples.map((example, index) => (
-            <li key={index}>{example}</li>
-          ))}
-        </ul>
+      <div className="category-info-card__section">
+        <h4>Main goals</h4>
+        {isLoading ? (
+          <p className="category-info-card__empty">Loading goals...</p>
+        ) : goals.length === 0 ? (
+          <p className="category-info-card__empty">No main goals yet for {categoryLabel}.</p>
+        ) : (
+          <ul className="category-info-card__list">
+            {goals.map((goal) => (
+              <li key={goal.id}>
+                <button
+                  type="button"
+                  className="category-info-card__goal"
+                  onClick={() => handleOpenDialog(goal)}
+                >
+                  <span>{goal.title}</span>
+                  <span className="category-info-card__goal-meta">View & edit</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="category-info-card__section">
+        <h4>Sub goals</h4>
+        {isLoading ? (
+          <p className="category-info-card__empty">Loading sub goals...</p>
+        ) : allSteps.length === 0 ? (
+          <p className="category-info-card__empty">No sub goals yet for {categoryLabel}.</p>
+        ) : (
+          <ul className="category-info-card__list category-info-card__list--subgoals">
+            {allSteps.map((step) => {
+              const parentGoal = goals.find((goal) => goal.id === step.goal_id);
+              return (
+                <li key={step.id} className="category-info-card__subgoal">
+                  <span>{step.title}</span>
+                  {parentGoal && (
+                    <span className="category-info-card__goal-meta">Main goal: {parentGoal.title}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       <button type="button" className="category-info-card__action" onClick={onAddGoal}>
         Add Goal to {info.title}
       </button>
+
+      {editingGoal && (
+        <GoalEditDialog
+          goal={editingGoal}
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          onSave={onUpdateGoal}
+        />
+      )}
     </div>
   );
 }
