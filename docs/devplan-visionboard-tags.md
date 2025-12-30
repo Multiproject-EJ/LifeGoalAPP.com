@@ -44,6 +44,13 @@
 - **Performance/N+1**: Fetch tags in a single batch query for the current image list.
 - **Hook ordering bugs**: Initialize category lookup memoization before tag-loading hooks to avoid use-before-init runtime errors.
 
+## Discoveries
+- `LIFE_WHEEL_CATEGORIES` is a stable, shared source for tag labels and currently feeds the Vision Board tag pills.
+- Reordered the Life Wheel category lookup memoization ahead of tag-loading hooks to avoid use-before-init runtime errors. ✅
+
+## Follow-ups
+- Validate tag filters in demo mode once QA is available to confirm the local-only path behaves the same as Supabase-backed mode.
+
 ## Manual test checklist
 1. Existing vision board still loads images (before tagging anything).
 2. Tag 2 images with different categories.
@@ -52,9 +59,10 @@
 5. Verify RLS with a second test account (cannot see/tag others).
 6. Mobile UI: modal opens, tabs scroll if needed.
 7. Load the vision board without console errors after the tagging changes.
+8. Re-open the tag modal and confirm previously selected categories are pre-checked.
 
 ## Next step
-- ✅ Reorder the Life Wheel category lookup memoization ahead of tag-loading hooks to avoid use-before-init runtime errors.
+- ⬜ Run a quick demo-mode sanity pass to confirm tag filters and chips render as expected in the local-only flow.
 
 ### DB verification queries
 ```sql
