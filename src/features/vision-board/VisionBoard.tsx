@@ -119,7 +119,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const categoriesAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
   const categoryLabelLookup = useMemo(
     () => new Map(LIFE_WHEEL_CATEGORIES.map((category) => [category.key, category.label])),
-    [],
+    [LIFE_WHEEL_CATEGORIES],
   );
 
   const loadImages = useCallback(async () => {
