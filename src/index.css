@@ -5602,8 +5602,14 @@ body {
   justify-content: center;
 }
 
-.progress-dashboard__panel-content--life-wheel .life-wheel {
+.progress-dashboard__life-wheel-stack {
   width: min(100%, 1200px);
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.progress-dashboard__panel-content--life-wheel .life-wheel {
+  width: 100%;
   padding: clamp(1.25rem, 2.5vw, 1.75rem);
   background: transparent;
   box-shadow: none;
