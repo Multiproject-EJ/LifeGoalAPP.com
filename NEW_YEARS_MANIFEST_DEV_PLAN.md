@@ -4,7 +4,7 @@
 A guided workflow that helps users close the chapter on the previous year with data visualization ("Year in Review") and intentionally design their next year by connecting high-level Life Wheel goals to actionable daily habits.
 
 ## Phase 1: Database Schema & Backend (Supabase)
-- [ ] **Create `annual_reviews` table**
+- [x] **Create `annual_reviews` table**
   - `id` (uuid, PK)
   - `user_id` (uuid, FK)
   - `year` (int)
@@ -12,14 +12,14 @@ A guided workflow that helps users close the chapter on the previous year with d
   - `reflection_text` (text)
   - `overall_rating` (int 1-10)
 
-- [ ] **Create `annual_goals` table**
+- [x] **Create `annual_goals` table**
   - `id` (uuid, PK)
   - `review_id` (uuid, FK)
   - `category` (text) - Linked to Life Wheel segments
   - `goal_statement` (text)
   - `vision_image_url` (text)
 
-- [ ] **Backend Functions (RPC)**
+- [x] **Backend Functions (RPC)**
   - `get_year_in_review_stats(year_input int)`: Returns aggregated stats:
     - Total habits completed
     - Longest streak
