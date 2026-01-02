@@ -249,7 +249,7 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'game'];
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'habits'];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
@@ -270,9 +270,10 @@ export default function App() {
     const progressPercent = Math.round(levelInfo?.progressPercentage ?? 0);
 
     return {
-      label: `Level ${levelNumber}`,
+      label: 'Game',
+      levelLabel: `Level ${levelNumber}`,
       description: progressPercent > 0 ? `${progressPercent}% to L${levelNumber + 1}` : 'Keep building your streak',
-      icon: '⚡️',
+      icon: '🎮',
       progress: progressPercent,
     } as const;
   }, [levelInfo]);
