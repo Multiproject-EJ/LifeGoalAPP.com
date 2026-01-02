@@ -115,6 +115,15 @@ export const XP_REWARDS = {
   // Micro-quest rewards
   MICRO_QUEST: 25,
   MICRO_QUEST_BONUS: 50,
+
+  // Meditation rewards
+  MEDITATION_SESSION: 15, // Per meditation session
+  MEDITATION_LONG_SESSION: 10, // Bonus for 10+ minutes
+  BREATHING_SESSION: 10, // Per breathing session
+  BODY_SESSION: 10, // Per body practice session
+  MEDITATION_GOAL_DAY: 20, // Per day completed towards goal
+  MEDITATION_GOAL_COMPLETE: 100, // Completing a meditation goal
+  DAILY_CHALLENGE_COMPLETE: 50, // Completing daily challenge
 } as const;
 
 // =====================================================
@@ -229,7 +238,12 @@ export type XPSource =
   | 'achievement'
   | 'challenge_complete'
   | 'daily_login'
-  | 'balance_week';
+  | 'balance_week'
+  | 'meditation_session'
+  | 'breathing_session'
+  | 'body_session'
+  | 'meditation_goal_complete'
+  | 'daily_challenge';
 
 // =====================================================
 // DEMO MODE TYPES

@@ -244,3 +244,524 @@ export const PLACEHOLDER_SESSIONS = [
     icon: '🧘',
   },
 ] as const;
+
+// =====================================================
+// MEDITATION GOALS SERVICE
+// =====================================================
+
+import type {
+  MeditationGoal,
+  DailyCompletion,
+  MeditationGoalWithCompletions,
+  GoalProgressStats,
+  DailyChallenge,
+  UserSkill,
+} from '../types/meditation';
+
+// Demo data storage for goals
+const demoMeditationGoals: Map<string, MeditationGoal[]> = new Map();
+const demoDailyCompletions: Map<string, DailyCompletion[]> = new Map();
+const demoDailyChallenges: Map<string, DailyChallenge[]> = new Map();
+const demoUserSkills: Map<string, UserSkill[]> = new Map();
+
+/**
+ * Create a new meditation goal
+ */
+export async function createMeditationGoal(
+  userId: string,
+  targetDays: number,
+  reminderTime?: string,
+): Promise<ServiceResponse<MeditationGoal>> {
+  if (!canUseSupabaseData()) {
+    const goal: MeditationGoal = {
+      id: uuidv4(),
+      user_id: userId,
+      start_date: new Date().toISOString().split('T')[0],
+      target_days: targetDays,
+      completed_days: 0,
+      is_active: true,
+      reminder_time: reminderTime || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const goals = demoMeditationGoals.get(userId) || [];
+    goals.push(goal);
+    demoMeditationGoals.set(userId, goals);
+    return { data: goal, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const response = await supabase
+    .from('meditation_goals')
+    .insert({
+      user_id: userId,
+      start_date: new Date().toISOString().split('T')[0],
+      target_days: targetDays,
+      completed_days: 0,
+      is_active: true,
+      reminder_time: reminderTime || null,
+    })
+    .select()
+    .single();
+
+  return { data: response.data ?? null, error: response.error };
+}
+
+/**
+ * Get active meditation goal for a user
+ */
+export async function getActiveMeditationGoal(
+  userId: string,
+): Promise<ServiceResponse<MeditationGoalWithCompletions>> {
+  if (!canUseSupabaseData()) {
+    const goals = demoMeditationGoals.get(userId) || [];
+    const activeGoal = goals.find((g) => g.is_active);
+    if (!activeGoal) {
+      return { data: null, error: null };
+    }
+    const completions = (demoDailyCompletions.get(userId) || []).filter(
+      (c) => c.goal_id === activeGoal.id,
+    );
+    return {
+      data: { ...activeGoal, completions },
+      error: null,
+    };
+  }
+
+  const supabase = getSupabaseClient();
+  const response = await supabase
+    .from('meditation_goals')
+    .select('*, daily_completions(*)')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (response.error || !response.data) {
+    return { data: null, error: response.error };
+  }
+
+  const goal: MeditationGoalWithCompletions = {
+    id: response.data.id,
+    user_id: response.data.user_id,
+    start_date: response.data.start_date,
+    target_days: response.data.target_days,
+    completed_days: response.data.completed_days,
+    is_active: response.data.is_active,
+    reminder_time: response.data.reminder_time,
+    created_at: response.data.created_at,
+    updated_at: response.data.updated_at,
+    completions: (response.data as any).daily_completions || [],
+  };
+
+  return { data: goal, error: null };
+}
+
+/**
+ * Complete a day for a meditation goal
+ */
+export async function completeMeditationDay(
+  goalId: string,
+  date: string,
+  durationMinutes: number,
+  activityType: 'meditation' | 'breathing' | 'body',
+): Promise<ServiceResponse<DailyCompletion>> {
+  if (!canUseSupabaseData()) {
+    const completion: DailyCompletion = {
+      id: uuidv4(),
+      goal_id: goalId,
+      completion_date: date,
+      duration_minutes: durationMinutes,
+      activity_type: activityType,
+      notes: null,
+      created_at: new Date().toISOString(),
+    };
+    const completions = demoDailyCompletions.get(goalId) || [];
+    completions.push(completion);
+    demoDailyCompletions.set(goalId, completions);
+
+    // Update goal completed_days
+    const allGoals = Array.from(demoMeditationGoals.values()).flat();
+    const goal = allGoals.find((g) => g.id === goalId);
+    if (goal) {
+      goal.completed_days += 1;
+      goal.updated_at = new Date().toISOString();
+    }
+
+    return { data: completion, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+
+  // Insert completion
+  const { data: completion, error: insertError } = await supabase
+    .from('daily_completions')
+    .insert({
+      goal_id: goalId,
+      completion_date: date,
+      duration_minutes: durationMinutes,
+      activity_type: activityType,
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    return { data: null, error: insertError };
+  }
+
+  // Update goal completed_days count
+  const { error: updateError } = await supabase.rpc('increment_meditation_goal_days', {
+    goal_id: goalId,
+  });
+
+  if (updateError) {
+    console.warn('Failed to update goal completed_days:', updateError);
+  }
+
+  return { data: completion ?? null, error: insertError };
+}
+
+/**
+ * Get goal progress statistics
+ */
+export async function getMeditationGoalProgress(
+  goalId: string,
+): Promise<ServiceResponse<GoalProgressStats>> {
+  if (!canUseSupabaseData()) {
+    const allGoals = Array.from(demoMeditationGoals.values()).flat();
+    const goal = allGoals.find((g) => g.id === goalId);
+    if (!goal) {
+      return { data: null, error: new Error('Goal not found') };
+    }
+
+    const completions = demoDailyCompletions.get(goalId) || [];
+    const daysRemaining = Math.max(0, goal.target_days - goal.completed_days);
+    const progressPercentage = (goal.completed_days / goal.target_days) * 100;
+    const isCompleted = goal.completed_days >= goal.target_days;
+
+    // Calculate streak
+    const sortedCompletions = [...completions].sort(
+      (a, b) => new Date(b.completion_date).getTime() - new Date(a.completion_date).getTime(),
+    );
+    let currentStreak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let checkDate = new Date(today);
+
+    for (const completion of sortedCompletions) {
+      const completionDate = new Date(completion.completion_date);
+      completionDate.setHours(0, 0, 0, 0);
+      if (completionDate.getTime() === checkDate.getTime()) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return {
+      data: {
+        goalId: goal.id,
+        completedDays: goal.completed_days,
+        targetDays: goal.target_days,
+        currentStreak,
+        daysRemaining,
+        progressPercentage,
+        isCompleted,
+      },
+      error: null,
+    };
+  }
+
+  const supabase = getSupabaseClient();
+  const { data: goal, error } = await supabase
+    .from('meditation_goals')
+    .select('*, daily_completions(*)')
+    .eq('id', goalId)
+    .single();
+
+  if (error || !goal) {
+    return { data: null, error };
+  }
+
+  const completions = (goal as any).daily_completions || [];
+  const daysRemaining = Math.max(0, goal.target_days - goal.completed_days);
+  const progressPercentage = (goal.completed_days / goal.target_days) * 100;
+  const isCompleted = goal.completed_days >= goal.target_days;
+
+  // Calculate streak
+  const sortedCompletions = [...completions].sort(
+    (a: any, b: any) => new Date(b.completion_date).getTime() - new Date(a.completion_date).getTime(),
+  );
+  let currentStreak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let checkDate = new Date(today);
+
+  for (const completion of sortedCompletions) {
+    const completionDate = new Date((completion as any).completion_date);
+    completionDate.setHours(0, 0, 0, 0);
+    if (completionDate.getTime() === checkDate.getTime()) {
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return {
+    data: {
+      goalId: goal.id,
+      completedDays: goal.completed_days,
+      targetDays: goal.target_days,
+      currentStreak,
+      daysRemaining,
+      progressPercentage,
+      isCompleted,
+    },
+    error: null,
+  };
+}
+
+/**
+ * Get or create today's daily challenge
+ */
+export async function getTodaysDailyChallenge(
+  userId: string,
+): Promise<ServiceResponse<DailyChallenge>> {
+  const today = new Date().toISOString().split('T')[0];
+
+  if (!canUseSupabaseData()) {
+    const challenges = demoDailyChallenges.get(userId) || [];
+    let todayChallenge = challenges.find((c) => c.challenge_date === today);
+
+    if (!todayChallenge) {
+      // Generate a random challenge
+      const challengeTypes: Array<'duration' | 'frequency' | 'variety'> = [
+        'duration',
+        'frequency',
+        'variety',
+      ];
+      const type = challengeTypes[Math.floor(Math.random() * challengeTypes.length)];
+      const descriptions = {
+        duration: 'Meditate for 10 minutes today',
+        frequency: 'Complete 3 meditation sessions today',
+        variety: 'Try 2 different types of meditation today',
+      };
+      const targets = {
+        duration: 10,
+        frequency: 3,
+        variety: 2,
+      };
+
+      todayChallenge = {
+        id: uuidv4(),
+        user_id: userId,
+        challenge_date: today,
+        challenge_type: type,
+        description: descriptions[type],
+        target_value: targets[type],
+        current_progress: 0,
+        bonus_xp: 50,
+        is_completed: false,
+        completed_at: null,
+        created_at: new Date().toISOString(),
+      };
+      challenges.push(todayChallenge);
+      demoDailyChallenges.set(userId, challenges);
+    }
+
+    return { data: todayChallenge, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const { data: existingChallenge } = await supabase
+    .from('daily_challenges')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('challenge_date', today)
+    .single();
+
+  if (existingChallenge) {
+    return { data: existingChallenge, error: null };
+  }
+
+  // Generate a new challenge
+  const challengeTypes: Array<'duration' | 'frequency' | 'variety'> = [
+    'duration',
+    'frequency',
+    'variety',
+  ];
+  const type = challengeTypes[Math.floor(Math.random() * challengeTypes.length)];
+  const descriptions = {
+    duration: 'Meditate for 10 minutes today',
+    frequency: 'Complete 3 meditation sessions today',
+    variety: 'Try 2 different types of meditation today',
+  };
+  const targets = {
+    duration: 10,
+    frequency: 3,
+    variety: 2,
+  };
+
+  const { data: newChallenge, error } = await supabase
+    .from('daily_challenges')
+    .insert({
+      user_id: userId,
+      challenge_date: today,
+      challenge_type: type,
+      description: descriptions[type],
+      target_value: targets[type],
+      current_progress: 0,
+      bonus_xp: 50,
+      is_completed: false,
+    })
+    .select()
+    .single();
+
+  return { data: newChallenge ?? null, error };
+}
+
+/**
+ * Update daily challenge progress
+ */
+export async function updateDailyChallengeProgress(
+  challengeId: string,
+  progress: number,
+): Promise<ServiceResponse<DailyChallenge>> {
+  if (!canUseSupabaseData()) {
+    const allChallenges = Array.from(demoDailyChallenges.values()).flat();
+    const challenge = allChallenges.find((c) => c.id === challengeId);
+    if (!challenge) {
+      return { data: null, error: new Error('Challenge not found') };
+    }
+
+    challenge.current_progress = progress;
+    if (progress >= challenge.target_value && !challenge.is_completed) {
+      challenge.is_completed = true;
+      challenge.completed_at = new Date().toISOString();
+    }
+
+    return { data: challenge, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+
+  // Get current challenge
+  const { data: challenge } = await supabase
+    .from('daily_challenges')
+    .select('*')
+    .eq('id', challengeId)
+    .single();
+
+  if (!challenge) {
+    return { data: null, error: new Error('Challenge not found') };
+  }
+
+  const isCompleted = progress >= challenge.target_value;
+  const { data: updated, error } = await supabase
+    .from('daily_challenges')
+    .update({
+      current_progress: progress,
+      is_completed: isCompleted,
+      completed_at: isCompleted && !challenge.is_completed ? new Date().toISOString() : challenge.completed_at,
+    })
+    .eq('id', challengeId)
+    .select()
+    .single();
+
+  return { data: updated ?? null, error };
+}
+
+/**
+ * Get user skills
+ */
+export async function getUserSkills(userId: string): Promise<ServiceResponse<UserSkill[]>> {
+  if (!canUseSupabaseData()) {
+    const skills = demoUserSkills.get(userId) || [];
+    return { data: skills, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const response = await supabase
+    .from('user_skills')
+    .select('*')
+    .eq('user_id', userId)
+    .order('unlocked_at', { ascending: false });
+
+  return { data: response.data ?? null, error: response.error };
+}
+
+/**
+ * Unlock or update a user skill
+ */
+export async function unlockSkill(
+  userId: string,
+  skillName: string,
+  experiencePoints: number = 0,
+): Promise<ServiceResponse<UserSkill>> {
+  if (!canUseSupabaseData()) {
+    const skills = demoUserSkills.get(userId) || [];
+    let skill = skills.find((s) => s.skill_name === skillName);
+
+    if (!skill) {
+      skill = {
+        id: uuidv4(),
+        user_id: userId,
+        skill_name: skillName,
+        skill_level: 1,
+        experience_points: experiencePoints,
+        unlocked_at: new Date().toISOString(),
+      };
+      skills.push(skill);
+      demoUserSkills.set(userId, skills);
+    } else {
+      skill.experience_points += experiencePoints;
+      skill.skill_level = Math.floor(skill.experience_points / 100) + 1;
+    }
+
+    return { data: skill, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+
+  // Try to get existing skill
+  const { data: existing } = await supabase
+    .from('user_skills')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('skill_name', skillName)
+    .single();
+
+  if (existing) {
+    // Update existing skill
+    const newXP = existing.experience_points + experiencePoints;
+    const newLevel = Math.floor(newXP / 100) + 1;
+    const { data: updated, error } = await supabase
+      .from('user_skills')
+      .update({
+        experience_points: newXP,
+        skill_level: newLevel,
+      })
+      .eq('id', existing.id)
+      .select()
+      .single();
+
+    return { data: updated ?? null, error };
+  }
+
+  // Create new skill
+  const { data: newSkill, error } = await supabase
+    .from('user_skills')
+    .insert({
+      user_id: userId,
+      skill_name: skillName,
+      skill_level: 1,
+      experience_points: experiencePoints,
+    })
+    .select()
+    .single();
+
+  return { data: newSkill ?? null, error };
+}
