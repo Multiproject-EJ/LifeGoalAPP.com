@@ -2,7 +2,7 @@
 
 ## Issue: "must be owner of relation objects" Error
 
-When running migration `0124_vision_board_storage_bucket.sql`, you may encounter this error:
+When running migration 0124_vision_board_storage_bucket.sql, you may encounter this error:
 
 ```
 Error: Failed to run sql query: ERROR: 42501: must be owner of relation objects

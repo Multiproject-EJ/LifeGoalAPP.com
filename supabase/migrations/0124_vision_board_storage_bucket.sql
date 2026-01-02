@@ -28,7 +28,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- OPTION 1 (Recommended): Create policies via Supabase Dashboard
 -- ----------------------------------------------------------------
 -- 1. Go to Supabase Dashboard > Storage > vision-board bucket
--- 2. Click "Policies" tab  
+-- 2. Click "Policies" tab
 -- 3. Add the following policies:
 --
 -- SELECT Policy:
