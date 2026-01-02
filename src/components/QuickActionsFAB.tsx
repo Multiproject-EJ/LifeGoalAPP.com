@@ -93,7 +93,7 @@ export function QuickActionsFAB({
     if (schedule && Array.isArray(schedule)) {
       const indexes = schedule
         .map((item) => (typeof item === 'string' ? item.toLowerCase() : undefined))
-        .map((day) => {
+        .map((day): number | undefined => {
           switch (day) {
             case 'sunday':
               return 0;
@@ -125,7 +125,7 @@ export function QuickActionsFAB({
       if (type === 'weekly' && Array.isArray(value.days)) {
         const indexes = value.days
           .map((item) => (typeof item === 'string' ? item.toLowerCase() : undefined))
-          .map((day) => {
+          .map((day): number | undefined => {
             switch (day) {
               case 'sunday':
                 return 0;
