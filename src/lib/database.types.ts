@@ -1554,6 +1554,67 @@ export interface Database {
         };
         Relationships: [];
       };
+      annual_reviews: {
+        Row: {
+          id: string;
+          user_id: string;
+          year: number;
+          created_at: string;
+          reflection_text: string | null;
+          overall_rating: number | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          year: number;
+          created_at?: string;
+          reflection_text?: string | null;
+          overall_rating?: number | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          year?: number;
+          created_at?: string;
+          reflection_text?: string | null;
+          overall_rating?: number | null;
+        };
+        Relationships: [];
+      };
+      annual_goals: {
+        Row: {
+          id: string;
+          review_id: string;
+          category: string;
+          goal_statement: string;
+          vision_image_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          review_id: string;
+          category: string;
+          goal_statement: string;
+          vision_image_url?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          review_id?: string;
+          category?: string;
+          goal_statement?: string;
+          vision_image_url?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "annual_goals_review_id_fkey";
+            columns: ["review_id"];
+            referencedRelation: "annual_reviews";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       v_habit_streaks: {
@@ -1575,7 +1636,18 @@ export interface Database {
         ];
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      get_year_in_review_stats: {
+        Args: {
+          year_input: number;
+        };
+        Returns: {
+          total_habits_completed: number;
+          longest_streak: number;
+          most_active_category: string | null;
+        }[];
+      };
+    };
     Enums: {
       habit_type: 'boolean' | 'quantity' | 'duration';
       vb_board_type: 'vision' | 'focus';
