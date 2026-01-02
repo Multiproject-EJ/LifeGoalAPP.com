@@ -23,6 +23,11 @@ type ServiceResponse<T> = {
   error: ServiceError;
 };
 
+function isBucketNotFoundError(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  return lowerMessage.includes('bucket') && (lowerMessage.includes('not found') || lowerMessage.includes('not exist'));
+}
+
 export async function fetchVisionImages(userId: string): Promise<ServiceResponse<VisionImageRow[]>> {
   if (!canUseSupabaseData()) {
     return { data: getDemoVisionImages(userId || DEMO_USER_ID), error: null };
@@ -119,8 +124,7 @@ export async function uploadVisionImage({
 
   if (storageError) {
     // Provide a more helpful error message for bucket not found
-    const errorMessage = storageError.message.toLowerCase();
-    if (errorMessage.includes('bucket') && (errorMessage.includes('not found') || errorMessage.includes('not exist'))) {
+    if (isBucketNotFoundError(storageError.message)) {
       return {
         data: null,
         error: new Error(
