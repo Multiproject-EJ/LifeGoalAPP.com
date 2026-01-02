@@ -26,13 +26,14 @@ A guided workflow that helps users close the chapter on the previous year with d
     - Most active category
 
 ## Phase 2: Frontend Components (React)
-- [ ] **`ReviewWizard` Container**
+- [x] **`ReviewWizard` Container**
   - Multi-step state manager.
   - Progress bar.
 
-- [ ] **Step 1: The Retrospective (Stats)**
+- [x] **Step 1: The Retrospective (Stats)**
   - `StatsCard` component for displaying aggregated data.
   - "Spotify Wrapped" style layout with animations.
+  - Integrated with `getYearInReviewStats` RPC function.
 
 - [ ] **Step 2: Life Wheel Audit**
   - Interactive wheel or list to rate satisfaction (1-10) for each category.
