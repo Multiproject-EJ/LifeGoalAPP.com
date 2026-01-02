@@ -113,7 +113,7 @@ export function QuickActionsFAB({
               return undefined;
           }
         })
-        .filter((value): value is number => typeof value === 'number');
+        .filter((value): value is Exclude<typeof value, undefined> => value !== undefined);
       if (indexes.length > 0) {
         return (date: Date) => indexes.includes(date.getDay());
       }
@@ -145,7 +145,7 @@ export function QuickActionsFAB({
                 return undefined;
             }
           })
-          .filter((value): value is number => typeof value === 'number');
+          .filter((value): value is Exclude<typeof value, undefined> => value !== undefined);
         if (indexes.length > 0) {
           return (date: Date) => indexes.includes(date.getDay());
         }

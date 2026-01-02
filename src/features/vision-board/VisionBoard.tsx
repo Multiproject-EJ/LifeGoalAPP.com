@@ -336,7 +336,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
     });
   }, [sortedImages]);
 
-  const toggleSelection = (current: string[], id: string) =>
+  const toggleSelection = <T extends string>(current: T[], id: T): T[] =>
     current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
 
   const goalLookup = useMemo(() => new Map(goals.map((goal) => [goal.id, goal.title])), [goals]);
