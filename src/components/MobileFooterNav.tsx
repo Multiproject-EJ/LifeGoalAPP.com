@@ -9,6 +9,7 @@ type MobileFooterNavItem = {
 
 type MobileFooterStatus = {
   label: string;
+  levelLabel?: string;
   description?: string;
   icon?: ReactNode;
   progress?: number;
@@ -63,11 +64,9 @@ export function MobileFooterNav({
                   >
                     <div className="mobile-footer-nav__status-header">
                       <span className="mobile-footer-nav__status-icon" aria-hidden="true">{status.icon ?? '⭐️'}</span>
-                      <span className="mobile-footer-nav__status-label">{status.label}</span>
+                      <span className="mobile-footer-nav__status-level">{status.levelLabel ?? status.label}</span>
                     </div>
-                    {status.description ? (
-                      <p className="mobile-footer-nav__status-description">{status.description}</p>
-                    ) : null}
+                    <span className="mobile-footer-nav__status-label">{status.label}</span>
                     {'progress' in status && status.progress !== undefined ? (
                       <div className="mobile-footer-nav__status-progress" aria-hidden="true">
                         <span
