@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
+import { StatsRetrospective } from './StatsRetrospective';
 
-// Placeholder components - will be moved to separate files later
-const StatsRetrospective = ({ onNext }: { onNext: () => void }) => (
-  <div className="review-step">
-    <h2>📊 Year in Review</h2>
-    <p>Let's look back at what you achieved last year.</p>
-    {/* Stats content will go here */}
-    <div className="step-actions">
-      <button className="btn-primary" onClick={onNext}>Next: Life Audit</button>
-    </div>
-  </div>
-);
+// Placeholder components - will be implemented in subsequent steps
 
 const LifeWheelAudit = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => (
   <div className="review-step">
@@ -52,6 +43,8 @@ const HabitPlanning = ({ onBack, onComplete }: { onBack: () => void; onComplete:
 export const ReviewWizard: React.FC = () => {
   const [step, setStep] = useState(1);
   const totalSteps = 4;
+  // Default to reviewing the previous year (current year - 1)
+  const [reviewYear] = useState(new Date().getFullYear() - 1);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, totalSteps));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
@@ -96,7 +89,7 @@ export const ReviewWizard: React.FC = () => {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {step === 1 && <StatsRetrospective onNext={nextStep} />}
+        {step === 1 && <StatsRetrospective year={reviewYear} onNext={nextStep} />}
         {step === 2 && <LifeWheelAudit onNext={nextStep} onBack={prevStep} />}
         {step === 3 && <VisionBoardManifest onNext={nextStep} onBack={prevStep} />}
         {step === 4 && <HabitPlanning onBack={prevStep} onComplete={handleComplete} />}
