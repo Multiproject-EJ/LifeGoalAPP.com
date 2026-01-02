@@ -1232,6 +1232,35 @@ body {
   z-index: 1;
 }
 
+.workspace-sidebar__pin-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: rgba(248, 250, 252, 0.65);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-sidebar__pin-label {
+  text-align: center;
+}
+
+.workspace-sidebar__pin-switch {
+  width: 40px;
+  height: 22px;
+}
+
+.workspace-sidebar__pin-switch .toggle__thumb {
+  width: 18px;
+  height: 18px;
+}
+
+.workspace-sidebar__pin-switch[data-on='true'] .toggle__thumb {
+  left: 20px;
+}
+
 .workspace-sidebar__actions-divider {
   width: 40px;
   height: 1px;
