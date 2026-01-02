@@ -89,11 +89,13 @@ export function QuickActionsFAB({
     return new Date(year, month - 1, day);
   };
 
+  type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
   const createScheduleChecker = (frequency: string, schedule: unknown) => {
     if (schedule && Array.isArray(schedule)) {
       const indexes = schedule
         .map((item) => (typeof item === 'string' ? item.toLowerCase() : undefined))
-        .map((day): number | undefined => {
+        .map((day): DayOfWeek | undefined => {
           switch (day) {
             case 'sunday':
               return 0;
@@ -113,9 +115,9 @@ export function QuickActionsFAB({
               return undefined;
           }
         })
-        .filter((value): value is number => value !== undefined);
+        .filter((value): value is DayOfWeek => value !== undefined);
       if (indexes.length > 0) {
-        return (date: Date) => indexes.includes(date.getDay());
+        return (date: Date) => indexes.includes(date.getDay() as DayOfWeek);
       }
     }
 
@@ -125,7 +127,7 @@ export function QuickActionsFAB({
       if (type === 'weekly' && Array.isArray(value.days)) {
         const indexes = value.days
           .map((item) => (typeof item === 'string' ? item.toLowerCase() : undefined))
-          .map((day): number | undefined => {
+          .map((day): DayOfWeek | undefined => {
             switch (day) {
               case 'sunday':
                 return 0;
@@ -145,9 +147,9 @@ export function QuickActionsFAB({
                 return undefined;
             }
           })
-          .filter((value): value is number => value !== undefined);
+          .filter((value): value is DayOfWeek => value !== undefined);
         if (indexes.length > 0) {
-          return (date: Date) => indexes.includes(date.getDay());
+          return (date: Date) => indexes.includes(date.getDay() as DayOfWeek);
         }
       }
       if (type === 'daily') {
