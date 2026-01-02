@@ -292,7 +292,7 @@ export async function createMeditationGoal(
 
   const supabase = getSupabaseClient();
   const response = await supabase
-    .from('meditation_goals')
+    .from('meditation_goals' as any)
     .insert({
       user_id: userId,
       start_date: new Date().toISOString().split('T')[0],
@@ -304,7 +304,7 @@ export async function createMeditationGoal(
     .select()
     .single();
 
-  return { data: response.data ?? null, error: response.error };
+  return { data: response.data as any ?? null, error: response.error };
 }
 
 /**
@@ -330,7 +330,7 @@ export async function getActiveMeditationGoal(
 
   const supabase = getSupabaseClient();
   const response = await supabase
-    .from('meditation_goals')
+    .from('meditation_goals' as any)
     .select('*, daily_completions(*)')
     .eq('user_id', userId)
     .eq('is_active', true)
@@ -343,15 +343,15 @@ export async function getActiveMeditationGoal(
   }
 
   const goal: MeditationGoalWithCompletions = {
-    id: response.data.id,
-    user_id: response.data.user_id,
-    start_date: response.data.start_date,
-    target_days: response.data.target_days,
-    completed_days: response.data.completed_days,
-    is_active: response.data.is_active,
-    reminder_time: response.data.reminder_time,
-    created_at: response.data.created_at,
-    updated_at: response.data.updated_at,
+    id: (response.data as any).id,
+    user_id: (response.data as any).user_id,
+    start_date: (response.data as any).start_date,
+    target_days: (response.data as any).target_days,
+    completed_days: (response.data as any).completed_days,
+    is_active: (response.data as any).is_active,
+    reminder_time: (response.data as any).reminder_time,
+    created_at: (response.data as any).created_at,
+    updated_at: (response.data as any).updated_at,
     completions: (response.data as any).daily_completions || [],
   };
 
@@ -396,7 +396,7 @@ export async function completeMeditationDay(
 
   // Insert completion
   const { data: completion, error: insertError } = await supabase
-    .from('daily_completions')
+    .from('daily_completions' as any)
     .insert({
       goal_id: goalId,
       completion_date: date,
@@ -411,7 +411,7 @@ export async function completeMeditationDay(
   }
 
   // Update goal completed_days count
-  const { error: updateError } = await supabase.rpc('increment_meditation_goal_days', {
+  const { error: updateError } = await (supabase.rpc as any)('increment_meditation_goal_days', {
     goal_id: goalId,
   });
 
@@ -419,7 +419,7 @@ export async function completeMeditationDay(
     console.warn('Failed to update goal completed_days:', updateError);
   }
 
-  return { data: completion ?? null, error: insertError };
+  return { data: completion as any ?? null, error: insertError };
 }
 
 /**
@@ -476,7 +476,7 @@ export async function getMeditationGoalProgress(
 
   const supabase = getSupabaseClient();
   const { data: goal, error } = await supabase
-    .from('meditation_goals')
+    .from('meditation_goals' as any)
     .select('*, daily_completions(*)')
     .eq('id', goalId)
     .single();
@@ -486,9 +486,9 @@ export async function getMeditationGoalProgress(
   }
 
   const completions = (goal as any).daily_completions || [];
-  const daysRemaining = Math.max(0, goal.target_days - goal.completed_days);
-  const progressPercentage = (goal.completed_days / goal.target_days) * 100;
-  const isCompleted = goal.completed_days >= goal.target_days;
+  const daysRemaining = Math.max(0, (goal as any).target_days - (goal as any).completed_days);
+  const progressPercentage = ((goal as any).completed_days / (goal as any).target_days) * 100;
+  const isCompleted = (goal as any).completed_days >= (goal as any).target_days;
 
   // Calculate streak
   const sortedCompletions = [...completions].sort(
@@ -512,9 +512,9 @@ export async function getMeditationGoalProgress(
 
   return {
     data: {
-      goalId: goal.id,
-      completedDays: goal.completed_days,
-      targetDays: goal.target_days,
+      goalId: (goal as any).id,
+      completedDays: (goal as any).completed_days,
+      targetDays: (goal as any).target_days,
       currentStreak,
       daysRemaining,
       progressPercentage,
@@ -577,14 +577,14 @@ export async function getTodaysDailyChallenge(
 
   const supabase = getSupabaseClient();
   const { data: existingChallenge } = await supabase
-    .from('daily_challenges')
+    .from('daily_challenges' as any)
     .select('*')
     .eq('user_id', userId)
     .eq('challenge_date', today)
     .single();
 
   if (existingChallenge) {
-    return { data: existingChallenge, error: null };
+    return { data: existingChallenge as any, error: null };
   }
 
   // Generate a new challenge
@@ -606,7 +606,7 @@ export async function getTodaysDailyChallenge(
   };
 
   const { data: newChallenge, error } = await supabase
-    .from('daily_challenges')
+    .from('daily_challenges' as any)
     .insert({
       user_id: userId,
       challenge_date: today,
@@ -620,7 +620,7 @@ export async function getTodaysDailyChallenge(
     .select()
     .single();
 
-  return { data: newChallenge ?? null, error };
+  return { data: newChallenge as any ?? null, error };
 }
 
 /**
@@ -650,7 +650,7 @@ export async function updateDailyChallengeProgress(
 
   // Get current challenge
   const { data: challenge } = await supabase
-    .from('daily_challenges')
+    .from('daily_challenges' as any)
     .select('*')
     .eq('id', challengeId)
     .single();
@@ -659,19 +659,19 @@ export async function updateDailyChallengeProgress(
     return { data: null, error: new Error('Challenge not found') };
   }
 
-  const isCompleted = progress >= challenge.target_value;
+  const isCompleted = progress >= (challenge as any).target_value;
   const { data: updated, error } = await supabase
-    .from('daily_challenges')
+    .from('daily_challenges' as any)
     .update({
       current_progress: progress,
       is_completed: isCompleted,
-      completed_at: isCompleted && !challenge.is_completed ? new Date().toISOString() : challenge.completed_at,
+      completed_at: isCompleted && !(challenge as any).is_completed ? new Date().toISOString() : (challenge as any).completed_at,
     })
     .eq('id', challengeId)
     .select()
     .single();
 
-  return { data: updated ?? null, error };
+  return { data: updated as any ?? null, error };
 }
 
 /**
@@ -685,12 +685,12 @@ export async function getUserSkills(userId: string): Promise<ServiceResponse<Use
 
   const supabase = getSupabaseClient();
   const response = await supabase
-    .from('user_skills')
+    .from('user_skills' as any)
     .select('*')
     .eq('user_id', userId)
     .order('unlocked_at', { ascending: false });
 
-  return { data: response.data ?? null, error: response.error };
+  return { data: response.data as any ?? null, error: response.error };
 }
 
 /**
@@ -728,7 +728,7 @@ export async function unlockSkill(
 
   // Try to get existing skill
   const { data: existing } = await supabase
-    .from('user_skills')
+    .from('user_skills' as any)
     .select('*')
     .eq('user_id', userId)
     .eq('skill_name', skillName)
@@ -736,24 +736,24 @@ export async function unlockSkill(
 
   if (existing) {
     // Update existing skill
-    const newXP = existing.experience_points + experiencePoints;
+    const newXP = (existing as any).experience_points + experiencePoints;
     const newLevel = Math.floor(newXP / 100) + 1;
     const { data: updated, error } = await supabase
-      .from('user_skills')
+      .from('user_skills' as any)
       .update({
         experience_points: newXP,
         skill_level: newLevel,
       })
-      .eq('id', existing.id)
+      .eq('id', (existing as any).id)
       .select()
       .single();
 
-    return { data: updated ?? null, error };
+    return { data: updated as any ?? null, error };
   }
 
   // Create new skill
   const { data: newSkill, error } = await supabase
-    .from('user_skills')
+    .from('user_skills' as any)
     .insert({
       user_id: userId,
       skill_name: skillName,
@@ -763,5 +763,5 @@ export async function unlockSkill(
     .select()
     .single();
 
-  return { data: newSkill ?? null, error };
+  return { data: newSkill as any ?? null, error };
 }
