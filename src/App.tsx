@@ -192,6 +192,7 @@ export default function App() {
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
+  const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
 
   const { xpToasts, dismissXPToast, levelInfo } = useGamification(supabaseSession);
@@ -431,7 +432,7 @@ export default function App() {
   );
 
   const scheduleDesktopMenuAutoHide = useCallback(() => {
-    if (isMobileViewport || !isDesktopMenuOpen) return;
+    if (isMobileViewport || !isDesktopMenuOpen || isDesktopMenuPinned) return;
     if (desktopMenuAutoHideTimeoutRef.current !== null) {
       window.clearTimeout(desktopMenuAutoHideTimeoutRef.current);
     }
@@ -439,7 +440,21 @@ export default function App() {
       setIsDesktopMenuOpen(false);
       desktopMenuAutoHideTimeoutRef.current = null;
     }, 3000);
-  }, [isDesktopMenuOpen, isMobileViewport]);
+  }, [isDesktopMenuOpen, isMobileViewport, isDesktopMenuPinned]);
+
+  const handleDesktopMenuPinToggle = () => {
+    setIsDesktopMenuPinned((current) => {
+      const nextValue = !current;
+      if (nextValue) {
+        setIsDesktopMenuOpen(true);
+        if (desktopMenuAutoHideTimeoutRef.current !== null) {
+          window.clearTimeout(desktopMenuAutoHideTimeoutRef.current);
+          desktopMenuAutoHideTimeoutRef.current = null;
+        }
+      }
+      return nextValue;
+    });
+  };
 
   const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1500,6 +1515,19 @@ export default function App() {
                   {isAuthenticated ? 'Open my account settings' : 'Open the sign-in dialog'}
                 </span>
               </button>
+              <div className="workspace-sidebar__pin-toggle">
+                <span className="workspace-sidebar__pin-label">Pin main menu</span>
+                <button
+                  type="button"
+                  className="toggle workspace-sidebar__pin-switch"
+                  data-on={isDesktopMenuPinned}
+                  onClick={handleDesktopMenuPinToggle}
+                  aria-pressed={isDesktopMenuPinned}
+                  aria-label="Pin main menu"
+                >
+                  <span className="toggle__thumb" />
+                </button>
+              </div>
             </div>
           </aside>
         )}
