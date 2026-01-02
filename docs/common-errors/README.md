@@ -15,6 +15,7 @@ Since certain issues have occurred multiple times, this database serves as:
 |---|---|---|---|---|
 | ERROR-001 | White/Blank Page on Production | ✅ Resolved (updated 2025-11-13) | 2025-11-05 | [white-blank-page-issue.md](./white-blank-page-issue.md) |
 | ERROR-002 | Invalid Login Credentials After Vercel Migration | ✅ Resolved (updated 2025-11-18) | 2025-11-18 | [invalid-login-credentials.md](./invalid-login-credentials.md) |
+| ERROR-003 | Vision Board Tags and Upload Issues | ✅ Resolved | 2026-01-02 | [vision-board-issues.md](./vision-board-issues.md) |
 
 ## How to Use This Database
 
@@ -79,6 +80,11 @@ YYYY-MM-DD
 
 ### Site Won't Load / Blank Page
 → See [ERROR-001: White/Blank Page Issue](./white-blank-page-issue.md)
+
+### Vision Board Not Working
+→ See [ERROR-003: Vision Board Issues](./vision-board-issues.md)
+- "Unable to load vision board tags" → Run migrations 0120 and 0121
+- "Bucket Not found" on upload → Run migration 0124 or create storage bucket manually
 
 ### Common First Steps
 1. **Check GitHub Actions**: Verify latest deployment succeeded

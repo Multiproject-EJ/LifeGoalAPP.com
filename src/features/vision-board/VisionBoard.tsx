@@ -229,7 +229,18 @@ export function VisionBoard({ session }: VisionBoardProps) {
       setLifeWheelTags(nextLifeWheelTags);
       setVisionaryTags(nextVisionaryTags);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to load vision board tags.');
+      // Provide more context if this is a table-related error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isTableMissing =
+        errorMessage.toLowerCase().includes('relation') &&
+        errorMessage.toLowerCase().includes('does not exist');
+      if (isTableMissing) {
+        setErrorMessage(
+          'Vision board tags table not found. Please run migrations 0120_vision_board_image_tags.sql and 0121_vision_board_image_tags_group.sql in your Supabase project.',
+        );
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load vision board tags.');
+      }
     }
   }, [session, isConfigured, isDemoExperience, images, lifeWheelLabelLookup, visionaryLabelLookup]);
 

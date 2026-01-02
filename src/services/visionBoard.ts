@@ -118,6 +118,16 @@ export async function uploadVisionImage({
     });
 
   if (storageError) {
+    // Provide a more helpful error message for bucket not found
+    const errorMessage = storageError.message.toLowerCase();
+    if (errorMessage.includes('bucket') && (errorMessage.includes('not found') || errorMessage.includes('not exist'))) {
+      return {
+        data: null,
+        error: new Error(
+          `Storage bucket "${VISION_BOARD_BUCKET}" not found. Please run the 0124_vision_board_storage_bucket.sql migration in your Supabase project to create it. You can still use URL-based images in the meantime.`,
+        ),
+      };
+    }
     return { data: null, error: new Error(storageError.message) };
   }
 
