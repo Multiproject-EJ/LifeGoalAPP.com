@@ -45,6 +45,10 @@ npx supabase db push
 6. `0103_gratitude_mood.sql`
 7. `0104_life_goals_extended.sql`
 8. `0105_vision_images_url_support.sql`
+9. ... (run all migrations in supabase/migrations/ folder in order)
+10. `0124_vision_board_storage_bucket.sql` - **Required for Vision Board image uploads**
+
+> **Important:** The `0124_vision_board_storage_bucket.sql` migration creates the storage bucket required for uploading images to the Vision Board. Without this migration, you will see a "Bucket Not found" error when trying to upload images (URL-based images will still work).
 
 ### 3. Start Development
 
