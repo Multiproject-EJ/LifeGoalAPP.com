@@ -19,18 +19,51 @@ ON CONFLICT (id) DO UPDATE SET
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 -- RLS Policies for vision-board bucket
--- Note: Storage RLS policies are created on the storage.objects table
-
--- Policy: Users can view their own images (and public images)
-DROP POLICY IF EXISTS "vision_board_select" ON storage.objects;
-CREATE POLICY "vision_board_select" ON storage.objects
+-- ===========================================
+-- IMPORTANT: Due to Supabase platform security, storage.objects policies
+-- cannot be created/dropped via standard SQL migrations (requires supabase_storage_admin role).
+-- 
+-- You have two options:
+--
+-- OPTION 1 (Recommended): Create policies via Supabase Dashboard
+-- ----------------------------------------------------------------
+-- 1. Go to Supabase Dashboard > Storage > vision-board bucket
+-- 2. Click "Policies" tab
+-- 3. Add the following policies:
+--
+-- SELECT Policy:
+--   Name: vision_board_select
+--   Target roles: authenticated
+--   USING: bucket_id = 'vision-board' AND ((storage.foldername(name))[1] = auth.uid()::text OR EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'vision-board' AND public = true))
+--
+-- INSERT Policy:
+--   Name: vision_board_insert
+--   Target roles: authenticated
+--   WITH CHECK: bucket_id = 'vision-board' AND (storage.foldername(name))[1] = auth.uid()::text
+--
+-- UPDATE Policy:
+--   Name: vision_board_update
+--   Target roles: authenticated
+--   USING: bucket_id = 'vision-board' AND (storage.foldername(name))[1] = auth.uid()::text
+--   WITH CHECK: bucket_id = 'vision-board' AND (storage.foldername(name))[1] = auth.uid()::text
+--
+-- DELETE Policy:
+--   Name: vision_board_delete
+--   Target roles: authenticated
+--   USING: bucket_id = 'vision-board' AND (storage.foldername(name))[1] = auth.uid()::text
+--
+-- OPTION 2: Run via Supabase SQL Editor (with elevated permissions)
+-- ------------------------------------------------------------------
+-- Copy and paste the SQL below into the Supabase Dashboard SQL Editor:
+--
+/*
+CREATE POLICY IF NOT EXISTS "vision_board_select" ON storage.objects
   FOR SELECT
+  TO authenticated
   USING (
     bucket_id = 'vision-board'
     AND (
-      -- Allow access to user's own folder
       (storage.foldername(name))[1] = auth.uid()::text
-      -- Or allow access if the bucket is public (for sharing)
       OR EXISTS (
         SELECT 1 FROM storage.buckets
         WHERE id = 'vision-board' AND public = true
@@ -38,19 +71,17 @@ CREATE POLICY "vision_board_select" ON storage.objects
     )
   );
 
--- Policy: Users can upload images to their own folder only
-DROP POLICY IF EXISTS "vision_board_insert" ON storage.objects;
-CREATE POLICY "vision_board_insert" ON storage.objects
+CREATE POLICY IF NOT EXISTS "vision_board_insert" ON storage.objects
   FOR INSERT
+  TO authenticated
   WITH CHECK (
     bucket_id = 'vision-board'
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- Policy: Users can update their own images
-DROP POLICY IF EXISTS "vision_board_update" ON storage.objects;
-CREATE POLICY "vision_board_update" ON storage.objects
+CREATE POLICY IF NOT EXISTS "vision_board_update" ON storage.objects
   FOR UPDATE
+  TO authenticated
   USING (
     bucket_id = 'vision-board'
     AND (storage.foldername(name))[1] = auth.uid()::text
@@ -60,17 +91,11 @@ CREATE POLICY "vision_board_update" ON storage.objects
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- Policy: Users can delete their own images
-DROP POLICY IF EXISTS "vision_board_delete" ON storage.objects;
-CREATE POLICY "vision_board_delete" ON storage.objects
+CREATE POLICY IF NOT EXISTS "vision_board_delete" ON storage.objects
   FOR DELETE
+  TO authenticated
   USING (
     bucket_id = 'vision-board'
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
-
--- Add helpful comments
-COMMENT ON POLICY "vision_board_select" ON storage.objects IS 'Allow users to view vision board images (own or public)';
-COMMENT ON POLICY "vision_board_insert" ON storage.objects IS 'Allow users to upload vision board images to their own folder';
-COMMENT ON POLICY "vision_board_update" ON storage.objects IS 'Allow users to update their own vision board images';
-COMMENT ON POLICY "vision_board_delete" ON storage.objects IS 'Allow users to delete their own vision board images';
+*/
