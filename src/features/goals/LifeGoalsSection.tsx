@@ -50,6 +50,47 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
     setIsDialogOpen(false);
   };
 
+  const refreshGoalStats = useCallback(async () => {
+    try {
+      const { data, error } = await fetchGoals();
+      if (error) throw error;
+
+      const goals = data ?? [];
+      const grouped = goals.reduce<
+        Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>
+      >((acc, goal) => {
+        const key = goal.life_wheel_category as LifeWheelCategoryKey | null;
+        if (!key) return acc;
+        if (!acc[key]) {
+          acc[key] = { mainCount: 0, subCount: 0 };
+        }
+        acc[key]!.mainCount += 1;
+        return acc;
+      }, {});
+
+      const stepsResults = await Promise.all(
+        goals.map(async (goal) => {
+          const { data: steps, error: stepsError } = await fetchStepsForGoal(goal.id);
+          if (stepsError) throw stepsError;
+          return { categoryKey: goal.life_wheel_category, count: steps?.length ?? 0 };
+        })
+      );
+
+      stepsResults.forEach((result) => {
+        if (!result.categoryKey) return;
+        const key = result.categoryKey as LifeWheelCategoryKey;
+        if (!grouped[key]) {
+          grouped[key] = { mainCount: 0, subCount: 0 };
+        }
+        grouped[key]!.subCount += result.count;
+      });
+
+      setGoalStats(grouped);
+    } catch (error) {
+      setGoalStats({});
+    }
+  }, []);
+
   const handleSaveGoal = useCallback(
     async (formData: any) => {
       setSaving(true);
@@ -135,47 +176,6 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
     },
     [refreshGoalStats, session.user.id]
   );
-
-  const refreshGoalStats = useCallback(async () => {
-    try {
-      const { data, error } = await fetchGoals();
-      if (error) throw error;
-
-      const goals = data ?? [];
-      const grouped = goals.reduce<
-        Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>
-      >((acc, goal) => {
-        const key = goal.life_wheel_category as LifeWheelCategoryKey | null;
-        if (!key) return acc;
-        if (!acc[key]) {
-          acc[key] = { mainCount: 0, subCount: 0 };
-        }
-        acc[key]!.mainCount += 1;
-        return acc;
-      }, {});
-
-      const stepsResults = await Promise.all(
-        goals.map(async (goal) => {
-          const { data: steps, error: stepsError } = await fetchStepsForGoal(goal.id);
-          if (stepsError) throw stepsError;
-          return { categoryKey: goal.life_wheel_category, count: steps?.length ?? 0 };
-        })
-      );
-
-      stepsResults.forEach((result) => {
-        if (!result.categoryKey) return;
-        const key = result.categoryKey as LifeWheelCategoryKey;
-        if (!grouped[key]) {
-          grouped[key] = { mainCount: 0, subCount: 0 };
-        }
-        grouped[key]!.subCount += result.count;
-      });
-
-      setGoalStats(grouped);
-    } catch (error) {
-      setGoalStats({});
-    }
-  }, []);
 
   const loadCategoryGoals = useCallback(
     async (categoryKey: LifeWheelCategoryKey) => {

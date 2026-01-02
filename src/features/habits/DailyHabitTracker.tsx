@@ -1860,7 +1860,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 fontSize: '0.8125rem',
                 fontWeight: 600
               }}>
-                Overall: {monthlyStats.overallCompletionPercentage}% completion rate
+                Overall: {monthlyStats?.overallCompletionPercentage ?? 0}% completion rate
               </div>
             </div>
           )}
