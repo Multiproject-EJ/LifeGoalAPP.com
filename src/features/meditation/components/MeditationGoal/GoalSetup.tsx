@@ -13,6 +13,8 @@ export function GoalSetup({ onCreateGoal, onCancel }: GoalSetupProps) {
   const [customDays, setCustomDays] = useState('');
   const [reminderTime, setReminderTime] = useState('09:00');
   const [enableReminder, setEnableReminder] = useState(false);
+  // Note: selectedTypes is used for UI state but not yet passed to backend
+  // Future enhancement: extend onCreateGoal to accept activity types
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['meditation', 'breathing', 'body']);
 
   const handleSubmit = (e: FormEvent) => {

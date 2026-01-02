@@ -3,6 +3,10 @@
  * Handles streak calculation and validation
  */
 
+// Constants
+const MILLISECONDS_PER_DAY = 86400000;
+const HOURS_PER_DAY = 24;
+
 /**
  * Check if a streak is maintained (activity within last 24 hours)
  */
@@ -14,7 +18,7 @@ export function isStreakMaintained(lastActivityDate: string | null): boolean {
   const hoursSinceActivity = (now.getTime() - last.getTime()) / (1000 * 60 * 60);
   
   // Streak is maintained if activity was within 24 hours
-  return hoursSinceActivity <= 24;
+  return hoursSinceActivity <= HOURS_PER_DAY;
 }
 
 /**
@@ -75,7 +79,7 @@ export function calculateStreak(activityDates: string[]): number {
     if (date.getTime() === checkDate.getTime()) {
       streak++;
       checkDate.setDate(checkDate.getDate() - 1);
-    } else if (streak === 0 && date.getTime() === new Date(today.getTime() - 86400000).getTime()) {
+    } else if (streak === 0 && date.getTime() === new Date(today.getTime() - MILLISECONDS_PER_DAY).getTime()) {
       // Allow streak to start from yesterday
       streak++;
       checkDate.setDate(checkDate.getDate() - 2);
@@ -109,7 +113,7 @@ export function calculateLongestStreak(activityDates: string[]): number {
   for (let i = 1; i < dates.length; i++) {
     const prevDate = dates[i - 1];
     const currDate = dates[i];
-    const dayDiff = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+    const dayDiff = (currDate.getTime() - prevDate.getTime()) / MILLISECONDS_PER_DAY;
     
     if (dayDiff === 1) {
       currentStreak++;
@@ -160,9 +164,9 @@ export function getDaysUntilStreakLost(lastActivityDate: string | null): number 
   const last = new Date(lastActivityDate);
   const now = new Date();
   const hoursSinceActivity = (now.getTime() - last.getTime()) / (1000 * 60 * 60);
-  const hoursRemaining = Math.max(0, 24 - hoursSinceActivity);
+  const hoursRemaining = Math.max(0, HOURS_PER_DAY - hoursSinceActivity);
   
-  return Math.ceil(hoursRemaining / 24);
+  return Math.ceil(hoursRemaining / HOURS_PER_DAY);
 }
 
 /**
