@@ -698,6 +698,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
       console.groupEnd();
 
       // Provide specific user-facing error messages based on error type
+      const CONSOLE_GUIDANCE = ' Check browser console for details.';
       let userMessage = 'Unable to upload the image right now.';
       
       if (error instanceof Error) {
@@ -705,11 +706,11 @@ export function VisionBoard({ session }: VisionBoardProps) {
         
         // Storage-related errors
         if (errorMsg.includes('storage upload failed')) {
-          userMessage = error.message + ' Check browser console for details.';
+          userMessage = error.message + CONSOLE_GUIDANCE;
         }
         // Database-related errors
         else if (errorMsg.includes('database insert failed')) {
-          userMessage = error.message + ' Check browser console for details.';
+          userMessage = error.message + CONSOLE_GUIDANCE;
         }
         // Bucket not found (already has good message)
         else if (errorMsg.includes('storage bucket') && errorMsg.includes('not found')) {
@@ -717,7 +718,7 @@ export function VisionBoard({ session }: VisionBoardProps) {
         }
         // Other specific errors
         else if (error.message) {
-          userMessage = error.message + ' Check browser console for details.';
+          userMessage = error.message + CONSOLE_GUIDANCE;
         }
       }
       
