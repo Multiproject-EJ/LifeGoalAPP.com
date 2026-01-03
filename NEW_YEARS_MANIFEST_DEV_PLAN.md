@@ -35,23 +35,26 @@ A guided workflow that helps users close the chapter on the previous year with d
   - "Spotify Wrapped" style layout with animations.
   - Integrated with `getYearInReviewStats` RPC function.
 
-- [ ] **Step 2: Life Wheel Audit**
+- [x] **Step 2: Life Wheel Audit**
   - Interactive wheel or list to rate satisfaction (1-10) for each category.
   - Text input for "What went well?" / "What needs focus?".
+  - Data persisted to `annual_reviews.reflection_text` and `overall_rating`.
 
-- [ ] **Step 3: Manifestation (Vision Board)**
+- [x] **Step 3: Manifestation (Vision Board)**
   - Image uploader for specific goals.
   - Canvas integration for generating a summary image.
+  - Goals saved to `annual_goals` table with optional vision images.
 
-- [ ] **Step 4: Habit Planning**
-  - Interface to "Migrate", "Archive", or "Create New" habits based on the new goals.
+- [x] **Step 4: Habit Planning**
+  - Interface to create new daily habits based on annual goals.
+  - Habits automatically linked to Life Wheel categories.
 
 ## Phase 3: Integration & Logic
-- [ ] Connect `ReviewWizard` to Supabase `annual_reviews`.
-- [ ] Implement image upload logic to Supabase Storage.
-- [ ] Build the "Habit Generator" logic (ensure every Goal has at least 1 linked Habit).
+- [x] Connect `ReviewWizard` to Supabase `annual_reviews`.
+- [x] Implement image upload logic to Supabase Storage.
+- [x] Build the "Habit Generator" logic (ensure every Goal has at least 1 linked Habit).
 
 ## Phase 4: Polish & Engagement
-- [ ] Add `canvas-confetti` on completion.
+- [x] Add `canvas-confetti` on completion.
 - [ ] Create a "202X Focus" Widget for the Dashboard.
 - [ ] Generate a shareable social media image of the "Year in Review".

@@ -6,6 +6,7 @@ type LifeWheelAuditProps = {
   onBack: () => void;
   reviewYear: number;
   initialData?: LifeWheelAuditData;
+  isLoading?: boolean;
 };
 
 export type CategoryReflection = {
@@ -100,7 +101,8 @@ export const LifeWheelAudit: React.FC<LifeWheelAuditProps> = ({
   onNext, 
   onBack, 
   reviewYear,
-  initialData 
+  initialData,
+  isLoading = false
 }) => {
   const [data, setData] = useState<LifeWheelAuditData>(() => {
     if (initialData) return initialData;
@@ -340,16 +342,16 @@ export const LifeWheelAudit: React.FC<LifeWheelAuditProps> = ({
       </div>
 
       <div className="step-actions">
-        <button className="btn-secondary" onClick={onBack}>
+        <button className="btn-secondary" onClick={onBack} disabled={isLoading}>
           Back
         </button>
         <button 
           className="btn-primary" 
           onClick={handleNext}
-          disabled={!allRated}
+          disabled={!allRated || isLoading}
           title={!allRated ? 'Please rate all categories' : ''}
         >
-          Next: Vision Board →
+          {isLoading ? 'Saving...' : 'Next: Vision Board →'}
         </button>
       </div>
 
