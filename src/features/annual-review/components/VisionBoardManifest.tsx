@@ -147,7 +147,7 @@ export const VisionBoardManifest: React.FC<VisionBoardManifestProps> = ({
           if (uploadError) {
             console.error(`Failed to upload image for ${category.label}:`, uploadError);
             // Continue without the image rather than failing completely
-          } else if (visionImageData) {
+          } else if (visionImageData && visionImageData.image_path) {
             // Get the public URL of the uploaded image
             const { data: urlData } = supabase.storage
               .from(VISION_BOARD_BUCKET)

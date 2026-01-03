@@ -6,7 +6,7 @@ import { getSupabaseClient } from '../../../lib/supabaseClient';
 
 // Constants for habit creation
 const DEFAULT_HABIT_TYPE = 'boolean' as const;
-const DEFAULT_SCHEDULE_MODE = 'daily' as const;
+const DEFAULT_SCHEDULE = { mode: 'daily' } as const;
 const DEFAULT_EMOJI = '✅';
 
 type HabitPlanningProps = {
@@ -115,8 +115,8 @@ export const HabitPlanning: React.FC<HabitPlanningProps> = ({
           {
             title: habitInput.title.trim(),
             emoji: habitInput.emoji,
-            habit_type: DEFAULT_HABIT_TYPE,
-            schedule_mode: DEFAULT_SCHEDULE_MODE,
+            type: DEFAULT_HABIT_TYPE,
+            schedule: DEFAULT_SCHEDULE,
             domain_key: habitInput.category as LifeWheelCategoryKey,
             target_num: null,
             target_unit: null,
