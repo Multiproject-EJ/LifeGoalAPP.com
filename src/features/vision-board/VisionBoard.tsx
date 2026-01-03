@@ -603,7 +603,17 @@ export function VisionBoard({ session }: VisionBoardProps) {
             fileNameToUpload = converted.fileName;
             originalFormat = converted.originalFormat;
           } catch (conversionError) {
-            console.warn('WebP conversion failed, uploading original:', conversionError);
+            // Log WebP conversion failure with details
+            console.group('[Vision Board] WebP conversion failed');
+            console.error('Timestamp:', new Date().toISOString());
+            console.error('File details:', {
+              name: fileDraft.name,
+              size: fileDraft.size,
+              type: fileDraft.type,
+            });
+            console.error('Conversion error:', conversionError);
+            console.groupEnd();
+            console.warn('Continuing with original file format');
             // Continue with original file if conversion fails
           } finally {
             setConvertingImage(false);
@@ -663,7 +673,56 @@ export function VisionBoard({ session }: VisionBoardProps) {
       setAddLinkedHabits([]);
       (event.target as HTMLFormElement).reset();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to upload the image right now.');
+      // Enhanced error logging for debugging
+      console.group('[Vision Board] Upload failed');
+      console.error('Timestamp:', new Date().toISOString());
+      console.error('User ID:', session?.user?.id);
+      console.error('Upload mode:', uploadMode);
+      
+      if (uploadMode === 'file' && fileDraft) {
+        console.error('File details:', {
+          name: fileDraft.name,
+          size: fileDraft.size,
+          type: fileDraft.type,
+        });
+      } else {
+        console.error('Image URL:', urlDraft.trim());
+      }
+      
+      console.error('Error details:', error);
+      
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Stack trace:', error.stack);
+      }
+      console.groupEnd();
+
+      // Provide specific user-facing error messages based on error type
+      const CONSOLE_GUIDANCE = ' Check browser console for details.';
+      let userMessage = 'Unable to upload the image right now.';
+      
+      if (error instanceof Error) {
+        const errorMsg = error.message.toLowerCase();
+        
+        // Storage-related errors
+        if (errorMsg.includes('storage upload failed')) {
+          userMessage = error.message + CONSOLE_GUIDANCE;
+        }
+        // Database-related errors
+        else if (errorMsg.includes('database insert failed')) {
+          userMessage = error.message + CONSOLE_GUIDANCE;
+        }
+        // Bucket not found (already has good message)
+        else if (errorMsg.includes('storage bucket') && errorMsg.includes('not found')) {
+          userMessage = error.message;
+        }
+        // Other specific errors
+        else if (error.message) {
+          userMessage = error.message + CONSOLE_GUIDANCE;
+        }
+      }
+      
+      setErrorMessage(userMessage);
     } finally {
       setUploading(false);
     }

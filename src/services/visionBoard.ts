@@ -123,6 +123,19 @@ export async function uploadVisionImage({
     });
 
   if (storageError) {
+    // Log storage error with context for debugging
+    console.error('[Vision Board] Storage upload failed:', {
+      timestamp: new Date().toISOString(),
+      operation: 'storage_upload',
+      bucket: VISION_BOARD_BUCKET,
+      filePath: storagePath,
+      fileName,
+      fileSize: file instanceof File ? file.size : (file as Blob).size,
+      fileType: file instanceof File ? file.type : 'image/webp',
+      userId,
+      error: storageError,
+    });
+
     // Provide a more helpful error message for bucket not found
     if (isBucketNotFoundError(storageError.message)) {
       return {
@@ -132,7 +145,10 @@ export async function uploadVisionImage({
         ),
       };
     }
-    return { data: null, error: new Error(storageError.message) };
+    
+    // Enrich error with context
+    const errorMessage = `Storage upload failed: ${storageError.message} (bucket: ${VISION_BOARD_BUCKET}, path: ${storagePath})`;
+    return { data: null, error: new Error(errorMessage) };
   }
 
   const payload: VisionImageInsert = {
@@ -156,7 +172,20 @@ export async function uploadVisionImage({
     .single();
 
   if (error) {
-    return { data: null, error };
+    // Log database error with context for debugging
+    console.error('[Vision Board] Database insert failed:', {
+      timestamp: new Date().toISOString(),
+      operation: 'database_insert',
+      table: 'vision_images',
+      userId,
+      filePath: storagePath,
+      fileName,
+      error,
+    });
+
+    // Enrich error with context
+    const errorMessage = `Database insert failed: ${error.message} (file: ${fileName})`;
+    return { data: null, error: new Error(errorMessage) };
   }
 
   return { data, error: null };
@@ -227,7 +256,19 @@ export async function uploadVisionImageFromUrl({
     .single();
 
   if (error) {
-    return { data: null, error };
+    // Log database error with context for debugging
+    console.error('[Vision Board] Database insert failed (URL):', {
+      timestamp: new Date().toISOString(),
+      operation: 'database_insert',
+      table: 'vision_images',
+      userId,
+      imageUrl,
+      error,
+    });
+
+    // Enrich error with context
+    const errorMessage = `Database insert failed: ${error.message} (URL: ${imageUrl})`;
+    return { data: null, error: new Error(errorMessage) };
   }
 
   return { data, error: null };
