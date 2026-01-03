@@ -513,6 +513,28 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
           qualified = (visionCount || 0) >= achievement.requirement_value;
           break;
           
+        case 'spins_used':
+          // Count total spins used
+          const { data: spinState } = await supabase
+            .from('daily_spin_state' as any)
+            .select('total_spins_used')
+            .eq('user_id', userId)
+            .maybeSingle() as { data: { total_spins_used: number } | null };
+          progress = spinState?.total_spins_used || 0;
+          qualified = (spinState?.total_spins_used || 0) >= achievement.requirement_value;
+          break;
+          
+        case 'mystery_wins':
+          // Count mystery prize wins
+          const { count: mysteryCount } = await supabase
+            .from('spin_history' as any)
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('prize_type', 'mystery');
+          progress = mysteryCount || 0;
+          qualified = (mysteryCount || 0) >= achievement.requirement_value;
+          break;
+          
         default:
           // Unknown requirement type, skip
           continue;

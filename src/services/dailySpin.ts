@@ -1,7 +1,6 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { DailySpinState, SpinResult, SpinPrize, PrizeType } from '../types/gamification';
-import { SPIN_PRIZES, PRIZE_WEIGHTS } from '../types/gamification';
 import { awardXP } from './gamification';
 import { fetchGamificationProfile } from './gamificationPrefs';
 
@@ -11,11 +10,68 @@ type ServiceResponse<T> = {
 };
 
 const DEMO_STORAGE_KEY = 'demo_daily_spin_state';
+const DEMO_HISTORY_KEY = 'lifegoal_demo_spin_history';
 
 /**
  * Fetch or initialize daily spin state for user
+ * Includes streak bonus logic: +1 spin for 7+ day streaks
  */
-export async function fetchDailySpinState(userId: string): Promise<ServiceResponse<DailySpinState>> {
+export async function getDailySpinState(userId: string): Promise<ServiceResponse<DailySpinState>> {
+  const { data: spinState, error } = await fetchDailySpinState(userId);
+  
+  if (error || !spinState) {
+    return { data: null, error };
+  }
+
+  // Check for streak bonus
+  const { data: profile } = await fetchGamificationProfile(userId);
+  if (profile && profile.current_streak >= 7) {
+    // Add bonus spin for 7+ day streak
+    const today = new Date().toISOString().split('T')[0];
+    const isNewDay = !spinState.lastSpinDate || spinState.lastSpinDate !== today;
+    
+    if (isNewDay && spinState.spinsAvailable === 0) {
+      // Initialize daily spins with bonus
+      const baseSpins = 1;
+      const bonusSpins = 1;
+      const totalSpins = baseSpins + bonusSpins;
+      
+      if (!canUseSupabaseData()) {
+        const updated: DailySpinState = {
+          ...spinState,
+          spinsAvailable: totalSpins,
+          updatedAt: new Date().toISOString(),
+        };
+        localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(updated));
+        return { data: updated, error: null };
+      }
+
+      const supabase = getSupabaseClient();
+      const { data: updatedState, error: updateError } = await supabase
+        .from('daily_spin_state' as any)
+        .update({
+          spins_available: totalSpins,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        return { data: spinState, error: null }; // Return original state if update fails
+      }
+
+      return { data: mapRowToState(updatedState), error: null };
+    }
+  }
+
+  return { data: spinState, error: null };
+}
+
+/**
+ * Fetch or initialize daily spin state for user (internal)
+ */
+async function fetchDailySpinState(userId: string): Promise<ServiceResponse<DailySpinState>> {
   if (!canUseSupabaseData()) {
     try {
       const stored = localStorage.getItem(DEMO_STORAGE_KEY);
@@ -72,6 +128,127 @@ export async function fetchDailySpinState(userId: string): Promise<ServiceRespon
 }
 
 /**
+ * Check if user can spin today
+ */
+export async function canSpinToday(userId: string): Promise<boolean> {
+  const { data: spinState, error } = await getDailySpinState(userId);
+  
+  if (error || !spinState) {
+    return false;
+  }
+
+  return spinState.spinsAvailable > 0;
+}
+
+/**
+ * Get spin history for user
+ */
+export async function getSpinHistory(userId: string, limit: number = 10): Promise<ServiceResponse<any[]>> {
+  if (!canUseSupabaseData()) {
+    try {
+      const stored = localStorage.getItem(DEMO_HISTORY_KEY);
+      if (stored) {
+        const history = JSON.parse(stored);
+        return { data: history.slice(0, limit), error: null };
+      }
+      return { data: [], error: null };
+    } catch (err) {
+      return { data: null, error: err as Error };
+    }
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('spin_history' as any)
+    .select('*')
+    .eq('user_id', userId)
+    .order('spun_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  return { data: data || [], error: null };
+}
+
+/**
+ * Get a random prize based on weighted probabilities
+ * Implements the prize selection algorithm from the spec
+ */
+export function getRandomPrize(): SpinPrize {
+  const roll = Math.random() * 100;
+  
+  // Legendary: 0-3 (3%)
+  if (roll < 3) {
+    return getLegendaryPrize();
+  }
+  // Epic: 3-15 (12%)
+  else if (roll < 15) {
+    return getEpicPrize();
+  }
+  // Rare: 15-40 (25%)
+  else if (roll < 40) {
+    return getRarePrize();
+  }
+  // Common: 40-100 (60%)
+  else {
+    return getCommonPrize();
+  }
+}
+
+/**
+ * Get a common prize (60%)
+ */
+function getCommonPrize(): SpinPrize {
+  const commonPrizes = [
+    { type: 'xp' as PrizeType, value: 50, label: '50 XP', icon: '💰' },
+    { type: 'xp' as PrizeType, value: 75, label: '75 XP', icon: '💰' },
+    { type: 'xp' as PrizeType, value: 100, label: '100 XP', icon: '💰' },
+    { type: 'points' as PrizeType, value: 5, label: '5 Points', icon: '💎' },
+    { type: 'points' as PrizeType, value: 10, label: '10 Points', icon: '💎' },
+  ];
+  return commonPrizes[Math.floor(Math.random() * commonPrizes.length)];
+}
+
+/**
+ * Get a rare prize (25%)
+ */
+function getRarePrize(): SpinPrize {
+  const rarePrizes = [
+    { type: 'xp' as PrizeType, value: 200, label: '200 XP', icon: '💰' },
+    { type: 'streak_freeze' as PrizeType, value: 1, label: '1 Streak Freeze', icon: '🛡️' },
+    { type: 'points' as PrizeType, value: 20, label: '20 Points', icon: '💎' },
+  ];
+  return rarePrizes[Math.floor(Math.random() * rarePrizes.length)];
+}
+
+/**
+ * Get an epic prize (12%)
+ */
+function getEpicPrize(): SpinPrize {
+  const epicPrizes = [
+    { type: 'xp' as PrizeType, value: 500, label: '500 XP', icon: '🌟' },
+    { type: 'life' as PrizeType, value: 1, label: '1 Extra Life', icon: '❤️' },
+    { type: 'life' as PrizeType, value: 2, label: '2 Extra Lives', icon: '❤️' },
+    { type: 'points' as PrizeType, value: 50, label: '50 Points', icon: '💎' },
+  ];
+  return epicPrizes[Math.floor(Math.random() * epicPrizes.length)];
+}
+
+/**
+ * Get a legendary prize (3%)
+ */
+function getLegendaryPrize(): SpinPrize {
+  const legendaryPrizes = [
+    { type: 'xp' as PrizeType, value: 1000, label: '1000 XP', icon: '🔥' },
+    { type: 'streak_freeze' as PrizeType, value: 3, label: '3 Streak Freezes', icon: '🛡️' },
+    { type: 'points' as PrizeType, value: 100, label: '100 Points', icon: '💎' },
+  ];
+  return legendaryPrizes[Math.floor(Math.random() * legendaryPrizes.length)];
+}
+
+/**
  * Update spins available based on habit completion
  */
 export async function updateSpinsAvailable(userId: string, spinsEarned: number): Promise<ServiceResponse<DailySpinState>> {
@@ -118,45 +295,10 @@ export async function updateSpinsAvailable(userId: string, spinsEarned: number):
 }
 
 /**
- * Select a random prize based on weighted probabilities
- */
-function selectRandomPrize(): SpinPrize {
-  const random = Math.random() * 100;
-  let cumulative = 0;
-
-  for (let i = 0; i < SPIN_PRIZES.length; i++) {
-    cumulative += PRIZE_WEIGHTS[i];
-    if (random <= cumulative) {
-      return { ...SPIN_PRIZES[i] };
-    }
-  }
-
-  // Fallback (should never reach)
-  return { ...SPIN_PRIZES[0] };
-}
-
-/**
- * Generate mystery prize
- */
-function generateMysteryPrize(): SpinPrize {
-  const mysteryOptions = [
-    { type: 'xp' as PrizeType, value: 100, label: '100 XP', icon: '✨' },
-    { type: 'xp' as PrizeType, value: 200, label: '200 XP', icon: '✨' },
-    { type: 'xp' as PrizeType, value: 500, label: '500 XP (JACKPOT!)', icon: '🌟' },
-    { type: 'points' as PrizeType, value: 100, label: '100 Points', icon: '💎' },
-    { type: 'points' as PrizeType, value: 200, label: '200 Points', icon: '💎' },
-    { type: 'streak_freeze' as PrizeType, value: 3, label: '3 Streak Freezes', icon: '🛡️' },
-  ];
-
-  const randomIndex = Math.floor(Math.random() * mysteryOptions.length);
-  return mysteryOptions[randomIndex];
-}
-
-/**
  * Execute a spin and award prize
  */
 export async function executeSpin(userId: string): Promise<ServiceResponse<SpinResult>> {
-  const { data: spinState, error: stateError } = await fetchDailySpinState(userId);
+  const { data: spinState, error: stateError } = await getDailySpinState(userId);
 
   if (stateError || !spinState) {
     return { data: null, error: stateError || new Error('Failed to fetch spin state') };
@@ -169,14 +311,8 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Select prize
-  let prize = selectRandomPrize();
-
-  // Handle mystery prize
-  if (prize.type === 'mystery') {
-    prize = generateMysteryPrize();
-    prize.details = { wasMystery: true };
-  }
+  // Select prize using new weighted algorithm
+  const prize = getRandomPrize();
 
   // Award prize
   await awardPrize(userId, prize);
@@ -193,6 +329,19 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
       updatedAt: new Date().toISOString(),
     };
     localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(updated));
+
+    // Log to demo history
+    const historyEntry = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId,
+      prizeType: prize.type,
+      prizeValue: prize.value,
+      prizeDetails: prize.details || {},
+      spunAt: new Date().toISOString(),
+    };
+    const history = JSON.parse(localStorage.getItem(DEMO_HISTORY_KEY) || '[]');
+    history.unshift(historyEntry);
+    localStorage.setItem(DEMO_HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
 
     return {
       data: {

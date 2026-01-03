@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { fetchDailySpinState, executeSpin } from '../../services/dailySpin';
+import { getDailySpinState, executeSpin } from '../../services/dailySpin';
 import type { DailySpinState, SpinResult } from '../../types/gamification';
 import { SpinWheel } from './SpinWheel';
 import { SpinRewardDisplay } from './SpinRewardDisplay';
@@ -26,7 +26,7 @@ export function DailySpinWheel({ session }: Props) {
 
   const loadSpinState = async () => {
     setLoading(true);
-    const { data, error: fetchError } = await fetchDailySpinState(session.user.id);
+    const { data, error: fetchError } = await getDailySpinState(session.user.id);
 
     if (fetchError) {
       setError('Failed to load spin state');
