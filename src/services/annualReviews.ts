@@ -130,6 +130,25 @@ export async function deleteAnnualReview(
     .single<AnnualReview>();
 }
 
+/**
+ * Mark an annual review as completed
+ */
+export async function markAnnualReviewComplete(
+  id: string,
+): Promise<ServiceResponse<AnnualReview>> {
+  if (!canUseSupabaseData()) {
+    return { data: null, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  return supabase
+    .from('annual_reviews')
+    .update({ completed_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single<AnnualReview>();
+}
+
 // ============================================================
 // ANNUAL GOALS
 // ============================================================
