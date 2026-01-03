@@ -19,6 +19,7 @@ export const StatsRetrospective: React.FC<StatsRetrospectiveProps> = ({ year, on
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
   const shareableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export const StatsRetrospective: React.FC<StatsRetrospectiveProps> = ({ year, on
     if (!shareableRef.current || !stats) return;
 
     setIsGeneratingImage(true);
+    setShareError(null);
     try {
       await shareOrDownloadImage(
         shareableRef.current,
@@ -65,7 +67,7 @@ export const StatsRetrospective: React.FC<StatsRetrospectiveProps> = ({ year, on
       );
     } catch (error) {
       console.error('Failed to generate image:', error);
-      alert('Failed to generate image. Please try again.');
+      setShareError('Failed to generate image. Please try again.');
     } finally {
       setIsGeneratingImage(false);
     }
@@ -170,6 +172,21 @@ export const StatsRetrospective: React.FC<StatsRetrospectiveProps> = ({ year, on
           </p>
         </div>
       </div>
+
+      {/* Share error message */}
+      {shareError && (
+        <div style={{
+          marginTop: '1rem',
+          padding: '0.75rem',
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '8px',
+          color: '#991b1b',
+          fontSize: '0.875rem'
+        }}>
+          {shareError}
+        </div>
+      )}
 
       <div className="step-actions">
         <button 

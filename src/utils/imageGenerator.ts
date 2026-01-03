@@ -72,7 +72,7 @@ export async function shareOrDownloadImage(
     }
 
     // Try to use Web Share API if available
-    if (navigator.share && navigator.canShare) {
+    if (navigator.share && typeof navigator.canShare === 'function') {
       const file = new File([blob], fileName, { type: 'image/png' });
       const sharePayload = {
         files: [file],

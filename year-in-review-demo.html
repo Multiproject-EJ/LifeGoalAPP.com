@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Year in Review - Shareable Image Demo</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #f1f5f9;
+    }
+    
+    .demo-container {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      margin-bottom: 40px;
+    }
+    
+    h1 {
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+    
+    .description {
+      color: #64748b;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 30px;
+    }
+    
+    .feature-list li {
+      padding: 8px 0;
+      color: #334155;
+    }
+    
+    .feature-list li:before {
+      content: "✓ ";
+      color: #06b6d4;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    
+    .code-block {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+    
+    .image-preview {
+      max-width: 600px;
+      margin: 30px auto;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    .image-preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    .note {
+      background: #fef3c7;
+      border: 2px solid #fbbf24;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 30px;
+      color: #78350f;
+    }
+    
+    .note strong {
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1>📸 Year in Review - Shareable Social Media Image</h1>
+    
+    <p class="description">
+      The final feature of the New Year's Manifest development plan has been implemented!
+      Users can now generate and share a beautiful social media image of their Year in Review statistics.
+    </p>
+    
+    <h2>✨ Features Implemented</h2>
+    <ul class="feature-list">
+      <li>Installed <code>html2canvas</code> library for DOM-to-image conversion</li>
+      <li>Created <code>ShareableYearInReview</code> component optimized for social media (1080x1080px)</li>
+      <li>Built <code>imageGenerator</code> utility with Web Share API support and download fallback</li>
+      <li>Added "📸 Share Image" button to the Stats Retrospective step</li>
+      <li>Designed beautiful gradient background with glassmorphism card effects</li>
+      <li>Image includes: total habits completed, longest streak, and most active category</li>
+    </ul>
+    
+    <h2>📝 Technical Details</h2>
+    <div class="code-block">
+// New files created:
+- src/features/annual-review/components/ShareableYearInReview.tsx
+- src/utils/imageGenerator.ts
+
+// Updated files:
+- src/features/annual-review/components/StatsRetrospective.tsx
+- src/features/annual-review/components/index.ts
+- package.json (added html2canvas dependency)
+    </div>
+    
+    <h2>🎨 Image Design</h2>
+    <p class="description">
+      The shareable image features a vibrant purple gradient background with three key statistics
+      displayed in glassmorphism-style cards. The design is Instagram-optimized at 1080x1080 pixels
+      and includes the LifeGoal App branding at the bottom.
+    </p>
+    
+    <h2>🚀 How It Works</h2>
+    <ol style="color: #334155; line-height: 1.8;">
+      <li>User views their Year in Review stats in the first step of the Annual Review wizard</li>
+      <li>Clicks the "📸 Share Image" button</li>
+      <li>The app renders a hidden ShareableYearInReview component with their stats</li>
+      <li>html2canvas captures the component as a high-quality PNG image</li>
+      <li>If Web Share API is available, user can share directly to social media</li>
+      <li>Otherwise, the image automatically downloads to their device</li>
+    </ol>
+    
+    <div class="note">
+      <strong>✅ Development Plan Completed</strong><br>
+      All tasks in the NEW_YEARS_MANIFEST_DEV_PLAN.md have been completed! The shareable
+      social media image feature marks the final item in Phase 4: Polish & Engagement.
+    </div>
+  </div>
+  
+  <div class="demo-container">
+    <h2>📋 Updated Development Plan Status</h2>
+    <div class="code-block">
+## Phase 4: Polish & Engagement
+- [x] Add `canvas-confetti` on completion.
+- [x] Create a "202X Focus" Widget for the Dashboard.
+- [x] Generate a shareable social media image of the "Year in Review".
+    </div>
+    
+    <p style="color: #64748b; margin-top: 20px;">
+      All phases of the New Year's Manifest & Check-in Feature are now complete! 🎉
+    </p>
+  </div>
+</body>
+</html>
