@@ -521,7 +521,7 @@ Dedicated UI for achievement browsing:
 | Version | Release Date | Phase | Key Features |
 |---------|--------------|-------|--------------|
 | v1.0.0 | Dec 2025 | Phase 1 | XP, Levels, 10 Achievements, Streaks, Lives |
-| v1.1.0 | Jan 2026 | Phase 2 | Spin Wheel, Power-ups Store, Achievements Page ✅ |
+| v1.1.0 | Jan 2026 | Phase 2 | Spin Wheel, Power-up Store, Achievements Page ✅ |
 | v1.2.0 | Q1 2026 (planned) | Phase 2.5 | Leaderboards, Challenge System |
 | v1.3.0 | Q2 2026 (planned) | Phase 3 | Avatars, Social, Events, Cosmetics |
 | v2.0.0 | Q3 2026 (planned) | Phase 4 | AI Features, Advanced Analytics |

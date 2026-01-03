@@ -204,10 +204,16 @@ function fetchAchievementsWithProgressDemo(
     ];
 
     // Get stored user progress from localStorage
-    const storedProgress = localStorage.getItem(DEMO_ACHIEVEMENTS_KEY);
-    const userAchievements: Record<string, { progress: number; unlocked: boolean; unlocked_at: string | null }> = storedProgress 
-      ? JSON.parse(storedProgress) 
-      : {};
+    let userAchievements: Record<string, { progress: number; unlocked: boolean; unlocked_at: string | null }> = {};
+    try {
+      const storedProgress = localStorage.getItem(DEMO_ACHIEVEMENTS_KEY);
+      if (storedProgress) {
+        userAchievements = JSON.parse(storedProgress);
+      }
+    } catch (error) {
+      console.error('Failed to parse demo achievements from localStorage:', error);
+      // Continue with empty achievements object
+    }
 
     // Merge with progress
     const achievementsWithProgress: AchievementWithProgress[] = demoAchievements.map(achievement => {
