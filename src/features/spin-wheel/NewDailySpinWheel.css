@@ -1,0 +1,357 @@
+/* New Daily Spin Wheel Modal Styles */
+
+.new-daily-spin-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.new-daily-spin-modal__content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.new-daily-spin-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.new-daily-spin-modal__close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.new-daily-spin-modal__header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.new-daily-spin-modal__header h2 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+.new-daily-spin-modal__subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.new-daily-spin-modal__loading {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: white;
+}
+
+.spinner {
+  font-size: 3rem;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.new-daily-spin-modal__error {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Spin Wheel */
+.new-daily-spin-wheel {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1;
+  margin: 0 auto 2rem;
+}
+
+.new-daily-spin-wheel__pointer {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  z-index: 10;
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.new-daily-spin-wheel__disc {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  background: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: transform 3.5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+.new-daily-spin-wheel__disc--spinning {
+  /* Animation is controlled by inline style */
+}
+
+.new-daily-spin-wheel__segment {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  background: var(--segment-color, #e5e7eb);
+  border: 2px solid white;
+}
+
+.new-daily-spin-wheel__segment-content {
+  position: absolute;
+  top: 20%;
+  left: 40%;
+  transform: rotate(25.7deg); /* Half of segment angle for 7 prizes */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.new-daily-spin-wheel__segment-icon {
+  font-size: 1.5rem;
+}
+
+.new-daily-spin-wheel__segment-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Actions */
+.new-daily-spin-modal__actions {
+  margin-bottom: 1.5rem;
+}
+
+.new-daily-spin-modal__spin-btn {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.new-daily-spin-modal__spin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.new-daily-spin-modal__spin-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.new-daily-spin-modal__spin-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Result Display */
+.new-daily-spin-modal__result {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: white;
+}
+
+.new-daily-spin-modal__result-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: prize-bounce 0.6s ease-out;
+}
+
+@keyframes prize-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.new-daily-spin-modal__result-title {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+.new-daily-spin-modal__result-prize {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.new-daily-spin-modal__result-subtitle {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Locked State */
+.new-daily-spin-modal__locked {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: white;
+}
+
+.new-daily-spin-modal__locked-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.new-daily-spin-modal__locked-text {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Prize Legend */
+.new-daily-spin-modal__legend {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  color: white;
+}
+
+.new-daily-spin-modal__legend h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+.new-daily-spin-modal__legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.new-daily-spin-modal__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.25rem;
+}
+
+.new-daily-spin-modal__legend-icon {
+  font-size: 1rem;
+}
+
+.new-daily-spin-modal__legend-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.new-daily-spin-modal__legend-chance {
+  opacity: 0.8;
+  font-size: 0.7rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .new-daily-spin-modal__content {
+    padding: 1.5rem;
+  }
+
+  .new-daily-spin-modal__header h2 {
+    font-size: 1.5rem;
+  }
+
+  .new-daily-spin-wheel {
+    max-width: 300px;
+  }
+
+  .new-daily-spin-wheel__segment-icon {
+    font-size: 1.25rem;
+  }
+
+  .new-daily-spin-wheel__segment-label {
+    font-size: 0.6rem;
+  }
+
+  .new-daily-spin-modal__spin-btn {
+    font-size: 1rem;
+    padding: 0.875rem 1.5rem;
+  }
+}
