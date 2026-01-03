@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { StatsRetrospective } from './StatsRetrospective';
 import { LifeWheelAudit, LifeWheelAuditData } from './LifeWheelAudit';
+import { LIFE_WHEEL_CATEGORIES } from '../../checkins/LifeWheelCheckins';
+import { 
+  createAnnualReview, 
+  updateAnnualReview, 
+  fetchAnnualReviewByYear 
+} from '../../../services/annualReviews';
+import { getSupabaseClient } from '../../../lib/supabaseClient';
 
 // Placeholder components - will be implemented in subsequent steps
 
@@ -35,13 +42,75 @@ export const ReviewWizard: React.FC = () => {
   // Default to reviewing the previous year (current year - 1)
   const [reviewYear] = useState(new Date().getFullYear() - 1);
   const [lifeWheelData, setLifeWheelData] = useState<LifeWheelAuditData | null>(null);
+  const [reviewId, setReviewId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Load existing review on mount
+  useEffect(() => {
+    const loadExistingReview = async () => {
+      const { data, error } = await fetchAnnualReviewByYear(reviewYear);
+      if (!error && data) {
+        setReviewId(data.id);
+        // TODO: Parse reflection_text to restore lifeWheelData if needed
+      }
+    };
+    loadExistingReview();
+  }, [reviewYear]);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, totalSteps));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
   
-  const handleLifeWheelNext = (data: LifeWheelAuditData) => {
+  const handleLifeWheelNext = async (data: LifeWheelAuditData) => {
     setLifeWheelData(data);
-    nextStep();
+    setSaveError(null);
+    setIsSaving(true);
+
+    try {
+      // Calculate overall rating as average of all category ratings
+      const ratings = LIFE_WHEEL_CATEGORIES.map(cat => data[cat.key].rating);
+      const overallRating = Math.round(
+        ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+      );
+
+      // Serialize the life wheel data as JSON for storage
+      const reflectionText = JSON.stringify(data);
+
+      const supabase = getSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      if (reviewId) {
+        // Update existing review
+        const { error } = await updateAnnualReview(reviewId, {
+          reflection_text: reflectionText,
+          overall_rating: overallRating,
+        });
+        if (error) throw error;
+      } else {
+        // Create new review
+        const { data: newReview, error } = await createAnnualReview({
+          user_id: user.id,
+          year: reviewYear,
+          reflection_text: reflectionText,
+          overall_rating: overallRating,
+        });
+        if (error) throw error;
+        if (newReview) {
+          setReviewId(newReview.id);
+        }
+      }
+
+      nextStep();
+    } catch (error) {
+      console.error('Failed to save annual review:', error);
+      setSaveError('Failed to save your review. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const handleComplete = () => {
@@ -85,7 +154,30 @@ export const ReviewWizard: React.FC = () => {
         flexDirection: 'column'
       }}>
         {step === 1 && <StatsRetrospective year={reviewYear} onNext={nextStep} />}
-        {step === 2 && <LifeWheelAudit onNext={handleLifeWheelNext} onBack={prevStep} reviewYear={reviewYear} initialData={lifeWheelData || undefined} />}
+        {step === 2 && (
+          <>
+            <LifeWheelAudit 
+              onNext={handleLifeWheelNext} 
+              onBack={prevStep} 
+              reviewYear={reviewYear} 
+              initialData={lifeWheelData || undefined}
+              isLoading={isSaving}
+            />
+            {saveError && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+                color: '#991b1b',
+                fontSize: '0.875rem'
+              }}>
+                {saveError}
+              </div>
+            )}
+          </>
+        )}
         {step === 3 && <VisionBoardManifest onNext={nextStep} onBack={prevStep} />}
         {step === 4 && <HabitPlanning onBack={prevStep} onComplete={handleComplete} />}
       </div>

@@ -35,9 +35,10 @@ A guided workflow that helps users close the chapter on the previous year with d
   - "Spotify Wrapped" style layout with animations.
   - Integrated with `getYearInReviewStats` RPC function.
 
-- [ ] **Step 2: Life Wheel Audit**
+- [x] **Step 2: Life Wheel Audit**
   - Interactive wheel or list to rate satisfaction (1-10) for each category.
   - Text input for "What went well?" / "What needs focus?".
+  - Data persisted to `annual_reviews.reflection_text` and `overall_rating`.
 
 - [ ] **Step 3: Manifestation (Vision Board)**
   - Image uploader for specific goals.
@@ -47,7 +48,7 @@ A guided workflow that helps users close the chapter on the previous year with d
   - Interface to "Migrate", "Archive", or "Create New" habits based on the new goals.
 
 ## Phase 3: Integration & Logic
-- [ ] Connect `ReviewWizard` to Supabase `annual_reviews`.
+- [x] Connect `ReviewWizard` to Supabase `annual_reviews`.
 - [ ] Implement image upload logic to Supabase Storage.
 - [ ] Build the "Habit Generator" logic (ensure every Goal has at least 1 linked Habit).
 
