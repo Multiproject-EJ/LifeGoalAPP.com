@@ -4177,9 +4177,9 @@ body {
   background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(6px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1.5rem;
+  padding: calc(env(safe-area-inset-top) + 1rem) 1.5rem 2rem;
   z-index: 50;
 }
 
