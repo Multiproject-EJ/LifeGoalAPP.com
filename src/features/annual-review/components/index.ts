@@ -2,6 +2,7 @@
 export { ReviewWizard } from './ReviewWizard';
 export { StatsCard } from './StatsCard';
 export { StatsRetrospective } from './StatsRetrospective';
+export { ShareableYearInReview } from './ShareableYearInReview';
 export { LifeWheelAudit } from './LifeWheelAudit';
 export { VisionBoardManifest } from './VisionBoardManifest';
 export { HabitPlanning } from './HabitPlanning';
