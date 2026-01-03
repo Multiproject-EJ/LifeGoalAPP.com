@@ -10,17 +10,26 @@ type FocusWidgetProps = {
 export function FocusWidget({ session }: FocusWidgetProps) {
   const [goals, setGoals] = useState<AnnualGoal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [year, setYear] = useState(new Date().getFullYear());
   const isDemoExperience = isDemoSession(session);
 
   useEffect(() => {
     const loadFocusGoals = async () => {
       setLoading(true);
+      setError(null);
       try {
         // Fetch annual reviews to find the most recent one
         const { data: reviews, error: reviewError } = await fetchAnnualReviews();
         
-        if (reviewError || !reviews || reviews.length === 0) {
+        if (reviewError) {
+          console.error('Failed to fetch annual reviews:', reviewError);
+          setError('Failed to load your focus goals. Please try refreshing.');
+          setLoading(false);
+          return;
+        }
+
+        if (!reviews || reviews.length === 0) {
           setGoals([]);
           setLoading(false);
           return;
@@ -34,12 +43,16 @@ export function FocusWidget({ session }: FocusWidgetProps) {
           // Fetch goals for this review
           const { data: fetchedGoals, error: goalsError } = await fetchAnnualGoalsByReview(latestReview.id);
           
-          if (!goalsError && fetchedGoals) {
+          if (goalsError) {
+            console.error('Failed to fetch annual goals:', goalsError);
+            setError('Failed to load your focus goals. Please try refreshing.');
+          } else if (fetchedGoals) {
             setGoals(fetchedGoals);
           }
         }
       } catch (error) {
         console.error('Failed to load focus goals:', error);
+        setError('An unexpected error occurred. Please try refreshing.');
       } finally {
         setLoading(false);
       }
@@ -59,6 +72,20 @@ export function FocusWidget({ session }: FocusWidgetProps) {
           <h3>{year} Focus</h3>
           <p>Loading your year's intentions...</p>
         </header>
+      </article>
+    );
+  }
+
+  if (error) {
+    return (
+      <article className="progress-card progress-card--focus">
+        <header>
+          <h3>{year} Focus</h3>
+          <p>Your manifestation goals and focus areas for the year.</p>
+        </header>
+        <p className="progress-card__empty" style={{ color: '#b91c1c' }}>
+          {error}
+        </p>
       </article>
     );
   }
@@ -109,6 +136,10 @@ export function FocusWidget({ session }: FocusWidgetProps) {
                 src={goal.vision_image_url} 
                 alt={`Vision for ${goal.category}`}
                 className="focus-widget__goal-image"
+                onError={(e) => {
+                  // Hide image if it fails to load
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             )}
           </li>
