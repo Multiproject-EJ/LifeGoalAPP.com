@@ -56,5 +56,5 @@ A guided workflow that helps users close the chapter on the previous year with d
 
 ## Phase 4: Polish & Engagement
 - [x] Add `canvas-confetti` on completion.
-- [ ] Create a "202X Focus" Widget for the Dashboard.
+- [x] Create a "202X Focus" Widget for the Dashboard.
 - [ ] Generate a shareable social media image of the "Year in Review".
