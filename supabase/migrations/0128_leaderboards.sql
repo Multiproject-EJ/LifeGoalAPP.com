@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.leaderboard_entries (
   category TEXT NOT NULL CHECK (category IN ('level', 'xp', 'streak', 'achievements', 'points')),
   score BIGINT NOT NULL,
   rank INT,
-  period_key TEXT NOT NULL, -- e.g., '2026-W01', '2026-01', 'all_time'
+  period_key TEXT NOT NULL, -- e.g., '2024-W01', '2024-01', 'all_time'
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(user_id, scope, category, period_key)
 );

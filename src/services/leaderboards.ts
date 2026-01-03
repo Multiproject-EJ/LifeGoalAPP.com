@@ -14,6 +14,13 @@ import { DEMO_LEADERBOARD_KEY, DEMO_LEADERBOARD_REWARDS_KEY, DEMO_PROFILE_KEY } 
 import { awardXP } from './gamification';
 
 // =====================================================
+// CONSTANTS
+// =====================================================
+
+const CURRENT_USER_ID = 'current-user';
+const DEMO_USER_ID = 'demo_user';
+
+// =====================================================
 // PERIOD KEY GENERATION
 // =====================================================
 
@@ -139,7 +146,7 @@ function generateMockLeaderboard(
   // Insert user at appropriate rank
   const userRank = entries.findIndex(e => e.score < userScore);
   const userEntry: LeaderboardEntry = {
-    user_id: 'current-user',
+    user_id: CURRENT_USER_ID,
     username,
     scope: 'all_time' as LeaderboardScope,
     category,
@@ -172,7 +179,7 @@ async function getDemoUserScore(category: LeaderboardCategory): Promise<{ score:
   } else {
     // Default demo profile
     profile = {
-      user_id: 'demo_user',
+      user_id: DEMO_USER_ID,
       total_xp: 500,
       current_level: 5,
       current_streak: 3,
@@ -247,7 +254,7 @@ async function getLeaderboardDemo(
     // Mark current user's entry
     entries = entries.map(e => ({
       ...e,
-      isCurrentUser: e.user_id === 'current-user',
+      isCurrentUser: e.user_id === CURRENT_USER_ID,
     }));
     
     return { data: entries.slice(0, limit), error: null };

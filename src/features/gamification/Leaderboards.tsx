@@ -56,7 +56,7 @@ export function Leaderboards({ session, onClose }: LeaderboardsProps) {
       // Fetch user's rank
       const { data: rank, error: rankError } = await getUserRank(userId, scope, category);
       if (rankError) {
-        console.error('Error loading user rank:', error);
+        console.error('Error loading user rank:', rankError);
       } else {
         setUserRank(rank);
       }

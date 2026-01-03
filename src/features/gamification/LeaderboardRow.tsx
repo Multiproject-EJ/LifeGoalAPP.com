@@ -16,7 +16,7 @@ const RANK_BADGES = {
 
 export function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowProps) {
   const isTopThree = entry.rank <= 3;
-  const badge = RANK_BADGES[entry.rank as keyof typeof RANK_BADGES];
+  const badge = isTopThree ? RANK_BADGES[entry.rank as keyof typeof RANK_BADGES] : undefined;
   
   return (
     <div
