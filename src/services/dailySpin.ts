@@ -1,7 +1,6 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { DailySpinState, SpinResult, SpinPrize, PrizeType } from '../types/gamification';
-import { SPIN_PRIZES, PRIZE_WEIGHTS } from '../types/gamification';
 import { awardXP } from './gamification';
 import { fetchGamificationProfile } from './gamificationPrefs';
 
@@ -180,17 +179,20 @@ export async function getSpinHistory(userId: string, limit: number = 10): Promis
 export function getRandomPrize(): SpinPrize {
   const roll = Math.random() * 100;
   
+  // Legendary: 0-3 (3%)
   if (roll < 3) {
-    // Legendary (3%)
     return getLegendaryPrize();
-  } else if (roll < 15) {
-    // Epic (12%)
+  }
+  // Epic: 3-15 (12%)
+  else if (roll < 15) {
     return getEpicPrize();
-  } else if (roll < 40) {
-    // Rare (25%)
+  }
+  // Rare: 15-40 (25%)
+  else if (roll < 40) {
     return getRarePrize();
-  } else {
-    // Common (60%)
+  }
+  // Common: 40-100 (60%)
+  else {
     return getCommonPrize();
   }
 }
