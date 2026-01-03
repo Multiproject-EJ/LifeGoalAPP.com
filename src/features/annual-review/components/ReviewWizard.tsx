@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { StatsRetrospective } from './StatsRetrospective';
 import { LifeWheelAudit, LifeWheelAuditData } from './LifeWheelAudit';
+import { VisionBoardManifest } from './VisionBoardManifest';
 import { LIFE_WHEEL_CATEGORIES } from '../../checkins/LifeWheelCheckins';
 import { 
   createAnnualReview, 
@@ -11,18 +12,6 @@ import {
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 
 // Placeholder components - will be implemented in subsequent steps
-
-const VisionBoardManifest = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => (
-  <div className="review-step">
-    <h2>✨ Vision Board Manifest</h2>
-    <p>What do you want to manifest this year?</p>
-    {/* Image upload/manifest content will go here */}
-    <div className="step-actions">
-      <button className="btn-secondary" onClick={onBack}>Back</button>
-      <button className="btn-primary" onClick={onNext}>Next: Habit Planning</button>
-    </div>
-  </div>
-);
 
 const HabitPlanning = ({ onBack, onComplete }: { onBack: () => void; onComplete: () => void }) => (
   <div className="review-step">
@@ -178,7 +167,14 @@ export const ReviewWizard: React.FC = () => {
             )}
           </>
         )}
-        {step === 3 && <VisionBoardManifest onNext={nextStep} onBack={prevStep} />}
+        {step === 3 && (
+          <VisionBoardManifest 
+            onNext={nextStep} 
+            onBack={prevStep} 
+            reviewId={reviewId} 
+            reviewYear={reviewYear}
+          />
+        )}
         {step === 4 && <HabitPlanning onBack={prevStep} onComplete={handleComplete} />}
       </div>
 

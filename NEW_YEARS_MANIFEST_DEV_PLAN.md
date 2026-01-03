@@ -40,16 +40,17 @@ A guided workflow that helps users close the chapter on the previous year with d
   - Text input for "What went well?" / "What needs focus?".
   - Data persisted to `annual_reviews.reflection_text` and `overall_rating`.
 
-- [ ] **Step 3: Manifestation (Vision Board)**
+- [x] **Step 3: Manifestation (Vision Board)**
   - Image uploader for specific goals.
   - Canvas integration for generating a summary image.
+  - Goals saved to `annual_goals` table with optional vision images.
 
 - [ ] **Step 4: Habit Planning**
   - Interface to "Migrate", "Archive", or "Create New" habits based on the new goals.
 
 ## Phase 3: Integration & Logic
 - [x] Connect `ReviewWizard` to Supabase `annual_reviews`.
-- [ ] Implement image upload logic to Supabase Storage.
+- [x] Implement image upload logic to Supabase Storage.
 - [ ] Build the "Habit Generator" logic (ensure every Goal has at least 1 linked Habit).
 
 ## Phase 4: Polish & Engagement
