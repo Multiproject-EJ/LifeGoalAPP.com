@@ -33,7 +33,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
       const { data: catalogData, error: catalogError } = await fetchPowerUpsCatalog();
       if (catalogError) {
         console.error('Error loading power-ups catalog:', catalogError);
-        setErrorMessage('Failed to load power-ups catalog. Please ensure migration 0111_power_ups_store.sql has been run.');
+        setErrorMessage('Failed to load power-ups catalog. Please ensure migration 0127_power_ups_store.sql has been run.');
         setCatalog([]);
       } else {
         setCatalog(catalogData || []);
@@ -107,10 +107,9 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
   };
 
   const categorizedPowerUps = {
-    boosts: catalog.filter(p => p.effectType === 'xp_multiplier'),
-    protection: catalog.filter(p => ['streak_freeze', 'extra_life'].includes(p.effectType)),
-    instant: catalog.filter(p => p.effectType === 'instant_xp'),
-    special: catalog.filter(p => ['spin_token', 'mystery'].includes(p.effectType)),
+    boosts: catalog.filter(p => p.category === 'boosts'),
+    protection: catalog.filter(p => p.category === 'protection'),
+    upgrades: catalog.filter(p => p.category === 'upgrades'),
   };
 
   if (loading) {
@@ -130,7 +129,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
           <details>
             <summary>Troubleshooting</summary>
             <ul>
-              <li>Ensure migration <code>0111_power_ups_store.sql</code> has been run successfully</li>
+              <li>Ensure migration <code>0127_power_ups_store.sql</code> has been run successfully</li>
               <li>Check browser console for detailed errors</li>
               <li>Verify Supabase connection</li>
             </ul>
@@ -210,35 +209,15 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
           </section>
         )}
 
-        {/* Instant Rewards */}
-        {categorizedPowerUps.instant.length > 0 && (
+        {/* Permanent Upgrades */}
+        {categorizedPowerUps.upgrades.length > 0 && (
           <section className="power-ups-store__category">
-            <h2 className="power-ups-store__category-title">✨ Instant Rewards</h2>
+            <h2 className="power-ups-store__category-title">💎 Permanent Upgrades</h2>
             <p className="power-ups-store__category-description">
-              Get immediate XP boosts
+              Unlock lasting improvements to your account
             </p>
             <div className="power-ups-store__grid">
-              {categorizedPowerUps.instant.map((powerUp) => (
-                <PowerUpCard
-                  key={powerUp.id}
-                  powerUp={powerUp}
-                  currentPoints={currentPoints}
-                  onPurchase={handlePurchase}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Special Items */}
-        {categorizedPowerUps.special.length > 0 && (
-          <section className="power-ups-store__category">
-            <h2 className="power-ups-store__category-title">🎁 Special Items</h2>
-            <p className="power-ups-store__category-description">
-              Unique items with special effects
-            </p>
-            <div className="power-ups-store__grid">
-              {categorizedPowerUps.special.map((powerUp) => (
+              {categorizedPowerUps.upgrades.map((powerUp) => (
                 <PowerUpCard
                   key={powerUp.id}
                   powerUp={powerUp}

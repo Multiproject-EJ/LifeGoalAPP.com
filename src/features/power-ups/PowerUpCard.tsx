@@ -37,14 +37,23 @@ export function PowerUpCard({ powerUp, currentPoints, onPurchase, disabled }: Po
         return `+${powerUp.effectValue} Spin`;
       case 'mystery':
         return 'Random Reward';
+      case 'max_lives_increase':
+        return `Max Lives +${powerUp.effectValue}`;
+      case 'freeze_bank_increase':
+        return `Freeze Bank +${powerUp.effectValue}`;
+      case 'daily_spin_increase':
+        return `Daily Spins +${powerUp.effectValue}`;
       default:
         return '';
     }
   };
 
   return (
-    <div className={`power-up-card ${isDisabled ? 'power-up-card--disabled' : ''}`}>
+    <div className={`power-up-card ${isDisabled ? 'power-up-card--disabled' : ''} ${powerUp.type === 'permanent' ? 'power-up-card--permanent' : ''}`}>
       <div className="power-up-card__icon">{powerUp.icon}</div>
+      {powerUp.type === 'permanent' && (
+        <div className="power-up-card__badge power-up-card__badge--permanent">Permanent</div>
+      )}
       <div className="power-up-card__content">
         <h3 className="power-up-card__name">{powerUp.name}</h3>
         <p className="power-up-card__description">{powerUp.description}</p>
