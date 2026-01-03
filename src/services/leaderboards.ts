@@ -8,10 +8,10 @@ import type {
   LeaderboardCategory,
   LeaderboardReward,
   LEADERBOARD_PRIZE_TIERS,
+  GamificationProfile,
 } from '../types/gamification';
-import { DEMO_LEADERBOARD_KEY, DEMO_LEADERBOARD_REWARDS_KEY } from '../types/gamification';
+import { DEMO_LEADERBOARD_KEY, DEMO_LEADERBOARD_REWARDS_KEY, DEMO_PROFILE_KEY } from '../types/gamification';
 import { awardXP } from './gamification';
-import { getGamificationProfile } from './gamification';
 
 // =====================================================
 // PERIOD KEY GENERATION
@@ -163,7 +163,32 @@ function generateMockLeaderboard(
  * Get user's score for a category in demo mode
  */
 async function getDemoUserScore(category: LeaderboardCategory): Promise<{ score: number; username: string }> {
-  const profile = await getGamificationProfile('demo_user');
+  // Get demo profile from localStorage
+  const profileStr = localStorage.getItem(DEMO_PROFILE_KEY);
+  let profile: GamificationProfile;
+  
+  if (profileStr) {
+    profile = JSON.parse(profileStr);
+  } else {
+    // Default demo profile
+    profile = {
+      user_id: 'demo_user',
+      total_xp: 500,
+      current_level: 5,
+      current_streak: 3,
+      longest_streak: 7,
+      last_activity_date: new Date().toISOString(),
+      lives: 3,
+      max_lives: 3,
+      last_life_refill: null,
+      streak_freezes: 1,
+      freeze_bank_capacity: 3,
+      total_points: 150,
+      gamification_enabled: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
   
   let score = 0;
   switch (category) {
