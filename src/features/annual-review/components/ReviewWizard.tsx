@@ -1,20 +1,9 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { StatsRetrospective } from './StatsRetrospective';
+import { LifeWheelAudit, LifeWheelAuditData } from './LifeWheelAudit';
 
 // Placeholder components - will be implemented in subsequent steps
-
-const LifeWheelAudit = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => (
-  <div className="review-step">
-    <h2>🎯 Life Wheel Audit</h2>
-    <p>Rate your satisfaction in key areas of your life.</p>
-    {/* Wheel content will go here */}
-    <div className="step-actions">
-      <button className="btn-secondary" onClick={onBack}>Back</button>
-      <button className="btn-primary" onClick={onNext}>Next: Vision Board</button>
-    </div>
-  </div>
-);
 
 const VisionBoardManifest = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => (
   <div className="review-step">
@@ -45,9 +34,15 @@ export const ReviewWizard: React.FC = () => {
   const totalSteps = 4;
   // Default to reviewing the previous year (current year - 1)
   const [reviewYear] = useState(new Date().getFullYear() - 1);
+  const [lifeWheelData, setLifeWheelData] = useState<LifeWheelAuditData | null>(null);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, totalSteps));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  
+  const handleLifeWheelNext = (data: LifeWheelAuditData) => {
+    setLifeWheelData(data);
+    nextStep();
+  };
   
   const handleComplete = () => {
     confetti({
@@ -90,7 +85,7 @@ export const ReviewWizard: React.FC = () => {
         flexDirection: 'column'
       }}>
         {step === 1 && <StatsRetrospective year={reviewYear} onNext={nextStep} />}
-        {step === 2 && <LifeWheelAudit onNext={nextStep} onBack={prevStep} />}
+        {step === 2 && <LifeWheelAudit onNext={handleLifeWheelNext} onBack={prevStep} reviewYear={reviewYear} initialData={lifeWheelData || undefined} />}
         {step === 3 && <VisionBoardManifest onNext={nextStep} onBack={prevStep} />}
         {step === 4 && <HabitPlanning onBack={prevStep} onComplete={handleComplete} />}
       </div>
