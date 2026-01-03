@@ -22,6 +22,7 @@ import { LIFE_WHEEL_CATEGORIES, LifeWheelCheckins, LifeWheelInsightsPanel } from
 import { DeveloperIdeasPage } from '../ideas/DeveloperIdeasPage';
 import { isDemoSession } from '../../services/demoSession';
 import { DailySpinWheel } from '../spin-wheel/DailySpinWheel';
+import { FocusWidget } from './components/FocusWidget';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import {
@@ -1118,6 +1119,9 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
               </ul>
             )}
           </article>
+
+          {/* 202X Focus Widget */}
+          <FocusWidget session={session} />
 
           {/* Daily Spin Wheel Widget */}
           <article className="progress-card progress-card--spin-wheel">
