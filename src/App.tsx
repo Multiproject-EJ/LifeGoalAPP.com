@@ -24,6 +24,7 @@ import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
+import { ReviewWizard } from './features/annual-review';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -118,6 +119,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     summary: '',
     icon: '🖼️',
     shortLabel: 'VISION',
+  },
+  {
+    id: 'annual-review',
+    label: 'Annual Review',
+    summary: 'Reflect on your year and manifest your goals for the next one.',
+    icon: '✨',
+    shortLabel: 'REVIEW',
   },
   {
     id: 'support',
@@ -1152,6 +1160,12 @@ export default function App() {
         return (
           <div className="workspace-content">
             <VisionBoard session={activeSession} />
+          </div>
+        );
+      case 'annual-review':
+        return (
+          <div className="workspace-content">
+            <ReviewWizard onComplete={() => setActiveWorkspaceNav('goals')} />
           </div>
         );
       case 'support':

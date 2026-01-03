@@ -63,3 +63,9 @@ A guided workflow that helps users close the chapter on the previous year with d
   - Implemented `markAnnualReviewComplete` service function
   - Updated ReviewWizard to save completion state and support navigation callback
   - Export ReviewWizardProps interface for flexible integration
+
+## Phase 5: Main Application Integration
+- [x] Add "Annual Review" navigation item to workspace navigation
+- [x] Import ReviewWizard component in App.tsx
+- [x] Add route case in renderWorkspaceSection for annual-review
+- [x] Pass onComplete callback to navigate back to dashboard after completion
