@@ -2,3 +2,5 @@
 export { ReviewWizard } from './ReviewWizard';
 export { StatsCard } from './StatsCard';
 export { StatsRetrospective } from './StatsRetrospective';
+export { LifeWheelAudit } from './LifeWheelAudit';
+export type { LifeWheelAuditData, CategoryReflection } from './LifeWheelAudit';
