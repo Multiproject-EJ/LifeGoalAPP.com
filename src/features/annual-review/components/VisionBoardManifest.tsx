@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LIFE_WHEEL_CATEGORIES, LifeWheelCategoryKey } from '../../checkins/LifeWheelCheckins';
-import { uploadVisionImage } from '../../../services/visionBoard';
+import { uploadVisionImage, VISION_BOARD_BUCKET } from '../../../services/visionBoard';
 import { createAnnualGoal, fetchAnnualGoalsByReview } from '../../../services/annualReviews';
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 
@@ -42,6 +42,18 @@ export const VisionBoardManifest: React.FC<VisionBoardManifestProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<Record<LifeWheelCategoryKey, boolean>>({} as Record<LifeWheelCategoryKey, boolean>);
+
+  // Cleanup object URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Revoke all object URLs when component unmounts
+      Object.values(goals).forEach(goal => {
+        if (goal.imageUrl) {
+          URL.revokeObjectURL(goal.imageUrl);
+        }
+      });
+    };
+  }, []);
 
   // Count how many goals have been defined
   const completedCount = useMemo(() => {
@@ -138,7 +150,7 @@ export const VisionBoardManifest: React.FC<VisionBoardManifestProps> = ({
           } else if (visionImageData) {
             // Get the public URL of the uploaded image
             const { data: urlData } = supabase.storage
-              .from('vision-board')
+              .from(VISION_BOARD_BUCKET)
               .getPublicUrl(visionImageData.image_path);
             visionImageUrl = urlData.publicUrl;
           }

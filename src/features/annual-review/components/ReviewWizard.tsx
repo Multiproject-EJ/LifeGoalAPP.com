@@ -31,7 +31,17 @@ export const ReviewWizard: React.FC = () => {
       const { data, error } = await fetchAnnualReviewByYear(reviewYear);
       if (!error && data) {
         setReviewId(data.id);
-        // TODO: Parse reflection_text to restore lifeWheelData if needed
+        
+        // Parse reflection_text to restore lifeWheelData if it exists
+        if (data.reflection_text) {
+          try {
+            const parsedData = JSON.parse(data.reflection_text);
+            setLifeWheelData(parsedData);
+          } catch (parseError) {
+            console.error('Failed to parse reflection text:', parseError);
+            // Continue without restoring data
+          }
+        }
       }
     };
     loadExistingReview();

@@ -4,6 +4,11 @@ import { fetchAnnualGoalsByReview, type AnnualGoal } from '../../../services/ann
 import { createHabitV2 } from '../../../services/habitsV2';
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 
+// Constants for habit creation
+const DEFAULT_HABIT_TYPE = 'boolean' as const;
+const DEFAULT_SCHEDULE_MODE = 'daily' as const;
+const DEFAULT_EMOJI = '✅';
+
 type HabitPlanningProps = {
   onBack: () => void;
   onComplete: () => void;
@@ -58,7 +63,7 @@ export const HabitPlanning: React.FC<HabitPlanningProps> = ({
             goalId: goal.id,
             category: goal.category,
             title: '',
-            emoji: '✅',
+            emoji: DEFAULT_EMOJI,
           };
         });
         setHabitInputs(initialInputs);
@@ -110,8 +115,8 @@ export const HabitPlanning: React.FC<HabitPlanningProps> = ({
           {
             title: habitInput.title.trim(),
             emoji: habitInput.emoji,
-            habit_type: 'boolean',
-            schedule_mode: 'daily',
+            habit_type: DEFAULT_HABIT_TYPE,
+            schedule_mode: DEFAULT_SCHEDULE_MODE,
             domain_key: habitInput.category as LifeWheelCategoryKey,
             target_num: null,
             target_unit: null,
