@@ -53,7 +53,7 @@ export const VisionBoardManifest: React.FC<VisionBoardManifestProps> = ({
         }
       });
     };
-  }, []);
+  }, [goals]);
 
   // Count how many goals have been defined
   const completedCount = useMemo(() => {
