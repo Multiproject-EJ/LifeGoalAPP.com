@@ -340,7 +340,70 @@ Spend accumulated points on temporary boosts and permanent upgrades:
 
 ---
 
-### 🏆 Leaderboards
+### 🏆 Leaderboards ✅
+**Status:** Implemented (January 2026)
+
+Enable competitive rankings and social comparison across multiple categories and time periods:
+
+#### Leaderboard Scopes
+- **All-Time**: Lifetime rankings across all users
+- **Weekly**: ISO week-based rankings (Monday-Sunday), resets every week
+- **Monthly**: Calendar month rankings, resets on 1st of each month
+
+#### Categories
+- **🆙 Highest Level**: Ranked by `current_level` (ties broken by total XP)
+- **💰 Most XP**: Ranked by `total_xp`
+- **🔥 Longest Streak**: Ranked by `current_streak` (ties broken by longest streak)
+- **🏆 Most Achievements**: Ranked by count of unlocked achievements
+- **💎 Most Points**: Ranked by `total_points`
+
+#### Prize Distribution
+Automatic prizes awarded at period end (Monday for weekly, 1st of month for monthly):
+- **Rank #1**: 1000 XP + "Leaderboard Champion" badge
+- **Rank #2-3**: 500 XP + Runner-up/Third badges
+- **Rank #4-5**: 500 XP
+- **Rank #6-10**: 250 XP
+
+#### Features
+- **Top 3 Badges**: 🥇🥈🥉 displayed for podium positions
+- **User Rank Highlighting**: Current user's row highlighted in leaderboard
+- **Sticky Rank Card**: Shows user's position if outside top 50
+- **Load More**: Pagination support for viewing more entries
+- **Refresh**: Manual leaderboard refresh button
+- **Demo Mode**: Generates realistic mock data with 50-100 entries
+- **Friend Leaderboard Placeholder**: UI hint for Phase 3 feature
+
+#### Database Tables
+- `leaderboard_entries`: Stores rankings (scope, category, period_key, rank, score)
+- `leaderboard_rewards`: Tracks awarded prizes
+- Function: `refresh_leaderboard_entries()` for recalculating ranks
+
+#### Technical Implementation
+- Migration: `0128_leaderboards.sql`
+- Service: `src/services/leaderboards.ts`
+- Components: 
+  - `src/features/gamification/Leaderboards.tsx` (main view)
+  - `src/features/gamification/LeaderboardRow.tsx` (individual entry)
+  - `src/features/gamification/LeaderboardPreview.tsx` (dashboard widget)
+- Integration: Leaderboard button added to `GamificationHeader.tsx`
+- Styling: Added to `src/styles/gamification.css`
+
+#### Period Key Format
+- All-time: `'all_time'`
+- Weekly: `'YYYY-Www'` (e.g., `'2026-W01'`)
+- Monthly: `'YYYY-MM'` (e.g., `'2026-01'`)
+
+#### Achievement Integration
+**Note:** The following achievements should be added to the database for full integration:
+- **"Top 10 Finish"**: Reach top 10 in any leaderboard category
+- **"Leaderboard Champion"**: Reach rank #1 in any leaderboard category
+- **"Podium Finisher"**: Finish in top 3 positions (bronze, silver, or gold)
+- **"Leaderboard Regular"**: Appear in top 50 for 5 different periods
+- **"Category Master"**: Reach top 10 in all 5 categories
+
+---
+
+### 🏆 Leaderboards (ORIGINAL SPEC - REPLACED BY IMPLEMENTATION ABOVE)
 - **Global leaderboard** (top 100 users)
 - **Friends leaderboard** (social connections)
 - **Weekly/Monthly** leaderboards with resets
