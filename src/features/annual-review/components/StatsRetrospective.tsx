@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getYearInReviewStats, YearInReviewStats } from '../../../services/annualReviews';
 import { LIFE_WHEEL_CATEGORIES } from '../../checkins/LifeWheelCheckins';
 import { StatsCard } from './StatsCard';
+import { ShareableYearInReview } from './ShareableYearInReview';
+import { shareOrDownloadImage } from '../../../utils/imageGenerator';
 
 type StatsRetrospectiveProps = {
   year: number;
@@ -16,6 +18,9 @@ export const StatsRetrospective: React.FC<StatsRetrospectiveProps> = ({ year, on
   const [stats, setStats] = useState<YearInReviewStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const shareableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -43,6 +48,29 @@ export const StatsRetrospective: React.FC<StatsRetrospectiveProps> = ({ year, on
     
     const category = LIFE_WHEEL_CATEGORIES.find(cat => cat.key === categoryKey);
     return category?.label || categoryKey;
+  };
+
+  // Handle share/download image
+  const handleShareImage = async () => {
+    if (!shareableRef.current || !stats) return;
+
+    setIsGeneratingImage(true);
+    setShareError(null);
+    try {
+      await shareOrDownloadImage(
+        shareableRef.current,
+        `year-in-review-${year}.png`,
+        {
+          title: `My ${year} in Review`,
+          text: `Check out my ${year} achievements! I completed ${stats.total_habits_completed} habits! 🎯`,
+        }
+      );
+    } catch (error) {
+      console.error('Failed to generate image:', error);
+      setShareError('Failed to generate image. Please try again.');
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   if (isLoading) {
@@ -145,10 +173,45 @@ export const StatsRetrospective: React.FC<StatsRetrospectiveProps> = ({ year, on
         </div>
       </div>
 
+      {/* Share error message */}
+      {shareError && (
+        <div style={{
+          marginTop: '1rem',
+          padding: '0.75rem',
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '8px',
+          color: '#991b1b',
+          fontSize: '0.875rem'
+        }}>
+          {shareError}
+        </div>
+      )}
+
       <div className="step-actions">
+        <button 
+          className="btn-secondary" 
+          onClick={handleShareImage}
+          disabled={isGeneratingImage}
+          style={{ marginRight: 'auto' }}
+        >
+          {isGeneratingImage ? '⏳ Generating...' : '📸 Share Image'}
+        </button>
         <button className="btn-primary" onClick={onNext}>
           Next: Life Wheel Audit →
         </button>
+      </div>
+
+      {/* Hidden shareable component for image generation */}
+      <div style={{ 
+        position: 'fixed', 
+        left: '-9999px', 
+        top: '-9999px',
+        visibility: 'hidden'
+      }}>
+        <div ref={shareableRef}>
+          {stats && <ShareableYearInReview year={year} stats={stats} />}
+        </div>
       </div>
 
       <style>{`
