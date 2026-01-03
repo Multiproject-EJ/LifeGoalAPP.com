@@ -12,6 +12,7 @@ import { XP_REWARDS } from '../types/gamification';
 import { AiCoach } from '../features/ai-coach';
 import '../features/ai-coach/AiCoach.css';
 import { GamificationHeader } from './GamificationHeader';
+import { NewDailySpinWheel } from '../features/spin-wheel/NewDailySpinWheel';
 
 type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule';
 
@@ -62,6 +63,7 @@ export function QuickActionsFAB({
   const [showLifeCoach, setShowLifeCoach] = useState(false);
   const [showHabitsSubmenu, setShowHabitsSubmenu] = useState(false);
   const [showGamificationCard, setShowGamificationCard] = useState(false);
+  const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [habitCompletions, setHabitCompletions] = useState<Record<string, { logId: string | null; completed: boolean }>>({});
   const [loadingHabits, setLoadingHabits] = useState(false);
@@ -408,6 +410,14 @@ export function QuickActionsFAB({
     setShowGamificationCard(false);
   };
 
+  const handleSpinWheelClick = () => {
+    setShowDailySpinWheel(true);
+  };
+
+  const closeSpinWheel = () => {
+    setShowDailySpinWheel(false);
+  };
+
   const toggleHabitCompletion = async (habitId: string) => {
     setSavingHabitId(habitId);
     try {
@@ -692,7 +702,12 @@ export function QuickActionsFAB({
 
               {!gamificationLoading && gamificationEnabled && gamificationProfile && levelInfo && (
                 <>
-                  <GamificationHeader profile={gamificationProfile} levelInfo={levelInfo} />
+                  <GamificationHeader 
+                    profile={gamificationProfile} 
+                    levelInfo={levelInfo}
+                    session={session}
+                    onLevelClick={handleSpinWheelClick}
+                  />
 
                   <div className="gamification-scorecard__grid">
                     <div className="gamification-scorecard__tile">
@@ -751,6 +766,11 @@ export function QuickActionsFAB({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Daily Spin Wheel Modal */}
+      {showDailySpinWheel && (
+        <NewDailySpinWheel session={session} onClose={closeSpinWheel} />
       )}
     </>
   );
