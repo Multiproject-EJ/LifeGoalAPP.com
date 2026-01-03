@@ -6896,7 +6896,7 @@ body {
   margin-top: 0.5rem;
 }
 
-.progress-card__empty {
+.progress-card__metric {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;

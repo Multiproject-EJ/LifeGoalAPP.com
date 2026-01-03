@@ -15,7 +15,7 @@ function GoalItem({ goal }: GoalItemProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <li key={goal.id} className="focus-widget__goal-item">
+    <li className="focus-widget__goal-item">
       <div className="focus-widget__goal-header">
         <span className="focus-widget__goal-category">{goal.category}</span>
       </div>
