@@ -302,20 +302,41 @@ Track the evolution of LifeGoalApp's gamification system across all phases.
 
 ---
 
-### 🛒 Power-ups Store
-Spend points on temporary and permanent boosts:
+### 🛒 Power-ups Store ✅
+**Status:** Implemented (January 2026)
 
-#### Temporary Power-ups
-- **2x XP Boost** (1 hour) - 50 points
-- **5x XP Boost** (1 hour) - 200 points
-- **Streak Freeze** (1 use) - 100 points
-- **Extra Life** (1 heart) - 75 points
-- **Perfect Day Guarantee** - 300 points
+Spend accumulated points on temporary boosts and permanent upgrades:
+
+#### Temporary Power-ups (Boosts)
+- **2x XP Boost** (1 hour) - 50 points - Double all XP gains
+- **5x XP Boost** (1 hour) - 200 points - Quintuple all XP gains
+- **Perfect Day Guarantee** - 300 points - Ensures all habits count as completed
+
+#### Temporary Power-ups (Protection)
+- **Streak Freeze** (1 use) - 100 points - Protects streak for one missed day
+- **Extra Life** (1 heart) - 75 points - Adds one life to your total
 
 #### Permanent Upgrades
-- **Max Lives +1** - 500 points
-- **Streak Freeze Bank +1** - 750 points
-- **Daily Spin +1** - 1000 points
+- **Max Lives +1** - 500 points - Permanently increase maximum lives
+- **Streak Freeze Bank +1** - 750 points - Permanently increase freeze capacity
+- **Daily Spin +1** - 1000 points - Add one extra daily spin permanently
+
+**Features:**
+- **Category-based store**: Organized into Boosts, Protection, and Upgrades sections
+- **Point validation**: Ensures users have enough points before purchase
+- **Active power-ups display**: Real-time countdown timers in gamification header
+- **XP multipliers**: Automatically applied to all XP gains (except power-up rewards)
+- **Permanent upgrades**: Instantly applied to user profile with database function
+- **Visual feedback**: Permanent items have special golden badge and styling
+- **Demo mode support**: Fully functional with localStorage
+
+**Technical Implementation:**
+- Migration: `0127_power_ups_store.sql`
+- Service: `src/services/powerUps.ts` (enhanced from 0111)
+- Component: `src/features/power-ups/PowerUpsStore.tsx`
+- Types: Updated `src/types/gamification.ts` with Phase 2 fields
+- Database function: `apply_permanent_upgrade()` for permanent effects
+- Active indicator: Integrated into `GamificationHeader.tsx`
 
 ---
 

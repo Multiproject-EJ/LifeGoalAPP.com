@@ -81,6 +81,53 @@
   margin-bottom: 1rem;
 }
 
+/* Active Power-ups Indicator */
+.gamification-header__active-powerups {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.active-powerup-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.active-powerup-indicator__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.active-powerup-indicator__text {
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.active-powerup-indicator__timer {
+  opacity: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+}
+
 .xp-bar-container {
   color: #fff;
 }

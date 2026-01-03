@@ -16,132 +16,137 @@ const DEMO_POWERUPS_KEY = 'demo_user_powerups';
  */
 export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>> {
   if (!canUseSupabaseData()) {
-    // Return full demo catalog
+    // Return full Phase 2 demo catalog
     const demoCatalog: PowerUp[] = [
+      // BOOSTS
       {
         id: 'demo-1',
         powerUpKey: 'xp_boost_1h_2x',
-        name: '2X XP Boost (1 hour)',
-        description: 'Double XP from all activities for 1 hour',
+        name: '2x XP Boost (1 hour)',
+        description: 'Double all XP gains for 1 hour',
         icon: '⚡',
+        type: 'temporary',
         costPoints: 50,
         effectType: 'xp_multiplier',
-        effectValue: 2.0,
+        effectValue: 2,
         durationMinutes: 60,
+        category: 'boosts',
         isActive: true,
         sortOrder: 1,
         createdAt: new Date().toISOString(),
       },
       {
         id: 'demo-2',
-        powerUpKey: 'xp_boost_24h_2x',
-        name: '2X XP Boost (24 hours)',
-        description: 'Double XP from all activities for 24 hours',
-        icon: '🌟',
-        costPoints: 150,
+        powerUpKey: 'xp_boost_1h_5x',
+        name: '5x XP Boost (1 hour)',
+        description: 'Quintuple all XP gains for 1 hour',
+        icon: '🚀',
+        type: 'temporary',
+        costPoints: 200,
         effectType: 'xp_multiplier',
-        effectValue: 2.0,
-        durationMinutes: 1440,
+        effectValue: 5,
+        durationMinutes: 60,
+        category: 'boosts',
         isActive: true,
         sortOrder: 2,
         createdAt: new Date().toISOString(),
       },
       {
         id: 'demo-3',
-        powerUpKey: 'xp_boost_1h_3x',
-        name: '3X XP Boost (1 hour)',
-        description: 'Triple XP from all activities for 1 hour',
-        icon: '💫',
-        costPoints: 100,
-        effectType: 'xp_multiplier',
-        effectValue: 3.0,
-        durationMinutes: 60,
+        powerUpKey: 'perfect_day',
+        name: 'Perfect Day Guarantee',
+        description: 'Ensures all habits count as completed today',
+        icon: '✨',
+        type: 'temporary',
+        costPoints: 300,
+        effectType: 'instant_xp',
+        effectValue: 100,
+        durationMinutes: null,
+        category: 'boosts',
         isActive: true,
         sortOrder: 3,
         createdAt: new Date().toISOString(),
       },
+      // PROTECTION
       {
         id: 'demo-4',
-        powerUpKey: 'streak_shield',
-        name: 'Streak Shield',
-        description: 'Protects your streak once when you miss a day',
+        powerUpKey: 'streak_freeze_1',
+        name: 'Streak Freeze (1 use)',
+        description: 'Protects your streak for one missed day',
         icon: '🛡️',
+        type: 'temporary',
         costPoints: 100,
         effectType: 'streak_freeze',
         effectValue: 1,
         durationMinutes: null,
+        category: 'protection',
         isActive: true,
         sortOrder: 10,
         createdAt: new Date().toISOString(),
       },
       {
         id: 'demo-5',
-        powerUpKey: 'extra_life',
-        name: 'Extra Life',
+        powerUpKey: 'extra_life_1',
+        name: 'Extra Life (1 heart)',
         description: 'Adds one life to your total',
         icon: '❤️',
+        type: 'temporary',
         costPoints: 75,
         effectType: 'extra_life',
         effectValue: 1,
         durationMinutes: null,
+        category: 'protection',
         isActive: true,
         sortOrder: 11,
         createdAt: new Date().toISOString(),
       },
+      // UPGRADES
       {
         id: 'demo-6',
-        powerUpKey: 'xp_pack_small',
-        name: 'XP Pack (Small)',
-        description: 'Instant 100 XP boost',
-        icon: '✨',
-        costPoints: 40,
-        effectType: 'instant_xp',
-        effectValue: 100,
+        powerUpKey: 'max_lives_plus_1',
+        name: 'Max Lives +1',
+        description: 'Permanently increase maximum lives by 1',
+        icon: '💪',
+        type: 'permanent',
+        costPoints: 500,
+        effectType: 'max_lives_increase',
+        effectValue: 1,
         durationMinutes: null,
+        category: 'upgrades',
         isActive: true,
         sortOrder: 20,
         createdAt: new Date().toISOString(),
       },
       {
         id: 'demo-7',
-        powerUpKey: 'xp_pack_large',
-        name: 'XP Pack (Large)',
-        description: 'Instant 500 XP boost',
-        icon: '💫',
-        costPoints: 150,
-        effectType: 'instant_xp',
-        effectValue: 500,
+        powerUpKey: 'freeze_bank_plus_1',
+        name: 'Streak Freeze Bank +1',
+        description: 'Permanently increase freeze capacity by 1',
+        icon: '🏦',
+        type: 'permanent',
+        costPoints: 750,
+        effectType: 'freeze_bank_increase',
+        effectValue: 1,
         durationMinutes: null,
+        category: 'upgrades',
         isActive: true,
         sortOrder: 21,
         createdAt: new Date().toISOString(),
       },
       {
         id: 'demo-8',
-        powerUpKey: 'extra_spin',
-        name: 'Extra Spin Token',
-        description: 'Spin the wheel again today',
-        icon: '🎟️',
-        costPoints: 80,
-        effectType: 'spin_token',
+        powerUpKey: 'daily_spin_plus_1',
+        name: 'Daily Spin +1',
+        description: 'Add one extra daily spin permanently',
+        icon: '🎰',
+        type: 'permanent',
+        costPoints: 1000,
+        effectType: 'daily_spin_increase',
         effectValue: 1,
         durationMinutes: null,
+        category: 'upgrades',
         isActive: true,
-        sortOrder: 30,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'demo-9',
-        powerUpKey: 'mystery_chest',
-        name: 'Mystery Chest',
-        description: 'Random mega reward - could be anything!',
-        icon: '🔮',
-        costPoints: 200,
-        effectType: 'mystery',
-        effectValue: 1,
-        durationMinutes: null,
-        isActive: true,
-        sortOrder: 40,
+        sortOrder: 22,
         createdAt: new Date().toISOString(),
       },
     ];
@@ -298,7 +303,18 @@ export async function purchasePowerUp(
   }
 
   // Handle instant effects vs activatable items
-  const isInstant = ['instant_xp', 'extra_life', 'spin_token', 'mystery'].includes(powerUp.effectType);
+  // Instant: immediately applied and consumed (permanent upgrades, instant XP, extra life, etc.)
+  // Timed: activated with duration (XP multipliers)
+  const isInstant = [
+    'instant_xp', 
+    'extra_life', 
+    'streak_freeze',
+    'spin_token', 
+    'mystery',
+    'max_lives_increase',
+    'freeze_bank_increase',
+    'daily_spin_increase'
+  ].includes(powerUp.effectType);
 
   const now = new Date();
   const activatedAt = isInstant ? now.toISOString() : null;
@@ -496,6 +512,41 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
 
       return `Mystery Chest: ${randomReward.label}!`;
 
+    case 'streak_freeze':
+      if (!canUseSupabaseData()) {
+        const capacity = profile.freeze_bank_capacity || 3;
+        saveDemoProfile({
+          ...profile,
+          streak_freezes: Math.min(profile.streak_freezes + powerUp.effectValue, capacity),
+        });
+      } else {
+        // Get capacity from profile
+        const { data: currentProfile } = await supabase
+          .from('gamification_profiles')
+          .select('streak_freezes, freeze_bank_capacity')
+          .eq('user_id', userId)
+          .single();
+        
+        const capacity = (currentProfile as any)?.freeze_bank_capacity || 3;
+        await supabase
+          .from('gamification_profiles')
+          .update({
+            streak_freezes: Math.min(
+              ((currentProfile as any)?.streak_freezes || 0) + powerUp.effectValue,
+              capacity
+            ),
+          })
+          .eq('user_id', userId);
+      }
+      return `Added ${powerUp.effectValue} streak freeze`;
+
+    case 'max_lives_increase':
+    case 'freeze_bank_increase':
+    case 'daily_spin_increase':
+      // Apply permanent upgrade
+      await applyPermanentUpgrade(userId, powerUp.effectType, powerUp.effectValue);
+      return `Permanently upgraded: ${powerUp.name}`;
+
     default:
       return 'Effect applied';
   }
@@ -572,6 +623,91 @@ export async function activatePowerUp(userPowerUpId: string, userId: string): Pr
 }
 
 /**
+ * Check and expire power-ups that have passed their expiration time
+ */
+export async function checkAndExpirePowerUps(userId: string): Promise<ServiceResponse<number>> {
+  const { data: userPowerUps, error } = await fetchUserPowerUps(userId);
+
+  if (error || !userPowerUps) {
+    return { data: null, error };
+  }
+
+  const now = new Date();
+  let expiredCount = 0;
+
+  for (const up of userPowerUps) {
+    if (up.isActive && !up.isConsumed && up.expiresAt) {
+      const expires = new Date(up.expiresAt);
+      if (expires <= now) {
+        await deactivatePowerUp(up.id, userId);
+        expiredCount++;
+      }
+    }
+  }
+
+  return { data: expiredCount, error: null };
+}
+
+/**
+ * Apply permanent upgrade effect to user profile
+ */
+export async function applyPermanentUpgrade(
+  userId: string,
+  effectType: string,
+  value: number
+): Promise<ServiceResponse<boolean>> {
+  const supabase = getSupabaseClient();
+
+  if (!canUseSupabaseData()) {
+    // Demo mode
+    const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
+    if (profileError || !profile) {
+      return { data: null, error: profileError || new Error('Profile not found') };
+    }
+
+    let updatedProfile = { ...profile };
+
+    switch (effectType) {
+      case 'max_lives_increase':
+        updatedProfile = { ...updatedProfile, max_lives: profile.max_lives + value };
+        break;
+      case 'freeze_bank_increase':
+        updatedProfile = { 
+          ...updatedProfile, 
+          freeze_bank_capacity: (profile.freeze_bank_capacity || 3) + value 
+        };
+        break;
+      case 'daily_spin_increase':
+        // In demo mode, we can't directly modify spin state
+        // This would be handled by the spin wheel service
+        break;
+      default:
+        return { data: null, error: new Error(`Unknown effect type: ${effectType}`) };
+    }
+
+    saveDemoProfile(updatedProfile);
+    return { data: true, error: null };
+  }
+
+  // Supabase mode - use the database function
+  try {
+    const { error } = await supabase.rpc('apply_permanent_upgrade' as any, {
+      p_user_id: userId,
+      p_effect_type: effectType,
+      p_effect_value: value,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: true, error: null };
+  } catch (err) {
+    return { data: null, error: err as Error };
+  }
+}
+
+/**
  * Deactivate expired power-up
  */
 async function deactivatePowerUp(userPowerUpId: string, userId: string): Promise<void> {
@@ -612,10 +748,12 @@ function mapRowToPowerUp(row: any): PowerUp {
     name: row.name,
     description: row.description,
     icon: row.icon,
+    type: row.type || 'temporary',
     costPoints: row.cost_points,
     effectType: row.effect_type,
     effectValue: row.effect_value,
     durationMinutes: row.duration_minutes,
+    category: row.category || 'boosts',
     isActive: row.is_active,
     sortOrder: row.sort_order,
     createdAt: row.created_at,

@@ -15,6 +15,7 @@ export interface GamificationProfile {
   max_lives: number;
   last_life_refill: string | null;
   streak_freezes: number;
+  freeze_bank_capacity: number;
   total_points: number;
   gamification_enabled: boolean;
   created_at: string;
@@ -256,7 +257,9 @@ export interface DemoGamificationProfile {
   longest_streak: number;
   last_activity_date: string | null;
   lives: number;
+  max_lives: number;
   streak_freezes: number;
+  freeze_bank_capacity: number;
   total_points: number;
   gamification_enabled: boolean;
 }
@@ -339,7 +342,13 @@ export type PowerUpEffectType =
   | 'instant_xp' 
   | 'extra_life' 
   | 'spin_token' 
-  | 'mystery';
+  | 'mystery'
+  | 'max_lives_increase'
+  | 'freeze_bank_increase'
+  | 'daily_spin_increase';
+
+export type PowerUpType = 'temporary' | 'permanent';
+export type PowerUpCategory = 'boosts' | 'protection' | 'upgrades';
 
 export interface PowerUp {
   id: string;
@@ -347,10 +356,12 @@ export interface PowerUp {
   name: string;
   description: string;
   icon: string;
+  type: PowerUpType;
   costPoints: number;
   effectType: PowerUpEffectType;
   effectValue: number;
   durationMinutes: number | null;
+  category: PowerUpCategory;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;

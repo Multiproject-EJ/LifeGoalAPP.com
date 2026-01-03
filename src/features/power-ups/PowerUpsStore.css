@@ -263,6 +263,41 @@
   cursor: not-allowed;
 }
 
+.power-up-card--permanent {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, #fffef7 0%, #fff9e6 100%);
+}
+
+.power-up-card__badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.power-up-card__badge--permanent {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #664d00;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.power-up-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
 .power-up-card__icon {
   font-size: 3rem;
   text-align: center;
