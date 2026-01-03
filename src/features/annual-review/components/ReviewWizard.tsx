@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { StatsRetrospective } from './StatsRetrospective';
 import { LifeWheelAudit, LifeWheelAuditData } from './LifeWheelAudit';
 import { VisionBoardManifest } from './VisionBoardManifest';
+import { HabitPlanning } from './HabitPlanning';
 import { LIFE_WHEEL_CATEGORIES } from '../../checkins/LifeWheelCheckins';
 import { 
   createAnnualReview, 
@@ -13,17 +14,6 @@ import { getSupabaseClient } from '../../../lib/supabaseClient';
 
 // Placeholder components - will be implemented in subsequent steps
 
-const HabitPlanning = ({ onBack, onComplete }: { onBack: () => void; onComplete: () => void }) => (
-  <div className="review-step">
-    <h2>📅 Habit Planning</h2>
-    <p>Translate your goals into daily habits.</p>
-    {/* Habit selection content will go here */}
-    <div className="step-actions">
-      <button className="btn-secondary" onClick={onBack}>Back</button>
-      <button className="btn-primary" onClick={onComplete}>Complete Review</button>
-    </div>
-  </div>
-);
 
 export const ReviewWizard: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -175,7 +165,14 @@ export const ReviewWizard: React.FC = () => {
             reviewYear={reviewYear}
           />
         )}
-        {step === 4 && <HabitPlanning onBack={prevStep} onComplete={handleComplete} />}
+        {step === 4 && (
+          <HabitPlanning 
+            onBack={prevStep} 
+            onComplete={handleComplete} 
+            reviewId={reviewId} 
+            reviewYear={reviewYear}
+          />
+        )}
       </div>
 
       <style>{`

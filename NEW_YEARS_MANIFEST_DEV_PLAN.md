@@ -45,15 +45,16 @@ A guided workflow that helps users close the chapter on the previous year with d
   - Canvas integration for generating a summary image.
   - Goals saved to `annual_goals` table with optional vision images.
 
-- [ ] **Step 4: Habit Planning**
-  - Interface to "Migrate", "Archive", or "Create New" habits based on the new goals.
+- [x] **Step 4: Habit Planning**
+  - Interface to create new daily habits based on annual goals.
+  - Habits automatically linked to Life Wheel categories.
 
 ## Phase 3: Integration & Logic
 - [x] Connect `ReviewWizard` to Supabase `annual_reviews`.
 - [x] Implement image upload logic to Supabase Storage.
-- [ ] Build the "Habit Generator" logic (ensure every Goal has at least 1 linked Habit).
+- [x] Build the "Habit Generator" logic (ensure every Goal has at least 1 linked Habit).
 
 ## Phase 4: Polish & Engagement
-- [ ] Add `canvas-confetti` on completion.
+- [x] Add `canvas-confetti` on completion.
 - [ ] Create a "202X Focus" Widget for the Dashboard.
 - [ ] Generate a shareable social media image of the "Year in Review".
