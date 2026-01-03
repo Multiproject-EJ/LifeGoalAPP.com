@@ -8,14 +8,19 @@ import { LIFE_WHEEL_CATEGORIES } from '../../checkins/LifeWheelCheckins';
 import { 
   createAnnualReview, 
   updateAnnualReview, 
-  fetchAnnualReviewByYear 
+  fetchAnnualReviewByYear,
+  markAnnualReviewComplete 
 } from '../../../services/annualReviews';
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 
 // Placeholder components - will be implemented in subsequent steps
 
+export interface ReviewWizardProps {
+  /** Optional callback when the wizard is completed */
+  onComplete?: () => void;
+}
 
-export const ReviewWizard: React.FC = () => {
+export const ReviewWizard: React.FC<ReviewWizardProps> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const totalSteps = 4;
   // Default to reviewing the previous year (current year - 1)
@@ -102,14 +107,33 @@ export const ReviewWizard: React.FC = () => {
     }
   };
   
-  const handleComplete = () => {
+  const handleComplete = async () => {
     confetti({
       particleCount: 150,
       spread: 70,
       origin: { y: 0.6 }
     });
-    // TODO: Save completion state and redirect
-    alert("Annual Review Completed! (Confetti should pop)");
+    
+    // Save completion state if we have a reviewId
+    if (reviewId) {
+      try {
+        await markAnnualReviewComplete(reviewId);
+      } catch (error) {
+        console.error('Failed to mark review as complete:', error);
+        // Continue anyway - don't block the user's celebration
+      }
+    }
+    
+    // Show success message briefly before redirecting
+    setTimeout(() => {
+      if (onComplete) {
+        onComplete();
+      } else {
+        // Default behavior: show a friendly message
+        // The parent component or app should handle navigation
+        alert("Annual Review Completed! Your manifestation for the new year is set. 🎉");
+      }
+    }, 2000); // Wait 2 seconds to let confetti show
   };
 
   return (

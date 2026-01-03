@@ -58,3 +58,8 @@ A guided workflow that helps users close the chapter on the previous year with d
 - [x] Add `canvas-confetti` on completion.
 - [x] Create a "202X Focus" Widget for the Dashboard.
 - [x] Generate a shareable social media image of the "Year in Review".
+- [x] Add completion tracking to annual reviews (Migration 0125)
+  - Added `completed_at` timestamp field to track wizard completion
+  - Implemented `markAnnualReviewComplete` service function
+  - Updated ReviewWizard to save completion state and support navigation callback
+  - Export ReviewWizardProps interface for flexible integration

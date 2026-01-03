@@ -1562,6 +1562,7 @@ export interface Database {
           created_at: string;
           reflection_text: string | null;
           overall_rating: number | null;
+          completed_at: string | null;
         };
         Insert: {
           id?: string;
@@ -1570,6 +1571,7 @@ export interface Database {
           created_at?: string;
           reflection_text?: string | null;
           overall_rating?: number | null;
+          completed_at?: string | null;
         };
         Update: {
           id?: string;
@@ -1578,6 +1580,7 @@ export interface Database {
           created_at?: string;
           reflection_text?: string | null;
           overall_rating?: number | null;
+          completed_at?: string | null;
         };
         Relationships: [];
       };
