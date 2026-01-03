@@ -7,6 +7,31 @@ type FocusWidgetProps = {
   session: Session;
 };
 
+type GoalItemProps = {
+  goal: AnnualGoal;
+};
+
+function GoalItem({ goal }: GoalItemProps) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <li key={goal.id} className="focus-widget__goal-item">
+      <div className="focus-widget__goal-header">
+        <span className="focus-widget__goal-category">{goal.category}</span>
+      </div>
+      <p className="focus-widget__goal-statement">{goal.goal_statement}</p>
+      {goal.vision_image_url && !imageError && (
+        <img 
+          src={goal.vision_image_url} 
+          alt={`Vision for ${goal.category}`}
+          className="focus-widget__goal-image"
+          onError={() => setImageError(true)}
+        />
+      )}
+    </li>
+  );
+}
+
 export function FocusWidget({ session }: FocusWidgetProps) {
   const [goals, setGoals] = useState<AnnualGoal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,23 +151,7 @@ export function FocusWidget({ session }: FocusWidgetProps) {
       </header>
       <ul className="focus-widget__goal-list">
         {goals.map((goal) => (
-          <li key={goal.id} className="focus-widget__goal-item">
-            <div className="focus-widget__goal-header">
-              <span className="focus-widget__goal-category">{goal.category}</span>
-            </div>
-            <p className="focus-widget__goal-statement">{goal.goal_statement}</p>
-            {goal.vision_image_url && (
-              <img 
-                src={goal.vision_image_url} 
-                alt={`Vision for ${goal.category}`}
-                className="focus-widget__goal-image"
-                onError={(e) => {
-                  // Hide image if it fails to load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            )}
-          </li>
+          <GoalItem key={goal.id} goal={goal} />
         ))}
       </ul>
     </article>
