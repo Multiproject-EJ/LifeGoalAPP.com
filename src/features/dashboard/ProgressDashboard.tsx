@@ -816,7 +816,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
       </header>
 
       {/* Workspace Snapshot Section */}
-      <section className="workspace-snapshot" aria-labelledby="workspace-snapshot-heading">
+      <section className="workspace-snapshot fade-in stagger-1" aria-labelledby="workspace-snapshot-heading">
         <div className="workspace-snapshot__header">
           <h3 id="workspace-snapshot-heading">Workspace snapshot</h3>
           <p>Track your stored rituals & goals at a glance</p>
@@ -876,7 +876,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
       ) : null}
 
       <div className="progress-dashboard__grid">
-          <article className="progress-card progress-card--habit-create">
+          <article className="progress-card progress-card--habit-create fade-in stagger-2">
             <header>
               <h3>Capture a new daily habit</h3>
               <p>Align a fresh ritual with your life wheel so it appears on today&apos;s checklist.</p>
@@ -957,7 +957,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             ) : null}
           </article>
 
-          <article className="progress-card progress-card--digest">
+          <article className="progress-card progress-card--digest fade-in stagger-3">
             <header>
               <h3>Weekly focus digest</h3>
               <p>{focusDigest.intro}</p>
@@ -993,7 +993,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             )}
           </article>
 
-          <article className="progress-card progress-card--summary">
+          <article className="progress-card progress-card--summary fade-in stagger-4">
             <header>
               <h3>This week&apos;s momentum</h3>
               <p>
@@ -1016,7 +1016,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             </ul>
           </article>
 
-          <article className="progress-card progress-card--statuses">
+          <article className="progress-card progress-card--statuses fade-in stagger-5">
             <header>
               <h3>Goal health snapshot</h3>
               <p>{goalStatusMessage}</p>
@@ -1076,7 +1076,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             )}
           </article>
 
-          <article className="progress-card progress-card--calendar">
+          <article className="progress-card progress-card--calendar fade-in stagger-6">
             <header>
               <h3>{today.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</h3>
               <p>Each dot represents habits you completed on that day.</p>
@@ -1101,7 +1101,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             </div>
           </article>
 
-          <article className="progress-card progress-card--goals">
+          <article className="progress-card progress-card--goals fade-in stagger-7">
             <header>
               <h3>Upcoming goal milestones</h3>
               <p>Stay ahead of deadlines by keeping these target dates in focus.</p>
@@ -1124,7 +1124,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
           <FocusWidget session={session} />
 
           {/* Daily Spin Wheel Widget */}
-          <article className="progress-card progress-card--spin-wheel">
+          <article className="progress-card progress-card--spin-wheel fade-in stagger-8">
             <DailySpinWheel session={session} />
           </article>
         </div>
