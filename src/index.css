@@ -6711,11 +6711,21 @@ body {
 .workspace-snapshot__stat-value {
   font-size: 2rem;
   font-weight: 700;
+  color: #667eea; /* Fallback for accessibility and high contrast mode */
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   display: block;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .workspace-snapshot__stat-value {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: #1e293b;
+  }
 }
 
 .workspace-snapshot__hint {
@@ -7025,10 +7035,20 @@ body {
 .progress-card__metric-value {
   font-size: clamp(2rem, 5vw, 2.5rem);
   font-weight: 700;
+  color: #667eea; /* Fallback for accessibility and high contrast mode */
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .progress-card__metric-value {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: #1e293b;
+  }
 }
 
 .progress-card__metric-label {
