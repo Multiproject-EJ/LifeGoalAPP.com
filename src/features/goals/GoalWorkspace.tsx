@@ -17,6 +17,7 @@ import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals
 import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import './Goals.css';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
@@ -519,7 +520,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   );
 
   return (
-    <section className="goal-workspace">
+    <section className="goal-workspace glass-card fade-in">
       <header className="goal-workspace__header">
         <div>
           <h2>Goals &amp; Habits workspace</h2>
@@ -554,7 +555,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       ) : null}
 
       <div className="goal-workspace__grid">
-        <div className="goal-form">
+        <div className="goal-form glass-card fade-in">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3>Capture a new goal</h3>
             <button
@@ -637,7 +638,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
           </form>
         </div>
 
-        <div className="goal-list">
+        <div className="goal-list glass-card fade-in stagger-2">
           <div className="goal-list__header">
             <h3>Active goals</h3>
             <span className="goal-list__meta">{listMeta}</span>
@@ -661,13 +662,13 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
           ) : null}
 
           <ul className="goal-list__items">
-            {filteredGoals.map((goal) => {
+            {filteredGoals.map((goal, index) => {
               const isEditing = editingGoalId === goal.id;
               const isPendingDelete = pendingDeleteId === goal.id;
               const isUpdating = updatingGoalId === goal.id;
               const isDeleting = deletingGoalId === goal.id;
               return (
-                <li key={goal.id} className="goal-card">
+                <li key={goal.id} className={`goal-card glass-card fade-in stagger-${Math.min(index + 1, 4)}`}>
                   {isEditing ? (
                     <form className="goal-card__editor" onSubmit={handleEditSubmit}>
                       <h4>Edit goal</h4>
