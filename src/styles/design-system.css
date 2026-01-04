@@ -92,6 +92,12 @@
   border: var(--glass-border);
   border-radius: 12px;
   box-shadow: var(--glass-shadow-sm);
+  transition: var(--transition-smooth);
+}
+
+.glass-card-secondary:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-md);
 }
 
 /* ========================================

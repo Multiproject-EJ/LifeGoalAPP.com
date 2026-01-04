@@ -6568,8 +6568,8 @@ body {
 }
 
 .progress-dashboard__ideas:focus-visible {
-  outline: 2px solid var(--focus-outline-color);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-outline-color);
 }
 
 .progress-dashboard__refresh:disabled {
@@ -6584,8 +6584,8 @@ body {
 }
 
 .progress-dashboard__refresh:focus-visible {
-  outline: 2px solid var(--focus-outline-color);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-outline-color);
 }
 
 .progress-dashboard__status {
