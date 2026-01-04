@@ -1400,27 +1400,13 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                           <span style={{ fontWeight: 500 }}>{habit.title}</span>
                           {/* Badge for times_per_week progress */}
                           {weekProgress && (
-                            <span style={{
-                              fontSize: '0.625rem',
-                              background: '#e0e7ff',
-                              color: '#4338ca',
-                              padding: '0.125rem 0.375rem',
-                              borderRadius: '4px',
-                              fontWeight: 600,
-                            }}>
+                            <span className="habit-card__frequency habit-card__frequency--custom">
                               {weekProgress.completed}/{weekProgress.target} this week
                             </span>
                           )}
                           {/* Badge for every_n_days */}
                           {nextDueLabel && (
-                            <span style={{
-                              fontSize: '0.625rem',
-                              background: '#fef3c7',
-                              color: '#92400e',
-                              padding: '0.125rem 0.375rem',
-                              borderRadius: '4px',
-                              fontWeight: 600,
-                            }}>
+                            <span className="habit-card__frequency habit-card__frequency--custom">
                               {nextDueLabel}
                             </span>
                           )}
@@ -1451,17 +1437,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                             <button
                               onClick={() => handleMarkHabitDone(habit.id, habit.type)}
                               disabled={isLogging}
+                              className="habit-card__action-btn habit-card__action-btn--primary"
                               style={{
                                 padding: '0.5rem 1rem',
-                                background: isLogging ? '#94a3b8' : '#667eea',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
-                                cursor: isLogging ? 'not-allowed' : 'pointer',
+                                whiteSpace: 'nowrap',
                                 opacity: isLogging ? 0.7 : 1,
-                                whiteSpace: 'nowrap'
+                                cursor: isLogging ? 'not-allowed' : 'pointer',
                               }}
                             >
                               {isLogging ? 'Saving…' : 'Mark done'}
@@ -1493,17 +1474,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                                   }
                                 }}
                                 disabled={isLogging || !inputValue || parseFloat(inputValue) <= 0}
+                                className="habit-card__action-btn habit-card__action-btn--primary"
                                 style={{
                                   padding: '0.5rem 1rem',
-                                  background: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? '#94a3b8' : '#667eea',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  fontSize: '0.875rem',
-                                  fontWeight: 600,
-                                  cursor: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 'not-allowed' : 'pointer',
+                                  whiteSpace: 'nowrap',
                                   opacity: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 0.7 : 1,
-                                  whiteSpace: 'nowrap'
+                                  cursor: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 'not-allowed' : 'pointer',
                                 }}
                               >
                                 {isLogging ? 'Saving…' : 'Log'}
@@ -1536,17 +1512,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                                   }
                                 }}
                                 disabled={isLogging || !inputValue || parseFloat(inputValue) <= 0}
+                                className="habit-card__action-btn habit-card__action-btn--primary"
                                 style={{
                                   padding: '0.5rem 0.75rem',
-                                  background: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? '#94a3b8' : '#667eea',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  fontSize: '0.875rem',
-                                  fontWeight: 600,
-                                  cursor: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 'not-allowed' : 'pointer',
+                                  whiteSpace: 'nowrap',
                                   opacity: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 0.7 : 1,
-                                  whiteSpace: 'nowrap'
+                                  cursor: isLogging || !inputValue || parseFloat(inputValue) <= 0 ? 'not-allowed' : 'pointer',
                                 }}
                               >
                                 {isLogging ? 'Saving…' : 'Log min'}
