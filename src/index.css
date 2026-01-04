@@ -6713,9 +6713,9 @@ body {
   font-weight: 700;
   color: #667eea; /* Fallback for accessibility and high contrast mode */
   background: var(--gradient-primary);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
   display: block;
 }
 
@@ -7037,9 +7037,9 @@ body {
   font-weight: 700;
   color: #667eea; /* Fallback for accessibility and high contrast mode */
   background: var(--gradient-primary);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* High contrast mode support */
