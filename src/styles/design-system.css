@@ -1,0 +1,118 @@
+/**
+ * Glassmorphic Design System
+ * Foundation for premium UI with frosted glass effects
+ */
+
+:root {
+  /* ========================================
+     Glassmorphic backgrounds
+     ======================================== */
+  --glass-bg-primary: rgba(255, 255, 255, 0.7);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.5);
+  --glass-bg-hover: rgba(255, 255, 255, 0.85);
+  
+  /* ========================================
+     Backdrop blur effects
+     ======================================== */
+  --glass-blur: blur(12px);
+  --glass-blur-strong: blur(20px);
+  
+  /* ========================================
+     Borders
+     ======================================== */
+  --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+  --glass-border-strong: 1px solid rgba(255, 255, 255, 0.3);
+  
+  /* ========================================
+     Shadows
+     ======================================== */
+  --glass-shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --glass-shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1);
+  --glass-shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15);
+  
+  /* ========================================
+     Gradients
+     ======================================== */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  
+  /* ========================================
+     Animations
+     ======================================== */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ========================================
+   Dark theme support (for future)
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --glass-bg-primary: rgba(30, 30, 30, 0.7);
+    --glass-bg-secondary: rgba(30, 30, 30, 0.5);
+    --glass-bg-hover: rgba(30, 30, 30, 0.85);
+  }
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+/* Primary glassmorphic card */
+.glass-card {
+  background: var(--glass-bg-primary);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow-md);
+  transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Secondary glassmorphic card (lighter) */
+.glass-card-secondary {
+  background: var(--glass-bg-secondary);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow-sm);
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+
+/* Fade in from bottom animation */
+.fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger animation delays for sequential card loading */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
