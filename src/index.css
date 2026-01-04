@@ -6547,7 +6547,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-smooth);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--button-shadow-primary);
 }
 
 .progress-dashboard__ideas {
@@ -6568,7 +6568,7 @@ body {
 }
 
 .progress-dashboard__ideas:focus-visible {
-  outline: 2px solid rgba(102, 126, 234, 0.5);
+  outline: 2px solid var(--focus-outline-color);
   outline-offset: 2px;
 }
 
@@ -6579,12 +6579,12 @@ body {
 }
 
 .progress-dashboard__refresh:not(:disabled):hover {
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--button-shadow-primary-hover);
   transform: translateY(-2px);
 }
 
 .progress-dashboard__refresh:focus-visible {
-  outline: 2px solid rgba(102, 126, 234, 0.5);
+  outline: 2px solid var(--focus-outline-color);
   outline-offset: 2px;
 }
 
@@ -6818,7 +6818,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-smooth);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--button-shadow-primary);
 }
 
 .habit-create-form__submit:disabled {
@@ -6829,7 +6829,7 @@ body {
 }
 
 .habit-create-form__submit:not(:disabled):hover {
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--button-shadow-primary-hover);
   transform: translateY(-2px);
 }
 

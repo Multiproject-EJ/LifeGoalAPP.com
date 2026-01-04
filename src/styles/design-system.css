@@ -39,6 +39,13 @@
   --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   
   /* ========================================
+     Button & Focus Colors
+     ======================================== */
+  --button-shadow-primary: 0 4px 12px rgba(102, 126, 234, 0.3);
+  --button-shadow-primary-hover: 0 6px 16px rgba(102, 126, 234, 0.4);
+  --focus-outline-color: rgba(102, 126, 234, 0.5);
+  
+  /* ========================================
      Animations
      ======================================== */
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
