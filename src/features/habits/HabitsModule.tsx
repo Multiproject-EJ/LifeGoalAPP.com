@@ -1155,9 +1155,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
               </p>
             </div>
           ) : (
-            <div className="habits-grid"
-              style={{ display: 'flex', flexDirection: 'column', gap: '1rem', gridTemplateColumns: '1fr' }}
-            >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {habits.map((habit, index) => {
                 const autoProgressState = getAutoProgressState(habit);
                 const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
