@@ -169,7 +169,7 @@ export function useDailyVisionSession(session: Session | null): UseDailyVisionSe
     } finally {
       setLoading(false);
     }
-  }, [session, sessionDate, supabase, ensureSignedUrls, signedUrlCache]);
+  }, [session, sessionDate, supabase, ensureSignedUrls]);
 
   useEffect(() => {
     loadSession();
