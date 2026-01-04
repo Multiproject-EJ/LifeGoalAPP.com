@@ -1,0 +1,720 @@
+/**
+ * Habits Page - Glassmorphic Design System
+ * Applies frosted glass effects, smooth animations, and premium styling
+ */
+
+/* ========================================
+   Habits Page Layout
+   ======================================== */
+
+.habits-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.habits-page__header {
+  background: var(--gradient-primary);
+  color: white;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--glass-shadow-lg);
+}
+
+.habits-page__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.habits-page__subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* ========================================
+   Habits Grid Layout
+   ======================================== */
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* ========================================
+   Individual Habit Card
+   ======================================== */
+
+.habit-card {
+  background: var(--glass-bg-primary);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--glass-shadow-md);
+  transition: var(--transition-smooth);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.habit-card:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-lg);
+  transform: translateY(-4px);
+}
+
+.habit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: var(--transition-smooth);
+}
+
+.habit-card:hover::before {
+  opacity: 1;
+}
+
+/* ========================================
+   Habit Card Header
+   ======================================== */
+
+.habit-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.habit-card__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  flex: 1;
+}
+
+.habit-card__icon {
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+/* ========================================
+   Habit Checkbox (Animated)
+   ======================================== */
+
+.habit-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  transition: var(--transition-smooth);
+  margin-bottom: 0.75rem;
+}
+
+.habit-checkbox:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+/* Custom checkbox */
+.habit-checkbox__input {
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+}
+
+.habit-checkbox__input:hover {
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.habit-checkbox__input:checked {
+  background: var(--gradient-success);
+  border-color: transparent;
+  animation: checkboxPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkboxPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Checkmark icon */
+.habit-checkbox__input:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  animation: checkmarkSlide 0.3s ease-out;
+}
+
+@keyframes checkmarkSlide {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.habit-checkbox__label {
+  flex: 1;
+  font-size: 1rem;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition-smooth);
+}
+
+.habit-checkbox__input:checked ~ .habit-checkbox__label {
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+/* ========================================
+   Streak Indicator
+   ======================================== */
+
+.habit-card__streak {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(251, 146, 60, 0.1);
+  margin-top: 1rem;
+}
+
+.habit-card__streak-icon {
+  font-size: 1.25rem;
+}
+
+.habit-card__streak-text {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.habit-card__streak-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: var(--gradient-warm);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Streak levels */
+.habit-card__streak--beginner {
+  background: rgba(156, 163, 175, 0.1);
+}
+
+.habit-card__streak--intermediate {
+  background: rgba(251, 146, 60, 0.1);
+}
+
+.habit-card__streak--advanced {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.habit-card__streak--master {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(219, 39, 119, 0.1));
+}
+
+/* ========================================
+   Frequency Badges
+   ======================================== */
+
+.habit-card__frequency {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  margin-bottom: 0.75rem;
+}
+
+.habit-card__frequency--daily {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.habit-card__frequency--weekly {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.habit-card__frequency--custom {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+/* ========================================
+   Progress Calendar/Heatmap
+   ======================================== */
+
+.habit-card__calendar {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.habit-card__calendar-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.habit-card__calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.habit-card__calendar-day {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  transition: var(--transition-smooth);
+}
+
+.habit-card__calendar-day--completed {
+  background: var(--gradient-success);
+  box-shadow: 0 0 8px rgba(79, 172, 254, 0.3);
+}
+
+.habit-card__calendar-day--partial {
+  background: linear-gradient(135deg, #4facfe 50%, rgba(0, 0, 0, 0.05) 50%);
+}
+
+.habit-card__calendar-day:hover {
+  transform: scale(1.1);
+}
+
+/* ========================================
+   Action Buttons
+   ======================================== */
+
+.habit-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.habit-card__action-btn {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.habit-card__action-btn--primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.habit-card__action-btn--primary:hover {
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+.habit-card__action-btn--secondary {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.habit-card__action-btn--secondary:hover {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+/* ========================================
+   Auto Progress Ladder
+   ======================================== */
+
+.habit-card__autoprog {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(102, 126, 234, 0.05);
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.habit-card__autoprog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.habit-card__autoprog-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.25rem 0;
+}
+
+.habit-card__autoprog-tier {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #667eea;
+  margin: 0 0 0.25rem 0;
+}
+
+.habit-card__autoprog-description {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.habit-card__autoprog-meta {
+  font-size: 0.625rem;
+  color: #9ca3af;
+}
+
+.habit-card__autoprog-hint {
+  font-size: 0.75rem;
+  color: #374151;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: rgba(251, 146, 60, 0.1);
+  border-radius: 6px;
+}
+
+.habit-card__autoprog-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.habit-card__autoprog-button {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: white;
+  color: #667eea;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.habit-card__autoprog-button:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.05);
+  border-color: #667eea;
+}
+
+.habit-card__autoprog-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.habit-card__autoprog-button--primary {
+  background: var(--gradient-primary);
+  color: white;
+  border-color: transparent;
+}
+
+.habit-card__autoprog-button--primary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.habit-card__autoprog-rules {
+  font-size: 0.625rem;
+  color: #9ca3af;
+  margin: 0.5rem 0 0 0;
+}
+
+.habit-card__autoprog-locked {
+  font-size: 0.625rem;
+  color: #f59e0b;
+  margin: 0.25rem 0 0 0;
+  font-style: italic;
+}
+
+/* ========================================
+   Stats Summary
+   ======================================== */
+
+.habits-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.habits-stat {
+  background: var(--glass-bg-secondary);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: var(--transition-smooth);
+}
+
+.habits-stat:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-2px);
+}
+
+.habits-stat__value {
+  font-size: 2rem;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.25rem;
+}
+
+.habits-stat__label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ========================================
+   Empty State
+   ======================================== */
+
+.habits-empty {
+  background: var(--glass-bg-secondary);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 16px;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.habits-empty__icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.habits-empty__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.habits-empty__description {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+.habits-empty__cta {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.habits-empty__cta:hover {
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   Habit Modal Styling
+   ======================================== */
+
+.habit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.habit-modal__content {
+  background: var(--glass-bg-primary);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+  .habits-page {
+    padding: 1rem;
+  }
+  
+  .habits-page__header {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .habits-page__title {
+    font-size: 1.5rem;
+  }
+  
+  .habits-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .habit-card {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+  
+  .habit-card__title {
+    font-size: 1.125rem;
+  }
+  
+  .habit-card__actions {
+    flex-direction: column;
+  }
+  
+  .habits-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .habit-card__autoprog-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .habits-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .habits-empty {
+    padding: 3rem 1.5rem;
+  }
+  
+  .habits-empty__icon {
+    font-size: 3rem;
+  }
+  
+  .habits-empty__title {
+    font-size: 1.25rem;
+  }
+}
+
+/* ========================================
+   Reduced Motion Support
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-card,
+  .habit-checkbox__input,
+  .habit-checkbox__label,
+  .habit-card__action-btn,
+  .habits-stat,
+  .habits-empty__cta {
+    transition: none;
+    animation: none;
+  }
+  
+  .habit-card:hover,
+  .habits-stat:hover,
+  .habits-empty__cta:hover,
+  .habit-card__action-btn--primary:hover {
+    transform: none;
+  }
+  
+  @keyframes checkboxPop {
+    0%, 100% { transform: scale(1); }
+  }
+  
+  @keyframes checkmarkSlide {
+    from, to {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+  }
+  
+  @keyframes modalSlideIn {
+    from, to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}

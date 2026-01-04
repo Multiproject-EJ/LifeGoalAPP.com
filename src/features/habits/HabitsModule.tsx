@@ -22,6 +22,7 @@ import {
   getNextUpgradeTier,
   type AutoProgressTier,
 } from './autoProgression';
+import './Habits.css';
 
 // Check if habit suggestions feature is enabled via environment variable
 const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
@@ -849,19 +850,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
   };
 
   return (
-    <div className="habits-module-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
-      <div style={{ 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-        color: 'white',
-        padding: '3rem 2rem',
-        borderRadius: '16px',
-        marginBottom: '2rem',
-        boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
-      }}>
-        <h1 style={{ margin: '0 0 1rem 0', fontSize: '2.5rem', fontWeight: '800' }}>
+    <div className="habits-page">
+      <div className="habits-page__header">
+        <h1 className="habits-page__title">
           Habits
         </h1>
-        <p style={{ margin: 0, fontSize: '1.125rem', opacity: 0.95 }}>
+        <p className="habits-page__subtitle">
           Create and track habits that support your goals.
         </p>
       </div>
@@ -939,13 +933,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       )}
 
       {/* Streaks Section */}
-      <div style={{
-        background: 'white',
-        border: '2px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '2rem',
-        marginBottom: '2rem'
-      }}>
+      <div className="glass-card-secondary fade-in">
         <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>Streaks</h2>
 
         {streaksLoading ? (
@@ -1013,13 +1001,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
       {/* Templates Gallery */}
       {!showWizard && (
-        <div style={{
-          background: 'white',
-          border: '2px solid #e2e8f0',
-          borderRadius: '12px',
-          padding: '2rem',
-          marginBottom: '2rem'
-        }}>
+        <div className="glass-card-secondary fade-in stagger-2">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Templates</h2>
             <button
@@ -1157,12 +1139,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         marginBottom: '2rem'
       }}>
         {/* Left column: Your habits */}
-        <div style={{
-          background: 'white',
-          border: '2px solid #e2e8f0',
-          borderRadius: '12px',
-          padding: '2rem'
-        }}>
+        <div className="glass-card fade-in stagger-3">
           <div style={{ marginBottom: '1.5rem' }}>
             <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Your habits</h2>
           </div>
@@ -1170,12 +1147,18 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           {loading ? (
             <p style={{ color: '#64748b', margin: 0 }}>Loading habits…</p>
           ) : habits.length === 0 ? (
-            <p style={{ color: '#64748b', margin: 0 }}>
-              No habits yet. Create your first habit to get started!
-            </p>
+            <div className="habits-empty">
+              <div className="habits-empty__icon">📋</div>
+              <h3 className="habits-empty__title">No habits yet</h3>
+              <p className="habits-empty__description">
+                Create your first habit to get started!
+              </p>
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {habits.map((habit) => {
+            <div className="habits-grid"
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem', gridTemplateColumns: '1fr' }}
+            >
+              {habits.map((habit, index) => {
                 const autoProgressState = getAutoProgressState(habit);
                 const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
                 const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
@@ -1187,12 +1170,9 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                 return (
                   <div
                     key={habit.id}
-                    className="habit-card"
+                    className={`glass-card fade-in stagger-${Math.min(index + 1, 4)}`}
                     style={{
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      padding: '1rem',
+                      padding: '1.5rem',
                       position: 'relative',
                     }}
                   >
@@ -1349,12 +1329,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         </div>
 
         {/* Right column: Today's checklist */}
-        <div style={{
-          background: 'white',
-          border: '2px solid #e2e8f0',
-          borderRadius: '12px',
-          padding: '2rem'
-        }}>
+        <div className="glass-card fade-in stagger-4">
           <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>Today's checklist</h2>
 
           {loading ? (
@@ -1590,13 +1565,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       </div>
 
       {/* Adherence Snapshot Section (Optional) */}
-      <div style={{
-        background: 'white',
-        border: '2px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '2rem',
-        marginBottom: '2rem'
-      }}>
+      <div className="glass-card-secondary fade-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Adherence</h2>
           <button
@@ -1896,32 +1865,14 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       {/* Revert Confirmation Dialog */}
       {revertConfirmation && (
         <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
+          className="habit-modal"
           onClick={() => {
             setRevertConfirmation(null);
             setRevertRationale('');
           }}
         >
           <div 
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '2rem',
-              maxWidth: '400px',
-              width: '90%',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
+            className="habit-modal__content"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.125rem' }}>
@@ -1994,32 +1945,14 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       {/* Archive Confirmation Dialog */}
       {archiveConfirmation && (
         <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
+          className="habit-modal"
           onClick={() => setArchiveConfirmation(null)}
         >
           <div 
             role="dialog"
             aria-labelledby="archive-dialog-title"
             aria-describedby="archive-dialog-description"
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '2rem',
-              maxWidth: '400px',
-              width: '90%',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
+            className="habit-modal__content"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="archive-dialog-title" style={{ margin: '0 0 1rem 0', fontSize: '1.125rem' }}>
