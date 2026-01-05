@@ -272,6 +272,11 @@
 }
 
 @media (max-width: 720px) {
+  .daily-game {
+    max-height: none;
+    padding: 1rem;
+  }
+
   .daily-game__header {
     flex-direction: column;
   }

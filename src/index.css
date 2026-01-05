@@ -9386,6 +9386,15 @@ body {
   .vision-board__delete {
     text-align: center;
   }
+
+  .vision-board__modal-backdrop {
+    align-items: flex-start;
+    padding-top: 1rem;
+  }
+
+  .vision-board__modal {
+    max-height: calc(100vh - 2rem);
+  }
 }
 
 .notification-preferences {
