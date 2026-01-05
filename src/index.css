@@ -10227,9 +10227,32 @@ body {
   transform: translateY(-1px);
 }
 
+.mobile-footer-nav__menu-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .mobile-footer-nav__menu-icon {
   font-size: 1.4rem;
   line-height: 1;
+}
+
+.mobile-footer-nav__menu-xp-badge {
+  position: absolute;
+  top: -0.65rem;
+  right: -1rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fde68a, #f59e0b);
+  color: #78350f;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.35);
+  white-space: nowrap;
 }
 
 .mobile-footer-nav__menu-label {
