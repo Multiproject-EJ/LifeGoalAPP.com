@@ -1,352 +1,1091 @@
 /* ========================================
-   Body Tab - Mobile First Styling
+   Body Tab Component - Mobile First CSS
    ======================================== */
 
+/* Base Container */
 .body-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding: 1rem;
-  padding-bottom: 5rem; /* Space for FAB */
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* Header */
-.body-tab__header {
-  margin-bottom: 1.5rem;
-}
-
-.body-tab__title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-primary, #1a1a1a);
-}
-
-.body-tab__subtitle {
-  font-size: 0.9rem;
-  color: var(--text-secondary, #666);
-  margin: 0.25rem 0 0;
-}
-
-/* Section Styling */
-.body-tab__section {
-  background: var(--card-bg, #fff);
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.body-tab__section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 1rem;
-  color: var(--text-primary, #1a1a1a);
+  background: var(--bg-primary, #ffffff);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* ========================================
-   At-A-Glance Section
+   Body Battery Bar Section
    ======================================== */
-
-/* Body Battery */
 .body-battery {
-  margin-bottom: 1.5rem;
+  background: var(--card-bg, #f8f9fa);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.body-battery__label {
+.body-battery__header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  align-items: center;
+  margin-bottom: 0.75rem;
 }
 
-.body-battery__score {
+.body-battery__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.body-battery__percentage {
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--accent-primary, #4caf50);
+  color: var(--primary-color, #007bff);
 }
 
-.body-battery__bar {
-  height: 12px;
-  background: var(--bar-bg, #e0e0e0);
-  border-radius: 6px;
+.body-battery__bar-container {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  background: var(--bg-secondary, #e9ecef);
+  border-radius: 12px;
   overflow: hidden;
 }
 
-.body-battery__fill {
+.body-battery__bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #4caf50, #8bc34a);
-  transition: width 0.3s ease;
+  border-radius: 12px;
+  transition: width 0.6s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Daily Rings */
-.daily-rings {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+.body-battery__bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
 }
 
-.daily-ring {
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.body-battery__stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color, #dee2e6);
+}
+
+.body-battery__stat {
   text-align: center;
-  padding: 0.75rem;
-  background: var(--ring-bg, #f5f5f5);
-  border-radius: 8px;
 }
 
-.daily-ring__icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.daily-ring__label {
+.body-battery__stat-label {
   font-size: 0.75rem;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary, #6c757d);
+  display: block;
   margin-bottom: 0.25rem;
 }
 
-.daily-ring__value {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-primary, #1a1a1a);
+.body-battery__stat-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
 }
 
-/* Hydration Tracker */
-.hydration-tracker {
+/* ========================================
+   Daily Rings Grid Section
+   ======================================== */
+.daily-rings {
+  background: var(--card-bg, #f8f9fa);
+  border-radius: 12px;
   padding: 1rem;
-  background: var(--hydration-bg, #e3f2fd);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.daily-rings__header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+  margin-bottom: 1rem;
+}
+
+.daily-rings__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.daily-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-primary, #ffffff);
   border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.daily-ring:active {
+  transform: scale(0.98);
+}
+
+.daily-ring__circle {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 0.5rem;
+}
+
+.daily-ring__svg {
+  transform: rotate(-90deg);
+}
+
+.daily-ring__bg {
+  fill: none;
+  stroke: var(--bg-secondary, #e9ecef);
+  stroke-width: 8;
+}
+
+.daily-ring__progress {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.daily-ring__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.daily-ring__value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary, #212529);
+  display: block;
+}
+
+.daily-ring__unit {
+  font-size: 0.625rem;
+  color: var(--text-secondary, #6c757d);
+}
+
+.daily-ring__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #212529);
+  text-align: center;
+}
+
+/* Ring Colors */
+.daily-ring--move .daily-ring__progress { stroke: #ff3b30; }
+.daily-ring--exercise .daily-ring__progress { stroke: #30d158; }
+.daily-ring--stand .daily-ring__progress { stroke: #007aff; }
+.daily-ring--sleep .daily-ring__progress { stroke: #bf5af2; }
+
+/* ========================================
+   Hydration Tracker Section
+   ======================================== */
+.hydration-tracker {
+  background: var(--card-bg, #f8f9fa);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .hydration-tracker__header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.hydration-tracker__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.hydration-tracker__count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color, #007bff);
+}
+
+.hydration-tracker__glasses {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.hydration-glass {
+  aspect-ratio: 1;
+  border: 2px solid var(--primary-color, #007bff);
+  border-radius: 8px;
+  background: var(--bg-primary, #ffffff);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hydration-glass::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0%;
+  background: linear-gradient(180deg, #42a5f5, #1e88e5);
+  transition: height 0.3s ease;
+}
+
+.hydration-glass--filled::before {
+  height: 100%;
+}
+
+.hydration-glass:active {
+  transform: scale(0.95);
+}
+
+.hydration-tracker__progress {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-secondary, #e9ecef);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hydration-tracker__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #42a5f5, #1e88e5);
+  transition: width 0.4s ease;
+  border-radius: 4px;
+}
+
+/* ========================================
+   Goals Scroll Section
+   ======================================== */
+.goals-scroll {
+  background: var(--card-bg, #f8f9fa);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.goals-scroll__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.goals-scroll__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.goals-scroll__view-all {
+  font-size: 0.875rem;
+  color: var(--primary-color, #007bff);
+  text-decoration: none;
   font-weight: 500;
 }
 
-.hydration-tracker__bar {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.hydration-tracker__fill {
-  height: 100%;
-  background: #2196f3;
-  transition: width 0.3s ease;
-}
-
-.hydration-tracker__add-btn {
-  width: 100%;
-  padding: 0.5rem;
-  background: #2196f3;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.hydration-tracker__add-btn:hover {
-  background: #1976d2;
-}
-
-/* ========================================
-   Active Goals Section
-   ======================================== */
-
-.body-goals-scroll {
+.goals-scroll__container {
   display: flex;
   gap: 1rem;
   overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: 0.5rem;
-  scrollbar-width: thin;
 }
 
-.body-goal-card {
-  min-width: 200px;
+.goals-scroll__container::-webkit-scrollbar {
+  display: none;
+}
+
+.goal-card {
+  min-width: 280px;
+  max-width: 280px;
+  background: var(--bg-primary, #ffffff);
+  border-radius: 10px;
   padding: 1rem;
-  background: var(--goal-card-bg, #f5f5f5);
-  border-radius: 8px;
-  border: 2px dashed var(--border-color, #ddd);
+  scroll-snap-align: start;
+  border: 1px solid var(--border-color, #dee2e6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.body-goal-card--placeholder {
+.goal-card:active {
+  transform: scale(0.98);
+}
+
+.goal-card__header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
 }
 
-.body-goal-card__title {
+.goal-card__title {
+  font-size: 0.95rem;
   font-weight: 600;
+  color: var(--text-primary, #212529);
   margin-bottom: 0.25rem;
 }
 
-.body-goal-card__subtitle {
-  font-size: 0.85rem;
-  color: var(--text-secondary, #666);
+.goal-card__category {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6c757d);
+}
+
+.goal-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: var(--primary-light, #e3f2fd);
+}
+
+.goal-card__progress {
+  margin-bottom: 0.5rem;
+}
+
+.goal-card__progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-secondary, #e9ecef);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.goal-card__progress-fill {
+  height: 100%;
+  background: var(--primary-color, #007bff);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.goal-card__progress-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6c757d);
+  text-align: right;
+}
+
+.goal-card__deadline {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6c757d);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* ========================================
-   Body Habits Section
+   Habits List Section
    ======================================== */
+.habits-list {
+  background: var(--card-bg, #f8f9fa);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 
-.body-habits-list {
+.habits-list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.habits-list__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.habits-list__add {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-color, #007bff);
+  color: white;
+  border: none;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.habits-list__add:active {
+  transform: scale(0.95);
+}
+
+.habits-list__items {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.body-habit-item {
-  padding: 0.75rem;
-  background: var(--habit-bg, #f5f5f5);
-  border-radius: 8px;
+.habit-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background: var(--bg-primary, #ffffff);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #dee2e6);
+  transition: transform 0.2s ease;
 }
 
-.body-habit-item--placeholder {
+.habit-item:active {
+  transform: scale(0.99);
+}
+
+.habit-item__checkbox {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border: 2px solid var(--primary-color, #007bff);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  color: var(--text-secondary, #666);
-  font-style: italic;
+  transition: all 0.3s ease;
+}
+
+.habit-item__checkbox--checked {
+  background: var(--primary-color, #007bff);
+  color: white;
+}
+
+.habit-item__content {
+  flex: 1;
+}
+
+.habit-item__name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary, #212529);
+  margin-bottom: 0.25rem;
+}
+
+.habit-item__streak {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6c757d);
+}
+
+.habit-item__icon {
+  font-size: 1.25rem;
 }
 
 /* ========================================
    Activity Feed Section
    ======================================== */
+.activity-feed {
+  background: var(--card-bg, #f8f9fa);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 
-.body-activity-feed {
+.activity-feed__header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+  margin-bottom: 1rem;
+}
+
+.activity-feed__items {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.body-activity-item {
-  padding: 0.75rem;
-  background: var(--activity-bg, #f5f5f5);
-  border-radius: 8px;
-}
-
-.body-activity-item--placeholder {
-  text-align: center;
-  color: var(--text-secondary, #666);
-  font-style: italic;
-}
-
-/* ========================================
-   Body Gallery Section
-   ======================================== */
-
-.body-gallery-toggle {
+.activity-item {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.body-gallery-toggle__btn {
-  flex: 1;
+  gap: 0.75rem;
   padding: 0.75rem;
-  background: var(--toggle-bg, #f5f5f5);
-  border: 2px solid transparent;
+  background: var(--bg-primary, #ffffff);
   border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  border-left: 3px solid var(--primary-color, #007bff);
+  transition: transform 0.2s ease;
 }
 
-.body-gallery-toggle__btn--active {
-  background: var(--toggle-active-bg, #e3f2fd);
-  border-color: var(--toggle-active-border, #2196f3);
+.activity-item:active {
+  transform: translateX(4px);
 }
 
-.body-gallery-preview {
-  min-height: 150px;
-  background: var(--gallery-bg, #f5f5f5);
-  border-radius: 8px;
+.activity-item__icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
+  font-size: 1.125rem;
+  background: var(--primary-light, #e3f2fd);
+  color: var(--primary-color, #007bff);
 }
 
-.body-gallery-preview--blurred {
-  filter: blur(8px);
-  cursor: pointer;
+.activity-item__content {
+  flex: 1;
 }
 
-.body-gallery-preview__placeholder {
-  text-align: center;
+.activity-item__title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary, #212529);
+  margin-bottom: 0.25rem;
 }
 
-.body-gallery-preview__placeholder span {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 0.5rem;
+.activity-item__description {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6c757d);
+  margin-bottom: 0.25rem;
 }
 
-.body-gallery-preview__placeholder p {
-  margin: 0;
+.activity-item__time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #adb5bd);
+}
+
+/* Activity Type Colors */
+.activity-item--workout .activity-item__icon { 
+  background: #e8f5e9; 
+  color: #4caf50; 
+}
+.activity-item--nutrition .activity-item__icon { 
+  background: #fff3e0; 
+  color: #ff9800; 
+}
+.activity-item--sleep .activity-item__icon { 
+  background: #f3e5f5; 
+  color: #9c27b0; 
+}
+.activity-item--mindfulness .activity-item__icon { 
+  background: #e0f2f1; 
+  color: #009688; 
+}
+
+/* ========================================
+   Gallery Toggle Section
+   ======================================== */
+.gallery-toggle {
+  background: var(--card-bg, #f8f9fa);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-toggle__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.gallery-toggle__title {
+  font-size: 1rem;
   font-weight: 600;
-  color: var(--text-secondary, #666);
+  color: var(--text-primary, #212529);
+}
+
+.gallery-toggle__switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--bg-secondary, #e9ecef);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.gallery-toggle__switch--active {
+  background: var(--primary-color, #007bff);
+}
+
+.gallery-toggle__switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.gallery-toggle__switch--active .gallery-toggle__switch-knob {
+  transform: translateX(20px);
+}
+
+.gallery-toggle__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.gallery-toggle__item {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-secondary, #e9ecef);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.gallery-toggle__item:active {
+  transform: scale(0.95);
+}
+
+.gallery-toggle__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-toggle__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary, #adb5bd);
+  font-size: 1.5rem;
 }
 
 /* ========================================
    Floating Action Button
    ======================================== */
-
-.body-tab__fab {
+.fab {
   position: fixed;
-  bottom: 80px; /* Above mobile nav */
+  bottom: 1.5rem;
   right: 1.5rem;
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--fab-bg, #2196f3);
+  background: var(--primary-color, #007bff);
   color: white;
   border: none;
-  font-size: 2rem;
-  font-weight: 300;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s, box-shadow 0.2s;
-  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+  z-index: 999;
 }
 
-.body-tab__fab:hover {
+.fab:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-.body-tab__fab:active {
+.fab:active {
   transform: scale(0.95);
 }
 
+.fab__icon {
+  transition: transform 0.3s ease;
+}
+
+.fab--expanded .fab__icon {
+  transform: rotate(45deg);
+}
+
+.fab-menu {
+  position: fixed;
+  bottom: 5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.fab-menu--active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.fab-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.fab-menu__button {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  color: var(--primary-color, #007bff);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.fab-menu__button:active {
+  transform: scale(0.95);
+}
+
+.fab-menu__label {
+  background: var(--text-primary, #212529);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
 /* ========================================
-   Responsive Adjustments
+   Responsive Breakpoints
    ======================================== */
 
+/* Small tablets and large phones (landscape) */
+@media (min-width: 576px) {
+  .body-tab {
+    padding: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .daily-rings__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .daily-ring__circle {
+    width: 90px;
+    height: 90px;
+  }
+
+  .hydration-tracker__glasses {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  .goal-card {
+    min-width: 300px;
+    max-width: 300px;
+  }
+
+  .gallery-toggle__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Tablets */
 @media (min-width: 768px) {
   .body-tab {
     padding: 2rem;
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
-  .body-tab__title {
-    font-size: 2.5rem;
+  .body-battery {
+    padding: 1.5rem;
+  }
+
+  .body-battery__title {
+    font-size: 1.125rem;
+  }
+
+  .body-battery__bar-container {
+    height: 32px;
   }
 
   .daily-rings {
+    padding: 1.5rem;
+  }
+
+  .daily-rings__header {
+    font-size: 1.125rem;
+  }
+
+  .daily-ring__circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .goal-card {
+    min-width: 320px;
+    max-width: 320px;
+  }
+
+  .habits-list,
+  .activity-feed,
+  .gallery-toggle {
+    padding: 1.5rem;
+  }
+
+  .gallery-toggle__grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+  }
+
+  .fab {
+    width: 64px;
+    height: 64px;
+    bottom: 2rem;
+    right: 2rem;
+  }
+
+  .fab-menu {
+    bottom: 6rem;
+    right: 2rem;
+  }
+}
+
+/* Laptops and desktops */
+@media (min-width: 992px) {
+  .body-tab {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-areas:
+      "battery battery"
+      "rings hydration"
+      "goals habits"
+      "activity gallery";
     gap: 1.5rem;
   }
 
-  .body-tab__fab {
-    bottom: 2rem;
-    right: 2rem;
+  .body-battery {
+    grid-area: battery;
+  }
+
+  .daily-rings {
+    grid-area: rings;
+  }
+
+  .daily-rings__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .daily-ring__circle {
+    width: 110px;
+    height: 110px;
+  }
+
+  .hydration-tracker {
+    grid-area: hydration;
+  }
+
+  .hydration-tracker__glasses {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .goals-scroll {
+    grid-area: goals;
+  }
+
+  .goals-scroll__container {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .goal-card {
+    min-width: calc(50% - 0.5rem);
+    max-width: calc(50% - 0.5rem);
+  }
+
+  .habits-list {
+    grid-area: habits;
+  }
+
+  .activity-feed {
+    grid-area: activity;
+  }
+
+  .gallery-toggle {
+    grid-area: gallery;
+  }
+
+  .gallery-toggle__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Hover states for desktop */
+  .daily-ring:hover,
+  .goal-card:hover,
+  .habit-item:hover,
+  .activity-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .fab:hover {
+    transform: scale(1.1);
+  }
+
+  .fab-menu__button:hover {
+    transform: scale(1.1);
+    background: var(--primary-color, #007bff);
+    color: white;
+  }
+}
+
+/* Large desktops */
+@media (min-width: 1200px) {
+  .body-tab {
+    max-width: 1400px;
+    gap: 2rem;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "battery battery battery"
+      "rings hydration habits"
+      "goals goals gallery"
+      "activity activity gallery";
+  }
+
+  .daily-rings__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .daily-ring__circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .goal-card {
+    min-width: calc(33.333% - 0.75rem);
+    max-width: calc(33.333% - 0.75rem);
+  }
+
+  .gallery-toggle__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1400px) {
+  .body-tab {
+    max-width: 1600px;
+  }
+
+  .daily-ring__circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .goal-card {
+    padding: 1.25rem;
+  }
+}
+
+/* ========================================
+   Dark Mode Support
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+  .body-tab {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --card-bg: #242424;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-tertiary: #808080;
+    --border-color: #3d3d3d;
+    --primary-color: #0a84ff;
+    --primary-light: #1e3a5f;
+  }
+
+  .body-battery__bar-container,
+  .hydration-tracker__progress,
+  .goal-card__progress-bar {
+    background: var(--bg-secondary);
+  }
+
+  .fab {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .fab-menu__button {
+    background: var(--bg-secondary);
+    color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .fab-menu__label {
+    background: var(--bg-secondary);
+  }
+}
+
+/* ========================================
+   Accessibility
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible styles */
+.fab:focus-visible,
+.habits-list__add:focus-visible,
+.fab-menu__button:focus-visible {
+  outline: 3px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.hydration-glass:focus-visible,
+.habit-item__checkbox:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .fab,
+  .fab-menu {
+    display: none !important;
+  }
+
+  .body-tab {
+    display: block;
   }
 }
