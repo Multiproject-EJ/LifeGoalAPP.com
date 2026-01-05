@@ -177,7 +177,7 @@ export function Leaderboards({ session, onClose }: LeaderboardsProps) {
                 <LeaderboardRow
                   key={entry.id || entry.user_id}
                   entry={entry}
-                  isCurrentUser={entry.user_id === userId || entry.isCurrentUser === true}
+                  isCurrentUser={entry.user_id === userId || !!entry.isCurrentUser}
                 />
               ))}
             </div>
