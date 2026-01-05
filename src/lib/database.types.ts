@@ -1618,6 +1618,78 @@ export interface Database {
           }
         ];
       };
+      leaderboard_entries: {
+        Row: {
+          id: string;
+          user_id: string;
+          username: string;
+          scope: 'all_time' | 'weekly' | 'monthly';
+          category: 'level' | 'xp' | 'streak' | 'achievements' | 'points';
+          score: number;
+          rank: number | null;
+          period_key: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          username: string;
+          scope: 'all_time' | 'weekly' | 'monthly';
+          category: 'level' | 'xp' | 'streak' | 'achievements' | 'points';
+          score: number;
+          rank?: number | null;
+          period_key: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          username?: string;
+          scope?: 'all_time' | 'weekly' | 'monthly';
+          category?: 'level' | 'xp' | 'streak' | 'achievements' | 'points';
+          score?: number;
+          rank?: number | null;
+          period_key?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      leaderboard_rewards: {
+        Row: {
+          id: string;
+          user_id: string;
+          scope: string;
+          category: string;
+          period_key: string;
+          rank: number;
+          xp_reward: number;
+          badge_key: string | null;
+          awarded_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          scope: string;
+          category: string;
+          period_key: string;
+          rank: number;
+          xp_reward: number;
+          badge_key?: string | null;
+          awarded_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          scope?: string;
+          category?: string;
+          period_key?: string;
+          rank?: number;
+          xp_reward?: number;
+          badge_key?: string | null;
+          awarded_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_habit_streaks: {
@@ -1649,6 +1721,13 @@ export interface Database {
           longest_streak: number;
           most_active_category: string | null;
         }[];
+      };
+      refresh_leaderboard_entries: {
+        Args: {
+          target_scope: string;
+          target_period: string;
+        };
+        Returns: void;
       };
     };
     Enums: {
