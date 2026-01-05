@@ -81,7 +81,7 @@ export function Leaderboards({ session, onClose }: LeaderboardsProps) {
   
   const selectedCategory = CATEGORY_OPTIONS.find(opt => opt.value === category);
   const userInTopResults = entries.some(e => e.user_id === userId || e.isCurrentUser);
-  const showUserRankCard = userRank && !userInTopResults && userRank.rank > limit;
+  const showUserRankCard = userRank && !userInTopResults && userRank.rank !== null && userRank.rank > limit;
   
   return (
     <div className="leaderboards-container">
@@ -177,7 +177,7 @@ export function Leaderboards({ session, onClose }: LeaderboardsProps) {
                 <LeaderboardRow
                   key={entry.id || entry.user_id}
                   entry={entry}
-                  isCurrentUser={entry.user_id === userId || entry.isCurrentUser}
+                  isCurrentUser={entry.user_id === userId || entry.isCurrentUser === true}
                 />
               ))}
             </div>

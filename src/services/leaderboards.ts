@@ -432,6 +432,9 @@ async function awardPrizes(
     
     // Award prizes
     for (const entry of topUsers) {
+      // Skip entries without a valid rank
+      if (entry.rank === null || entry.rank === undefined) continue;
+      
       const prize = PRIZE_TIERS[entry.rank as keyof typeof PRIZE_TIERS];
       if (!prize) continue;
       

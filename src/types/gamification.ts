@@ -420,7 +420,7 @@ export interface LeaderboardEntry {
   scope: LeaderboardScope;
   category: LeaderboardCategory;
   score: number;
-  rank: number;
+  rank: number | null;
   period_key: string;
   updated_at?: string;
   isCurrentUser?: boolean; // Client-side flag

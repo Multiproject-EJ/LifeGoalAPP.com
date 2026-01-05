@@ -15,18 +15,19 @@ const RANK_BADGES = {
 };
 
 export function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowProps) {
-  const isTopThree = entry.rank <= 3;
-  const badge = isTopThree ? RANK_BADGES[entry.rank as keyof typeof RANK_BADGES] : undefined;
+  const rank = entry.rank ?? 0;
+  const isTopThree = rank > 0 && rank <= 3;
+  const badge = isTopThree ? RANK_BADGES[rank as keyof typeof RANK_BADGES] : undefined;
   
   return (
     <div
       className={`leaderboard-row ${isCurrentUser ? 'leaderboard-row--current-user' : ''} ${
-        isTopThree ? `leaderboard-row--rank-${entry.rank}` : ''
+        isTopThree ? `leaderboard-row--rank-${rank}` : ''
       }`}
     >
       <div className="leaderboard-row__rank">
         {badge && <span className="leaderboard-row__badge">{badge}</span>}
-        <span className="leaderboard-row__rank-number">#{entry.rank}</span>
+        <span className="leaderboard-row__rank-number">#{rank > 0 ? rank : '-'}</span>
       </div>
       
       <div className="leaderboard-row__user">
