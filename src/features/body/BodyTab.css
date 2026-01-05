@@ -1,0 +1,352 @@
+/* ========================================
+   Body Tab - Mobile First Styling
+   ======================================== */
+
+.body-tab {
+  padding: 1rem;
+  padding-bottom: 5rem; /* Space for FAB */
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Header */
+.body-tab__header {
+  margin-bottom: 1.5rem;
+}
+
+.body-tab__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.body-tab__subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666);
+  margin: 0.25rem 0 0;
+}
+
+/* Section Styling */
+.body-tab__section {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.body-tab__section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--text-primary, #1a1a1a);
+}
+
+/* ========================================
+   At-A-Glance Section
+   ======================================== */
+
+/* Body Battery */
+.body-battery {
+  margin-bottom: 1.5rem;
+}
+
+.body-battery__label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.body-battery__score {
+  font-weight: 700;
+  color: var(--accent-primary, #4caf50);
+}
+
+.body-battery__bar {
+  height: 12px;
+  background: var(--bar-bg, #e0e0e0);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.body-battery__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  transition: width 0.3s ease;
+}
+
+/* Daily Rings */
+.daily-rings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.daily-ring {
+  text-align: center;
+  padding: 0.75rem;
+  background: var(--ring-bg, #f5f5f5);
+  border-radius: 8px;
+}
+
+.daily-ring__icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.daily-ring__label {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+  margin-bottom: 0.25rem;
+}
+
+.daily-ring__value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a1a1a);
+}
+
+/* Hydration Tracker */
+.hydration-tracker {
+  padding: 1rem;
+  background: var(--hydration-bg, #e3f2fd);
+  border-radius: 8px;
+}
+
+.hydration-tracker__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.hydration-tracker__bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.hydration-tracker__fill {
+  height: 100%;
+  background: #2196f3;
+  transition: width 0.3s ease;
+}
+
+.hydration-tracker__add-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.hydration-tracker__add-btn:hover {
+  background: #1976d2;
+}
+
+/* ========================================
+   Active Goals Section
+   ======================================== */
+
+.body-goals-scroll {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+}
+
+.body-goal-card {
+  min-width: 200px;
+  padding: 1rem;
+  background: var(--goal-card-bg, #f5f5f5);
+  border-radius: 8px;
+  border: 2px dashed var(--border-color, #ddd);
+}
+
+.body-goal-card--placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.body-goal-card__title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.body-goal-card__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666);
+}
+
+/* ========================================
+   Body Habits Section
+   ======================================== */
+
+.body-habits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.body-habit-item {
+  padding: 0.75rem;
+  background: var(--habit-bg, #f5f5f5);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.body-habit-item--placeholder {
+  justify-content: center;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+/* ========================================
+   Activity Feed Section
+   ======================================== */
+
+.body-activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.body-activity-item {
+  padding: 0.75rem;
+  background: var(--activity-bg, #f5f5f5);
+  border-radius: 8px;
+}
+
+.body-activity-item--placeholder {
+  text-align: center;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+/* ========================================
+   Body Gallery Section
+   ======================================== */
+
+.body-gallery-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.body-gallery-toggle__btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: var(--toggle-bg, #f5f5f5);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.body-gallery-toggle__btn--active {
+  background: var(--toggle-active-bg, #e3f2fd);
+  border-color: var(--toggle-active-border, #2196f3);
+}
+
+.body-gallery-preview {
+  min-height: 150px;
+  background: var(--gallery-bg, #f5f5f5);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.body-gallery-preview--blurred {
+  filter: blur(8px);
+  cursor: pointer;
+}
+
+.body-gallery-preview__placeholder {
+  text-align: center;
+}
+
+.body-gallery-preview__placeholder span {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.body-gallery-preview__placeholder p {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+}
+
+/* ========================================
+   Floating Action Button
+   ======================================== */
+
+.body-tab__fab {
+  position: fixed;
+  bottom: 80px; /* Above mobile nav */
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--fab-bg, #2196f3);
+  color: white;
+  border: none;
+  font-size: 2rem;
+  font-weight: 300;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 100;
+}
+
+.body-tab__fab:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.body-tab__fab:active {
+  transform: scale(0.95);
+}
+
+/* ========================================
+   Responsive Adjustments
+   ======================================== */
+
+@media (min-width: 768px) {
+  .body-tab {
+    padding: 2rem;
+  }
+
+  .body-tab__title {
+    font-size: 2.5rem;
+  }
+
+  .daily-rings {
+    gap: 1.5rem;
+  }
+
+  .body-tab__fab {
+    bottom: 2rem;
+    right: 2rem;
+  }
+}
