@@ -250,10 +250,15 @@ Each widget follows same pattern:
 
 ### Widget Interface
 ```typescript
-// Base widget settings type that can be extended by specific widgets
-interface BaseWidgetSettings {
-  [key: string]: string | number | boolean | string[] | undefined;
-}
+// Base widget settings type using Record for better type safety
+// Extend this with specific widget settings types
+type BaseWidgetSettings = Record<string, unknown>;
+
+// Alternative approach: Use a branded type for extensibility
+type WidgetSettingsValue = string | number | boolean | string[] | null;
+type SafeWidgetSettings = {
+  [K: string]: WidgetSettingsValue;
+};
 
 // Specific settings for different widget types
 interface HealthCheckupsSettings extends BaseWidgetSettings {
@@ -408,10 +413,9 @@ CREATE TABLE body_tab_preferences (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   
-  -- Ensure arrays have matching length
+  -- Ensure arrays have matching length (handles NULL from array_length on empty arrays)
   CONSTRAINT matching_enabled_order CHECK (
-    array_length(enabled_widgets, 1) = array_length(widget_order, 1) 
-    OR (enabled_widgets = '{}' AND widget_order = '{}')
+    COALESCE(array_length(enabled_widgets, 1), 0) = COALESCE(array_length(widget_order, 1), 0)
   )
 );
 
