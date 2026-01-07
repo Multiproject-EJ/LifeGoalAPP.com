@@ -228,6 +228,8 @@ Each widget follows same pattern:
 
 ## Widget Architecture
 
+> **Note**: This section describes the planned architecture to be implemented in Phase 1 and beyond. The interfaces and code examples shown here are design specifications, not yet implemented.
+
 ### Widget Interface
 ```typescript
 interface BodyWidget {
@@ -255,6 +257,9 @@ interface WidgetConfig {
 
 ### Widget Registry
 All widgets registered in `src/features/body/widgetRegistry.ts`:
+
+> **Note**: The code below is an example implementation for future phases. The referenced widget components (HealthCheckupsWidget, SelfChecksWidget, BodyMetricsWidget) will be created in Phases 2-4.
+
 ```typescript
 export const WIDGET_REGISTRY: Record<string, BodyWidget> = {
   'health-checkups': {
