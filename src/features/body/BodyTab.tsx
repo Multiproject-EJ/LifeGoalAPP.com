@@ -15,7 +15,8 @@ type BodyMetrics = {
 };
 
 export function BodyTab({ session }: BodyTabProps) {
-  const { user } = useSupabaseAuth();
+  const { session: authSession } = useSupabaseAuth();
+  const user = authSession?.user;
   const [metrics, setMetrics] = useState<BodyMetrics>({
     weight: null,
     sleepHours: null,
