@@ -299,9 +299,12 @@ interface WidgetProps<TSettings extends BaseWidgetSettings = BaseWidgetSettings>
 ### Widget Registry
 All widgets registered in `src/features/body/widgetRegistry.ts`:
 
-> **Note**: The code below is an example implementation for future phases. The referenced widget components (HealthCheckupsWidget, SelfChecksWidget, BodyMetricsWidget) will be created in Phases 2-4.
+> **Note**: The code below is example pseudocode for future implementation. The referenced widget components (HealthCheckupsWidget, SelfChecksWidget, BodyMetricsWidget) will be created in Phases 2-4. During Phase 1, use placeholder components or type-only references to avoid import errors.
 
 ```typescript
+// Example implementation - widget components will be created in Phases 2-4
+// For Phase 1, import placeholder components or use lazy loading
+
 // Define widgets as an array to avoid key duplication
 const WIDGETS: BodyWidget[] = [
   {
@@ -309,7 +312,7 @@ const WIDGETS: BodyWidget[] = [
     name: 'Health Checkups',
     icon: '🏥',
     tier: 'essential',
-    component: HealthCheckupsWidget,
+    component: HealthCheckupsWidget, // Will be implemented in Phase 2
     defaultConfig: {
       enabled: true,
       position: 1,
@@ -324,7 +327,7 @@ const WIDGETS: BodyWidget[] = [
     name: 'Body Self-Checks',
     icon: '🔍',
     tier: 'essential',
-    component: SelfChecksWidget,
+    component: SelfChecksWidget, // Will be implemented in Phase 3
     defaultConfig: {
       enabled: true,
       position: 2,
@@ -339,7 +342,7 @@ const WIDGETS: BodyWidget[] = [
     name: 'Body Metrics',
     icon: '📊',
     tier: 'essential',
-    component: BodyMetricsWidget,
+    component: BodyMetricsWidget, // Will be implemented in Phase 4
     defaultConfig: {
       enabled: true,
       position: 3,
@@ -405,20 +408,19 @@ CREATE TABLE body_tab_preferences (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   
-  -- Validation constraints
-  CONSTRAINT valid_enabled_widgets CHECK (
-    enabled_widgets <@ (SELECT array_agg(id) FROM unnest(enabled_widgets) AS id)
-  ),
-  CONSTRAINT valid_widget_order CHECK (
-    widget_order <@ (SELECT array_agg(id) FROM unnest(widget_order) AS id)
-  ),
+  -- Ensure arrays have matching length
   CONSTRAINT matching_enabled_order CHECK (
-    array_length(enabled_widgets, 1) = array_length(widget_order, 1)
+    array_length(enabled_widgets, 1) = array_length(widget_order, 1) 
+    OR (enabled_widgets = '{}' AND widget_order = '{}')
   )
 );
 
 -- Index for quick user lookups
 CREATE INDEX idx_body_tab_preferences_user_id ON body_tab_preferences(user_id);
+
+-- Note: Widget ID validation will be handled at the application layer using the
+-- getWidgetIds() and isValidWidgetId() helper functions from widgetRegistry.ts
+-- This allows the valid widget IDs to be managed in code rather than in the database.
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_body_tab_preferences_updated_at()
