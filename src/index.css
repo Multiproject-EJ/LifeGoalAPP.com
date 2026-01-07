@@ -14496,3 +14496,130 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================
+   App Navigation Styles
+   ======================================== */
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-header {
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.nav-tab:hover {
+  background: rgba(6, 182, 212, 0.08);
+  color: #0891b2;
+}
+
+.nav-tab.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(168, 85, 247, 0.08));
+  color: #0891b2;
+  font-weight: 600;
+}
+
+.tab-icon {
+  font-size: 1.25rem;
+}
+
+.tab-label {
+  font-size: 0.875rem;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.app-loading,
+.app-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  font-size: 1.125rem;
+  color: #0891b2;
+}
+
+.app-error h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
+
+.app-error p {
+  color: #64748b;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .app-nav {
+    padding: 0.5rem 1rem;
+  }
+  
+  .app-title {
+    font-size: 1.125rem;
+  }
+  
+  .nav-tab {
+    padding: 0.5rem;
+    min-width: 3rem;
+    justify-content: center;
+  }
+  
+  .tab-label {
+    display: none;
+  }
+}
