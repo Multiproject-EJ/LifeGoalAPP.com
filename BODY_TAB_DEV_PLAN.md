@@ -59,11 +59,11 @@ A modular health and vitality dashboard with core features + customizable widget
 **Database Schema**:
 ```sql
 CREATE TABLE health_checkups (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES auth.users,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   checkup_type TEXT NOT NULL, -- 'dentist', 'physical', 'eye_exam', etc.
   last_completed_date DATE,
-  frequency_months INTEGER, -- 6 for dentist, 12 for physical, etc.
+  frequency_months INTEGER NOT NULL CHECK (frequency_months > 0),
   next_due_date DATE,
   provider_name TEXT,
   provider_contact TEXT,
@@ -71,6 +71,12 @@ CREATE TABLE health_checkups (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Indexes for performance
+CREATE INDEX idx_health_checkups_user_id ON health_checkups(user_id);
+CREATE INDEX idx_health_checkups_next_due_date ON health_checkups(next_due_date);
+CREATE INDEX idx_health_checkups_type ON health_checkups(checkup_type);
+CREATE INDEX idx_health_checkups_user_next_due ON health_checkups(user_id, next_due_date);
 ```
 
 **Files to Create**:
@@ -102,24 +108,31 @@ CREATE TABLE health_checkups (
 **Database Schema**:
 ```sql
 CREATE TABLE self_check_routines (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES auth.users,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   check_type TEXT NOT NULL, -- 'skin_scan', 'breast_exam', etc.
-  frequency_days INTEGER, -- 30 for monthly, etc.
+  frequency_days INTEGER NOT NULL CHECK (frequency_days > 0),
   enabled BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE self_check_logs (
-  id UUID PRIMARY KEY,
-  routine_id UUID REFERENCES self_check_routines,
-  user_id UUID REFERENCES auth.users,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  routine_id UUID REFERENCES self_check_routines ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   completed_date DATE NOT NULL,
-  findings TEXT, -- 'normal', 'concern_flagged'
+  findings TEXT CHECK (findings IN ('normal', 'concern_flagged')),
   notes TEXT,
   photo_urls TEXT[], -- Optional photos for tracking
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Indexes for performance
+CREATE INDEX idx_self_check_routines_user_id ON self_check_routines(user_id);
+CREATE INDEX idx_self_check_routines_enabled ON self_check_routines(user_id, enabled);
+CREATE INDEX idx_self_check_logs_routine_id ON self_check_logs(routine_id);
+CREATE INDEX idx_self_check_logs_user_id ON self_check_logs(user_id);
+CREATE INDEX idx_self_check_logs_completed_date ON self_check_logs(user_id, completed_date DESC);
 ```
 
 **Files to Create**:
@@ -153,16 +166,21 @@ CREATE TABLE self_check_logs (
 **Database Schema**:
 ```sql
 CREATE TABLE body_metrics (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES auth.users,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   metric_type TEXT NOT NULL, -- 'weight', 'body_fat_pct', 'fitness_benchmark'
-  value NUMERIC NOT NULL,
-  unit TEXT, -- 'kg', 'lbs', '%', 'reps', 'minutes'
+  value NUMERIC NOT NULL CHECK (value >= 0),
+  unit TEXT NOT NULL, -- 'kg', 'lbs', '%', 'reps', 'minutes'
   benchmark_name TEXT, -- For fitness tests: 'pushups', '5k_time', etc.
   logged_date DATE NOT NULL,
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Indexes for performance
+CREATE INDEX idx_body_metrics_user_id ON body_metrics(user_id);
+CREATE INDEX idx_body_metrics_logged_date ON body_metrics(user_id, logged_date DESC);
+CREATE INDEX idx_body_metrics_type ON body_metrics(user_id, metric_type, logged_date DESC);
 ```
 
 **Files to Create**:
@@ -232,26 +250,49 @@ Each widget follows same pattern:
 
 ### Widget Interface
 ```typescript
-interface BodyWidget {
+// Base widget settings type that can be extended by specific widgets
+interface BaseWidgetSettings {
+  [key: string]: string | number | boolean | string[] | undefined;
+}
+
+// Specific settings for different widget types
+interface HealthCheckupsSettings extends BaseWidgetSettings {
+  defaultFrequency?: number; // months
+  reminderDays?: number;
+}
+
+interface BodyMetricsSettings extends BaseWidgetSettings {
+  showTrends: boolean;
+  timeRange: '1month' | '3months' | '6months' | '1year';
+  defaultUnit?: 'metric' | 'imperial';
+}
+
+interface SelfChecksSettings extends BaseWidgetSettings {
+  enabledCheckTypes: string[];
+  photoUploadEnabled: boolean;
+}
+
+// Generic widget config that uses type parameter for settings
+interface WidgetConfig<TSettings extends BaseWidgetSettings = BaseWidgetSettings> {
+  enabled: boolean;
+  position: number;
+  settings: TSettings;
+}
+
+interface BodyWidget<TSettings extends BaseWidgetSettings = BaseWidgetSettings> {
   id: string;
   name: string;
   icon: string;
   tier: 'essential' | 'specialized';
-  component: React.ComponentType<WidgetProps>;
-  defaultConfig: WidgetConfig;
+  component: React.ComponentType<WidgetProps<TSettings>>;
+  defaultConfig: WidgetConfig<TSettings>;
   requiredPermissions?: string[];
 }
 
-interface WidgetProps {
+interface WidgetProps<TSettings extends BaseWidgetSettings = BaseWidgetSettings> {
   session: Session;
-  config: WidgetConfig;
-  onUpdate: (config: WidgetConfig) => void;
-}
-
-interface WidgetConfig {
-  enabled: boolean;
-  position: number;
-  settings: Record<string, any>;
+  config: WidgetConfig<TSettings>;
+  onUpdate: (config: WidgetConfig<TSettings>) => void;
 }
 ```
 
@@ -261,8 +302,9 @@ All widgets registered in `src/features/body/widgetRegistry.ts`:
 > **Note**: The code below is an example implementation for future phases. The referenced widget components (HealthCheckupsWidget, SelfChecksWidget, BodyMetricsWidget) will be created in Phases 2-4.
 
 ```typescript
-export const WIDGET_REGISTRY: Record<string, BodyWidget> = {
-  'health-checkups': {
+// Define widgets as an array to avoid key duplication
+const WIDGETS: BodyWidget[] = [
+  {
     id: 'health-checkups',
     name: 'Health Checkups',
     icon: '🏥',
@@ -271,10 +313,13 @@ export const WIDGET_REGISTRY: Record<string, BodyWidget> = {
     defaultConfig: {
       enabled: true,
       position: 1,
-      settings: {}
+      settings: {
+        defaultFrequency: 12,
+        reminderDays: 30
+      } as HealthCheckupsSettings
     }
   },
-  'self-checks': {
+  {
     id: 'self-checks',
     name: 'Body Self-Checks',
     icon: '🔍',
@@ -283,10 +328,13 @@ export const WIDGET_REGISTRY: Record<string, BodyWidget> = {
     defaultConfig: {
       enabled: true,
       position: 2,
-      settings: {}
+      settings: {
+        enabledCheckTypes: ['skin_scan'],
+        photoUploadEnabled: false
+      } as SelfChecksSettings
     }
   },
-  'body-metrics': {
+  {
     id: 'body-metrics',
     name: 'Body Metrics',
     icon: '📊',
@@ -297,12 +345,32 @@ export const WIDGET_REGISTRY: Record<string, BodyWidget> = {
       position: 3,
       settings: {
         showTrends: true,
-        timeRange: '6months'
-      }
+        timeRange: '6months',
+        defaultUnit: 'metric'
+      } as BodyMetricsSettings
     }
   },
   // ... more widgets
-};
+];
+
+// Convert array to record with validation
+export const WIDGET_REGISTRY = WIDGETS.reduce((acc, widget) => {
+  if (acc[widget.id]) {
+    throw new Error(`Duplicate widget ID: ${widget.id}`);
+  }
+  acc[widget.id] = widget;
+  return acc;
+}, {} as Record<string, BodyWidget>);
+
+// Helper function to get all widget IDs
+export function getWidgetIds(): string[] {
+  return WIDGETS.map(w => w.id);
+}
+
+// Helper function to validate widget ID
+export function isValidWidgetId(id: string): boolean {
+  return id in WIDGET_REGISTRY;
+}
 ```
 
 ### Widget Management
@@ -329,14 +397,42 @@ interface BodyTabPreferences {
 #### Database Schema for Preferences
 ```sql
 CREATE TABLE body_tab_preferences (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES auth.users UNIQUE,
-  enabled_widgets TEXT[],
-  widget_order TEXT[],
-  widget_configs JSONB,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE UNIQUE NOT NULL,
+  enabled_widgets TEXT[] NOT NULL DEFAULT '{}',
+  widget_order TEXT[] NOT NULL DEFAULT '{}',
+  widget_configs JSONB NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Validation constraints
+  CONSTRAINT valid_enabled_widgets CHECK (
+    enabled_widgets <@ (SELECT array_agg(id) FROM unnest(enabled_widgets) AS id)
+  ),
+  CONSTRAINT valid_widget_order CHECK (
+    widget_order <@ (SELECT array_agg(id) FROM unnest(widget_order) AS id)
+  ),
+  CONSTRAINT matching_enabled_order CHECK (
+    array_length(enabled_widgets, 1) = array_length(widget_order, 1)
+  )
 );
+
+-- Index for quick user lookups
+CREATE INDEX idx_body_tab_preferences_user_id ON body_tab_preferences(user_id);
+
+-- Trigger to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_body_tab_preferences_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER body_tab_preferences_updated_at
+  BEFORE UPDATE ON body_tab_preferences
+  FOR EACH ROW
+  EXECUTE FUNCTION update_body_tab_preferences_updated_at();
 ```
 
 ---
