@@ -123,9 +123,14 @@ CREATE TABLE self_check_logs (
   completed_date DATE NOT NULL,
   findings TEXT CHECK (findings IN ('normal', 'concern_flagged')),
   notes TEXT,
-  photo_urls TEXT[], -- Optional photos for tracking
+  photo_urls TEXT[], -- Optional photos for tracking (URLs validated at application layer)
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Note: Photo URLs should be validated at application layer to ensure they:
+-- 1. Point to valid Supabase Storage buckets
+-- 2. Are accessible only by the user
+-- 3. Meet security requirements (e.g., HTTPS, proper domain)
 
 -- Indexes for performance
 CREATE INDEX idx_self_check_routines_user_id ON self_check_routines(user_id);
@@ -304,11 +309,16 @@ interface WidgetProps<TSettings extends BaseWidgetSettings = BaseWidgetSettings>
 ### Widget Registry
 All widgets registered in `src/features/body/widgetRegistry.ts`:
 
-> **Note**: The code below is example pseudocode for future implementation. The referenced widget components (HealthCheckupsWidget, SelfChecksWidget, BodyMetricsWidget) will be created in Phases 2-4. During Phase 1, use placeholder components or type-only references to avoid import errors.
+> **Important**: The code below is **pseudocode** for illustration purposes. The referenced widget components do not exist yet and will cause TypeScript errors if used as-is. 
+> 
+> **For Phase 1 implementation**:
+> - Create placeholder components: `const HealthCheckupsWidget = () => <div>Coming Soon</div>;`
+> - Use lazy loading: `component: React.lazy(() => import('./widgets/HealthCheckups'))`
+> - Or use a factory pattern with dynamic imports
 
 ```typescript
-// Example implementation - widget components will be created in Phases 2-4
-// For Phase 1, import placeholder components or use lazy loading
+// PSEUDOCODE - Widget components will be created in Phases 2-4
+// Do NOT copy this directly - it will cause TypeScript import errors
 
 // Define widgets as an array to avoid key duplication
 const WIDGETS: BodyWidget[] = [
@@ -414,6 +424,8 @@ CREATE TABLE body_tab_preferences (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   
   -- Ensure arrays have matching length (handles NULL from array_length on empty arrays)
+  -- Note: This ensures structural consistency. Content validation (widget IDs, configs)
+  -- is handled at application layer using isValidWidgetId() and widget-specific validators
   CONSTRAINT matching_enabled_order CHECK (
     COALESCE(array_length(enabled_widgets, 1), 0) = COALESCE(array_length(widget_order, 1), 0)
   )
