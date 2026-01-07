@@ -301,8 +301,7 @@ export async function getLeaderboard(
     const supabase = getSupabaseClient();
     const periodKey = getCurrentPeriodKey(scope);
     
-    // Type cast to any to handle missing leaderboard_entries table in types
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('leaderboard_entries')
       .select('*')
       .eq('scope', scope)
@@ -313,7 +312,7 @@ export async function getLeaderboard(
     
     if (error) throw error;
     
-    return { data: (data || []) as LeaderboardEntry[], error: null };
+    return { data: data || [], error: null };
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     return { data: null, error: error as Error };
@@ -337,8 +336,7 @@ export async function getUserRank(
     const supabase = getSupabaseClient();
     const periodKey = getCurrentPeriodKey(scope);
     
-    // Type cast to any to handle missing leaderboard_entries table in types
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('leaderboard_entries')
       .select('*')
       .eq('user_id', userId)
@@ -349,7 +347,7 @@ export async function getUserRank(
     
     if (error) throw error;
     
-    return { data: (data || null) as LeaderboardEntry | null, error: null };
+    return { data: data || null, error: null };
   } catch (error) {
     console.error('Error fetching user rank:', error);
     return { data: null, error: error as Error };
@@ -371,8 +369,7 @@ export async function refreshLeaderboard(
     const supabase = getSupabaseClient();
     const periodKey = getCurrentPeriodKey(scope);
     
-    // Type cast to any to handle missing RPC function in types
-    const { error } = await (supabase as any).rpc('refresh_leaderboard_entries', {
+    const { error } = await supabase.rpc('refresh_leaderboard_entries', {
       target_scope: scope,
       target_period: periodKey,
     });
@@ -419,8 +416,7 @@ async function awardPrizes(
     const supabase = getSupabaseClient();
     
     // Get top 10
-    // Type cast to any to handle missing leaderboard_entries table in types
-    const { data: topUsers, error: fetchError } = await (supabase as any)
+    const { data: topUsers, error: fetchError } = await supabase
       .from('leaderboard_entries')
       .select('*')
       .eq('scope', scope)
@@ -440,8 +436,7 @@ async function awardPrizes(
       if (!prize) continue;
       
       // Check if already awarded
-      // Type cast to any to handle missing leaderboard_rewards table in types
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await supabase
         .from('leaderboard_rewards')
         .select('id')
         .eq('user_id', entry.user_id)
@@ -462,8 +457,7 @@ async function awardPrizes(
       );
       
       // Record reward
-      // Type cast to any to handle missing leaderboard_rewards table in types
-      await (supabase as any).from('leaderboard_rewards').insert({
+      await supabase.from('leaderboard_rewards').insert({
         user_id: entry.user_id,
         scope,
         category,
