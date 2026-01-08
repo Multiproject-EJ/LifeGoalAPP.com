@@ -203,7 +203,7 @@ export default function App() {
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
 
-  const { xpToasts, dismissXPToast, levelInfo, profile: gamificationProfile } = useGamification(supabaseSession);
+  const { xpToasts, dismissXPToast, levelInfo } = useGamification(supabaseSession);
 
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
@@ -286,8 +286,6 @@ export default function App() {
       progress: progressPercent,
     } as const;
   }, [levelInfo]);
-
-  const totalXPEarned = gamificationProfile?.total_xp ?? 0;
 
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
 
@@ -1375,11 +1373,6 @@ export default function App() {
               <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.journalCount ?? 0}</p>
               <p className="mobile-gamification-overlay__stat-hint">Reflections you’ve captured</p>
             </div>
-            <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">XP earned</p>
-              <p className="mobile-gamification-overlay__stat-value">{totalXPEarned.toLocaleString()}</p>
-              <p className="mobile-gamification-overlay__stat-hint">Lifetime progress points</p>
-            </div>
           </div>
         </div>
       </div>
@@ -1396,7 +1389,6 @@ export default function App() {
           onSelect={handleMobileNavSelect}
           onStatusClick={() => setShowMobileGamification(true)}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
-          xpTotal={totalXPEarned}
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -1575,7 +1567,6 @@ export default function App() {
           onSelect={handleMobileNavSelect}
           onStatusClick={() => setShowMobileGamification(true)}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
-          xpTotal={totalXPEarned}
         />
       ) : null}
 

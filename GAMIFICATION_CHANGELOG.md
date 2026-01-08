@@ -274,20 +274,7 @@ Track the evolution of LifeGoalApp's gamification system across all phases.
 
 ---
 
-## Phase 2: Engagement (Complete) ✅
-
-**Release Date:** January 2026
-
-### 🎉 Phase 2 Complete!
-
-All major Phase 2 features have been successfully implemented:
-- ✅ **Daily Spin Wheel** - Spin for random rewards daily
-- ✅ **Power-ups Store** - Spend points on boosts and upgrades
-- ✅ **Achievements Page** - Dedicated UI for browsing and tracking achievements
-
-**What's Next:** Phase 2.5 will bring Leaderboards and Challenge System in Q1 2026.
-
----
+## Phase 2: Engagement (In Progress) 🔮
 
 ### 🎰 Daily Spin Wheel ✅
 **Status:** Implemented (January 2026)
@@ -353,70 +340,7 @@ Spend accumulated points on temporary boosts and permanent upgrades:
 
 ---
 
-### 🏆 Leaderboards ✅
-**Status:** Implemented (January 2026)
-
-Enable competitive rankings and social comparison across multiple categories and time periods:
-
-#### Leaderboard Scopes
-- **All-Time**: Lifetime rankings across all users
-- **Weekly**: ISO week-based rankings (Monday-Sunday), resets every week
-- **Monthly**: Calendar month rankings, resets on 1st of each month
-
-#### Categories
-- **🆙 Highest Level**: Ranked by `current_level` (ties broken by total XP)
-- **💰 Most XP**: Ranked by `total_xp`
-- **🔥 Longest Streak**: Ranked by `current_streak` (ties broken by longest streak)
-- **🏆 Most Achievements**: Ranked by count of unlocked achievements
-- **💎 Most Points**: Ranked by `total_points`
-
-#### Prize Distribution
-Automatic prizes awarded at period end (Monday for weekly, 1st of month for monthly):
-- **Rank #1**: 1000 XP + "Leaderboard Champion" badge
-- **Rank #2-3**: 500 XP + Runner-up/Third badges
-- **Rank #4-5**: 500 XP
-- **Rank #6-10**: 250 XP
-
-#### Features
-- **Top 3 Badges**: 🥇🥈🥉 displayed for podium positions
-- **User Rank Highlighting**: Current user's row highlighted in leaderboard
-- **Sticky Rank Card**: Shows user's position if outside top 50
-- **Load More**: Pagination support for viewing more entries
-- **Refresh**: Manual leaderboard refresh button
-- **Demo Mode**: Generates realistic mock data with 50-100 entries
-- **Friend Leaderboard Placeholder**: UI hint for Phase 3 feature
-
-#### Database Tables
-- `leaderboard_entries`: Stores rankings (scope, category, period_key, rank, score)
-- `leaderboard_rewards`: Tracks awarded prizes
-- Function: `refresh_leaderboard_entries()` for recalculating ranks
-
-#### Technical Implementation
-- Migration: `0128_leaderboards.sql`
-- Service: `src/services/leaderboards.ts`
-- Components: 
-  - `src/features/gamification/Leaderboards.tsx` (main view)
-  - `src/features/gamification/LeaderboardRow.tsx` (individual entry)
-  - `src/features/gamification/LeaderboardPreview.tsx` (dashboard widget)
-- Integration: Leaderboard button added to `GamificationHeader.tsx`
-- Styling: Added to `src/styles/gamification.css`
-
-#### Period Key Format
-- All-time: `'all_time'`
-- Weekly: `'YYYY-Www'` (e.g., `'2026-W01'`)
-- Monthly: `'YYYY-MM'` (e.g., `'2026-01'`)
-
-#### Achievement Integration
-**Note:** The following achievements should be added to the database for full integration:
-- **"Top 10 Finish"**: Reach top 10 in any leaderboard category
-- **"Leaderboard Champion"**: Reach rank #1 in any leaderboard category
-- **"Podium Finisher"**: Finish in top 3 positions (bronze, silver, or gold)
-- **"Leaderboard Regular"**: Appear in top 50 for 5 different periods
-- **"Category Master"**: Reach top 10 in all 5 categories
-
----
-
-### 🏆 Leaderboards (ORIGINAL SPEC - REPLACED BY IMPLEMENTATION ABOVE)
+### 🏆 Leaderboards
 - **Global leaderboard** (top 100 users)
 - **Friends leaderboard** (social connections)
 - **Weekly/Monthly** leaderboards with resets
@@ -449,40 +373,15 @@ Automatic prizes awarded at period end (Monday for weekly, 1st of month for mont
 
 ---
 
-### 📊 Achievements Page ✅
-**Status:** Implemented (January 2026)
-
+### 📊 Achievements Page
 Dedicated UI for achievement browsing:
-- **Grid view** of all achievements with responsive layout
-- **Progress bars** for locked achievements showing completion percentage
-- **Filter by**: Status (All, Unlocked, Locked), Tier (Bronze, Silver, Gold, Diamond)
-- **Search functionality**: Find achievements by name or description
-- **Achievement details** modal with full progress tracking
-- **Share achievements** feature with clipboard and native share API support
-- **Trophy case stats**: Total unlocked, completion percentage, tier breakdown
-- **Next achievement suggestion**: Highlights closest achievement to unlock
-- **Demo mode support**: Fully functional with localStorage
-
-**Features:**
-- **Trophy Case Stats Card**: Displays unlocked achievements, completion percentage, and XP earned
-- **Tier Breakdown**: Visual breakdown of achievements by tier (Bronze, Silver, Gold, Diamond)
-- **Real-time Progress**: Shows current progress for locked achievements
-- **Unlock Dates**: Displays when each achievement was unlocked
-- **Responsive Design**: 3-column desktop, 2-column tablet, 1-column mobile
-- **Visual Indicators**: Lock/unlock status, tier colors, progress animations
-- **Empty State**: Helpful message when no achievements match filters
-
-**Technical Implementation:**
-- Service: `src/services/achievements.ts` with stats calculation
-- Components: 
-  - `src/features/achievements/AchievementsPage.tsx` - Main page
-  - `src/features/achievements/AchievementCard.tsx` - Individual cards
-  - `src/features/achievements/AchievementGrid.tsx` - Grid layout
-  - `src/features/achievements/AchievementFilters.tsx` - Filter controls
-  - `src/features/achievements/AchievementDetailModal.tsx` - Detail view
-  - `src/features/achievements/AchievementProgress.tsx` - Progress bar
-- Styling: `src/features/achievements/AchievementsPage.css` with tier colors and animations
-- Integration: Accessible via Game of Life hub in `App.tsx`
+- **Grid view** of all achievements
+- **Progress bars** for locked achievements
+- **Filter by**: Category, Tier, Status
+- **Sort by**: XP reward, Difficulty, Date unlocked
+- **Achievement details** modal with tips
+- **Share achievements** on social media
+- **Trophy case** display for unlocked badges
 
 ---
 
@@ -584,9 +483,8 @@ Dedicated UI for achievement browsing:
 | Version | Release Date | Phase | Key Features |
 |---------|--------------|-------|--------------|
 | v1.0.0 | Dec 2025 | Phase 1 | XP, Levels, 10 Achievements, Streaks, Lives |
-| v1.1.0 | Jan 2026 | Phase 2 | Spin Wheel, Power-up Store, Achievements Page ✅ |
-| v1.2.0 | Q1 2026 (planned) | Phase 2.5 | Leaderboards, Challenge System |
-| v1.3.0 | Q2 2026 (planned) | Phase 3 | Avatars, Social, Events, Cosmetics |
+| v1.1.0 | Q1 2026 (planned) | Phase 2 | Spin Wheel, Store, Leaderboards, Challenges |
+| v1.2.0 | Q2 2026 (planned) | Phase 3 | Avatars, Social, Events, Cosmetics |
 | v2.0.0 | Q3 2026 (planned) | Phase 4 | AI Features, Advanced Analytics |
 
 ---
@@ -609,21 +507,18 @@ Dedicated UI for achievement browsing:
 
 ## Known Issues & Limitations
 
-### Phase 1 & 2 Current Limitations
-- ❗ Limited to 10 starter achievements (more coming in future updates)
-- ❗ No leaderboards or challenge system yet (Phase 2.5)
-- ❗ No social/competitive features (Phase 3)
-- ❗ Lives cannot be earned back yet (Phase 2.5 feature)
-
-### Completed Features
-- ✅ Achievements page (Phase 2) - January 2026
-- ✅ Power-up store (Phase 2) - January 2026  
-- ✅ Daily Spin Wheel (Phase 2) - January 2026
+### Phase 1 Current Limitations
+- ❗ No dedicated achievements page (Phase 2)
+- ❗ Limited to 10 starter achievements
+- ❗ No social/competitive features
+- ❗ Lives cannot be earned back (Phase 2 feature)
+- ❗ Points cannot be spent yet (Phase 2 store)
 
 ### Planned Fixes
-- ⏳ Leaderboards in Phase 2.5
-- ⏳ Life refill challenges in Phase 2.5
-- ⏳ Social features in Phase 3
+- ✅ Achievements page in Phase 2
+- ✅ Life refill challenges in Phase 2
+- ✅ Power-up store in Phase 2
+- ✅ Social features in Phase 3
 
 ---
 
