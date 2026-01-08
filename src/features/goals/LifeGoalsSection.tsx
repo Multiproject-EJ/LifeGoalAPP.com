@@ -8,7 +8,6 @@ import { insertGoal, updateGoal, fetchGoals } from '../../services/goals';
 import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import type { Database } from '../../lib/database.types';
-import './Goals.css';
 
 type LifeGoalsSectionProps = {
   session: Session;
@@ -256,7 +255,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   );
 
   return (
-    <section className={`life-goals-section ${isMobile ? 'life-goals-section--mobile' : ''} fade-in`}>
+    <section className={`life-goals-section ${isMobile ? 'life-goals-section--mobile' : ''}`}>
       <header className="life-goals-section__header">
         <div className="life-goals-section__eyebrow">Long-term roadmap</div>
         <div className="life-goals-section__heading-row">
@@ -285,7 +284,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
       )}
 
       <div className="life-goals-section__interactive">
-        <div className="life-goals-section__wheel-card glass-card fade-in stagger-1">
+        <div className="life-goals-section__wheel-card">
           <div className="life-goals-section__card-header">
             <div>
               <p className="life-goals-section__card-label">Life wheel</p>
@@ -305,7 +304,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
             />
           </div>
         </div>
-        <div className="life-goals-section__info glass-card fade-in stagger-2">
+        <div className="life-goals-section__info">
           <CategoryInfoCard
             categoryKey={selectedCategory}
             onAddGoal={handleAddGoal}

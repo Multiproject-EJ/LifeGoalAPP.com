@@ -24,7 +24,6 @@ type MobileFooterNavProps = {
   onOpenMenu?: () => void;
   status?: MobileFooterStatus;
   onStatusClick?: () => void;
-  xpTotal?: number;
 };
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
@@ -36,19 +35,7 @@ export function MobileFooterNav({
   onOpenMenu,
   status,
   onStatusClick,
-  xpTotal,
 }: MobileFooterNavProps) {
-  const xpTotalLabel =
-    typeof xpTotal === 'number'
-      ? new Intl.NumberFormat('en-US', {
-          notation: 'compact',
-          maximumFractionDigits: 1,
-        }).format(xpTotal)
-      : null;
-  const xpBadgeLabel = xpTotalLabel ? `${xpTotalLabel} XP` : null;
-  const menuButtonLabel = xpBadgeLabel
-    ? `Open full navigation. ${xpBadgeLabel} earned so far.`
-    : 'Open full navigation';
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
       ? [items[0], items[1], { type: 'status' }, ...items.slice(2)]
@@ -122,13 +109,10 @@ export function MobileFooterNav({
         {onOpenMenu ? (
           <div className="mobile-footer-nav__menu">
             <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
-              <span className="mobile-footer-nav__menu-icon-wrapper" aria-hidden="true">
-                <span className="mobile-footer-nav__menu-icon">☰</span>
-                {xpBadgeLabel ? (
-                  <span className="mobile-footer-nav__menu-xp-badge">{xpBadgeLabel}</span>
-                ) : null}
+              <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
+                ☰
               </span>
-              <span className="sr-only">{menuButtonLabel}</span>
+              <span className="sr-only">Open full navigation</span>
             </button>
           </div>
         ) : null}
