@@ -90,15 +90,152 @@ CREATE POLICY "Users can delete own subscriptions"
   USING (auth.uid() = user_id);
 ```
 
+### 4. Configure CRON Job
+
+To send automated reminders, you need to configure a CRON job that triggers the Edge Function every minute.
+
+#### Step 1: Verify Edge Function Deployment
+
+```bash
+supabase functions list
+# Should show: send-reminders (deployed)
+```
+
+#### Step 2: Set VAPID Keys as Secrets
+
+If you haven't already set the VAPID keys:
+
+```bash
+# Generate keys if you haven't
+npx web-push generate-vapid-keys
+
+# Set as Supabase secrets
+supabase secrets set VAPID_PUBLIC_KEY="your_public_key"
+supabase secrets set VAPID_PRIVATE_KEY="your_private_key"
+```
+
+#### Step 3: Configure CRON Job in Supabase
+
+**Option A: Supabase Dashboard (Recommended)**
+
+1. Go to **Edge Functions** → **send-reminders** in your Supabase dashboard
+2. Click on **Settings** or **Invocations** tab
+3. Look for **CRON Schedule** or **Scheduled Jobs** section
+4. Add a new schedule:
+   - **Schedule:** `* * * * *` (every minute)
+   - **Path:** `/cron`
+   - **Method:** POST
+   - **Headers:** (optional) Add `Authorization: Bearer <service_role_key>` if required
+5. Save the configuration
+
+**Option B: Using pg_cron (Advanced)**
+
+If you have access to pg_cron (Pro tier and above):
+
+```sql
+SELECT cron.schedule(
+  'send-habit-reminders',
+  '* * * * *', -- Every minute
+  $$
+  SELECT net.http_post(
+    url := 'YOUR_SUPABASE_URL/functions/v1/send-reminders/cron',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY',
+      'Content-Type', 'application/json'
+    )
+  );
+  $$
+);
+```
+
+Replace:
+- `YOUR_SUPABASE_URL` with your project URL
+- `YOUR_SERVICE_ROLE_KEY` with your service role key (found in Project Settings → API)
+
+**Option C: External CRON Service**
+
+Use services like:
+- **Cron-job.org** (free, simple)
+- **EasyCron** (free tier available)
+- **AWS EventBridge** (pay per use)
+- **GitHub Actions** (free for public repos)
+
+Configure to POST to:
+```
+https://YOUR_SUPABASE_URL/functions/v1/send-reminders/cron
+```
+
+With header:
+```
+Authorization: Bearer YOUR_SERVICE_ROLE_KEY
+```
+
+#### Step 4: Test CRON Configuration
+
+1. Go to **Account** → **Push Notification Test Panel** in the app
+2. Click **"Check Configuration"** - should show ✅ VAPID Keys configured
+3. Click **"Trigger CRON Now"** - should execute successfully
+4. Check Edge Function logs for execution details
+
+#### Step 5: Monitor CRON Execution
+
+Monitor your CRON job execution:
+
+1. **Supabase Dashboard:**
+   - Go to Edge Functions → send-reminders
+   - Check invocation logs for errors
+   - Monitor execution times
+
+2. **Test Panel:**
+   - Use the diagnostic tools in the Push Notification Test Panel
+   - Check reminder configuration
+   - View user preferences
+
+3. **Database Logs:**
+   ```sql
+   -- Check recent reminder logs
+   SELECT * FROM reminder_logs
+   ORDER BY created_at DESC
+   LIMIT 20;
+   
+   -- Check reminder state
+   SELECT * FROM habit_reminder_state
+   ORDER BY last_reminder_sent_at DESC
+   LIMIT 20;
+   ```
+
+#### Troubleshooting CRON
+
+**CRON not triggering:**
+- Verify CRON schedule is configured correctly
+- Check Edge Function is deployed
+- Verify VAPID keys are set as secrets
+- Check service role key has correct permissions
+
+**CRON triggering but no notifications:**
+- Check users have push subscriptions
+- Verify habits have reminder times configured
+- Ensure users are within reminder time windows
+- Check Edge Function logs for errors
+
+**CRON timing out:**
+- See [Push Notifications Scaling Guide](./PUSH_NOTIFICATIONS_SCALING_GUIDE.md)
+- Consider implementing batch processing for 1,000+ users
+- Check database query performance
+
 ## Edge Function Endpoints
 
 ### `GET /health`
 
-Health check endpoint to verify the Edge Function is running.
+Health check endpoint to verify the Edge Function is running and VAPID keys are configured.
 
 **Response:**
 ```json
-{ "ok": true }
+{
+  "ok": true,
+  "vapid_configured": true,
+  "message": "Edge Function is healthy and ready to send notifications"
+}
 ```
 
 ### `POST /subscribe`
