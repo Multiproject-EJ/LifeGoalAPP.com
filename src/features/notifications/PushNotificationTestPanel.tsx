@@ -152,17 +152,29 @@ export function PushNotificationTestPanel({ session }: Props) {
         throw new Error('Supabase URL not configured.');
       }
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/health`);
+      // Call health endpoint without authentication (public endpoint)
+      const response = await fetch(`${supabaseUrl}/functions/v1/send-reminders/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+          // Note: No Authorization header - this is a public endpoint
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Health check failed: ${response.status} ${response.statusText}`);
+      }
+      
       const data = await response.json();
 
-      if (data.ok) {
-        setHealthStatus('✓ Edge Function is healthy');
+      if (data.vapid_configured) {
+        setHealthStatus('✓ Edge Function is healthy and VAPID keys are configured');
         setVapidStatus({
           configured: data.vapid_configured || false,
           message: data.message || 'VAPID keys configured'
         });
       } else {
-        setHealthStatus('✗ Edge Function responded but not healthy');
+        setHealthStatus(`✗ ${data.message || 'VAPID keys not configured'}`);
         setVapidStatus({
           configured: false,
           message: data.message || 'VAPID keys not configured'
@@ -304,37 +316,48 @@ export function PushNotificationTestPanel({ session }: Props) {
     setLoading(true);
     setStatus(null);
     try {
-      if (!hasSupabaseCredentials()) {
-        throw new Error('Supabase credentials not configured.');
-      }
-
       const supabaseUrl = getSupabaseUrl();
-      const accessToken = session.access_token;
-
-      if (!supabaseUrl || !accessToken) {
-        throw new Error('Missing Supabase URL or access token.');
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL not configured.');
       }
 
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/send-reminders/cron`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to trigger CRON: ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      // For manual testing, we'll show instructions for CRON endpoint
+      // In production, this should be called by a scheduled job with the CRON_SECRET
       setStatus({
-        kind: 'success',
-        message: `CRON executed: ${result.message || 'Check completed'}. Sent: ${result.sent || 0}, Failed: ${result.failed || 0}`
+        kind: 'info',
+        message: 'To test CRON manually, you need to:\n1. Set CRON_SECRET in Supabase Edge Function secrets\n2. Call the /cron endpoint with x-cron-secret header\n3. Or set up automatic CRON scheduling in Supabase\n\nFor security, the CRON endpoint requires a custom x-cron-secret header instead of JWT.'
       });
+      
+      // Alternatively, if you want to allow manual testing with a known secret:
+      // Uncomment the code below and remove the setStatus call above
+      
+      // const cronSecret = prompt('Enter CRON_SECRET (from Supabase secrets):');
+      // if (!cronSecret) {
+      //   throw new Error('CRON secret required');
+      // }
+      //
+      // const response = await fetch(
+      //   `${supabaseUrl}/functions/v1/send-reminders/cron`,
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       'x-cron-secret': cronSecret,
+      //       'Content-Type': 'application/json'
+      //     }
+      //   }
+      // );
+      //
+      // if (!response.ok) {
+      //   const errorData = await response.json();
+      //   throw new Error(errorData.error || `Failed to trigger CRON: ${response.statusText}`);
+      // }
+      //
+      // const result = await response.json();
+      // setStatus({
+      //   kind: response.ok ? 'success' : 'error',
+      //   message: result.message || JSON.stringify(result)
+      // });
+      
     } catch (error) {
       setStatus({
         kind: 'error',

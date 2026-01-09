@@ -7,7 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 // Retry configuration
@@ -185,7 +185,10 @@ Deno.serve(async (req) => {
   const pathname = url.pathname;
 
   try {
-    // Health check
+    // ========================================================
+    // PUBLIC ENDPOINT: /health
+    // No authentication required - anyone can check system status
+    // ========================================================
     if (pathname.endsWith('/health') && req.method === 'GET') {
       const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
       const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
@@ -203,7 +206,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get auth header
+    // ========================================================
+    // AUTHENTICATION: Required for all endpoints below
+    // User endpoints use JWT (Authorization: Bearer)
+    // Internal endpoints use custom headers (x-cron-secret)
+    // ========================================================
+
+    // Get auth header for user endpoints
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
@@ -669,8 +678,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // CRON: Send reminders with per-user timezone preferences, per-habit prefs, and idempotent delivery
+    // ========================================================
+    // INTERNAL ENDPOINT: /cron
+    // Protected by custom header to avoid Supabase Authorization interference
+    // ========================================================
     if (pathname.endsWith('/cron')) {
+      // Verify CRON secret using custom header (not Authorization)
+      const cronSecret = req.headers.get('x-cron-secret');
+      const expectedSecret = Deno.env.get('CRON_SECRET');
+      
+      if (!expectedSecret) {
+        console.error('CRON_SECRET not configured in Edge Function secrets');
+        return new Response(JSON.stringify({ 
+          error: 'CRON endpoint not configured. Set CRON_SECRET in Edge Function secrets.' 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (cronSecret !== expectedSecret) {
+        console.error('Invalid CRON secret provided');
+        return new Response(JSON.stringify({ 
+          error: 'Unauthorized: Invalid CRON secret' 
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       console.log('CRON: Send reminders job triggered');
       
       try {
@@ -681,6 +717,7 @@ Deno.serve(async (req) => {
         // This prevents loading subscriptions for users who have no habits or reminders
         // Note: Falls back gracefully if migration not yet applied
         let userIds: string[] = [];
+        let subscriptions: Array<{ user_id: string; endpoint: string; p256dh: string; auth: string }> = [];
         let useFallback = false;
         
         const { data: eligibleUserIds, error: usersError } = await supabase
@@ -700,37 +737,39 @@ Deno.serve(async (req) => {
           const eligibleUserIdsList = eligibleUserIds.map(u => u.user_id);
           console.log(`Found ${eligibleUserIdsList.length} users with active habits and reminders`);
 
-          const { data: subscriptions, error: subsError } = await supabase
+          const { data: subs, error: subsError } = await supabase
             .from('push_subscriptions')
             .select('user_id, endpoint, p256dh, auth')
             .in('user_id', eligibleUserIdsList);
 
           if (subsError) throw subsError;
 
-          if (!subscriptions || subscriptions.length === 0) {
+          if (!subs || subs.length === 0) {
             return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found for eligible users', count: 0 }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
           }
 
+          subscriptions = subs;
           userIds = [...new Set(subscriptions.map(s => s.user_id))];
         }
 
         if (useFallback) {
           // Fallback: get all subscriptions if the RPC fails (migration not applied yet)
           console.log('Using fallback method to get all subscriptions');
-          const { data: subscriptions, error: subsError } = await supabase
+          const { data: subs, error: subsError } = await supabase
             .from('push_subscriptions')
             .select('user_id, endpoint, p256dh, auth');
 
           if (subsError) throw subsError;
 
-          if (!subscriptions || subscriptions.length === 0) {
+          if (!subs || subs.length === 0) {
             return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found', count: 0 }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
           }
 
+          subscriptions = subs;
           userIds = [...new Set(subscriptions.map(s => s.user_id))];
         }
 
