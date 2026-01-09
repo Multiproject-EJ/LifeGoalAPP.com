@@ -1,12 +1,12 @@
 name: Send Habit Reminders
 
-on:
+on: 
   schedule:
     - cron:  '* * * * *'
   workflow_dispatch:
 
-jobs:
-  send-reminders:
+jobs: 
+  send-reminders: 
     name:  Trigger Reminder CRON
     runs-on: ubuntu-latest
     
@@ -15,10 +15,24 @@ jobs:
         run: |
           echo "Calling CRON endpoint..."
           
-          curl -v -X POST \
+          response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+            --max-time 30 \
+            --http1.1 \
+            -X POST \
             "https://muanayogiboxooftkyny.supabase.co/functions/v1/send-reminders/cron" \
-            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json"
+            -H "x-cron-secret: ${{ secrets. CRON_SECRET }}" \
+            -H "Content-Type:  application/json" \
+            -d '{}')
           
-          echo ""
-          echo "CRON call completed!"
+          http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d':' -f2)
+          body=$(echo "$response" | sed '/HTTP_CODE:/d')
+          
+          echo "Status Code: $http_code"
+          echo "Response Body: $body"
+          
+          if [ "$http_code" != "200" ]; then
+            echo "Error: Expected 200, got $http_code"
+            exit 1
+          fi
+          
+          echo "✅ CRON completed successfully!"
