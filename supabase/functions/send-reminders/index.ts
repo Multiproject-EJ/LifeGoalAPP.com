@@ -14,6 +14,9 @@ const corsHeaders = {
 const MAX_RETRIES = 2;
 const RETRY_DELAYS = [500, 2000]; // ms
 
+// Days of week configuration for habit reminders
+const ALL_DAYS_OF_WEEK = [0, 1, 2, 3, 4, 5, 6]; // Sunday through Saturday
+
 // Helper: Sleep for specified milliseconds
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -1136,7 +1139,7 @@ Deno.serve(async (req) => {
             .delete()
             .eq('habit_id', habit_id);
           
-          // Proceed with insert if delete succeeded (deleteError will be null if no rows existed)
+          // Proceed with insert if delete operation succeeded (deleteError is null for success)
           if (!deleteError) {
             // Insert new reminder with all days configured
             const { error: insertError } = await supabase
@@ -1144,7 +1147,7 @@ Deno.serve(async (req) => {
               .insert({
                 habit_id: habit_id,
                 local_time: currentPreferredTime,
-                days: [0, 1, 2, 3, 4, 5, 6] // all days
+                days: ALL_DAYS_OF_WEEK
               });
             
             if (insertError) {
