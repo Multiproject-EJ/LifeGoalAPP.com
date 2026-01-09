@@ -496,7 +496,7 @@ Deno.serve(async (req) => {
         }
 
         // Set up web push
-        const webpush = await import('https://esm.sh/web-push@3.6.6');
+        const webpush = await import('npm:web-push@3.6.7');
         const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
         const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
         
