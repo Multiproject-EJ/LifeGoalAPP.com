@@ -14,6 +14,9 @@ const corsHeaders = {
 const MAX_RETRIES = 2;
 const RETRY_DELAYS = [500, 2000]; // ms
 
+// Days of week configuration for habit reminders
+const ALL_DAYS_OF_WEEK = [0, 1, 2, 3, 4, 5, 6]; // Sunday through Saturday
+
 // Helper: Sleep for specified milliseconds
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -1109,6 +1112,54 @@ Deno.serve(async (req) => {
         .single();
 
       if (updateError) throw updateError;
+
+      // Manage habit_reminders table to enable CRON job to send notifications
+      // Only process if enabled or preferred_time was provided in the request
+      if (enabled !== undefined || preferred_time !== undefined) {
+        // Use the updated preference to determine current state
+        const currentEnabled = updatedPref.enabled;
+        const currentPreferredTime = updatedPref.preferred_time || '08:00:00';
+        
+        if (currentEnabled === false) {
+          // When disabled: Delete all habit_reminders entries for this habit
+          const { error: deleteError } = await supabase
+            .from('habit_reminders')
+            .delete()
+            .eq('habit_id', habit_id);
+          
+          if (deleteError) {
+            console.error('Failed to delete habit_reminders entry:', deleteError);
+            // Don't throw - this is a non-critical cleanup operation
+          }
+        } else if (currentEnabled === true) {
+          // When enabled: Create/update habit_reminders entry
+          // Delete existing reminders first
+          const { error: deleteError } = await supabase
+            .from('habit_reminders')
+            .delete()
+            .eq('habit_id', habit_id);
+          
+          // Proceed with insert if delete operation succeeded (deleteError is null for success)
+          if (!deleteError) {
+            // Insert new reminder with all days configured
+            const { error: insertError } = await supabase
+              .from('habit_reminders')
+              .insert({
+                habit_id: habit_id,
+                local_time: currentPreferredTime,
+                days: ALL_DAYS_OF_WEEK
+              });
+            
+            if (insertError) {
+              console.error('Failed to insert habit_reminders entry:', insertError);
+              // Don't throw - pref was saved successfully
+            }
+          } else {
+            console.error('Failed to delete existing habit_reminders, skipping insert:', deleteError);
+          }
+        }
+        // If currentEnabled is undefined/null, don't modify habit_reminders
+      }
 
       return new Response(JSON.stringify(updatedPref), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
