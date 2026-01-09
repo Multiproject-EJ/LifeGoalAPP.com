@@ -1111,12 +1111,13 @@ Deno.serve(async (req) => {
       if (updateError) throw updateError;
 
       // Manage habit_reminders table to enable CRON job to send notifications
+      // Only process if enabled or preferred_time was provided in the request
       if (enabled !== undefined || preferred_time !== undefined) {
-        // Determine if we should upsert or delete the reminder
-        const shouldDisableReminder = enabled === false;
-        const shouldUpsertReminder = enabled === true || (enabled === undefined && preferred_time !== undefined);
+        // Use the updated preference to determine current state
+        const currentEnabled = updatedPref.enabled;
+        const currentPreferredTime = updatedPref.preferred_time || '08:00:00';
         
-        if (shouldDisableReminder) {
+        if (currentEnabled === false) {
           // When disabled: Delete all habit_reminders entries for this habit
           const { error: deleteError } = await supabase
             .from('habit_reminders')
@@ -1127,59 +1128,35 @@ Deno.serve(async (req) => {
             console.error('Failed to delete habit_reminders entry:', deleteError);
             // Don't throw - this is a non-critical cleanup operation
           }
-        } else if (shouldUpsertReminder) {
-          // When enabled or updating preferred_time: Replace habit_reminders entry
-          // But only if reminders are currently enabled (check existing pref)
+        } else if (currentEnabled === true) {
+          // When enabled: Create/update habit_reminders entry
+          // Delete existing reminders first
+          const { error: deleteError } = await supabase
+            .from('habit_reminders')
+            .delete()
+            .eq('habit_id', habit_id);
           
-          // Determine the local_time to use
-          let localTime = updateData.preferred_time;
-          let isEnabled = enabled;
-          
-          // If we don't have enabled status or preferred_time from request, check existing pref
-          if (!localTime || isEnabled === undefined) {
-            const { data: existingPref } = await supabase
-              .from('habit_reminder_prefs')
-              .select('preferred_time, enabled')
-              .eq('habit_id', habit_id)
-              .maybeSingle();
-            
-            if (!localTime) {
-              localTime = existingPref?.preferred_time || '08:00:00';
-            }
-            if (isEnabled === undefined) {
-              isEnabled = existingPref?.enabled ?? true; // default to true if no pref exists
-            }
-          }
-          
-          // Only create/update reminder if enabled
-          if (isEnabled) {
-            // Delete existing reminders first
-            const { error: deleteError } = await supabase
+          // Only proceed with insert if delete succeeded or no rows existed
+          // PGRST116 = PostgREST error code for "no rows affected"
+          if (!deleteError || deleteError.code === 'PGRST116') {
+            // Insert new reminder with all days configured
+            const { error: insertError } = await supabase
               .from('habit_reminders')
-              .delete()
-              .eq('habit_id', habit_id);
+              .insert({
+                habit_id: habit_id,
+                local_time: currentPreferredTime,
+                days: [0, 1, 2, 3, 4, 5, 6] // all days
+              });
             
-            // Only proceed with insert if delete succeeded or no rows existed
-            // (deleteError would be null in both cases for Postgres)
-            if (!deleteError || deleteError.code === 'PGRST116') {
-              // Insert new reminder with all days configured
-              const { error: insertError } = await supabase
-                .from('habit_reminders')
-                .insert({
-                  habit_id: habit_id,
-                  local_time: localTime,
-                  days: [0, 1, 2, 3, 4, 5, 6] // all days
-                });
-              
-              if (insertError) {
-                console.error('Failed to insert habit_reminders entry:', insertError);
-                // Don't throw - pref was saved successfully
-              }
-            } else {
-              console.error('Failed to delete existing habit_reminders, skipping insert:', deleteError);
+            if (insertError) {
+              console.error('Failed to insert habit_reminders entry:', insertError);
+              // Don't throw - pref was saved successfully
             }
+          } else {
+            console.error('Failed to delete existing habit_reminders, skipping insert:', deleteError);
           }
         }
+        // If currentEnabled is undefined/null, don't modify habit_reminders
       }
 
       return new Response(JSON.stringify(updatedPref), {
