@@ -1136,9 +1136,8 @@ Deno.serve(async (req) => {
             .delete()
             .eq('habit_id', habit_id);
           
-          // Only proceed with insert if delete succeeded or no rows existed
-          // PGRST116 = PostgREST error code for "no rows affected"
-          if (!deleteError || deleteError.code === 'PGRST116') {
+          // Proceed with insert if delete succeeded (deleteError will be null if no rows existed)
+          if (!deleteError) {
             // Insert new reminder with all days configured
             const { error: insertError } = await supabase
               .from('habit_reminders')
