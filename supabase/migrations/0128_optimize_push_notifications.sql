@@ -1,6 +1,6 @@
 -- ========================================================
 -- PUSH NOTIFICATIONS OPTIMIZATION
--- Migration 0126: Indexes and functions for efficient reminder lookups
+-- Migration 0128: Indexes and functions for efficient reminder lookups
 -- Purpose: Scale push notifications from 0 to 1,000+ users
 -- ========================================================
 

@@ -385,7 +385,7 @@ export function PushNotificationTestPanel({ session }: Props) {
 
         <div className="push-test-panel__section">
           <h4>📱 Push Subscription Status</h4>
-          <p className="account-panel__hint">View your browser&apos;s push subscription status.</p>
+          <p className="account-panel__hint">View your browser's push subscription status.</p>
           <button
             type="button"
             className="btn btn--secondary"
@@ -497,7 +497,7 @@ export function PushNotificationTestPanel({ session }: Props) {
 
         <div className="push-test-panel__section">
           <h4>2. Push Subscription</h4>
-          <p className="account-panel__hint">Manage the browser&apos;s push subscription.</p>
+          <p className="account-panel__hint">Manage the browser's push subscription.</p>
           <div className="push-test-panel__actions">
             <button
               type="button"
