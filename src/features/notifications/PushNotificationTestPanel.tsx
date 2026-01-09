@@ -24,6 +24,26 @@ export function PushNotificationTestPanel({ session }: Props) {
   const [loading, setLoading] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState<PushSubscriptionJSON | null>(null);
   const [healthStatus, setHealthStatus] = useState<string | null>(null);
+  
+  // New diagnostic state
+  const [vapidStatus, setVapidStatus] = useState<{
+    configured: boolean;
+    message: string;
+  } | null>(null);
+  
+  const [reminderInfo, setReminderInfo] = useState<{
+    habitsWithReminders: number;
+    nextReminderTime?: string;
+  } | null>(null);
+  
+  const [userPrefs, setUserPrefs] = useState<{
+    timezone: string;
+    window_start: string;
+    window_end: string;
+    quiet_hours_start?: string;
+    quiet_hours_end?: string;
+    skip_weekends: boolean;
+  } | null>(null);
 
   const checkPushSupport = () => {
     const supported = isPushSupported();
@@ -121,6 +141,7 @@ export function PushNotificationTestPanel({ session }: Props) {
   const checkHealthEndpoint = async () => {
     setLoading(true);
     setHealthStatus(null);
+    setVapidStatus(null);
     try {
       if (!hasSupabaseCredentials()) {
         throw new Error('Supabase credentials not configured.');
@@ -136,11 +157,23 @@ export function PushNotificationTestPanel({ session }: Props) {
 
       if (data.ok) {
         setHealthStatus('✓ Edge Function is healthy');
+        setVapidStatus({
+          configured: data.vapid_configured || false,
+          message: data.message || 'VAPID keys configured'
+        });
       } else {
         setHealthStatus('✗ Edge Function responded but not healthy');
+        setVapidStatus({
+          configured: false,
+          message: data.message || 'VAPID keys not configured'
+        });
       }
     } catch (error) {
       setHealthStatus(`✗ ${error instanceof Error ? error.message : 'Health check failed'}`);
+      setVapidStatus({
+        configured: false,
+        message: error instanceof Error ? error.message : 'Health check failed'
+      });
     } finally {
       setLoading(false);
     }
@@ -180,6 +213,138 @@ export function PushNotificationTestPanel({ session }: Props) {
     }
   };
 
+  const checkReminderConfiguration = async () => {
+    setLoading(true);
+    setReminderInfo(null);
+    try {
+      if (!hasSupabaseCredentials()) {
+        throw new Error('Supabase credentials not configured.');
+      }
+
+      const supabaseUrl = getSupabaseUrl();
+      const accessToken = session.access_token;
+
+      if (!supabaseUrl || !accessToken) {
+        throw new Error('Missing Supabase URL or access token.');
+      }
+
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/send-reminders/habit-prefs`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch habit preferences: ${response.statusText}`);
+      }
+
+      const habits = await response.json();
+      const enabled = habits.filter((h: { enabled: boolean }) => h.enabled).length;
+      
+      setReminderInfo({
+        habitsWithReminders: enabled,
+        nextReminderTime: enabled > 0 ? 'Within reminder window' : undefined
+      });
+
+      setStatus({
+        kind: 'info',
+        message: `Found ${enabled} habit(s) with reminders enabled.`
+      });
+    } catch (error) {
+      setStatus({
+        kind: 'error',
+        message: error instanceof Error ? error.message : 'Failed to check reminder configuration.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUserPreferences = async () => {
+    setLoading(true);
+    setUserPrefs(null);
+    try {
+      if (!hasSupabaseCredentials()) {
+        throw new Error('Supabase credentials not configured.');
+      }
+
+      const supabaseUrl = getSupabaseUrl();
+      const accessToken = session.access_token;
+
+      if (!supabaseUrl || !accessToken) {
+        throw new Error('Missing Supabase URL or access token.');
+      }
+
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/send-reminders/prefs`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user preferences: ${response.statusText}`);
+      }
+
+      const prefs = await response.json();
+      setUserPrefs(prefs);
+
+      setStatus({
+        kind: 'info',
+        message: 'User preferences loaded successfully.'
+      });
+    } catch (error) {
+      setStatus({
+        kind: 'error',
+        message: error instanceof Error ? error.message : 'Failed to load user preferences.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerCronManually = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      if (!hasSupabaseCredentials()) {
+        throw new Error('Supabase credentials not configured.');
+      }
+
+      const supabaseUrl = getSupabaseUrl();
+      const accessToken = session.access_token;
+
+      if (!supabaseUrl || !accessToken) {
+        throw new Error('Missing Supabase URL or access token.');
+      }
+
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/send-reminders/cron`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to trigger CRON: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setStatus({
+        kind: 'success',
+        message: `CRON executed: ${result.message || 'Check completed'}. Sent: ${result.sent || 0}, Failed: ${result.failed || 0}`
+      });
+    } catch (error) {
+      setStatus({
+        kind: 'error',
+        message: error instanceof Error ? error.message : 'Failed to trigger CRON'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="account-panel__card" aria-labelledby="push-test-panel">
       <p className="account-panel__eyebrow">Developer tools</p>
@@ -199,6 +364,125 @@ export function PushNotificationTestPanel({ session }: Props) {
         )}
 
         <div className="push-test-panel__section">
+          <h4>⚙️ System Configuration</h4>
+          <p className="account-panel__hint">Check VAPID keys and Edge Function configuration.</p>
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={checkHealthEndpoint}
+            disabled={loading}
+          >
+            {loading ? 'Checking...' : 'Check Configuration'}
+          </button>
+          {vapidStatus && (
+            <div className={`push-test-panel__status-box ${vapidStatus.configured ? 'push-test-panel__status-box--success' : 'push-test-panel__status-box--error'}`}>
+              <p>
+                <strong>{vapidStatus.configured ? '✅' : '❌'} VAPID Keys:</strong> {vapidStatus.message}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="push-test-panel__section">
+          <h4>📱 Push Subscription Status</h4>
+          <p className="account-panel__hint">View your browser's push subscription status.</p>
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={checkExistingSubscription}
+            disabled={loading}
+          >
+            {loading ? 'Checking...' : 'Check Subscription'}
+          </button>
+          {subscriptionInfo && (
+            <div className="push-test-panel__status-box push-test-panel__status-box--success">
+              <p><strong>✅ Subscribed</strong></p>
+              <p className="account-panel__hint" style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                Endpoint: {subscriptionInfo.endpoint?.substring(0, 50)}...
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="push-test-panel__section">
+          <h4>⏰ Reminder Configuration</h4>
+          <p className="account-panel__hint">View your habit reminders and preferences.</p>
+          <div className="push-test-panel__actions">
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={checkReminderConfiguration}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Check Reminders'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={loadUserPreferences}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'View Preferences'}
+            </button>
+          </div>
+          {reminderInfo && (
+            <div className="push-test-panel__status-box push-test-panel__status-box--info">
+              <p><strong>Habits with reminders:</strong> {reminderInfo.habitsWithReminders}</p>
+              {reminderInfo.nextReminderTime && (
+                <p><strong>Status:</strong> {reminderInfo.nextReminderTime}</p>
+              )}
+            </div>
+          )}
+          {userPrefs && (
+            <div className="push-test-panel__prefs-display">
+              <dl className="account-panel__details" style={{ marginTop: '1rem' }}>
+                <div>
+                  <dt>Timezone</dt>
+                  <dd>{userPrefs.timezone}</dd>
+                </div>
+                <div>
+                  <dt>Reminder Window</dt>
+                  <dd>{userPrefs.window_start} - {userPrefs.window_end}</dd>
+                </div>
+                {userPrefs.quiet_hours_start && (
+                  <div>
+                    <dt>Quiet Hours</dt>
+                    <dd>{userPrefs.quiet_hours_start} - {userPrefs.quiet_hours_end}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>Skip Weekends</dt>
+                  <dd>{userPrefs.skip_weekends ? 'Yes' : 'No'}</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+        </div>
+
+        <div className="push-test-panel__section">
+          <h4>🧪 Manual Testing</h4>
+          <p className="account-panel__hint">Manually trigger notifications and CRON jobs.</p>
+          <div className="push-test-panel__actions">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={sendTestNotification}
+              disabled={loading}
+            >
+              {loading ? 'Sending...' : 'Send Test Notification'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={triggerCronManually}
+              disabled={loading}
+            >
+              {loading ? 'Triggering...' : 'Trigger CRON Now'}
+            </button>
+          </div>
+        </div>
+
+        <div className="push-test-panel__section">
           <h4>1. Browser Support</h4>
           <p className="account-panel__hint">Check if this browser supports push notifications.</p>
           <button
@@ -213,7 +497,7 @@ export function PushNotificationTestPanel({ session }: Props) {
 
         <div className="push-test-panel__section">
           <h4>2. Push Subscription</h4>
-          <p className="account-panel__hint">Manage the browser&apos;s push subscription.</p>
+          <p className="account-panel__hint">Manage the browser's push subscription.</p>
           <div className="push-test-panel__actions">
             <button
               type="button"

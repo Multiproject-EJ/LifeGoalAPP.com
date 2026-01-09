@@ -187,7 +187,18 @@ Deno.serve(async (req) => {
   try {
     // Health check
     if (pathname.endsWith('/health') && req.method === 'GET') {
-      return new Response(JSON.stringify({ ok: true }), {
+      const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+      const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+      
+      const healthy = !!(vapidPublicKey && vapidPrivateKey);
+      
+      return new Response(JSON.stringify({ 
+        ok: healthy,
+        vapid_configured: healthy,
+        message: healthy 
+          ? 'Edge Function is healthy and ready to send notifications' 
+          : 'VAPID keys not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY in Edge Function secrets.'
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -666,20 +677,62 @@ Deno.serve(async (req) => {
         const now = new Date();
         console.log('Server time (UTC):', now.toISOString());
 
-        // Get all users with push subscriptions
-        const { data: subscriptions, error: subsError } = await supabase
-          .from('push_subscriptions')
-          .select('user_id, endpoint, p256dh, auth');
+        // OPTIMIZATION: First get users who have active habits with reminders configured
+        // This prevents loading subscriptions for users who have no habits or reminders
+        // Note: Falls back gracefully if migration not yet applied
+        let userIds: string[] = [];
+        let useFallback = false;
+        
+        const { data: eligibleUserIds, error: usersError } = await supabase
+          .rpc('get_users_with_active_reminders');
 
-        if (subsError) throw subsError;
-
-        if (!subscriptions || subscriptions.length === 0) {
-          return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found', count: 0 }), {
+        if (usersError) {
+          // RPC doesn't exist yet, fall back to old method
+          console.warn('get_users_with_active_reminders RPC not available, using all subscriptions');
+          useFallback = true;
+        } else if (!eligibleUserIds || eligibleUserIds.length === 0) {
+          // No users with active reminders
+          return new Response(JSON.stringify({ success: true, message: 'No users with active habits and reminders', count: 0 }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
+        } else {
+          // OPTIMIZED PATH: Only load subscriptions for users with active reminders
+          const eligibleUserIdsList = eligibleUserIds.map(u => u.user_id);
+          console.log(`Found ${eligibleUserIdsList.length} users with active habits and reminders`);
+
+          const { data: subscriptions, error: subsError } = await supabase
+            .from('push_subscriptions')
+            .select('user_id, endpoint, p256dh, auth')
+            .in('user_id', eligibleUserIdsList);
+
+          if (subsError) throw subsError;
+
+          if (!subscriptions || subscriptions.length === 0) {
+            return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found for eligible users', count: 0 }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          userIds = [...new Set(subscriptions.map(s => s.user_id))];
         }
 
-        const userIds = [...new Set(subscriptions.map(s => s.user_id))];
+        if (useFallback) {
+          // Fallback: get all subscriptions if the RPC fails (migration not applied yet)
+          console.log('Using fallback method to get all subscriptions');
+          const { data: subscriptions, error: subsError } = await supabase
+            .from('push_subscriptions')
+            .select('user_id, endpoint, p256dh, auth');
+
+          if (subsError) throw subsError;
+
+          if (!subscriptions || subscriptions.length === 0) {
+            return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found', count: 0 }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          userIds = [...new Set(subscriptions.map(s => s.user_id))];
+        }
 
         // Get user reminder preferences
         const { data: allPrefs, error: prefsError } = await supabase
@@ -1050,6 +1103,13 @@ Deno.serve(async (req) => {
         });
       }
     }
+
+    // ========================================================
+    // TODO: Implement batch processing for 1,000+ users
+    // When user count exceeds 1,000, process users in batches of 100 using
+    // cursor-based pagination to prevent timeouts.
+    // See docs/PUSH_NOTIFICATIONS_SCALING_GUIDE.md for implementation details.
+    // ========================================================
 
     // GET /analytics/summary - Get aggregated reminder analytics
     if (pathname.endsWith('/analytics/summary') && req.method === 'GET') {
