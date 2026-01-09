@@ -54,7 +54,31 @@ supabase secrets set VAPID_PUBLIC_KEY=your_public_key_here
 supabase secrets set VAPID_PRIVATE_KEY=your_private_key_here
 ```
 
-### 3. Database Migration
+### 3. Set CRON Secret
+
+The CRON endpoint uses a custom header to avoid Supabase Authorization conflicts.
+
+**Generate CRON Secret:**
+```bash
+# Generate a strong random secret
+openssl rand -hex 32
+```
+
+**Set in Supabase:**
+```bash
+supabase secrets set CRON_SECRET="your_generated_secret_here"
+```
+
+Or via Supabase Dashboard:
+1. Go to Edge Functions → send-reminders → Secrets
+2. Click "Add another"
+3. Name: `CRON_SECRET`
+4. Value: (paste your generated secret)
+5. Click "Save"
+
+**Important:** Keep this secret secure! Anyone with this secret can trigger reminders.
+
+### 4. Database Migration
 
 Ensure the `push_subscriptions` table exists in your Supabase project:
 
@@ -116,6 +140,8 @@ supabase secrets set VAPID_PRIVATE_KEY="your_private_key"
 
 #### Step 3: Configure CRON Job in Supabase
 
+**Important:** The CRON endpoint now uses a custom `x-cron-secret` header instead of Authorization to avoid Supabase header conflicts.
+
 **Option A: Supabase Dashboard (Recommended)**
 
 1. Go to **Edge Functions** → **send-reminders** in your Supabase dashboard
@@ -125,7 +151,7 @@ supabase secrets set VAPID_PRIVATE_KEY="your_private_key"
    - **Schedule:** `* * * * *` (every minute)
    - **Path:** `/cron`
    - **Method:** POST
-   - **Headers:** (optional) Add `Authorization: Bearer <service_role_key>` if required
+   - **Headers:** Add `x-cron-secret: YOUR_CRON_SECRET` (from Step 3 above)
 5. Save the configuration
 
 **Option B: Using pg_cron (Advanced)**
@@ -140,7 +166,7 @@ SELECT cron.schedule(
   SELECT net.http_post(
     url := 'YOUR_SUPABASE_URL/functions/v1/send-reminders/cron',
     headers := jsonb_build_object(
-      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY',
+      'x-cron-secret', 'YOUR_CRON_SECRET',
       'Content-Type', 'application/json'
     )
   );
@@ -150,7 +176,7 @@ SELECT cron.schedule(
 
 Replace:
 - `YOUR_SUPABASE_URL` with your project URL
-- `YOUR_SERVICE_ROLE_KEY` with your service role key (found in Project Settings → API)
+- `YOUR_CRON_SECRET` with the secret you generated in Step 3
 
 **Option C: External CRON Service**
 
@@ -167,7 +193,7 @@ https://YOUR_SUPABASE_URL/functions/v1/send-reminders/cron
 
 With header:
 ```
-Authorization: Bearer YOUR_SERVICE_ROLE_KEY
+x-cron-secret: YOUR_CRON_SECRET
 ```
 
 #### Step 4: Test CRON Configuration
