@@ -9534,6 +9534,54 @@ body {
   color: #991b1b;
 }
 
+/* Diagnostic Status Boxes */
+.push-test-panel__status-box {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 0.75rem;
+  border: 1px solid;
+}
+
+.push-test-panel__status-box--success {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.push-test-panel__status-box--error {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.push-test-panel__status-box--info {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.push-test-panel__status-box p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.push-test-panel__status-box p:first-child {
+  margin-top: 0;
+}
+
+.push-test-panel__status-box p:last-child {
+  margin-bottom: 0;
+}
+
+/* Preferences Display */
+.push-test-panel__prefs-display {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
 /* Per-Habit Reminder Preferences Styles */
 .per-habit-prefs__list {
   list-style: none;
