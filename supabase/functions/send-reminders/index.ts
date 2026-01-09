@@ -1110,6 +1110,75 @@ Deno.serve(async (req) => {
 
       if (updateError) throw updateError;
 
+      // Manage habit_reminders table to enable CRON job to send notifications
+      if (enabled !== undefined || preferred_time !== undefined) {
+        if (enabled === false) {
+          // When disabled: Delete habit_reminders entry
+          const { error: deleteError } = await supabase
+            .from('habit_reminders')
+            .delete()
+            .eq('habit_id', habit_id);
+          
+          if (deleteError) {
+            console.error('Failed to delete habit_reminders entry:', deleteError);
+            // Don't throw - this is a non-critical cleanup operation
+          }
+        } else if (enabled === true || (enabled === undefined && preferred_time !== undefined)) {
+          // When enabled or updating preferred_time: Upsert habit_reminders
+          // Determine the local_time to use
+          let localTime = updateData.preferred_time;
+          
+          // If preferred_time not provided in this request, check existing pref or use default
+          if (!localTime) {
+            // Get existing pref to check if it has a preferred_time
+            const { data: existingPref } = await supabase
+              .from('habit_reminder_prefs')
+              .select('preferred_time')
+              .eq('habit_id', habit_id)
+              .maybeSingle();
+            
+            localTime = existingPref?.preferred_time || '08:00:00';
+          }
+          
+          // Check if entry exists
+          const { data: existingReminder } = await supabase
+            .from('habit_reminders')
+            .select('id')
+            .eq('habit_id', habit_id)
+            .maybeSingle();
+          
+          if (existingReminder) {
+            // Update existing entry
+            const { error: updateReminderError } = await supabase
+              .from('habit_reminders')
+              .update({
+                local_time: localTime,
+                days: [0, 1, 2, 3, 4, 5, 6] // all days
+              })
+              .eq('habit_id', habit_id);
+            
+            if (updateReminderError) {
+              console.error('Failed to update habit_reminders entry:', updateReminderError);
+              // Don't throw - pref was saved successfully
+            }
+          } else {
+            // Insert new entry
+            const { error: insertError } = await supabase
+              .from('habit_reminders')
+              .insert({
+                habit_id: habit_id,
+                local_time: localTime,
+                days: [0, 1, 2, 3, 4, 5, 6] // all days
+              });
+            
+            if (insertError) {
+              console.error('Failed to insert habit_reminders entry:', insertError);
+              // Don't throw - pref was saved successfully
+            }
+          }
+        }
+      }
+
       return new Response(JSON.stringify(updatedPref), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
