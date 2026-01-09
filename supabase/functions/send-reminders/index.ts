@@ -206,6 +206,479 @@ Deno.serve(async (req) => {
       });
     }
 
+
+    // ========================================================
+    // INTERNAL ENDPOINT: /cron
+    // Protected by custom header to avoid Supabase Authorization interference
+    // MUST come BEFORE auth check to avoid requiring Authorization header
+    // ========================================================
+    if (pathname.endsWith('/cron')) {
+      // Verify CRON secret using custom header (not Authorization)
+      const cronSecret = req.headers.get('x-cron-secret');
+      const expectedSecret = Deno.env.get('CRON_SECRET');
+      
+      if (!expectedSecret) {
+        console.error('CRON_SECRET not configured in Edge Function secrets');
+        return new Response(JSON.stringify({ 
+          error: 'CRON endpoint not configured. Set CRON_SECRET in Edge Function secrets.' 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (cronSecret !== expectedSecret) {
+        console.error('Invalid CRON secret provided');
+        return new Response(JSON.stringify({ 
+          error: 'Unauthorized: Invalid CRON secret' 
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log('CRON: Send reminders job triggered');
+      
+      // Create Supabase client for CRON operations (using service role key, no user auth)
+      const cronSupabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const cronSupabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')!;
+      const supabase = createClient(cronSupabaseUrl, cronSupabaseKey);
+      
+      try {
+        const now = new Date();
+        console.log('Server time (UTC):', now.toISOString());
+
+        // OPTIMIZATION: First get users who have active habits with reminders configured
+        // This prevents loading subscriptions for users who have no habits or reminders
+        // Note: Falls back gracefully if migration not yet applied
+        let userIds: string[] = [];
+        let subscriptions: Array<{ user_id: string; endpoint: string; p256dh: string; auth: string }> = [];
+        let useFallback = false;
+        
+        const { data: eligibleUserIds, error: usersError } = await supabase
+          .rpc('get_users_with_active_reminders');
+
+        if (usersError) {
+          // RPC doesn't exist yet, fall back to old method
+          console.warn('get_users_with_active_reminders RPC not available, using all subscriptions');
+          useFallback = true;
+        } else if (!eligibleUserIds || eligibleUserIds.length === 0) {
+          // No users with active reminders
+          return new Response(JSON.stringify({ success: true, message: 'No users with active habits and reminders', count: 0 }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } else {
+          // OPTIMIZED PATH: Only load subscriptions for users with active reminders
+          const eligibleUserIdsList = eligibleUserIds.map(u => u.user_id);
+          console.log(`Found ${eligibleUserIdsList.length} users with active habits and reminders`);
+
+          const { data: subs, error: subsError } = await supabase
+            .from('push_subscriptions')
+            .select('user_id, endpoint, p256dh, auth')
+            .in('user_id', eligibleUserIdsList);
+
+          if (subsError) throw subsError;
+
+          if (!subs || subs.length === 0) {
+            return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found for eligible users', count: 0 }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          subscriptions = subs;
+          userIds = [...new Set(subscriptions.map(s => s.user_id))];
+        }
+
+        if (useFallback) {
+          // Fallback: get all subscriptions if the RPC fails (migration not applied yet)
+          console.log('Using fallback method to get all subscriptions');
+          const { data: subs, error: subsError } = await supabase
+            .from('push_subscriptions')
+            .select('user_id, endpoint, p256dh, auth');
+
+          if (subsError) throw subsError;
+
+          if (!subs || subs.length === 0) {
+            return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found', count: 0 }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          subscriptions = subs;
+          userIds = [...new Set(subscriptions.map(s => s.user_id))];
+        }
+
+        // Get user reminder preferences
+        const { data: allPrefs, error: prefsError } = await supabase
+          .from('user_reminder_prefs')
+          .select('*')
+          .in('user_id', userIds);
+
+        if (prefsError) throw prefsError;
+
+        // Build prefs map with defaults
+        const prefsMap: Record<string, { 
+          timezone: string; 
+          window_start: string; 
+          window_end: string;
+          quiet_hours_start: string | null;
+          quiet_hours_end: string | null;
+          skip_weekends: boolean;
+        }> = {};
+        for (const userId of userIds) {
+          const userPrefs = allPrefs?.find(p => p.user_id === userId);
+          prefsMap[userId] = {
+            timezone: userPrefs?.timezone || 'UTC',
+            window_start: userPrefs?.window_start || '08:00:00',
+            window_end: userPrefs?.window_end || '10:00:00',
+            quiet_hours_start: userPrefs?.quiet_hours_start || null,
+            quiet_hours_end: userPrefs?.quiet_hours_end || null,
+            skip_weekends: userPrefs?.skip_weekends ?? false,
+          };
+        }
+
+        // Filter users whose current local time is within their reminder window
+        // and not in quiet hours, and not on weekend if skip_weekends is enabled
+        const eligibleUsers: string[] = [];
+        const userLocalTime: Record<string, { hours: number; minutes: number; dayOfWeek: number }> = {};
+        for (const userId of userIds) {
+          const prefs = prefsMap[userId];
+          const localTime = getLocalTimeInTimezone(prefs.timezone);
+          userLocalTime[userId] = localTime;
+          
+          // Check if weekend skip is enabled and it's a weekend
+          if (prefs.skip_weekends && isWeekend(localTime.dayOfWeek)) {
+            console.log(`User ${userId} skipped: skip_weekends enabled and day is ${localTime.dayOfWeek}`);
+            continue;
+          }
+          
+          // Check if within reminder window
+          if (!isTimeInWindow(localTime.hours, localTime.minutes, prefs.window_start, prefs.window_end)) {
+            continue;
+          }
+          
+          // Check if within quiet hours
+          if (isWithinQuietHours(localTime.hours, localTime.minutes, prefs.quiet_hours_start, prefs.quiet_hours_end)) {
+            console.log(`User ${userId} skipped: within quiet hours ${prefs.quiet_hours_start}-${prefs.quiet_hours_end}`);
+            continue;
+          }
+          
+          eligibleUsers.push(userId);
+          console.log(`User ${userId} eligible: ${localTime.hours}:${localTime.minutes} in ${prefs.timezone} within ${prefs.window_start}-${prefs.window_end}`);
+        }
+
+        if (eligibleUsers.length === 0) {
+          return new Response(JSON.stringify({ success: true, message: 'No users in reminder window', count: 0 }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Get habits with reminders for eligible users
+        const { data: habits, error: habitsError } = await supabase
+          .from('habits_v2')
+          .select(`
+            id,
+            user_id,
+            title,
+            emoji,
+            archived,
+            habit_reminders (
+              id,
+              local_time,
+              days
+            )
+          `)
+          .in('user_id', eligibleUsers)
+          .eq('archived', false);
+
+        if (habitsError) throw habitsError;
+
+        if (!habits || habits.length === 0) {
+          return new Response(JSON.stringify({ success: true, message: 'No habits found for eligible users', count: 0 }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Get reminder state for idempotency check
+        const habitIds = habits.map(h => h.id);
+        const { data: reminderStates, error: statesError } = await supabase
+          .from('habit_reminder_state')
+          .select('*')
+          .in('habit_id', habitIds);
+
+        if (statesError) throw statesError;
+
+        const stateMap: Record<string, { last_reminder_sent_at: string | null; snooze_until: string | null }> = {};
+        for (const state of (reminderStates || [])) {
+          stateMap[state.habit_id] = {
+            last_reminder_sent_at: state.last_reminder_sent_at,
+            snooze_until: state.snooze_until,
+          };
+        }
+
+        // Get per-habit reminder preferences
+        const { data: habitPrefs, error: habitPrefsError } = await supabase
+          .from('habit_reminder_prefs')
+          .select('*')
+          .in('habit_id', habitIds);
+
+        if (habitPrefsError) throw habitPrefsError;
+
+        const habitPrefsMap: Record<string, { enabled: boolean; preferred_time: string | null }> = {};
+        for (const pref of (habitPrefs || [])) {
+          habitPrefsMap[pref.habit_id] = {
+            enabled: pref.enabled,
+            preferred_time: pref.preferred_time,
+          };
+        }
+
+        // Determine which habits need reminders
+        const habitsToRemind: Array<{
+          habit: typeof habits[0];
+          userId: string;
+        }> = [];
+
+        for (const habit of habits) {
+          const userId = habit.user_id;
+          const prefs = prefsMap[userId];
+          const state = stateMap[habit.id];
+          const habitPref = habitPrefsMap[habit.id];
+          const localTime = userLocalTime[userId];
+
+          // Check per-habit enabled flag (default to true if not set)
+          if (habitPref && habitPref.enabled === false) {
+            console.log(`Skipping habit ${habit.id}: reminders disabled for this habit`);
+            continue;
+          }
+
+          // Check preferred_time if set - only send if current time >= preferred_time
+          if (habitPref?.preferred_time) {
+            if (!isAtOrAfterPreferredTime(localTime.hours, localTime.minutes, habitPref.preferred_time)) {
+              console.log(`Skipping habit ${habit.id}: preferred time ${habitPref.preferred_time} not reached yet`);
+              continue;
+            }
+          }
+
+          // Check if habit has reminders configured and has valid days
+          const reminders = habit.habit_reminders || [];
+          
+          // Skip habits with no reminders configured
+          if (reminders.length === 0) continue;
+          
+          const hasValidReminder = reminders.some(r => {
+            if (!r.days || r.days.length === 0) return true;
+            return r.days.includes(localTime.dayOfWeek);
+          });
+
+          if (!hasValidReminder) continue;
+
+          // Check idempotency - skip if already sent today
+          if (state && wasReminderSentToday(state.last_reminder_sent_at, prefs.timezone)) {
+            console.log(`Skipping habit ${habit.id}: already reminded today`);
+            continue;
+          }
+
+          // Check snooze
+          if (state?.snooze_until && new Date(state.snooze_until) > now) {
+            console.log(`Skipping habit ${habit.id}: snoozed until ${state.snooze_until}`);
+            continue;
+          }
+
+          habitsToRemind.push({ habit, userId });
+        }
+
+        console.log(`Found ${habitsToRemind.length} habits to remind`);
+
+        if (habitsToRemind.length === 0) {
+          return new Response(JSON.stringify({ success: true, message: 'No reminders due', count: 0 }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Set up web push
+        const webpush = await import('https://esm.sh/web-push@3.6.6');
+        const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+        const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+        
+        if (!vapidPublicKey || !vapidPrivateKey) {
+          console.warn('VAPID keys not configured, skipping push notifications');
+          return new Response(JSON.stringify({ 
+            success: true, 
+            message: 'Reminders found but VAPID not configured', 
+            count: habitsToRemind.length 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        webpush.setVapidDetails(
+          'mailto:support@lifegoalapp.com',
+          vapidPublicKey,
+          vapidPrivateKey
+        );
+
+        // Helper function to send notification with retry
+        async function sendNotificationWithRetry(
+          pushSubscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+          payload: string,
+          userId: string,
+          habitId: string
+        ): Promise<{ success: boolean; shouldDelete: boolean }> {
+          let lastError: Error | null = null;
+          
+          for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+              await webpush.sendNotification(pushSubscription, payload);
+              return { success: true, shouldDelete: false };
+            } catch (error) {
+              lastError = error;
+              console.error(`Notification attempt ${attempt + 1} failed:`, error.message || error);
+              
+              // Check for permanent failures (410 Gone, 404 Not Found)
+              if (error.statusCode === 410 || error.statusCode === 404) {
+                return { success: false, shouldDelete: true };
+              }
+              
+              // If we have retries left, wait before next attempt
+              if (attempt < MAX_RETRIES) {
+                await sleep(RETRY_DELAYS[attempt]);
+              }
+            }
+          }
+          
+          // All retries exhausted - log to dead-letter queue
+          console.error(`All ${MAX_RETRIES + 1} attempts failed for endpoint ${pushSubscription.endpoint}`);
+          const { error: dlError } = await supabase
+            .from('reminder_delivery_failures')
+            .insert({
+              user_id: userId,
+              habit_id: habitId,
+              endpoint: pushSubscription.endpoint,
+              error: lastError?.message || 'Unknown error',
+              retry_count: MAX_RETRIES + 1,
+            });
+          
+          if (dlError) {
+            console.error('Failed to log to dead-letter queue:', dlError);
+          }
+          
+          return { success: false, shouldDelete: false };
+        }
+
+        // Send notifications and update state
+        let sentCount = 0;
+        let failedCount = 0;
+        const habitIdsToUpdate: string[] = [];
+
+        for (const { habit, userId } of habitsToRemind) {
+          const userSubs = subscriptions.filter(s => s.user_id === userId);
+          
+          const title = `Time for: ${habit.emoji || '📋'} ${habit.title}`;
+          
+          interface NotificationPayload {
+            title: string;
+            body: string;
+            icon: string;
+            badge: string;
+            tag: string;
+            data: {
+              habit_id: string;
+              habit_title: string;
+              url: string;
+            };
+            actions: Array<{ action: string; title: string }>;
+          }
+          
+          const notificationPayload: NotificationPayload = {
+            title,
+            body: 'Mark it complete in LifeGoal App',
+            icon: '/icons/icon-192x192.svg',
+            badge: '/icons/icon-192x192.svg',
+            tag: `habit-${habit.id}`,
+            data: {
+              habit_id: habit.id,
+              habit_title: habit.title,
+              url: '/#habits',
+            },
+            actions: [
+              { action: 'done', title: 'Done' },
+              { action: 'snooze', title: 'Snooze' },
+            ],
+          };
+          
+          const payload = JSON.stringify(notificationPayload);
+          let sentForHabit = false;
+
+          for (const sub of userSubs) {
+            const pushSubscription = {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: sub.p256dh,
+                auth: sub.auth,
+              },
+            };
+
+            const result = await sendNotificationWithRetry(pushSubscription, payload, userId, habit.id);
+            
+            if (result.success) {
+              sentCount++;
+              sentForHabit = true;
+            } else {
+              failedCount++;
+              if (result.shouldDelete) {
+                // Remove invalid subscription
+                await supabase
+                  .from('push_subscriptions')
+                  .delete()
+                  .eq('endpoint', sub.endpoint);
+              }
+            }
+          }
+
+          // Mark habit as reminded if at least one notification was sent
+          if (sentForHabit) {
+            habitIdsToUpdate.push(habit.id);
+          }
+        }
+
+        // Update reminder state for sent habits (idempotency)
+        if (habitIdsToUpdate.length > 0) {
+          const stateUpdates = habitIdsToUpdate.map(habitId => ({
+            habit_id: habitId,
+            last_reminder_sent_at: now.toISOString(),
+          }));
+
+          const { error: updateStateError } = await supabase
+            .from('habit_reminder_state')
+            .upsert(stateUpdates, { onConflict: 'habit_id' });
+
+          if (updateStateError) {
+            console.error('Failed to update reminder state:', updateStateError);
+          }
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: `Sent ${sentCount} notifications (${failedCount} failed)`, 
+          habits: habitsToRemind.length,
+          sent: sentCount,
+          failed: failedCount
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error('Error in CRON job:', error);
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: error.message 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+
     // ========================================================
     // AUTHENTICATION: Required for all endpoints below
     // User endpoints use JWT (Authorization: Bearer)
@@ -676,471 +1149,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(logs || []), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    }
-
-    // ========================================================
-    // INTERNAL ENDPOINT: /cron
-    // Protected by custom header to avoid Supabase Authorization interference
-    // ========================================================
-    if (pathname.endsWith('/cron')) {
-      // Verify CRON secret using custom header (not Authorization)
-      const cronSecret = req.headers.get('x-cron-secret');
-      const expectedSecret = Deno.env.get('CRON_SECRET');
-      
-      if (!expectedSecret) {
-        console.error('CRON_SECRET not configured in Edge Function secrets');
-        return new Response(JSON.stringify({ 
-          error: 'CRON endpoint not configured. Set CRON_SECRET in Edge Function secrets.' 
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      if (cronSecret !== expectedSecret) {
-        console.error('Invalid CRON secret provided');
-        return new Response(JSON.stringify({ 
-          error: 'Unauthorized: Invalid CRON secret' 
-        }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      console.log('CRON: Send reminders job triggered');
-      
-      try {
-        const now = new Date();
-        console.log('Server time (UTC):', now.toISOString());
-
-        // OPTIMIZATION: First get users who have active habits with reminders configured
-        // This prevents loading subscriptions for users who have no habits or reminders
-        // Note: Falls back gracefully if migration not yet applied
-        let userIds: string[] = [];
-        let subscriptions: Array<{ user_id: string; endpoint: string; p256dh: string; auth: string }> = [];
-        let useFallback = false;
-        
-        const { data: eligibleUserIds, error: usersError } = await supabase
-          .rpc('get_users_with_active_reminders');
-
-        if (usersError) {
-          // RPC doesn't exist yet, fall back to old method
-          console.warn('get_users_with_active_reminders RPC not available, using all subscriptions');
-          useFallback = true;
-        } else if (!eligibleUserIds || eligibleUserIds.length === 0) {
-          // No users with active reminders
-          return new Response(JSON.stringify({ success: true, message: 'No users with active habits and reminders', count: 0 }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        } else {
-          // OPTIMIZED PATH: Only load subscriptions for users with active reminders
-          const eligibleUserIdsList = eligibleUserIds.map(u => u.user_id);
-          console.log(`Found ${eligibleUserIdsList.length} users with active habits and reminders`);
-
-          const { data: subs, error: subsError } = await supabase
-            .from('push_subscriptions')
-            .select('user_id, endpoint, p256dh, auth')
-            .in('user_id', eligibleUserIdsList);
-
-          if (subsError) throw subsError;
-
-          if (!subs || subs.length === 0) {
-            return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found for eligible users', count: 0 }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-
-          subscriptions = subs;
-          userIds = [...new Set(subscriptions.map(s => s.user_id))];
-        }
-
-        if (useFallback) {
-          // Fallback: get all subscriptions if the RPC fails (migration not applied yet)
-          console.log('Using fallback method to get all subscriptions');
-          const { data: subs, error: subsError } = await supabase
-            .from('push_subscriptions')
-            .select('user_id, endpoint, p256dh, auth');
-
-          if (subsError) throw subsError;
-
-          if (!subs || subs.length === 0) {
-            return new Response(JSON.stringify({ success: true, message: 'No push subscriptions found', count: 0 }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-
-          subscriptions = subs;
-          userIds = [...new Set(subscriptions.map(s => s.user_id))];
-        }
-
-        // Get user reminder preferences
-        const { data: allPrefs, error: prefsError } = await supabase
-          .from('user_reminder_prefs')
-          .select('*')
-          .in('user_id', userIds);
-
-        if (prefsError) throw prefsError;
-
-        // Build prefs map with defaults
-        const prefsMap: Record<string, { 
-          timezone: string; 
-          window_start: string; 
-          window_end: string;
-          quiet_hours_start: string | null;
-          quiet_hours_end: string | null;
-          skip_weekends: boolean;
-        }> = {};
-        for (const userId of userIds) {
-          const userPrefs = allPrefs?.find(p => p.user_id === userId);
-          prefsMap[userId] = {
-            timezone: userPrefs?.timezone || 'UTC',
-            window_start: userPrefs?.window_start || '08:00:00',
-            window_end: userPrefs?.window_end || '10:00:00',
-            quiet_hours_start: userPrefs?.quiet_hours_start || null,
-            quiet_hours_end: userPrefs?.quiet_hours_end || null,
-            skip_weekends: userPrefs?.skip_weekends ?? false,
-          };
-        }
-
-        // Filter users whose current local time is within their reminder window
-        // and not in quiet hours, and not on weekend if skip_weekends is enabled
-        const eligibleUsers: string[] = [];
-        const userLocalTime: Record<string, { hours: number; minutes: number; dayOfWeek: number }> = {};
-        for (const userId of userIds) {
-          const prefs = prefsMap[userId];
-          const localTime = getLocalTimeInTimezone(prefs.timezone);
-          userLocalTime[userId] = localTime;
-          
-          // Check if weekend skip is enabled and it's a weekend
-          if (prefs.skip_weekends && isWeekend(localTime.dayOfWeek)) {
-            console.log(`User ${userId} skipped: skip_weekends enabled and day is ${localTime.dayOfWeek}`);
-            continue;
-          }
-          
-          // Check if within reminder window
-          if (!isTimeInWindow(localTime.hours, localTime.minutes, prefs.window_start, prefs.window_end)) {
-            continue;
-          }
-          
-          // Check if within quiet hours
-          if (isWithinQuietHours(localTime.hours, localTime.minutes, prefs.quiet_hours_start, prefs.quiet_hours_end)) {
-            console.log(`User ${userId} skipped: within quiet hours ${prefs.quiet_hours_start}-${prefs.quiet_hours_end}`);
-            continue;
-          }
-          
-          eligibleUsers.push(userId);
-          console.log(`User ${userId} eligible: ${localTime.hours}:${localTime.minutes} in ${prefs.timezone} within ${prefs.window_start}-${prefs.window_end}`);
-        }
-
-        if (eligibleUsers.length === 0) {
-          return new Response(JSON.stringify({ success: true, message: 'No users in reminder window', count: 0 }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        // Get habits with reminders for eligible users
-        const { data: habits, error: habitsError } = await supabase
-          .from('habits_v2')
-          .select(`
-            id,
-            user_id,
-            title,
-            emoji,
-            archived,
-            habit_reminders (
-              id,
-              local_time,
-              days
-            )
-          `)
-          .in('user_id', eligibleUsers)
-          .eq('archived', false);
-
-        if (habitsError) throw habitsError;
-
-        if (!habits || habits.length === 0) {
-          return new Response(JSON.stringify({ success: true, message: 'No habits found for eligible users', count: 0 }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        // Get reminder state for idempotency check
-        const habitIds = habits.map(h => h.id);
-        const { data: reminderStates, error: statesError } = await supabase
-          .from('habit_reminder_state')
-          .select('*')
-          .in('habit_id', habitIds);
-
-        if (statesError) throw statesError;
-
-        const stateMap: Record<string, { last_reminder_sent_at: string | null; snooze_until: string | null }> = {};
-        for (const state of (reminderStates || [])) {
-          stateMap[state.habit_id] = {
-            last_reminder_sent_at: state.last_reminder_sent_at,
-            snooze_until: state.snooze_until,
-          };
-        }
-
-        // Get per-habit reminder preferences
-        const { data: habitPrefs, error: habitPrefsError } = await supabase
-          .from('habit_reminder_prefs')
-          .select('*')
-          .in('habit_id', habitIds);
-
-        if (habitPrefsError) throw habitPrefsError;
-
-        const habitPrefsMap: Record<string, { enabled: boolean; preferred_time: string | null }> = {};
-        for (const pref of (habitPrefs || [])) {
-          habitPrefsMap[pref.habit_id] = {
-            enabled: pref.enabled,
-            preferred_time: pref.preferred_time,
-          };
-        }
-
-        // Determine which habits need reminders
-        const habitsToRemind: Array<{
-          habit: typeof habits[0];
-          userId: string;
-        }> = [];
-
-        for (const habit of habits) {
-          const userId = habit.user_id;
-          const prefs = prefsMap[userId];
-          const state = stateMap[habit.id];
-          const habitPref = habitPrefsMap[habit.id];
-          const localTime = userLocalTime[userId];
-
-          // Check per-habit enabled flag (default to true if not set)
-          if (habitPref && habitPref.enabled === false) {
-            console.log(`Skipping habit ${habit.id}: reminders disabled for this habit`);
-            continue;
-          }
-
-          // Check preferred_time if set - only send if current time >= preferred_time
-          if (habitPref?.preferred_time) {
-            if (!isAtOrAfterPreferredTime(localTime.hours, localTime.minutes, habitPref.preferred_time)) {
-              console.log(`Skipping habit ${habit.id}: preferred time ${habitPref.preferred_time} not reached yet`);
-              continue;
-            }
-          }
-
-          // Check if habit has reminders configured and has valid days
-          const reminders = habit.habit_reminders || [];
-          
-          // Skip habits with no reminders configured
-          if (reminders.length === 0) continue;
-          
-          const hasValidReminder = reminders.some(r => {
-            if (!r.days || r.days.length === 0) return true;
-            return r.days.includes(localTime.dayOfWeek);
-          });
-
-          if (!hasValidReminder) continue;
-
-          // Check idempotency - skip if already sent today
-          if (state && wasReminderSentToday(state.last_reminder_sent_at, prefs.timezone)) {
-            console.log(`Skipping habit ${habit.id}: already reminded today`);
-            continue;
-          }
-
-          // Check snooze
-          if (state?.snooze_until && new Date(state.snooze_until) > now) {
-            console.log(`Skipping habit ${habit.id}: snoozed until ${state.snooze_until}`);
-            continue;
-          }
-
-          habitsToRemind.push({ habit, userId });
-        }
-
-        console.log(`Found ${habitsToRemind.length} habits to remind`);
-
-        if (habitsToRemind.length === 0) {
-          return new Response(JSON.stringify({ success: true, message: 'No reminders due', count: 0 }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        // Set up web push
-        const webpush = await import('https://esm.sh/web-push@3.6.6');
-        const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-        const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-        
-        if (!vapidPublicKey || !vapidPrivateKey) {
-          console.warn('VAPID keys not configured, skipping push notifications');
-          return new Response(JSON.stringify({ 
-            success: true, 
-            message: 'Reminders found but VAPID not configured', 
-            count: habitsToRemind.length 
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        webpush.setVapidDetails(
-          'mailto:support@lifegoalapp.com',
-          vapidPublicKey,
-          vapidPrivateKey
-        );
-
-        // Helper function to send notification with retry
-        async function sendNotificationWithRetry(
-          pushSubscription: { endpoint: string; keys: { p256dh: string; auth: string } },
-          payload: string,
-          userId: string,
-          habitId: string
-        ): Promise<{ success: boolean; shouldDelete: boolean }> {
-          let lastError: Error | null = null;
-          
-          for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-            try {
-              await webpush.sendNotification(pushSubscription, payload);
-              return { success: true, shouldDelete: false };
-            } catch (error) {
-              lastError = error;
-              console.error(`Notification attempt ${attempt + 1} failed:`, error.message || error);
-              
-              // Check for permanent failures (410 Gone, 404 Not Found)
-              if (error.statusCode === 410 || error.statusCode === 404) {
-                return { success: false, shouldDelete: true };
-              }
-              
-              // If we have retries left, wait before next attempt
-              if (attempt < MAX_RETRIES) {
-                await sleep(RETRY_DELAYS[attempt]);
-              }
-            }
-          }
-          
-          // All retries exhausted - log to dead-letter queue
-          console.error(`All ${MAX_RETRIES + 1} attempts failed for endpoint ${pushSubscription.endpoint}`);
-          const { error: dlError } = await supabase
-            .from('reminder_delivery_failures')
-            .insert({
-              user_id: userId,
-              habit_id: habitId,
-              endpoint: pushSubscription.endpoint,
-              error: lastError?.message || 'Unknown error',
-              retry_count: MAX_RETRIES + 1,
-            });
-          
-          if (dlError) {
-            console.error('Failed to log to dead-letter queue:', dlError);
-          }
-          
-          return { success: false, shouldDelete: false };
-        }
-
-        // Send notifications and update state
-        let sentCount = 0;
-        let failedCount = 0;
-        const habitIdsToUpdate: string[] = [];
-
-        for (const { habit, userId } of habitsToRemind) {
-          const userSubs = subscriptions.filter(s => s.user_id === userId);
-          
-          const title = `Time for: ${habit.emoji || '📋'} ${habit.title}`;
-          
-          interface NotificationPayload {
-            title: string;
-            body: string;
-            icon: string;
-            badge: string;
-            tag: string;
-            data: {
-              habit_id: string;
-              habit_title: string;
-              url: string;
-            };
-            actions: Array<{ action: string; title: string }>;
-          }
-          
-          const notificationPayload: NotificationPayload = {
-            title,
-            body: 'Mark it complete in LifeGoal App',
-            icon: '/icons/icon-192x192.svg',
-            badge: '/icons/icon-192x192.svg',
-            tag: `habit-${habit.id}`,
-            data: {
-              habit_id: habit.id,
-              habit_title: habit.title,
-              url: '/#habits',
-            },
-            actions: [
-              { action: 'done', title: 'Done' },
-              { action: 'snooze', title: 'Snooze' },
-            ],
-          };
-          
-          const payload = JSON.stringify(notificationPayload);
-          let sentForHabit = false;
-
-          for (const sub of userSubs) {
-            const pushSubscription = {
-              endpoint: sub.endpoint,
-              keys: {
-                p256dh: sub.p256dh,
-                auth: sub.auth,
-              },
-            };
-
-            const result = await sendNotificationWithRetry(pushSubscription, payload, userId, habit.id);
-            
-            if (result.success) {
-              sentCount++;
-              sentForHabit = true;
-            } else {
-              failedCount++;
-              if (result.shouldDelete) {
-                // Remove invalid subscription
-                await supabase
-                  .from('push_subscriptions')
-                  .delete()
-                  .eq('endpoint', sub.endpoint);
-              }
-            }
-          }
-
-          // Mark habit as reminded if at least one notification was sent
-          if (sentForHabit) {
-            habitIdsToUpdate.push(habit.id);
-          }
-        }
-
-        // Update reminder state for sent habits (idempotency)
-        if (habitIdsToUpdate.length > 0) {
-          const stateUpdates = habitIdsToUpdate.map(habitId => ({
-            habit_id: habitId,
-            last_reminder_sent_at: now.toISOString(),
-          }));
-
-          const { error: updateStateError } = await supabase
-            .from('habit_reminder_state')
-            .upsert(stateUpdates, { onConflict: 'habit_id' });
-
-          if (updateStateError) {
-            console.error('Failed to update reminder state:', updateStateError);
-          }
-        }
-
-        return new Response(JSON.stringify({ 
-          success: true, 
-          message: `Sent ${sentCount} notifications (${failedCount} failed)`, 
-          habits: habitsToRemind.length,
-          sent: sentCount,
-          failed: failedCount
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (error) {
-        console.error('Error in CRON job:', error);
-        return new Response(JSON.stringify({ 
-          success: false, 
-          error: error.message 
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
     }
 
     // ========================================================

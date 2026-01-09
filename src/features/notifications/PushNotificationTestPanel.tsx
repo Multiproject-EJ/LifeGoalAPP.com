@@ -354,7 +354,7 @@ export function PushNotificationTestPanel({ session }: Props) {
       //
       // const result = await response.json();
       // setStatus({
-      //   kind: response.ok ? 'success' : 'error',
+      //   kind: 'success',
       //   message: result.message || JSON.stringify(result)
       // });
       
