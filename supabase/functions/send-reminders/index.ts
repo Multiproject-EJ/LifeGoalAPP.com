@@ -1080,6 +1080,15 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Get user's general reminder window for default time
+      const { data: userPrefs } = await supabase
+        .from('user_reminder_prefs')
+        .select('window_start')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const defaultTime = userPrefs?.window_start || '08:00:00';
+
       // Validate preferred_time format if provided
       if (preferred_time !== undefined && preferred_time !== null) {
         // Ensure preferred_time is a string
@@ -1118,7 +1127,7 @@ Deno.serve(async (req) => {
       if (enabled !== undefined || preferred_time !== undefined) {
         // Use the updated preference to determine current state
         const currentEnabled = updatedPref.enabled;
-        const currentPreferredTime = updatedPref.preferred_time || '08:00:00';
+        const currentPreferredTime = updatedPref.preferred_time || defaultTime;
         
         if (currentEnabled === false) {
           // When disabled: Delete all habit_reminders entries for this habit
