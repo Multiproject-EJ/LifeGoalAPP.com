@@ -4379,6 +4379,98 @@ body {
   color: rgba(68, 64, 60, 0.85);
 }
 
+.habit-day-status {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(120, 53, 15, 0.18);
+  display: grid;
+  gap: 0.6rem;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+}
+
+.habit-day-status__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.habit-day-status__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.65rem;
+  color: rgba(120, 53, 15, 0.75);
+  font-weight: 700;
+}
+
+.habit-day-status__title {
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+  color: #7c2d12;
+}
+
+.habit-day-status__badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #7c2d12;
+  background: rgba(253, 230, 138, 0.55);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  white-space: nowrap;
+}
+
+.habit-day-status__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(120, 53, 15, 0.8);
+}
+
+.habit-day-status__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.habit-day-status__button {
+  border: none;
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: #f97316;
+  color: #fff7ed;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 16px rgba(249, 115, 22, 0.2);
+}
+
+.habit-day-status__button--secondary {
+  background: #0ea5e9;
+  box-shadow: 0 10px 16px rgba(14, 165, 233, 0.2);
+}
+
+.habit-day-status__button--active {
+  background: #16a34a;
+  box-shadow: 0 12px 18px rgba(22, 163, 74, 0.2);
+}
+
+.habit-day-status__button:disabled {
+  cursor: not-allowed;
+  background: rgba(148, 163, 184, 0.8);
+  box-shadow: none;
+  color: rgba(248, 250, 252, 0.9);
+}
+
+.habit-day-status__note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: rgba(120, 53, 15, 0.75);
+  font-weight: 600;
+}
+
 .habit-checklist {
   list-style: none;
   margin: 0;

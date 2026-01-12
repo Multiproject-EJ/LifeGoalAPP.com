@@ -93,6 +93,8 @@ type IntentionsJournalDraft = {
   content: string;
 };
 
+type DayStatus = 'skip' | 'vacation';
+
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
 type VisionImage = VisionImageRow & { publicUrl: string };
@@ -129,6 +131,7 @@ const quickJournalDraftKey = (userId: string, dateISO: string) =>
   `lifegoal.quick-journal:${userId}:${dateISO}`;
 const intentionsJournalDraftKey = (userId: string, dateISO: string) =>
   `lifegoal.intentions-journal:${userId}:${dateISO}`;
+const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -209,12 +212,22 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
+  const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
   const [yesterdaySelections, setYesterdaySelections] = useState<Record<string, boolean>>({});
   const [yesterdayActionStatus, setYesterdayActionStatus] = useState<string | null>(null);
   const [yesterdaySaving, setYesterdaySaving] = useState(false);
   const [yesterdayCollecting, setYesterdayCollecting] = useState(false);
   const { earnXP, recordActivity, enabled: gamificationEnabled } = useGamification(session);
+
+  useEffect(() => {
+    const storedDayStatus = loadDraft<Record<string, DayStatus>>(dayStatusStorageKey(session.user.id));
+    setDayStatusMap(storedDayStatus ?? {});
+  }, [session.user.id]);
+
+  useEffect(() => {
+    saveDraft(dayStatusStorageKey(session.user.id), dayStatusMap);
+  }, [dayStatusMap, session.user.id]);
 
   useEffect(() => {
     const parsedDate = parseISODate(activeDate);
@@ -1380,6 +1393,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     };
 
     const quickJournalDateLabel = formatDateLabel(activeDate);
+    const dayStatus = dayStatusMap[activeDate] ?? null;
+    const previousDateISO = formatISODate(addDays(parseISODate(activeDate), -1));
+    const skipStreakBefore = getSkipStreak(previousDateISO, dayStatusMap);
+    const skipStreakCount = dayStatus === 'skip' ? skipStreakBefore + 1 : skipStreakBefore;
+    const skipLimitReached = skipStreakBefore >= 3 && dayStatus !== 'skip';
 
     const handleOpenIntentionsJournal = (type: 'today' | 'tomorrow') => {
       setIsIntentionsJournalOpen(true);
@@ -1450,6 +1468,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     };
 
     const checklistCardClassName = `habit-checklist-card${isGlassModeEnabled ? ' habit-checklist-card--glass' : ''}`;
+    const handleDayStatusUpdate = (status: DayStatus) => {
+      setDayStatusMap((previous) => {
+        const next = { ...previous };
+        if (next[activeDate] === status) {
+          delete next[activeDate];
+        } else {
+          next[activeDate] = status;
+        }
+        return next;
+      });
+    };
 
     return (
       <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
@@ -1705,6 +1734,45 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 <p className="habit-quick-journal__status habit-quick-journal__status--success">
                   {intentionsJournalStatus}
                 </p>
+              ) : null}
+            </div>
+
+            <div className="habit-day-status" aria-live="polite">
+              <div className="habit-day-status__header">
+                <div>
+                  <p className="habit-day-status__eyebrow">Busy day?</p>
+                  <h3 className="habit-day-status__title">Log a skip or vacation</h3>
+                </div>
+                <span className="habit-day-status__badge">
+                  {skipStreakCount}/3 skips
+                </span>
+              </div>
+              <p className="habit-day-status__hint">
+                Use this when today is for travel or rest and you’re skipping habits and journals.
+              </p>
+              <div className="habit-day-status__actions">
+                <button
+                  type="button"
+                  className={`habit-day-status__button ${dayStatus === 'skip' ? 'habit-day-status__button--active' : ''}`}
+                  onClick={() => handleDayStatusUpdate('skip')}
+                  disabled={skipLimitReached}
+                >
+                  {dayStatus === 'skip' ? 'Skipped today' : 'Skip today'}
+                </button>
+                <button
+                  type="button"
+                  className={`habit-day-status__button habit-day-status__button--secondary ${
+                    dayStatus === 'vacation' ? 'habit-day-status__button--active' : ''
+                  }`}
+                  onClick={() => handleDayStatusUpdate('vacation')}
+                >
+                  {dayStatus === 'vacation' ? 'Vacation day' : 'Vacation'}
+                </button>
+              </div>
+              {skipLimitReached ? (
+                <p className="habit-day-status__note">Max 3 skips in a row reached.</p>
+              ) : dayStatus ? (
+                <p className="habit-day-status__note">Logged: {dayStatus === 'skip' ? 'Skipped' : 'Vacation'}.</p>
               ) : null}
             </div>
           </div>
@@ -2467,6 +2535,20 @@ function formatISODate(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function getSkipStreak(dateISO: string, statusMap: Record<string, DayStatus>) {
+  let streak = 0;
+  let cursor = parseISODate(dateISO);
+  while (true) {
+    const key = formatISODate(cursor);
+    if (statusMap[key] !== 'skip') {
+      break;
+    }
+    streak += 1;
+    cursor = addDays(cursor, -1);
+  }
+  return streak;
 }
 
 function generateDateRange(start: Date, end: Date): string[] {
