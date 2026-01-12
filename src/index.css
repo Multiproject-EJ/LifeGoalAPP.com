@@ -3867,6 +3867,44 @@ body {
   transition: stroke-dasharray 0.4s ease;
 }
 
+.habit-checklist-card__intentions-button {
+  border: 1px solid rgba(220, 38, 38, 0.55);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fffaf5;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 0 0 rgba(239, 68, 68, 0.4);
+  animation: intentions-glow 1.8s ease-in-out infinite;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.habit-checklist-card__intentions-button--seen {
+  animation: none;
+  background: rgba(248, 250, 252, 0.9);
+  color: #b45309;
+  border-color: rgba(180, 83, 9, 0.4);
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
+}
+
+@keyframes intentions-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0.3), 0 0 0 rgba(239, 68, 68, 0.3);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.65), 0 0 24px rgba(239, 68, 68, 0.35);
+    transform: translateY(-1px);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0.3), 0 0 0 rgba(239, 68, 68, 0.3);
+    transform: translateY(0);
+  }
+}
+
 .habit-checklist-card__refresh {
   border: 1px solid rgba(120, 53, 15, 0.35);
   border-radius: 999px;
@@ -3888,6 +3926,81 @@ body {
 .habit-checklist-card__refresh:not(:disabled):hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 18px rgba(124, 45, 18, 0.25);
+}
+
+.habit-intentions-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 40;
+}
+
+.habit-intentions-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  border: none;
+}
+
+.habit-intentions-modal__card {
+  position: relative;
+  z-index: 1;
+  width: min(90vw, 360px);
+  background: #fff7ed;
+  border-radius: 20px;
+  padding: 1.25rem 1.2rem;
+  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.3);
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(234, 88, 12, 0.2);
+}
+
+.habit-intentions-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.habit-intentions-modal__eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #9a3412;
+}
+
+.habit-intentions-modal__title {
+  margin: 0.35rem 0 0;
+  font-size: 1.2rem;
+  color: #7c2d12;
+}
+
+.habit-intentions-modal__close {
+  border: none;
+  background: rgba(255, 255, 255, 0.75);
+  color: #7c2d12;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+.habit-intentions-modal__body {
+  background: #fff;
+  border-radius: 16px;
+  padding: 0.9rem 0.95rem;
+  color: #4b5563;
+  line-height: 1.5;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.08);
+}
+
+.habit-intentions-modal__body p {
+  margin: 0;
+  white-space: pre-wrap;
 }
 
 .habit-checklist-card__board-body {

@@ -20,7 +20,7 @@ import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { fetchVisionImages, getVisionImagePublicUrl } from '../../services/visionBoard';
 import { HabitAlertConfig } from './HabitAlertConfig';
-import { createJournalEntry } from '../../services/journal';
+import { createJournalEntry, listJournalEntries, type JournalEntry } from '../../services/journal';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import {
   getYesterdayRecapEnabled,
@@ -131,6 +131,8 @@ const quickJournalDraftKey = (userId: string, dateISO: string) =>
   `lifegoal.quick-journal:${userId}:${dateISO}`;
 const intentionsJournalDraftKey = (userId: string, dateISO: string) =>
   `lifegoal.intentions-journal:${userId}:${dateISO}`;
+const intentionsNoticeStorageKey = (userId: string, dateISO: string) =>
+  `lifegoal.intentions-notice:${userId}:${dateISO}`;
 const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
 
 const loadDraft = <T,>(key: string): T | null => {
@@ -204,6 +206,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [intentionsJournalSaving, setIntentionsJournalSaving] = useState(false);
   const [intentionsJournalError, setIntentionsJournalError] = useState<string | null>(null);
   const [intentionsJournalStatus, setIntentionsJournalStatus] = useState<string | null>(null);
+  const [tomorrowIntentionsEntry, setTomorrowIntentionsEntry] = useState<JournalEntry | null>(null);
+  const [isIntentionsNoticeOpen, setIsIntentionsNoticeOpen] = useState(false);
+  const [isIntentionsNoticeViewed, setIsIntentionsNoticeViewed] = useState(false);
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
   const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
   const [visionRewardError, setVisionRewardError] = useState<string | null>(null);
@@ -460,6 +465,50 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     setIntentionsJournalError(null);
     setIntentionsJournalStatus(null);
   }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (activeDate !== today) {
+      setTomorrowIntentionsEntry(null);
+      setIsIntentionsNoticeViewed(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    const loadIntentionsNotice = async () => {
+      const { data, error } = await listJournalEntries({
+        fromDate: today,
+        toDate: today,
+        tag: 'intentions',
+        limit: 25,
+      });
+
+      if (!isActive) return;
+
+      if (error) {
+        setTomorrowIntentionsEntry(null);
+        setIsIntentionsNoticeViewed(false);
+        return;
+      }
+
+      const match = data?.find((entry) => entry.title === "Tomorrow's Intentions") ?? null;
+      setTomorrowIntentionsEntry(match);
+      if (match) {
+        const viewed = loadDraft<boolean>(intentionsNoticeStorageKey(session.user.id, today));
+        setIsIntentionsNoticeViewed(Boolean(viewed));
+      } else {
+        setIsIntentionsNoticeViewed(false);
+      }
+    };
+
+    void loadIntentionsNotice();
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeDate, session.user.id, today]);
 
   useEffect(() => {
     const draftKey = intentionsJournalDraftKey(session.user.id, activeDate);
@@ -1468,6 +1517,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     };
 
     const checklistCardClassName = `habit-checklist-card${isGlassModeEnabled ? ' habit-checklist-card--glass' : ''}`;
+    const intentionsNoticeKey = intentionsNoticeStorageKey(session.user.id, today);
+    const handleOpenIntentionsNotice = () => {
+      setIsIntentionsNoticeOpen(true);
+      setIsIntentionsNoticeViewed(true);
+      saveDraft(intentionsNoticeKey, true);
+    };
+    const handleCloseIntentionsNotice = () => {
+      setIsIntentionsNoticeOpen(false);
+    };
     const handleDayStatusUpdate = (status: DayStatus) => {
       setDayStatusMap((previous) => {
         const next = { ...previous };
@@ -1482,6 +1540,34 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     return (
       <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
+        {tomorrowIntentionsEntry && isIntentionsNoticeOpen ? (
+          <div className="habit-intentions-modal" role="dialog" aria-modal="true">
+            <button
+              type="button"
+              className="habit-intentions-modal__backdrop"
+              onClick={handleCloseIntentionsNotice}
+              aria-label="Close intentions"
+            />
+            <div className="habit-intentions-modal__card" role="document">
+              <div className="habit-intentions-modal__header">
+                <div>
+                  <p className="habit-intentions-modal__eyebrow">Yesterday's note for today</p>
+                  <h3 className="habit-intentions-modal__title">Intentions</h3>
+                </div>
+                <button
+                  type="button"
+                  className="habit-intentions-modal__close"
+                  onClick={handleCloseIntentionsNotice}
+                >
+                  Close
+                </button>
+              </div>
+              <div className="habit-intentions-modal__body">
+                <p>{tomorrowIntentionsEntry.content}</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <div className="habit-checklist-card__board">
           <div className="habit-checklist-card__board-head">
             <div className="habit-checklist-card__date-wrap">
@@ -1518,6 +1604,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   />
                 </svg>
               </span>
+              {tomorrowIntentionsEntry ? (
+                <button
+                  type="button"
+                  className={`habit-checklist-card__intentions-button ${
+                    isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen' : ''
+                  }`}
+                  onClick={handleOpenIntentionsNotice}
+                >
+                  Intentions
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="habit-checklist-card__refresh"
