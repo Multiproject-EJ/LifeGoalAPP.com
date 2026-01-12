@@ -277,11 +277,17 @@ export default function App() {
   const mobileFooterStatus = useMemo(() => {
     const levelNumber = levelInfo?.currentLevel ?? 1;
     const progressPercent = Math.round(levelInfo?.progressPercentage ?? 0);
+    const xpProgress = levelInfo?.xpProgress ?? 0;
+    const xpNeeded = Math.max(0, (levelInfo?.xpForNextLevel ?? 0) - (levelInfo?.xpForCurrentLevel ?? 0));
+    const xpProgressLabel = `${xpProgress.toLocaleString()}/${xpNeeded.toLocaleString()} XP`;
 
     return {
       label: 'Game',
       levelLabel: `Level ${levelNumber}`,
-      description: progressPercent > 0 ? `${progressPercent}% to L${levelNumber + 1}` : 'Keep building your streak',
+      description:
+        progressPercent > 0
+          ? `${progressPercent}% to L${levelNumber + 1} • ${xpProgressLabel}`
+          : `Keep building your streak • ${xpProgressLabel}`,
       icon: '🎮',
       progress: progressPercent,
     } as const;
