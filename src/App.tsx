@@ -1031,24 +1031,6 @@ export default function App() {
         </header>
 
         <main className="auth-layout auth-gate__layout">
-          <section className="auth-hero">
-            <span className="auth-hero__badge">Secure workspace</span>
-            <h1>Sign in to keep your rituals in sync</h1>
-            <p className="auth-hero__lead">
-              Access your personalized habit checklist and goal planning tools from any device.
-            </p>
-            <ul className="auth-hero__list">
-              <li>
-                <h3>Daily rituals, anywhere</h3>
-                <p>Review Today's Habits once you're signed in to your workspace.</p>
-              </li>
-              <li>
-                <h3>Private progress</h3>
-                <p>Your life wheel check-ins and reflections stay linked to your secure account.</p>
-              </li>
-            </ul>
-          </section>
-
           <div className="auth-panel auth-gate__panel">{renderAuthPanel()}</div>
         </main>
       </div>
