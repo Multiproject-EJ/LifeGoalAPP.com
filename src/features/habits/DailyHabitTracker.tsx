@@ -198,7 +198,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalSaving, setQuickJournalSaving] = useState(false);
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
-  const [isGlassModeEnabled, setIsGlassModeEnabled] = useState(false);
+  const [isCompactView, setIsCompactView] = useState(false);
   // State for intentions journal
   const [isIntentionsJournalOpen, setIsIntentionsJournalOpen] = useState(false);
   const [intentionsJournalType, setIntentionsJournalType] = useState<'today' | 'tomorrow'>('today');
@@ -1128,7 +1128,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }));
   };
 
-  const renderDayNavigation = (variant: 'compact' | 'full') => {
+  const renderDayNavigation = (variant: 'compact' | 'full', showDetails = true) => {
     const displayLabel = formatDateLabel(activeDate);
     const canGoForward = activeDate < today;
     const isViewingToday = activeDate === today;
@@ -1144,66 +1144,68 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           ← Previous day
         </button>
 
-        <div className="habit-day-nav__info">
-          <p className="habit-day-nav__label">Tracking day</p>
-          <p className="habit-day-nav__value">{displayLabel}</p>
-          <div className="habit-day-nav__actions">
-            {isViewingToday ? (
-              <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
-            ) : (
-              <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
-                Jump to today
+        {showDetails ? (
+          <div className="habit-day-nav__info">
+            <p className="habit-day-nav__label">Tracking day</p>
+            <p className="habit-day-nav__value">{displayLabel}</p>
+            <div className="habit-day-nav__actions">
+              {isViewingToday ? (
+                <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
+              ) : (
+                <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
+                  Jump to today
+                </button>
+              )}
+              <label className="habit-day-nav__picker" aria-label="Select a date to track">
+                <span className="sr-only">Select a date to track</span>
+                <input
+                  type="date"
+                  value={activeDate}
+                  max={today}
+                  onChange={(event) => handleDateInputChange(event.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className={`habit-day-nav__star ${
+                  isStarBursting || visionRewarding ? 'habit-day-nav__star--burst' : ''
+                }`}
+                onClick={handleVisionRewardClick}
+                disabled={visionImagesLoading || visionRewarding}
+                aria-label="Reveal a vision board star boost"
+              >
+                <span className="habit-day-nav__star-icon" aria-hidden="true">★</span>
+                <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--one" aria-hidden="true">
+                  ✨
+                </span>
+                <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--two" aria-hidden="true">
+                  🏆
+                </span>
+                <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--three" aria-hidden="true">
+                  📸
+                </span>
               </button>
-            )}
-            <label className="habit-day-nav__picker" aria-label="Select a date to track">
-              <span className="sr-only">Select a date to track</span>
-              <input
-                type="date"
-                value={activeDate}
-                max={today}
-                onChange={(event) => handleDateInputChange(event.target.value)}
-              />
-            </label>
-            <button
-              type="button"
-              className={`habit-day-nav__star ${
-                isStarBursting || visionRewarding ? 'habit-day-nav__star--burst' : ''
-              }`}
-              onClick={handleVisionRewardClick}
-              disabled={visionImagesLoading || visionRewarding}
-              aria-label="Reveal a vision board star boost"
-            >
-              <span className="habit-day-nav__star-icon" aria-hidden="true">★</span>
-              <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--one" aria-hidden="true">
-                ✨
-              </span>
-              <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--two" aria-hidden="true">
-                🏆
-              </span>
-              <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--three" aria-hidden="true">
-                📸
-              </span>
-            </button>
-          </div>
-          <div className="habit-day-nav__bonus">
-            <div className="habit-day-nav__bonus-text">
-              <span className="habit-day-nav__bonus-title">Vision star</span>
-              <span className="habit-day-nav__bonus-subtitle">
-                {visionReward ? `+${visionReward.xpAwarded} XP earned` : `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`}
-              </span>
             </div>
-            {visionReward ? (
-              <img
-                className="habit-day-nav__bonus-image"
-                src={visionReward.imageUrl}
-                alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
-              />
-            ) : (
-              <span className="habit-day-nav__bonus-placeholder">Tap the star for a random vision board image</span>
-            )}
+            <div className="habit-day-nav__bonus">
+              <div className="habit-day-nav__bonus-text">
+                <span className="habit-day-nav__bonus-title">Vision star</span>
+                <span className="habit-day-nav__bonus-subtitle">
+                  {visionReward ? `+${visionReward.xpAwarded} XP earned` : `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`}
+                </span>
+              </div>
+              {visionReward ? (
+                <img
+                  className="habit-day-nav__bonus-image"
+                  src={visionReward.imageUrl}
+                  alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
+                />
+              ) : (
+                <span className="habit-day-nav__bonus-placeholder">Tap the star for a random vision board image</span>
+              )}
+            </div>
+            {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
           </div>
-          {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
-        </div>
+        ) : null}
 
         <button
           type="button"
@@ -1516,7 +1518,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       }
     };
 
-    const checklistCardClassName = `habit-checklist-card${isGlassModeEnabled ? ' habit-checklist-card--glass' : ''}`;
+    const checklistCardClassName = `habit-checklist-card${isCompactView ? ' habit-checklist-card--glass' : ''}`;
     const intentionsNoticeKey = intentionsNoticeStorageKey(session.user.id, today);
     const handleOpenIntentionsNotice = () => {
       setIsIntentionsNoticeOpen(true);
@@ -1577,61 +1579,65 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               <button
                 type="button"
                 className={`habit-checklist-card__glass-toggle ${
-                  isGlassModeEnabled ? 'habit-checklist-card__glass-toggle--active' : ''
+                  isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
                 }`}
-                onClick={() => setIsGlassModeEnabled((previous) => !previous)}
-                aria-pressed={isGlassModeEnabled}
+                onClick={() => setIsCompactView((previous) => !previous)}
+                aria-pressed={isCompactView}
               >
                 <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
                   <span className="habit-checklist-card__glass-toggle-thumb" />
                 </span>
                 <span className="habit-checklist-card__glass-toggle-label">
-                  {isGlassModeEnabled ? 'Liquid glass' : 'Cozy paper'}
+                  {isCompactView ? 'Compact' : 'Detailed'}
                 </span>
               </button>
             </div>
-            <div className="habit-checklist-card__head-actions">
-              <span className="habit-checklist-card__progress" role="img" aria-label={progressLabel}>
-                <span className="sr-only">{progressLabel}</span>
-                <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
-                  <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
-                  <circle
-                    className="habit-checklist-card__progress-value"
-                    cx="18"
-                    cy="18"
-                    r="16"
-                    strokeDasharray={`${progressPercent} 100`}
-                  />
-                </svg>
-              </span>
-              {tomorrowIntentionsEntry ? (
+            {!isCompactView ? (
+              <div className="habit-checklist-card__head-actions">
+                <span className="habit-checklist-card__progress" role="img" aria-label={progressLabel}>
+                  <span className="sr-only">{progressLabel}</span>
+                  <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
+                    <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
+                    <circle
+                      className="habit-checklist-card__progress-value"
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      strokeDasharray={`${progressPercent} 100`}
+                    />
+                  </svg>
+                </span>
+                {tomorrowIntentionsEntry ? (
+                  <button
+                    type="button"
+                    className={`habit-checklist-card__intentions-button ${
+                      isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen' : ''
+                    }`}
+                    onClick={handleOpenIntentionsNotice}
+                  >
+                    Intentions
+                  </button>
+                ) : null}
                 <button
                   type="button"
-                  className={`habit-checklist-card__intentions-button ${
-                    isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen' : ''
-                  }`}
-                  onClick={handleOpenIntentionsNotice}
+                  className="habit-checklist-card__refresh"
+                  onClick={() => void refreshHabits()}
+                  disabled={loading || (!isConfigured && !isDemoExperience)}
                 >
-                  Intentions
+                  {loading ? 'Refreshing…' : 'Refresh'}
                 </button>
-              ) : null}
-              <button
-                type="button"
-                className="habit-checklist-card__refresh"
-                onClick={() => void refreshHabits()}
-                disabled={loading || (!isConfigured && !isDemoExperience)}
-              >
-                {loading ? 'Refreshing…' : 'Refresh'}
-              </button>
-            </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="habit-checklist-card__board-body">
-            {renderDayNavigation('compact')}
-            <div className="habit-checklist-card__title">
-              <h2>{titleText}</h2>
-              <p>{subtitleText}</p>
-            </div>
+            {renderDayNavigation('compact', !isCompactView)}
+            {!isCompactView ? (
+              <div className="habit-checklist-card__title">
+                <h2>{titleText}</h2>
+                <p>{subtitleText}</p>
+              </div>
+            ) : null}
 
             {habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
@@ -1755,123 +1761,127 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               ) : null}
             </div>
 
-            <div className="habit-quick-journal habit-quick-journal--intentions" aria-live="polite">
-              <div className="habit-quick-journal__header">
-                <div>
-                  <p className="habit-quick-journal__eyebrow">Plan for this day</p>
-                  <h3 className="habit-quick-journal__title">Intentions & Todos</h3>
-                </div>
-                <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
-              </div>
-              <p className="habit-quick-journal__hint">
-                Set your intentions and list your key todos for the day ahead.
-              </p>
-              {!isIntentionsJournalOpen ? (
-                <div className="habit-quick-journal__button-group">
-                  <button
-                    type="button"
-                    className="habit-quick-journal__button habit-quick-journal__button--half"
-                    onClick={() => handleOpenIntentionsJournal('today')}
-                  >
-                    + Today's intentions
-                  </button>
-                  <button
-                    type="button"
-                    className="habit-quick-journal__button habit-quick-journal__button--half"
-                    onClick={() => handleOpenIntentionsJournal('tomorrow')}
-                  >
-                    + Tomorrow's intentions
-                  </button>
-                </div>
-              ) : (
-                <div className="habit-quick-journal__sheet">
-                  <label className="habit-quick-journal__field">
-                    <span className="habit-quick-journal__field-label">
-                      {intentionsJournalType === 'tomorrow' ? "Tomorrow's Intentions" : "Today's Intentions"} ({intentionsJournalType === 'tomorrow' ? formatDateLabel(formatISODate(addDays(parseISODate(activeDate), 1))) : quickJournalDateLabel})
-                    </span>
-                    <textarea
-                      rows={4}
-                      value={intentionsJournalContent}
-                      onChange={(event) => setIntentionsJournalContent(event.target.value)}
-                      placeholder={intentionsJournalType === 'tomorrow' ? "What do you intend to accomplish tomorrow? What's most important?" : "What do you intend to accomplish today? What's most important?"}
-                    />
-                  </label>
-                  {intentionsJournalError ? (
-                    <p className="habit-quick-journal__status habit-quick-journal__status--error">
-                      {intentionsJournalError}
+            {!isCompactView ? (
+              <>
+                <div className="habit-quick-journal habit-quick-journal--intentions" aria-live="polite">
+                  <div className="habit-quick-journal__header">
+                    <div>
+                      <p className="habit-quick-journal__eyebrow">Plan for this day</p>
+                      <h3 className="habit-quick-journal__title">Intentions & Todos</h3>
+                    </div>
+                    <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+                  </div>
+                  <p className="habit-quick-journal__hint">
+                    Set your intentions and list your key todos for the day ahead.
+                  </p>
+                  {!isIntentionsJournalOpen ? (
+                    <div className="habit-quick-journal__button-group">
+                      <button
+                        type="button"
+                        className="habit-quick-journal__button habit-quick-journal__button--half"
+                        onClick={() => handleOpenIntentionsJournal('today')}
+                      >
+                        + Today's intentions
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-quick-journal__button habit-quick-journal__button--half"
+                        onClick={() => handleOpenIntentionsJournal('tomorrow')}
+                      >
+                        + Tomorrow's intentions
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="habit-quick-journal__sheet">
+                      <label className="habit-quick-journal__field">
+                        <span className="habit-quick-journal__field-label">
+                          {intentionsJournalType === 'tomorrow' ? "Tomorrow's Intentions" : "Today's Intentions"} ({intentionsJournalType === 'tomorrow' ? formatDateLabel(formatISODate(addDays(parseISODate(activeDate), 1))) : quickJournalDateLabel})
+                        </span>
+                        <textarea
+                          rows={4}
+                          value={intentionsJournalContent}
+                          onChange={(event) => setIntentionsJournalContent(event.target.value)}
+                          placeholder={intentionsJournalType === 'tomorrow' ? "What do you intend to accomplish tomorrow? What's most important?" : "What do you intend to accomplish today? What's most important?"}
+                        />
+                      </label>
+                      {intentionsJournalError ? (
+                        <p className="habit-quick-journal__status habit-quick-journal__status--error">
+                          {intentionsJournalError}
+                        </p>
+                      ) : null}
+                      <div className="habit-quick-journal__actions">
+                        <button
+                          type="button"
+                          className="habit-quick-journal__save"
+                          onClick={() => void handleSaveIntentionsJournal()}
+                          disabled={intentionsJournalSaving}
+                        >
+                          {intentionsJournalSaving ? 'Saving…' : 'Save entry'}
+                        </button>
+                        <button
+                          type="button"
+                          className="habit-quick-journal__cancel"
+                          onClick={() => {
+                            removeDraft(intentionsJournalDraftKey(session.user.id, activeDate));
+                            setIsIntentionsJournalOpen(false);
+                            setIntentionsJournalContent('');
+                            setIntentionsJournalError(null);
+                          }}
+                          disabled={intentionsJournalSaving}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {intentionsJournalStatus ? (
+                    <p className="habit-quick-journal__status habit-quick-journal__status--success">
+                      {intentionsJournalStatus}
                     </p>
                   ) : null}
-                  <div className="habit-quick-journal__actions">
+                </div>
+
+                <div className="habit-day-status" aria-live="polite">
+                  <div className="habit-day-status__header">
+                    <div>
+                      <p className="habit-day-status__eyebrow">Busy day?</p>
+                      <h3 className="habit-day-status__title">Log a skip or vacation</h3>
+                    </div>
+                    <span className="habit-day-status__badge">
+                      {skipStreakCount}/3 skips
+                    </span>
+                  </div>
+                  <p className="habit-day-status__hint">
+                    Use this when today is for travel or rest and you’re skipping habits and journals.
+                  </p>
+                  <div className="habit-day-status__actions">
                     <button
                       type="button"
-                      className="habit-quick-journal__save"
-                      onClick={() => void handleSaveIntentionsJournal()}
-                      disabled={intentionsJournalSaving}
+                      className={`habit-day-status__button ${dayStatus === 'skip' ? 'habit-day-status__button--active' : ''}`}
+                      onClick={() => handleDayStatusUpdate('skip')}
+                      disabled={skipLimitReached}
                     >
-                      {intentionsJournalSaving ? 'Saving…' : 'Save entry'}
+                      {dayStatus === 'skip' ? 'Skipped today' : 'Skip today'}
                     </button>
                     <button
                       type="button"
-                      className="habit-quick-journal__cancel"
-                      onClick={() => {
-                        removeDraft(intentionsJournalDraftKey(session.user.id, activeDate));
-                        setIsIntentionsJournalOpen(false);
-                        setIntentionsJournalContent('');
-                        setIntentionsJournalError(null);
-                      }}
-                      disabled={intentionsJournalSaving}
+                      className={`habit-day-status__button habit-day-status__button--secondary ${
+                        dayStatus === 'vacation' ? 'habit-day-status__button--active' : ''
+                      }`}
+                      onClick={() => handleDayStatusUpdate('vacation')}
                     >
-                      Cancel
+                      {dayStatus === 'vacation' ? 'Vacation day' : 'Vacation'}
                     </button>
                   </div>
+                  {skipLimitReached ? (
+                    <p className="habit-day-status__note">Max 3 skips in a row reached.</p>
+                  ) : dayStatus ? (
+                    <p className="habit-day-status__note">Logged: {dayStatus === 'skip' ? 'Skipped' : 'Vacation'}.</p>
+                  ) : null}
                 </div>
-              )}
-
-              {intentionsJournalStatus ? (
-                <p className="habit-quick-journal__status habit-quick-journal__status--success">
-                  {intentionsJournalStatus}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="habit-day-status" aria-live="polite">
-              <div className="habit-day-status__header">
-                <div>
-                  <p className="habit-day-status__eyebrow">Busy day?</p>
-                  <h3 className="habit-day-status__title">Log a skip or vacation</h3>
-                </div>
-                <span className="habit-day-status__badge">
-                  {skipStreakCount}/3 skips
-                </span>
-              </div>
-              <p className="habit-day-status__hint">
-                Use this when today is for travel or rest and you’re skipping habits and journals.
-              </p>
-              <div className="habit-day-status__actions">
-                <button
-                  type="button"
-                  className={`habit-day-status__button ${dayStatus === 'skip' ? 'habit-day-status__button--active' : ''}`}
-                  onClick={() => handleDayStatusUpdate('skip')}
-                  disabled={skipLimitReached}
-                >
-                  {dayStatus === 'skip' ? 'Skipped today' : 'Skip today'}
-                </button>
-                <button
-                  type="button"
-                  className={`habit-day-status__button habit-day-status__button--secondary ${
-                    dayStatus === 'vacation' ? 'habit-day-status__button--active' : ''
-                  }`}
-                  onClick={() => handleDayStatusUpdate('vacation')}
-                >
-                  {dayStatus === 'vacation' ? 'Vacation day' : 'Vacation'}
-                </button>
-              </div>
-              {skipLimitReached ? (
-                <p className="habit-day-status__note">Max 3 skips in a row reached.</p>
-              ) : dayStatus ? (
-                <p className="habit-day-status__note">Logged: {dayStatus === 'skip' ? 'Skipped' : 'Vacation'}.</p>
-              ) : null}
-            </div>
+              </>
+            ) : null}
           </div>
         </div>
 

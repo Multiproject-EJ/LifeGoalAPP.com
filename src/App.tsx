@@ -85,6 +85,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'TODAY',
   },
   {
+    id: 'actions',
+    label: 'Actions',
+    summary: 'Jump into quick actions and focus modes.',
+    icon: '⚡️',
+    shortLabel: 'ACTIONS',
+  },
+  {
     id: 'habits',
     label: 'Habits & Routines',
     summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
@@ -137,6 +144,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
   'planning',
+  'actions',
   'goals',
   'habits',
   'support',
@@ -250,7 +258,7 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'habits'];
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'actions'];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
@@ -1110,6 +1118,15 @@ export default function App() {
             ) : null}
             <DailyHabitTracker session={activeSession} />
             <HabitsModule session={activeSession} />
+          </div>
+        );
+      case 'actions':
+        return (
+          <div className="workspace-content">
+            <section className="workspace-actions-placeholder" aria-label="Actions">
+              <h2>Actions</h2>
+              <p>This space is ready for your next quick-action tools.</p>
+            </section>
           </div>
         );
       case 'rituals':
