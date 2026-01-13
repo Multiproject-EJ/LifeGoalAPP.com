@@ -1152,7 +1152,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const canGoForward = activeDate < today;
     const isViewingToday = activeDate === today;
     const navClasses = ['habit-day-nav', `habit-day-nav--${variant}`];
-    const visionRewardForDay = visionReward && visionRewardDate === activeDate;
+    const visionRewardForDay = visionRewardDate === activeDate ? visionReward : null;
     const visionBoostLabel = `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`;
 
     return (
