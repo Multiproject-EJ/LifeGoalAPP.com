@@ -2612,7 +2612,6 @@ const COMPACT_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
   weekday: 'short',
   day: 'numeric',
   month: 'long',
-  year: 'numeric',
 });
 
 
