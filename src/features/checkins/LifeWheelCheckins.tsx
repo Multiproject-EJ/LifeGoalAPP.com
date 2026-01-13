@@ -6,6 +6,7 @@ import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { ReviewWizard } from '../annual-review';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
@@ -105,6 +106,8 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
   year: 'numeric',
 });
+
+type CheckinView = 'full' | 'annual' | 'area';
 
 function formatISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -296,6 +299,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const { earnXP, recordActivity } = useGamification(session);
+  const [activeCheckinView, setActiveCheckinView] = useState<CheckinView>('full');
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -308,6 +312,12 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   // Questionnaire state
   const [isInQuestionnaireMode, setIsInQuestionnaireMode] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [activeQuestionSet, setActiveQuestionSet] = useState<Question[]>(QUESTIONS);
+  const [questionnaireBaseScores, setQuestionnaireBaseScores] = useState<CheckinScores>(() =>
+    createDefaultScores(),
+  );
+  const [questionnaireLabel, setQuestionnaireLabel] = useState('Wellbeing Check-in');
+  const [selectedAreaCategory, setSelectedAreaCategory] = useState<LifeWheelCategoryKey | ''>('');
   const [answers, setAnswers] = useState<Map<string, QuestionAnswer>>(new Map());
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [customNote, setCustomNote] = useState('');
@@ -373,6 +383,16 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const selectedScores = useMemo(() => {
     return selectedCheckin ? parseCheckinScores(selectedCheckin.scores) : null;
   }, [selectedCheckin]);
+
+  const areaQuestionSet = useMemo(() => {
+    if (!selectedAreaCategory) return [];
+    return QUESTIONS.filter((question) => question.categoryKey === selectedAreaCategory);
+  }, [selectedAreaCategory]);
+
+  const selectedAreaScore = useMemo(() => {
+    if (!selectedAreaCategory || !selectedScores) return null;
+    return selectedScores[selectedAreaCategory] ?? null;
+  }, [selectedAreaCategory, selectedScores]);
 
   const radarGeometry = useMemo(() => {
     return selectedScores ? buildRadarGeometry(selectedScores) : null;
@@ -519,13 +539,27 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     }).length;
   };
 
-  const startQuestionnaire = () => {
+  const startQuestionnaire = ({
+    questionSet = QUESTIONS,
+    baseScores = createDefaultScores(),
+    label = 'Wellbeing Check-in',
+    areaCategoryKey = '',
+  }: {
+    questionSet?: Question[];
+    baseScores?: CheckinScores;
+    label?: string;
+    areaCategoryKey?: LifeWheelCategoryKey | '';
+  } = {}) => {
     setIsInQuestionnaireMode(true);
     setCurrentQuestionIndex(0);
     setAnswers(new Map());
     setSelectedOption(null);
     setCustomNote('');
-    setFormScores(createDefaultScores());
+    setActiveQuestionSet(questionSet);
+    setQuestionnaireBaseScores(baseScores);
+    setQuestionnaireLabel(label);
+    setFormScores(baseScores);
+    setSelectedAreaCategory(areaCategoryKey);
   };
 
   const exitQuestionnaire = () => {
@@ -535,7 +569,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const handleAnswerSubmit = () => {
     if (selectedOption === null) return;
     
-    const currentQuestion = QUESTIONS[currentQuestionIndex];
+    const currentQuestion = activeQuestionSet[currentQuestionIndex];
     const answer: QuestionAnswer = {
       questionId: currentQuestion.id,
       score: selectedOption,
@@ -547,7 +581,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     setAnswers(newAnswers);
     
     // Update scores for the radar chart
-    const categoryAnswers = QUESTIONS
+    const categoryAnswers = activeQuestionSet
       .filter(q => q.categoryKey === currentQuestion.categoryKey)
       .map(q => newAnswers.get(q.id)?.score || 0)
       .filter(score => score > 0);
@@ -562,7 +596,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     }
     
     // Move to next question or finish
-    if (currentQuestionIndex < QUESTIONS.length - 1) {
+    if (currentQuestionIndex < activeQuestionSet.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedOption(null);
       setCustomNote('');
@@ -578,18 +612,19 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     setSuccessMessage(null);
 
     try {
-      const finalScores = createDefaultScores();
+      const finalScores = { ...questionnaireBaseScores };
+      const questionCategories = new Set(activeQuestionSet.map((question) => question.categoryKey));
       
       // Calculate final scores for each category
-      LIFE_WHEEL_CATEGORIES.forEach(category => {
-        const categoryQuestions = QUESTIONS.filter(q => q.categoryKey === category.key);
+      questionCategories.forEach((categoryKey) => {
+        const categoryQuestions = activeQuestionSet.filter(q => q.categoryKey === categoryKey);
         const categoryAnswers = categoryQuestions
           .map(q => finalAnswers.get(q.id)?.score || 0)
           .filter(score => score > 0);
         
         if (categoryAnswers.length > 0) {
           const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
-          finalScores[category.key] = scaleQuestionScoreToWheel(avgScore);
+          finalScores[categoryKey] = scaleQuestionScoreToWheel(avgScore);
         }
       });
 
@@ -615,7 +650,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         await recordActivity();
       }
       
-      setSuccessMessage('Wellbeing check-in completed! Your life wheel has been updated.');
+      setSuccessMessage(`${questionnaireLabel} completed! Your life wheel has been updated.`);
       setIsInQuestionnaireMode(false);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to save your check-in.');
@@ -628,41 +663,69 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   const currentProgressScores = useMemo(() => {
     if (!isInQuestionnaireMode) return null;
     
-    const progressScores = createDefaultScores();
-    LIFE_WHEEL_CATEGORIES.forEach(category => {
-      const categoryQuestions = QUESTIONS.filter(q => q.categoryKey === category.key);
+    const progressScores = { ...questionnaireBaseScores };
+    const questionCategories = new Set(activeQuestionSet.map((question) => question.categoryKey));
+
+    questionCategories.forEach((categoryKey) => {
+      const categoryQuestions = activeQuestionSet.filter(q => q.categoryKey === categoryKey);
       const categoryAnswers = categoryQuestions
         .map(q => answers.get(q.id)?.score || 0)
         .filter(score => score > 0);
       
       if (categoryAnswers.length > 0) {
         const avgScore = categoryAnswers.reduce((sum, s) => sum + s, 0) / categoryAnswers.length;
-        progressScores[category.key] = scaleQuestionScoreToWheel(avgScore);
+        progressScores[categoryKey] = scaleQuestionScoreToWheel(avgScore);
       }
     });
     
     return progressScores;
-  }, [isInQuestionnaireMode, answers]);
+  }, [isInQuestionnaireMode, answers, activeQuestionSet, questionnaireBaseScores]);
 
   const progressRadarGeometry = useMemo(() => {
     return currentProgressScores ? buildRadarGeometry(currentProgressScores) : null;
   }, [currentProgressScores]);
 
+  const activeAreaLabel = useMemo(() => {
+    if (!selectedAreaCategory) return null;
+    return LIFE_WHEEL_CATEGORIES.find((category) => category.key === selectedAreaCategory)?.label ?? null;
+  }, [selectedAreaCategory]);
+
+  const handleSelectCheckinView = (view: CheckinView) => {
+    setActiveCheckinView(view);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+    setIsQuickCheckinOpen(false);
+  };
+
+  const handleStartAreaCheckin = () => {
+    if (!selectedAreaCategory || areaQuestionSet.length === 0) return;
+    const baseScores = selectedScores ?? createDefaultScores();
+    startQuestionnaire({
+      questionSet: areaQuestionSet,
+      baseScores,
+      label: `${activeAreaLabel ?? 'Area'} Check-in`,
+      areaCategoryKey: selectedAreaCategory,
+    });
+  };
+
+  const showCheckinStatus = activeCheckinView !== 'annual';
+
   // Render questionnaire mode
   if (isInQuestionnaireMode) {
-    const currentQuestion = QUESTIONS[currentQuestionIndex];
-    const progress = ((currentQuestionIndex + 1) / QUESTIONS.length) * 100;
+    const currentQuestion = activeQuestionSet[currentQuestionIndex];
+    const questionCount = Math.max(1, activeQuestionSet.length);
+    const progress = ((currentQuestionIndex + 1) / questionCount) * 100;
     
     return (
       <section className="life-wheel life-wheel--questionnaire">
         <div className="questionnaire-container">
           <button type="button" className="questionnaire-back" onClick={exitQuestionnaire}>
-            Back to wellbeing dashboard
+            Back to check-ins
           </button>
           <div className="questionnaire-progress">
             <div className="questionnaire-progress__bar" style={{ width: `${progress}%` }} />
             <span className="questionnaire-progress__text">
-              Question {currentQuestionIndex + 1} of {QUESTIONS.length}
+              Question {currentQuestionIndex + 1} of {questionCount}
             </span>
           </div>
 
@@ -672,6 +735,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
             </div>
             
             <h3 className="questionnaire-question">{currentQuestion.text}</h3>
+            <p className="questionnaire-subtitle">{questionnaireLabel}</p>
             
             <div className="questionnaire-options">
               <button
@@ -717,7 +781,11 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
               onClick={handleAnswerSubmit}
               disabled={selectedOption === null || submitting}
             >
-              {submitting ? 'Saving...' : currentQuestionIndex === QUESTIONS.length - 1 ? 'Complete Check-in' : 'Next Question'}
+              {submitting
+                ? 'Saving...'
+                : currentQuestionIndex === questionCount - 1
+                  ? 'Complete Check-in'
+                  : 'Next Question'}
             </button>
           </div>
 
@@ -768,21 +836,112 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
   return (
     <section className="life-wheel">
-      {isDemoExperience ? (
-        <p className="life-wheel__status life-wheel__status--info">
-          Life wheel entries are stored locally in demo mode. Connect Supabase when you&apos;re ready to sync check-ins across
-          devices.
-        </p>
-      ) : !isConfigured ? (
-        <p className="life-wheel__status life-wheel__status--warning">
-          Add your Supabase credentials so we can sync your check-ins across devices. Until then your entries stay local.
-        </p>
+      <div className="life-wheel__chooser">
+        <div className="life-wheel__chooser-header">
+          <h2>Check-ins</h2>
+          <p>Choose the check-in flow you want to focus on today.</p>
+        </div>
+        <div className="life-wheel__chooser-grid">
+          <button
+            type="button"
+            className={`life-wheel__chooser-card ${activeCheckinView === 'full' ? 'life-wheel__chooser-card--active' : ''}`}
+            onClick={() => handleSelectCheckinView('full')}
+            aria-pressed={activeCheckinView === 'full'}
+          >
+            <h3>Full Check-in</h3>
+            <p>Use the full wellbeing wheel and track your overall balance.</p>
+          </button>
+          <button
+            type="button"
+            className={`life-wheel__chooser-card ${activeCheckinView === 'annual' ? 'life-wheel__chooser-card--active' : ''}`}
+            onClick={() => handleSelectCheckinView('annual')}
+            aria-pressed={activeCheckinView === 'annual'}
+          >
+            <h3>Annual Review &amp; Manifestation</h3>
+            <p>Reflect on the year and set intentions for what comes next.</p>
+          </button>
+          <button
+            type="button"
+            className={`life-wheel__chooser-card ${activeCheckinView === 'area' ? 'life-wheel__chooser-card--active' : ''}`}
+            onClick={() => handleSelectCheckinView('area')}
+            aria-pressed={activeCheckinView === 'area'}
+          >
+            <h3>Area Check-in</h3>
+            <p>Zoom in on one life wheel area for a focused refresh.</p>
+          </button>
+        </div>
+      </div>
+
+      {showCheckinStatus ? (
+        <>
+          {isDemoExperience ? (
+            <p className="life-wheel__status life-wheel__status--info">
+              Life wheel entries are stored locally in demo mode. Connect Supabase when you&apos;re ready to sync check-ins across
+              devices.
+            </p>
+          ) : !isConfigured ? (
+            <p className="life-wheel__status life-wheel__status--warning">
+              Add your Supabase credentials so we can sync your check-ins across devices. Until then your entries stay local.
+            </p>
+          ) : null}
+
+          {errorMessage && <p className="life-wheel__status life-wheel__status--error">{errorMessage}</p>}
+          {successMessage && <p className="life-wheel__status life-wheel__status--success">{successMessage}</p>}
+        </>
       ) : null}
 
-      {errorMessage && <p className="life-wheel__status life-wheel__status--error">{errorMessage}</p>}
-      {successMessage && <p className="life-wheel__status life-wheel__status--success">{successMessage}</p>}
+      {activeCheckinView === 'annual' ? (
+        <div className="life-wheel__annual-review">
+          <ReviewWizard onComplete={() => handleSelectCheckinView('full')} />
+        </div>
+      ) : (
+        <>
+          {activeCheckinView === 'area' ? (
+            <div className="life-wheel__area-panel">
+              <div>
+                <h3>Area Check-in</h3>
+                <p>Select one life wheel area and complete a focused set of questions.</p>
+              </div>
+              <div className="life-wheel__area-controls">
+                <label htmlFor="life-wheel-area">Choose an area</label>
+                <select
+                  id="life-wheel-area"
+                  value={selectedAreaCategory}
+                  onChange={(event) => {
+                    const value = event.target.value as LifeWheelCategoryKey | '';
+                    setSelectedAreaCategory(value);
+                  }}
+                >
+                  <option value="">Select an area</option>
+                  {LIFE_WHEEL_CATEGORIES.map((category) => (
+                    <option key={category.key} value={category.key}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="life-wheel__area-start"
+                  onClick={handleStartAreaCheckin}
+                  disabled={!selectedAreaCategory || (!isConfigured && !isDemoExperience)}
+                >
+                  Start Area Check-in
+                  {selectedAreaCategory && areaQuestionSet.length > 0 ? (
+                    <span className="life-wheel__area-count">({areaQuestionSet.length} questions)</span>
+                  ) : null}
+                </button>
+                {selectedAreaCategory ? (
+                  <p className="life-wheel__area-meta">
+                    Current score: {selectedAreaScore ?? 0}/10
+                  </p>
+                ) : (
+                  <p className="life-wheel__area-meta">Pick a focus area to see its latest score.</p>
+                )}
+              </div>
+            </div>
+          ) : null}
 
-      <div className="life-wheel__grid">
+          <div className="life-wheel__grid">
         <div className="life-wheel__panel life-wheel__panel--chart">
           {selectedCheckin && radarGeometry ? (
             <>
@@ -828,23 +987,45 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                 </g>
               </svg>
               <div className="life-wheel__chart-actions">
-                <button
-                  type="button"
-                  className="life-wheel__start-questionnaire"
-                  onClick={startQuestionnaire}
-                  disabled={!isConfigured && !isDemoExperience}
-                >
-                  Start New Wellbeing Check-in
-                  <span className="life-wheel__questionnaire-count">(25 questions)</span>
-                </button>
-                <button
-                  type="button"
-                  className="life-wheel__quick-checkin"
-                  onClick={() => setIsQuickCheckinOpen(true)}
-                  disabled={!isConfigured && !isDemoExperience}
-                >
-                  Quick Score Check-in
-                </button>
+                {activeCheckinView === 'area' ? (
+                  <button
+                    type="button"
+                    className="life-wheel__area-start"
+                    onClick={handleStartAreaCheckin}
+                    disabled={!selectedAreaCategory || (!isConfigured && !isDemoExperience)}
+                  >
+                    Start Area Check-in
+                    {selectedAreaCategory && areaQuestionSet.length > 0 ? (
+                      <span className="life-wheel__area-count">({areaQuestionSet.length} questions)</span>
+                    ) : null}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="life-wheel__start-questionnaire"
+                      onClick={() =>
+                        startQuestionnaire({
+                          questionSet: QUESTIONS,
+                          baseScores: createDefaultScores(),
+                          label: 'Full Check-in',
+                        })
+                      }
+                      disabled={!isConfigured && !isDemoExperience}
+                    >
+                      Start New Wellbeing Check-in
+                      <span className="life-wheel__questionnaire-count">({QUESTIONS.length} questions)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="life-wheel__quick-checkin"
+                      onClick={() => setIsQuickCheckinOpen(true)}
+                      disabled={!isConfigured && !isDemoExperience}
+                    >
+                      Quick Score Check-in
+                    </button>
+                  </>
+                )}
               </div>
               <div className="life-wheel__snapshot">
                 <h3>{dateFormatter.format(new Date(selectedCheckin.date))}</h3>
@@ -951,31 +1132,56 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
                 <p>Log your first check-in to unlock the radar chart and trend history.</p>
               </div>
               <div className="life-wheel__chart-actions">
-                <button
-                  type="button"
-                  className="life-wheel__start-questionnaire"
-                  onClick={startQuestionnaire}
-                  disabled={!isConfigured && !isDemoExperience}
-                >
-                  Start New Wellbeing Check-in
-                  <span className="life-wheel__questionnaire-count">(25 questions)</span>
-                </button>
-                <button
-                  type="button"
-                  className="life-wheel__quick-checkin"
-                  onClick={() => setIsQuickCheckinOpen(true)}
-                  disabled={!isConfigured && !isDemoExperience}
-                >
-                  Quick Score Check-in
-                </button>
+                {activeCheckinView === 'area' ? (
+                  <button
+                    type="button"
+                    className="life-wheel__area-start"
+                    onClick={handleStartAreaCheckin}
+                    disabled={!selectedAreaCategory || (!isConfigured && !isDemoExperience)}
+                  >
+                    Start Area Check-in
+                    {selectedAreaCategory && areaQuestionSet.length > 0 ? (
+                      <span className="life-wheel__area-count">({areaQuestionSet.length} questions)</span>
+                    ) : null}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="life-wheel__start-questionnaire"
+                      onClick={() =>
+                        startQuestionnaire({
+                          questionSet: QUESTIONS,
+                          baseScores: createDefaultScores(),
+                          label: 'Full Check-in',
+                        })
+                      }
+                      disabled={!isConfigured && !isDemoExperience}
+                    >
+                      Start New Wellbeing Check-in
+                      <span className="life-wheel__questionnaire-count">({QUESTIONS.length} questions)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="life-wheel__quick-checkin"
+                      onClick={() => setIsQuickCheckinOpen(true)}
+                      disabled={!isConfigured && !isDemoExperience}
+                    >
+                      Quick Score Check-in
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}
         </div>
 
       </div>
+        </>
+      )}
 
-      <dialog className="modal life-wheel__quick-checkin-modal" open={isQuickCheckinOpen}>
+      {activeCheckinView !== 'annual' ? (
+        <dialog className="modal life-wheel__quick-checkin-modal" open={isQuickCheckinOpen}>
         <div className="modal-backdrop" onClick={() => setIsQuickCheckinOpen(false)} />
         <div className="modal__panel life-wheel__quick-checkin-panel" onClick={(event) => event.stopPropagation()}>
           <div className="life-wheel__form-header life-wheel__form-header--modal">
@@ -1035,7 +1241,8 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
             </div>
           </form>
         </div>
-      </dialog>
+        </dialog>
+      ) : null}
     </section>
   );
 }
