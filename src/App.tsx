@@ -34,6 +34,7 @@ import { XPToast } from './components/XPToast';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useTheme, AVAILABLE_THEMES } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
+import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -199,6 +200,7 @@ export default function App() {
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
+  const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
@@ -1344,25 +1346,43 @@ export default function App() {
           </div>
 
           <div className="mobile-gamification-overlay__grid" role="list">
+            <button
+              type="button"
+              className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat-button"
+              onClick={() => setShowAiCoachModal(true)}
+              role="listitem"
+            >
+              <span className="mobile-gamification-overlay__stat-icon" aria-hidden="true">🤖</span>
+              <div className="mobile-gamification-overlay__stat-content">
+                <p className="mobile-gamification-overlay__stat-label">Hey Coach?</p>
+                <p className="mobile-gamification-overlay__stat-hint">Ask for a quick nudge or focus reset.</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat-button"
+              onClick={() => setShowDailySpinWheel(true)}
+              role="listitem"
+            >
+              <span className="mobile-gamification-overlay__stat-icon" aria-hidden="true">🎡</span>
+              <div className="mobile-gamification-overlay__stat-content">
+                <p className="mobile-gamification-overlay__stat-label">Life Spin</p>
+                <p className="mobile-gamification-overlay__stat-hint">Spin once per day for a surprise boost.</p>
+              </div>
+            </button>
             <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">Goals</p>
-              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.goalCount ?? 0}</p>
-              <p className="mobile-gamification-overlay__stat-hint">Tracked in your workspace</p>
+              <p className="mobile-gamification-overlay__stat-label">Goals + Habits</p>
+              <p className="mobile-gamification-overlay__stat-value mobile-gamification-overlay__stat-value--compact">
+                {(workspaceStats?.goalCount ?? 0)} goals · {(workspaceStats?.habitCount ?? 0)} habits
+              </p>
+              <p className="mobile-gamification-overlay__stat-hint">Tracked focus areas and routines.</p>
             </div>
             <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">Habits</p>
-              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.habitCount ?? 0}</p>
-              <p className="mobile-gamification-overlay__stat-hint">Active routines to keep you steady</p>
-            </div>
-            <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">Check-ins</p>
-              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.checkinCount ?? 0}</p>
-              <p className="mobile-gamification-overlay__stat-hint">Moments you showed up</p>
-            </div>
-            <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">Journals</p>
-              <p className="mobile-gamification-overlay__stat-value">{workspaceStats?.journalCount ?? 0}</p>
-              <p className="mobile-gamification-overlay__stat-hint">Reflections you’ve captured</p>
+              <p className="mobile-gamification-overlay__stat-label">Check-ins + Journals</p>
+              <p className="mobile-gamification-overlay__stat-value mobile-gamification-overlay__stat-value--compact">
+                {(workspaceStats?.checkinCount ?? 0)} check-ins · {(workspaceStats?.journalCount ?? 0)} journals
+              </p>
+              <p className="mobile-gamification-overlay__stat-hint">Moments logged and reflections captured.</p>
             </div>
           </div>
         </div>
@@ -1385,6 +1405,9 @@ export default function App() {
         {mobileGamificationOverlay}
         {showAiCoachModal && (
           <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
+        )}
+        {showDailySpinWheel && (
+          <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
         )}
       </>
     );
@@ -1601,6 +1624,9 @@ export default function App() {
       {/* AI Coach Modal from Main Menu */}
       {showAiCoachModal && (
         <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
+      )}
+      {showDailySpinWheel && (
+        <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
       )}
 
       {/* Quick Actions FAB - visible app-wide */}

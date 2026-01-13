@@ -64,7 +64,6 @@ export function MobileFooterNav({
                   >
                     <div className="mobile-footer-nav__status-header">
                       <span className="mobile-footer-nav__status-icon" aria-hidden="true">{status.icon ?? '⭐️'}</span>
-                      <span className="mobile-footer-nav__status-level">{status.levelLabel ?? status.label}</span>
                     </div>
                     <span className="mobile-footer-nav__status-label">{status.label}</span>
                     {'progress' in status && status.progress !== undefined ? (
@@ -75,6 +74,7 @@ export function MobileFooterNav({
                         />
                       </div>
                     ) : null}
+                    <span className="mobile-footer-nav__status-level">{status.levelLabel ?? status.label}</span>
                   </button>
                 </li>
               );

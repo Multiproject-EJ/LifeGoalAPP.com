@@ -10551,7 +10551,7 @@ body {
 .mobile-footer-nav__status-header {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: 0.02em;
@@ -10563,8 +10563,10 @@ body {
 }
 
 .mobile-footer-nav__status-level {
+  text-align: center;
   font-size: 0.7rem;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .mobile-footer-nav__status-label {
@@ -11039,6 +11041,27 @@ body {
   gap: 0.2rem;
 }
 
+.mobile-gamification-overlay__stat-button {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mobile-gamification-overlay__stat-button:hover,
+.mobile-gamification-overlay__stat-button:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+  outline: none;
+}
+
+.mobile-gamification-overlay__stat-content {
+  display: grid;
+  gap: 0.15rem;
+}
+
 .mobile-gamification-overlay__stat-label {
   margin: 0;
   color: #475569;
@@ -11051,6 +11074,12 @@ body {
   font-size: 1.4rem;
   font-weight: 800;
   color: #0f172a;
+}
+
+.mobile-gamification-overlay__stat-value--compact {
+  font-size: 1.05rem;
+  line-height: 1.4;
+  font-weight: 700;
 }
 
 .mobile-gamification-overlay__stat-hint {
