@@ -21,7 +21,6 @@ type QuickActionsFABProps = {
   onCheckHabit?: () => void;
   onJournalNow?: (type: JournalType) => void;
   onOpenLifeCoach?: () => void;
-  onToggleWorkspaceMenu?: (isFabOpen: boolean) => void;
 };
 
 type QuickAction = {
@@ -56,7 +55,6 @@ export function QuickActionsFAB({
   onCheckHabit,
   onJournalNow,
   onOpenLifeCoach,
-  onToggleWorkspaceMenu,
 }: QuickActionsFABProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showJournalTypes, setShowJournalTypes] = useState(false);
@@ -272,7 +270,6 @@ export function QuickActionsFAB({
       setShowHabitsSubmenu(false);
       setShowGamificationCard(false);
     }
-    onToggleWorkspaceMenu?.(nextIsOpen);
   };
 
   // Load habits and their completion status

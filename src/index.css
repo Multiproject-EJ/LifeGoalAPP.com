@@ -876,6 +876,20 @@ body {
   z-index: 998;
 }
 
+.workspace-shell__menu-edge::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: clamp(2px, 0.5vw, 6px);
+  width: clamp(6px, 0.8vw, 10px);
+  height: clamp(44px, 8vh, 80px);
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35), 0 6px 16px rgba(15, 23, 42, 0.25);
+  transform: translateY(-50%);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
 .workspace-shell__menu-edge::after {
   content: '';
   position: absolute;
@@ -888,6 +902,13 @@ body {
 .workspace-shell__menu-edge:hover::after,
 .workspace-shell__menu-edge:focus-visible::after {
   opacity: 1;
+}
+
+.workspace-shell__menu-edge:hover::before,
+.workspace-shell__menu-edge:focus-visible::before {
+  background: rgba(99, 102, 241, 0.7);
+  box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.6), 0 10px 20px rgba(15, 23, 42, 0.35);
+  transform: translateY(-50%) scaleY(1.05);
 }
 
 .workspace-sidebar {
