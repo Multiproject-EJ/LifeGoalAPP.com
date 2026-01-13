@@ -14,6 +14,54 @@
   gap: var(--space-5);
 }
 
+.breathing-space__reminder {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.breathing-space__reminder-button {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.breathing-space__reminder-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.breathing-space__reminder-button--glow {
+  box-shadow: 0 0 12px rgba(102, 154, 255, 0.45), 0 0 24px rgba(102, 154, 255, 0.25);
+  border-color: rgba(102, 154, 255, 0.65);
+}
+
+.breathing-space__reminder-card {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, max-height 0.2s ease;
+}
+
+.breathing-space__reminder-card--open {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 600px;
+  pointer-events: auto;
+}
+
 .breathing-space__right-column {
   display: flex;
   flex-direction: column;
@@ -158,10 +206,98 @@
   letter-spacing: -0.01em;
 }
 
+.breathing-space__guided-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.breathing-space__guided-button {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.breathing-space__guided-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.breathing-space__guided-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.breathing-space__guided-button-title {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+.breathing-space__guided-button-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
 .breathing-space__library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
+}
+
+.breathing-space__button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.breathing-space__exercise-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.breathing-space__exercise-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.breathing-space__exercise-button-icon {
+  font-size: 1.5rem;
+}
+
+.breathing-space__exercise-button-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.breathing-space__exercise-button-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.breathing-space__exercise-button-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
 }
 
 .breathing-space__library-card {
@@ -237,6 +373,14 @@
   }
 
   .breathing-space__library-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .breathing-space__guided-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .breathing-space__button-grid {
     grid-template-columns: 1fr;
   }
 

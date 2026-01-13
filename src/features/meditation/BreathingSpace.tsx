@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { MeditationSessionPlayer } from './MeditationSessionPlayer';
 import { GuidedMeditationPlayer } from './GuidedMeditationPlayer';
@@ -37,6 +37,9 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     duration: number;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderSet, setReminderSet] = useState(false);
+  const reminderRef = useRef<HTMLDivElement>(null);
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
@@ -62,6 +65,24 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
       window.removeEventListener('breathing:open', handleBreathingOpen as EventListener);
     };
   }, [session.user.id]);
+
+  useEffect(() => {
+    if (!reminderOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (reminderRef.current && !reminderRef.current.contains(event.target as Node)) {
+        setReminderOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [reminderOpen]);
 
   const loadStats = async () => {
     setLoading(true);
@@ -160,6 +181,28 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
     <div className="breathing-space">
       {/* Left Column: Quick Start & Reminder */}
       <div className="breathing-space__left-column">
+        {/* Daily Reminder Toggle */}
+        <div className="breathing-space__reminder" ref={reminderRef}>
+          <button
+            type="button"
+            className={`breathing-space__reminder-button ${
+              reminderSet ? '' : 'breathing-space__reminder-button--glow'
+            }`}
+            onClick={() => setReminderOpen((prev) => !prev)}
+            aria-expanded={reminderOpen}
+            aria-label="Toggle daily reminder"
+          >
+            ⏰
+          </button>
+          <div
+            className={`breathing-space__reminder-card ${
+              reminderOpen ? 'breathing-space__reminder-card--open' : ''
+            }`}
+          >
+            <ReminderCard userId={session.user.id} onReminderStatusChange={setReminderSet} />
+          </div>
+        </div>
+
         {/* Quick Start Card */}
         <div className="breathing-space__card breathing-space__quick-start">
           <div className="breathing-space__card-header">
@@ -177,8 +220,6 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           </button>
         </div>
 
-        {/* Daily Reminder Card */}
-        <ReminderCard userId={session.user.id} />
       </div>
 
       {/* Right Column: Progress & Library */}
@@ -214,6 +255,23 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         {/* Meditation Library */}
         <div className="breathing-space__library">
           <h3 className="breathing-space__library-title">Guided Meditations</h3>
+
+          <div className="breathing-space__guided-buttons">
+            {GUIDED_MEDITATIONS.map((meditation) => (
+              <button
+                key={meditation.id}
+                type="button"
+                className="breathing-space__guided-button"
+                onClick={() => handleStartGuidedMeditation(meditation.id)}
+                disabled={meditation.isPlaceholder}
+              >
+                <span className="breathing-space__guided-button-title">{meditation.title}</span>
+                <span className="breathing-space__guided-button-meta">
+                  {meditation.isPlaceholder ? 'Coming soon' : `${meditationDuration} min`}
+                </span>
+              </button>
+            ))}
+          </div>
           
           {/* Meditation Controls */}
           <div className="breathing-space__guided-controls">
@@ -288,22 +346,22 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         {/* Breathing Exercises Library */}
         <div className="breathing-space__library">
           <h3 className="breathing-space__library-title">Breathing Exercises</h3>
-          <div className="breathing-space__library-grid">
+          <div className="breathing-space__button-grid">
             {PLACEHOLDER_SESSIONS.map((s) => (
-              <div key={s.id} className="breathing-space__library-card">
-                <div className="breathing-space__library-card-icon">{s.icon}</div>
-                <h4 className="breathing-space__library-card-title">{s.title}</h4>
-                <p className="breathing-space__library-card-description">{s.description}</p>
-                <div className="breathing-space__library-card-duration">
-                  {Math.floor(s.duration / 60)} minutes
-                </div>
-                <button
-                  className="btn btn--secondary breathing-space__library-card-button"
-                  onClick={() => handleStartSession(s.title, s.duration)}
-                >
-                  Start
-                </button>
-              </div>
+              <button
+                key={s.id}
+                type="button"
+                className="breathing-space__exercise-button"
+                onClick={() => handleStartSession(s.title, s.duration)}
+              >
+                <span className="breathing-space__exercise-button-icon">{s.icon}</span>
+                <span className="breathing-space__exercise-button-text">
+                  <span className="breathing-space__exercise-button-title">{s.title}</span>
+                  <span className="breathing-space__exercise-button-meta">
+                    {Math.floor(s.duration / 60)} min
+                  </span>
+                </span>
+              </button>
             ))}
           </div>
         </div>
