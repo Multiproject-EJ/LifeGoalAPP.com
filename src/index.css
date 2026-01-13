@@ -3888,13 +3888,16 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: rgba(253, 230, 138, 0.35);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(56, 189, 248, 0.15) 55%, rgba(168, 85, 247, 0.2));
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: 0 10px 18px rgba(59, 130, 246, 0.18);
 }
 
 .habit-checklist-card__progress-ring {
   width: 28px;
   height: 28px;
   transform: rotate(-90deg);
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.35));
 }
 
 .habit-checklist-card__progress-track {
@@ -3905,7 +3908,6 @@ body {
 
 .habit-checklist-card__progress-value {
   fill: none;
-  stroke: #f59e0b;
   stroke-width: 4;
   stroke-linecap: round;
   transition: stroke-dasharray 0.4s ease;
@@ -4195,17 +4197,85 @@ body {
   outline-offset: 2px;
 }
 
-.habit-day-nav__star {
+.habit-day-nav__vision-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.35rem;
+}
+
+.habit-day-nav--compact .habit-day-nav__vision-row {
+  margin-top: 0.25rem;
+}
+
+.habit-day-nav__vision-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   border: none;
-  width: 34px;
-  height: 34px;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: linear-gradient(120deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2), rgba(245, 158, 11, 0.2));
+  background-size: 200% 200%;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habit-day-nav--compact .habit-day-nav__vision-button {
+  padding: 0.3rem 0.7rem;
+  gap: 0.6rem;
+}
+
+.habit-day-nav__vision-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.habit-day-nav__vision-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(59, 130, 246, 0.25);
+}
+
+.habit-day-nav__vision-button--glow {
+  animation: vision-glow 2.8s ease-in-out infinite;
+}
+
+.habit-day-nav__vision-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  text-align: left;
+}
+
+.habit-day-nav__vision-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.6rem;
+  color: #334155;
+}
+
+.habit-day-nav__vision-subtitle {
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+.habit-day-nav--compact .habit-day-nav__vision-subtitle {
+  font-size: 0.75rem;
+}
+
+.habit-day-nav__star {
+  width: 30px;
+  height: 30px;
   background: radial-gradient(circle at top, #fde68a, #f59e0b);
   color: #7c2d12;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.95rem;
   display: grid;
   place-items: center;
-  cursor: pointer;
   box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
   clip-path: polygon(
     50% 0%,
@@ -4264,15 +4334,24 @@ body {
   animation: sparkle-pop 0.9s ease;
 }
 
-.habit-day-nav__star:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.habit-day-nav__star:not(:disabled):hover {
+.habit-day-nav__vision-button:not(:disabled):hover .habit-day-nav__star {
   transform: translateY(-1px) scale(1.02);
   box-shadow: 0 14px 24px rgba(245, 158, 11, 0.4);
+}
+
+@keyframes vision-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0.2);
+    background-position: 0% 50%;
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.35);
+    background-position: 100% 50%;
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0.2);
+    background-position: 0% 50%;
+  }
 }
 
 .habit-day-nav__bonus {
@@ -4326,6 +4405,12 @@ body {
 .habit-day-nav__bonus-placeholder {
   font-size: 0.75rem;
   color: #64748b;
+  font-weight: 600;
+}
+
+.habit-day-nav__bonus-caption {
+  font-size: 0.72rem;
+  color: #475569;
   font-weight: 600;
 }
 
@@ -4525,6 +4610,41 @@ body {
   border-radius: 14px;
   padding: 0.65rem 0.85rem;
   background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.habit-checklist-card__status-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.habit-checklist-card__refresh-inline {
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  background: #fff;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.habit-checklist-card__refresh-inline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.habit-checklist-card__refresh-inline:not(:disabled):hover {
+  background: #0ea5e9;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(14, 165, 233, 0.25);
 }
 
 .habit-checklist-card__status--info {

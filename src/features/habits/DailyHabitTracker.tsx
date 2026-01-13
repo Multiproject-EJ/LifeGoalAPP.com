@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useId } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
@@ -134,6 +134,8 @@ const intentionsJournalDraftKey = (userId: string, dateISO: string) =>
 const intentionsNoticeStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.intentions-notice:${userId}:${dateISO}`;
 const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
+const visionStarStorageKey = (userId: string, dateISO: string) =>
+  `lifegoal.vision-star:${userId}:${dateISO}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -160,6 +162,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const isCompact = variant === 'compact';
+  const progressGradientId = useId();
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -211,11 +214,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [isIntentionsNoticeViewed, setIsIntentionsNoticeViewed] = useState(false);
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
   const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
+  const [visionRewardDate, setVisionRewardDate] = useState<string | null>(null);
   const [visionRewardError, setVisionRewardError] = useState<string | null>(null);
   const [visionImagesLoading, setVisionImagesLoading] = useState(false);
   const [visionRewarding, setVisionRewarding] = useState(false);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
+  const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
@@ -348,11 +353,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         caption: selection.caption ?? null,
         xpAwarded: result?.xpAwarded ?? xpAmount,
       });
+      setVisionRewardDate(activeDate);
+      setHasClaimedVisionStar(true);
+      saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
       setIsVisionRewardOpen(true);
     } finally {
       setVisionRewarding(false);
     }
-  }, [earnXP, isConfigured, isDemoExperience, recordActivity, visionImages]);
+  }, [activeDate, earnXP, isConfigured, isDemoExperience, recordActivity, session.user.id, visionImages]);
 
   const triggerStarBurst = useCallback(() => {
     setIsStarBursting(true);
@@ -414,6 +422,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         </div>
       </div>
     ) : null;
+
+  useEffect(() => {
+    setIsVisionRewardOpen(false);
+    setVisionRewardError(null);
+    setIsStarBursting(false);
+  }, [activeDate]);
+
+  useEffect(() => {
+    const stored = loadDraft<boolean>(visionStarStorageKey(session.user.id, activeDate));
+    setHasClaimedVisionStar(Boolean(stored));
+  }, [activeDate, session.user.id]);
 
   useEffect(() => {
     const draftKey = quickJournalDraftKey(session.user.id, activeDate);
@@ -1133,6 +1152,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const canGoForward = activeDate < today;
     const isViewingToday = activeDate === today;
     const navClasses = ['habit-day-nav', `habit-day-nav--${variant}`];
+    const visionRewardForDay = visionReward && visionRewardDate === activeDate;
+    const visionBoostLabel = `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`;
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
@@ -1165,43 +1186,57 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   onChange={(event) => handleDateInputChange(event.target.value)}
                 />
               </label>
-              <button
-                type="button"
-                className={`habit-day-nav__star ${
-                  isStarBursting || visionRewarding ? 'habit-day-nav__star--burst' : ''
-                }`}
-                onClick={handleVisionRewardClick}
-                disabled={visionImagesLoading || visionRewarding}
-                aria-label="Reveal a vision board star boost"
-              >
-                <span className="habit-day-nav__star-icon" aria-hidden="true">★</span>
-                <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--one" aria-hidden="true">
-                  ✨
-                </span>
-                <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--two" aria-hidden="true">
-                  🏆
-                </span>
-                <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--three" aria-hidden="true">
-                  📸
-                </span>
-              </button>
             </div>
-            <div className="habit-day-nav__bonus">
-              <div className="habit-day-nav__bonus-text">
-                <span className="habit-day-nav__bonus-title">Vision star</span>
-                <span className="habit-day-nav__bonus-subtitle">
-                  {visionReward ? `+${visionReward.xpAwarded} XP earned` : `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`}
-                </span>
+            {!hasClaimedVisionStar ? (
+              <div className="habit-day-nav__vision-row">
+                <button
+                  type="button"
+                  className={`habit-day-nav__vision-button ${
+                    !hasClaimedVisionStar ? 'habit-day-nav__vision-button--glow' : ''
+                  }`}
+                  onClick={handleVisionRewardClick}
+                  disabled={visionImagesLoading || visionRewarding}
+                  aria-label="Reveal a vision board star boost"
+                >
+                  <span
+                    className={`habit-day-nav__star ${
+                      isStarBursting || visionRewarding ? 'habit-day-nav__star--burst' : ''
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <span className="habit-day-nav__star-icon">★</span>
+                    <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--one">
+                      ✨
+                    </span>
+                    <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--two">
+                      🏆
+                    </span>
+                    <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--three">
+                      📸
+                    </span>
+                  </span>
+                  <span className="habit-day-nav__vision-text">
+                    <span className="habit-day-nav__vision-title">Vision star</span>
+                    <span className="habit-day-nav__vision-subtitle">{visionBoostLabel}</span>
+                  </span>
+                </button>
               </div>
-              {visionReward ? (
+            ) : null}
+            <div className="habit-day-nav__bonus">
+              {visionRewardForDay ? (
                 <img
                   className="habit-day-nav__bonus-image"
-                  src={visionReward.imageUrl}
-                  alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
+                  src={visionRewardForDay.imageUrl}
+                  alt={visionRewardForDay.caption ? `Vision board: ${visionRewardForDay.caption}` : 'Vision board inspiration'}
                 />
               ) : (
-                <span className="habit-day-nav__bonus-placeholder">Tap the star for a random vision board image</span>
+                <span className="habit-day-nav__bonus-placeholder">
+                  {hasClaimedVisionStar ? 'Vision star claimed today.' : 'Tap the star to reveal a random vision board image.'}
+                </span>
               )}
+              {visionRewardForDay?.caption ? (
+                <span className="habit-day-nav__bonus-caption">{visionRewardForDay.caption}</span>
+              ) : null}
             </div>
             {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
           </div>
@@ -1595,18 +1630,26 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">
                 <span className="habit-checklist-card__progress" role="img" aria-label={progressLabel}>
-                  <span className="sr-only">{progressLabel}</span>
-                  <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
-                    <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
-                    <circle
-                      className="habit-checklist-card__progress-value"
-                      cx="18"
-                      cy="18"
-                      r="16"
-                      strokeDasharray={`${progressPercent} 100`}
-                    />
-                  </svg>
-                </span>
+                <span className="sr-only">{progressLabel}</span>
+                <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
+                  <defs>
+                    <linearGradient id={progressGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#38bdf8" />
+                      <stop offset="50%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#f59e0b" />
+                    </linearGradient>
+                  </defs>
+                  <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
+                  <circle
+                    className="habit-checklist-card__progress-value"
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    strokeDasharray={`${progressPercent} 100`}
+                    stroke={`url(#${progressGradientId})`}
+                  />
+                </svg>
+              </span>
                 {tomorrowIntentionsEntry ? (
                   <button
                     type="button"
@@ -1618,14 +1661,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     Intentions
                   </button>
                 ) : null}
-                <button
-                  type="button"
-                  className="habit-checklist-card__refresh"
-                  onClick={() => void refreshHabits()}
-                  disabled={loading || (!isConfigured && !isDemoExperience)}
-                >
-                  {loading ? 'Refreshing…' : 'Refresh'}
-                </button>
               </div>
             ) : null}
           </div>
@@ -1885,9 +1920,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           </div>
         </div>
 
-        <p className={`habit-checklist-card__status habit-checklist-card__status--${statusVariant}`}>
-          {statusText}
-        </p>
+        <div className={`habit-checklist-card__status habit-checklist-card__status--${statusVariant}`}>
+          <span className="habit-checklist-card__status-text">{statusText}</span>
+          <button
+            type="button"
+            className="habit-checklist-card__refresh-inline"
+            onClick={() => void refreshHabits()}
+            disabled={loading || (!isConfigured && !isDemoExperience)}
+          >
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
     );
   };
