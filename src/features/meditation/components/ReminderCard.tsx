@@ -9,9 +9,10 @@ import { DEFAULT_BREATHING_REMINDER_TIME } from '../constants';
 
 type ReminderCardProps = {
   userId: string;
+  onReminderStatusChange?: (isSet: boolean) => void;
 };
 
-export function ReminderCard({ userId }: ReminderCardProps) {
+export function ReminderCard({ userId, onReminderStatusChange }: ReminderCardProps) {
   const [enabled, setEnabled] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState(DEFAULT_BREATHING_REMINDER_TIME);
   const [reminderId, setReminderId] = useState<string | null>(null);
@@ -21,6 +22,12 @@ export function ReminderCard({ userId }: ReminderCardProps) {
   useEffect(() => {
     loadReminder();
   }, [userId]);
+
+  useEffect(() => {
+    if (!loading) {
+      onReminderStatusChange?.(Boolean(reminderId) && enabled);
+    }
+  }, [loading, reminderId, enabled, onReminderStatusChange]);
 
   const loadReminder = async () => {
     setLoading(true);
