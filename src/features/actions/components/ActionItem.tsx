@@ -1,5 +1,6 @@
 import type { Action } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG, calculateTimeRemaining } from '../../../types/actions';
+import { ActionTimer } from './ActionTimer';
 
 export interface ActionItemProps {
   action: Action;
@@ -13,19 +14,6 @@ export function ActionItem({ action, onComplete, onDelete }: ActionItemProps) {
   
   // MUST DO items don't expire
   const showTimer = action.category !== 'must_do';
-  
-  const formatTimeRemaining = () => {
-    if (action.category === 'must_do') {
-      return '∞';
-    }
-    if (timeRemaining.isExpired) {
-      return 'Expired';
-    }
-    if (timeRemaining.daysRemaining > 0) {
-      return `${timeRemaining.daysRemaining}d`;
-    }
-    return `${timeRemaining.hoursRemaining}h`;
-  };
 
   return (
     <li 
@@ -50,23 +38,7 @@ export function ActionItem({ action, onComplete, onDelete }: ActionItemProps) {
         )}
       </div>
       
-      {showTimer && (
-        <span 
-          className={`action-item__timer ${
-            timeRemaining.isExpiringSoon ? 'action-item__timer--urgent' : ''
-          } ${timeRemaining.isExpired ? 'action-item__timer--expired' : ''}`}
-          aria-label={`Time remaining: ${formatTimeRemaining()}`}
-        >
-          {formatTimeRemaining()}
-          <span className="action-item__timer-icon" aria-hidden="true">⏱</span>
-        </span>
-      )}
-      
-      {action.category === 'must_do' && (
-        <span className="action-item__timer action-item__timer--infinite" aria-label="Never expires">
-          ∞
-        </span>
-      )}
+      <ActionTimer action={action} />
       
       <button
         type="button"
