@@ -25,6 +25,7 @@ import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import { ActionsTab } from './features/actions';
+import { ProjectsManager } from './features/projects';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -92,6 +93,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     summary: 'Jump into quick actions and focus modes.',
     icon: '⚡️',
     shortLabel: 'ACTIONS',
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    summary: 'Manage multi-step initiatives and track progress.',
+    icon: '📋',
+    shortLabel: 'PROJECTS',
   },
   {
     id: 'habits',
@@ -1127,6 +1135,12 @@ export default function App() {
         return (
           <div className="workspace-content">
             <ActionsTab session={activeSession} />
+          </div>
+        );
+      case 'projects':
+        return (
+          <div className="workspace-content">
+            <ProjectsManager session={activeSession} />
           </div>
         );
       case 'rituals':
