@@ -158,11 +158,8 @@ export async function completeAction(
   if (!canUseSupabaseData()) {
     const updated = updateDemoAction(id, {
       completed: true,
-    });
-    if (updated) {
-      updated.completed_at = new Date().toISOString();
-      updated.xp_awarded = xpAwarded;
-    }
+      xp_awarded: xpAwarded,
+    } as UpdateActionInput & { xp_awarded: number });
     return { data: updated, error: null };
   }
 

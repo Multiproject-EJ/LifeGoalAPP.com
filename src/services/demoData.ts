@@ -1669,11 +1669,20 @@ export function addDemoAction(userId: string, input: CreateActionInput): Action 
   return clone(record);
 }
 
-export function updateDemoAction(id: string, input: UpdateActionInput): Action | null {
+export function updateDemoAction(id: string, input: UpdateActionInput & { xp_awarded?: number }): Action | null {
   let updated: Action | null = null;
   updateState((current) => {
     const actions = current.actions.map((action) => {
       if (action.id !== id) return action;
+      
+      // Handle completed_at based on completed state
+      let completedAt = action.completed_at;
+      if (input.completed === true) {
+        completedAt = new Date().toISOString();
+      } else if (input.completed === false) {
+        completedAt = null;
+      }
+      
       updated = {
         ...action,
         ...input,
@@ -1682,7 +1691,8 @@ export function updateDemoAction(id: string, input: UpdateActionInput): Action |
         completed: input.completed ?? action.completed,
         notes: input.notes ?? action.notes,
         order_index: input.order_index ?? action.order_index,
-        completed_at: input.completed === true ? new Date().toISOString() : action.completed_at,
+        completed_at: completedAt,
+        xp_awarded: input.xp_awarded ?? action.xp_awarded,
       };
       return updated;
     });

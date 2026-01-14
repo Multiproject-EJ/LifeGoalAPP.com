@@ -135,9 +135,24 @@ export function ActionsTab({ session }: ActionsTabProps) {
       }
       
       if (data) {
-        setActions((prev) =>
-          prev.map((a) => (a.id === action.id ? data : a))
-        );
+        // Use a promise to get the result from the state update
+        const shouldAwardClearBonus = await new Promise<boolean>((resolve) => {
+          setActions((prev) => {
+            const updated = prev.map((a) => (a.id === action.id ? data : a));
+            
+            // Check if all must_do items are now complete after this update
+            if (action.category === 'must_do') {
+              const remainingMustDo = updated.filter(
+                (a) => a.category === 'must_do' && !a.completed
+              );
+              resolve(remainingMustDo.length === 0);
+            } else {
+              resolve(false);
+            }
+            
+            return updated;
+          });
+        });
         
         // Award XP
         if (xpReward > 0) {
@@ -145,11 +160,8 @@ export function ActionsTab({ session }: ActionsTabProps) {
           await recordActivity();
         }
         
-        // Check if all must_do items are now complete
-        const remainingMustDo = actions.filter(
-          (a) => a.category === 'must_do' && !a.completed && a.id !== action.id
-        );
-        if (action.category === 'must_do' && remainingMustDo.length === 0) {
+        // Award bonus XP if all must_do items are cleared
+        if (shouldAwardClearBonus) {
           await earnXP(
             ACTIONS_XP_REWARDS.CLEAR_ALL_MUST_DO,
             'action_clear_must_do',
@@ -163,7 +175,7 @@ export function ActionsTab({ session }: ActionsTabProps) {
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to complete action' });
     }
-  }, [actions, earnXP, recordActivity]);
+  }, [earnXP, recordActivity]);
 
   // Handle delete action
   const handleDeleteAction = useCallback(async (actionId: string) => {

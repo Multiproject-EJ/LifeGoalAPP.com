@@ -156,6 +156,8 @@
 
 .actions-tab__category-option--selected {
   border-color: var(--category-color, #6366f1);
+  /* Fallback for browsers that don't support color-mix */
+  background: rgba(99, 102, 241, 0.1);
   background: color-mix(in srgb, var(--category-color, #6366f1) 10%, transparent);
   color: var(--category-color, #6366f1);
 }
@@ -258,6 +260,8 @@
 }
 
 .action-item--expiring-soon {
+  /* Fallback for browsers that don't support color-mix */
+  background: rgba(245, 158, 11, 0.05);
   background: color-mix(in srgb, var(--warning-color, #f59e0b) 5%, var(--surface-primary, #fff));
 }
 
@@ -278,6 +282,8 @@
 
 .action-item__checkbox:hover {
   border-color: var(--category-color, #6366f1);
+  /* Fallback for browsers that don't support color-mix */
+  background: rgba(99, 102, 241, 0.1);
   background: color-mix(in srgb, var(--category-color, #6366f1) 10%, transparent);
 }
 

@@ -277,7 +277,7 @@ export function calculateTimeRemaining(expiresAt: string): {
     return {
       daysRemaining: 0,
       hoursRemaining: 0,
-      isExpiringSoon: true,
+      isExpiringSoon: false, // Already expired, not "expiring soon"
       isExpired: true,
     };
   }
