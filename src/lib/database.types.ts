@@ -1618,6 +1618,168 @@ export interface Database {
           }
         ];
       };
+      actions: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          category: string;
+          completed: boolean;
+          completed_at: string | null;
+          created_at: string;
+          expires_at: string;
+          migrated_to_project_id: string | null;
+          order_index: number;
+          notes: string | null;
+          xp_awarded: number;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          category: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          migrated_to_project_id?: string | null;
+          order_index?: number;
+          notes?: string | null;
+          xp_awarded?: number;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          category?: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          migrated_to_project_id?: string | null;
+          order_index?: number;
+          notes?: string | null;
+          xp_awarded?: number;
+        };
+        Relationships: [];
+      };
+      projects: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          status: string;
+          priority: string | null;
+          goal_id: string | null;
+          start_date: string | null;
+          target_date: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+          archived_at: string | null;
+          color: string;
+          icon: string;
+          order_index: number;
+          xp_reward: number;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          status?: string;
+          priority?: string | null;
+          goal_id?: string | null;
+          start_date?: string | null;
+          target_date?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          archived_at?: string | null;
+          color?: string;
+          icon?: string;
+          order_index?: number;
+          xp_reward?: number;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          status?: string;
+          priority?: string | null;
+          goal_id?: string | null;
+          start_date?: string | null;
+          target_date?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          archived_at?: string | null;
+          color?: string;
+          icon?: string;
+          order_index?: number;
+          xp_reward?: number;
+        };
+        Relationships: [];
+      };
+      project_tasks: {
+        Row: {
+          id: string;
+          project_id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          status: string;
+          parent_task_id: string | null;
+          depends_on_task_id: string | null;
+          completed: boolean;
+          completed_at: string | null;
+          due_date: string | null;
+          created_at: string;
+          updated_at: string;
+          order_index: number;
+          estimated_hours: number | null;
+          actual_hours: number | null;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          status?: string;
+          parent_task_id?: string | null;
+          depends_on_task_id?: string | null;
+          completed?: boolean;
+          completed_at?: string | null;
+          due_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          order_index?: number;
+          estimated_hours?: number | null;
+          actual_hours?: number | null;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          status?: string;
+          parent_task_id?: string | null;
+          depends_on_task_id?: string | null;
+          completed?: boolean;
+          completed_at?: string | null;
+          due_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          order_index?: number;
+          estimated_hours?: number | null;
+          actual_hours?: number | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_habit_streaks: {

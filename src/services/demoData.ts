@@ -4,6 +4,17 @@ import type {
 } from '../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from '../features/journal/constants';
 import { DEFAULT_AI_COACH_ACCESS, type AiCoachDataAccess } from '../types/aiCoach';
+import type {
+  Action,
+  Project,
+  ProjectTask,
+  CreateActionInput,
+  UpdateActionInput,
+  CreateProjectInput,
+  UpdateProjectInput,
+  CreateProjectTaskInput,
+  UpdateProjectTaskInput,
+} from '../types/actions';
 
 export type GoalRow = Database['public']['Tables']['goals']['Row'];
 export type GoalInsert = Database['public']['Tables']['goals']['Insert'];
@@ -59,6 +70,9 @@ type DemoState = {
   telemetryEvents: TelemetryEventRow[];
   goalReflections: GoalReflectionRow[];
   journalEntries: JournalEntryRow[];
+  actions: Action[];
+  projects: Project[];
+  projectTasks: ProjectTask[];
 };
 
 type StructuredCloneFn = <T>(value: T) => T;
@@ -188,6 +202,9 @@ const defaultState: DemoState = {
   telemetryEvents: [],
   goalReflections: [],
   journalEntries: [],
+  actions: [],
+  projects: [],
+  projectTasks: [],
 };
 
 // Populate habits and dependent tables once goals exist so references align.
@@ -735,6 +752,170 @@ const defaultState: DemoState = {
       concrete_steps: null,
     },
   ];
+
+  // Initialize demo actions with sample data
+  const threeDaysFromNow = new Date(today);
+  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+  defaultState.actions = [
+    {
+      id: createId('action'),
+      user_id: DEMO_USER_ID,
+      title: 'Review beta feedback report',
+      category: 'must_do',
+      completed: false,
+      completed_at: null,
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)),
+      expires_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
+      migrated_to_project_id: null,
+      order_index: 0,
+      notes: 'Focus on the top 5 pain points',
+      xp_awarded: 0,
+    },
+    {
+      id: createId('action'),
+      user_id: DEMO_USER_ID,
+      title: 'Schedule intro call with potential partner',
+      category: 'must_do',
+      completed: false,
+      completed_at: null,
+      created_at: iso(today),
+      expires_at: iso(threeDaysFromNow),
+      migrated_to_project_id: null,
+      order_index: 1,
+      notes: null,
+      xp_awarded: 0,
+    },
+    {
+      id: createId('action'),
+      user_id: DEMO_USER_ID,
+      title: 'Organize digital photo library',
+      category: 'nice_to_do',
+      completed: false,
+      completed_at: null,
+      created_at: iso(today),
+      expires_at: iso(threeDaysFromNow),
+      migrated_to_project_id: null,
+      order_index: 0,
+      notes: 'Low priority but would be nice',
+      xp_awarded: 0,
+    },
+    {
+      id: createId('action'),
+      user_id: DEMO_USER_ID,
+      title: 'Plan website redesign',
+      category: 'project',
+      completed: false,
+      completed_at: null,
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)),
+      expires_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)),
+      migrated_to_project_id: null,
+      order_index: 0,
+      notes: 'This might need to become a full project',
+      xp_awarded: 0,
+    },
+  ];
+
+  // Initialize demo projects
+  const demoProjectId = createId('project');
+  defaultState.projects = [
+    {
+      id: demoProjectId,
+      user_id: DEMO_USER_ID,
+      title: 'Launch Marketing Campaign',
+      description: 'Create and execute a social media marketing campaign for the beta launch',
+      status: 'active',
+      priority: 'high',
+      goal_id: goalLaunch.id,
+      start_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)),
+      target_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14)),
+      completed_at: null,
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)),
+      updated_at: iso(today),
+      archived_at: null,
+      color: '#3b82f6',
+      icon: '🚀',
+      order_index: 0,
+      xp_reward: 150,
+    },
+    {
+      id: createId('project'),
+      user_id: DEMO_USER_ID,
+      title: 'Build Community Forum',
+      description: 'Set up a community discussion space for beta users',
+      status: 'planning',
+      priority: 'medium',
+      goal_id: goalLaunch.id,
+      start_date: null,
+      target_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())),
+      completed_at: null,
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)),
+      updated_at: iso(today),
+      archived_at: null,
+      color: '#10b981',
+      icon: '💬',
+      order_index: 1,
+      xp_reward: 100,
+    },
+  ];
+
+  // Initialize demo project tasks
+  defaultState.projectTasks = [
+    {
+      id: createId('task'),
+      project_id: demoProjectId,
+      user_id: DEMO_USER_ID,
+      title: 'Define target audience',
+      description: 'Research and document the ideal customer profile',
+      status: 'done',
+      parent_task_id: null,
+      depends_on_task_id: null,
+      completed: true,
+      completed_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)),
+      due_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)),
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)),
+      updated_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)),
+      order_index: 0,
+      estimated_hours: 3,
+      actual_hours: 2.5,
+    },
+    {
+      id: createId('task'),
+      project_id: demoProjectId,
+      user_id: DEMO_USER_ID,
+      title: 'Create content calendar',
+      description: 'Plan 2 weeks of social media content',
+      status: 'in_progress',
+      parent_task_id: null,
+      depends_on_task_id: null,
+      completed: false,
+      completed_at: null,
+      due_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 4)),
+      updated_at: iso(today),
+      order_index: 1,
+      estimated_hours: 5,
+      actual_hours: null,
+    },
+    {
+      id: createId('task'),
+      project_id: demoProjectId,
+      user_id: DEMO_USER_ID,
+      title: 'Design social media graphics',
+      description: 'Create branded images for posts',
+      status: 'todo',
+      parent_task_id: null,
+      depends_on_task_id: null,
+      completed: false,
+      completed_at: null,
+      due_date: isoDateOnly(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5)),
+      created_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)),
+      updated_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)),
+      order_index: 2,
+      estimated_hours: 8,
+      actual_hours: null,
+    },
+  ];
 })();
 
 function normalizeGoalRow(goal: GoalRow): GoalRow {
@@ -782,6 +963,9 @@ function loadState(): DemoState {
       telemetryEvents: parsed.telemetryEvents ?? clone(defaultState.telemetryEvents),
       goalReflections: parsed.goalReflections ?? clone(defaultState.goalReflections),
       journalEntries: parsed.journalEntries ?? clone(defaultState.journalEntries),
+      actions: parsed.actions ?? clone(defaultState.actions),
+      projects: parsed.projects ?? clone(defaultState.projects),
+      projectTasks: parsed.projectTasks ?? clone(defaultState.projectTasks),
     } satisfies DemoState;
   } catch (error) {
     console.warn('Unable to parse demo data state, falling back to defaults.', error);
@@ -1445,6 +1629,256 @@ export function removeDemoJournalEntry(id: string): JournalEntryRow | null {
       return true;
     });
     return { ...current, journalEntries };
+  });
+  return removed ? clone(removed) : null;
+}
+
+// =====================================================
+// ACTIONS DEMO FUNCTIONS
+// =====================================================
+
+export function getDemoActions(userId: string): Action[] {
+  return clone(
+    state.actions
+      .filter((action) => action.user_id === userId)
+      .sort((a, b) => a.order_index - b.order_index),
+  );
+}
+
+export function addDemoAction(userId: string, input: CreateActionInput): Action {
+  const now = new Date();
+  const expiresAt = new Date(now);
+  expiresAt.setDate(expiresAt.getDate() + 3);
+
+  const record: Action = {
+    id: createId('action'),
+    user_id: userId,
+    title: input.title,
+    category: input.category,
+    completed: false,
+    completed_at: null,
+    created_at: now.toISOString(),
+    expires_at: expiresAt.toISOString(),
+    migrated_to_project_id: null,
+    order_index: state.actions.filter((a) => a.user_id === userId && a.category === input.category).length,
+    notes: input.notes ?? null,
+    xp_awarded: 0,
+  };
+
+  updateState((current) => ({ ...current, actions: [...current.actions, record] }));
+  return clone(record);
+}
+
+export function updateDemoAction(id: string, input: UpdateActionInput & { xp_awarded?: number }): Action | null {
+  let updated: Action | null = null;
+  updateState((current) => {
+    const actions = current.actions.map((action) => {
+      if (action.id !== id) return action;
+      
+      // Handle completed_at based on completed state
+      let completedAt = action.completed_at;
+      if (input.completed === true) {
+        completedAt = new Date().toISOString();
+      } else if (input.completed === false) {
+        completedAt = null;
+      }
+      
+      updated = {
+        ...action,
+        ...input,
+        title: input.title ?? action.title,
+        category: input.category ?? action.category,
+        completed: input.completed ?? action.completed,
+        notes: input.notes ?? action.notes,
+        order_index: input.order_index ?? action.order_index,
+        completed_at: completedAt,
+        xp_awarded: input.xp_awarded ?? action.xp_awarded,
+      };
+      return updated;
+    });
+    return { ...current, actions };
+  });
+  return updated ? clone(updated) : null;
+}
+
+export function removeDemoAction(id: string): Action | null {
+  let removed: Action | null = null;
+  updateState((current) => {
+    const actions = current.actions.filter((action) => {
+      if (action.id === id) {
+        removed = action;
+        return false;
+      }
+      return true;
+    });
+    return { ...current, actions };
+  });
+  return removed ? clone(removed) : null;
+}
+
+// =====================================================
+// PROJECTS DEMO FUNCTIONS
+// =====================================================
+
+export function getDemoProjects(userId: string): Project[] {
+  return clone(
+    state.projects
+      .filter((project) => project.user_id === userId)
+      .sort((a, b) => a.order_index - b.order_index),
+  );
+}
+
+export function addDemoProject(userId: string, input: CreateProjectInput): Project {
+  const now = new Date();
+
+  const record: Project = {
+    id: createId('project'),
+    user_id: userId,
+    title: input.title,
+    description: input.description ?? null,
+    status: 'planning',
+    priority: input.priority ?? null,
+    goal_id: input.goal_id ?? null,
+    start_date: input.start_date ?? null,
+    target_date: input.target_date ?? null,
+    completed_at: null,
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+    archived_at: null,
+    color: input.color ?? '#6366f1',
+    icon: input.icon ?? '📋',
+    order_index: state.projects.filter((p) => p.user_id === userId).length,
+    xp_reward: 100,
+  };
+
+  updateState((current) => ({ ...current, projects: [...current.projects, record] }));
+  return clone(record);
+}
+
+export function updateDemoProject(id: string, input: UpdateProjectInput): Project | null {
+  let updated: Project | null = null;
+  updateState((current) => {
+    const projects = current.projects.map((project) => {
+      if (project.id !== id) return project;
+      updated = {
+        ...project,
+        ...input,
+        title: input.title ?? project.title,
+        description: input.description ?? project.description,
+        status: input.status ?? project.status,
+        priority: input.priority ?? project.priority,
+        goal_id: input.goal_id ?? project.goal_id,
+        start_date: input.start_date ?? project.start_date,
+        target_date: input.target_date ?? project.target_date,
+        color: input.color ?? project.color,
+        icon: input.icon ?? project.icon,
+        order_index: input.order_index ?? project.order_index,
+        updated_at: new Date().toISOString(),
+        completed_at: input.status === 'completed' ? new Date().toISOString() : project.completed_at,
+        archived_at: input.status === 'archived' ? new Date().toISOString() : project.archived_at,
+      };
+      return updated;
+    });
+    return { ...current, projects };
+  });
+  return updated ? clone(updated) : null;
+}
+
+export function removeDemoProject(id: string): Project | null {
+  let removed: Project | null = null;
+  updateState((current) => {
+    const projects = current.projects.filter((project) => {
+      if (project.id === id) {
+        removed = project;
+        return false;
+      }
+      return true;
+    });
+    // Also remove associated tasks
+    const projectTasks = current.projectTasks.filter((task) => task.project_id !== id);
+    return { ...current, projects, projectTasks };
+  });
+  return removed ? clone(removed) : null;
+}
+
+// =====================================================
+// PROJECT TASKS DEMO FUNCTIONS
+// =====================================================
+
+export function getDemoProjectTasks(userId: string): ProjectTask[] {
+  return clone(
+    state.projectTasks
+      .filter((task) => task.user_id === userId)
+      .sort((a, b) => a.order_index - b.order_index),
+  );
+}
+
+export function addDemoProjectTask(userId: string, input: CreateProjectTaskInput): ProjectTask {
+  const now = new Date();
+
+  const record: ProjectTask = {
+    id: createId('task'),
+    project_id: input.project_id,
+    user_id: userId,
+    title: input.title,
+    description: input.description ?? null,
+    status: 'todo',
+    parent_task_id: input.parent_task_id ?? null,
+    depends_on_task_id: input.depends_on_task_id ?? null,
+    completed: false,
+    completed_at: null,
+    due_date: input.due_date ?? null,
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+    order_index: state.projectTasks.filter((t) => t.project_id === input.project_id).length,
+    estimated_hours: input.estimated_hours ?? null,
+    actual_hours: null,
+  };
+
+  updateState((current) => ({ ...current, projectTasks: [...current.projectTasks, record] }));
+  return clone(record);
+}
+
+export function updateDemoProjectTask(id: string, input: UpdateProjectTaskInput): ProjectTask | null {
+  let updated: ProjectTask | null = null;
+  updateState((current) => {
+    const projectTasks = current.projectTasks.map((task) => {
+      if (task.id !== id) return task;
+      const isCompleting = input.completed === true || input.status === 'done';
+      updated = {
+        ...task,
+        ...input,
+        title: input.title ?? task.title,
+        description: input.description ?? task.description,
+        status: input.status ?? task.status,
+        parent_task_id: input.parent_task_id ?? task.parent_task_id,
+        depends_on_task_id: input.depends_on_task_id ?? task.depends_on_task_id,
+        completed: isCompleting ? true : (input.completed ?? task.completed),
+        due_date: input.due_date ?? task.due_date,
+        order_index: input.order_index ?? task.order_index,
+        estimated_hours: input.estimated_hours ?? task.estimated_hours,
+        actual_hours: input.actual_hours ?? task.actual_hours,
+        updated_at: new Date().toISOString(),
+        completed_at: isCompleting ? new Date().toISOString() : task.completed_at,
+      };
+      return updated;
+    });
+    return { ...current, projectTasks };
+  });
+  return updated ? clone(updated) : null;
+}
+
+export function removeDemoProjectTask(id: string): ProjectTask | null {
+  let removed: ProjectTask | null = null;
+  updateState((current) => {
+    const projectTasks = current.projectTasks.filter((task) => {
+      if (task.id === id) {
+        removed = task;
+        return false;
+      }
+      return true;
+    });
+    return { ...current, projectTasks };
   });
   return removed ? clone(removed) : null;
 }
