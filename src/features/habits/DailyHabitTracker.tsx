@@ -580,6 +580,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
 
     return [...habits].sort((a, b) => {
+      const aCompleted = Boolean(completions[a.id]?.completed);
+      const bCompleted = Boolean(completions[b.id]?.completed);
+      if (aCompleted !== bCompleted) {
+        return aCompleted ? 1 : -1;
+      }
+
       const aInsight = habitInsights[a.id];
       const bInsight = habitInsights[b.id];
       const aCurrent = aInsight?.currentStreak ?? 0;
@@ -594,7 +600,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       }
       return a.name.localeCompare(b.name);
     });
-  }, [habits, habitInsights]);
+  }, [habits, habitInsights, completions]);
 
   const sortedMonthlyHabits = useMemo(() => {
     if (!monthlyStats?.habits?.length) {
@@ -1368,11 +1374,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       : 'No habits scheduled';
     const progressRatio = scheduledTarget ? completedCount / scheduledTarget : 0;
     const progressPercent = Math.round(progressRatio * 100);
-    const isViewingToday = activeDate === today;
-    const titleText = isViewingToday ? 'Things to do today' : 'Things to do for this day';
-    const subtitleText = isViewingToday
-      ? 'Check off the rituals that keep your life wheel balanced.'
-      : `Logging for ${formatDateLabel(activeDate)}. Check off the rituals that keep your life wheel balanced.`;
+    const titleText = 'My Habits';
+    const subtitleText = null;
 
     const statusText = errorMessage
       ? errorMessage
@@ -1670,7 +1673,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             {!isCompactView ? (
               <div className="habit-checklist-card__title">
                 <h2>{titleText}</h2>
-                <p>{subtitleText}</p>
+                {subtitleText ? <p>{subtitleText}</p> : null}
               </div>
             ) : null}
 
