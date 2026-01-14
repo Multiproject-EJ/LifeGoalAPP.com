@@ -6,8 +6,18 @@ interface ActionTimerProps {
   action: Action;
 }
 
+interface TimeRemaining {
+  days: number;
+  hours: number;
+  minutes: number;
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+}
+
 export function ActionTimer({ action }: ActionTimerProps) {
-  const [timeRemaining, setTimeRemaining] = useState(() => calculateTimeRemaining(action.expires_at));
+  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() => 
+    calculateTimeRemaining(action.expires_at)
+  );
 
   useEffect(() => {
     // MUST DO actions don't expire
@@ -44,7 +54,7 @@ export function ActionTimer({ action }: ActionTimerProps) {
   return <span className={className}>{displayText}</span>;
 }
 
-function calculateTimeRemaining(expiresAt: string) {
+function calculateTimeRemaining(expiresAt: string): TimeRemaining {
   const now = new Date();
   const expiry = new Date(expiresAt);
   const diffMs = expiry.getTime() - now.getTime();
