@@ -193,6 +193,7 @@ export interface UpdateActionInput {
   completed?: boolean;
   notes?: string;
   order_index?: number;
+  migrated_to_project_id?: string;
 }
 
 export interface CreateProjectInput {
