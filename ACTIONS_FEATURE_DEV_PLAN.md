@@ -33,7 +33,7 @@ The system intelligently promotes tasks from Actions to Projects when they need 
 
 ### Current State
 
-**Placeholder exists** at `src/App.tsx:1125-1133`:
+**Placeholder exists** in `src/App.tsx` (search for `case 'actions'`):
 
 ```tsx
 case 'actions':
@@ -504,7 +504,7 @@ export const ACTION_CATEGORY_CONFIG = {
 } as const;
 
 export const PROJECT_STATUS_CONFIG = {
-  planning: { label: 'Planning', icon: '��', color: '#6b7280' },
+  planning: { label: 'Planning', icon: '📝', color: '#6b7280' },
   active: { label: 'Active', icon: '🚀', color: '#3b82f6' },
   on_hold: { label: 'On Hold', icon: '⏸️', color: '#f59e0b' },
   completed: { label: 'Completed', icon: '✅', color: '#10b981' },
