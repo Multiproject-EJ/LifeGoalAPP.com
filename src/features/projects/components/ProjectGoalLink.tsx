@@ -9,14 +9,8 @@ interface ProjectGoalLinkProps {
   onLink: (goalId: string | null) => void;
 }
 
-interface Goal {
-  id: string;
-  title: string;
-  category: string;
-}
-
 export function ProjectGoalLink({ session, currentGoalId, onLink }: ProjectGoalLinkProps) {
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goals, setGoals] = useState<Array<{ id: string; title: string; life_wheel_category: string | null }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +18,11 @@ export function ProjectGoalLink({ session, currentGoalId, onLink }: ProjectGoalL
       setLoading(true);
       const { data } = await fetchGoals();
       if (data) {
-        setGoals(data as Goal[]);
+        setGoals(data.map(g => ({
+          id: g.id,
+          title: g.title,
+          life_wheel_category: g.life_wheel_category
+        })));
       }
       setLoading(false);
     };
@@ -54,7 +52,7 @@ export function ProjectGoalLink({ session, currentGoalId, onLink }: ProjectGoalL
         <option value="">No goal linked</option>
         {goals.map((goal) => (
           <option key={goal.id} value={goal.id}>
-            {goal.title} ({goal.category})
+            {goal.title} {goal.life_wheel_category ? `(${goal.life_wheel_category})` : ''}
           </option>
         ))}
       </select>
