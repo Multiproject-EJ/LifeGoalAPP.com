@@ -20,7 +20,12 @@ import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { fetchVisionImages, getVisionImagePublicUrl } from '../../services/visionBoard';
 import { HabitAlertConfig } from './HabitAlertConfig';
-import { createJournalEntry, listJournalEntries, type JournalEntry } from '../../services/journal';
+import {
+  createJournalEntry,
+  listJournalEntries,
+  updateJournalEntry,
+  type JournalEntry,
+} from '../../services/journal';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import {
   getYesterdayRecapEnabled,
@@ -129,8 +134,10 @@ const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry sho
 
 const quickJournalDraftKey = (userId: string, dateISO: string) =>
   `lifegoal.quick-journal:${userId}:${dateISO}`;
-const intentionsJournalDraftKey = (userId: string, dateISO: string) =>
+const legacyIntentionsJournalDraftKey = (userId: string, dateISO: string) =>
   `lifegoal.intentions-journal:${userId}:${dateISO}`;
+const intentionsJournalDraftKey = (userId: string, dateISO: string, type: 'today' | 'tomorrow') =>
+  `lifegoal.intentions-journal:${userId}:${dateISO}:${type}`;
 const intentionsNoticeStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.intentions-notice:${userId}:${dateISO}`;
 const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
@@ -156,6 +163,14 @@ const saveDraft = (key: string, value: unknown) => {
 const removeDraft = (key: string) => {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(key);
+};
+
+const loadIntentionsDraft = (userId: string, dateISO: string, type: 'today' | 'tomorrow') => {
+  const draft = loadDraft<IntentionsJournalDraft>(intentionsJournalDraftKey(userId, dateISO, type));
+  if (draft) return draft;
+  const legacyDraft = loadDraft<IntentionsJournalDraft>(legacyIntentionsJournalDraftKey(userId, dateISO));
+  if (legacyDraft?.type === type) return legacyDraft;
+  return null;
 };
 
 export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrackerProps) {
@@ -209,7 +224,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [intentionsJournalSaving, setIntentionsJournalSaving] = useState(false);
   const [intentionsJournalError, setIntentionsJournalError] = useState<string | null>(null);
   const [intentionsJournalStatus, setIntentionsJournalStatus] = useState<string | null>(null);
-  const [tomorrowIntentionsEntry, setTomorrowIntentionsEntry] = useState<JournalEntry | null>(null);
+  const [todayIntentionsEntry, setTodayIntentionsEntry] = useState<JournalEntry | null>(null);
+  const [nextDayIntentionsEntry, setNextDayIntentionsEntry] = useState<JournalEntry | null>(null);
+  const [yesterdayIntentionsEntry, setYesterdayIntentionsEntry] = useState<JournalEntry | null>(null);
   const [isIntentionsNoticeOpen, setIsIntentionsNoticeOpen] = useState(false);
   const [isIntentionsNoticeViewed, setIsIntentionsNoticeViewed] = useState(false);
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
@@ -469,8 +486,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   ]);
 
   useEffect(() => {
-    const draftKey = intentionsJournalDraftKey(session.user.id, activeDate);
-    const draft = loadDraft<IntentionsJournalDraft>(draftKey);
+    const todayDraft = loadIntentionsDraft(session.user.id, activeDate, 'today');
+    const tomorrowDraft = loadIntentionsDraft(session.user.id, activeDate, 'tomorrow');
+    const draft = todayDraft ?? tomorrowDraft;
     if (draft) {
       setIntentionsJournalContent(draft.content ?? '');
       setIntentionsJournalType(draft.type ?? 'today');
@@ -487,9 +505,42 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
   useEffect(() => {
     let isActive = true;
+    const nextDate = formatISODate(addDays(parseISODate(activeDate), 1));
+
+    const loadIntentionsEntries = async () => {
+      const { data, error } = await listJournalEntries({
+        fromDate: activeDate,
+        toDate: nextDate,
+        tag: 'intentions',
+        limit: 25,
+      });
+
+      if (!isActive) return;
+
+      if (error) {
+        setTodayIntentionsEntry(null);
+        setNextDayIntentionsEntry(null);
+        return;
+      }
+
+      const entries = data ?? [];
+      const todayEntry =
+        entries.find(
+          (entry) => entry.entry_date === activeDate && entry.title === "Today's Intentions",
+        ) ?? null;
+      const tomorrowEntry =
+        entries.find(
+          (entry) => entry.entry_date === nextDate && entry.title === "Tomorrow's Intentions",
+        ) ?? null;
+
+      setTodayIntentionsEntry(todayEntry);
+      setNextDayIntentionsEntry(tomorrowEntry);
+    };
+
+    void loadIntentionsEntries();
 
     if (activeDate !== today) {
-      setTomorrowIntentionsEntry(null);
+      setYesterdayIntentionsEntry(null);
       setIsIntentionsNoticeViewed(false);
       return () => {
         isActive = false;
@@ -507,13 +558,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       if (!isActive) return;
 
       if (error) {
-        setTomorrowIntentionsEntry(null);
+        setYesterdayIntentionsEntry(null);
         setIsIntentionsNoticeViewed(false);
         return;
       }
 
       const match = data?.find((entry) => entry.title === "Tomorrow's Intentions") ?? null;
-      setTomorrowIntentionsEntry(match);
+      setYesterdayIntentionsEntry(match);
       if (match) {
         const viewed = loadDraft<boolean>(intentionsNoticeStorageKey(session.user.id, today));
         setIsIntentionsNoticeViewed(Boolean(viewed));
@@ -530,9 +581,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   }, [activeDate, session.user.id, today]);
 
   useEffect(() => {
-    const draftKey = intentionsJournalDraftKey(session.user.id, activeDate);
+    const draftKey = intentionsJournalDraftKey(session.user.id, activeDate, intentionsJournalType);
     if (!intentionsJournalContent && !isIntentionsJournalOpen) {
       removeDraft(draftKey);
+      removeDraft(legacyIntentionsJournalDraftKey(session.user.id, activeDate));
       return;
     }
 
@@ -541,6 +593,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       type: intentionsJournalType,
       content: intentionsJournalContent,
     } satisfies IntentionsJournalDraft);
+    removeDraft(legacyIntentionsJournalDraftKey(session.user.id, activeDate));
   }, [
     activeDate,
     session.user.id,
@@ -1489,9 +1542,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const skipLimitReached = skipStreakBefore >= 3 && dayStatus !== 'skip';
 
     const handleOpenIntentionsJournal = (type: 'today' | 'tomorrow') => {
+      const draft = loadIntentionsDraft(session.user.id, activeDate, type);
+      const existingEntry = type === 'tomorrow' ? nextDayIntentionsEntry : todayIntentionsEntry;
+      const draftContent = draft?.content ?? '';
+      const content = draftContent || existingEntry?.content || '';
       setIsIntentionsJournalOpen(true);
       setIntentionsJournalType(type);
-      setIntentionsJournalContent('');
+      setIntentionsJournalContent(content);
       setIntentionsJournalError(null);
       setIntentionsJournalStatus(null);
     };
@@ -1517,24 +1574,31 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           ? "Tomorrow's Intentions" 
           : "Today's Intentions";
 
-        const payload: Database['public']['Tables']['journal_entries']['Insert'] = {
-          user_id: session.user.id,
-          entry_date: targetDate,
-          title,
-          content,
-          mood: null,
-          tags: ['intentions', 'todos'],
-          linked_goal_ids: null,
-          linked_habit_ids: null,
-          is_private: true,
-          type: 'quick',
-          mood_score: null,
-          category: null,
-          unlock_date: null,
-          goal_id: null,
-        };
-
-        const { data, error } = await createJournalEntry(payload);
+        const existingEntry =
+          intentionsJournalType === 'tomorrow' ? nextDayIntentionsEntry : todayIntentionsEntry;
+        const { data, error } = existingEntry
+          ? await updateJournalEntry(existingEntry.id, {
+              entry_date: targetDate,
+              title,
+              content,
+              tags: ['intentions', 'todos'],
+            })
+          : await createJournalEntry({
+              user_id: session.user.id,
+              entry_date: targetDate,
+              title,
+              content,
+              mood: null,
+              tags: ['intentions', 'todos'],
+              linked_goal_ids: null,
+              linked_habit_ids: null,
+              is_private: true,
+              type: 'quick',
+              mood_score: null,
+              category: null,
+              unlock_date: null,
+              goal_id: null,
+            });
         if (error) {
           throw new Error(error.message);
         }
@@ -1545,7 +1609,16 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           await recordActivity();
         }
 
-        removeDraft(intentionsJournalDraftKey(session.user.id, activeDate));
+        if (data) {
+          if (intentionsJournalType === 'tomorrow') {
+            setNextDayIntentionsEntry(data);
+          } else {
+            setTodayIntentionsEntry(data);
+          }
+        }
+
+        removeDraft(intentionsJournalDraftKey(session.user.id, activeDate, intentionsJournalType));
+        removeDraft(legacyIntentionsJournalDraftKey(session.user.id, activeDate));
         setIsIntentionsJournalOpen(false);
         setIntentionsJournalContent('');
         setIntentionsJournalStatus('Saved to your journal.');
@@ -1580,7 +1653,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     return (
       <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
-        {tomorrowIntentionsEntry && isIntentionsNoticeOpen ? (
+        {yesterdayIntentionsEntry && isIntentionsNoticeOpen ? (
           <div className="habit-intentions-modal" role="dialog" aria-modal="true">
             <button
               type="button"
@@ -1603,7 +1676,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 </button>
               </div>
               <div className="habit-intentions-modal__body">
-                <p>{tomorrowIntentionsEntry.content}</p>
+                <p>{yesterdayIntentionsEntry.content}</p>
               </div>
             </div>
           </div>
@@ -1653,7 +1726,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   />
                 </svg>
               </span>
-                {tomorrowIntentionsEntry ? (
+                {yesterdayIntentionsEntry ? (
                   <button
                     type="button"
                     className={`habit-checklist-card__intentions-button ${
@@ -1858,12 +1931,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                         </button>
                         <button
                           type="button"
-                          className="habit-quick-journal__cancel"
-                          onClick={() => {
-                            removeDraft(intentionsJournalDraftKey(session.user.id, activeDate));
-                            setIsIntentionsJournalOpen(false);
-                            setIntentionsJournalContent('');
-                            setIntentionsJournalError(null);
+                      className="habit-quick-journal__cancel"
+                      onClick={() => {
+                        removeDraft(
+                          intentionsJournalDraftKey(session.user.id, activeDate, intentionsJournalType),
+                        );
+                        removeDraft(legacyIntentionsJournalDraftKey(session.user.id, activeDate));
+                        setIsIntentionsJournalOpen(false);
+                        setIntentionsJournalContent('');
+                        setIntentionsJournalError(null);
                           }}
                           disabled={intentionsJournalSaving}
                         >
