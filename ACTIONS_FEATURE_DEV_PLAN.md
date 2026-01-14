@@ -116,7 +116,7 @@ This section helps any developer pick up where previous work left off.
 |-------|--------|-----------|
 | Phase 0: Foundation | ✅ Complete | - |
 | Phase 1: Simple Actions Tab | ✅ Complete | - |
-| Phase 2: Auto-Cleanup | Not Started | Implement timers |
+| Phase 2: Auto-Cleanup | ✅ Complete | - |
 | Phase 3: Projects Foundation | Not Started | Build Projects Manager UI |
 | Phase 4: Advanced Views | Not Started | Build Kanban board |
 | Phase 5: AI Integration | Not Started | Add AI breakdown |
@@ -812,34 +812,34 @@ export function ActionsTab({ session }: { session: Session | null }) {
 **Goal**: Implement per-task expiration timers and auto-cleanup
 
 #### Checklist
-- [ ] Add timer display to ActionItem
-  - [ ] `ActionTimer.tsx` component
-  - [ ] Show days/hours remaining
-  - [ ] Red warning when < 24 hours
-  - [ ] "Expired" badge if past expiration
-- [ ] Build cleanup service
-  - [ ] `src/services/actionsCleanup.ts`
-  - [ ] Function to delete expired NICE TO DO actions
-  - [ ] Function to migrate expired PROJECT actions
-  - [ ] Batch processing for efficiency
-- [ ] Build migration service
-  - [ ] `src/services/actionsMigration.ts`
-  - [ ] Convert action to project
-  - [ ] Create initial project task
-  - [ ] Link to original action
-- [ ] Add notification hooks
-  - [ ] `useActionNotifications.ts`
-  - [ ] Notify 24 hours before expiration
-  - [ ] Notify when action is migrated
-  - [ ] Notify when action is deleted
-- [ ] Schedule cleanup job (backend)
-  - [ ] Supabase Edge Function or cron job
-  - [ ] Run every hour
-  - [ ] Process all users' expired actions
-- [ ] Update UI to show timers
-  - [ ] Timer badge on each ActionItem
-  - [ ] Sort by expiration (soonest first)
-  - [ ] Visual indicators for urgency
+- [x] Add timer display to ActionItem
+  - [x] `ActionTimer.tsx` component
+  - [x] Show days/hours remaining
+  - [x] Red warning when < 24 hours
+  - [x] "Expired" badge if past expiration
+- [x] Build cleanup service
+  - [x] `src/services/actionsCleanup.ts`
+  - [x] Function to delete expired NICE TO DO actions
+  - [x] Function to migrate expired PROJECT actions
+  - [x] Batch processing for efficiency
+- [x] Build migration service
+  - [x] `src/services/actionsMigration.ts`
+  - [x] Convert action to project
+  - [x] Create initial project task
+  - [x] Link to original action
+- [x] Add notification hooks
+  - [x] `useActionNotifications.ts`
+  - [x] Notify 24 hours before expiration
+  - [x] Notify when action is migrated
+  - [x] Notify when action is deleted
+- [x] Schedule cleanup job (backend)
+  - [x] Supabase Edge Function or cron job
+  - [x] Run every hour
+  - [x] Process all users' expired actions
+- [x] Update UI to show timers
+  - [x] Timer badge on each ActionItem
+  - [x] Sort by expiration (soonest first)
+  - [x] Visual indicators for urgency
 
 #### Success Criteria
 - [ ] Timer displays correctly for each action
@@ -1395,3 +1395,4 @@ This development plan provides a **complete roadmap** for building the Actions F
 |------|-------|-------------|--------|-------|
 | 2026-01-14 | Phase 0 | AI Agent | ✅ Complete | Created migration 0129_actions_feature.sql, types/actions.ts, services/actions.ts, services/projects.ts. Fixed FK reference from life_goals to goals. All demo mode functions implemented in demoData.ts |
 | 2026-01-14 | Phase 1 | AI Agent | ✅ Complete | Refactored ActionsTab into modular structure with separate components (ActionItem, ActionsList, QuickAddAction, CategoryHeader, ActionEmptyState) and hooks (useActions, useActionXP). Integrated with existing gamification system. All components properly typed and mobile-first CSS maintained. |
+| 2026-01-14 | Phase 2 | AI Agent | ✅ Complete | Implemented ActionTimer component with countdown display, actionsCleanup.ts service for deleting expired NICE TO DO actions, actionsMigration.ts for migrating PROJECT actions to full projects, useActionNotifications.ts hook for expiration alerts, and Edge Function for server-side cleanup. All services support demo mode. Build passes successfully. |
