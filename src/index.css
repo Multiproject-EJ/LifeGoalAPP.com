@@ -4187,6 +4187,16 @@ body {
   color: #0f172a;
 }
 
+[data-theme='dark-glass'] .habit-day-nav__picker input {
+  background: var(--color-surface-secondary, rgba(15, 20, 25, 0.6));
+  color: var(--color-text-primary, #f1f5f9);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+[data-theme='dark-glass'] .habit-day-nav__picker input::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.2);
+}
+
 .habit-day-nav--compact .habit-day-nav__picker input {
   padding: 0.3rem 0.55rem;
   font-size: 0.75rem;
