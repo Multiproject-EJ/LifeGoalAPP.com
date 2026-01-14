@@ -24,6 +24,7 @@ import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
+import { ActionsTab } from './features/actions';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -1125,10 +1126,7 @@ export default function App() {
       case 'actions':
         return (
           <div className="workspace-content">
-            <section className="workspace-actions-placeholder" aria-label="Actions">
-              <h2>Actions</h2>
-              <p>This space is ready for your next quick-action tools.</p>
-            </section>
+            <ActionsTab session={activeSession} />
           </div>
         );
       case 'rituals':
