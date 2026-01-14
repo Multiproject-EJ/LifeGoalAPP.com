@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS projects (
   description TEXT,
   status TEXT NOT NULL DEFAULT 'planning' CHECK (status IN ('planning', 'active', 'on_hold', 'completed', 'archived')),
   priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
-  goal_id UUID REFERENCES life_goals(id) ON DELETE SET NULL,
+  goal_id UUID REFERENCES goals(id) ON DELETE SET NULL,
   start_date DATE,
   target_date DATE,
   completed_at TIMESTAMPTZ,
