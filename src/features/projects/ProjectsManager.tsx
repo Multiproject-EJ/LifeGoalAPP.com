@@ -24,11 +24,14 @@ export function ProjectsManager({ session }: ProjectsManagerProps) {
   const selectedProject = projects.find(p => p.id === selectedProjectId) ?? null;
 
   // Calculate progress for all projects
+  // NOTE: This is a simplified implementation showing 0 progress for list view.
+  // The actual progress is calculated in ProjectDetail when a project is selected
+  // and tasks are fetched. To show accurate progress in the list, we would need to
+  // fetch tasks for all projects, which could be inefficient for many projects.
+  // Consider implementing a server-side aggregate or caching strategy in future phases.
   const projectProgress = useMemo(() => {
     const progressMap = new Map();
     projects.forEach((project) => {
-      // We'll use a simplified progress calculation here
-      // In a real implementation, we'd fetch tasks for each project
       progressMap.set(project.id, {
         completed: 0,
         total: 0,

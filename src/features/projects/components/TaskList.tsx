@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { ProjectTask, TaskStatus } from '../../../types/actions';
 import { TaskItem } from './TaskItem';
 
@@ -31,9 +31,11 @@ export function TaskList({
     done: 4,
   };
 
-  const sortedTasks = [...tasks].sort((a, b) => {
-    return statusOrder[a.status] - statusOrder[b.status];
-  });
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      return statusOrder[a.status] - statusOrder[b.status];
+    });
+  }, [tasks]);
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
