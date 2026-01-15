@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 export type CelebrationAnimationProps = {
-  type: 'habit' | 'journal' | 'action' | 'levelup';
+  type: 'habit' | 'journal' | 'action' | 'breathing' | 'levelup';
   xpAmount?: number;
   targetElement?: 'game-icon' | 'fab-button';
   onComplete?: () => void;
@@ -53,6 +53,11 @@ const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
     icons: ['⚡', '✨', '💫', '🚀', '💥'],
     count: 8,
     target: 'fab-button',
+  },
+  breathing: {
+    icons: ['🌬️', '🧘', '💨', '🌊', '☁️', '✨', '🕊️'],
+    count: 10,
+    target: 'game-icon',
   },
   levelup: {
     icons: ['🎉', '🏆', '⭐', '🌟', '💎', '👑', '🎊', '✨'],
