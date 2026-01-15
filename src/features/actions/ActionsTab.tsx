@@ -5,6 +5,7 @@ import type { CreateActionInput, ActionCategory } from '../../types/actions';
 import { useActions } from './hooks/useActions';
 import { useActionXP } from './hooks/useActionXP';
 import { useActionsKeyboard } from './hooks/useActionsKeyboard';
+import { useActionsCleanupOnLoad } from './hooks/useActionsCleanupOnLoad';
 import { QuickAddAction } from './components/QuickAddAction';
 import { ActionsList } from './components/ActionsList';
 import { ActionEmptyState } from './components/ActionEmptyState';
@@ -22,13 +23,36 @@ type StatusMessage = {
 
 export function ActionsTab({ session }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
-  const { actions, loading, error, createAction, completeAction, deleteAction } = useActions(session);
+  const { actions, loading, error, createAction, completeAction, deleteAction, refresh } = useActions(session);
   const { awardActionXP, awardClearAllMustDoBonus, shouldAwardClearBonus } = useActionXP(session);
   
   const [status, setStatus] = useState<StatusMessage>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ActionCategory>('must_do');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Run cleanup on load (once per 24 hours) - safety net for Edge Functions
+  useActionsCleanupOnLoad(session, {
+    onCleanupComplete: (result) => {
+      // Refresh actions list if anything was cleaned up
+      if (result.deletedCount > 0 || result.migratedCount > 0) {
+        refresh(); // Call the refresh function from useActions
+        
+        // Show a combined notification for both cleaned and migrated items
+        const messages: string[] = [];
+        if (result.deletedCount > 0) {
+          messages.push(`🧹 Cleaned up ${result.deletedCount} expired action(s)`);
+        }
+        if (result.migratedCount > 0) {
+          messages.push(`📦 Migrated ${result.migratedCount} action(s) to Projects`);
+        }
+        
+        if (messages.length > 0) {
+          setStatus({ kind: 'success', message: messages.join(' • ') });
+        }
+      }
+    },
+  });
 
   // Filter actions to non-completed
   const activeActions = actions.filter(a => !a.completed);
