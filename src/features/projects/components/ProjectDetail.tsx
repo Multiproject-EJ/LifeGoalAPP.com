@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { Project, UpdateProjectInput } from '../../../types/actions';
+import type { Project, UpdateProjectInput, CreateProjectTaskInput } from '../../../types/actions';
 import { PROJECT_STATUS_CONFIG } from '../../../types/actions';
 import { useProjectTasks } from '../hooks/useProjectTasks';
 import { useProjectProgress } from '../hooks/useProjectProgress';
+import { useGamification } from '../../../hooks/useGamification';
 import { ProjectProgress } from './ProjectProgress';
 import { TaskList } from './TaskList';
+import { AIProjectBreakdown } from './AIProjectBreakdown';
 
 interface ProjectDetailProps {
   project: Project;
@@ -28,7 +30,9 @@ export function ProjectDetail({
 }: ProjectDetailProps) {
   const { tasks, createTask, updateTask, deleteTask, completeTask } = useProjectTasks(session, project.id);
   const progress = useProjectProgress(project, tasks);
+  const { earnXP } = useGamification(session);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAIBreakdown, setShowAIBreakdown] = useState(false);
 
   const statusConfig = PROJECT_STATUS_CONFIG[project.status];
 
@@ -82,6 +86,20 @@ export function ProjectDetail({
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleAIAddTasks = async (aiTasks: CreateProjectTaskInput[]) => {
+    // Add all tasks from AI
+    for (const task of aiTasks) {
+      await createTask({
+        project_id: project.id,
+        ...task,
+      });
+    }
+    // Award XP for using AI assistance
+    if (aiTasks.length > 0) {
+      earnXP(10, 'ai_breakdown_used', project.id);
+    }
   };
 
   return (
@@ -150,6 +168,16 @@ export function ProjectDetail({
         </div>
 
         <div className="project-detail__tasks">
+          <div className="project-detail__tasks-header">
+            <h3>Tasks</h3>
+            <button 
+              className="project-detail__ai-btn"
+              onClick={() => setShowAIBreakdown(true)}
+              title="Break down with AI"
+            >
+              🤖 AI Breakdown
+            </button>
+          </div>
           <TaskList
             tasks={tasks}
             projectId={project.id}
@@ -194,6 +222,18 @@ export function ProjectDetail({
           {showDeleteConfirm ? '⚠️ Confirm Delete' : '🗑️ Delete'}
         </button>
       </div>
+
+      {showAIBreakdown && (
+        <div className="project-detail__ai-overlay">
+          <div className="project-detail__ai-backdrop" onClick={() => setShowAIBreakdown(false)} />
+          <AIProjectBreakdown
+            project={project}
+            session={session}
+            onAddTasks={handleAIAddTasks}
+            onClose={() => setShowAIBreakdown(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -401,6 +401,57 @@
   font-size: 1rem;
 }
 
+.project-detail__tasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.project-detail__tasks-header h3 {
+  margin: 0;
+}
+
+.project-detail__ai-btn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--color-primary, #6366f1), var(--color-accent-purple, #a855f7));
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.project-detail__ai-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.project-detail__ai-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.project-detail__ai-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
 .project-detail__actions {
   display: flex;
   gap: 0.5rem;

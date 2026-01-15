@@ -1816,13 +1816,17 @@ export function getDemoProjectTasks(userId: string): ProjectTask[] {
 export function addDemoProjectTask(userId: string, input: CreateProjectTaskInput): ProjectTask {
   const now = new Date();
 
+  if (!input.project_id) {
+    throw new Error('project_id is required');
+  }
+
   const record: ProjectTask = {
     id: createId('task'),
     project_id: input.project_id,
     user_id: userId,
     title: input.title,
     description: input.description ?? null,
-    status: 'todo',
+    status: input.status ?? 'todo',
     parent_task_id: input.parent_task_id ?? null,
     depends_on_task_id: input.depends_on_task_id ?? null,
     completed: false,
@@ -1830,7 +1834,7 @@ export function addDemoProjectTask(userId: string, input: CreateProjectTaskInput
     due_date: input.due_date ?? null,
     created_at: now.toISOString(),
     updated_at: now.toISOString(),
-    order_index: state.projectTasks.filter((t) => t.project_id === input.project_id).length,
+    order_index: input.order_index ?? state.projectTasks.filter((t) => t.project_id === input.project_id).length,
     estimated_hours: input.estimated_hours ?? null,
     actual_hours: null,
   };
