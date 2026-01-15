@@ -38,12 +38,17 @@ export function ActionsTab({ session }: ActionsTabProps) {
       if (result.deletedCount > 0 || result.migratedCount > 0) {
         refresh(); // Call the refresh function from useActions
         
-        // Optionally show a toast notification
+        // Show a combined notification for both cleaned and migrated items
+        const messages: string[] = [];
         if (result.deletedCount > 0) {
-          setStatus({ kind: 'success', message: `🧹 Cleaned up ${result.deletedCount} expired action(s)` });
+          messages.push(`🧹 Cleaned up ${result.deletedCount} expired action(s)`);
         }
         if (result.migratedCount > 0) {
-          setStatus({ kind: 'success', message: `📦 Migrated ${result.migratedCount} action(s) to Projects` });
+          messages.push(`📦 Migrated ${result.migratedCount} action(s) to Projects`);
+        }
+        
+        if (messages.length > 0) {
+          setStatus({ kind: 'success', message: messages.join(' • ') });
         }
       }
     },

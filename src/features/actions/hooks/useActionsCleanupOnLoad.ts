@@ -132,6 +132,12 @@ export async function manualActionsCleanup(): Promise<CleanupResult> {
 
   if (cleanupError) {
     console.error('Cleanup error:', cleanupError);
+    // Return early with error, don't continue to migration
+    return {
+      deletedCount: 0,
+      migratedCount: 0,
+      ranCleanup: false,
+    };
   }
 
   const { successCount: migratedCount } = await runActionsMigration();
