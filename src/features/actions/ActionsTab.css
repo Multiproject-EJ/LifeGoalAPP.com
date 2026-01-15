@@ -530,8 +530,9 @@
 /* Extra small screens - 2 category buttons per row */
 @media (max-width: 400px) {
   .actions-tab__category-option {
-    min-width: calc(50% - 0.25rem);
-    flex-basis: calc(50% - 0.25rem);
-    max-width: calc(50% - 0.25rem);
+    --category-width: calc(50% - 0.25rem);
+    min-width: var(--category-width);
+    flex-basis: var(--category-width);
+    max-width: var(--category-width);
   }
 }
