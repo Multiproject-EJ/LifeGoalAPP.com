@@ -8,6 +8,7 @@ export interface ActionsListProps {
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate?: (id: string, updates: Partial<Action>) => void;
+  onOpenDetail?: (action: Action) => void;
   selectedIndex?: number;
   selectedIds?: Set<string>;
 }
@@ -15,7 +16,8 @@ export interface ActionsListProps {
 export function ActionsList({ 
   actions, 
   onComplete, 
-  onDelete, 
+  onDelete,
+  onOpenDetail,
   selectedIndex = -1,
   selectedIds = new Set()
 }: ActionsListProps) {
@@ -72,6 +74,7 @@ export function ActionsList({
                 action={action}
                 onComplete={() => onComplete(action.id)}
                 onDelete={() => onDelete(action.id)}
+                onOpenDetail={onOpenDetail ? () => onOpenDetail(action) : undefined}
                 isSelected={isSelected}
               />
             );

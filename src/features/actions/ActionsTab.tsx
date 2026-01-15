@@ -1,16 +1,30 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { isDemoSession } from '../../services/demoSession';
-import type { CreateActionInput, ActionCategory } from '../../types/actions';
+import type { CreateActionInput, ActionCategory, Action, UpdateActionInput } from '../../types/actions';
+import { calculateTimeRemaining } from '../../types/actions';
 import { useActions } from './hooks/useActions';
 import { useActionXP } from './hooks/useActionXP';
 import { useActionsKeyboard } from './hooks/useActionsKeyboard';
 import { useActionsCleanupOnLoad } from './hooks/useActionsCleanupOnLoad';
+import { useProjects } from '../projects/hooks/useProjects';
+import { insertProjectTask } from '../../services/projects';
 import { QuickAddAction } from './components/QuickAddAction';
 import { ActionsList } from './components/ActionsList';
 import { ActionEmptyState } from './components/ActionEmptyState';
 import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
+import { ActionDetailModal } from './components/ActionDetailModal';
+import { ActionFilters, type FilterOption } from './components/ActionFilters';
+import { DEMO_USER_ID } from '../../services/demoData';
 import './ActionsTab.css';
+
+// Constants
+const EXPIRING_SOON_THRESHOLD_HOURS = 24;
+
+// Helper function to check if MUST DO items should always show
+const shouldAlwaysShow = (action: Action): boolean => {
+  return action.category === 'must_do';
+};
 
 type ActionsTabProps = {
   session: Session;
@@ -23,13 +37,18 @@ type StatusMessage = {
 
 export function ActionsTab({ session }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
-  const { actions, loading, error, createAction, completeAction, deleteAction, refresh } = useActions(session);
+  const { actions, loading, error, createAction, updateAction, completeAction, deleteAction, refresh } = useActions(session);
+  const { projects } = useProjects(session);
   const { awardActionXP, awardClearAllMustDoBonus, shouldAwardClearBonus } = useActionXP(session);
   
   const [status, setStatus] = useState<StatusMessage>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ActionCategory>('must_do');
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const userId = session?.user?.id ?? DEMO_USER_ID;
 
   // Run cleanup on load (once per 24 hours) - safety net for Edge Functions
   useActionsCleanupOnLoad(session, {
@@ -56,6 +75,36 @@ export function ActionsTab({ session }: ActionsTabProps) {
 
   // Filter actions to non-completed
   const activeActions = actions.filter(a => !a.completed);
+
+  // Apply filter
+  const filteredActions = activeActions.filter((action) => {
+    if (activeFilter === 'all') return true;
+    
+    // MUST DO items always show in all filters
+    if (shouldAlwaysShow(action)) return true;
+    
+    const now = new Date();
+    const expires = new Date(action.expires_at);
+    const timeRemaining = calculateTimeRemaining(action.expires_at);
+    
+    switch (activeFilter) {
+      case 'expiring_soon':
+        return timeRemaining.hoursRemaining + timeRemaining.daysRemaining * 24 < EXPIRING_SOON_THRESHOLD_HOURS;
+      case 'today': {
+        const todayEnd = new Date(now);
+        todayEnd.setHours(23, 59, 59, 999);
+        return expires <= todayEnd;
+      }
+      case 'this_week': {
+        const weekEnd = new Date(now);
+        weekEnd.setDate(now.getDate() + 7);
+        weekEnd.setHours(23, 59, 59, 999);
+        return expires <= weekEnd;
+      }
+      default:
+        return true;
+    }
+  });
 
   // Handle add action with error handling
   const handleAddAction = useCallback(async (input: CreateActionInput) => {
@@ -102,6 +151,51 @@ export function ActionsTab({ session }: ActionsTabProps) {
     }
   }, [deleteAction]);
 
+  // Handle update action
+  const handleUpdateAction = useCallback(async (actionId: string, updates: UpdateActionInput) => {
+    try {
+      await updateAction(actionId, updates);
+      setStatus({ kind: 'success', message: 'Action updated' });
+      refresh();
+    } catch (err) {
+      setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to update action' });
+      throw err;
+    }
+  }, [updateAction, refresh]);
+
+  // Handle move to project
+  const handleMoveToProject = useCallback(async (actionId: string, projectId: string) => {
+    const action = actions.find((a) => a.id === actionId);
+    if (!action) return;
+
+    try {
+      // Create project task
+      const { data: newTask, error: taskError } = await insertProjectTask(userId, {
+        project_id: projectId,
+        title: action.title,
+        description: action.notes || undefined,
+        status: 'todo',
+        order_index: 0,
+      });
+
+      if (taskError) {
+        throw new Error(taskError.message);
+      }
+
+      // Delete the action
+      await deleteAction(actionId);
+
+      // Find project name for success message
+      const project = projects.find((p) => p.id === projectId);
+      const projectName = project ? project.title : 'project';
+
+      setStatus({ kind: 'success', message: `Moved to ${projectName}` });
+    } catch (err) {
+      setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to move to project' });
+      throw err;
+    }
+  }, [actions, projects, userId, deleteAction]);
+
   const {
     selectedIndex,
     setSelectedIndex,
@@ -110,7 +204,7 @@ export function ActionsTab({ session }: ActionsTabProps) {
     clearSelection,
     shortcuts,
   } = useActionsKeyboard({
-    actions: activeActions,
+    actions: filteredActions,
     onNewAction: () => inputRef.current?.focus(),
     onCompleteAction: handleCompleteAction,
     onDeleteAction: handleDeleteAction,
@@ -124,7 +218,7 @@ export function ActionsTab({ session }: ActionsTabProps) {
         inputRef.current.blur();
       }
     },
-    enabled: !showShortcutsHelp,
+    enabled: !showShortcutsHelp && !selectedAction,
   });
 
   // Add ? shortcut for help
@@ -196,12 +290,22 @@ export function ActionsTab({ session }: ActionsTabProps) {
       {/* Quick add section */}
       <QuickAddAction onAdd={handleAddAction} />
 
+      {/* Filters */}
+      {hasActions && (
+        <ActionFilters
+          actions={activeActions}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+      )}
+
       {/* Actions list or empty state */}
       {hasActions ? (
         <ActionsList
-          actions={actions}
+          actions={filteredActions}
           onComplete={handleCompleteAction}
           onDelete={handleDeleteAction}
+          onOpenDetail={(action) => setSelectedAction(action)}
           selectedIndex={selectedIndex}
           selectedIds={selectedIds}
         />
@@ -224,6 +328,19 @@ export function ActionsTab({ session }: ActionsTabProps) {
         <KeyboardShortcutsHelp
           shortcuts={shortcuts}
           onClose={() => setShowShortcutsHelp(false)}
+        />
+      )}
+
+      {/* Action detail modal */}
+      {selectedAction && (
+        <ActionDetailModal
+          action={selectedAction}
+          projects={projects}
+          onClose={() => setSelectedAction(null)}
+          onSave={handleUpdateAction}
+          onComplete={handleCompleteAction}
+          onDelete={handleDeleteAction}
+          onMoveToProject={handleMoveToProject}
         />
       )}
     </div>
