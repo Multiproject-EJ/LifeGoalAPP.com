@@ -1457,6 +1457,18 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       : 'No habits scheduled';
     const progressRatio = scheduledTarget ? completedCount / scheduledTarget : 0;
     const progressPercent = Math.round(progressRatio * 100);
+    const progressStage =
+      progressPercent >= 95
+        ? 'celebrate'
+        : progressPercent >= 75
+          ? 'strong'
+          : progressPercent >= 50
+            ? 'mid'
+            : progressPercent >= 25
+              ? 'faint'
+              : 'none';
+    const progressIcon =
+      progressStage === 'celebrate' ? '⭐' : progressStage === 'strong' ? '✦' : null;
     const titleText = 'My Habits';
     const subtitleText = null;
 
@@ -1779,27 +1791,38 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             </div>
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">
-                <span className="habit-checklist-card__progress" role="img" aria-label={progressLabel}>
-                <span className="sr-only">{progressLabel}</span>
-                <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
-                  <defs>
-                    <linearGradient id={progressGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#38bdf8" />
-                      <stop offset="50%" stopColor="#a855f7" />
-                      <stop offset="100%" stopColor="#f59e0b" />
-                    </linearGradient>
-                  </defs>
-                  <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
-                  <circle
-                    className="habit-checklist-card__progress-value"
-                    cx="18"
-                    cy="18"
-                    r="16"
-                    strokeDasharray={`${progressPercent} 100`}
-                    stroke={`url(#${progressGradientId})`}
-                  />
-                </svg>
-              </span>
+                <span
+                  className={`habit-checklist-card__progress${
+                    progressStage !== 'none' ? ` habit-checklist-card__progress--${progressStage}` : ''
+                  }`}
+                  role="img"
+                  aria-label={progressLabel}
+                >
+                  <span className="sr-only">{progressLabel}</span>
+                  <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
+                    <defs>
+                      <linearGradient id={progressGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#38bdf8" />
+                        <stop offset="50%" stopColor="#a855f7" />
+                        <stop offset="100%" stopColor="#f59e0b" />
+                      </linearGradient>
+                    </defs>
+                    <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
+                    <circle
+                      className="habit-checklist-card__progress-value"
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      strokeDasharray={`${progressPercent} 100`}
+                      stroke={`url(#${progressGradientId})`}
+                    />
+                  </svg>
+                  {progressIcon ? (
+                    <span className="habit-checklist-card__progress-symbol" aria-hidden="true">
+                      {progressIcon}
+                    </span>
+                  ) : null}
+                </span>
                 {yesterdayIntentionsEntry ? (
                   <button
                     type="button"

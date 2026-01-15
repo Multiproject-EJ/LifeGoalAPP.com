@@ -3885,6 +3885,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   width: 34px;
   height: 34px;
   border-radius: 999px;
@@ -3898,6 +3899,35 @@ body {
   height: 28px;
   transform: rotate(-90deg);
   filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.35));
+}
+
+.habit-checklist-card__progress--faint {
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35), 0 0 16px rgba(168, 85, 247, 0.2);
+}
+
+.habit-checklist-card__progress--mid {
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.55), 0 0 20px rgba(168, 85, 247, 0.35);
+}
+
+.habit-checklist-card__progress--strong,
+.habit-checklist-card__progress--celebrate {
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.75), 0 0 26px rgba(245, 158, 11, 0.45);
+}
+
+.habit-checklist-card__progress--strong .habit-checklist-card__progress-ring,
+.habit-checklist-card__progress--celebrate .habit-checklist-card__progress-ring {
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+}
+
+.habit-checklist-card__progress-symbol {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  color: #fbbf24;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  pointer-events: none;
 }
 
 .habit-checklist-card__progress-track {
