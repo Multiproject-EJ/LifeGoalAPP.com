@@ -147,20 +147,16 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
       if (shouldAwardClearBonus(action, actions)) {
         const bonusXP = await awardClearAllMustDoBonus();
         setStatus({ kind: 'success', message: `Completed! +${xpReward + bonusXP} XP (with bonus!)` });
-        // 🎉 Trigger celebration animation with bonus (but only if not a level-up)
-        if (!levelUpEvent) {
-          setCelebrationType('action');
-          setCelebrationXP(xpReward + bonusXP);
-          setShowCelebration(true);
-        }
+        // 🎉 Trigger celebration animation with bonus (level-up will trigger its own separate animation)
+        setCelebrationType('action');
+        setCelebrationXP(xpReward + bonusXP);
+        setShowCelebration(true);
       } else {
         setStatus({ kind: 'success', message: `Completed! +${xpReward} XP` });
-        // 🎉 Trigger celebration animation (but only if not a level-up)
-        if (!levelUpEvent) {
-          setCelebrationType('action');
-          setCelebrationXP(xpReward);
-          setShowCelebration(true);
-        }
+        // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
+        setCelebrationType('action');
+        setCelebrationXP(xpReward);
+        setShowCelebration(true);
       }
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to complete action' });

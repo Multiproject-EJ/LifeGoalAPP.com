@@ -1027,15 +1027,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             ? XP_REWARDS.HABIT_COMPLETE_EARLY
             : XP_REWARDS.HABIT_COMPLETE;
 
-          await earnXP(xpAmount, 'habit_complete', habit.id);
+          const result = await earnXP(xpAmount, 'habit_complete', habit.id);
           await recordActivity();
 
-          // 🎉 Trigger celebration animation (but only if not a level-up, which will trigger its own)
-          if (!levelUpEvent) {
-            setCelebrationType('habit');
-            setCelebrationXP(xpAmount);
-            setShowCelebration(true);
-          }
+          // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
+          setCelebrationType('habit');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
         }
       }
     } catch (error) {

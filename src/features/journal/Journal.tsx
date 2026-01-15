@@ -335,12 +335,10 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
           await earnXP(xpAmount, 'journal_entry', saved.id);
           await recordActivity(); // Update daily streak
 
-          // 🎉 Trigger celebration animation (but only if not a level-up, which will trigger its own)
-          if (!levelUpEvent) {
-            setCelebrationType('journal');
-            setCelebrationXP(xpAmount);
-            setShowCelebration(true);
-          }
+          // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
+          setCelebrationType('journal');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
         }
 
         setSelectedEntryId(saved.id);

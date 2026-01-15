@@ -22,6 +22,22 @@ type IconInstance = {
   delay: number;
 };
 
+// DOM element selectors
+const SELECTORS = {
+  GAME_ICON: '.mobile-footer-nav__status-card',
+  FAB_BUTTON: '.quick-actions-fab__toggle',
+  FAB_FALLBACK: '[class*="quick-actions-fab"]',
+} as const;
+
+// Animation timing constants
+const TIMING = {
+  ICON_STAGGER_DELAY: 200, // ms between each icon appearing
+  FLY_START_DELAY: 1000,   // ms before icons start flying
+  XP_HIDE_DELAY: 1800,     // ms before XP indicator fades
+  CLEANUP_DELAY: 2000,     // ms before full cleanup
+  PULSE_DURATION: 300,     // ms for target pulse animation
+} as const;
+
 const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
   habit: {
     icons: ['✅', '⭐', '🎯', '💪', '🔥'],
@@ -50,6 +66,11 @@ const getRandomIcon = (icons: string[]): string => {
 };
 
 const getRandomPosition = (): { x: number; y: number } => {
+  // Check if window is available (for SSR safety)
+  if (typeof window === 'undefined') {
+    return { x: 0, y: 0 };
+  }
+  
   // Generate random positions across the viewport
   const x = Math.random() * (window.innerWidth - 100) + 50;
   const y = Math.random() * (window.innerHeight - 100) + 50;
@@ -57,19 +78,18 @@ const getRandomPosition = (): { x: number; y: number } => {
 };
 
 const getTargetPosition = (targetElement: 'game-icon' | 'fab-button' | 'none'): { x: number; y: number } | null => {
+  if (typeof window === 'undefined') return null;
   if (targetElement === 'none') return null;
 
   let element: HTMLElement | null = null;
 
   if (targetElement === 'game-icon') {
-    // Try to find the mobile footer nav status card (game icon)
-    element = document.querySelector('.mobile-footer-nav__status-card');
+    element = document.querySelector(SELECTORS.GAME_ICON);
   } else if (targetElement === 'fab-button') {
-    // Try to find the FAB button
-    element = document.querySelector('.quick-actions-fab__toggle');
+    element = document.querySelector(SELECTORS.FAB_BUTTON);
     if (!element) {
       // Fallback to any FAB-related element
-      element = document.querySelector('[class*="quick-actions-fab"]');
+      element = document.querySelector(SELECTORS.FAB_FALLBACK);
     }
   }
 
@@ -120,26 +140,26 @@ export function CelebrationAnimation({
         icon: getRandomIcon(config.icons),
         x: position.x,
         y: position.y,
-        delay: Math.random() * 200, // Stagger the pop-in animations
+        delay: Math.random() * TIMING.ICON_STAGGER_DELAY,
       });
     }
     setIcons(newIcons);
 
-    // After 1 second, start flying animation
+    // After delay, start flying animation
     const flyTimeout = setTimeout(() => {
       setIsFlying(true);
       setTargetPulsing(true);
-    }, 1000);
+    }, TIMING.FLY_START_DELAY);
 
-    // Hide XP after 1.8 seconds
+    // Hide XP after delay
     const xpTimeout = setTimeout(() => {
       setShowXP(false);
-    }, 1800);
+    }, TIMING.XP_HIDE_DELAY);
 
-    // Clean up after animations complete (2 seconds total)
+    // Clean up after animations complete
     const cleanupTimeout = setTimeout(() => {
       cleanup();
-    }, 2000);
+    }, TIMING.CLEANUP_DELAY);
 
     return () => {
       clearTimeout(flyTimeout);
@@ -154,16 +174,16 @@ export function CelebrationAnimation({
 
     let element: HTMLElement | null = null;
     if (targetElement === 'game-icon') {
-      element = document.querySelector('.mobile-footer-nav__status-card');
+      element = document.querySelector(SELECTORS.GAME_ICON);
     } else if (targetElement === 'fab-button') {
-      element = document.querySelector('.quick-actions-fab__toggle');
+      element = document.querySelector(SELECTORS.FAB_BUTTON);
     }
 
     if (element) {
       element.classList.add('collecting-icons');
       const timeout = setTimeout(() => {
         element?.classList.remove('collecting-icons');
-      }, 300);
+      }, TIMING.PULSE_DURATION);
       return () => {
         clearTimeout(timeout);
         element?.classList.remove('collecting-icons');
