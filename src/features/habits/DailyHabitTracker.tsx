@@ -248,7 +248,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [yesterdayCollecting, setYesterdayCollecting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationXP, setCelebrationXP] = useState(0);
-  const [celebrationType, setCelebrationType] = useState<'habit' | 'levelup'>('habit');
+  const [celebrationType, setCelebrationType] = useState<'habit' | 'journal' | 'action' | 'breathing' | 'levelup'>('habit');
+  const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   // Watch for level-up events
@@ -1027,13 +1028,23 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             ? XP_REWARDS.HABIT_COMPLETE_EARLY
             : XP_REWARDS.HABIT_COMPLETE;
 
+          // 1. Immediately add instant feedback (pop/glow)
+          setJustCompletedHabitId(habit.id);
+
+          // 2. After pop animation completes, trigger celebration
+          setTimeout(() => {
+            setCelebrationType('habit');
+            setCelebrationXP(xpAmount);
+            setShowCelebration(true);
+          }, 400);
+
+          // 3. Clean up instant feedback class
+          setTimeout(() => {
+            setJustCompletedHabitId(null);
+          }, 600);
+
           await earnXP(xpAmount, 'habit_complete', habit.id);
           await recordActivity();
-
-          // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
-          setCelebrationType('habit');
-          setCelebrationXP(xpAmount);
-          setShowCelebration(true);
         }
       }
     } catch (error) {
@@ -1347,13 +1358,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         const checkboxId = `habit-checkbox-${habit.id}`;
         const detailPanelId = `habit-details-${habit.id}`;
         const isExpanded = Boolean(expandedHabits[habit.id]);
+        const isJustCompleted = justCompletedHabitId === habit.id;
 
         return (
           <li
             key={habit.id}
             className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
               isCompleted ? 'habit-checklist__item--completed' : ''
-            }`}
+            } ${isJustCompleted ? 'habit-item--just-completed' : ''}`}
           >
             <div
               className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
@@ -2513,8 +2525,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 : 'This is a rest day for this habit.';
               const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
               const streakSquares = Array.from({ length: 8 }, (_, index) => index < currentStreak);
+              const isJustCompleted = justCompletedHabitId === habit.id;
               return (
-                <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''}`}>
+                <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? 'habit-item--just-completed' : ''}`}>
                   <div className="habit-card__content">
                     <div className="habit-card__details">
                       <h3>{habit.name}</h3>

@@ -297,7 +297,7 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'actions', 'habits'];
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'actions'];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));

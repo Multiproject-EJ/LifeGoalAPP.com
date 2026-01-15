@@ -15061,3 +15061,89 @@ body {
     transform: scale(1.2); 
   }
 }
+
+/* ===================================
+   Instant Feedback Animations (Before Celebration)
+   =================================== */
+
+/* Instant pop effect for habits when completed */
+.habit-item--just-completed {
+  animation: instant-pop 0.25s ease-out;
+}
+
+@keyframes instant-pop {
+  0% { 
+    transform: scale(1); 
+  }
+  40% { 
+    transform: scale(1.15); 
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.8); 
+  }
+  100% { 
+    transform: scale(1); 
+    box-shadow: none; 
+  }
+}
+
+/* Glow effect for habits */
+.habit-item--glowing {
+  box-shadow: 0 0 15px rgba(74, 222, 128, 0.6), 0 0 30px rgba(74, 222, 128, 0.3);
+  transition: box-shadow 0.3s ease-out;
+}
+
+/* Instant pop effect for actions */
+.action-item--just-completed {
+  animation: instant-pop-action 0.25s ease-out;
+}
+
+@keyframes instant-pop-action {
+  0% { 
+    transform: scale(1); 
+  }
+  40% { 
+    transform: scale(1.15); 
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.8); 
+  }
+  100% { 
+    transform: scale(1); 
+    box-shadow: none; 
+  }
+}
+
+/* Instant pop effect for journals */
+.journal-item--just-completed {
+  animation: instant-pop-journal 0.25s ease-out;
+}
+
+@keyframes instant-pop-journal {
+  0% { 
+    transform: scale(1); 
+  }
+  40% { 
+    transform: scale(1.15); 
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.8); 
+  }
+  100% { 
+    transform: scale(1); 
+    box-shadow: none; 
+  }
+}
+
+/* Instant pop effect for breathing/meditation */
+.breathing-item--just-completed {
+  animation: instant-pop-breathing 0.25s ease-out;
+}
+
+@keyframes instant-pop-breathing {
+  0% { 
+    transform: scale(1); 
+  }
+  40% { 
+    transform: scale(1.15); 
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.8); 
+  }
+  100% { 
+    transform: scale(1); 
+    box-shadow: none; 
+  }
+}

@@ -93,7 +93,8 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const [showMobileDetail, setShowMobileDetail] = useState(!isCompactLayout);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationXP, setCelebrationXP] = useState(0);
-  const [celebrationType, setCelebrationType] = useState<'journal' | 'levelup'>('journal');
+  const [celebrationType, setCelebrationType] = useState<'journal' | 'action' | 'breathing' | 'levelup'>('journal');
+  const [justSavedEntryId, setJustSavedEntryId] = useState<string | null>(null);
 
   // Watch for level-up events
   useEffect(() => {
@@ -335,10 +336,20 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
           await earnXP(xpAmount, 'journal_entry', saved.id);
           await recordActivity(); // Update daily streak
 
-          // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
-          setCelebrationType('journal');
-          setCelebrationXP(xpAmount);
-          setShowCelebration(true);
+          // 1. Immediately add instant feedback (pop/glow)
+          setJustSavedEntryId(saved.id);
+
+          // 2. After pop animation completes, trigger celebration
+          setTimeout(() => {
+            setCelebrationType('journal');
+            setCelebrationXP(xpAmount);
+            setShowCelebration(true);
+          }, 400);
+
+          // 3. Clean up instant feedback class
+          setTimeout(() => {
+            setJustSavedEntryId(null);
+          }, 600);
         }
 
         setSelectedEntryId(saved.id);
