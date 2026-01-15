@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { Project, UpdateProjectInput, CreateProjectTaskInput } from '../../../types/actions';
-import { PROJECT_STATUS_CONFIG, ACTIONS_XP_REWARDS } from '../../../types/actions';
+import { PROJECT_STATUS_CONFIG } from '../../../types/actions';
 import { useProjectTasks } from '../hooks/useProjectTasks';
 import { useProjectProgress } from '../hooks/useProjectProgress';
 import { useGamification } from '../../../hooks/useGamification';

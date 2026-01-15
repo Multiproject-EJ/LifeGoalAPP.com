@@ -18,6 +18,8 @@ interface TaskSuggestion {
   selected: boolean;
 }
 
+const AI_GENERATION_DELAY = 1500; // milliseconds
+
 export function AIProjectBreakdown({ project, session, onAddTasks, onClose }: AIProjectBreakdownProps) {
   const [suggestions, setSuggestions] = useState<TaskSuggestion[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -27,7 +29,7 @@ export function AIProjectBreakdown({ project, session, onAddTasks, onClose }: AI
     setIsGenerating(true);
     
     // Simulate AI "thinking" delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, AI_GENERATION_DELAY));
     
     // Generate suggestions based on project title/description
     const generated = generateTasksForProject(project);
