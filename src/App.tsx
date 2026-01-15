@@ -167,6 +167,13 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'identity',
 ] as const;
 
+// IDs to exclude from the mobile popup menu
+// - 'account': replaced by Settings button
+// - 'breathing-space': shown in main footer nav
+// - 'planning': replaced by ID button (Today is in main footer nav)
+// - 'actions': replaced by Settings button (Actions is in main footer nav)
+const MOBILE_POPUP_EXCLUDED_IDS = ['account', 'breathing-space', 'planning', 'actions'] as const;
+
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
@@ -1288,7 +1295,7 @@ export default function App() {
               <div className="mobile-menu-overlay__content">
                 <ul className="mobile-menu-overlay__list">
                   {mobileMenuNavItems
-                    .filter((item) => item.id !== 'account' && item.id !== 'breathing-space' && item.id !== 'planning' && item.id !== 'actions')
+                    .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
                     .map((item) => (
                       <li key={item.id} className="mobile-menu-overlay__item">
                         <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
