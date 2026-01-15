@@ -220,6 +220,14 @@ export async function getMeditationStats(userId: string): Promise<
  */
 export const PLACEHOLDER_SESSIONS = [
   {
+    id: 'one-minute-reset',
+    title: '1-Minute Reset',
+    description: 'A quick 60-second reset to refocus',
+    duration: 60,
+    type: 'breathing',
+    icon: '⏱️',
+  },
+  {
     id: 'quick-breathing',
     title: '3-Minute Breathing',
     description: 'A quick breathing exercise to center yourself',
