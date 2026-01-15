@@ -6,7 +6,9 @@ import { useProjectProgress } from './hooks/useProjectProgress';
 import { ProjectList } from './components/ProjectList';
 import { ProjectDetail } from './components/ProjectDetail';
 import { ProjectForm } from './components/ProjectForm';
-import type { Project, ProjectStatus, CreateProjectInput } from '../../types/actions';
+import { ProjectBoard } from './components/ProjectBoard';
+import { ProjectTimeline } from './components/ProjectTimeline';
+import type { Project, ProjectStatus, CreateProjectInput, TaskStatus } from '../../types/actions';
 import { PROJECT_STATUS_CONFIG } from '../../types/actions';
 import './ProjectsManager.css';
 
@@ -20,8 +22,23 @@ export function ProjectsManager({ session }: ProjectsManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all');
+  const [currentView, setCurrentView] = useState<'list' | 'board' | 'timeline'>('list');
 
   const selectedProject = projects.find(p => p.id === selectedProjectId) ?? null;
+  
+  // Fetch tasks for selected project (for board view)
+  const { tasks, updateTask } = useProjectTasks(session, selectedProjectId ?? '');
+
+  // Handler for updating task status from board view
+  const handleTaskStatusChange = useCallback(async (taskId: string, newStatus: TaskStatus) => {
+    await updateTask(taskId, { status: newStatus });
+  }, [updateTask]);
+
+  // Handler for clicking on a task in board view (placeholder for now)
+  const handleTaskClick = useCallback((task: any) => {
+    console.log('Task clicked:', task);
+    // Could open a task detail modal in the future
+  }, []);
 
   // Calculate progress for all projects
   // NOTE: This is a simplified implementation showing 0 progress for list view.
@@ -130,6 +147,29 @@ export function ProjectsManager({ session }: ProjectsManagerProps) {
         </button>
       </header>
 
+      <div className="projects-manager__view-switcher">
+        <button 
+          className={`projects-manager__view-btn ${currentView === 'list' ? 'projects-manager__view-btn--active' : ''}`}
+          onClick={() => setCurrentView('list')}
+        >
+          📋 List
+        </button>
+        <button 
+          className={`projects-manager__view-btn ${currentView === 'board' ? 'projects-manager__view-btn--active' : ''}`}
+          onClick={() => setCurrentView('board')}
+          disabled={!selectedProject}
+          title={!selectedProject ? 'Select a project to view board' : ''}
+        >
+          📊 Board
+        </button>
+        <button 
+          className={`projects-manager__view-btn ${currentView === 'timeline' ? 'projects-manager__view-btn--active' : ''}`}
+          onClick={() => setCurrentView('timeline')}
+        >
+          📅 Timeline
+        </button>
+      </div>
+
       <div className="projects-manager__filters">
         {statusFilters.map((filter) => (
           <button
@@ -145,25 +185,52 @@ export function ProjectsManager({ session }: ProjectsManagerProps) {
       </div>
 
       <div className="projects-manager__content">
-        <div className="projects-manager__list-section">
-          <ProjectList
-            projects={filteredProjects}
-            selectedId={selectedProjectId}
-            onSelect={setSelectedProjectId}
-            projectProgress={projectProgress}
-          />
-        </div>
+        {currentView === 'list' && (
+          <>
+            <div className="projects-manager__list-section">
+              <ProjectList
+                projects={filteredProjects}
+                selectedId={selectedProjectId}
+                onSelect={setSelectedProjectId}
+                projectProgress={projectProgress}
+              />
+            </div>
 
-        {selectedProject && (
-          <div className="projects-manager__detail-section">
-            <ProjectDetail
-              project={selectedProject}
-              session={session}
-              onUpdate={handleUpdateProject}
-              onDelete={handleDeleteProject}
-              onComplete={handleCompleteProject}
-              onClose={() => setSelectedProjectId(null)}
-              onEdit={handleEditProject}
+            {selectedProject && (
+              <div className="projects-manager__detail-section">
+                <ProjectDetail
+                  project={selectedProject}
+                  session={session}
+                  onUpdate={handleUpdateProject}
+                  onDelete={handleDeleteProject}
+                  onComplete={handleCompleteProject}
+                  onClose={() => setSelectedProjectId(null)}
+                  onEdit={handleEditProject}
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        {currentView === 'board' && selectedProject && (
+          <div className="projects-manager__board-view">
+            <ProjectBoard
+              projectId={selectedProject.id}
+              tasks={tasks}
+              onTaskStatusChange={handleTaskStatusChange}
+              onTaskClick={handleTaskClick}
+            />
+          </div>
+        )}
+
+        {currentView === 'timeline' && (
+          <div className="projects-manager__timeline-view">
+            <ProjectTimeline
+              projects={filteredProjects}
+              onProjectClick={(project) => {
+                setSelectedProjectId(project.id);
+                setCurrentView('list');
+              }}
             />
           </div>
         )}

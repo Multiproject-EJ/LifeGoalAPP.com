@@ -55,6 +55,40 @@
 }
 
 /* Filters */
+.projects-manager__view-switcher {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.projects-manager__view-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--card-bg, #ffffff);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.projects-manager__view-btn--active {
+  background: var(--primary-color, #6366f1);
+  color: white;
+  border-color: var(--primary-color, #6366f1);
+}
+
+.projects-manager__view-btn:hover:not(.projects-manager__view-btn--active):not(:disabled) {
+  background: var(--hover-bg, #f9fafb);
+}
+
+.projects-manager__view-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .projects-manager__filters {
   display: flex;
   gap: 0.5rem;
@@ -95,6 +129,13 @@
 .projects-manager__list-section {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
+}
+
+.projects-manager__board-view,
+.projects-manager__timeline-view {
+  flex: 1;
+  overflow: auto;
   min-height: 0;
 }
 
@@ -1021,4 +1062,20 @@
   background: var(--color-surface-secondary, rgba(15, 20, 25, 0.6));
   border-color: var(--color-border-primary, rgba(148, 163, 184, 0.15));
   color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .projects-manager__view-btn,
+[data-theme='midnight-purple'] .projects-manager__view-btn,
+[data-theme='flow-night'] .projects-manager__view-btn,
+[data-theme='bio-night'] .projects-manager__view-btn {
+  background: var(--color-surface-primary, rgba(26, 31, 46, 0.7));
+  border-color: var(--color-border-primary, rgba(148, 163, 184, 0.15));
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .projects-manager__view-btn:hover:not(.projects-manager__view-btn--active):not(:disabled),
+[data-theme='midnight-purple'] .projects-manager__view-btn:hover:not(.projects-manager__view-btn--active):not(:disabled),
+[data-theme='flow-night'] .projects-manager__view-btn:hover:not(.projects-manager__view-btn--active):not(:disabled),
+[data-theme='bio-night'] .projects-manager__view-btn:hover:not(.projects-manager__view-btn--active):not(:disabled) {
+  background: var(--color-surface-secondary, rgba(15, 20, 25, 0.6));
 }
