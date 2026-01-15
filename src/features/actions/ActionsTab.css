@@ -477,11 +477,19 @@
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .actions-tab {
+    max-width: 900px;
     padding: 1.5rem;
   }
   
   .actions-tab__title {
     font-size: 1.75rem;
+  }
+  
+  /* Multi-column layout for desktop */
+  .actions-tab__lists {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
   }
   
   .actions-tab__category-option {
@@ -499,6 +507,131 @@
     height: 36px;
     min-width: 36px;
   }
+  
+  /* Help button */
+  .actions-tab__help-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--surface-primary, #fff);
+    border: 1px solid var(--border-color, #e0e0e0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+    z-index: 100;
+  }
+  
+  .actions-tab__help-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Hide help button on mobile */
+@media (max-width: 767px) {
+  .actions-tab__help-btn {
+    display: none;
+  }
+}
+
+/* Selected action highlight */
+.action-item--selected {
+  outline: 2px solid var(--primary-color, #6366f1);
+  outline-offset: 2px;
+  background: var(--primary-light, #e0e7ff);
+}
+
+/* Selection mode indicator */
+.action-item--in-selection {
+  position: relative;
+}
+
+.action-item--in-selection::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary-color, #6366f1);
+  border-radius: 2px 0 0 2px;
+}
+
+/* Bulk actions bar */
+.actions-tab__bulk-bar {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-primary, #fff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.actions-tab__bulk-bar-count {
+  font-weight: 600;
+  color: var(--primary-color, #6366f1);
+}
+
+.actions-tab__bulk-bar-action {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.actions-tab__bulk-bar-action--complete {
+  background: var(--success-color, #10b981);
+  color: white;
+}
+
+.actions-tab__bulk-bar-action--delete {
+  background: var(--error-color, #ef4444);
+  color: white;
+}
+
+.actions-tab__bulk-bar-action--cancel {
+  background: var(--surface-secondary, #f1f5f9);
+  color: var(--text-primary, #1e293b);
+}
+
+/* Dark theme for selection */
+[data-theme='dark-glass'] .action-item--selected,
+[data-theme='midnight-purple'] .action-item--selected,
+[data-theme='flow-night'] .action-item--selected,
+[data-theme='bio-night'] .action-item--selected {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+[data-theme='dark-glass'] .actions-tab__bulk-bar,
+[data-theme='midnight-purple'] .actions-tab__bulk-bar,
+[data-theme='flow-night'] .actions-tab__bulk-bar,
+[data-theme='bio-night'] .actions-tab__bulk-bar {
+  background: var(--color-surface-primary, #1e293b);
+  border-color: var(--color-border-primary, rgba(255, 255, 255, 0.1));
+}
+
+[data-theme='dark-glass'] .actions-tab__help-btn,
+[data-theme='midnight-purple'] .actions-tab__help-btn,
+[data-theme='flow-night'] .actions-tab__help-btn,
+[data-theme='bio-night'] .actions-tab__help-btn {
+  background: var(--color-surface-primary, #1e293b);
+  border-color: var(--color-border-primary, rgba(255, 255, 255, 0.1));
 }
 
 /* Mobile-first adjustments */

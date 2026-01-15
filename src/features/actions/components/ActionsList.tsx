@@ -8,9 +8,17 @@ export interface ActionsListProps {
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate?: (id: string, updates: Partial<Action>) => void;
+  selectedIndex?: number;
+  selectedIds?: Set<string>;
 }
 
-export function ActionsList({ actions, onComplete, onDelete }: ActionsListProps) {
+export function ActionsList({ 
+  actions, 
+  onComplete, 
+  onDelete, 
+  selectedIndex = -1,
+  selectedIds = new Set()
+}: ActionsListProps) {
   // Group actions by category
   const actionsByCategory: Record<ActionCategory, Action[]> = {
     must_do: [],
@@ -53,14 +61,21 @@ export function ActionsList({ actions, onComplete, onDelete }: ActionsListProps)
         <CategoryHeader category={category} count={categoryActions.length} />
         
         <ul className="actions-tab__list" role="list">
-          {categoryActions.map((action) => (
-            <ActionItem
-              key={action.id}
-              action={action}
-              onComplete={() => onComplete(action.id)}
-              onDelete={() => onDelete(action.id)}
-            />
-          ))}
+          {categoryActions.map((action, index) => {
+            // Calculate the global index for this action
+            const globalIndex = actions.filter(a => !a.completed).findIndex(a => a.id === action.id);
+            const isSelected = globalIndex === selectedIndex || selectedIds.has(action.id);
+            
+            return (
+              <ActionItem
+                key={action.id}
+                action={action}
+                onComplete={() => onComplete(action.id)}
+                onDelete={() => onDelete(action.id)}
+                isSelected={isSelected}
+              />
+            );
+          })}
         </ul>
       </section>
     );

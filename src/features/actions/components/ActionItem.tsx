@@ -6,9 +6,10 @@ export interface ActionItemProps {
   action: Action;
   onComplete: () => void;
   onDelete: () => void;
+  isSelected?: boolean;
 }
 
-export function ActionItem({ action, onComplete, onDelete }: ActionItemProps) {
+export function ActionItem({ action, onComplete, onDelete, isSelected = false }: ActionItemProps) {
   const timeRemaining = calculateTimeRemaining(action.expires_at);
   const config = ACTION_CATEGORY_CONFIG[action.category];
   
@@ -17,7 +18,7 @@ export function ActionItem({ action, onComplete, onDelete }: ActionItemProps) {
 
   return (
     <li 
-      className={`action-item ${timeRemaining.isExpiringSoon && showTimer ? 'action-item--expiring-soon' : ''}`}
+      className={`action-item ${timeRemaining.isExpiringSoon && showTimer ? 'action-item--expiring-soon' : ''} ${isSelected ? 'action-item--selected' : ''}`}
       style={{ '--category-color': config.color } as React.CSSProperties}
     >
       <button
