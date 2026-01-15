@@ -9,8 +9,10 @@ export interface QuickAddActionProps {
 
 export function QuickAddAction({ onAdd, disabled = false }: QuickAddActionProps) {
   const [title, setTitle] = useState('');
+  const [notes, setNotes] = useState('');
   const [category, setCategory] = useState<ActionCategory>('nice_to_do');
   const [adding, setAdding] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   const handleSubmit = async () => {
     const trimmedTitle = title.trim();
@@ -21,8 +23,11 @@ export function QuickAddAction({ onAdd, disabled = false }: QuickAddActionProps)
       await onAdd({
         title: trimmedTitle,
         category,
+        notes: notes.trim() || undefined,
       });
       setTitle('');
+      setNotes('');
+      setShowNotes(false);
     } catch (err) {
       // Error handling is done by parent component
     } finally {
@@ -59,6 +64,42 @@ export function QuickAddAction({ onAdd, disabled = false }: QuickAddActionProps)
           {adding ? '...' : '+'}
         </button>
       </div>
+      
+      {/* Notes toggle and textarea */}
+      {!showNotes ? (
+        <button
+          type="button"
+          className="actions-tab__notes-toggle"
+          onClick={() => setShowNotes(true)}
+          disabled={disabled}
+        >
+          📝 Add notes
+        </button>
+      ) : (
+        <>
+          <textarea
+            className="actions-tab__notes-textarea"
+            placeholder="Optional notes..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            disabled={adding || disabled}
+            rows={3}
+            aria-label="Action notes"
+          />
+          <button
+            type="button"
+            className="actions-tab__notes-toggle"
+            onClick={() => {
+              setShowNotes(false);
+              setNotes('');
+            }}
+            disabled={disabled}
+          >
+            Hide notes
+          </button>
+        </>
+      )}
+
       <div className="actions-tab__category-selector" role="radiogroup" aria-label="Action category">
         {(Object.keys(ACTION_CATEGORY_CONFIG) as ActionCategory[]).map((cat) => {
           const config = ACTION_CATEGORY_CONFIG[cat];

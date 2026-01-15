@@ -6,15 +6,29 @@ export interface ActionItemProps {
   action: Action;
   onComplete: () => void;
   onDelete: () => void;
+  onOpenDetail?: () => void;
   isSelected?: boolean;
 }
 
-export function ActionItem({ action, onComplete, onDelete, isSelected = false }: ActionItemProps) {
+export function ActionItem({ action, onComplete, onDelete, onOpenDetail, isSelected = false }: ActionItemProps) {
   const timeRemaining = calculateTimeRemaining(action.expires_at);
   const config = ACTION_CATEGORY_CONFIG[action.category];
   
   // MUST DO items don't expire
   const showTimer = action.category !== 'must_do';
+
+  const handleContentClick = () => {
+    if (onOpenDetail) {
+      onOpenDetail();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleContentClick();
+    }
+  };
 
   return (
     <li 
@@ -32,7 +46,14 @@ export function ActionItem({ action, onComplete, onDelete, isSelected = false }:
         </span>
       </button>
       
-      <div className="action-item__content">
+      <div 
+        className="action-item__content"
+        onClick={handleContentClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label={`View details: ${action.title}`}
+      >
         <span className="action-item__title">{action.title}</span>
         {action.notes && (
           <span className="action-item__notes">{action.notes}</span>
