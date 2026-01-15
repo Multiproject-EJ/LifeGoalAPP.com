@@ -14963,6 +14963,38 @@ body {
    Celebration Animation Styles
    =================================== */
 
+/* Semi-transparent backdrop that dims the screen during XP display */
+.celebration-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4); /* 40% opacity - dims but doesn't hide */
+  z-index: 9997; /* Below icons (9998) and XP (9999) */
+  pointer-events: none; /* Don't block interactions */
+  animation: backdrop-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes backdrop-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.celebration-backdrop--fading-out {
+  animation: backdrop-fade-out 0.5s ease-out forwards;
+}
+
+@keyframes backdrop-fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* For level-up, make it slightly darker for more drama */
+.celebration-backdrop--levelup {
+  background: rgba(0, 0, 0, 0.55);
+}
+
 /* Celebration icon pop-up animation */
 .celebration-icon {
   position: fixed;
@@ -14991,7 +15023,7 @@ body {
   transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* XP indicator - center of screen with glow */
+/* XP indicator - center of screen with glow and dark pill background */
 .celebration-xp {
   position: fixed;
   top: 50%;
@@ -15000,22 +15032,35 @@ body {
   z-index: 9999;
   font-size: 3rem;
   font-weight: bold;
-  text-shadow: 0 0 20px currentColor;
+  /* Add a dark background/pill shape to ensure visibility */
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1rem 2rem;
+  border-radius: 999px;
+  /* Glowing border */
+  border: 3px solid currentColor;
+  box-shadow: 
+    0 0 20px currentColor,
+    0 0 40px currentColor,
+    0 0 60px rgba(255, 215, 0, 0.3),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
   animation: xp-glow 2s ease-in-out infinite, xp-fade-in 0.5s ease-out;
 }
 
 @keyframes xp-glow {
   0%, 100% { 
     color: #ffd700; 
-    text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700; 
+    border-color: #ffd700;
+    box-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700, 0 0 60px rgba(255, 215, 0, 0.5);
   }
   33% { 
     color: #a855f7; 
-    text-shadow: 0 0 20px #a855f7, 0 0 40px #a855f7; 
+    border-color: #a855f7;
+    box-shadow: 0 0 20px #a855f7, 0 0 40px #a855f7, 0 0 60px rgba(168, 85, 247, 0.5);
   }
   66% { 
     color: #06b6d4; 
-    text-shadow: 0 0 20px #06b6d4, 0 0 40px #06b6d4; 
+    border-color: #06b6d4;
+    box-shadow: 0 0 20px #06b6d4, 0 0 40px #06b6d4, 0 0 60px rgba(6, 182, 212, 0.5);
   }
 }
 
@@ -15030,9 +15075,10 @@ body {
   }
 }
 
-/* Level up MEGA celebration */
+/* Level up MEGA celebration - even bigger with more padding */
 .celebration-xp--levelup {
   font-size: 4rem;
+  padding: 1.5rem 3rem;
   animation: xp-glow 1s ease-in-out infinite, levelup-pulse 0.5s ease-out;
 }
 
