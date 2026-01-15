@@ -164,7 +164,15 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'insights',
   'rituals',
   'account',
+  'identity',
 ] as const;
+
+// IDs to exclude from the mobile popup menu
+// - 'account': replaced by Settings button
+// - 'breathing-space': shown in main footer nav
+// - 'planning': replaced by ID button (Today is in main footer nav)
+// - 'actions': replaced by Settings button (Actions is in main footer nav)
+const MOBILE_POPUP_EXCLUDED_IDS = ['account', 'breathing-space', 'planning', 'actions'] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -255,6 +263,16 @@ export default function App() {
           ariaLabel: 'Account and profile',
           icon: '👤',
           summary: 'Manage your profile, workspace, and sign-in preferences.',
+        } satisfies MobileMenuNavItem;
+      }
+
+      if (navId === 'identity') {
+        return {
+          id: navId,
+          label: 'ID',
+          ariaLabel: 'Your identity and preferences',
+          icon: '🪪',
+          summary: 'Explore your personality and preferences.',
         } satisfies MobileMenuNavItem;
       }
 
@@ -1206,6 +1224,27 @@ export default function App() {
             </section>
           </div>
         );
+      case 'identity':
+        return (
+          <div className="workspace-content">
+            <section className="identity-hub">
+              <div className="identity-hub__header">
+                <div>
+                  <h2 className="identity-hub__title">🪪 Your ID</h2>
+                  <p className="identity-hub__subtitle">
+                    Explore your personality, preferences, and what makes you unique.
+                  </p>
+                </div>
+              </div>
+              <div className="identity-hub__placeholder">
+                <p className="identity-hub__placeholder-text">
+                  This section is coming soon. Here you'll be able to discover insights about your personality, 
+                  set preferences, and tailor your LifeGoal experience to match who you are.
+                </p>
+              </div>
+            </section>
+          </div>
+        );
       default:
         return (
           <div className="workspace-stage__placeholder">
@@ -1256,7 +1295,7 @@ export default function App() {
               <div className="mobile-menu-overlay__content">
                 <ul className="mobile-menu-overlay__list">
                   {mobileMenuNavItems
-                    .filter((item) => item.id !== 'account' && item.id !== 'breathing-space')
+                    .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
                     .map((item) => (
                       <li key={item.id} className="mobile-menu-overlay__item">
                         <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
@@ -1273,10 +1312,20 @@ export default function App() {
                 </ul>
               </div>
               <div className="mobile-menu-overlay__settings">
-                <h3 className="mobile-menu-overlay__settings-title">Settings</h3>
                 <button
                   type="button"
-                  className="mobile-menu-overlay__theme-selector-button"
+                  className="mobile-menu-overlay__settings-button"
+                  onClick={() => handleMobileNavSelect('account')}
+                  aria-label="Open settings"
+                >
+                  <span className="mobile-menu-overlay__settings-button-icon" aria-hidden="true">
+                    ⚙️
+                  </span>
+                  <span className="mobile-menu-overlay__settings-button-label">Settings</span>
+                </button>
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__theme-selector-button mobile-menu-overlay__theme-selector-button--expanded"
                   onClick={() => setIsMobileThemeSelectorOpen(true)}
                   aria-label="Open theme selector"
                 >
@@ -1291,17 +1340,6 @@ export default function App() {
                   <span className="mobile-menu-overlay__theme-selector-icon" aria-hidden="true">
                     {AVAILABLE_THEMES.find(t => t.id === theme)?.icon || '🎨'}
                   </span>
-                </button>
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__account-button"
-                  onClick={() => handleMobileNavSelect('account')}
-                  aria-label="Open account settings"
-                >
-                  <span className="mobile-menu-overlay__account-icon" aria-hidden="true">
-                    👤
-                  </span>
-                  <span>My Account</span>
                 </button>
               </div>
             </>
