@@ -1,0 +1,253 @@
+.ai-breakdown {
+  background: var(--color-surface-primary, #fff);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-breakdown__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-primary, #e2e8f0);
+}
+
+.ai-breakdown__icon {
+  font-size: 1.5rem;
+}
+
+.ai-breakdown__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.ai-breakdown__close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary, #64748b);
+  border-radius: 6px;
+}
+
+.ai-breakdown__close:hover {
+  background: var(--color-surface-secondary, #f1f5f9);
+}
+
+.ai-breakdown__body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ai-breakdown__intro {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.ai-breakdown__intro p {
+  margin-bottom: 1.5rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.ai-breakdown__generate-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-primary, #6366f1), var(--color-accent-purple, #a855f7));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.ai-breakdown__generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.ai-breakdown__loading {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.ai-breakdown__typing {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 1rem;
+}
+
+.ai-breakdown__typing span {
+  width: 8px;
+  height: 8px;
+  background: var(--color-primary, #6366f1);
+  border-radius: 50%;
+  animation: ai-typing 1.4s infinite ease-in-out;
+}
+
+.ai-breakdown__typing span:nth-child(1) { animation-delay: 0s; }
+.ai-breakdown__typing span:nth-child(2) { animation-delay: 0.2s; }
+.ai-breakdown__typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes ai-typing {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.ai-breakdown__result-text {
+  margin-bottom: 1rem;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.875rem;
+}
+
+.ai-breakdown__suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-breakdown__suggestion {
+  background: var(--color-surface-secondary, #f8fafc);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.ai-breakdown__suggestion label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+
+.ai-breakdown__suggestion--selected {
+  background: var(--color-primary-light, #e0e7ff);
+}
+
+.ai-breakdown__suggestion input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.ai-breakdown__suggestion-title {
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.ai-breakdown__suggestion-hours {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #64748b);
+  background: var(--color-surface-primary, #fff);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.ai-breakdown__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.ai-breakdown__add-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: var(--color-primary, #6366f1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ai-breakdown__add-btn:hover:not(:disabled) {
+  background: var(--color-primary-dark, #4f46e5);
+}
+
+.ai-breakdown__add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-breakdown__regenerate-btn {
+  padding: 0.75rem 1rem;
+  background: var(--color-surface-secondary, #f1f5f9);
+  color: var(--color-text-primary, #1e293b);
+  border: 1px solid var(--color-border-primary, #e2e8f0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ai-breakdown__regenerate-btn:hover {
+  background: var(--color-surface-tertiary, #e2e8f0);
+}
+
+/* Dark theme support */
+[data-theme='dark-glass'] .ai-breakdown,
+[data-theme='midnight-purple'] .ai-breakdown,
+[data-theme='flow-night'] .ai-breakdown,
+[data-theme='bio-night'] .ai-breakdown {
+  background: var(--color-surface-primary, #1e293b);
+  border: 1px solid var(--color-border-primary, rgba(255, 255, 255, 0.1));
+}
+
+[data-theme='dark-glass'] .ai-breakdown__header,
+[data-theme='midnight-purple'] .ai-breakdown__header,
+[data-theme='flow-night'] .ai-breakdown__header,
+[data-theme='bio-night'] .ai-breakdown__header {
+  border-bottom-color: var(--color-border-primary, rgba(255, 255, 255, 0.1));
+}
+
+[data-theme='dark-glass'] .ai-breakdown__close:hover,
+[data-theme='midnight-purple'] .ai-breakdown__close:hover,
+[data-theme='flow-night'] .ai-breakdown__close:hover,
+[data-theme='bio-night'] .ai-breakdown__close:hover {
+  background: var(--color-surface-secondary, #334155);
+}
+
+[data-theme='dark-glass'] .ai-breakdown__suggestion,
+[data-theme='midnight-purple'] .ai-breakdown__suggestion,
+[data-theme='flow-night'] .ai-breakdown__suggestion,
+[data-theme='bio-night'] .ai-breakdown__suggestion {
+  background: var(--color-surface-secondary, #334155);
+}
+
+[data-theme='dark-glass'] .ai-breakdown__suggestion--selected,
+[data-theme='midnight-purple'] .ai-breakdown__suggestion--selected,
+[data-theme='flow-night'] .ai-breakdown__suggestion--selected,
+[data-theme='bio-night'] .ai-breakdown__suggestion--selected {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+[data-theme='dark-glass'] .ai-breakdown__suggestion-hours,
+[data-theme='midnight-purple'] .ai-breakdown__suggestion-hours,
+[data-theme='flow-night'] .ai-breakdown__suggestion-hours,
+[data-theme='bio-night'] .ai-breakdown__suggestion-hours {
+  background: var(--color-surface-primary, #1e293b);
+}
+
+[data-theme='dark-glass'] .ai-breakdown__regenerate-btn,
+[data-theme='midnight-purple'] .ai-breakdown__regenerate-btn,
+[data-theme='flow-night'] .ai-breakdown__regenerate-btn,
+[data-theme='bio-night'] .ai-breakdown__regenerate-btn {
+  background: var(--color-surface-secondary, #334155);
+  border-color: var(--color-border-primary, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-primary, #f1f5f9);
+}

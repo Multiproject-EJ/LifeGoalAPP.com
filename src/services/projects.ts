@@ -266,6 +266,19 @@ export async function insertProjectTask(
   userId: string,
   input: CreateProjectTaskInput
 ): Promise<ServiceResponse<ProjectTask>> {
+  if (!input.project_id) {
+    return { 
+      data: null, 
+      error: { 
+        name: 'PostgrestError',
+        message: 'project_id is required',
+        details: '',
+        hint: '',
+        code: 'PGRST000'
+      }
+    };
+  }
+
   if (!canUseSupabaseData()) {
     const newTask = addDemoProjectTask(userId, input);
     return { data: newTask, error: null };
@@ -279,10 +292,12 @@ export async function insertProjectTask(
       user_id: userId,
       title: input.title,
       description: input.description ?? null,
+      status: input.status ?? 'todo',
       parent_task_id: input.parent_task_id ?? null,
       depends_on_task_id: input.depends_on_task_id ?? null,
       due_date: input.due_date ?? null,
       estimated_hours: input.estimated_hours ?? null,
+      order_index: input.order_index ?? 0,
     })
     .select()
     .returns<ProjectTask>()

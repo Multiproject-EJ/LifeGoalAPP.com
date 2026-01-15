@@ -221,13 +221,15 @@ export interface UpdateProjectInput {
 }
 
 export interface CreateProjectTaskInput {
-  project_id: string;
+  project_id?: string;
   title: string;
   description?: string;
+  status?: TaskStatus;
   parent_task_id?: string;
   depends_on_task_id?: string;
   due_date?: string;
   estimated_hours?: number;
+  order_index?: number;
 }
 
 export interface UpdateProjectTaskInput {
