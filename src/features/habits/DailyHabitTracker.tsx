@@ -98,7 +98,7 @@ type IntentionsJournalDraft = {
   content: string;
 };
 
-type DayStatus = 'skip' | 'vacation';
+type DayStatus = 'skip' | 'vacation' | 'sick';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
@@ -1639,16 +1639,60 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const handleCloseIntentionsNotice = () => {
       setIsIntentionsNoticeOpen(false);
     };
-    const handleDayStatusUpdate = (status: DayStatus) => {
+    const handleDayStatusUpdate = async (status: DayStatus) => {
+      const isCurrentlySet = dayStatusMap[activeDate] === status;
+      
       setDayStatusMap((previous) => {
         const next = { ...previous };
-        if (next[activeDate] === status) {
+        if (isCurrentlySet) {
           delete next[activeDate];
         } else {
           next[activeDate] = status;
         }
         return next;
       });
+
+      // Create journal entry when status is set (not when unsetting)
+      if (!isCurrentlySet) {
+        let journalMessage = '';
+        let journalTitle = '';
+        
+        switch (status) {
+          case 'skip':
+            journalMessage = 'Skipped today for any reason (lazy, busy, tired)';
+            journalTitle = 'Day Status: Skipped';
+            break;
+          case 'vacation':
+            journalMessage = 'Vacation';
+            journalTitle = 'Day Status: Vacation';
+            break;
+          case 'sick':
+            journalMessage = 'Sick';
+            journalTitle = 'Day Status: Sick';
+            break;
+        }
+
+        try {
+          await createJournalEntry({
+            user_id: session.user.id,
+            entry_date: activeDate,
+            title: journalTitle,
+            content: journalMessage,
+            mood: null,
+            tags: ['day_status', status],
+            linked_goal_ids: null,
+            linked_habit_ids: null,
+            is_private: true,
+            type: 'quick',
+            mood_score: null,
+            category: null,
+            unlock_date: null,
+            goal_id: null,
+          });
+        } catch (error) {
+          console.error('Failed to create journal entry for day status:', error);
+        }
+      }
     };
 
     return (
@@ -1960,7 +2004,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   <div className="habit-day-status__header">
                     <div>
                       <p className="habit-day-status__eyebrow">Busy day?</p>
-                      <h3 className="habit-day-status__title">Log a skip or vacation</h3>
+                      <h3 className="habit-day-status__title">Log a skip, vacation, or sick day</h3>
                     </div>
                     <span className="habit-day-status__badge">
                       {skipStreakCount}/3 skips
@@ -1981,6 +2025,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     <button
                       type="button"
                       className={`habit-day-status__button habit-day-status__button--secondary ${
+                        dayStatus === 'sick' ? 'habit-day-status__button--active' : ''
+                      }`}
+                      onClick={() => handleDayStatusUpdate('sick')}
+                    >
+                      {dayStatus === 'sick' ? 'Sick day' : 'Sick'}
+                    </button>
+                    <button
+                      type="button"
+                      className={`habit-day-status__button habit-day-status__button--secondary ${
                         dayStatus === 'vacation' ? 'habit-day-status__button--active' : ''
                       }`}
                       onClick={() => handleDayStatusUpdate('vacation')}
@@ -1991,7 +2044,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   {skipLimitReached ? (
                     <p className="habit-day-status__note">Max 3 skips in a row reached.</p>
                   ) : dayStatus ? (
-                    <p className="habit-day-status__note">Logged: {dayStatus === 'skip' ? 'Skipped' : 'Vacation'}.</p>
+                    <p className="habit-day-status__note">Logged: {dayStatus === 'skip' ? 'Skipped' : dayStatus === 'sick' ? 'Sick' : 'Vacation'}.</p>
                   ) : null}
                 </div>
               </>

@@ -17,6 +17,7 @@ export interface Action {
   created_at: string;
   expires_at: string;
   migrated_to_project_id: string | null;
+  project_id: string | null;
   order_index: number;
   notes: string | null;
   xp_awarded: number;
@@ -185,6 +186,7 @@ export interface CreateActionInput {
   title: string;
   category: ActionCategory;
   notes?: string;
+  project_id?: string;
 }
 
 export interface UpdateActionInput {
@@ -194,6 +196,7 @@ export interface UpdateActionInput {
   notes?: string;
   order_index?: number;
   migrated_to_project_id?: string;
+  project_id?: string;
 }
 
 export interface CreateProjectInput {

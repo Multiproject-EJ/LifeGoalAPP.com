@@ -1,22 +1,34 @@
 import { useState } from 'react';
-import type { ActionCategory, CreateActionInput } from '../../../types/actions';
+import type { ActionCategory, CreateActionInput, Project } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG } from '../../../types/actions';
 
 export interface QuickAddActionProps {
   onAdd: (input: CreateActionInput) => Promise<void>;
+  projects?: Project[];
   disabled?: boolean;
 }
 
-export function QuickAddAction({ onAdd, disabled = false }: QuickAddActionProps) {
+export function QuickAddAction({ onAdd, projects = [], disabled = false }: QuickAddActionProps) {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [category, setCategory] = useState<ActionCategory>('nice_to_do');
+  const [projectId, setProjectId] = useState<string>('');
   const [adding, setAdding] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [showProjectSelector, setShowProjectSelector] = useState(false);
+
+  const activeProjects = projects.filter(
+    (p) => p.status === 'planning' || p.status === 'active'
+  );
 
   const handleSubmit = async () => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle || adding) return;
+
+    // Validate project selection if project selector is shown
+    if (showProjectSelector && !projectId) {
+      return; // Don't submit if project selector is open but no project selected
+    }
 
     setAdding(true);
     try {
@@ -24,10 +36,13 @@ export function QuickAddAction({ onAdd, disabled = false }: QuickAddActionProps)
         title: trimmedTitle,
         category,
         notes: notes.trim() || undefined,
+        project_id: projectId || undefined,
       });
       setTitle('');
       setNotes('');
+      setProjectId('');
       setShowNotes(false);
+      setShowProjectSelector(false);
     } catch (err) {
       // Error handling is done by parent component
     } finally {
@@ -58,7 +73,7 @@ export function QuickAddAction({ onAdd, disabled = false }: QuickAddActionProps)
           type="button"
           className="actions-tab__quick-add-button"
           onClick={handleSubmit}
-          disabled={adding || disabled || !title.trim()}
+          disabled={adding || disabled || !title.trim() || (showProjectSelector && !projectId)}
           aria-label="Add action"
         >
           {adding ? '...' : '+'}
@@ -98,6 +113,54 @@ export function QuickAddAction({ onAdd, disabled = false }: QuickAddActionProps)
             Hide notes
           </button>
         </>
+      )}
+
+      {/* Project selector */}
+      {activeProjects.length > 0 && (
+        <div className="actions-tab__project-selector-wrapper">
+          {!showProjectSelector ? (
+            <button
+              type="button"
+              className="actions-tab__project-toggle"
+              onClick={() => setShowProjectSelector(true)}
+              disabled={disabled}
+            >
+              📦 Assign to project
+            </button>
+          ) : (
+            <>
+              <label className="actions-tab__project-label" htmlFor="action-project-select">
+                Select Project (required)
+              </label>
+              <select
+                id="action-project-select"
+                className="actions-tab__project-select"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                disabled={adding || disabled}
+                aria-label="Select project"
+              >
+                <option value="">Choose a project...</option>
+                {activeProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.icon} {project.title}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="actions-tab__project-toggle"
+                onClick={() => {
+                  setShowProjectSelector(false);
+                  setProjectId('');
+                }}
+                disabled={disabled}
+              >
+                Remove project
+              </button>
+            </>
+          )}
+        </div>
       )}
 
       <div className="actions-tab__category-selector" role="radiogroup" aria-label="Action category">
