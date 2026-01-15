@@ -28,6 +28,7 @@ const shouldAlwaysShow = (action: Action): boolean => {
 
 type ActionsTabProps = {
   session: Session;
+  onNavigateToProjects?: () => void;
 };
 
 type StatusMessage = {
@@ -35,7 +36,7 @@ type StatusMessage = {
   message: string;
 } | null;
 
-export function ActionsTab({ session }: ActionsTabProps) {
+export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
   const { actions, loading, error, createAction, updateAction, completeAction, deleteAction, refresh } = useActions(session);
   const { projects } = useProjects(session);
@@ -288,7 +289,23 @@ export function ActionsTab({ session }: ActionsTabProps) {
       )}
 
       {/* Quick add section */}
-      <QuickAddAction onAdd={handleAddAction} />
+      <QuickAddAction onAdd={handleAddAction} projects={projects} />
+
+      {/* Navigate to Projects button */}
+      {onNavigateToProjects && (
+        <div className="actions-tab__projects-link">
+          <button
+            className="actions-tab__projects-button"
+            onClick={onNavigateToProjects}
+            type="button"
+          >
+            📦 Go to Projects
+          </button>
+          <p className="actions-tab__projects-hint">
+            Manage long-term initiatives and multi-step tasks
+          </p>
+        </div>
+      )}
 
       {/* Filters */}
       {hasActions && (

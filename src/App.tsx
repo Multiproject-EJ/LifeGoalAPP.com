@@ -1152,7 +1152,7 @@ export default function App() {
       case 'actions':
         return (
           <div className="workspace-content">
-            <ActionsTab session={activeSession} />
+            <ActionsTab session={activeSession} onNavigateToProjects={() => setActiveWorkspaceNav('projects')} />
           </div>
         );
       case 'projects':

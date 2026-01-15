@@ -279,6 +279,16 @@ export function ActionDetailModal({
               <span className="action-detail-modal__info-label">XP Reward:</span>
               <span className="action-detail-modal__info-value">+{xpReward} XP</span>
             </div>
+
+            {action.project_id && (
+              <div className="action-detail-modal__info-item action-detail-modal__info-item--project">
+                <span className="action-detail-modal__info-icon">📦</span>
+                <span className="action-detail-modal__info-label">Assigned to:</span>
+                <span className="action-detail-modal__info-value">
+                  {projects.find(p => p.id === action.project_id)?.title || 'Unknown Project'}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
