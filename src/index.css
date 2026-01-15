@@ -4734,11 +4734,11 @@ body {
   padding: 0.55rem 0.75rem;
   font-weight: 700;
   font-size: 0.85rem;
-  background: #f97316;
-  color: #fff7ed;
+  background: #fca5a5;
+  color: #7f1d1d;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 10px 16px rgba(249, 115, 22, 0.2);
+  box-shadow: 0 10px 16px rgba(248, 113, 113, 0.25);
 }
 
 .habit-day-status__button--secondary {
