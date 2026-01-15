@@ -50,7 +50,8 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationXP, setCelebrationXP] = useState(0);
-  const [celebrationType, setCelebrationType] = useState<'action' | 'levelup'>('action');
+  const [celebrationType, setCelebrationType] = useState<'action' | 'journal' | 'breathing' | 'levelup'>('action');
+  const [justCompletedActionId, setJustCompletedActionId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Watch for level-up events
@@ -143,21 +144,35 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
       // Award XP for completing the action
       const xpReward = await awardActionXP(action);
       
+      // 1. Immediately add instant feedback (pop/glow)
+      setJustCompletedActionId(actionId);
+      
       // Check if we should award clear all bonus
       if (shouldAwardClearBonus(action, actions)) {
         const bonusXP = await awardClearAllMustDoBonus();
         setStatus({ kind: 'success', message: `Completed! +${xpReward + bonusXP} XP (with bonus!)` });
-        // 🎉 Trigger celebration animation with bonus (level-up will trigger its own separate animation)
-        setCelebrationType('action');
-        setCelebrationXP(xpReward + bonusXP);
-        setShowCelebration(true);
+        
+        // 2. After pop animation completes, trigger celebration with bonus
+        setTimeout(() => {
+          setCelebrationType('action');
+          setCelebrationXP(xpReward + bonusXP);
+          setShowCelebration(true);
+        }, 400);
       } else {
         setStatus({ kind: 'success', message: `Completed! +${xpReward} XP` });
-        // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
-        setCelebrationType('action');
-        setCelebrationXP(xpReward);
-        setShowCelebration(true);
+        
+        // 2. After pop animation completes, trigger celebration
+        setTimeout(() => {
+          setCelebrationType('action');
+          setCelebrationXP(xpReward);
+          setShowCelebration(true);
+        }, 400);
       }
+      
+      // 3. Clean up instant feedback class
+      setTimeout(() => {
+        setJustCompletedActionId(null);
+      }, 600);
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to complete action' });
     }
@@ -346,6 +361,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
           onOpenDetail={(action) => setSelectedAction(action)}
           selectedIndex={selectedIndex}
           selectedIds={selectedIds}
+          justCompletedActionId={justCompletedActionId}
         />
       ) : (
         <ActionEmptyState />

@@ -11,6 +11,7 @@ export interface ActionsListProps {
   onOpenDetail?: (action: Action) => void;
   selectedIndex?: number;
   selectedIds?: Set<string>;
+  justCompletedActionId?: string | null;
 }
 
 export function ActionsList({ 
@@ -19,7 +20,8 @@ export function ActionsList({
   onDelete,
   onOpenDetail,
   selectedIndex = -1,
-  selectedIds = new Set()
+  selectedIds = new Set(),
+  justCompletedActionId = null
 }: ActionsListProps) {
   // Group actions by category
   const actionsByCategory: Record<ActionCategory, Action[]> = {
@@ -76,6 +78,7 @@ export function ActionsList({
                 onDelete={() => onDelete(action.id)}
                 onOpenDetail={onOpenDetail ? () => onOpenDetail(action) : undefined}
                 isSelected={isSelected}
+                isJustCompleted={justCompletedActionId === action.id}
               />
             );
           })}

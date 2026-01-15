@@ -11,6 +11,9 @@ import {
 import { GUIDED_MEDITATIONS } from '../../data/meditationContent';
 import type { RevealMode } from '../../types/meditation';
 import { FEATURE_BREATHING_SPACE } from './constants';
+import { useGamification } from '../../hooks/useGamification';
+import { XP_REWARDS } from '../../types/gamification';
+import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import './BreathingSpace.css';
 
 type BreathingSpaceProps = {
@@ -46,6 +49,22 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   const [selectedMeditationId, setSelectedMeditationId] = useState<string>('attempting-breath');
   const [meditationDuration, setMeditationDuration] = useState<number>(5);
   const [revealMode, setRevealMode] = useState<RevealMode>('sentence');
+  
+  // Celebration and gamification state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationXP, setCelebrationXP] = useState(0);
+  const [celebrationType, setCelebrationType] = useState<'breathing' | 'levelup'>('breathing');
+  const [justCompletedSession, setJustCompletedSession] = useState(false);
+  const { earnXP, recordActivity, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
+
+  // Watch for level-up events
+  useEffect(() => {
+    if (levelUpEvent) {
+      setCelebrationType('levelup');
+      setCelebrationXP(levelUpEvent.xp);
+      setShowCelebration(true);
+    }
+  }, [levelUpEvent]);
 
   useEffect(() => {
     loadStats();
@@ -123,6 +142,31 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
       if (result.error) {
         console.error('Failed to save session:', result.error);
       } else {
+        // Award XP for breathing session
+        const durationMinutes = selectedSession.duration / 60;
+        const isLongSession = durationMinutes >= 10;
+        const xpAmount = isLongSession
+          ? XP_REWARDS.MEDITATION_SESSION + 10  // Bonus for longer sessions
+          : XP_REWARDS.MEDITATION_SESSION;
+
+        // 1. Immediately add instant feedback (pop/glow)
+        setJustCompletedSession(true);
+
+        // 2. After pop animation completes, trigger celebration
+        setTimeout(() => {
+          setCelebrationType('breathing');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
+        }, 400);
+
+        // 3. Clean up instant feedback class
+        setTimeout(() => {
+          setJustCompletedSession(false);
+        }, 600);
+
+        await earnXP(xpAmount, 'meditation_session', result.data?.id);
+        await recordActivity();
+
         // Reload stats after successful save
         await loadStats();
       }
@@ -158,6 +202,30 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
       if (result.error) {
         console.error('Failed to save session:', result.error);
       } else {
+        // Award XP for guided meditation session
+        const isLongSession = meditationDuration >= 10;
+        const xpAmount = isLongSession
+          ? XP_REWARDS.MEDITATION_SESSION + 10  // Bonus for longer sessions
+          : XP_REWARDS.MEDITATION_SESSION;
+
+        // 1. Immediately add instant feedback (pop/glow)
+        setJustCompletedSession(true);
+
+        // 2. After pop animation completes, trigger celebration
+        setTimeout(() => {
+          setCelebrationType('breathing');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
+        }, 400);
+
+        // 3. Clean up instant feedback class
+        setTimeout(() => {
+          setJustCompletedSession(false);
+        }, 600);
+
+        await earnXP(xpAmount, 'meditation_session', result.data?.id);
+        await recordActivity();
+
         // Reload stats after successful save
         await loadStats();
       }
@@ -387,6 +455,20 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         revealMode={revealMode}
         onComplete={handleGuidedSessionComplete}
       />
+
+      {/* Celebration Animation */}
+      {showCelebration && (
+        <CelebrationAnimation
+          type={celebrationType}
+          xpAmount={celebrationXP}
+          onComplete={() => {
+            setShowCelebration(false);
+            if (celebrationType === 'levelup') {
+              dismissLevelUpEvent();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
