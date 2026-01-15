@@ -25,6 +25,11 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
     const trimmedTitle = title.trim();
     if (!trimmedTitle || adding) return;
 
+    // Validate project selection if project selector is shown
+    if (showProjectSelector && !projectId) {
+      return; // Don't submit if project selector is open but no project selected
+    }
+
     setAdding(true);
     try {
       await onAdd({
@@ -68,7 +73,7 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
           type="button"
           className="actions-tab__quick-add-button"
           onClick={handleSubmit}
-          disabled={adding || disabled || !title.trim()}
+          disabled={adding || disabled || !title.trim() || (showProjectSelector && !projectId)}
           aria-label="Add action"
         >
           {adding ? '...' : '+'}
@@ -125,7 +130,7 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
           ) : (
             <>
               <label className="actions-tab__project-label" htmlFor="action-project-select">
-                Select Project (required if clicked)
+                Select Project (required)
               </label>
               <select
                 id="action-project-select"
