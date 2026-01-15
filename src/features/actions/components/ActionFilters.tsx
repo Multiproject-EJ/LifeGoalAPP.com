@@ -4,6 +4,14 @@ import './ActionFilters.css';
 
 export type FilterOption = 'all' | 'expiring_soon' | 'today' | 'this_week';
 
+// Constants
+const EXPIRING_SOON_THRESHOLD_HOURS = 24;
+
+// Helper function to check if MUST DO items should always show
+const shouldAlwaysShow = (action: Action): boolean => {
+  return action.category === 'must_do';
+};
+
 export interface ActionFiltersProps {
   actions: Action[];
   activeFilter: FilterOption;
@@ -23,19 +31,19 @@ export function ActionFilters({ actions, activeFilter, onFilterChange }: ActionF
   const counts = {
     all: actions.filter((a) => !a.completed).length,
     expiring_soon: actions.filter((a) => {
-      if (a.completed || a.category === 'must_do') return false;
+      if (a.completed || shouldAlwaysShow(a)) return false;
       const timeRemaining = calculateTimeRemaining(a.expires_at);
-      return timeRemaining.hoursRemaining + timeRemaining.daysRemaining * 24 < 24;
+      return timeRemaining.hoursRemaining + timeRemaining.daysRemaining * 24 < EXPIRING_SOON_THRESHOLD_HOURS;
     }).length,
     today: actions.filter((a) => {
       if (a.completed) return false;
-      if (a.category === 'must_do') return true; // MUST DO always shows
+      if (shouldAlwaysShow(a)) return true;
       const expires = new Date(a.expires_at);
       return expires <= todayEnd;
     }).length,
     this_week: actions.filter((a) => {
       if (a.completed) return false;
-      if (a.category === 'must_do') return true; // MUST DO always shows
+      if (shouldAlwaysShow(a)) return true;
       const expires = new Date(a.expires_at);
       return expires <= weekEnd;
     }).length,

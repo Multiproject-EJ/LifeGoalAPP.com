@@ -3,6 +3,25 @@ import type { Action, ActionCategory, UpdateActionInput, Project } from '../../.
 import { ACTION_CATEGORY_CONFIG, calculateTimeRemaining, getActionXpReward } from '../../../types/actions';
 import './ActionDetailModal.css';
 
+// Helper function to format dates
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
+
+// Helper function to filter active projects
+const getActiveProjects = (projects: Project[]): Project[] => {
+  return projects.filter(
+    (p) => p.status === 'planning' || p.status === 'active'
+  );
+};
+
 export interface ActionDetailModalProps {
   action: Action;
   projects: Project[];
@@ -51,7 +70,7 @@ export function ActionDetailModal({
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [hasChanges]);
+  }, [hasChanges, onClose]); // Add dependencies
 
   const handleClose = () => {
     if (hasChanges) {
@@ -101,22 +120,14 @@ export function ActionDetailModal({
     }
   };
 
-  const handleMoveToProjectClick = (projectId: string) => {
+  const handleMoveToProjectClick = async (projectId: string) => {
     setShowProjectSelector(false);
-    onMoveToProject(action.id, projectId)
-      .then(() => onClose())
-      .catch((err) => console.error('Failed to move to project:', err));
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
+    try {
+      await onMoveToProject(action.id, projectId);
+      onClose();
+    } catch (err) {
+      console.error('Failed to move to project:', err);
+    }
   };
 
   const formatTimeLeft = () => {
@@ -136,9 +147,7 @@ export function ActionDetailModal({
     return '< 1h';
   };
 
-  const activeProjects = projects.filter(
-    (p) => p.status === 'planning' || p.status === 'active'
-  );
+  const activeProjects = getActiveProjects(projects);
 
   return (
     <div className="action-detail-modal__overlay" onClick={handleClose}>

@@ -18,6 +18,14 @@ import { ActionFilters, type FilterOption } from './components/ActionFilters';
 import { DEMO_USER_ID } from '../../services/demoData';
 import './ActionsTab.css';
 
+// Constants
+const EXPIRING_SOON_THRESHOLD_HOURS = 24;
+
+// Helper function to check if MUST DO items should always show
+const shouldAlwaysShow = (action: Action): boolean => {
+  return action.category === 'must_do';
+};
+
 type ActionsTabProps = {
   session: Session;
 };
@@ -73,7 +81,7 @@ export function ActionsTab({ session }: ActionsTabProps) {
     if (activeFilter === 'all') return true;
     
     // MUST DO items always show in all filters
-    if (action.category === 'must_do') return true;
+    if (shouldAlwaysShow(action)) return true;
     
     const now = new Date();
     const expires = new Date(action.expires_at);
@@ -81,7 +89,7 @@ export function ActionsTab({ session }: ActionsTabProps) {
     
     switch (activeFilter) {
       case 'expiring_soon':
-        return timeRemaining.hoursRemaining + timeRemaining.daysRemaining * 24 < 24;
+        return timeRemaining.hoursRemaining + timeRemaining.daysRemaining * 24 < EXPIRING_SOON_THRESHOLD_HOURS;
       case 'today': {
         const todayEnd = new Date(now);
         todayEnd.setHours(23, 59, 59, 999);
