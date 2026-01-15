@@ -36,8 +36,7 @@ export function ProjectsManager({ session }: ProjectsManagerProps) {
 
   // Handler for clicking on a task in board view (placeholder for now)
   const handleTaskClick = useCallback((task: any) => {
-    console.log('Task clicked:', task);
-    // Could open a task detail modal in the future
+    // TODO: Implement task detail modal in future phase
   }, []);
 
   // Calculate progress for all projects
