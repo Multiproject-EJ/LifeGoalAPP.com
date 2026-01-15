@@ -248,7 +248,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [yesterdayCollecting, setYesterdayCollecting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationXP, setCelebrationXP] = useState(0);
-  const { earnXP, recordActivity, enabled: gamificationEnabled } = useGamification(session);
+  const [celebrationType, setCelebrationType] = useState<'habit' | 'levelup'>('habit');
+  const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
+
+  // Watch for level-up events
+  useEffect(() => {
+    if (levelUpEvent) {
+      setCelebrationType('levelup');
+      setCelebrationXP(levelUpEvent.xp);
+      setShowCelebration(true);
+    }
+  }, [levelUpEvent]);
 
   useEffect(() => {
     const storedDayStatus = loadDraft<Record<string, DayStatus>>(dayStatusStorageKey(session.user.id));
@@ -1020,9 +1030,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           await earnXP(xpAmount, 'habit_complete', habit.id);
           await recordActivity();
 
-          // 🎉 Trigger celebration animation
-          setCelebrationXP(xpAmount);
-          setShowCelebration(true);
+          // 🎉 Trigger celebration animation (but only if not a level-up, which will trigger its own)
+          if (!levelUpEvent) {
+            setCelebrationType('habit');
+            setCelebrationXP(xpAmount);
+            setShowCelebration(true);
+          }
         }
       }
     } catch (error) {
@@ -2426,10 +2439,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         {/* Celebration animation for habit completion */}
         {showCelebration && (
           <CelebrationAnimation
-            type="habit"
+            type={celebrationType}
             xpAmount={celebrationXP}
             targetElement="game-icon"
-            onComplete={() => setShowCelebration(false)}
+            onComplete={() => {
+              setShowCelebration(false);
+              if (celebrationType === 'levelup') {
+                dismissLevelUpEvent?.();
+              }
+            }}
           />
         )}
       </section>
@@ -2688,10 +2706,15 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       {/* Celebration animation for habit completion */}
       {showCelebration && (
         <CelebrationAnimation
-          type="habit"
+          type={celebrationType}
           xpAmount={celebrationXP}
           targetElement="game-icon"
-          onComplete={() => setShowCelebration(false)}
+          onComplete={() => {
+            setShowCelebration(false);
+            if (celebrationType === 'levelup') {
+              dismissLevelUpEvent?.();
+            }
+          }}
         />
       )}
     </section>

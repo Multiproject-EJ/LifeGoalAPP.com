@@ -8,7 +8,7 @@ import { ACTIONS_XP_REWARDS, getActionXpReward } from '../../../types/actions';
  * Hook for awarding XP when actions are completed
  */
 export function useActionXP(session: Session | null) {
-  const { earnXP, recordActivity } = useGamification(session);
+  const { earnXP, recordActivity, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   /**
    * Award XP for completing an action based on its category
@@ -64,5 +64,7 @@ export function useActionXP(session: Session | null) {
     awardActionXP,
     awardClearAllMustDoBonus,
     shouldAwardClearBonus,
+    levelUpEvent,
+    dismissLevelUpEvent,
   };
 }

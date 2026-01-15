@@ -31,6 +31,7 @@ export function useGamification(session: Session | null) {
     source?: string;
     celebration?: string;
   }>>([]);
+  const [levelUpEvent, setLevelUpEvent] = useState<{ newLevel: number; xp: number } | null>(null);
 
   const userId = session?.user?.id;
 
@@ -131,6 +132,11 @@ export function useGamification(session: Session | null) {
           { id: toastId, amount: xpAmount, source: sourceType, celebration },
         ]);
         
+        // Trigger level-up event if applicable
+        if (result.leveledUp && result.newLevel) {
+          setLevelUpEvent({ newLevel: result.newLevel, xp: xpAmount });
+        }
+        
         // Refresh profile
         await loadGamificationData();
       }
@@ -176,6 +182,10 @@ export function useGamification(session: Session | null) {
     setXpToasts(prev => prev.filter(toast => toast.id !== toastId));
   }, []);
 
+  const dismissLevelUpEvent = useCallback(() => {
+    setLevelUpEvent(null);
+  }, []);
+
   return {
     enabled,
     profile,
@@ -187,6 +197,8 @@ export function useGamification(session: Session | null) {
     dismissNotification,
     dismissXPToast,
     xpToasts,
+    levelUpEvent,
+    dismissLevelUpEvent,
     refreshProfile: loadGamificationData,
   };
 }

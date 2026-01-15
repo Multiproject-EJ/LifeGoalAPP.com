@@ -41,7 +41,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
   const { actions, loading, error, createAction, updateAction, completeAction, deleteAction, refresh } = useActions(session);
   const { projects } = useProjects(session);
-  const { awardActionXP, awardClearAllMustDoBonus, shouldAwardClearBonus } = useActionXP(session);
+  const { awardActionXP, awardClearAllMustDoBonus, shouldAwardClearBonus, levelUpEvent, dismissLevelUpEvent } = useActionXP(session);
   
   const [status, setStatus] = useState<StatusMessage>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -50,7 +50,17 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationXP, setCelebrationXP] = useState(0);
+  const [celebrationType, setCelebrationType] = useState<'action' | 'levelup'>('action');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Watch for level-up events
+  useEffect(() => {
+    if (levelUpEvent) {
+      setCelebrationType('levelup');
+      setCelebrationXP(levelUpEvent.xp);
+      setShowCelebration(true);
+    }
+  }, [levelUpEvent]);
   
   const userId = session?.user?.id ?? DEMO_USER_ID;
 
@@ -137,14 +147,20 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
       if (shouldAwardClearBonus(action, actions)) {
         const bonusXP = await awardClearAllMustDoBonus();
         setStatus({ kind: 'success', message: `Completed! +${xpReward + bonusXP} XP (with bonus!)` });
-        // 🎉 Trigger celebration animation with bonus
-        setCelebrationXP(xpReward + bonusXP);
-        setShowCelebration(true);
+        // 🎉 Trigger celebration animation with bonus (but only if not a level-up)
+        if (!levelUpEvent) {
+          setCelebrationType('action');
+          setCelebrationXP(xpReward + bonusXP);
+          setShowCelebration(true);
+        }
       } else {
         setStatus({ kind: 'success', message: `Completed! +${xpReward} XP` });
-        // 🎉 Trigger celebration animation
-        setCelebrationXP(xpReward);
-        setShowCelebration(true);
+        // 🎉 Trigger celebration animation (but only if not a level-up)
+        if (!levelUpEvent) {
+          setCelebrationType('action');
+          setCelebrationXP(xpReward);
+          setShowCelebration(true);
+        }
       }
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to complete action' });
@@ -373,10 +389,15 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
       {/* Celebration animation for action completion */}
       {showCelebration && (
         <CelebrationAnimation
-          type="action"
+          type={celebrationType}
           xpAmount={celebrationXP}
           targetElement="fab-button"
-          onComplete={() => setShowCelebration(false)}
+          onComplete={() => {
+            setShowCelebration(false);
+            if (celebrationType === 'levelup') {
+              dismissLevelUpEvent?.();
+            }
+          }}
         />
       )}
     </div>
