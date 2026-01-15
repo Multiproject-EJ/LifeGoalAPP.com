@@ -31,37 +31,41 @@ const SELECTORS = {
 
 // Animation timing constants
 const TIMING = {
-  ICON_STAGGER_DELAY: 200, // ms between each icon appearing
-  FLY_START_DELAY: 1000,   // ms before icons start flying
-  XP_HIDE_DELAY: 1800,     // ms before XP indicator fades
-  CLEANUP_DELAY: 2000,     // ms before full cleanup
-  PULSE_DURATION: 300,     // ms for target pulse animation
+  ICON_START_DELAY: 400,      // ms before icons start appearing
+  ICON_STAGGER_DELAY: 200,    // ms between each icon appearing
+  BACKDROP_FADE_IN: 450,      // ms when backdrop starts fading in
+  XP_FADE_IN: 500,            // ms when XP indicator appears
+  FLY_START_DELAY: 1200,      // ms before icons start flying
+  XP_HIDE_DELAY: 2500,        // ms before XP indicator fades
+  BACKDROP_FADE_OUT: 2300,    // ms when backdrop starts fading out
+  CLEANUP_DELAY: 3000,        // ms before full cleanup
+  PULSE_DURATION: 300,        // ms for target pulse animation
 } as const;
 
 const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
   habit: {
     icons: ['✅', '⭐', '🎯', '💪', '🔥'],
-    count: 10,
+    count: 10,  // 8-12 icons
     target: 'game-icon',
   },
   journal: {
     icons: ['📔', '✍️', '📝', '💭', '✨'],
-    count: 8,
+    count: 8,   // 6-10 icons
     target: 'fab-button',
   },
   action: {
     icons: ['⚡', '✨', '💫', '🚀', '💥'],
-    count: 8,
+    count: 8,   // 6-10 icons
     target: 'fab-button',
   },
   breathing: {
-    icons: ['🌬️', '🧘', '💨', '🌊', '☁️', '✨', '🕊️'],
-    count: 10,
+    icons: ['🌬️', '🧘', '💨', '🌊', '☁️', '✨', '🕊️', '🍃'],
+    count: 10,  // 8-12 icons
     target: 'game-icon',
   },
   levelup: {
     icons: ['🎉', '🏆', '⭐', '🌟', '💎', '👑', '🎊', '✨'],
-    count: 25,
+    count: 25,  // 20-30 icons
     target: 'game-icon',
   },
 };
@@ -120,7 +124,9 @@ export function CelebrationAnimation({
   onComplete,
 }: CelebrationAnimationProps) {
   const [icons, setIcons] = useState<IconInstance[]>([]);
-  const [showXP, setShowXP] = useState(true);
+  const [showXP, setShowXP] = useState(false);
+  const [showBackdrop, setShowBackdrop] = useState(false);
+  const [backdropFadingOut, setBackdropFadingOut] = useState(false);
   const [isFlying, setIsFlying] = useState(false);
   const [targetPulsing, setTargetPulsing] = useState(false);
 
@@ -130,13 +136,15 @@ export function CelebrationAnimation({
   const cleanup = useCallback(() => {
     setIcons([]);
     setShowXP(false);
+    setShowBackdrop(false);
+    setBackdropFadingOut(false);
     setIsFlying(false);
     setTargetPulsing(false);
     onComplete?.();
   }, [onComplete]);
 
   useEffect(() => {
-    // Generate random icons
+    // Generate random icons with initial delay
     const newIcons: IconInstance[] = [];
     for (let i = 0; i < config.count; i++) {
       const position = getRandomPosition();
@@ -145,29 +153,47 @@ export function CelebrationAnimation({
         icon: getRandomIcon(config.icons),
         x: position.x,
         y: position.y,
-        delay: Math.random() * TIMING.ICON_STAGGER_DELAY,
+        delay: TIMING.ICON_START_DELAY + (Math.random() * TIMING.ICON_STAGGER_DELAY),
       });
     }
     setIcons(newIcons);
 
-    // After delay, start flying animation
+    // Show backdrop at 450ms
+    const backdropTimeout = setTimeout(() => {
+      setShowBackdrop(true);
+    }, TIMING.BACKDROP_FADE_IN);
+
+    // Show XP at 500ms
+    const xpShowTimeout = setTimeout(() => {
+      setShowXP(true);
+    }, TIMING.XP_FADE_IN);
+
+    // Start flying animation at 1200ms
     const flyTimeout = setTimeout(() => {
       setIsFlying(true);
       setTargetPulsing(true);
     }, TIMING.FLY_START_DELAY);
 
-    // Hide XP after delay
+    // Start fading out backdrop at 2300ms
+    const backdropFadeOutTimeout = setTimeout(() => {
+      setBackdropFadingOut(true);
+    }, TIMING.BACKDROP_FADE_OUT);
+
+    // Hide XP at 2500ms
     const xpTimeout = setTimeout(() => {
       setShowXP(false);
     }, TIMING.XP_HIDE_DELAY);
 
-    // Clean up after animations complete
+    // Clean up after animations complete at 3000ms
     const cleanupTimeout = setTimeout(() => {
       cleanup();
     }, TIMING.CLEANUP_DELAY);
 
     return () => {
+      clearTimeout(backdropTimeout);
+      clearTimeout(xpShowTimeout);
       clearTimeout(flyTimeout);
+      clearTimeout(backdropFadeOutTimeout);
       clearTimeout(xpTimeout);
       clearTimeout(cleanupTimeout);
     };
@@ -200,11 +226,15 @@ export function CelebrationAnimation({
 
   return createPortal(
     <>
-      {/* XP Indicator */}
-      {showXP && xpAmount && (
-        <div className={`celebration-xp ${type === 'levelup' ? 'celebration-xp--levelup' : ''}`}>
-          +{xpAmount} XP
-        </div>
+      {/* Dimmed backdrop - mutes the background */}
+      {showBackdrop && (
+        <div 
+          className={`celebration-backdrop ${
+            type === 'levelup' ? 'celebration-backdrop--levelup' : ''
+          } ${
+            backdropFadingOut ? 'celebration-backdrop--fading-out' : ''
+          }`} 
+        />
       )}
 
       {/* Celebration Icons */}
@@ -232,6 +262,13 @@ export function CelebrationAnimation({
           </div>
         );
       })}
+
+      {/* XP indicator - the star of the show! */}
+      {showXP && xpAmount && (
+        <div className={`celebration-xp ${type === 'levelup' ? 'celebration-xp--levelup' : ''}`}>
+          +{xpAmount} XP
+        </div>
+      )}
     </>,
     document.body
   );
