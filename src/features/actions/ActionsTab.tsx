@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { isDemoSession } from '../../services/demoSession';
-import type { CreateActionInput } from '../../types/actions';
+import type { CreateActionInput, ActionCategory } from '../../types/actions';
 import { useActions } from './hooks/useActions';
 import { useActionXP } from './hooks/useActionXP';
+import { useActionsKeyboard } from './hooks/useActionsKeyboard';
 import { QuickAddAction } from './components/QuickAddAction';
 import { ActionsList } from './components/ActionsList';
 import { ActionEmptyState } from './components/ActionEmptyState';
+import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
 import './ActionsTab.css';
 
 type ActionsTabProps = {
@@ -24,6 +26,12 @@ export function ActionsTab({ session }: ActionsTabProps) {
   const { awardActionXP, awardClearAllMustDoBonus, shouldAwardClearBonus } = useActionXP(session);
   
   const [status, setStatus] = useState<StatusMessage>(null);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<ActionCategory>('must_do');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Filter actions to non-completed
+  const activeActions = actions.filter(a => !a.completed);
 
   // Handle add action with error handling
   const handleAddAction = useCallback(async (input: CreateActionInput) => {
@@ -69,6 +77,46 @@ export function ActionsTab({ session }: ActionsTabProps) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to delete action' });
     }
   }, [deleteAction]);
+
+  const {
+    selectedIndex,
+    setSelectedIndex,
+    selectedIds,
+    selectionMode,
+    clearSelection,
+    shortcuts,
+  } = useActionsKeyboard({
+    actions: activeActions,
+    onNewAction: () => inputRef.current?.focus(),
+    onCompleteAction: handleCompleteAction,
+    onDeleteAction: handleDeleteAction,
+    onCategoryChange: setSelectedCategory,
+    onSave: () => {
+      // No specific save action needed for now
+    },
+    onCancel: () => {
+      if (inputRef.current) {
+        inputRef.current.value = '';
+        inputRef.current.blur();
+      }
+    },
+    enabled: !showShortcutsHelp,
+  });
+
+  // Add ? shortcut for help
+  useEffect(() => {
+    const handleHelp = (e: KeyboardEvent) => {
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          setShowShortcutsHelp(prev => !prev);
+        }
+      }
+    };
+    document.addEventListener('keydown', handleHelp);
+    return () => document.removeEventListener('keydown', handleHelp);
+  }, []);
 
   // Clear status after delay
   useEffect(() => {
@@ -130,9 +178,29 @@ export function ActionsTab({ session }: ActionsTabProps) {
           actions={actions}
           onComplete={handleCompleteAction}
           onDelete={handleDeleteAction}
+          selectedIndex={selectedIndex}
+          selectedIds={selectedIds}
         />
       ) : (
         <ActionEmptyState />
+      )}
+
+      {/* Help button for desktop */}
+      <button 
+        className="actions-tab__help-btn"
+        onClick={() => setShowShortcutsHelp(true)}
+        title="Keyboard shortcuts (?)"
+        aria-label="Show keyboard shortcuts"
+      >
+        ⌨️
+      </button>
+
+      {/* Shortcuts help modal */}
+      {showShortcutsHelp && (
+        <KeyboardShortcutsHelp
+          shortcuts={shortcuts}
+          onClose={() => setShowShortcutsHelp(false)}
+        />
       )}
     </div>
   );
