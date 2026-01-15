@@ -23,6 +23,7 @@ import { isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { GoalReflectionJournal } from '../goals/GoalReflectionJournal';
+import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 
 /**
  * Journal mode type representing different journaling experiences.
@@ -68,7 +69,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const isDemoExperience = isDemoSession(session);
   const journalDisabled = !isConfigured && !isDemoExperience;
   const isCompactLayout = useMediaQuery('(max-width: 960px)');
-  const { earnXP, recordActivity } = useGamification(session);
+  const { earnXP, recordActivity, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   // Journal mode state for different journaling experiences
   const [journalType, setJournalType] = useState<JournalType>(DEFAULT_JOURNAL_TYPE);
@@ -90,6 +91,18 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitRow[]>([]);
   const [showMobileDetail, setShowMobileDetail] = useState(!isCompactLayout);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationXP, setCelebrationXP] = useState(0);
+  const [celebrationType, setCelebrationType] = useState<'journal' | 'levelup'>('journal');
+
+  // Watch for level-up events
+  useEffect(() => {
+    if (levelUpEvent) {
+      setCelebrationType('levelup');
+      setCelebrationXP(levelUpEvent.xp);
+      setShowCelebration(true);
+    }
+  }, [levelUpEvent]);
 
   useEffect(() => {
     if (!isCompactLayout) {
@@ -321,6 +334,11 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
 
           await earnXP(xpAmount, 'journal_entry', saved.id);
           await recordActivity(); // Update daily streak
+
+          // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
+          setCelebrationType('journal');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
         }
 
         setSelectedEntryId(saved.id);
@@ -480,6 +498,21 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
             onSave={handleSaveEntry}
           />
         </>
+      )}
+
+      {/* Celebration animation for journal completion */}
+      {showCelebration && (
+        <CelebrationAnimation
+          type={celebrationType}
+          xpAmount={celebrationXP}
+          targetElement="fab-button"
+          onComplete={() => {
+            setShowCelebration(false);
+            if (celebrationType === 'levelup') {
+              dismissLevelUpEvent?.();
+            }
+          }}
+        />
       )}
     </section>
   );

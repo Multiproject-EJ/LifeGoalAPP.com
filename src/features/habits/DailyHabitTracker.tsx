@@ -34,6 +34,7 @@ import {
   setYesterdayRecapLastCollected,
   setYesterdayRecapLastShown,
 } from '../../services/yesterdayRecapPrefs';
+import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
@@ -245,7 +246,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [yesterdayActionStatus, setYesterdayActionStatus] = useState<string | null>(null);
   const [yesterdaySaving, setYesterdaySaving] = useState(false);
   const [yesterdayCollecting, setYesterdayCollecting] = useState(false);
-  const { earnXP, recordActivity, enabled: gamificationEnabled } = useGamification(session);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationXP, setCelebrationXP] = useState(0);
+  const [celebrationType, setCelebrationType] = useState<'habit' | 'levelup'>('habit');
+  const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
+
+  // Watch for level-up events
+  useEffect(() => {
+    if (levelUpEvent) {
+      setCelebrationType('levelup');
+      setCelebrationXP(levelUpEvent.xp);
+      setShowCelebration(true);
+    }
+  }, [levelUpEvent]);
 
   useEffect(() => {
     const storedDayStatus = loadDraft<Record<string, DayStatus>>(dayStatusStorageKey(session.user.id));
@@ -1016,6 +1029,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
           await earnXP(xpAmount, 'habit_complete', habit.id);
           await recordActivity();
+
+          // 🎉 Trigger celebration animation (level-up will trigger its own separate animation)
+          setCelebrationType('habit');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
         }
       }
     } catch (error) {
@@ -2416,6 +2434,20 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
         {visionRewardModal}
+        {/* Celebration animation for habit completion */}
+        {showCelebration && (
+          <CelebrationAnimation
+            type={celebrationType}
+            xpAmount={celebrationXP}
+            targetElement="game-icon"
+            onComplete={() => {
+              setShowCelebration(false);
+              if (celebrationType === 'levelup') {
+                dismissLevelUpEvent?.();
+              }
+            }}
+          />
+        )}
       </section>
     );
   }
@@ -2667,6 +2699,21 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             {renderMonthlyGrid()}
           </div>
         </div>
+      )}
+
+      {/* Celebration animation for habit completion */}
+      {showCelebration && (
+        <CelebrationAnimation
+          type={celebrationType}
+          xpAmount={celebrationXP}
+          targetElement="game-icon"
+          onComplete={() => {
+            setShowCelebration(false);
+            if (celebrationType === 'levelup') {
+              dismissLevelUpEvent?.();
+            }
+          }}
+        />
       )}
     </section>
   );
