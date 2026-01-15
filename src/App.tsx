@@ -276,6 +276,16 @@ export default function App() {
         } satisfies MobileMenuNavItem;
       }
 
+      if (navId === 'habits') {
+        return {
+          id: navId,
+          label: 'Habits',
+          ariaLabel: 'Habits and routines',
+          icon: '🔄',
+          summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
+        } satisfies MobileMenuNavItem;
+      }
+
       return {
         id: navId,
         label: formattedLabel,
@@ -287,7 +297,7 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'actions'];
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'actions', 'habits'];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
