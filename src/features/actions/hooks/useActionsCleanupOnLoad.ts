@@ -67,11 +67,14 @@ export function useActionsCleanupOnLoad(
 
         if (cleanupError) {
           console.error('Cleanup error:', cleanupError);
+          // Note: cleanupError means deletion failed, but we still have the list of actions to migrate
+          // We'll proceed with migration since it's independent of the deletion operation
         } else if (deletedCount > 0) {
           console.log(`🗑️ Deleted ${deletedCount} expired NICE TO DO action(s)`);
         }
 
         // Step 2: Migrate expired PROJECT actions to full projects
+        // This runs even if cleanup had errors, as the operations are independent
         let migratedCount = 0;
         if (actionsToMigrate && actionsToMigrate.length > 0) {
           const { successCount, failureCount } = await runActionsMigration();
@@ -85,10 +88,11 @@ export function useActionsCleanupOnLoad(
           }
         }
 
-        // Update last cleanup timestamp
+        // Update last cleanup timestamp (even if there were partial errors)
+        // This prevents retry loops for transient errors
         localStorage.setItem(CLEANUP_STORAGE_KEY, now.toString());
 
-        // Notify caller of results
+        // Notify caller of results (includes actual counts, even if there were errors)
         onCleanupComplete?.({
           deletedCount,
           migratedCount,
@@ -132,9 +136,10 @@ export async function manualActionsCleanup(): Promise<CleanupResult> {
 
   if (cleanupError) {
     console.error('Cleanup error:', cleanupError);
-    // Return early with error, don't continue to migration
+    // Return actual counts even if there was an error
+    // The deletion might have partially succeeded
     return {
-      deletedCount: 0,
+      deletedCount,
       migratedCount: 0,
       ranCleanup: false,
     };
