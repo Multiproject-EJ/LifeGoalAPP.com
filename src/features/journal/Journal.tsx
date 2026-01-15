@@ -23,6 +23,7 @@ import { isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { GoalReflectionJournal } from '../goals/GoalReflectionJournal';
+import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 
 /**
  * Journal mode type representing different journaling experiences.
@@ -90,6 +91,8 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitRow[]>([]);
   const [showMobileDetail, setShowMobileDetail] = useState(!isCompactLayout);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationXP, setCelebrationXP] = useState(0);
 
   useEffect(() => {
     if (!isCompactLayout) {
@@ -321,6 +324,10 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
 
           await earnXP(xpAmount, 'journal_entry', saved.id);
           await recordActivity(); // Update daily streak
+
+          // 🎉 Trigger celebration animation
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
         }
 
         setSelectedEntryId(saved.id);
@@ -480,6 +487,16 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
             onSave={handleSaveEntry}
           />
         </>
+      )}
+
+      {/* Celebration animation for journal completion */}
+      {showCelebration && (
+        <CelebrationAnimation
+          type="journal"
+          xpAmount={celebrationXP}
+          targetElement="fab-button"
+          onComplete={() => setShowCelebration(false)}
+        />
       )}
     </section>
   );

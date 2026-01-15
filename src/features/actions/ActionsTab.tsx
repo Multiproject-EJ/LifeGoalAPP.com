@@ -16,6 +16,7 @@ import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
 import { ActionDetailModal } from './components/ActionDetailModal';
 import { ActionFilters, type FilterOption } from './components/ActionFilters';
 import { DEMO_USER_ID } from '../../services/demoData';
+import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import './ActionsTab.css';
 
 // Constants
@@ -47,6 +48,8 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   const [selectedCategory, setSelectedCategory] = useState<ActionCategory>('must_do');
   const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationXP, setCelebrationXP] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   
   const userId = session?.user?.id ?? DEMO_USER_ID;
@@ -134,8 +137,14 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
       if (shouldAwardClearBonus(action, actions)) {
         const bonusXP = await awardClearAllMustDoBonus();
         setStatus({ kind: 'success', message: `Completed! +${xpReward + bonusXP} XP (with bonus!)` });
+        // 🎉 Trigger celebration animation with bonus
+        setCelebrationXP(xpReward + bonusXP);
+        setShowCelebration(true);
       } else {
         setStatus({ kind: 'success', message: `Completed! +${xpReward} XP` });
+        // 🎉 Trigger celebration animation
+        setCelebrationXP(xpReward);
+        setShowCelebration(true);
       }
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to complete action' });
@@ -358,6 +367,16 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
           onComplete={handleCompleteAction}
           onDelete={handleDeleteAction}
           onMoveToProject={handleMoveToProject}
+        />
+      )}
+
+      {/* Celebration animation for action completion */}
+      {showCelebration && (
+        <CelebrationAnimation
+          type="action"
+          xpAmount={celebrationXP}
+          targetElement="fab-button"
+          onComplete={() => setShowCelebration(false)}
         />
       )}
     </div>
