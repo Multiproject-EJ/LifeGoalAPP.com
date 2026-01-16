@@ -33,7 +33,7 @@ import { MobileFooterNav } from './components/MobileFooterNav';
 import { MobileThemeSelector } from './components/MobileThemeSelector';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
-import { useMediaQuery } from './hooks/useMediaQuery';
+import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
 import { useTheme, AVAILABLE_THEMES } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
@@ -206,7 +206,7 @@ export default function App() {
     typeof window !== 'undefined' ? window.location.search : '',
   );
   const [showAuthPanel, setShowAuthPanel] = useState(false);
-  const isMobileViewport = useMediaQuery('(max-width: 720px)');
+  const isMobileViewport = useMediaQuery(WORKSPACE_MOBILE_MEDIA_QUERY);
   const [showMobileHome, setShowMobileHome] = useState(false);
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
   const [workspaceStats, setWorkspaceStats] = useState<WorkspaceStats | null>(null);
