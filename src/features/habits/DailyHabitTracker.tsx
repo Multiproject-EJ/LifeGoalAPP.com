@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useId } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
@@ -218,6 +218,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
   const [isCompactView, setIsCompactView] = useState(false);
+  const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
+  const compactToggleLabelTimeoutRef = useRef<number | null>(null);
   const [currentTime, setCurrentTime] = useState(() => new Date());
   // State for intentions journal
   const [isIntentionsJournalOpen, setIsIntentionsJournalOpen] = useState(false);
@@ -262,6 +264,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setShowCelebration(true);
     }
   }, [levelUpEvent]);
+
+  useEffect(() => {
+    return () => {
+      if (compactToggleLabelTimeoutRef.current) {
+        window.clearTimeout(compactToggleLabelTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const storedDayStatus = loadDraft<Record<string, DayStatus>>(dayStatusStorageKey(session.user.id));
@@ -1769,6 +1779,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       }
     };
 
+    const handleCompactToggle = () => {
+      setIsCompactView((previous) => !previous);
+      setIsCompactToggleLabelVisible(true);
+      if (compactToggleLabelTimeoutRef.current) {
+        window.clearTimeout(compactToggleLabelTimeoutRef.current);
+      }
+      compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
+        setIsCompactToggleLabelVisible(false);
+      }, 2200);
+    };
+
     return (
       <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
         {yesterdayIntentionsEntry && isIntentionsNoticeOpen ? (
@@ -1820,8 +1841,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 type="button"
                 className={`habit-checklist-card__glass-toggle ${
                   isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
-                }`}
-                onClick={() => setIsCompactView((previous) => !previous)}
+                } ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+                onClick={handleCompactToggle}
                 aria-pressed={isCompactView}
               >
                 <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
