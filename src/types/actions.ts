@@ -67,6 +67,12 @@ export interface ProjectTask {
   actual_hours: number | null;
 }
 
+export type ProjectTaskSource = 'project_task' | 'action';
+
+export interface ProjectTaskItem extends ProjectTask {
+  source?: ProjectTaskSource;
+}
+
 // =====================================================
 // UI DISPLAY TYPES
 // =====================================================

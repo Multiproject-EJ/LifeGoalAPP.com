@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { ProjectTask } from '../../../types/actions';
+import type { ProjectTaskItem } from '../../../types/actions';
 import { TASK_STATUS_CONFIG } from '../../../types/actions';
 
 interface TaskItemProps {
-  task: ProjectTask;
+  task: ProjectTaskItem;
   onComplete: (id: string) => void;
   onUpdate: (id: string, title: string) => void;
   onDelete: (id: string) => void;
@@ -15,6 +15,7 @@ export function TaskItem({ task, onComplete, onUpdate, onDelete, onStatusChange 
   const [editTitle, setEditTitle] = useState(task.title);
 
   const statusConfig = TASK_STATUS_CONFIG[task.status];
+  const isActionTask = task.source === 'action';
 
   const handleComplete = () => {
     if (!task.completed) {
@@ -80,6 +81,7 @@ export function TaskItem({ task, onComplete, onUpdate, onDelete, onStatusChange 
           onChange={(e) => onStatusChange(task.id, e.target.value)}
           className="task-item__status"
           style={{ color: statusConfig.color }}
+          disabled={isActionTask}
         >
           {Object.entries(TASK_STATUS_CONFIG).map(([key, config]) => (
             <option key={key} value={key}>

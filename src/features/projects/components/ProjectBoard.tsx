@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import type { ProjectTask, TaskStatus } from '../../../types/actions';
+import type { ProjectTaskItem, TaskStatus } from '../../../types/actions';
 import './ProjectBoard.css';
 
 interface ProjectBoardProps {
   projectId: string;
-  tasks: ProjectTask[];
+  tasks: ProjectTaskItem[];
   onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => Promise<void>;
-  onTaskClick: (task: ProjectTask) => void;
+  onTaskClick: (task: ProjectTaskItem) => void;
 }
 
 const COLUMNS: { status: TaskStatus; label: string; icon: string }[] = [
@@ -37,7 +37,7 @@ export function ProjectBoard({ projectId, tasks, onTaskStatusChange, onTaskClick
     }
   };
 
-  const isOverdue = (task: ProjectTask) => {
+  const isOverdue = (task: ProjectTaskItem) => {
     if (!task.due_date || task.completed) return false;
     return new Date(task.due_date) < new Date();
   };
@@ -63,8 +63,12 @@ export function ProjectBoard({ projectId, tasks, onTaskStatusChange, onTaskClick
               <div
                 key={task.id}
                 className={`project-board__task ${isOverdue(task) ? 'project-board__task--overdue' : ''}`}
-                draggable
-                onDragStart={() => handleDragStart(task.id)}
+                draggable={task.source !== 'action'}
+                onDragStart={() => {
+                  if (task.source !== 'action') {
+                    handleDragStart(task.id);
+                  }
+                }}
                 onClick={() => onTaskClick(task)}
               >
                 <span className="project-board__task-title">{task.title}</span>

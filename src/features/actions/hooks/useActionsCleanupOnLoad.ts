@@ -1,15 +1,19 @@
 import { useEffect, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { runActionsCleanup } from '../../../services/actionsCleanup';
+import type { Action } from '../../../types/actions';
+import { runActionsCleanup, runDoneArchiveCleanup } from '../../../services/actionsCleanup';
 import { runActionsMigration } from '../../../services/actionsMigration';
 import { isDemoSession } from '../../../services/demoSession';
 
 const CLEANUP_STORAGE_KEY = 'lifegoal_actions_last_cleanup';
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const ARCHIVE_STORAGE_KEY = 'lifegoal_actions_last_archive_cleanup';
+const ARCHIVE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 interface CleanupResult {
   deletedCount: number;
   migratedCount: number;
+  archivedCount: number;
   ranCleanup: boolean;
 }
 
@@ -49,7 +53,12 @@ export function useActionsCleanupOnLoad(
         // Check if cleanup is needed (24+ hours since last run)
         const needsCleanup = forceCleanup || timeSinceLastCleanup > CLEANUP_INTERVAL_MS;
 
-        if (!needsCleanup) {
+        const lastArchiveStr = localStorage.getItem(ARCHIVE_STORAGE_KEY);
+        const lastArchive = lastArchiveStr ? parseInt(lastArchiveStr, 10) : 0;
+        const timeSinceLastArchive = now - lastArchive;
+        const needsArchive = forceCleanup || timeSinceLastArchive > ARCHIVE_INTERVAL_MS;
+
+        if (!needsCleanup && !needsArchive) {
           // Already ran cleanup recently, skip
           return;
         }
@@ -62,8 +71,18 @@ export function useActionsCleanupOnLoad(
 
         console.log(`🧹 Running actions cleanup (${isDemo ? 'demo mode' : 'live'})...`);
 
+        let deletedCount = 0;
+        let actionsToMigrate: Action[] = [];
+        let archivedCount = 0;
+        let cleanupError: Error | null = null;
+
         // Step 1: Delete expired NICE TO DO actions
-        const { deletedCount, actionsToMigrate, error: cleanupError } = await runActionsCleanup();
+        if (needsCleanup) {
+          const cleanupResult = await runActionsCleanup();
+          deletedCount = cleanupResult.deletedCount;
+          actionsToMigrate = cleanupResult.actionsToMigrate;
+          cleanupError = cleanupResult.error;
+        }
 
         if (cleanupError) {
           console.error('Cleanup error:', cleanupError);
@@ -76,7 +95,7 @@ export function useActionsCleanupOnLoad(
         // Step 2: Migrate expired PROJECT actions to full projects
         // This runs even if cleanup had errors, as the operations are independent
         let migratedCount = 0;
-        if (actionsToMigrate && actionsToMigrate.length > 0) {
+        if (needsCleanup && actionsToMigrate && actionsToMigrate.length > 0) {
           const { successCount, failureCount } = await runActionsMigration();
           migratedCount = successCount;
 
@@ -88,14 +107,28 @@ export function useActionsCleanupOnLoad(
           }
         }
 
-        // Update last cleanup timestamp (even if there were partial errors)
-        // This prevents retry loops for transient errors
-        localStorage.setItem(CLEANUP_STORAGE_KEY, now.toString());
+        if (needsArchive) {
+          const { archivedCount: archived, error: archiveError } = await runDoneArchiveCleanup();
+          if (archiveError) {
+            console.error('Archive cleanup error:', archiveError);
+          } else if (archived > 0) {
+            console.log(`🔥 Archived ${archived} completed action(s)`);
+          }
+          archivedCount = archived;
+          localStorage.setItem(ARCHIVE_STORAGE_KEY, now.toString());
+        }
+
+        if (needsCleanup) {
+          // Update last cleanup timestamp (even if there were partial errors)
+          // This prevents retry loops for transient errors
+          localStorage.setItem(CLEANUP_STORAGE_KEY, now.toString());
+        }
 
         // Notify caller of results (includes actual counts, even if there were errors)
         onCleanupComplete?.({
           deletedCount,
           migratedCount,
+          archivedCount,
           ranCleanup: true,
         });
 
@@ -141,20 +174,24 @@ export async function manualActionsCleanup(): Promise<CleanupResult> {
     return {
       deletedCount,
       migratedCount: 0,
+      archivedCount: 0,
       ranCleanup: false,
     };
   }
 
   const { successCount: migratedCount } = await runActionsMigration();
+  const { archivedCount } = await runDoneArchiveCleanup();
 
   // Update timestamp
   localStorage.setItem(CLEANUP_STORAGE_KEY, Date.now().toString());
+  localStorage.setItem(ARCHIVE_STORAGE_KEY, Date.now().toString());
 
-  console.log(`✅ Cleanup complete: ${deletedCount} deleted, ${migratedCount} migrated`);
+  console.log(`✅ Cleanup complete: ${deletedCount} deleted, ${migratedCount} migrated, ${archivedCount} archived`);
 
   return {
     deletedCount,
     migratedCount,
+    archivedCount,
     ranCleanup: true,
   };
 }

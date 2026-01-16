@@ -1629,6 +1629,7 @@ export interface Database {
           created_at: string;
           expires_at: string;
           migrated_to_project_id: string | null;
+          project_id: string | null;
           order_index: number;
           notes: string | null;
           xp_awarded: number;
@@ -1643,6 +1644,7 @@ export interface Database {
           created_at?: string;
           expires_at?: string;
           migrated_to_project_id?: string | null;
+          project_id?: string | null;
           order_index?: number;
           notes?: string | null;
           xp_awarded?: number;
@@ -1657,6 +1659,7 @@ export interface Database {
           created_at?: string;
           expires_at?: string;
           migrated_to_project_id?: string | null;
+          project_id?: string | null;
           order_index?: number;
           notes?: string | null;
           xp_awarded?: number;

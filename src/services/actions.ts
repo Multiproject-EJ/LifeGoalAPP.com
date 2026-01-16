@@ -110,6 +110,7 @@ export async function insertAction(
       title: input.title,
       category: input.category,
       notes: input.notes ?? null,
+      project_id: input.project_id ?? null,
       expires_at: expiresAt.toISOString(),
     })
     .select()
@@ -146,6 +147,28 @@ export async function updateAction(
     .select()
     .returns<Action>()
     .single();
+}
+
+/**
+ * Fetch actions by project assignment
+ */
+export async function fetchActionsByProjectId(
+  projectId: string
+): Promise<ServiceResponse<Action[]>> {
+  if (!canUseSupabaseData()) {
+    const allActions = getDemoActions(DEMO_USER_ID);
+    const filtered = allActions.filter((a) => a.project_id === projectId);
+    return { data: filtered, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  return supabase
+    .from('actions')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('created_at', { ascending: false })
+    .returns<Action[]>();
 }
 
 /**

@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import type { ProjectTask, TaskStatus } from '../../../types/actions';
+import type { ProjectTaskItem, TaskStatus } from '../../../types/actions';
 import { TaskItem } from './TaskItem';
 
 interface TaskListProps {
-  tasks: ProjectTask[];
+  tasks: ProjectTaskItem[];
   projectId: string;
   onAddTask: (title: string) => void;
   onCompleteTask: (id: string) => void;

@@ -69,7 +69,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   useActionsCleanupOnLoad(session, {
     onCleanupComplete: (result) => {
       // Refresh actions list if anything was cleaned up
-      if (result.deletedCount > 0 || result.migratedCount > 0) {
+      if (result.deletedCount > 0 || result.migratedCount > 0 || result.archivedCount > 0) {
         refresh(); // Call the refresh function from useActions
         
         // Show a combined notification for both cleaned and migrated items
@@ -79,6 +79,9 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
         }
         if (result.migratedCount > 0) {
           messages.push(`📦 Migrated ${result.migratedCount} action(s) to Projects`);
+        }
+        if (result.archivedCount > 0) {
+          messages.push(`🔥 Archived ${result.archivedCount} completed action(s)`);
         }
         
         if (messages.length > 0) {
