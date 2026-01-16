@@ -332,6 +332,8 @@ export default function App() {
     } as const;
   }, [levelInfo]);
 
+  const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
+
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
 
   const isDemoMode = mode === 'demo';
@@ -1308,12 +1310,27 @@ export default function App() {
                     .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
                     .map((item) => (
                       <li key={item.id} className="mobile-menu-overlay__item">
-                        <button type="button" onClick={() => handleMobileNavSelect(item.id)} aria-label={item.ariaLabel}>
+                        <button
+                          type="button"
+                          onClick={() => handleMobileNavSelect(item.id)}
+                          aria-label={item.ariaLabel}
+                          className={
+                            item.id === 'game' && isGameNearNextLevel
+                              ? 'mobile-menu-overlay__game-button mobile-menu-overlay__game-button--charged'
+                              : undefined
+                          }
+                        >
                           <span aria-hidden="true" className="mobile-menu-overlay__icon">
                             {item.icon}
                           </span>
                           <span className="mobile-menu-overlay__texts">
-                            <span className="mobile-menu-overlay__label">{item.label}</span>
+                            <span
+                              className={`mobile-menu-overlay__label${
+                                item.id === 'game' && isGameNearNextLevel ? ' mobile-menu-overlay__label--charged' : ''
+                              }`}
+                            >
+                              {item.label}
+                            </span>
                             <span className="mobile-menu-overlay__summary">{item.summary}</span>
                           </span>
                         </button>
@@ -1414,7 +1431,7 @@ export default function App() {
             >
               <span className="mobile-gamification-overlay__stat-icon" aria-hidden="true">🤖</span>
               <div className="mobile-gamification-overlay__stat-content">
-                <p className="mobile-gamification-overlay__stat-label">Hey Coach?</p>
+                <p className="mobile-gamification-overlay__stat-label">Quick Gains</p>
                 <p className="mobile-gamification-overlay__stat-hint">Ask for a quick nudge or focus reset.</p>
               </div>
             </button>
