@@ -1320,6 +1320,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               )}
               <label className="habit-day-nav__picker" aria-label="Select a date to track">
                 <span className="sr-only">Select a date to track</span>
+                <span className="habit-day-nav__picker-icon" aria-hidden="true">
+                  📅
+                </span>
                 <input
                   type="date"
                   value={activeDate}
