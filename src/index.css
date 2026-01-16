@@ -4957,11 +4957,11 @@ body {
 }
 
 .habit-checklist__checkbox {
-  width: 1.35rem;
-  height: 1.35rem;
-  min-width: 1.35rem;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
   accent-color: #0ea5e9;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .habit-checklist__name {

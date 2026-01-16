@@ -1414,6 +1414,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 type="checkbox"
                 className="habit-checklist__checkbox"
                 checked={isCompleted}
+                aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
                 onClick={(event) => event.stopPropagation()}
                 onChange={(event) => {
                   event.stopPropagation();
@@ -1421,19 +1422,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 }}
                 disabled={isSaving || (!scheduledToday && !isCompleted)}
               />
-              <label
-                htmlFor={checkboxId}
-                className="habit-checklist__name"
-                onClick={(event) => event.stopPropagation()}
-              >
+              <span className="habit-checklist__name">
                 {habit.name}
-              </label>
-              <span
-                className={`habit-checklist__chevron ${
-                  isExpanded ? 'habit-checklist__chevron--open' : ''
-                }`}
-                aria-hidden="true"
-              />
+              </span>
             </div>
             <div
               className={`habit-checklist__details-panel ${
