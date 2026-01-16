@@ -1405,7 +1405,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mobile-gamification-overlay__grid" role="list">
+          <div className="mobile-gamification-overlay__cta-row" role="list">
             <button
               type="button"
               className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat-button"
@@ -1430,6 +1430,9 @@ export default function App() {
                 <p className="mobile-gamification-overlay__stat-hint">Spin once per day for a surprise boost.</p>
               </div>
             </button>
+          </div>
+
+          <div className="mobile-gamification-overlay__grid" role="list">
             <div className="mobile-gamification-overlay__stat" role="listitem">
               <p className="mobile-gamification-overlay__stat-label">Goals + Habits</p>
               <p className="mobile-gamification-overlay__stat-value mobile-gamification-overlay__stat-value--compact">
