@@ -1454,13 +1454,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               id={detailPanelId}
             >
               <p className="habit-checklist__meta">
-                {domainLabel ? `Life wheel • ${domainLabel}` : `Goal • ${goalLabel}`}
+                Life wheel • {domainLabel ?? 'Unassigned'}
               </p>
-              {domainLabel && habit.goal?.title ? (
-                <p className="habit-checklist__meta habit-checklist__meta--secondary">
-                  Goal • {habit.goal.title}
-                </p>
-              ) : null}
+              <p className="habit-checklist__meta habit-checklist__meta--secondary">
+                Goal • {goalLabel}
+              </p>
               {lastCompletedText ? (
                 <p className="habit-checklist__note">{lastCompletedText}</p>
               ) : null}
