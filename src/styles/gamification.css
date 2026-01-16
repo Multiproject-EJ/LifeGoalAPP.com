@@ -564,6 +564,166 @@
   }
 }
 
+.gamification-scorecard__panels {
+  --level-progress: 0%;
+  --level-glow: 0.35;
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.35rem;
+  margin: 0 -0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gamification-scorecard__panels::-webkit-scrollbar {
+  height: 6px;
+}
+
+.gamification-scorecard__panels::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+}
+
+.gamification-scorecard__panel {
+  min-width: 100%;
+  scroll-snap-align: start;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 1rem 1.1rem;
+  background: linear-gradient(140deg, rgba(15, 23, 42, 0.03), rgba(255, 255, 255, 0));
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.gamification-scorecard__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.gamification-scorecard__panel-eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted, #64748b);
+}
+
+.gamification-scorecard__panel-chip {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.gamification-scorecard__diagram {
+  position: relative;
+  border-radius: 16px;
+  padding: 1.1rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.02);
+  overflow: hidden;
+}
+
+.gamification-scorecard__diagram-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(59, 130, 246, 0.08), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.15),
+      rgba(148, 163, 184, 0.15) 1px,
+      transparent 1px,
+      transparent 18px
+    );
+  opacity: 0.7;
+}
+
+.gamification-scorecard__diagram-line {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.1);
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+}
+
+.gamification-scorecard__diagram-fill {
+  height: 100%;
+  width: var(--level-progress);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+  box-shadow:
+    0 0 calc(18px * var(--level-glow)) rgba(56, 189, 248, 0.6),
+    0 0 calc(10px * var(--level-glow)) rgba(99, 102, 241, 0.6);
+  transition: width 0.4s ease, box-shadow 0.4s ease;
+}
+
+.gamification-scorecard__diagram-spark {
+  position: absolute;
+  top: 50%;
+  left: var(--level-progress);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(56, 189, 248, 0.5));
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 calc(18px * var(--level-glow)) rgba(56, 189, 248, 0.8);
+}
+
+.gamification-scorecard__diagram-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #64748b);
+  position: relative;
+  z-index: 1;
+}
+
+.gamification-scorecard__panel-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.gamification-scorecard__panel-swipe {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.gamification-scorecard__chat-bubble {
+  border-radius: 18px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 0.9rem 1rem;
+  background: rgba(248, 250, 252, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gamification-scorecard__chat-bubble p {
+  margin: 0;
+  color: #0f172a;
+}
+
+.gamification-scorecard__chat-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #64748b);
+}
+
 .gamification-scorecard__header {
   display: flex;
   align-items: center;
@@ -770,6 +930,14 @@
   .gamification-scorecard {
     padding: 1.1rem;
     max-height: calc(100vh - 1.5rem);
+  }
+
+  .gamification-scorecard__panel {
+    padding: 0.9rem 1rem;
+  }
+
+  .gamification-scorecard__diagram {
+    padding: 1rem 0.75rem;
   }
 
   .gamification-scorecard-overlay {
