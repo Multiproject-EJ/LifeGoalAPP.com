@@ -44,7 +44,7 @@ const TIMING = {
 
 const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
   habit: {
-    icons: ['✅', '⭐', '🎯', '💪', '🔥'],
+    icons: ['✅'],
     count: 10,  // 8-12 icons
     target: 'game-icon',
   },
@@ -223,6 +223,10 @@ export function CelebrationAnimation({
   }, [targetPulsing, targetElement]);
 
   const targetPos = isFlying ? getTargetPosition(targetElement) : null;
+  const xpOrigin = showXP ? getTargetPosition(targetElement) : null;
+  const xpStyle: React.CSSProperties | undefined = xpOrigin
+    ? { left: `${xpOrigin.x}px`, top: `${xpOrigin.y}px` }
+    : undefined;
 
   return createPortal(
     <>
@@ -265,8 +269,12 @@ export function CelebrationAnimation({
 
       {/* XP indicator - the star of the show! */}
       {showXP && xpAmount && (
-        <div className={`celebration-xp ${type === 'levelup' ? 'celebration-xp--levelup' : ''}`}>
-          +{xpAmount} XP
+        <div
+          className={`celebration-xp ${type === 'levelup' ? 'celebration-xp--levelup' : ''}`}
+          style={xpStyle}
+        >
+          <span className="celebration-xp__value">+{xpAmount}</span>
+          <span className="celebration-xp__label">XP</span>
         </div>
       )}
     </>,
