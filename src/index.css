@@ -571,6 +571,30 @@ body {
   line-height: 1;
 }
 
+@media (max-width: 768px) {
+  .workspace-setup__close,
+  .auth-overlay__close,
+  .goal-edit-dialog__close,
+  .life-goal-dialog__close,
+  .life-coach-modal__close,
+  .mobile-menu-overlay__close,
+  .mobile-gamification-overlay__close,
+  .mobile-theme-selector__close,
+  .habit-day-nav__vision-modal-close,
+  .life-wheel__quick-checkin-close {
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    font-size: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+  }
+}
+
 .auth-overlay__dialog--habits {
   max-width: 1400px;
   width: 95%;

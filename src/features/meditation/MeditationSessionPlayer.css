@@ -80,6 +80,14 @@
   transform: scale(0.95);
 }
 
+@media (max-width: 768px) {
+  .meditation-modal__close {
+    width: 44px;
+    height: 44px;
+    font-size: 1.6rem;
+  }
+}
+
 .meditation-modal__content {
   display: flex;
   flex-direction: column;

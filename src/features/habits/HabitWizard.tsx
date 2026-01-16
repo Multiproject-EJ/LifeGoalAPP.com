@@ -119,8 +119,14 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
             cursor: 'pointer',
             fontSize: '1.5rem',
             color: '#64748b',
-            padding: '0.25rem 0.5rem',
+            width: '2.75rem',
+            height: '2.75rem',
+            padding: 0,
+            borderRadius: '999px',
             lineHeight: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           ×
