@@ -10937,6 +10937,16 @@ body {
   min-height: 90px;
 }
 
+.mobile-menu-overlay__game-button--charged {
+  border-color: rgba(59, 130, 246, 0.7);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 12px rgba(59, 130, 246, 0.55),
+    0 0 24px rgba(236, 72, 153, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  animation: mobile-game-oscillate 1.8s ease-in-out infinite;
+}
+
 .mobile-menu-overlay__item button:hover,
 .mobile-menu-overlay__item button:focus-visible {
   background: rgba(255, 255, 255, 0.82);
@@ -10973,6 +10983,14 @@ body {
   color: #0f172a;
   letter-spacing: 0.01em;
   font-size: 0.85rem;
+}
+
+.mobile-menu-overlay__label--charged {
+  color: #0b4fd1;
+  text-shadow:
+    0 0 6px rgba(59, 130, 246, 0.75),
+    0 0 12px rgba(236, 72, 153, 0.6);
+  animation: mobile-game-text-glow 1.8s ease-in-out infinite;
 }
 
 .mobile-menu-overlay__summary {
@@ -11397,6 +11415,51 @@ body {
 
 .mobile-menu-overlay__theme-selector-button--expanded .mobile-menu-overlay__theme-selector-icon {
   font-size: 2rem;
+}
+
+@keyframes mobile-game-oscillate {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      0 0 10px rgba(59, 130, 246, 0.35),
+      0 0 18px rgba(236, 72, 153, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow:
+      0 0 16px rgba(59, 130, 246, 0.75),
+      0 0 30px rgba(236, 72, 153, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+  100% {
+    transform: scale(1.02);
+    box-shadow:
+      0 0 14px rgba(236, 72, 153, 0.7),
+      0 0 28px rgba(59, 130, 246, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+}
+
+@keyframes mobile-game-text-glow {
+  0% {
+    color: #0b4fd1;
+    text-shadow:
+      0 0 6px rgba(59, 130, 246, 0.65),
+      0 0 10px rgba(236, 72, 153, 0.45);
+  }
+  50% {
+    color: #db2777;
+    text-shadow:
+      0 0 8px rgba(236, 72, 153, 0.8),
+      0 0 14px rgba(59, 130, 246, 0.7);
+  }
+  100% {
+    color: #2563eb;
+    text-shadow:
+      0 0 8px rgba(59, 130, 246, 0.7),
+      0 0 14px rgba(236, 72, 153, 0.65);
+  }
 }
 
 /* Identity Hub placeholder styles */
