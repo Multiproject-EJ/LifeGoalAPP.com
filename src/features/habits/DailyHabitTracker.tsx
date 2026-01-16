@@ -2077,7 +2077,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     </button>
                     <button
                       type="button"
-                      className={`habit-day-status__button habit-day-status__button--secondary ${
+                      className={`habit-day-status__button habit-day-status__button--sick ${
                         dayStatus === 'sick' ? 'habit-day-status__button--active' : ''
                       }`}
                       onClick={() => handleDayStatusUpdate('sick')}
