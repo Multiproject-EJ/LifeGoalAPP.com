@@ -5,6 +5,7 @@ export type CelebrationAnimationProps = {
   type: 'habit' | 'journal' | 'action' | 'breathing' | 'levelup';
   xpAmount?: number;
   targetElement?: 'game-icon' | 'fab-button';
+  origin?: { x: number; y: number } | null;
   onComplete?: () => void;
 };
 
@@ -42,10 +43,25 @@ const TIMING = {
   PULSE_DURATION: 300,        // ms for target pulse animation
 } as const;
 
+const HABIT_TIMING = {
+  ICON_START_DELAY: 0,
+  ICON_STAGGER_DELAY: 0,
+  BACKDROP_FADE_IN: 0,
+  XP_FADE_IN: 0,
+  FLY_START_DELAY: 80,
+  XP_HIDE_DELAY: 0,
+  BACKDROP_FADE_OUT: 0,
+  CLEANUP_DELAY: 550,
+  PULSE_DURATION: 300,
+} as const;
+
+const getTiming = (type: CelebrationAnimationProps['type']) =>
+  type === 'habit' ? HABIT_TIMING : TIMING;
+
 const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
   habit: {
     icons: ['✅'],
-    count: 10,  // 8-12 icons
+    count: 5,  // compact burst for snappy habit feedback
     target: 'game-icon',
   },
   journal: {
@@ -121,6 +137,7 @@ export function CelebrationAnimation({
   type,
   xpAmount,
   targetElement: targetElementProp,
+  origin,
   onComplete,
 }: CelebrationAnimationProps) {
   const [icons, setIcons] = useState<IconInstance[]>([]);
@@ -131,6 +148,9 @@ export function CelebrationAnimation({
   const [targetPulsing, setTargetPulsing] = useState(false);
 
   const config = ICON_CONFIGS[type];
+  const timing = getTiming(type);
+  const allowBackdrop = type !== 'habit';
+  const allowXP = type !== 'habit';
   const targetElement = targetElementProp ?? config.target;
 
   const cleanup = useCallback(() => {
@@ -147,57 +167,73 @@ export function CelebrationAnimation({
     // Generate random icons with initial delay
     const newIcons: IconInstance[] = [];
     for (let i = 0; i < config.count; i++) {
-      const position = getRandomPosition();
+      const position = type === 'habit' && origin ? origin : getRandomPosition();
       newIcons.push({
         id: `icon-${i}-${Date.now()}`,
         icon: getRandomIcon(config.icons),
         x: position.x,
         y: position.y,
-        delay: TIMING.ICON_START_DELAY + (Math.random() * TIMING.ICON_STAGGER_DELAY),
+        delay: timing.ICON_START_DELAY + (Math.random() * timing.ICON_STAGGER_DELAY),
       });
     }
     setIcons(newIcons);
 
     // Show backdrop at 450ms
-    const backdropTimeout = setTimeout(() => {
-      setShowBackdrop(true);
-    }, TIMING.BACKDROP_FADE_IN);
+    const backdropTimeout = allowBackdrop
+      ? setTimeout(() => {
+        setShowBackdrop(true);
+      }, timing.BACKDROP_FADE_IN)
+      : null;
 
     // Show XP at 500ms
-    const xpShowTimeout = setTimeout(() => {
-      setShowXP(true);
-    }, TIMING.XP_FADE_IN);
+    const xpShowTimeout = allowXP
+      ? setTimeout(() => {
+        setShowXP(true);
+      }, timing.XP_FADE_IN)
+      : null;
 
     // Start flying animation at 1200ms
     const flyTimeout = setTimeout(() => {
       setIsFlying(true);
       setTargetPulsing(true);
-    }, TIMING.FLY_START_DELAY);
+    }, timing.FLY_START_DELAY);
 
     // Start fading out backdrop at 2300ms
-    const backdropFadeOutTimeout = setTimeout(() => {
-      setBackdropFadingOut(true);
-    }, TIMING.BACKDROP_FADE_OUT);
+    const backdropFadeOutTimeout = allowBackdrop
+      ? setTimeout(() => {
+        setBackdropFadingOut(true);
+      }, timing.BACKDROP_FADE_OUT)
+      : null;
 
     // Hide XP at 2500ms
-    const xpTimeout = setTimeout(() => {
-      setShowXP(false);
-    }, TIMING.XP_HIDE_DELAY);
+    const xpTimeout = allowXP
+      ? setTimeout(() => {
+        setShowXP(false);
+      }, timing.XP_HIDE_DELAY)
+      : null;
 
     // Clean up after animations complete at 3000ms
     const cleanupTimeout = setTimeout(() => {
       cleanup();
-    }, TIMING.CLEANUP_DELAY);
+    }, timing.CLEANUP_DELAY);
 
     return () => {
-      clearTimeout(backdropTimeout);
-      clearTimeout(xpShowTimeout);
+      if (backdropTimeout) {
+        clearTimeout(backdropTimeout);
+      }
+      if (xpShowTimeout) {
+        clearTimeout(xpShowTimeout);
+      }
       clearTimeout(flyTimeout);
-      clearTimeout(backdropFadeOutTimeout);
-      clearTimeout(xpTimeout);
+      if (backdropFadeOutTimeout) {
+        clearTimeout(backdropFadeOutTimeout);
+      }
+      if (xpTimeout) {
+        clearTimeout(xpTimeout);
+      }
       clearTimeout(cleanupTimeout);
     };
-  }, [config, cleanup]);
+  }, [config, cleanup, origin, timing, allowBackdrop, allowXP, type]);
 
   // Add pulse class to target element
   useEffect(() => {
@@ -231,7 +267,7 @@ export function CelebrationAnimation({
   return createPortal(
     <>
       {/* Dimmed backdrop - mutes the background */}
-      {showBackdrop && (
+      {showBackdrop && allowBackdrop && (
         <div 
           className={`celebration-backdrop ${
             type === 'levelup' ? 'celebration-backdrop--levelup' : ''
@@ -259,7 +295,9 @@ export function CelebrationAnimation({
         return (
           <div
             key={iconInstance.id}
-            className={`celebration-icon ${isFlying ? 'celebration-icon--flying' : ''}`}
+            className={`celebration-icon celebration-icon--${type} ${
+              isFlying ? 'celebration-icon--flying' : ''
+            }`}
             style={style}
           >
             {iconInstance.icon}
@@ -268,7 +306,7 @@ export function CelebrationAnimation({
       })}
 
       {/* XP indicator - the star of the show! */}
-      {showXP && xpAmount && (
+      {showXP && allowXP && xpAmount && (
         <div
           className={`celebration-xp ${type === 'levelup' ? 'celebration-xp--levelup' : ''}`}
           style={xpStyle}

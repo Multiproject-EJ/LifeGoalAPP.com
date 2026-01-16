@@ -253,6 +253,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [celebrationType, setCelebrationType] = useState<'habit' | 'journal' | 'action' | 'breathing' | 'levelup'>('habit');
+  const [celebrationOrigin, setCelebrationOrigin] = useState<{ x: number; y: number } | null>(null);
   const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
@@ -1082,12 +1083,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             setCelebrationType('habit');
             setCelebrationXP(xpAmount);
             setShowCelebration(true);
-          }, 400);
+          }, 300);
 
           // 3. Clean up instant feedback class
           setTimeout(() => {
             setJustCompletedHabitId(null);
-          }, 600);
+          }, 320);
 
           await earnXP(xpAmount, 'habit_complete', habit.id);
           await recordActivity();
@@ -1107,7 +1108,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
   };
 
-  const toggleHabit = async (habit: HabitWithGoal) => {
+  const toggleHabit = async (habit: HabitWithGoal, originElement?: HTMLElement | null) => {
+    if (originElement) {
+      const rect = originElement.getBoundingClientRect();
+      setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    } else {
+      setCelebrationOrigin(null);
+    }
     await toggleHabitForDate(habit, activeDate);
   };
 
@@ -1439,7 +1446,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 onClick={(event) => event.stopPropagation()}
                 onChange={(event) => {
                   event.stopPropagation();
-                  void toggleHabit(habit);
+                  void toggleHabit(habit, event.currentTarget);
                 }}
                 disabled={isSaving || (!scheduledToday && !isCompleted)}
               />
@@ -2537,6 +2544,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             type={celebrationType}
             xpAmount={celebrationXP}
             targetElement="game-icon"
+            origin={celebrationOrigin}
             onComplete={() => {
               setShowCelebration(false);
               if (celebrationType === 'levelup') {
@@ -2627,7 +2635,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     <button
                       type="button"
                       className={`habit-card__toggle ${isCompleted ? 'habit-card__toggle--active' : ''}`}
-                      onClick={() => void toggleHabit(habit)}
+                      onClick={(event) => void toggleHabit(habit, event.currentTarget)}
                       disabled={isSaving}
                     >
                       {isSaving ? 'Saving…' : isCompleted ? 'Mark incomplete' : 'Mark complete'}
@@ -2805,6 +2813,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           type={celebrationType}
           xpAmount={celebrationXP}
           targetElement="game-icon"
+          origin={celebrationOrigin}
           onComplete={() => {
             setShowCelebration(false);
             if (celebrationType === 'levelup') {
