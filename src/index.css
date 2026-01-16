@@ -15259,6 +15259,11 @@ body {
   animation: pop-in 0.3s ease-out forwards;
 }
 
+.celebration-icon--habit {
+  font-size: 1.4rem;
+  animation-duration: 0.2s;
+}
+
 @keyframes pop-in {
   0% { 
     transform: scale(0); 
@@ -15276,6 +15281,10 @@ body {
 /* Flying to target animation */
 .celebration-icon--flying {
   transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.celebration-icon--habit.celebration-icon--flying {
+  transition-duration: 0.35s;
 }
 
 /* XP indicator - slides out from the game icon with a pop */
@@ -15391,7 +15400,7 @@ body {
 
 /* Instant pop effect for habits when completed */
 .habit-item--just-completed {
-  animation: instant-pop 0.25s ease-out;
+  animation: instant-pop 0.3s ease-out;
 }
 
 @keyframes instant-pop {
@@ -15399,8 +15408,8 @@ body {
     transform: scale(1); 
   }
   40% { 
-    transform: scale(1.15); 
-    box-shadow: 0 0 20px rgba(74, 222, 128, 0.8); 
+    transform: scale(1.12); 
+    box-shadow: 0 0 18px rgba(74, 222, 128, 0.7); 
   }
   100% { 
     transform: scale(1); 
