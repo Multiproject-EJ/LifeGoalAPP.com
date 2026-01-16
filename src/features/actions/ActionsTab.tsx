@@ -308,9 +308,22 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
             Your 3-day rolling todo list
           </p>
         </div>
-        {isDemoExperience && (
-          <span className="actions-tab__demo-badge">Demo Mode</span>
-        )}
+        <div className="actions-tab__header-actions">
+          {onNavigateToProjects && (
+            <button
+              className="actions-tab__projects-icon"
+              onClick={onNavigateToProjects}
+              type="button"
+              aria-label="Go to Projects"
+              title="Go to Projects"
+            >
+              📦
+            </button>
+          )}
+          {isDemoExperience && (
+            <span className="actions-tab__demo-badge">Demo Mode</span>
+          )}
+        </div>
       </header>
 
       {/* Status message */}
@@ -326,22 +339,6 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
 
       {/* Quick add section */}
       <QuickAddAction onAdd={handleAddAction} projects={projects} />
-
-      {/* Navigate to Projects button */}
-      {onNavigateToProjects && (
-        <div className="actions-tab__projects-link">
-          <button
-            className="actions-tab__projects-button"
-            onClick={onNavigateToProjects}
-            type="button"
-          >
-            📦 Go to Projects
-          </button>
-          <p className="actions-tab__projects-hint">
-            Manage long-term initiatives and multi-step tasks
-          </p>
-        </div>
-      )}
 
       {/* Filters */}
       {hasActions && (
