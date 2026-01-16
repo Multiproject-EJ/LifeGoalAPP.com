@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Project, ProjectTask } from '../../../types/actions';
+import type { Project, ProjectTaskItem } from '../../../types/actions';
 
 export interface ProjectProgress {
   completed: number;
@@ -9,7 +9,7 @@ export interface ProjectProgress {
   isOverdue: boolean;
 }
 
-export function useProjectProgress(project: Project, tasks: ProjectTask[]): ProjectProgress {
+export function useProjectProgress(project: Project, tasks: ProjectTaskItem[]): ProjectProgress {
   return useMemo(() => {
     const total = tasks.length;
     const completed = tasks.filter((t) => t.completed).length;

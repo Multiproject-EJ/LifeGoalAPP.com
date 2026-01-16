@@ -4,6 +4,8 @@ import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Action } from '../types/actions';
 import { DEMO_USER_ID, getDemoActions, removeDemoAction } from './demoData';
 
+const DONE_ARCHIVE_RETENTION_DAYS = 7;
+
 /**
  * Fetch all expired actions for the current user
  * Expired = expires_at < now AND completed = false
@@ -48,6 +50,7 @@ export async function deleteExpiredNiceToDoActions(): Promise<{ count: number; e
       if (
         action.category === 'nice_to_do' &&
         !action.completed &&
+        !action.project_id &&
         new Date(action.expires_at) < now
       ) {
         removeDemoAction(action.id);
@@ -65,6 +68,7 @@ export async function deleteExpiredNiceToDoActions(): Promise<{ count: number; e
       .delete()
       .eq('category', 'nice_to_do')
       .eq('completed', false)
+      .is('project_id', null)
       .lt('expires_at', new Date().toISOString())
       .select();
 
@@ -87,6 +91,7 @@ export async function getExpiredProjectActions(): Promise<{ data: Action[] | nul
         a.category === 'project' &&
         !a.completed &&
         !a.migrated_to_project_id &&
+        !a.project_id &&
         new Date(a.expires_at) < now
     );
     return { data: expired, error: null };
@@ -100,6 +105,7 @@ export async function getExpiredProjectActions(): Promise<{ data: Action[] | nul
       .eq('category', 'project')
       .eq('completed', false)
       .is('migrated_to_project_id', null)
+      .is('project_id', null)
       .lt('expires_at', new Date().toISOString());
 
     if (error) throw error;
@@ -107,6 +113,64 @@ export async function getExpiredProjectActions(): Promise<{ data: Action[] | nul
   } catch (err) {
     return { data: null, error: err instanceof Error ? err : new Error('Failed to fetch expired project actions') };
   }
+}
+
+/**
+ * Delete completed actions that are older than the retention window,
+ * excluding any actions assigned to projects.
+ */
+export async function deleteArchivedCompletedActions(): Promise<{ count: number; error: Error | null }> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - DONE_ARCHIVE_RETENTION_DAYS);
+
+  if (!canUseSupabaseData()) {
+    const allActions = getDemoActions(DEMO_USER_ID);
+    let count = 0;
+
+    for (const action of allActions) {
+      if (
+        action.completed &&
+        !action.project_id &&
+        action.completed_at &&
+        new Date(action.completed_at) < cutoff
+      ) {
+        removeDemoAction(action.id);
+        count++;
+      }
+    }
+
+    return { count, error: null };
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('actions')
+      .delete()
+      .eq('completed', true)
+      .is('project_id', null)
+      .lt('completed_at', cutoff.toISOString())
+      .select();
+
+    if (error) throw error;
+    return { count: data?.length ?? 0, error: null };
+  } catch (err) {
+    return { count: 0, error: err instanceof Error ? err : new Error('Failed to delete archived actions') };
+  }
+}
+
+/**
+ * Run cleanup for done archive items
+ */
+export async function runDoneArchiveCleanup(): Promise<{
+  archivedCount: number;
+  error: Error | null;
+}> {
+  const { count: archivedCount, error } = await deleteArchivedCompletedActions();
+  if (error) {
+    return { archivedCount: 0, error };
+  }
+  return { archivedCount, error: null };
 }
 
 /**
