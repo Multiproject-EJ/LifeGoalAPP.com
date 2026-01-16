@@ -218,6 +218,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
   const [isCompactView, setIsCompactView] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   // State for intentions journal
   const [isIntentionsJournalOpen, setIsIntentionsJournalOpen] = useState(false);
   const [intentionsJournalType, setIntentionsJournalType] = useState<'today' | 'tomorrow'>('today');
@@ -403,6 +404,16 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     triggerStarBurst();
     void handleVisionReward();
   };
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
 
   const closeVisionReward = () => {
     setIsVisionRewardOpen(false);
@@ -1272,7 +1283,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
         <button
           type="button"
-          className="habit-day-nav__button"
+          className="habit-day-nav__button habit-day-nav__button--prev"
           onClick={() => changeActiveDateBy(-1)}
         >
           ← Previous day
@@ -1357,7 +1368,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
         <button
           type="button"
-          className="habit-day-nav__button"
+          className="habit-day-nav__button habit-day-nav__button--next"
           onClick={() => changeActiveDateBy(1)}
           disabled={!canGoForward}
         >
@@ -1487,6 +1498,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       progressStage === 'celebrate' ? '⭐' : progressStage === 'strong' ? '✦' : null;
     const titleText = 'My Habits';
     const subtitleText = null;
+    const isViewingToday = activeDate === today;
+    const circadianEmoji = isViewingToday ? getCircadianEmoji(currentTime) : null;
+    const circadianLabel = isViewingToday ? getCircadianLabel(currentTime) : null;
+    const clockEmoji = isViewingToday ? getClockEmoji(currentTime) : null;
+    const timeLabel = isViewingToday ? formatTimeLabel(currentTime) : null;
 
     const statusText = errorMessage
       ? errorMessage
@@ -1787,7 +1803,18 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           <div className="habit-checklist-card__board-head">
             <div className="habit-checklist-card__date-wrap">
               <div className="habit-checklist-card__date-group">
-                <p className="habit-checklist-card__date">{dateLabel}</p>
+                <p className="habit-checklist-card__date">
+                  <span className="habit-checklist-card__date-text">{dateLabel}</span>
+                  {isViewingToday && circadianEmoji && clockEmoji ? (
+                    <span className="habit-checklist-card__date-icons" aria-hidden="true">
+                      <span className="habit-checklist-card__date-icon">{circadianEmoji}</span>
+                      <span className="habit-checklist-card__date-icon">{clockEmoji}</span>
+                    </span>
+                  ) : null}
+                  {isViewingToday && circadianLabel && timeLabel ? (
+                    <span className="sr-only">{`${circadianLabel} · ${timeLabel}`}</span>
+                  ) : null}
+                </p>
               </div>
               <button
                 type="button"
@@ -2895,6 +2922,35 @@ function formatDayOfMonth(value: string) {
 
 function formatDayOfWeekShort(value: string) {
   return DAY_SHORT_FORMATTER.format(parseISODate(value));
+}
+
+function getCircadianEmoji(date: Date) {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 10) return '🌅';
+  if (hour >= 10 && hour < 16) return '☀️';
+  if (hour >= 16 && hour < 20) return '🌇';
+  return '🌙';
+}
+
+function getCircadianLabel(date: Date) {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 10) return 'Morning rhythm';
+  if (hour >= 10 && hour < 16) return 'Daytime rhythm';
+  if (hour >= 16 && hour < 20) return 'Evening rhythm';
+  return 'Night rhythm';
+}
+
+function getClockEmoji(date: Date) {
+  const hour = date.getHours() % 12;
+  const icons = ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚'];
+  return icons[hour];
+}
+
+function formatTimeLabel(date: Date) {
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 function formatCompactDateLabel(value: string) {
