@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { 
   fetchHabitsForUser, 
@@ -77,6 +77,14 @@ export function QuickActionsFAB({
     loading: gamificationLoading,
     refreshProfile,
   } = useGamification(session);
+  const currentLevel = levelInfo?.currentLevel ?? 1;
+  const levelProgress = Math.min(100, Math.max(0, (currentLevel / 100) * 100));
+  const levelGlow = 0.35 + (levelProgress / 100) * 0.65;
+  const levelPanelStyle = {
+    '--level-progress': `${levelProgress}%`,
+    '--level-glow': levelGlow.toFixed(2),
+  } as CSSProperties;
+  const levelStatus = `Level ${currentLevel} · ${Math.round(levelProgress)}% to 100`;
 
   const parseISODate = (value: string): Date => {
     const [yearStr, monthStr, dayStr] = value.split('-');
@@ -661,13 +669,49 @@ export function QuickActionsFAB({
           aria-label="Game of Life scorecard"
           onClick={closeGamificationCard}
         >
-          <div
-            className="gamification-scorecard"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="gamification-scorecard__header">
-              <div className="gamification-scorecard__title">
-                <span className="gamification-scorecard__badge" aria-hidden="true">🎮</span>
+        <div
+          className="gamification-scorecard"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="gamification-scorecard__panels" style={levelPanelStyle} aria-label="Level panels">
+            <div className="gamification-scorecard__panel gamification-scorecard__panel--diagram">
+              <div className="gamification-scorecard__panel-header">
+                <p className="gamification-scorecard__panel-eyebrow">Level momentum</p>
+                <span className="gamification-scorecard__panel-chip">{levelStatus}</span>
+              </div>
+              <div className="gamification-scorecard__diagram">
+                <div className="gamification-scorecard__diagram-grid" aria-hidden="true" />
+                <div className="gamification-scorecard__diagram-line">
+                  <div className="gamification-scorecard__diagram-fill" />
+                  <div className="gamification-scorecard__diagram-spark" />
+                </div>
+                <div className="gamification-scorecard__diagram-labels">
+                  <span>Lv {currentLevel}</span>
+                  <span>Lv 100</span>
+                </div>
+              </div>
+              <p className="gamification-scorecard__panel-note">
+                Your glow scales with each level—keep stacking XP to light up the curve.
+              </p>
+              <span className="gamification-scorecard__panel-swipe">Swipe for chat →</span>
+            </div>
+
+            <div className="gamification-scorecard__panel gamification-scorecard__panel--chat">
+              <div className="gamification-scorecard__panel-header">
+                <p className="gamification-scorecard__panel-eyebrow">Coach bubble</p>
+                <span className="gamification-scorecard__panel-chip">Quick check-in</span>
+              </div>
+              <div className="gamification-scorecard__chat-bubble">
+                <p>Want a nudge? Share your next micro-win and I&apos;ll echo back a tiny boost.</p>
+                <span className="gamification-scorecard__chat-meta">Awaiting your message…</span>
+              </div>
+              <span className="gamification-scorecard__panel-swipe">← Swipe for levels</span>
+            </div>
+          </div>
+
+          <div className="gamification-scorecard__header">
+            <div className="gamification-scorecard__title">
+              <span className="gamification-scorecard__badge" aria-hidden="true">🎮</span>
                 <div>
                   <p className="gamification-scorecard__eyebrow">Game of Life</p>
                   <h3 className="gamification-scorecard__headline">Scorecard & progress</h3>
