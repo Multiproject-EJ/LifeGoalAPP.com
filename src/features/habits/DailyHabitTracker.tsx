@@ -238,6 +238,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [visionRewarding, setVisionRewarding] = useState(false);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
+  const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
@@ -407,6 +408,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     setIsVisionRewardOpen(false);
   };
 
+  useEffect(() => {
+    if (visionReward?.imageUrl) {
+      setIsVisionImageLoaded(false);
+    }
+  }, [visionReward?.imageUrl, isVisionRewardOpen]);
+
   const visionRewardModal =
     visionReward && isVisionRewardOpen ? (
       <div
@@ -433,11 +440,22 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           <div className="habit-day-nav__vision-modal-intro" aria-hidden="true">
             📸 🖼️ 🎯 ✨ 🚀
           </div>
-          <img
-            className="habit-day-nav__vision-modal-image"
-            src={visionReward.imageUrl}
-            alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
-          />
+          <div className="habit-day-nav__vision-modal-frame">
+            {!isVisionImageLoaded && (
+              <div className="habit-day-nav__vision-modal-loading" aria-hidden="true">
+                <span className="habit-day-nav__vision-modal-bloom" />
+              </div>
+            )}
+            <img
+              className={`habit-day-nav__vision-modal-image ${
+                isVisionImageLoaded ? 'habit-day-nav__vision-modal-image--loaded' : ''
+              }`}
+              src={visionReward.imageUrl}
+              alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
+              onLoad={() => setIsVisionImageLoaded(true)}
+              onError={() => setIsVisionImageLoaded(true)}
+            />
+          </div>
           <div className="habit-day-nav__vision-modal-claim">
             <p className="habit-day-nav__vision-modal-caption">
               {visionReward.caption ?? 'A spark for your next win.'}
@@ -448,6 +466,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               onClick={closeVisionReward}
             >
               Claim {visionReward.xpAwarded} XP
+            </button>
+            <button
+              type="button"
+              className="habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--manifest"
+              disabled
+            >
+              Manifestation +50 XP
             </button>
           </div>
         </div>
