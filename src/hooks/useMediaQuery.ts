@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 
+export const WORKSPACE_MOBILE_MEDIA_QUERY =
+  '(max-width: 720px), (max-height: 720px) and (pointer: coarse)';
+
 export function useMediaQuery(query: string): boolean {
   const getInitial = () => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {

@@ -271,7 +271,7 @@
   font-size: 0.95rem;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .daily-game__header {
     flex-direction: column;
   }

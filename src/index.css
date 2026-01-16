@@ -1465,7 +1465,7 @@ body {
 }
 
 /* Match mobile layout breakpoint used across workspace shell */
-@media (max-width: var(--workspace-mobile-breakpoint)) {
+@media (max-width: var(--workspace-mobile-breakpoint)), (max-height: var(--workspace-mobile-breakpoint)) and (pointer: coarse) {
   .workspace-status {
     bottom: var(--workspace-edge-spacing);
     left: 50%;
@@ -2485,7 +2485,7 @@ body {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .workspace-main {
     padding-bottom: clamp(6rem, 14vw, 7.25rem);
     width: 100%;
@@ -5540,7 +5540,7 @@ body {
    MOBILE-OPTIMIZED MONTHLY HABITS DASHBOARD
    Modern, sleek design for smaller screens
    ===================================================== */
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   /* Hide the traditional table on mobile */
   .habit-monthly__table-wrapper {
     display: none;
@@ -5689,7 +5689,7 @@ body {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .habit-monthly__mobile-view {
     display: flex;
     flex-direction: column;
@@ -7726,7 +7726,7 @@ body {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .progress-dashboard__actions {
     flex-direction: column;
     align-items: stretch;
@@ -9450,7 +9450,7 @@ body {
   font-weight: 500;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .life-wheel__radar {
     max-width: 260px;
     filter: none;
@@ -9890,7 +9890,7 @@ body {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .goal-reflection-journal {
     padding: clamp(1.1rem, 4vw, 1.5rem);
   }
@@ -9929,7 +9929,7 @@ body {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .vision-board__header {
     flex-direction: column;
     align-items: flex-start;
@@ -12021,7 +12021,7 @@ body {
   fill: #064e3b;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .life-goals-section__heading-row {
     flex-direction: column;
     align-items: flex-start;
@@ -14558,7 +14558,7 @@ body {
   gap: 0.75rem;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .quick-actions-fab {
     /* Hide FAB on small phone screens - mobile menu is adequate for navigation */
     display: none;

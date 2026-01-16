@@ -6,7 +6,7 @@ import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { insertGoal, updateGoal, fetchGoals } from '../../services/goals';
 import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from '../../hooks/useMediaQuery';
 import type { Database } from '../../lib/database.types';
 
 type LifeGoalsSectionProps = {
@@ -27,7 +27,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   const [goalStats, setGoalStats] = useState<
     Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>
   >({});
-  const isMobile = useMediaQuery('(max-width: 720px)');
+  const isMobile = useMediaQuery(WORKSPACE_MOBILE_MEDIA_QUERY);
 
   const activeCategoryLabel = useMemo(() => {
     if (!selectedCategory) {
