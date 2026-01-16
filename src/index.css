@@ -4241,6 +4241,14 @@ body {
   flex-wrap: wrap;
 }
 
+[data-theme='dark-glass'] .habit-day-nav__label {
+  color: rgba(226, 232, 240, 0.8);
+}
+
+[data-theme='dark-glass'] .habit-day-nav__value {
+  color: #f8fafc;
+}
+
 .habit-day-nav--compact .habit-day-nav__actions {
   gap: 0.35rem;
 }
@@ -4272,6 +4280,20 @@ body {
   background: rgba(14, 165, 233, 0.2);
 }
 
+.habit-day-nav__picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.habit-day-nav__picker-icon {
+  font-size: 1rem;
+}
+
+[data-theme='dark-glass'] .habit-day-nav__picker-icon {
+  color: #e2e8f0;
+}
+
 .habit-day-nav__picker input {
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 10px;
@@ -4284,6 +4306,14 @@ body {
   background: var(--color-surface-secondary, rgba(15, 20, 25, 0.6));
   color: var(--color-text-primary, #f1f5f9);
   border-color: rgba(148, 163, 184, 0.35);
+}
+
+[data-theme='dark-glass'] .habit-day-nav__chip {
+  color: #e2e8f0;
+}
+
+[data-theme='dark-glass'] .habit-day-nav__chip--current {
+  color: #bbf7d0;
 }
 
 [data-theme='dark-glass'] .habit-day-nav__picker input::-webkit-calendar-picker-indicator {
@@ -5006,6 +5036,12 @@ body {
   min-width: 2rem;
   accent-color: #0ea5e9;
   border-radius: 8px;
+}
+
+[data-theme='dark-glass'] .habit-checklist__checkbox {
+  background-color: rgba(15, 23, 42, 0.85);
+  border: 2px solid rgba(226, 232, 240, 0.8);
+  accent-color: #38bdf8;
 }
 
 .habit-checklist__name {
