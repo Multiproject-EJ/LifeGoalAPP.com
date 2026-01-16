@@ -455,6 +455,18 @@
   color: var(--text-primary, #000);
 }
 
+@media (max-width: 768px) {
+  .power-up-modal__close {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    padding: 0;
+  }
+}
+
 .power-up-modal__content {
   padding: 2rem 1.5rem;
   text-align: center;

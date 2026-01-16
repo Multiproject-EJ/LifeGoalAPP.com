@@ -85,6 +85,18 @@
   transform: scale(0.95);
 }
 
+@media (max-width: 768px) {
+  .guided-meditation-modal__close {
+    width: 44px;
+    height: 44px;
+    font-size: 1.6rem;
+  }
+
+  .guided-meditation-modal__header {
+    padding-right: 56px;
+  }
+}
+
 .guided-meditation-modal__content {
   display: flex;
   flex-direction: column;

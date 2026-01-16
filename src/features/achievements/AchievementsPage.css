@@ -438,6 +438,18 @@
   color: var(--text-primary);
 }
 
+@media (max-width: 768px) {
+  .achievement-detail-modal__close {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    padding: 0;
+  }
+}
+
 .achievement-detail-modal__content {
   padding: 1.5rem;
 }
