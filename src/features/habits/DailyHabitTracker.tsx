@@ -26,6 +26,7 @@ import {
   updateJournalEntry,
   type JournalEntry,
 } from '../../services/journal';
+import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import {
   getYesterdayRecapEnabled,
@@ -192,6 +193,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [monthlySaving, setMonthlySaving] = useState<Record<string, boolean>>({});
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
+  const [completedActionsCount, setCompletedActionsCount] = useState(0);
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
@@ -277,6 +279,26 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       }
     };
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadCompletedActions = async () => {
+      const { data, error } = await fetchCompletedActionsForDate(activeDate);
+      if (!isActive) return;
+      if (error) {
+        setCompletedActionsCount(0);
+        return;
+      }
+      setCompletedActionsCount(data?.length ?? 0);
+    };
+
+    void loadCompletedActions();
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeDate]);
 
   useEffect(() => {
     const storedDayStatus = loadDraft<Record<string, DayStatus>>(dayStatusStorageKey(session.user.id));
@@ -1587,6 +1609,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const titleText = 'My Habits';
     const subtitleText = null;
     const isViewingToday = activeDate === today;
+    const actionsBadgeAria = `${completedActionsCount} actions completed ${
+      isViewingToday ? 'today' : 'for this day'
+    }`;
     const circadianEmoji = isViewingToday ? getCircadianEmoji(currentTime) : null;
     const circadianLabel = isViewingToday ? getCircadianLabel(currentTime) : null;
     const clockEmoji = isViewingToday ? getClockEmoji(currentTime) : null;
@@ -1955,6 +1980,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       {progressIcon}
                     </span>
                   ) : null}
+                </span>
+                <span className="habit-checklist-card__actions-badge" aria-label={actionsBadgeAria}>
+                  <span className="habit-checklist-card__actions-label">Actions</span>
+                  <span className="habit-checklist-card__actions-count">{completedActionsCount}</span>
                 </span>
                 {yesterdayIntentionsEntry ? (
                   <button

@@ -3769,7 +3769,7 @@ body {
 .habit-checklist-card__date {
   margin: 0;
   font-weight: 700;
-  color: #7c2d12;
+  color: #1e293b;
   font-size: 1rem;
   display: flex;
   align-items: center;
@@ -3886,6 +3886,34 @@ body {
   gap: 0.3rem;
   min-width: fit-content;
   flex-shrink: 0;
+}
+
+.habit-checklist-card__actions-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.habit-checklist-card__actions-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.18);
+  color: #0b3b5b;
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 @media (max-width: 640px) {
