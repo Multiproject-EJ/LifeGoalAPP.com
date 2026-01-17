@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { Action } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG, calculateTimeRemaining } from '../../../types/actions';
 import { ActionTimer } from './ActionTimer';
@@ -18,6 +18,7 @@ export function ActionItem({ action, onComplete, onDelete, onOpenDetail, isSelec
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const touchDeltaRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const swipeHandledRef = useRef(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // MUST DO items don't expire
   const showTimer = action.category !== 'must_do';
@@ -62,11 +63,20 @@ export function ActionItem({ action, onComplete, onDelete, onOpenDetail, isSelec
 
     if (isHorizontalSwipe && x < 0) {
       swipeHandledRef.current = true;
-      onDelete();
+      setShowDeleteConfirm(true);
     }
 
     touchStartRef.current = null;
     touchDeltaRef.current = { x: 0, y: 0 };
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteConfirm(false);
+    onDelete();
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -103,15 +113,35 @@ export function ActionItem({ action, onComplete, onDelete, onOpenDetail, isSelec
       </div>
       
       <ActionTimer action={action} />
-      
-      <button
-        type="button"
-        className="action-item__delete"
-        onClick={onDelete}
-        aria-label={`Delete: ${action.title}`}
-      >
-        <span aria-hidden="true">×</span>
-      </button>
+
+      {showDeleteConfirm ? (
+        <div className="action-item__delete-confirm" role="group" aria-label={`Delete ${action.title}`}>
+          <span className="action-item__delete-confirm-label">Delete?</span>
+          <button
+            type="button"
+            className="action-item__delete-confirm-yes"
+            onClick={handleConfirmDelete}
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            className="action-item__delete-confirm-no"
+            onClick={handleCancelDelete}
+          >
+            No
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="action-item__delete"
+          onClick={onDelete}
+          aria-label={`Delete: ${action.title}`}
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      )}
     </li>
   );
 }
