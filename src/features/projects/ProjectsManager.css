@@ -25,6 +25,8 @@
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  position: relative;
+  padding-right: 2.5rem;
 }
 
 .projects-manager__header-actions {
@@ -73,6 +75,9 @@
   font-size: 1.1rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .projects-manager__actions-icon:hover {
@@ -882,6 +887,14 @@
 
 /* Desktop Layout */
 @media (min-width: 768px) {
+  .projects-manager__header {
+    padding-right: 0;
+  }
+
+  .projects-manager__actions-icon {
+    position: static;
+  }
+
   .projects-manager__content {
     flex-direction: row;
   }
