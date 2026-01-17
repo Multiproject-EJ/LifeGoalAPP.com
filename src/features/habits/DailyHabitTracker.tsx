@@ -218,6 +218,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalFreeform, setQuickJournalFreeform] = useState('');
   const [quickJournalSaving, setQuickJournalSaving] = useState(false);
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
+  const [showCompletedHabits, setShowCompletedHabits] = useState(false);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
   const [isCompactView, setIsCompactView] = useState(false);
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
@@ -1350,15 +1351,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               )}
               <label className="habit-day-nav__picker" aria-label="Select a date to track">
                 <span className="sr-only">Select a date to track</span>
-                <span className="habit-day-nav__picker-icon" aria-hidden="true">
-                  📅
+                <span className="habit-day-nav__picker-pill">
+                  <span className="habit-day-nav__picker-icon" aria-hidden="true">
+                    📅
+                  </span>
+                  <input
+                    type="date"
+                    value={activeDate}
+                    max={today}
+                    onChange={(event) => handleDateInputChange(event.target.value)}
+                  />
                 </span>
-                <input
-                  type="date"
-                  value={activeDate}
-                  max={today}
-                  onChange={(event) => handleDateInputChange(event.target.value)}
-                />
               </label>
             </div>
             {!hasClaimedVisionStar ? (
@@ -1432,100 +1435,133 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     );
   };
 
-  const renderCompactList = () => (
-    <ul className="habit-checklist" role="list">
-      {sortedHabits.map((habit) => {
-        const state = completions[habit.id];
-        const isCompleted = Boolean(state?.completed);
-        const isSaving = Boolean(saving[habit.id]);
-        const insight = habitInsights[habit.id];
-        const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
-        const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? activeDate : null);
-        const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
-        const domainMeta = extractLifeWheelDomain(habit.schedule);
-        const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
-        const goalLabel = habit.goal?.title ?? 'Unassigned goal';
-        const checkboxId = `habit-checkbox-${habit.id}`;
-        const detailPanelId = `habit-details-${habit.id}`;
-        const isExpanded = Boolean(expandedHabits[habit.id]);
-        const isJustCompleted = justCompletedHabitId === habit.id;
+  const renderCompactList = () => {
+    const completedHabits = sortedHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
+    const activeHabits = sortedHabits.filter((habit) => !completions[habit.id]?.completed);
+    const visibleHabits = showCompletedHabits
+      ? [...activeHabits, ...completedHabits]
+      : activeHabits;
 
-        return (
-          <li
-            key={habit.id}
-            className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
-              isCompleted ? 'habit-checklist__item--completed' : ''
-            } ${isJustCompleted ? 'habit-item--just-completed' : ''}`}
-          >
-            <div
-              className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
-              role="button"
-              tabIndex={0}
-              aria-expanded={isExpanded}
-              aria-controls={detailPanelId}
-              onClick={() => toggleExpanded(habit.id)}
-              onKeyDown={(event) => {
-                if (event.currentTarget !== event.target) {
-                  return;
-                }
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  toggleExpanded(habit.id);
-                }
-              }}
-            >
-              <input
-                id={checkboxId}
-                type="checkbox"
-                className="habit-checklist__checkbox"
-                checked={isCompleted}
-                aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
-                onClick={(event) => event.stopPropagation()}
-                onChange={(event) => {
-                  event.stopPropagation();
-                  void toggleHabit(habit, event.currentTarget);
-                }}
-                disabled={isSaving || (!scheduledToday && !isCompleted)}
-              />
-              <span className="habit-checklist__name">
-                {habit.name}
-              </span>
-            </div>
-            <div
-              className={`habit-checklist__details-panel ${
-                isExpanded ? 'habit-checklist__details-panel--open' : ''
-              }`}
-              id={detailPanelId}
-            >
-              <p className="habit-checklist__meta">
-                Life wheel • {domainLabel ?? 'Unassigned'}
-              </p>
-              <p className="habit-checklist__meta habit-checklist__meta--secondary">
-                Goal • {goalLabel}
-              </p>
-              {lastCompletedText ? (
-                <p className="habit-checklist__note">{lastCompletedText}</p>
-              ) : null}
-              <div className="habit-checklist__detail-actions">
-                {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
-                {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
-                <button
-                  type="button"
-                  className="habit-checklist__alert-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAlertConfigHabit({ id: habit.id, name: habit.name });
+    return (
+      <div className="habit-checklist__group">
+        {visibleHabits.length === 0 && completedHabits.length > 0 ? (
+          <p className="habit-checklist__empty">All habits checked off for today.</p>
+        ) : null}
+        <ul className="habit-checklist" role="list">
+          {visibleHabits.map((habit) => {
+            const state = completions[habit.id];
+            const isCompleted = Boolean(state?.completed);
+            const isSaving = Boolean(saving[habit.id]);
+            const insight = habitInsights[habit.id];
+            const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
+            const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? activeDate : null);
+            const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
+            const domainMeta = extractLifeWheelDomain(habit.schedule);
+            const domainLabel = domainMeta ? formatLifeWheelDomainLabel(domainMeta) : null;
+            const goalLabel = habit.goal?.title ?? 'Unassigned goal';
+            const checkboxId = `habit-checkbox-${habit.id}`;
+            const detailPanelId = `habit-details-${habit.id}`;
+            const isExpanded = Boolean(expandedHabits[habit.id]);
+            const isJustCompleted = justCompletedHabitId === habit.id;
+
+            return (
+              <li
+                key={habit.id}
+                className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
+                  isCompleted ? 'habit-checklist__item--completed' : ''
+                } ${isJustCompleted ? 'habit-item--just-completed' : ''}`}
+              >
+                <div
+                  className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  aria-controls={detailPanelId}
+                  onClick={() => toggleExpanded(habit.id)}
+                  onKeyDown={(event) => {
+                    if (event.currentTarget !== event.target) {
+                      return;
+                    }
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      toggleExpanded(habit.id);
+                    }
                   }}
                 >
-                  🔔 Alerts
-                </button>
-              </div>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
-  );
+                  <input
+                    id={checkboxId}
+                    type="checkbox"
+                    className="habit-checklist__checkbox"
+                    checked={isCompleted}
+                    aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => {
+                      event.stopPropagation();
+                      void toggleHabit(habit, event.currentTarget);
+                    }}
+                    disabled={isSaving || (!scheduledToday && !isCompleted)}
+                  />
+                  <span className="habit-checklist__name">
+                    {habit.name}
+                  </span>
+                </div>
+                <div
+                  className={`habit-checklist__details-panel ${
+                    isExpanded ? 'habit-checklist__details-panel--open' : ''
+                  }`}
+                  id={detailPanelId}
+                >
+                  <p className="habit-checklist__meta">
+                    Life wheel • {domainLabel ?? 'Unassigned'}
+                  </p>
+                  <p className="habit-checklist__meta habit-checklist__meta--secondary">
+                    Goal • {goalLabel}
+                  </p>
+                  {lastCompletedText ? (
+                    <p className="habit-checklist__note">{lastCompletedText}</p>
+                  ) : null}
+                  <div className="habit-checklist__detail-actions">
+                    {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
+                    {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+                    <button
+                      type="button"
+                      className="habit-checklist__alert-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAlertConfigHabit({ id: habit.id, name: habit.name });
+                      }}
+                    >
+                      🔔 Alerts
+                    </button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        {completedHabits.length > 0 ? (
+          <button
+            type="button"
+            className="habit-checklist__toggle"
+            onClick={() => setShowCompletedHabits((prev) => !prev)}
+            aria-expanded={showCompletedHabits}
+          >
+            <span className="habit-checklist__toggle-text">
+              {showCompletedHabits
+                ? 'Hide completed habits'
+                : `Show completed habits (${completedHabits.length})`}
+            </span>
+            <span
+              className={`habit-checklist__toggle-icon ${
+                showCompletedHabits ? 'habit-checklist__toggle-icon--open' : ''
+              }`}
+              aria-hidden="true"
+            />
+          </button>
+        ) : null}
+      </div>
+    );
+  };
 
   const renderCompactExperience = () => {
     const dateLabel = formatCompactDateLabel(activeDate);
@@ -1868,15 +1904,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               <div className="habit-checklist-card__date-group">
                 <p className="habit-checklist-card__date">
                   <span className="habit-checklist-card__date-text">{dateLabel}</span>
-                  {isViewingToday && circadianEmoji && clockEmoji ? (
-                    <span className="habit-checklist-card__date-icons" aria-hidden="true">
-                      <span className="habit-checklist-card__date-icon">{circadianEmoji}</span>
-                      <span className="habit-checklist-card__date-icon">{clockEmoji}</span>
-                    </span>
-                  ) : null}
-                  {isViewingToday && circadianLabel && timeLabel ? (
-                    <span className="sr-only">{`${circadianLabel} · ${timeLabel}`}</span>
-                  ) : null}
                 </p>
               </div>
               <button
@@ -1968,7 +1995,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   <p className="habit-quick-journal__eyebrow">Reflect for this day</p>
                   <h3 className="habit-quick-journal__title">Quick journal</h3>
                 </div>
-                <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+                <div className="habit-quick-journal__meta">
+                  <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+                  {isViewingToday && circadianEmoji ? (
+                    <span className="habit-quick-journal__icon" aria-hidden="true">
+                      {circadianEmoji}
+                    </span>
+                  ) : null}
+                  {isViewingToday && circadianLabel ? (
+                    <span className="sr-only">{circadianLabel}</span>
+                  ) : null}
+                </div>
               </div>
               <p className="habit-quick-journal__hint">
                 Capture a few thoughts tied to the same date you are tracking above.
@@ -2083,7 +2120,17 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       <p className="habit-quick-journal__eyebrow">Plan for this day</p>
                       <h3 className="habit-quick-journal__title">Intentions & Todos</h3>
                     </div>
-                    <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+                    <div className="habit-quick-journal__meta">
+                      <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+                      {isViewingToday && clockEmoji ? (
+                        <span className="habit-quick-journal__icon" aria-hidden="true">
+                          {clockEmoji}
+                        </span>
+                      ) : null}
+                      {isViewingToday && timeLabel ? (
+                        <span className="sr-only">{timeLabel}</span>
+                      ) : null}
+                    </div>
                   </div>
                   <p className="habit-quick-journal__hint">
                     Set your intentions and list your key todos for the day ahead.
