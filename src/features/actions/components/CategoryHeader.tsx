@@ -8,6 +8,7 @@ export interface CategoryHeaderProps {
 
 export function CategoryHeader({ category, count }: CategoryHeaderProps) {
   const config = ACTION_CATEGORY_CONFIG[category];
+  const showInfinity = category === 'must_do';
   
   return (
     <header className="actions-tab__category-header">
@@ -26,6 +27,11 @@ export function CategoryHeader({ category, count }: CategoryHeaderProps) {
           ({count})
         </span>
       </h3>
+      {showInfinity && (
+        <span className="actions-tab__category-infinite" aria-label="No due date">
+          ∞
+        </span>
+      )}
     </header>
   );
 }

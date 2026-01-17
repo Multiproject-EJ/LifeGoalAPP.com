@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import type { Action } from '../../../types/actions';
 import { calculateTimeRemaining } from '../../../types/actions';
 import './ActionFilters.css';
@@ -19,6 +20,7 @@ export interface ActionFiltersProps {
 }
 
 export function ActionFilters({ actions, activeFilter, onFilterChange }: ActionFiltersProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const now = new Date();
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
@@ -56,31 +58,62 @@ export function ActionFilters({ actions, activeFilter, onFilterChange }: ActionF
     { key: 'this_week', label: 'This Week' },
   ];
 
-  return (
-    <div className="action-filters" role="tablist" aria-label="Action filters">
-      {filters.map((filter) => {
-        const isActive = activeFilter === filter.key;
-        const count = counts[filter.key];
+  const activeFilterMeta = useMemo(
+    () => filters.find((filter) => filter.key === activeFilter) ?? filters[0],
+    [filters, activeFilter]
+  );
 
-        return (
-          <button
-            key={filter.key}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            className={`action-filters__button ${
-              isActive ? 'action-filters__button--active' : ''
-            }`}
-            onClick={() => onFilterChange(filter.key)}
-          >
-            <span className="action-filters__label">
-              {filter.icon && <span aria-hidden="true">{filter.icon} </span>}
-              {filter.label}
-            </span>
-            <span className="action-filters__badge">{count}</span>
-          </button>
-        );
-      })}
+  return (
+    <div className={`action-filters ${isOpen ? 'action-filters--open' : ''}`}>
+      <button
+        type="button"
+        className="action-filters__toggle"
+        aria-expanded={isOpen}
+        aria-controls="action-filters-panel"
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        <span className="action-filters__toggle-icon" aria-hidden="true">🎛️</span>
+        <span className="action-filters__toggle-label">
+          {activeFilterMeta.icon && <span aria-hidden="true">{activeFilterMeta.icon} </span>}
+          {activeFilterMeta.label}
+        </span>
+        <span className="action-filters__toggle-badge">{counts[activeFilter]}</span>
+      </button>
+
+      <div
+        id="action-filters-panel"
+        className="action-filters__panel"
+        role="tablist"
+        aria-label="Action filters"
+        hidden={!isOpen}
+      >
+        {filters.map((filter) => {
+          const isActive = activeFilter === filter.key;
+          const count = counts[filter.key];
+
+          return (
+            <button
+              key={filter.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              className={`action-filters__button ${
+                isActive ? 'action-filters__button--active' : ''
+              }`}
+              onClick={() => {
+                onFilterChange(filter.key);
+                setIsOpen(false);
+              }}
+            >
+              <span className="action-filters__label">
+                {filter.icon && <span aria-hidden="true">{filter.icon} </span>}
+                {filter.label}
+              </span>
+              <span className="action-filters__badge">{count}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
