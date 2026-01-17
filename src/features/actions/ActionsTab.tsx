@@ -310,6 +310,12 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
     }
   }, [status, lastDeletedAction]);
 
+  useEffect(() => {
+    if (!lastDeletedAction) return;
+    const timer = setTimeout(() => setLastDeletedAction(null), 6000);
+    return () => clearTimeout(timer);
+  }, [lastDeletedAction]);
+
   if (loading) {
     return (
       <div className="actions-tab actions-tab--loading">
@@ -363,15 +369,6 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
           aria-live="polite"
         >
           <span className="actions-tab__status-message">{status.message}</span>
-          {lastDeletedAction && status.kind === 'success' && (
-            <button
-              type="button"
-              className="actions-tab__undo-button"
-              onClick={handleUndoDelete}
-            >
-              Undo
-            </button>
-          )}
         </div>
       )}
 
@@ -446,6 +443,19 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
             }
           }}
         />
+      )}
+
+      {lastDeletedAction && (
+        <div className="actions-tab__undo-toast" role="status" aria-live="polite">
+          <span className="actions-tab__undo-message">Action deleted</span>
+          <button
+            type="button"
+            className="actions-tab__undo-button"
+            onClick={handleUndoDelete}
+          >
+            Undo
+          </button>
+        </div>
       )}
     </div>
   );
