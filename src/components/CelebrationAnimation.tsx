@@ -60,8 +60,8 @@ const getTiming = (type: CelebrationAnimationProps['type']) =>
 
 const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
   habit: {
-    icons: ['✅'],
-    count: 5,  // compact burst for snappy habit feedback
+    icons: ['⚡'],
+    count: 9,  // slightly larger swarm for snappy habit feedback
     target: 'game-icon',
   },
   journal: {
