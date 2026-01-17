@@ -48,6 +48,16 @@ export function MobileFooterNav({
   return (
     <nav className="mobile-footer-nav" aria-label="Primary navigation">
       <div className="mobile-footer-nav__surface">
+        {onOpenMenu ? (
+          <div className="mobile-footer-nav__menu-row">
+            <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
+              <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
+                •
+              </span>
+              <span className="sr-only">Open full navigation</span>
+            </button>
+          </div>
+        ) : null}
         <ul className="mobile-footer-nav__list" style={listStyle}>
           {listItems.map((item) => {
             if ('type' in item && item.type === 'status' && status) {
@@ -105,17 +115,6 @@ export function MobileFooterNav({
             );
           })}
         </ul>
-
-        {onOpenMenu ? (
-          <div className="mobile-footer-nav__menu">
-            <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
-              <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
-                ☰
-              </span>
-              <span className="sr-only">Open full navigation</span>
-            </button>
-          </div>
-        ) : null}
       </div>
     </nav>
   );

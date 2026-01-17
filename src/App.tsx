@@ -95,6 +95,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'ACTIONS',
   },
   {
+    id: 'score',
+    label: 'Score',
+    summary: 'Review your current score and recent highlights.',
+    icon: '🏅',
+    shortLabel: 'SCORE',
+  },
+  {
     id: 'projects',
     label: 'Projects',
     summary: 'Manage multi-step initiatives and track progress.',
@@ -155,6 +162,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
 const MOBILE_FOOTER_WORKSPACE_IDS = [
   'planning',
   'actions',
+  'score',
   'goals',
   'habits',
   'support',
@@ -296,7 +304,7 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'actions'];
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'score', 'actions'];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
@@ -1164,6 +1172,17 @@ export default function App() {
         return (
           <div className="workspace-content">
             <ActionsTab session={activeSession} onNavigateToProjects={() => setActiveWorkspaceNav('projects')} />
+          </div>
+        );
+      case 'score':
+        return (
+          <div className="workspace-content">
+            <section className="workspace-stage__placeholder">
+              <div className="workspace-stage__placeholder-content">
+                <h2>Score</h2>
+                <p>Score details are coming soon.</p>
+              </div>
+            </section>
           </div>
         );
       case 'projects':
