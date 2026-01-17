@@ -31,7 +31,7 @@ export function ActionTimer({ action }: ActionTimerProps) {
   }, [action.expires_at, action.category]);
 
   if (action.category === 'must_do') {
-    return <span className="action-timer action-timer--no-limit">∞</span>;
+    return null;
   }
 
   const { days, hours, minutes, isExpired, isExpiringSoon } = timeRemaining;
@@ -49,7 +49,7 @@ export function ActionTimer({ action }: ActionTimerProps) {
     displayText = `${minutes}m`;
   }
 
-  const className = `action-timer ${isExpiringSoon ? 'action-timer--warning' : ''}`;
+  const className = `action-timer ${isExpiringSoon ? 'action-timer--urgent' : ''}`;
 
   return <span className={className}>{displayText}</span>;
 }

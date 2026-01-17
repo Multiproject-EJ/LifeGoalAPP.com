@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { Action } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG, calculateTimeRemaining } from '../../../types/actions';
 import { ActionTimer } from './ActionTimer';
@@ -14,11 +15,18 @@ export interface ActionItemProps {
 export function ActionItem({ action, onComplete, onDelete, onOpenDetail, isSelected = false, isJustCompleted = false }: ActionItemProps) {
   const timeRemaining = calculateTimeRemaining(action.expires_at);
   const config = ACTION_CATEGORY_CONFIG[action.category];
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchDeltaRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const swipeHandledRef = useRef(false);
   
   // MUST DO items don't expire
   const showTimer = action.category !== 'must_do';
 
   const handleContentClick = () => {
+    if (swipeHandledRef.current) {
+      swipeHandledRef.current = false;
+      return;
+    }
     if (onOpenDetail) {
       onOpenDetail();
     }
@@ -31,10 +39,43 @@ export function ActionItem({ action, onComplete, onDelete, onOpenDetail, isSelec
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    touchDeltaRef.current = { x: 0, y: 0 };
+    swipeHandledRef.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.touches[0];
+    touchDeltaRef.current = {
+      x: touch.clientX - touchStartRef.current.x,
+      y: touch.clientY - touchStartRef.current.y,
+    };
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartRef.current) return;
+    const { x, y } = touchDeltaRef.current;
+    const isHorizontalSwipe = Math.abs(x) > 70 && Math.abs(y) < 40;
+
+    if (isHorizontalSwipe && x < 0) {
+      swipeHandledRef.current = true;
+      onDelete();
+    }
+
+    touchStartRef.current = null;
+    touchDeltaRef.current = { x: 0, y: 0 };
+  };
+
   return (
     <li 
       className={`action-item ${timeRemaining.isExpiringSoon && showTimer ? 'action-item--expiring-soon' : ''} ${isSelected ? 'action-item--selected' : ''} ${isJustCompleted ? 'action-item--just-completed' : ''}`}
       style={{ '--category-color': config.color } as React.CSSProperties}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <button
         type="button"

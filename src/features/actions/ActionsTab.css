@@ -362,6 +362,15 @@
   margin-left: 0.25rem;
 }
 
+.actions-tab__category-infinite {
+  font-size: 1rem;
+  color: var(--must-do-color, #ef4444);
+  background: var(--must-do-bg, #fef2f2);
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  font-weight: 600;
+}
+
 .actions-tab__empty-category {
   font-size: 0.875rem;
   color: var(--text-tertiary, #999);

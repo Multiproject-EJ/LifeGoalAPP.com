@@ -44,6 +44,11 @@ export function useKeyboardShortcuts(
         continue;
       }
 
+      // Avoid interfering with typing/backspace in inputs unless modifier keys are used
+      if (isInputFocused && !shortcut.ctrl && !shortcut.meta && !shortcut.alt) {
+        continue;
+      }
+
       if (keyMatch && ctrlMatch && shiftMatch && altMatch) {
         if (shortcut.preventDefault !== false) {
           event.preventDefault();

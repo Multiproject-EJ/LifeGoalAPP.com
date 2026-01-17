@@ -8,15 +8,11 @@
   white-space: nowrap;
 }
 
-.action-timer--no-limit {
-  background: var(--must-do-bg, #fef2f2);
-  color: var(--must-do-color, #ef4444);
-}
-
-.action-timer--warning {
-  background: var(--warning-bg, #fef3c7);
-  color: var(--warning-color, #d97706);
-  animation: pulse-warning 2s infinite;
+.action-timer--urgent {
+  background: var(--error-bg, #fee2e2);
+  color: var(--error-color, #dc2626);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--error-color, #dc2626) 20%, transparent);
+  animation: pulse-urgent 1.6s ease-in-out infinite;
 }
 
 .action-timer--expired {
@@ -24,7 +20,7 @@
   color: var(--error-color, #dc2626);
 }
 
-@keyframes pulse-warning {
+@keyframes pulse-urgent {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.75; }
 }
