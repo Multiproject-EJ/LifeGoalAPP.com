@@ -50,6 +50,8 @@ export function MyAccountPanel({
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
+  const [cacheClearing, setCacheClearing] = useState(false);
+  const [cacheStatus, setCacheStatus] = useState<string | null>(null);
   
   const user = session.user;
   const displayName =
@@ -106,6 +108,42 @@ export function MyAccountPanel({
       console.error('Failed to update initials preference:', error);
     } finally {
       setSavingPreference(false);
+    }
+  };
+
+  const handleClearAppCache = async () => {
+    if (typeof window === 'undefined') return;
+
+    setCacheClearing(true);
+    setCacheStatus(null);
+
+    try {
+      let clearedCaches = 0;
+      let clearedRegistrations = 0;
+
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        clearedCaches = cacheKeys.length;
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+      }
+
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        clearedRegistrations = registrations.length;
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      }
+
+      setCacheStatus(
+        `Cleared ${clearedCaches} cache${clearedCaches === 1 ? '' : 's'} and ${clearedRegistrations} service worker${
+          clearedRegistrations === 1 ? '' : 's'
+        }. Reloading…`,
+      );
+      window.setTimeout(() => window.location.reload(), 750);
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      setCacheStatus('Unable to clear the PWA cache. Check the console for details.');
+    } finally {
+      setCacheClearing(false);
     }
   };
 
@@ -246,7 +284,7 @@ export function MyAccountPanel({
           title="Developer & Analytics Tools"
           description="Advanced settings for workspace data, analytics, debugging, and testing"
           icon="🔧"
-          itemCount={5}
+          itemCount={6}
           onClick={() => setFolder1Open(true)}
         />
       </section>
@@ -288,6 +326,25 @@ export function MyAccountPanel({
               <dd className="account-panel__code">{user.id}</dd>
             </div>
           </dl>
+        </section>
+
+        <section className="account-panel__card" aria-labelledby="account-cache">
+          <p className="account-panel__eyebrow">PWA Tools</p>
+          <h3 id="account-cache">Clear app cache</h3>
+          <p className="account-panel__hint">
+            Remove cached assets and unregister the service worker so you can verify a fresh build.
+          </p>
+          <div className="account-panel__actions-row">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={handleClearAppCache}
+              disabled={cacheClearing}
+            >
+              {cacheClearing ? 'Clearing…' : 'Clear cache & refresh'}
+            </button>
+            {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
+          </div>
         </section>
 
         <ReminderAnalyticsDashboard session={session} />
