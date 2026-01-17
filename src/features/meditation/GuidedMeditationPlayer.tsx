@@ -27,11 +27,37 @@ export function GuidedMeditationPlayer({
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [meditation, setMeditation] = useState(getMeditationById(meditationId));
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
 
   const timerRef = useRef<number | null>(null);
   const chunkTimerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
+  const silenceRef = useRef(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const stopSpeech = useCallback(() => {
+    if (!isVoiceSupported) return;
+    window.speechSynthesis.cancel();
+    utteranceRef.current = null;
+  }, [isVoiceSupported]);
+
+  const speakChunk = useCallback(
+    (text: string) => {
+      if (!isVoiceSupported || !isVoiceEnabled) return;
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
+      stopSpeech();
+      const utterance = new SpeechSynthesisUtterance(trimmed);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    },
+    [isVoiceSupported, isVoiceEnabled, stopSpeech]
+  );
 
   // Calculate pacing
   const totalDurationMs = durationMinutes * 60 * 1000;
@@ -54,9 +80,18 @@ export function GuidedMeditationPlayer({
     handleRestart();
   }, [meditationId, durationMinutes, revealMode]);
 
+  useEffect(() => {
+    setIsVoiceSupported(
+      typeof window !== 'undefined' &&
+        'speechSynthesis' in window &&
+        'SpeechSynthesisUtterance' in window
+    );
+  }, []);
+
   // Reset when modal closes
   useEffect(() => {
     if (!isOpen) {
+      stopSpeech();
       handleRestart();
     }
   }, [isOpen]);
@@ -66,6 +101,7 @@ export function GuidedMeditationPlayer({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (chunkTimerRef.current) clearTimeout(chunkTimerRef.current);
+      stopSpeech();
     };
   }, []);
 
@@ -82,6 +118,11 @@ export function GuidedMeditationPlayer({
           setIsRunning(false);
           if (timerRef.current) clearInterval(timerRef.current);
           if (chunkTimerRef.current) clearTimeout(chunkTimerRef.current);
+        }
+
+        if (!silenceRef.current && elapsed >= contentDurationMs) {
+          silenceRef.current = true;
+          stopSpeech();
         }
       }, 100);
 
@@ -130,7 +171,7 @@ export function GuidedMeditationPlayer({
 
   const handleStart = () => {
     if (chunks.length === 0) return;
-    
+
     setIsRunning(true);
     setIsPaused(false);
     startTimeRef.current = Date.now() - pausedTimeRef.current;
@@ -140,6 +181,8 @@ export function GuidedMeditationPlayer({
     setIsPaused(true);
     setIsRunning(false);
     pausedTimeRef.current = timeElapsed;
+
+    stopSpeech();
     
     if (timerRef.current) clearInterval(timerRef.current);
     if (chunkTimerRef.current) clearTimeout(chunkTimerRef.current);
@@ -159,6 +202,9 @@ export function GuidedMeditationPlayer({
     setTimeElapsed(0);
     startTimeRef.current = 0;
     pausedTimeRef.current = 0;
+    silenceRef.current = false;
+
+    stopSpeech();
 
     if (timerRef.current) clearInterval(timerRef.current);
     if (chunkTimerRef.current) clearTimeout(chunkTimerRef.current);
@@ -170,8 +216,40 @@ export function GuidedMeditationPlayer({
   };
 
   const handleCompleteSession = () => {
+    stopSpeech();
     onComplete();
     handleClose();
+  };
+
+  useEffect(() => {
+    if (!isRunning || isPaused || isComplete || !isVoiceEnabled || !isVoiceSupported) {
+      return;
+    }
+
+    const text = chunks[currentChunkIndex] || '';
+    speakChunk(text);
+  }, [
+    chunks,
+    currentChunkIndex,
+    isComplete,
+    isPaused,
+    isRunning,
+    isVoiceEnabled,
+    isVoiceSupported,
+    speakChunk,
+  ]);
+
+  const handleToggleVoice = () => {
+    if (!isVoiceSupported) return;
+    setIsVoiceEnabled((prev) => {
+      const next = !prev;
+      if (!next) {
+        stopSpeech();
+      } else if (isRunning && !isPaused && !isComplete) {
+        speakChunk(chunks[currentChunkIndex] || '');
+      }
+      return next;
+    });
   };
 
   if (!isOpen || !meditation) return null;
@@ -238,6 +316,19 @@ export function GuidedMeditationPlayer({
           {/* Controls */}
           {!meditation.isPlaceholder && (
             <div className="guided-meditation-controls">
+              {isVoiceSupported ? (
+                <button
+                  className={`btn btn--secondary guided-meditation-controls__button guided-meditation-controls__button--voice${isVoiceEnabled ? ' is-active' : ''}`}
+                  onClick={handleToggleVoice}
+                  aria-pressed={isVoiceEnabled}
+                >
+                  Voice {isVoiceEnabled ? 'On' : 'Off'}
+                </button>
+              ) : (
+                <span className="guided-meditation-voice__unsupported">
+                  Voice not supported on this device.
+                </span>
+              )}
               {!isRunning && !isPaused && !isComplete && (
                 <button
                   className="btn btn--primary guided-meditation-controls__button"
