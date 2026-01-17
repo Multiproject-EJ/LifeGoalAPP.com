@@ -14,9 +14,10 @@ import './ProjectsManager.css';
 
 interface ProjectsManagerProps {
   session: Session | null;
+  onNavigateToActions?: () => void;
 }
 
-export function ProjectsManager({ session }: ProjectsManagerProps) {
+export function ProjectsManager({ session, onNavigateToActions }: ProjectsManagerProps) {
   const { projects, loading, error, createProject, updateProject, deleteProject, completeProject, refresh } = useProjects(session);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -138,12 +139,25 @@ export function ProjectsManager({ session }: ProjectsManagerProps) {
             Manage your multi-step initiatives and track progress
           </p>
         </div>
-        <button
-          onClick={handleNewProject}
-          className="projects-manager__new-button"
-        >
-          + New Project
-        </button>
+        <div className="projects-manager__header-actions">
+          {onNavigateToActions && (
+            <button
+              className="projects-manager__actions-icon"
+              onClick={onNavigateToActions}
+              type="button"
+              aria-label="Go to Actions"
+              title="Go to Actions"
+            >
+              ⚡
+            </button>
+          )}
+          <button
+            onClick={handleNewProject}
+            className="projects-manager__new-button"
+          >
+            + New Project
+          </button>
+        </div>
       </header>
 
       <div className="projects-manager__view-switcher">

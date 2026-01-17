@@ -1169,7 +1169,10 @@ export default function App() {
       case 'projects':
         return (
           <div className="workspace-content">
-            <ProjectsManager session={activeSession} />
+            <ProjectsManager
+              session={activeSession}
+              onNavigateToActions={() => setActiveWorkspaceNav('actions')}
+            />
           </div>
         );
       case 'rituals':
