@@ -5,10 +5,9 @@ import type { Session } from '@supabase/supabase-js';
 import confetti from 'canvas-confetti';
 import { 
   checkSpinAvailable, 
-  executeDailySpin,
-  getTodaysSpin 
+  executeDailySpin
 } from '../../services/dailySpins';
-import type { SpinWheelPrize, DailySpinRecord } from './types';
+import type { SpinWheelPrize } from './types';
 import { DAILY_SPIN_PRIZES } from './types';
 import { useGamification } from '../../hooks/useGamification';
 import './NewDailySpinWheel.css';
@@ -23,10 +22,10 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(false);
-  const [todaysSpin, setTodaysSpin] = useState<DailySpinRecord | null>(null);
   const [wonPrize, setWonPrize] = useState<SpinWheelPrize | null>(null);
   const [rotation, setRotation] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showReward, setShowReward] = useState(false);
 
   useEffect(() => {
     loadSpinStatus();
@@ -45,8 +44,6 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
       if (availability) {
         setCanSpin(availability.available);
-        setTodaysSpin(availability.todaysSpin);
-
         // If user already spun, get prize details
         if (availability.todaysSpin) {
           const prize = DAILY_SPIN_PRIZES.find(
@@ -93,15 +90,13 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         setWonPrize(prize);
         setCanSpin(false);
         setSpinning(false);
+        setShowReward(true);
 
-        // Trigger confetti for big wins
-        if (prize.type === 'CASH' || prize.type === 'FEATURE_UNLOCK') {
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-          });
-        }
+        confetti({
+          particleCount: prize.type === 'CASH' || prize.type === 'FEATURE_UNLOCK' ? 140 : 80,
+          spread: prize.type === 'CASH' || prize.type === 'FEATURE_UNLOCK' ? 80 : 60,
+          origin: { y: 0.6 },
+        });
 
         // Refresh gamification profile
         refreshProfile();
@@ -128,6 +123,27 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       </div>
     );
   }
+
+  const segmentAngle = 360 / DAILY_SPIN_PRIZES.length;
+  const wheelBackground = `conic-gradient(${DAILY_SPIN_PRIZES.map((prize, index) => {
+    const start = segmentAngle * index;
+    const end = start + segmentAngle;
+    return `${prize.color} ${start}deg ${end}deg`;
+  }).join(', ')})`;
+
+  const rewardSubtitle = wonPrize
+    ? wonPrize.type === 'XP'
+      ? 'XP added to your profile!'
+      : wonPrize.type === 'CASH'
+      ? 'Virtual currency credited!'
+      : wonPrize.type === 'GAME_LIVES'
+      ? 'Lives added to your account!'
+      : wonPrize.type === 'FEATURE_UNLOCK'
+      ? 'Feature unlocked!'
+      : wonPrize.type === 'TASK_BONUS'
+      ? 'Special task bonus activated!'
+      : 'Better luck tomorrow!'
+    : '';
 
   return (
     <div className="new-daily-spin-modal" onClick={onClose}>
@@ -163,23 +179,21 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             }`}
             style={{
               transform: `rotate(${rotation}deg)`,
+              background: wheelBackground,
             }}
           >
             {DAILY_SPIN_PRIZES.map((prize, index) => {
-              const angle = (360 / DAILY_SPIN_PRIZES.length) * index;
+              const angle = segmentAngle * index + segmentAngle / 2;
               return (
                 <div
                   key={prize.id}
-                  className="new-daily-spin-wheel__segment"
-                  style={{
-                    transform: `rotate(${angle}deg)`,
-                    '--segment-color': prize.color,
-                  } as React.CSSProperties}
+                  className="new-daily-spin-wheel__label"
+                  style={{ '--label-angle': `${angle}deg` } as React.CSSProperties}
                 >
-                  <div className="new-daily-spin-wheel__segment-content">
-                    <span className="new-daily-spin-wheel__segment-icon">{prize.icon}</span>
-                    <span className="new-daily-spin-wheel__segment-label">
-                      {prize.type === 'CASH' 
+                  <div className="new-daily-spin-wheel__label-content">
+                    <span className="new-daily-spin-wheel__label-icon">{prize.icon}</span>
+                    <span className="new-daily-spin-wheel__label-text">
+                      {prize.type === 'CASH'
                         ? `${(prize.value / 1000000).toFixed(1)}M`
                         : prize.type === 'XP'
                         ? `${prize.value} XP`
@@ -189,6 +203,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
                 </div>
               );
             })}
+            <div className="new-daily-spin-wheel__hub" aria-hidden="true" />
           </div>
         </div>
 
@@ -210,11 +225,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               <p className="new-daily-spin-modal__result-prize">{wonPrize.name}</p>
               {wonPrize.type !== 'EMPTY' && (
                 <p className="new-daily-spin-modal__result-subtitle">
-                  {wonPrize.type === 'XP' && 'XP added to your profile!'}
-                  {wonPrize.type === 'CASH' && 'Virtual currency credited!'}
-                  {wonPrize.type === 'GAME_LIVES' && 'Lives added to your account!'}
-                  {wonPrize.type === 'FEATURE_UNLOCK' && 'Feature unlocked!'}
-                  {wonPrize.type === 'TASK_BONUS' && 'Special task bonus activated!'}
+                  {rewardSubtitle}
                 </p>
               )}
             </div>
@@ -227,6 +238,35 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             </div>
           )}
         </div>
+
+        {showReward && wonPrize && (
+          <div
+            className="new-daily-spin-modal__reward-overlay"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setShowReward(false)}
+          >
+            <div
+              className="new-daily-spin-modal__reward-card"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="new-daily-spin-modal__reward-burst">🎉</div>
+              <h3 className="new-daily-spin-modal__reward-title">Lilly Reward!</h3>
+              <div className="new-daily-spin-modal__reward-icon">{wonPrize.icon}</div>
+              <p className="new-daily-spin-modal__reward-name">{wonPrize.name}</p>
+              {wonPrize.type !== 'EMPTY' && (
+                <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
+              )}
+              <button
+                type="button"
+                className="new-daily-spin-modal__reward-close"
+                onClick={() => setShowReward(false)}
+              >
+                Awesome!
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Prize Legend */}
         <div className="new-daily-spin-modal__legend">
