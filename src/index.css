@@ -10799,6 +10799,7 @@ body {
   font-size: 0.7rem;
   font-weight: 700;
   color: #1e293b;
+  white-space: nowrap;
 }
 
 .mobile-footer-nav__status-label {
