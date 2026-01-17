@@ -52,6 +52,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [celebrationType, setCelebrationType] = useState<'action' | 'journal' | 'breathing' | 'levelup'>('action');
   const [justCompletedActionId, setJustCompletedActionId] = useState<string | null>(null);
+  const [lastDeletedAction, setLastDeletedAction] = useState<Action | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Watch for level-up events
@@ -183,13 +184,32 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
 
   // Handle delete action
   const handleDeleteAction = useCallback(async (actionId: string) => {
+    const deletedAction = actions.find((action) => action.id === actionId) ?? null;
     try {
       await deleteAction(actionId);
+      setLastDeletedAction(deletedAction);
       setStatus({ kind: 'success', message: 'Action deleted' });
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to delete action' });
     }
-  }, [deleteAction]);
+  }, [actions, deleteAction]);
+
+  const handleUndoDelete = useCallback(async () => {
+    if (!lastDeletedAction) return;
+
+    try {
+      await createAction({
+        title: lastDeletedAction.title,
+        category: lastDeletedAction.category,
+        notes: lastDeletedAction.notes ?? undefined,
+        project_id: lastDeletedAction.project_id ?? undefined,
+      });
+      setLastDeletedAction(null);
+      setStatus({ kind: 'success', message: 'Action restored' });
+    } catch (err) {
+      setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to restore action' });
+    }
+  }, [createAction, lastDeletedAction]);
 
   // Handle update action
   const handleUpdateAction = useCallback(async (actionId: string, updates: UpdateActionInput) => {
@@ -284,6 +304,12 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
     }
   }, [status]);
 
+  useEffect(() => {
+    if (!lastDeletedAction) return;
+    const timer = setTimeout(() => setLastDeletedAction(null), 6000);
+    return () => clearTimeout(timer);
+  }, [lastDeletedAction]);
+
   if (loading) {
     return (
       <div className="actions-tab actions-tab--loading">
@@ -336,7 +362,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
           role="status"
           aria-live="polite"
         >
-          {status.message}
+          <span className="actions-tab__status-message">{status.message}</span>
         </div>
       )}
 
@@ -411,6 +437,19 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
             }
           }}
         />
+      )}
+
+      {lastDeletedAction && (
+        <div className="actions-tab__undo-toast" role="status" aria-live="polite">
+          <span className="actions-tab__undo-message">Action deleted</span>
+          <button
+            type="button"
+            className="actions-tab__undo-button"
+            onClick={handleUndoDelete}
+          >
+            Undo
+          </button>
+        </div>
       )}
     </div>
   );

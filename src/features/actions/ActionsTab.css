@@ -91,6 +91,10 @@
   margin-bottom: 1rem;
   font-size: 0.875rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .actions-tab__status--success {
@@ -101,6 +105,53 @@
 .actions-tab__status--error {
   background: var(--error-bg, #fee2e2);
   color: var(--error-text, #991b1b);
+}
+
+.actions-tab__status-message {
+  flex: 1;
+}
+
+.actions-tab__undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 2rem));
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: var(--surface-primary, #fff);
+  color: var(--text-primary, #1a1a1a);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+  z-index: 200;
+}
+
+.actions-tab__undo-message {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.actions-tab__undo-button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.actions-tab__undo-button:hover {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.actions-tab__undo-button:active {
+  transform: scale(0.97);
 }
 
 /* Quick add section */
