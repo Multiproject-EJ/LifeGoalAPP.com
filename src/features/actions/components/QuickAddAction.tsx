@@ -14,8 +14,8 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
   const [category, setCategory] = useState<ActionCategory>('nice_to_do');
   const [projectId, setProjectId] = useState<string>('');
   const [adding, setAdding] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
-  const [showProjectSelector, setShowProjectSelector] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const activeProjects = projects.filter(
     (p) => p.status === 'planning' || p.status === 'active'
@@ -24,11 +24,6 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
   const handleSubmit = async () => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle || adding) return;
-
-    // Validate project selection if project selector is shown
-    if (showProjectSelector && !projectId) {
-      return; // Don't submit if project selector is open but no project selected
-    }
 
     setAdding(true);
     try {
@@ -41,8 +36,8 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
       setTitle('');
       setNotes('');
       setProjectId('');
-      setShowNotes(false);
-      setShowProjectSelector(false);
+      setShowCategoryModal(false);
+      setShowDetailsModal(false);
     } catch (err) {
       // Error handling is done by parent component
     } finally {
@@ -52,7 +47,9 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !adding) {
-      handleSubmit();
+      if (title.trim()) {
+        setShowCategoryModal(true);
+      }
     }
   };
 
@@ -72,121 +69,165 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
         <button
           type="button"
           className="actions-tab__quick-add-button"
-          onClick={handleSubmit}
-          disabled={adding || disabled || !title.trim() || (showProjectSelector && !projectId)}
-          aria-label="Add action"
+          onClick={() => setShowCategoryModal(true)}
+          disabled={adding || disabled || !title.trim()}
+          aria-label="Choose action category"
         >
           {adding ? '...' : '+'}
         </button>
       </div>
-      
-      {/* Notes toggle and textarea */}
-      {!showNotes ? (
-        <button
-          type="button"
-          className="actions-tab__notes-toggle"
-          onClick={() => setShowNotes(true)}
-          disabled={disabled}
-        >
-          📝 Add notes
-        </button>
-      ) : (
-        <>
-          <textarea
-            className="actions-tab__notes-textarea"
-            placeholder="Optional notes..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            disabled={adding || disabled}
-            rows={3}
-            aria-label="Action notes"
-          />
-          <button
-            type="button"
-            className="actions-tab__notes-toggle"
-            onClick={() => {
-              setShowNotes(false);
-              setNotes('');
-            }}
-            disabled={disabled}
-          >
-            Hide notes
-          </button>
-        </>
-      )}
 
-      {/* Project selector */}
-      {activeProjects.length > 0 && (
-        <div className="actions-tab__project-selector-wrapper">
-          {!showProjectSelector ? (
-            <button
-              type="button"
-              className="actions-tab__project-toggle"
-              onClick={() => setShowProjectSelector(true)}
-              disabled={disabled}
-            >
-              📦 Assign to project
-            </button>
-          ) : (
-            <>
-              <label className="actions-tab__project-label" htmlFor="action-project-select">
-                Select Project (required)
-              </label>
-              <select
-                id="action-project-select"
-                className="actions-tab__project-select"
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                disabled={adding || disabled}
-                aria-label="Select project"
-              >
-                <option value="">Choose a project...</option>
-                {activeProjects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.icon} {project.title}
-                  </option>
-                ))}
-              </select>
+      {showCategoryModal && (
+        <div
+          className="actions-tab__quick-add-modal-overlay"
+          role="presentation"
+          onClick={() => setShowCategoryModal(false)}
+        >
+          <div
+            className="actions-tab__quick-add-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Choose action category"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="actions-tab__quick-add-modal-header">
+              <h3>Choose a category</h3>
               <button
                 type="button"
-                className="actions-tab__project-toggle"
-                onClick={() => {
-                  setShowProjectSelector(false);
-                  setProjectId('');
-                }}
-                disabled={disabled}
+                className="actions-tab__quick-add-modal-close"
+                onClick={() => setShowCategoryModal(false)}
+                aria-label="Close category selector"
               >
-                Remove project
+                ✕
               </button>
-            </>
-          )}
+            </header>
+            <div className="actions-tab__quick-add-modal-body actions-tab__quick-add-modal-body--category" role="radiogroup">
+              {(Object.keys(ACTION_CATEGORY_CONFIG) as ActionCategory[]).map((cat) => {
+                const config = ACTION_CATEGORY_CONFIG[cat];
+                const isSelected = category === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={`actions-tab__category-option ${
+                      isSelected ? 'actions-tab__category-option--selected' : ''
+                    }`}
+                    style={{
+                      '--category-color': config.color,
+                    } as React.CSSProperties}
+                    onClick={() => {
+                      setCategory(cat);
+                      setShowCategoryModal(false);
+                      setShowDetailsModal(true);
+                    }}
+                    disabled={disabled}
+                  >
+                    <span aria-hidden="true">{config.icon}</span>
+                    <span>{config.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="actions-tab__category-selector" role="radiogroup" aria-label="Action category">
-        {(Object.keys(ACTION_CATEGORY_CONFIG) as ActionCategory[]).map((cat) => {
-          const config = ACTION_CATEGORY_CONFIG[cat];
-          return (
-            <button
-              key={cat}
-              type="button"
-              role="radio"
-              aria-checked={category === cat}
-              className={`actions-tab__category-option ${
-                category === cat ? 'actions-tab__category-option--selected' : ''
-              }`}
-              style={{ 
-                '--category-color': config.color 
-              } as React.CSSProperties}
-              onClick={() => setCategory(cat)}
-              disabled={disabled}
-            >
-              <span aria-hidden="true">{config.icon}</span>
-              <span>{config.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {showDetailsModal && (
+        <div
+          className="actions-tab__quick-add-modal-overlay"
+          role="presentation"
+          onClick={() => setShowDetailsModal(false)}
+        >
+          <div
+            className="actions-tab__quick-add-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add optional details"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="actions-tab__quick-add-modal-header">
+              <button
+                type="button"
+                className="actions-tab__quick-add-modal-back"
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setShowCategoryModal(true);
+                }}
+                aria-label="Back to category selector"
+              >
+                ← Back
+              </button>
+              <h3>Optional details</h3>
+              <button
+                type="button"
+                className="actions-tab__quick-add-modal-close"
+                onClick={() => setShowDetailsModal(false)}
+                aria-label="Close details"
+              >
+                ✕
+              </button>
+            </header>
+            <div className="actions-tab__quick-add-modal-body">
+              <label className="actions-tab__quick-add-modal-label" htmlFor="quick-add-notes">
+                📝 Add notes (optional)
+              </label>
+              <textarea
+                id="quick-add-notes"
+                className="actions-tab__notes-textarea"
+                placeholder="Optional notes..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                disabled={adding || disabled}
+                rows={3}
+                aria-label="Action notes"
+              />
+
+              {activeProjects.length > 0 && (
+                <>
+                  <label className="actions-tab__quick-add-modal-label" htmlFor="action-project-select">
+                    📦 Assign to project (optional)
+                  </label>
+                  <select
+                    id="action-project-select"
+                    className="actions-tab__project-select"
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    disabled={adding || disabled}
+                    aria-label="Select project"
+                  >
+                    <option value="">Choose a project...</option>
+                    {activeProjects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.icon} {project.title}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+            </div>
+            <footer className="actions-tab__quick-add-modal-footer">
+              <button
+                type="button"
+                className="actions-tab__quick-add-modal-action actions-tab__quick-add-modal-action--secondary"
+                onClick={() => setShowDetailsModal(false)}
+                disabled={adding || disabled}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="actions-tab__quick-add-modal-action actions-tab__quick-add-modal-action--primary"
+                onClick={handleSubmit}
+                disabled={adding || disabled}
+              >
+                {adding ? 'Adding...' : 'Add action'}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
