@@ -2,16 +2,18 @@
 
 .breathing-space {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: var(--space-5);
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .breathing-space__left-column {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  min-width: 0;
 }
 
 .breathing-space__reminder {
@@ -66,6 +68,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  min-width: 0;
 }
 
 .breathing-space__card {
