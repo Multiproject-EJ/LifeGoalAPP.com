@@ -299,10 +299,16 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   // Clear status after delay
   useEffect(() => {
     if (status) {
-      const timer = setTimeout(() => setStatus(null), 3000);
+      const timeoutMs = lastDeletedAction ? 6000 : 3000;
+      const timer = setTimeout(() => {
+        setStatus(null);
+        if (lastDeletedAction) {
+          setLastDeletedAction(null);
+        }
+      }, timeoutMs);
       return () => clearTimeout(timer);
     }
-  }, [status]);
+  }, [status, lastDeletedAction]);
 
   useEffect(() => {
     if (!lastDeletedAction) return;
