@@ -11456,41 +11456,10 @@ body {
   height: 2.25rem;
 }
 
-/* Settings button in mobile menu overlay */
-.mobile-menu-overlay__settings-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.85rem 1rem;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.mobile-menu-overlay__settings-button:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(59, 130, 246, 0.4);
-  transform: translateY(-1px);
-}
-
-.mobile-menu-overlay__settings-button-icon {
-  font-size: 1.25rem;
-}
-
-.mobile-menu-overlay__settings-button-label {
-  font-size: 0.95rem;
-}
-
 /* Expanded theme selector button */
 .mobile-menu-overlay__theme-selector-button--expanded {
-  padding: 1.1rem 1.25rem;
-  min-height: 4.5rem;
+  padding: 1.85rem 2.1rem;
+  min-height: 7.5rem;
 }
 
 .mobile-menu-overlay__theme-selector-button--expanded .mobile-menu-overlay__theme-selector-icon {
