@@ -8248,6 +8248,195 @@ body {
   color: #4338ca;
 }
 
+.vision-board__haircut-widget {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: linear-gradient(135deg, rgba(241, 245, 249, 0.9), rgba(255, 255, 255, 0.95));
+  display: grid;
+  gap: 0.85rem;
+}
+
+.vision-board__haircut-widget--expanded {
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+}
+
+.vision-board__haircut-toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  gap: 1rem;
+}
+
+.vision-board__haircut-toggle-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.12);
+  color: #4338ca;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.vision-board__haircut-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.vision-board__haircut-title {
+  margin: 0.1rem 0 0;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.vision-board__haircut-subtitle {
+  margin: 0.3rem 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.vision-board__haircut-details {
+  display: grid;
+  gap: 1rem;
+}
+
+.vision-board__haircut-section h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.vision-board__haircut-style-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.vision-board__haircut-style {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: white;
+  cursor: pointer;
+  text-align: left;
+}
+
+.vision-board__haircut-style span {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.vision-board__haircut-style strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.vision-board__haircut-style-swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #a5b4fc, #fda4af);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.vision-board__haircut-style--active {
+  border-color: rgba(79, 70, 229, 0.6);
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.12);
+}
+
+.vision-board__haircut-inputs {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.vision-board__haircut-inputs label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.vision-board__haircut-inputs input,
+.vision-board__haircut-inputs select {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.vision-board__haircut-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.vision-board__haircut-reset,
+.vision-board__haircut-alert {
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-weight: 600;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: white;
+  cursor: pointer;
+}
+
+.vision-board__haircut-alert {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #b91c1c;
+}
+
+.vision-board__haircut-status {
+  margin: 0.5rem 0 0;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.vision-board__haircut-status--alert {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.vision-board__haircut-progress {
+  width: 100%;
+  height: 8px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.vision-board__haircut-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+}
+
+.vision-board__haircut-progress-label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
 .vision-board__form {
   background: white;
   border-radius: 16px;
