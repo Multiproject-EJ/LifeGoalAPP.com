@@ -96,10 +96,10 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
   {
     id: 'score',
-    label: 'Score',
-    summary: 'Review your current score and recent highlights.',
-    icon: '🏅',
-    shortLabel: 'SCORE',
+    label: 'Grow',
+    summary: 'Track growth highlights and celebrate progress.',
+    icon: '🌱',
+    shortLabel: 'GROW',
   },
   {
     id: 'projects',
@@ -1184,8 +1184,8 @@ export default function App() {
           <div className="workspace-content">
             <section className="workspace-stage__placeholder">
               <div className="workspace-stage__placeholder-content">
-                <h2>Score</h2>
-                <p>Score details are coming soon.</p>
+                <h2>Grow</h2>
+                <p>Growth insights are coming soon.</p>
               </div>
             </section>
           </div>
@@ -1498,7 +1498,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={null}
           onSelect={handleMobileNavSelect}
-          onStatusClick={() => setShowMobileGamification(true)}
+          onStatusClick={handleMobileGameCardClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
         {mobileMenuOverlay}
@@ -1679,7 +1679,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
-          onStatusClick={() => setShowMobileGamification(true)}
+          onStatusClick={handleMobileGameCardClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
       ) : null}
