@@ -168,11 +168,10 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
 ] as const;
 
 // IDs to exclude from the mobile popup menu
-// - 'account': replaced by Settings button
 // - 'breathing-space': shown in main footer nav
 // - 'planning': replaced by ID button (Today is in main footer nav)
 // - 'actions': replaced by Settings button (Actions is in main footer nav)
-const MOBILE_POPUP_EXCLUDED_IDS = ['account', 'breathing-space', 'planning', 'actions'] as const;
+const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions'] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -259,10 +258,10 @@ export default function App() {
       if (navId === 'account') {
         return {
           id: navId,
-          label: 'Account',
-          ariaLabel: 'Account and profile',
-          icon: '👤',
-          summary: 'Manage your profile, workspace, and sign-in preferences.',
+          label: 'Settings',
+          ariaLabel: 'Settings and profile',
+          icon: '⚙️',
+          summary: 'Manage your profile, workspace, and preferences.',
         } satisfies MobileMenuNavItem;
       }
 
@@ -1339,17 +1338,6 @@ export default function App() {
                 </ul>
               </div>
               <div className="mobile-menu-overlay__settings">
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__settings-button"
-                  onClick={() => handleMobileNavSelect('account')}
-                  aria-label="Open settings"
-                >
-                  <span className="mobile-menu-overlay__settings-button-icon" aria-hidden="true">
-                    ⚙️
-                  </span>
-                  <span className="mobile-menu-overlay__settings-button-label">Settings</span>
-                </button>
                 <button
                   type="button"
                   className="mobile-menu-overlay__theme-selector-button mobile-menu-overlay__theme-selector-button--expanded"
