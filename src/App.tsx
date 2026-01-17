@@ -689,6 +689,11 @@ export default function App() {
     setShowMobileHome(false);
   };
 
+  const handleMobileGameOverlayCardClick = () => {
+    setActiveWorkspaceNav('game');
+    setShowMobileHome(false);
+  };
+
   const handleJournalNavigation = useCallback((navId: string) => {
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
@@ -1415,7 +1420,12 @@ export default function App() {
             </button>
           </header>
 
-          <div className="mobile-gamification-overlay__status">
+          <button
+            type="button"
+            className="mobile-gamification-overlay__status mobile-gamification-overlay__status-button"
+            onClick={handleMobileGameOverlayCardClick}
+            aria-label="Open Game of Life achievements"
+          >
             <div className="mobile-gamification-overlay__status-icon" aria-hidden="true">
               {mobileFooterStatus?.icon ?? '⚡️'}
             </div>
@@ -1430,7 +1440,7 @@ export default function App() {
                 </div>
               ) : null}
             </div>
-          </div>
+          </button>
 
           <div className="mobile-gamification-overlay__cta-row" role="list">
             <button
