@@ -109,6 +109,7 @@ type VisionReward = {
   imageUrl: string;
   caption: string | null;
   xpAwarded: number;
+  isSuperBoost: boolean;
 };
 
 const STREAK_LOOKBACK_DAYS = 60;
@@ -144,6 +145,7 @@ const intentionsNoticeStorageKey = (userId: string, dateISO: string) =>
 const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
 const visionStarStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star:${userId}:${dateISO}`;
+const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -243,6 +245,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
+  const [visionStarCount, setVisionStarCount] = useState(0);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
@@ -277,6 +280,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   useEffect(() => {
     const storedDayStatus = loadDraft<Record<string, DayStatus>>(dayStatusStorageKey(session.user.id));
     setDayStatusMap(storedDayStatus ?? {});
+  }, [session.user.id]);
+
+  useEffect(() => {
+    const storedCount = loadDraft<number>(visionStarCountKey(session.user.id));
+    setVisionStarCount(storedCount ?? 0);
   }, [session.user.id]);
 
   useEffect(() => {
@@ -381,7 +389,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
 
     const selection = visionImages[Math.floor(Math.random() * visionImages.length)];
-    const xpAmount = XP_REWARDS.VISION_BOARD_STAR;
+    const nextCount = visionStarCount + 1;
+    const isSuperBoost = nextCount % 20 === 0;
+    const xpAmount = isSuperBoost ? 250 : XP_REWARDS.VISION_BOARD_STAR;
 
     setVisionRewarding(true);
     try {
@@ -396,15 +406,27 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         imageUrl: selection.publicUrl,
         caption: selection.caption ?? null,
         xpAwarded: result?.xpAwarded ?? xpAmount,
+        isSuperBoost,
       });
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
       saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
+      saveDraft(visionStarCountKey(session.user.id), nextCount);
+      setVisionStarCount(nextCount);
       setIsVisionRewardOpen(true);
     } finally {
       setVisionRewarding(false);
     }
-  }, [activeDate, earnXP, isConfigured, isDemoExperience, recordActivity, session.user.id, visionImages]);
+  }, [
+    activeDate,
+    earnXP,
+    isConfigured,
+    isDemoExperience,
+    recordActivity,
+    session.user.id,
+    visionImages,
+    visionStarCount,
+  ]);
 
   const triggerStarBurst = useCallback(() => {
     setIsStarBursting(true);
@@ -484,17 +506,19 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             </p>
             <button
               type="button"
-              className="habit-day-nav__vision-modal-button"
+              className="habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--claim"
               onClick={closeVisionReward}
             >
               Claim {visionReward.xpAwarded} XP
             </button>
             <button
               type="button"
-              className="habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--manifest"
+              className={`habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--visualize ${
+                visionReward.isSuperBoost ? 'habit-day-nav__vision-modal-button--super-boost' : ''
+              }`}
               disabled
             >
-              Manifestation +50 XP
+              {visionReward.isSuperBoost ? 'Visualization super boost' : 'Visualization +50 XP'}
             </button>
           </div>
         </div>
@@ -1294,7 +1318,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const isViewingToday = activeDate === today;
     const navClasses = ['habit-day-nav', `habit-day-nav--${variant}`];
     const visionRewardForDay = visionRewardDate === activeDate ? visionReward : null;
-    const visionBoostLabel = `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`;
+    const isNextVisionSuperBoost = !hasClaimedVisionStar && (visionStarCount + 1) % 20 === 0;
+    const visionBoostLabel = isNextVisionSuperBoost
+      ? '+250 XP claim · Super boost'
+      : `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`;
+    const shouldGlowBonus = Boolean(
+      visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
+    );
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
@@ -1366,7 +1396,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                 </button>
               </div>
             ) : null}
-            <div className="habit-day-nav__bonus">
+            <div
+              className={`habit-day-nav__bonus ${
+                shouldGlowBonus ? 'habit-day-nav__bonus--super-boost' : ''
+              }`}
+            >
               {visionRewardForDay ? (
                 <img
                   className="habit-day-nav__bonus-image"
