@@ -5308,7 +5308,11 @@ body {
 }
 
 .habit-quick-journal__icon {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  display: inline-block;
+  transform: scale(1.6);
+  transform-origin: center;
 }
 
 .habit-quick-journal__eyebrow {
