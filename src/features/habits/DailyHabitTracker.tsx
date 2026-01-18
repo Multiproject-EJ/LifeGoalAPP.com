@@ -261,6 +261,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [celebrationType, setCelebrationType] = useState<'habit' | 'journal' | 'action' | 'breathing' | 'levelup'>('habit');
   const [celebrationOrigin, setCelebrationOrigin] = useState<{ x: number; y: number } | null>(null);
   const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
+  const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
+  const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   // Watch for level-up events
@@ -276,6 +278,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     return () => {
       if (compactToggleLabelTimeoutRef.current) {
         window.clearTimeout(compactToggleLabelTimeoutRef.current);
+      }
+      if (trackingMetaFadeTimeoutRef.current) {
+        window.clearTimeout(trackingMetaFadeTimeoutRef.current);
       }
     };
   }, []);
@@ -558,6 +563,26 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const stored = loadDraft<boolean>(visionStarStorageKey(session.user.id, activeDate));
     setHasClaimedVisionStar(Boolean(stored));
   }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    if (trackingMetaFadeTimeoutRef.current) {
+      window.clearTimeout(trackingMetaFadeTimeoutRef.current);
+    }
+
+    if (hasClaimedVisionStar && isViewingToday) {
+      trackingMetaFadeTimeoutRef.current = window.setTimeout(() => {
+        setShouldFadeTrackingMeta(true);
+      }, 1000);
+    } else {
+      setShouldFadeTrackingMeta(false);
+    }
+
+    return () => {
+      if (trackingMetaFadeTimeoutRef.current) {
+        window.clearTimeout(trackingMetaFadeTimeoutRef.current);
+      }
+    };
+  }, [hasClaimedVisionStar, isViewingToday]);
 
   useEffect(() => {
     const draftKey = quickJournalDraftKey(session.user.id, activeDate);
@@ -1361,8 +1386,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
         {showDetails ? (
           <div className="habit-day-nav__info">
-            <p className="habit-day-nav__label">Tracking day</p>
-            <p className="habit-day-nav__value">{displayLabel}</p>
+            <p className={`habit-day-nav__label ${shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''}`}>
+              Tracking day
+            </p>
+            <p className={`habit-day-nav__value ${shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''}`}>
+              {displayLabel}
+            </p>
             <div className="habit-day-nav__actions">
               {isViewingToday ? (
                 <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
@@ -1433,7 +1462,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   alt={visionRewardForDay.caption ? `Vision board: ${visionRewardForDay.caption}` : 'Vision board inspiration'}
                 />
               ) : (
-                <span className="habit-day-nav__bonus-placeholder">
+                <span
+                  className={`habit-day-nav__bonus-placeholder ${
+                    hasClaimedVisionStar && shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''
+                  }`}
+                >
                   {hasClaimedVisionStar ? 'Vision star claimed today.' : 'Tap the star to reveal a random vision board image.'}
                 </span>
               )}
