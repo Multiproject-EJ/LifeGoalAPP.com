@@ -12,11 +12,15 @@ const HAIRCUT_STYLES = [
   { key: 'textured_crop', label: 'Textured crop', tone: 'Modern + bold' },
 ] as const;
 
+type HaircutStyleKey = (typeof HAIRCUT_STYLES)[number]['key'];
+
 const HAIRCUT_LENGTHS = [
   { value: 'short', label: 'Short' },
   { value: 'medium', label: 'Medium' },
   { value: 'long', label: 'Long' },
 ] as const;
+
+type HaircutLengthValue = (typeof HAIRCUT_LENGTHS)[number]['value'];
 
 function formatDateLabel(value: string | null): string {
   if (!value) return 'Not scheduled';
@@ -42,8 +46,8 @@ export function BodyHaircutWidget() {
   const [isHaircutExpanded, setIsHaircutExpanded] = useState(true);
   const [haircutIntervalDays, setHaircutIntervalDays] = useState(75);
   const [lastHaircutDate, setLastHaircutDate] = useState(() => formatISODate(new Date()));
-  const [selectedHaircutStyle, setSelectedHaircutStyle] = useState(HAIRCUT_STYLES[0].key);
-  const [bestHairLength, setBestHairLength] = useState(HAIRCUT_LENGTHS[1].value);
+  const [selectedHaircutStyle, setSelectedHaircutStyle] = useState<HaircutStyleKey>(HAIRCUT_STYLES[0].key);
+  const [bestHairLength, setBestHairLength] = useState<HaircutLengthValue>(HAIRCUT_LENGTHS[1].value);
   const [needsHaircut, setNeedsHaircut] = useState(false);
 
   const nextHaircutDate = addDays(lastHaircutDate, haircutIntervalDays);
@@ -146,7 +150,7 @@ export function BodyHaircutWidget() {
                   Best length
                   <select
                     value={bestHairLength}
-                    onChange={(event) => setBestHairLength(event.target.value)}
+                    onChange={(event) => setBestHairLength(event.target.value as HaircutLengthValue)}
                   >
                     {HAIRCUT_LENGTHS.map((option) => (
                       <option key={option.value} value={option.value}>
