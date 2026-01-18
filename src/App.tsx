@@ -334,11 +334,9 @@ export default function App() {
   const mobileFooterNavItems = useMemo(() => {
     const footerIds: MobileMenuNavItem['id'][] = [
       'planning',
-      'habits',
       'breathing-space',
       'score',
       'actions',
-      'placeholder',
     ];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
