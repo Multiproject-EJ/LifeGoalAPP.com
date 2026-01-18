@@ -675,6 +675,11 @@ export default function App() {
   const handleMobileNavSelect = (navId: string) => {
     setIsMobileMenuOpen(false);
 
+    if (navId === 'game' && isMobileViewport) {
+      setShowMobileGamification(true);
+      return;
+    }
+
     if (navId === 'account' && !isAuthenticated) {
       handleAccountClick();
       return;
