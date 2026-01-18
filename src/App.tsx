@@ -179,7 +179,10 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
 // - 'breathing-space': shown in main footer nav
 // - 'planning': replaced by ID button (Today is in main footer nav)
 // - 'actions': replaced by Settings button (Actions is in main footer nav)
-const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions'] as const;
+// - 'goals': dashboard removed from popup menu
+// - 'score': grow removed from popup menu
+// - 'game': game removed from popup menu
+const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions', 'goals', 'score', 'game'] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -286,8 +289,8 @@ export default function App() {
       if (navId === 'habits') {
         return {
           id: navId,
-          label: 'Habits',
-          ariaLabel: 'Habits and routines',
+          label: 'Body',
+          ariaLabel: 'Body habits and routines',
           icon: '🔄',
           summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
         } satisfies MobileMenuNavItem;
@@ -1320,7 +1323,7 @@ export default function App() {
           ) : (
             <>
               <div className="mobile-menu-overlay__header">
-                <h2 className="mobile-menu-overlay__title">Quick menu</h2>
+                <h2 className="mobile-menu-overlay__title">Profile</h2>
                 <button
                   type="button"
                   className="mobile-menu-overlay__close"
