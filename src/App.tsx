@@ -96,10 +96,10 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
   {
     id: 'score',
-    label: 'Grow',
-    summary: 'Track growth highlights and celebrate progress.',
-    icon: '🌱',
-    shortLabel: 'GROW',
+    label: 'Upgrade Shop',
+    summary: 'Browse power-ups, boosts, and upgrades for your journey.',
+    icon: '🛒',
+    shortLabel: 'SHOP',
   },
   {
     id: 'projects',
@@ -109,11 +109,18 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'PROJECTS',
   },
   {
-    id: 'habits',
-    label: 'Habits & Routines',
-    summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
-    icon: '🧍',
+    id: 'body',
+    label: 'Body',
+    summary: 'Tune your body routines and personal care rituals.',
+    icon: '💪',
     shortLabel: 'BODY',
+  },
+  {
+    id: 'habits',
+    label: 'Habits',
+    summary: 'Review habits, streaks, and routines that power your weeks.',
+    icon: '🔄',
+    shortLabel: 'HABITS',
   },
   {
     id: 'rituals',
@@ -157,6 +164,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     icon: '🎮',
     shortLabel: 'GAME',
   },
+  {
+    id: 'placeholder',
+    label: 'Placeholder',
+    summary: 'A new section is taking shape. Stay tuned!',
+    icon: '🧩',
+    shortLabel: 'SOON',
+  },
 ];
 
 const MOBILE_FOOTER_WORKSPACE_IDS = [
@@ -164,6 +178,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'actions',
   'score',
   'goals',
+  'body',
   'habits',
   'support',
   'game',
@@ -173,6 +188,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'rituals',
   'account',
   'identity',
+  'placeholder',
 ] as const;
 
 // IDs to exclude from the mobile popup menu
@@ -180,9 +196,8 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
 // - 'planning': replaced by ID button (Today is in main footer nav)
 // - 'actions': replaced by Settings button (Actions is in main footer nav)
 // - 'goals': dashboard removed from popup menu
-// - 'score': grow removed from popup menu
-// - 'game': game removed from popup menu
-const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions', 'goals', 'score', 'game'] as const;
+// - 'score': shop removed from popup menu
+const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions', 'goals', 'score'] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -286,13 +301,23 @@ export default function App() {
         } satisfies MobileMenuNavItem;
       }
 
-      if (navId === 'habits') {
+      if (navId === 'body') {
         return {
           id: navId,
           label: 'Body',
-          ariaLabel: 'Body habits and routines',
+          ariaLabel: 'Body routines and care',
+          icon: '💪',
+          summary: 'Refresh your body-focused routines and personal care rituals.',
+        } satisfies MobileMenuNavItem;
+      }
+
+      if (navId === 'habits') {
+        return {
+          id: navId,
+          label: 'Habits',
+          ariaLabel: 'Habits and routines',
           icon: '🔄',
-          summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
+          summary: 'Review weekly habits, streaks, and routines in progress.',
         } satisfies MobileMenuNavItem;
       }
 
@@ -307,7 +332,14 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'score', 'actions'];
+    const footerIds: MobileMenuNavItem['id'][] = [
+      'planning',
+      'habits',
+      'breathing-space',
+      'score',
+      'actions',
+      'placeholder',
+    ];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
@@ -1192,8 +1224,8 @@ export default function App() {
           <div className="workspace-content">
             <section className="workspace-stage__placeholder">
               <div className="workspace-stage__placeholder-content">
-                <h2>Grow</h2>
-                <p>Growth insights are coming soon.</p>
+                <h2>Upgrade Shop</h2>
+                <p>Shop upgrades and power-ups are coming soon.</p>
               </div>
             </section>
           </div>
@@ -1213,10 +1245,16 @@ export default function App() {
             <LifeWheelCheckins session={activeSession} />
           </div>
         );
-      case 'habits':
+      case 'body':
         return (
           <div className="workspace-content">
             <BodyHaircutWidget />
+          </div>
+        );
+      case 'habits':
+        return (
+          <div className="workspace-content">
+            <HabitsModule session={activeSession} />
           </div>
         );
       case 'journal':
@@ -1291,6 +1329,17 @@ export default function App() {
                   This section is coming soon. Here you'll be able to discover insights about your personality, 
                   set preferences, and tailor your LifeGoal experience to match who you are.
                 </p>
+              </div>
+            </section>
+          </div>
+        );
+      case 'placeholder':
+        return (
+          <div className="workspace-content">
+            <section className="workspace-stage__placeholder">
+              <div className="workspace-stage__placeholder-content">
+                <h2>Placeholder</h2>
+                <p>A new space is on the way. Check back soon for updates.</p>
               </div>
             </section>
           </div>
