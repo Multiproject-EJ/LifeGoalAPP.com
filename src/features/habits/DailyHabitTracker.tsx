@@ -1975,6 +1975,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       stroke={`url(#${progressGradientId})`}
                     />
                   </svg>
+                  <span className="habit-checklist-card__progress-count" aria-hidden="true">
+                    {completedCount}
+                  </span>
                   {progressIcon ? (
                     <span className="habit-checklist-card__progress-symbol" aria-hidden="true">
                       {progressIcon}
