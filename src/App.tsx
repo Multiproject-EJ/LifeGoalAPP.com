@@ -1498,7 +1498,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={null}
           onSelect={handleMobileNavSelect}
-          onStatusClick={handleMobileGameCardClick}
+          onStatusClick={handleMobileGameOverlayCardClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
         {mobileMenuOverlay}
@@ -1679,7 +1679,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
-          onStatusClick={handleMobileGameCardClick}
+          onStatusClick={handleMobileGameOverlayCardClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
       ) : null}
