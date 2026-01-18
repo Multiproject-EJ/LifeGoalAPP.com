@@ -8465,6 +8465,23 @@ body {
   color: #64748b;
 }
 
+.body-habits {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.body-habits__header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #0f172a;
+}
+
+.body-habits__header p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  max-width: 60ch;
+}
+
 .vision-board__form {
   background: white;
   border-radius: 16px;
