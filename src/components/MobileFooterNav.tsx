@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 
 type MobileFooterNavItem = {
   id: string;
@@ -36,6 +36,7 @@ export function MobileFooterNav({
   status,
   onStatusClick,
 }: MobileFooterNavProps) {
+  const [isDiodeActive, setIsDiodeActive] = useState(false);
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
       ? [items[0], items[1], { type: 'status' }, ...items.slice(2)]
@@ -48,6 +49,25 @@ export function MobileFooterNav({
   return (
     <nav className="mobile-footer-nav" aria-label="Primary navigation">
       <div className="mobile-footer-nav__surface">
+        {onOpenMenu ? (
+          <div className="mobile-footer-nav__menu-row">
+            <button
+              type="button"
+              className={`mobile-footer-nav__diode-toggle ${
+                isDiodeActive ? 'mobile-footer-nav__diode-toggle--on' : 'mobile-footer-nav__diode-toggle--off'
+              }`}
+              aria-pressed={isDiodeActive}
+              aria-label="Toggle diode indicator"
+              onClick={() => setIsDiodeActive((prev) => !prev)}
+            />
+            <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
+              <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
+                •
+              </span>
+              <span className="sr-only">Open full navigation</span>
+            </button>
+          </div>
+        ) : null}
         <ul className="mobile-footer-nav__list" style={listStyle}>
           {listItems.map((item) => {
             if ('type' in item && item.type === 'status' && status) {
@@ -105,17 +125,6 @@ export function MobileFooterNav({
             );
           })}
         </ul>
-
-        {onOpenMenu ? (
-          <div className="mobile-footer-nav__menu">
-            <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
-              <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
-                ☰
-              </span>
-              <span className="sr-only">Open full navigation</span>
-            </button>
-          </div>
-        ) : null}
       </div>
     </nav>
   );

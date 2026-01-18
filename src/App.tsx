@@ -95,6 +95,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'ACTIONS',
   },
   {
+    id: 'score',
+    label: 'Grow',
+    summary: 'Track growth highlights and celebrate progress.',
+    icon: '🌱',
+    shortLabel: 'GROW',
+  },
+  {
     id: 'projects',
     label: 'Projects',
     summary: 'Manage multi-step initiatives and track progress.',
@@ -155,6 +162,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
 const MOBILE_FOOTER_WORKSPACE_IDS = [
   'planning',
   'actions',
+  'score',
   'goals',
   'habits',
   'support',
@@ -171,7 +179,10 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
 // - 'breathing-space': shown in main footer nav
 // - 'planning': replaced by ID button (Today is in main footer nav)
 // - 'actions': replaced by Settings button (Actions is in main footer nav)
-const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions'] as const;
+// - 'goals': dashboard removed from popup menu
+// - 'score': grow removed from popup menu
+// - 'game': game removed from popup menu
+const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions', 'goals', 'score', 'game'] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -278,8 +289,8 @@ export default function App() {
       if (navId === 'habits') {
         return {
           id: navId,
-          label: 'Habits',
-          ariaLabel: 'Habits and routines',
+          label: 'Body',
+          ariaLabel: 'Body habits and routines',
           icon: '🔄',
           summary: 'Keep your weekly rhythms aligned with the goals you care about most.',
         } satisfies MobileMenuNavItem;
@@ -296,7 +307,7 @@ export default function App() {
   }, [workspaceNavItems]);
 
   const mobileFooterNavItems = useMemo(() => {
-    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'actions'];
+    const footerIds: MobileMenuNavItem['id'][] = ['planning', 'breathing-space', 'score', 'actions'];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
@@ -667,6 +678,11 @@ export default function App() {
   const handleMobileNavSelect = (navId: string) => {
     setIsMobileMenuOpen(false);
 
+    if (navId === 'game' && isMobileViewport) {
+      setShowMobileGamification(true);
+      return;
+    }
+
     if (navId === 'account' && !isAuthenticated) {
       handleAccountClick();
       return;
@@ -678,6 +694,11 @@ export default function App() {
     }
 
     setActiveWorkspaceNav(navId);
+    setShowMobileHome(false);
+  };
+
+  const handleMobileGameOverlayCardClick = () => {
+    setActiveWorkspaceNav('game');
     setShowMobileHome(false);
   };
 
@@ -1166,6 +1187,17 @@ export default function App() {
             <ActionsTab session={activeSession} onNavigateToProjects={() => setActiveWorkspaceNav('projects')} />
           </div>
         );
+      case 'score':
+        return (
+          <div className="workspace-content">
+            <section className="workspace-stage__placeholder">
+              <div className="workspace-stage__placeholder-content">
+                <h2>Grow</h2>
+                <p>Growth insights are coming soon.</p>
+              </div>
+            </section>
+          </div>
+        );
       case 'projects':
         return (
           <div className="workspace-content">
@@ -1300,7 +1332,7 @@ export default function App() {
           ) : (
             <>
               <div className="mobile-menu-overlay__header">
-                <h2 className="mobile-menu-overlay__title">Quick menu</h2>
+                <h2 className="mobile-menu-overlay__title">Profile</h2>
                 <button
                   type="button"
                   className="mobile-menu-overlay__close"
@@ -1400,7 +1432,12 @@ export default function App() {
             </button>
           </header>
 
-          <div className="mobile-gamification-overlay__status">
+          <button
+            type="button"
+            className="mobile-gamification-overlay__status mobile-gamification-overlay__status-button"
+            onClick={handleMobileGameOverlayCardClick}
+            aria-label="Open Game of Life achievements"
+          >
             <div className="mobile-gamification-overlay__status-icon" aria-hidden="true">
               {mobileFooterStatus?.icon ?? '⚡️'}
             </div>
@@ -1415,7 +1452,7 @@ export default function App() {
                 </div>
               ) : null}
             </div>
-          </div>
+          </button>
 
           <div className="mobile-gamification-overlay__cta-row" role="list">
             <button
@@ -1473,7 +1510,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={null}
           onSelect={handleMobileNavSelect}
-          onStatusClick={() => setShowMobileGamification(true)}
+          onStatusClick={handleMobileGameOverlayCardClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
         {mobileMenuOverlay}
@@ -1654,7 +1691,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
-          onStatusClick={() => setShowMobileGamification(true)}
+          onStatusClick={handleMobileGameOverlayCardClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
       ) : null}

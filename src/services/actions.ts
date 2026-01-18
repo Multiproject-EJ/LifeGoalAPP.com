@@ -86,6 +86,38 @@ export async function fetchActiveActions(): Promise<ServiceResponse<Action[]>> {
 }
 
 /**
+ * Fetch completed actions for a specific date (local day boundaries).
+ */
+export async function fetchCompletedActionsForDate(
+  dateISO: string
+): Promise<ServiceResponse<Action[]>> {
+  const startOfDay = new Date(`${dateISO}T00:00:00`);
+  const endOfDay = new Date(`${dateISO}T23:59:59.999`);
+
+  if (!canUseSupabaseData()) {
+    const allActions = getDemoActions(DEMO_USER_ID);
+    const filtered = allActions.filter((action) => {
+      if (!action.completed || !action.completed_at) return false;
+      if (action.migrated_to_project_id) return false;
+      const completedAt = new Date(action.completed_at);
+      return completedAt >= startOfDay && completedAt <= endOfDay;
+    });
+    return { data: filtered, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  return supabase
+    .from('actions')
+    .select('*')
+    .eq('completed', true)
+    .is('migrated_to_project_id', null)
+    .gte('completed_at', startOfDay.toISOString())
+    .lte('completed_at', endOfDay.toISOString())
+    .order('completed_at', { ascending: false })
+    .returns<Action[]>();
+}
+
+/**
  * Create a new action
  */
 export async function insertAction(

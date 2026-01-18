@@ -78,11 +78,33 @@ const REVIEW_INTERVAL_OPTIONS = [
   { value: 90, label: 'Quarterly (90 days)' },
 ];
 
+const HAIRCUT_INTERVAL_OPTIONS = [
+  { value: 60, label: 'Every 2 months (60 days)' },
+  { value: 75, label: 'Every 2-3 months (75 days)' },
+  { value: 90, label: 'Every 3 months (90 days)' },
+];
+
+const HAIRCUT_STYLES = [
+  { key: 'classic_taper', label: 'Classic taper', tone: 'Clean + sharp' },
+  { key: 'soft_layers', label: 'Soft layers', tone: 'Natural + airy' },
+  { key: 'textured_crop', label: 'Textured crop', tone: 'Modern + bold' },
+];
+
+const HAIRCUT_LENGTHS = [
+  { value: 'short', label: 'Short' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'long', label: 'Long' },
+];
+
 function formatDateLabel(value: string | null): string {
   if (!value) return 'Not scheduled';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return 'Not scheduled';
   return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatISODate(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }
 
 function addDays(dateValue: string | null, days: number): string | null {
@@ -141,6 +163,12 @@ export function VisionBoard({ session }: VisionBoardProps) {
   const [lifeWheelDraft, setLifeWheelDraft] = useState<LifeWheelCategoryKey[]>([]);
   const [visionaryDraft, setVisionaryDraft] = useState<FourVisionaryCategoryKey[]>([]);
   const [tagSaving, setTagSaving] = useState(false);
+  const [isHaircutExpanded, setIsHaircutExpanded] = useState(false);
+  const [haircutIntervalDays, setHaircutIntervalDays] = useState(75);
+  const [lastHaircutDate, setLastHaircutDate] = useState(() => formatISODate(new Date()));
+  const [selectedHaircutStyle, setSelectedHaircutStyle] = useState(HAIRCUT_STYLES[0].key);
+  const [bestHairLength, setBestHairLength] = useState(HAIRCUT_LENGTHS[1].value);
+  const [needsHaircut, setNeedsHaircut] = useState(false);
   const lifeWheelAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
   const visionariesAvailable = FOUR_VISIONARIES.length > 0;
   const lifeWheelLabelLookup = useMemo(
@@ -335,6 +363,19 @@ export function VisionBoard({ session }: VisionBoardProps) {
     lifeWheelAvailable,
     visionariesAvailable,
   ]);
+
+  const isBodyStyleTab =
+    boardView === 'visionaries' && (visionaryFilter === 'body_style' || (!isConfigured && !isDemoExperience));
+  const nextHaircutDate = addDays(lastHaircutDate, haircutIntervalDays);
+  const haircutDaysSince = useMemo(() => {
+    const parsed = new Date(lastHaircutDate);
+    if (Number.isNaN(parsed.getTime())) return 0;
+    const diff = Date.now() - parsed.getTime();
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+  }, [lastHaircutDate]);
+  const haircutProgress = haircutIntervalDays > 0
+    ? Math.min(100, Math.round((haircutDaysSince / haircutIntervalDays) * 100))
+    : 0;
 
   const dueReviewItems = useMemo(() => {
     const now = new Date();
@@ -1154,6 +1195,121 @@ export function VisionBoard({ session }: VisionBoardProps) {
             </button>
           )}
         </div>
+      )}
+
+      {isBodyStyleTab && (
+        <section className={`vision-board__haircut-widget ${isHaircutExpanded ? 'vision-board__haircut-widget--expanded' : ''}`}>
+          <button
+            type="button"
+            className="vision-board__haircut-toggle"
+            aria-expanded={isHaircutExpanded}
+            onClick={() => setIsHaircutExpanded((prev) => !prev)}
+          >
+            <div>
+              <p className="vision-board__haircut-kicker">My Haircut</p>
+              <h3 className="vision-board__haircut-title">Haircut rhythm & reminders</h3>
+              <p className="vision-board__haircut-subtitle">
+                Interval: {HAIRCUT_INTERVAL_OPTIONS.find((option) => option.value === haircutIntervalDays)?.label ?? 'Custom'} ·
+                Next reminder {formatDateLabel(nextHaircutDate)}
+              </p>
+            </div>
+            <span className="vision-board__haircut-toggle-icon" aria-hidden>
+              {isHaircutExpanded ? '−' : '+'}
+            </span>
+          </button>
+          {isHaircutExpanded && (
+            <div className="vision-board__haircut-details">
+              <div className="vision-board__haircut-section">
+                <h4>My haircut selection</h4>
+                <div className="vision-board__haircut-style-grid" role="radiogroup" aria-label="Select haircut style">
+                  {HAIRCUT_STYLES.map((style) => (
+                    <button
+                      key={style.key}
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedHaircutStyle === style.key}
+                      className={`vision-board__haircut-style ${selectedHaircutStyle === style.key ? 'vision-board__haircut-style--active' : ''}`}
+                      onClick={() => setSelectedHaircutStyle(style.key)}
+                    >
+                      <span className="vision-board__haircut-style-swatch" aria-hidden />
+                      <span>
+                        <strong>{style.label}</strong>
+                        <span>{style.tone}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="vision-board__haircut-section">
+                <h4>Reminders & reset</h4>
+                <div className="vision-board__haircut-inputs">
+                  <label>
+                    Last haircut
+                    <input
+                      type="date"
+                      value={lastHaircutDate}
+                      onChange={(event) => setLastHaircutDate(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Interval
+                    <select
+                      value={haircutIntervalDays}
+                      onChange={(event) => setHaircutIntervalDays(Number(event.target.value))}
+                    >
+                      {HAIRCUT_INTERVAL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Best length
+                    <select
+                      value={bestHairLength}
+                      onChange={(event) => setBestHairLength(event.target.value)}
+                    >
+                      {HAIRCUT_LENGTHS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="vision-board__haircut-actions">
+                  <button
+                    type="button"
+                    className="vision-board__haircut-reset"
+                    onClick={() => {
+                      setLastHaircutDate(formatISODate(new Date()));
+                      setNeedsHaircut(false);
+                    }}
+                  >
+                    Just had a haircut
+                  </button>
+                  <button
+                    type="button"
+                    className="vision-board__haircut-alert"
+                    onClick={() => setNeedsHaircut(true)}
+                  >
+                    Hair feels too long
+                  </button>
+                </div>
+                <p className={`vision-board__haircut-status ${needsHaircut ? 'vision-board__haircut-status--alert' : ''}`}>
+                  {needsHaircut ? 'Time for a trim — consider booking a cut.' : 'On track with your ideal length.'}
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="vision-board__haircut-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={haircutProgress}>
+            <div className="vision-board__haircut-progress-bar" style={{ width: `${haircutProgress}%` }} />
+          </div>
+          <p className="vision-board__haircut-progress-label">
+            {haircutDaysSince} days since your last cut · {haircutProgress}% toward your next one
+          </p>
+        </section>
       )}
 
       <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
