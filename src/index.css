@@ -4281,6 +4281,8 @@ body {
   letter-spacing: 0.05em;
   font-size: 0.75rem;
   color: #475569;
+  max-height: 1.5rem;
+  transition: opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, transform 0.4s ease;
 }
 
 .habit-day-nav__value {
@@ -4288,6 +4290,8 @@ body {
   font-weight: 800;
   font-size: 1.05rem;
   color: #0f172a;
+  max-height: 2rem;
+  transition: opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, transform 0.4s ease;
 }
 
 .habit-day-nav--compact .habit-day-nav__value {
@@ -4627,6 +4631,17 @@ body {
   font-size: 0.75rem;
   color: #64748b;
   font-weight: 600;
+  max-height: 2.5rem;
+  transition: opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, transform 0.4s ease;
+}
+
+.habit-day-nav__fade {
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .habit-day-nav__bonus-caption {
