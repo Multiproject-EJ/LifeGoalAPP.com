@@ -96,10 +96,10 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
   {
     id: 'score',
-    label: 'Upgrade Shop',
-    summary: 'Browse power-ups, boosts, and upgrades for your journey.',
-    icon: '🛒',
-    shortLabel: 'SHOP',
+    label: 'Score',
+    summary: 'Track your points, rewards, and upcoming boosts.',
+    icon: '🏆',
+    shortLabel: 'SCORE',
   },
   {
     id: 'projects',
@@ -1226,8 +1226,13 @@ export default function App() {
           <div className="workspace-content">
             <section className="workspace-stage__placeholder">
               <div className="workspace-stage__placeholder-content">
-                <h2>Upgrade Shop</h2>
-                <p>Shop upgrades and power-ups are coming soon.</p>
+                <h2>Score</h2>
+                <p>Collect points and unlock the next wave of rewards.</p>
+                <ul className="workspace-stage__placeholder-list">
+                  <li>shop upgrades</li>
+                  <li>Grow Zen Garden</li>
+                  <li>Trade Achievements</li>
+                </ul>
               </div>
             </section>
           </div>
