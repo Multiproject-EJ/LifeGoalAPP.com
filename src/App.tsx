@@ -12,7 +12,7 @@ import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace, LifeGoalsSection } from './features/goals';
-import { DailyHabitTracker, HabitsModule, MobileHabitHome } from './features/habits';
+import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome } from './features/habits';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
@@ -1182,7 +1182,11 @@ export default function App() {
           </div>
         );
       case 'habits':
-        return <div className="workspace-content" />;
+        return (
+          <div className="workspace-content">
+            <BodyHaircutWidget />
+          </div>
+        );
       case 'journal':
         return (
           <div className="workspace-content">
