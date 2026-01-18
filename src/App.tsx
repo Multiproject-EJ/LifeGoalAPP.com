@@ -732,6 +732,10 @@ export default function App() {
     setShowMobileHome(false);
   };
 
+  const handleMobileGameStatusClick = () => {
+    setShowMobileGamification(true);
+  };
+
   const handleJournalNavigation = useCallback((navId: string) => {
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
@@ -1557,7 +1561,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={null}
           onSelect={handleMobileNavSelect}
-          onStatusClick={handleMobileGameOverlayCardClick}
+          onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
         {mobileMenuOverlay}
@@ -1738,7 +1742,7 @@ export default function App() {
           status={mobileFooterStatus}
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
-          onStatusClick={handleMobileGameOverlayCardClick}
+          onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
         />
       ) : null}
