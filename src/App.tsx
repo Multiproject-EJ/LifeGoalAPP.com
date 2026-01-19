@@ -26,6 +26,7 @@ import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import { ActionsTab } from './features/actions';
 import { ProjectsManager } from './features/projects';
+import { ScoreTab } from './features/gamification/ScoreTab';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -257,7 +258,14 @@ export default function App() {
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
 
-  const { xpToasts, dismissXPToast, levelInfo } = useGamification(supabaseSession);
+  const {
+    xpToasts,
+    dismissXPToast,
+    levelInfo,
+    profile: gamificationProfile,
+    enabled: gamificationEnabled,
+    loading: gamificationLoading,
+  } = useGamification(supabaseSession);
 
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
@@ -1234,17 +1242,13 @@ export default function App() {
       case 'score':
         return (
           <div className="workspace-content">
-            <section className="workspace-stage__placeholder">
-              <div className="workspace-stage__placeholder-content">
-                <h2>Score</h2>
-                <p>Collect points and unlock the next wave of rewards.</p>
-                <ul className="workspace-stage__placeholder-list">
-                  <li>shop upgrades</li>
-                  <li>Grow Zen Garden</li>
-                  <li>Trade Achievements</li>
-                </ul>
-              </div>
-            </section>
+            <ScoreTab
+              session={activeSession}
+              profile={gamificationProfile}
+              levelInfo={levelInfo}
+              enabled={gamificationEnabled}
+              loading={gamificationLoading}
+            />
           </div>
         );
       case 'projects':

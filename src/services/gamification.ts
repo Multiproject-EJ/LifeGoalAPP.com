@@ -2,6 +2,7 @@
 // Supports both demo mode (localStorage) and Supabase mode
 
 import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
+import { convertXpToPoints } from '../constants/economy';
 import type {
   GamificationProfile,
   Achievement,
@@ -116,6 +117,7 @@ export async function awardXP(
     const oldLevel = currentProfile.current_level;
     const newLevel = calculateLevelFromXP(newXP);
     const leveledUp = newLevel > oldLevel;
+    const pointsAwarded = convertXpToPoints(finalXPAmount);
 
     // Update profile
     const { error: updateError } = await supabase
@@ -123,7 +125,7 @@ export async function awardXP(
       .update({
         total_xp: newXP,
         current_level: newLevel,
-        total_points: currentProfile.total_points + finalXPAmount,
+        total_points: currentProfile.total_points + pointsAwarded,
       })
       .eq('user_id', userId);
 
@@ -200,11 +202,12 @@ async function awardXPDemo(
   const oldLevel = profile.current_level || 1;
   const newLevel = calculateLevelFromXP(newXP);
   const leveledUp = newLevel > oldLevel;
+  const pointsAwarded = convertXpToPoints(xpAmount);
 
   // Update profile
   profile.total_xp = newXP;
   profile.current_level = newLevel;
-  profile.total_points = (profile.total_points || 0) + xpAmount;
+  profile.total_points = (profile.total_points || 0) + pointsAwarded;
   localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(profile));
 
   // Log transaction
