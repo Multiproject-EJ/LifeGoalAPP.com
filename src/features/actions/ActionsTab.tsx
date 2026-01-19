@@ -53,6 +53,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
   const [celebrationType, setCelebrationType] = useState<'action' | 'journal' | 'breathing' | 'levelup'>('action');
   const [justCompletedActionId, setJustCompletedActionId] = useState<string | null>(null);
   const [lastDeletedAction, setLastDeletedAction] = useState<Action | null>(null);
+  const [lastCompletedAction, setLastCompletedAction] = useState<Action | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Watch for level-up events
@@ -147,6 +148,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
       
       // Award XP for completing the action
       const xpReward = await awardActionXP(action);
+      setLastCompletedAction(action);
       
       // 1. Immediately add instant feedback (pop/glow)
       setJustCompletedActionId(actionId);
@@ -210,6 +212,18 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to restore action' });
     }
   }, [createAction, lastDeletedAction]);
+
+  const handleUndoComplete = useCallback(async () => {
+    if (!lastCompletedAction) return;
+
+    try {
+      await updateAction(lastCompletedAction.id, { completed: false });
+      setLastCompletedAction(null);
+      setStatus({ kind: 'success', message: 'Action restored' });
+    } catch (err) {
+      setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to restore action' });
+    }
+  }, [lastCompletedAction, updateAction]);
 
   // Handle update action
   const handleUpdateAction = useCallback(async (actionId: string, updates: UpdateActionInput) => {
@@ -377,11 +391,23 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
 
       {/* Filters */}
       {hasActions && (
-        <ActionFilters
-          actions={activeActions}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
+        <div className="actions-tab__filters-row">
+          <ActionFilters
+            actions={activeActions}
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+          />
+          <button
+            type="button"
+            className="actions-tab__undo-complete"
+            onClick={handleUndoComplete}
+            disabled={!lastCompletedAction}
+            aria-label="Undo last completed action"
+            title={lastCompletedAction ? 'Undo last completed action' : 'Complete an action to enable undo'}
+          >
+            ↩️ Undo
+          </button>
+        </div>
       )}
 
       {/* Actions list or empty state */}

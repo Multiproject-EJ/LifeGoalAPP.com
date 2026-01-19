@@ -194,6 +194,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
   const [completedActionsCount, setCompletedActionsCount] = useState(0);
+  const isViewingToday = activeDate === today;
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
