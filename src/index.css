@@ -11073,6 +11073,7 @@ body {
   flex-direction: column;
   gap: clamp(0.5rem, 2vw, 0.85rem);
   pointer-events: auto;
+  position: relative;
 }
 
 .mobile-footer-nav__list {
@@ -11247,6 +11248,16 @@ body {
   gap: 12px;
 }
 
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-row {
+  position: absolute;
+  top: -2.6rem;
+  left: 0;
+  right: 0;
+  height: 0;
+  justify-content: center;
+  overflow: visible;
+}
+
 .mobile-footer-nav__diode-toggle {
   width: 18px;
   height: 18px;
@@ -11255,6 +11266,8 @@ body {
   background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.9), rgba(148, 163, 184, 0.2) 55%, rgba(148, 163, 184, 0.1));
   box-shadow: 0 0 8px rgba(148, 163, 184, 0.35), inset 0 0 6px rgba(255, 255, 255, 0.7);
   cursor: pointer;
+  --diode-shift: 0px;
+  transform: translateX(var(--diode-shift));
   transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
@@ -11272,8 +11285,15 @@ body {
 
 .mobile-footer-nav__diode-toggle:hover,
 .mobile-footer-nav__diode-toggle:focus-visible {
-  transform: scale(1.05);
+  transform: translateX(var(--diode-shift)) scale(1.05);
   outline: none;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__diode-toggle {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  --diode-shift: -50%;
 }
 
 .mobile-footer-nav__menu-button {
@@ -11291,6 +11311,12 @@ body {
   letter-spacing: 0.01em;
   transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button {
+  position: absolute;
+  right: 0.4rem;
+  top: 0;
 }
 
 .mobile-footer-nav__menu-button:hover,

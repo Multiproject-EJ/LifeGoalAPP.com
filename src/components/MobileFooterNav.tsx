@@ -37,6 +37,7 @@ export function MobileFooterNav({
   onStatusClick,
 }: MobileFooterNavProps) {
   const [isDiodeActive, setIsDiodeActive] = useState(false);
+  const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
       ? [items[0], items[1], { type: 'status' }, ...items.slice(2)]
@@ -48,7 +49,11 @@ export function MobileFooterNav({
 
   return (
     <nav className="mobile-footer-nav" aria-label="Primary navigation">
-      <div className="mobile-footer-nav__surface">
+      <div
+        className={`mobile-footer-nav__surface ${
+          isDiodeOff ? 'mobile-footer-nav__surface--diode-off' : ''
+        }`}
+      >
         {onOpenMenu ? (
           <div className="mobile-footer-nav__menu-row">
             <button
