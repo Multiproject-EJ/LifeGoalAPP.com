@@ -197,7 +197,17 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
 // - 'actions': replaced by Settings button (Actions is in main footer nav)
 // - 'goals': dashboard removed from popup menu
 // - 'score': shop removed from popup menu
-const MOBILE_POPUP_EXCLUDED_IDS = ['breathing-space', 'planning', 'actions', 'goals', 'score'] as const;
+// - 'game': Game of Life lives in main menu only
+// - 'placeholder': Soon lives in main menu only
+const MOBILE_POPUP_EXCLUDED_IDS = [
+  'breathing-space',
+  'planning',
+  'actions',
+  'goals',
+  'score',
+  'game',
+  'placeholder',
+] as const;
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
