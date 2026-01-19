@@ -1374,6 +1374,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const shouldGlowBonus = Boolean(
       visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
     );
+    const shouldHideBonus = shouldFadeTrackingMeta && hasClaimedVisionStar && !visionRewardForDay;
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
@@ -1454,7 +1455,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             <div
               className={`habit-day-nav__bonus ${
                 shouldGlowBonus ? 'habit-day-nav__bonus--super-boost' : ''
-              }`}
+              } ${shouldHideBonus ? 'habit-day-nav__bonus--hidden' : ''}`}
             >
               {visionRewardForDay ? (
                 <img

@@ -4576,6 +4576,9 @@ body {
   justify-content: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+  max-height: 6rem;
+  overflow: hidden;
+  transition: opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease, transform 0.4s ease;
 }
 
 .habit-day-nav__bonus--super-boost {
@@ -4586,6 +4589,15 @@ body {
     0 0 0 2px rgba(250, 204, 21, 0.25),
     0 12px 30px rgba(249, 115, 22, 0.35);
   background: radial-gradient(circle at top, rgba(254, 240, 138, 0.35), transparent 60%);
+}
+
+.habit-day-nav__bonus--hidden {
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+  padding: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
 }
 
 .habit-day-nav--compact .habit-day-nav__bonus {
