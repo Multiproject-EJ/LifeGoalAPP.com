@@ -32,6 +32,8 @@ A single, explicit source of truth for how points are earned/spent.
 
 > This matrix should live in code (types + constants) and be visible in docs.
 
+**Code source of truth:** `src/constants/economy.ts` (mirrors the matrix below).
+
 ## Step-by-step Plan with Prerequisite Checks
 
 ### Step 1 — Validate Existing Systems (Prereqs)
