@@ -16,6 +16,7 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
   const [adding, setAdding] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const hasTitle = title.trim().length > 0;
 
   const activeProjects = projects.filter(
     (p) => p.status === 'planning' || p.status === 'active'
@@ -58,7 +59,7 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
       <div className="actions-tab__quick-add-input-row">
         <input
           type="text"
-          className="actions-tab__quick-add-input"
+          className={`actions-tab__quick-add-input ${hasTitle ? '' : 'actions-tab__quick-add-input--pulse'}`}
           placeholder="What needs to be done?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -68,10 +69,12 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
         />
         <button
           type="button"
-          className="actions-tab__quick-add-button"
+          className={`actions-tab__quick-add-button ${hasTitle ? 'actions-tab__quick-add-button--visible' : ''}`}
           onClick={() => setShowCategoryModal(true)}
-          disabled={adding || disabled || !title.trim()}
+          disabled={adding || disabled || !hasTitle}
           aria-label="Choose action category"
+          aria-hidden={!hasTitle}
+          tabIndex={hasTitle ? 0 : -1}
         >
           {adding ? '...' : '+'}
         </button>
