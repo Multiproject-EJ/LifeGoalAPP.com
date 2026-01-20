@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 type MobileFooterNavItem = {
   id: string;
@@ -22,6 +22,8 @@ type MobileFooterNavProps = {
   activeId: string | null;
   onSelect: (itemId: string) => void;
   onOpenMenu?: () => void;
+  isDiodeActive: boolean;
+  onToggleDiode: (nextState: boolean) => void;
   status?: MobileFooterStatus;
   onStatusClick?: () => void;
 };
@@ -33,10 +35,11 @@ export function MobileFooterNav({
   activeId,
   onSelect,
   onOpenMenu,
+  isDiodeActive,
+  onToggleDiode,
   status,
   onStatusClick,
 }: MobileFooterNavProps) {
-  const [isDiodeActive, setIsDiodeActive] = useState(false);
   const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
@@ -63,7 +66,7 @@ export function MobileFooterNav({
               }`}
               aria-pressed={isDiodeActive}
               aria-label="Toggle diode indicator"
-              onClick={() => setIsDiodeActive((prev) => !prev)}
+              onClick={() => onToggleDiode(!isDiodeActive)}
             />
             <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
               <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
