@@ -465,6 +465,40 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     window.setTimeout(() => setIsStarBursting(false), 900);
   }, []);
 
+  const triggerVisionClaimFlight = useCallback(() => {
+    if (typeof document === 'undefined') return;
+
+    const startRect = visionClaimButtonRef.current?.getBoundingClientRect();
+    const target = document.querySelector('[data-game-tab-icon="true"]') as HTMLElement | null;
+    const targetRect = target?.getBoundingClientRect();
+
+    if (!startRect || !targetRect) return;
+
+    const startX = startRect.left + startRect.width / 2;
+    const startY = startRect.top + startRect.height / 2;
+    const endX = targetRect.left + targetRect.width / 2;
+    const endY = targetRect.top + targetRect.height / 2;
+
+    const flight = document.createElement('div');
+    flight.className = 'vision-claim-flight';
+    flight.setAttribute('aria-hidden', 'true');
+    flight.textContent = '✅';
+    flight.style.setProperty('--flight-start-x', `${startX}px`);
+    flight.style.setProperty('--flight-start-y', `${startY}px`);
+    flight.style.setProperty('--flight-translate-x', `${endX - startX}px`);
+    flight.style.setProperty('--flight-translate-y', `${endY - startY}px`);
+
+    document.body.appendChild(flight);
+
+    flight.addEventListener(
+      'animationend',
+      () => {
+        flight.remove();
+      },
+      { once: true }
+    );
+  }, []);
+
   const handleVisionRewardClick = () => {
     if (visionButtonRef.current) {
       const rect = visionButtonRef.current.getBoundingClientRect();
@@ -484,6 +518,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setCelebrationOrigin(null);
     }
 
+    triggerVisionClaimFlight();
     setCelebrationType('vision');
     setCelebrationXP(visionReward?.xpAwarded ?? 0);
     setShowCelebration(true);

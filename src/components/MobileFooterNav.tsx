@@ -86,6 +86,7 @@ export function MobileFooterNav({
                     onClick={onStatusClick}
                     aria-label={`View Game of Life details for ${status.label}`}
                     aria-pressed={false}
+                    data-game-tab-icon="true"
                   >
                     <div className="mobile-footer-nav__status-header">
                       <span className="mobile-footer-nav__status-icon" aria-hidden="true">{status.icon ?? '⭐️'}</span>
