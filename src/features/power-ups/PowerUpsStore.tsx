@@ -176,7 +176,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
             <p className="power-ups-store__category-description">
               Multiply your XP gains for a limited time
             </p>
-            <div className="power-ups-store__grid">
+            <div className="power-ups-store__grid four-by-three-grid">
               {categorizedPowerUps.boosts.map((powerUp) => (
                 <PowerUpCard
                   key={powerUp.id}
@@ -196,7 +196,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
             <p className="power-ups-store__category-description">
               Guard your progress with protective items
             </p>
-            <div className="power-ups-store__grid">
+            <div className="power-ups-store__grid four-by-three-grid">
               {categorizedPowerUps.protection.map((powerUp) => (
                 <PowerUpCard
                   key={powerUp.id}
@@ -216,7 +216,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
             <p className="power-ups-store__category-description">
               Unlock lasting improvements to your account
             </p>
-            <div className="power-ups-store__grid">
+            <div className="power-ups-store__grid four-by-three-grid">
               {categorizedPowerUps.upgrades.map((powerUp) => (
                 <PowerUpCard
                   key={powerUp.id}

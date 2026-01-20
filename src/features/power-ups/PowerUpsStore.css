@@ -236,11 +236,6 @@
   margin: 0 0 1.5rem 0;
 }
 
-.power-ups-store__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
 
 /* Power-up Card */
 .power-up-card {
@@ -586,10 +581,6 @@
     justify-content: flex-start;
   }
 
-  .power-ups-store__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.25rem;
-  }
 
   .power-up-card__footer {
     flex-direction: row;
@@ -606,10 +597,6 @@
 }
 
 @media (min-width: 1024px) {
-  .power-ups-store__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1.5rem;
-  }
 
   .power-up-card {
     padding: 1.5rem;
