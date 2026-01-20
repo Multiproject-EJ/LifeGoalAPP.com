@@ -26,14 +26,33 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [rotation, setRotation] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showReward, setShowReward] = useState(false);
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
 
   useEffect(() => {
     loadSpinStatus();
   }, [session.user.id]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const loadSpinStatus = async () => {
     setLoading(true);
     setError(null);
+    setWonPrize(null);
 
     try {
       const { data: availability, error: availError } = await checkSpinAvailable(session.user.id);
@@ -56,7 +75,14 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       }
     } catch (err) {
       console.error('Failed to load spin status:', err);
-      setError('Failed to load spin wheel. Please try again.');
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+      setIsOffline(offline);
+      setCanSpin(false);
+      setError(
+        offline
+          ? 'You appear to be offline. Check your connection and try again.'
+          : 'We could not reach the spin wheel. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -166,7 +192,30 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
         {error && (
           <div className="new-daily-spin-modal__error" role="alert">
-            {error}
+            <p className="new-daily-spin-modal__error-title">Spin wheel unavailable</p>
+            <p className="new-daily-spin-modal__error-detail">{error}</p>
+            <div className="new-daily-spin-modal__error-actions">
+              <button
+                type="button"
+                className="new-daily-spin-modal__retry-btn"
+                onClick={loadSpinStatus}
+                disabled={loading}
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                className="new-daily-spin-modal__secondary-btn"
+                onClick={onClose}
+              >
+                Close
+              </button>
+            </div>
+            {isOffline && (
+              <p className="new-daily-spin-modal__error-footnote">
+                Offline mode keeps your place. Reconnect to spin.
+              </p>
+            )}
           </div>
         )}
 
@@ -209,7 +258,31 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
         {/* Actions */}
         <div className="new-daily-spin-modal__actions">
-          {canSpin ? (
+          {error ? (
+            <div className="new-daily-spin-modal__fallback">
+              <p className="new-daily-spin-modal__fallback-title">We saved your spot.</p>
+              <p className="new-daily-spin-modal__fallback-text">
+                Stay here and retry once your connection is back.
+              </p>
+              <div className="new-daily-spin-modal__fallback-actions">
+                <button
+                  type="button"
+                  className="new-daily-spin-modal__retry-btn"
+                  onClick={loadSpinStatus}
+                  disabled={loading}
+                >
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  className="new-daily-spin-modal__secondary-btn"
+                  onClick={onClose}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : canSpin ? (
             <button
               type="button"
               className="new-daily-spin-modal__spin-btn"
