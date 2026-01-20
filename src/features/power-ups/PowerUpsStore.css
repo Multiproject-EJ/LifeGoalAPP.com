@@ -5,21 +5,22 @@
 .power-ups-store {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem 1rem;
 }
 
 /* Header */
 .power-ups-store__header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
+  flex-direction: column;
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
 .power-ups-store__title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   margin: 0;
   color: var(--text-primary, #000);
@@ -29,17 +30,18 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  justify-content: center;
+  padding: 0.6rem 1.1rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 50px;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .power-ups-store__balance-value {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
 }
 
 /* Loading */
@@ -236,8 +238,8 @@
 
 .power-ups-store__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
 /* Power-up Card */
@@ -245,7 +247,7 @@
   background: white;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem;
   transition: all 0.3s ease;
   cursor: pointer;
   display: flex;
@@ -290,7 +292,7 @@
   background: white;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem;
   transition: all 0.3s ease;
   cursor: pointer;
   display: flex;
@@ -299,7 +301,7 @@
 }
 
 .power-up-card__icon {
-  font-size: 3rem;
+  font-size: 2.4rem;
   text-align: center;
   margin-bottom: 1rem;
 }
@@ -348,8 +350,9 @@
 
 .power-up-card__footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
   gap: 1rem;
   margin-top: auto;
 }
@@ -377,6 +380,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  width: 100%;
 }
 
 .power-up-card__button:hover:not(:disabled) {
@@ -564,52 +568,54 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .power-ups-store {
-    padding: 1rem;
+    padding: 2rem;
   }
 
   .power-ups-store__header {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
   }
 
   .power-ups-store__title {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 
   .power-ups-store__balance {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .power-ups-store__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
   }
 
   .power-up-card__footer {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
   }
 
   .power-up-card__button {
-    width: 100%;
+    width: auto;
   }
 
   .power-up-modal__actions {
-    flex-direction: column;
+    flex-direction: row;
   }
 }
 
-@media (max-width: 480px) {
-  .power-ups-store__title {
-    font-size: 1.25rem;
+@media (min-width: 1024px) {
+  .power-ups-store__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
   }
 
   .power-up-card {
-    padding: 1rem;
+    padding: 1.5rem;
   }
 
   .power-up-card__icon {
-    font-size: 2.5rem;
+    font-size: 3rem;
   }
 }
