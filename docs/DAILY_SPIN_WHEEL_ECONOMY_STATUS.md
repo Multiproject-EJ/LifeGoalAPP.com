@@ -16,5 +16,6 @@
 - **Step 6 — Zen Tokens + Zen Garden: Not Started**
 - **Step 7 — 4x3 Grid Layout: In Progress**
   - Added shared mobile-first 4x3 grid utility and applied it to the shop + achievements grids.
+  - Added a mobile-friendly locked-state hint showing missing points for power-up cards.
 - **Step 8 — Trophies/Plaques/Medals: Not Started**
 - **Step 9 — QA + Telemetry: Not Started**

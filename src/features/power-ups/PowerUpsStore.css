@@ -321,6 +321,16 @@
   flex: 1;
 }
 
+.power-up-card__unlock-hint {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.85rem;
+  color: #9f1239;
+  background: #fff1f2;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
 .power-up-card__details {
   display: flex;
   gap: 1rem;

@@ -10,6 +10,7 @@ interface PowerUpCardProps {
 export function PowerUpCard({ powerUp, currentPoints, onPurchase, disabled }: PowerUpCardProps) {
   const canAfford = currentPoints >= powerUp.costPoints;
   const isDisabled = disabled || !canAfford;
+  const missingPoints = Math.max(powerUp.costPoints - currentPoints, 0);
 
   const getDurationText = () => {
     if (!powerUp.durationMinutes) return null;
@@ -78,6 +79,11 @@ export function PowerUpCard({ powerUp, currentPoints, onPurchase, disabled }: Po
             {!canAfford ? 'Not Enough Points' : 'Buy Now'}
           </button>
         </div>
+        {!canAfford && (
+          <p className="power-up-card__unlock-hint">
+            Need {missingPoints} more {missingPoints === 1 ? 'point' : 'points'} to unlock.
+          </p>
+        )}
       </div>
     </div>
   );
