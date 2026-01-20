@@ -16,7 +16,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Props) {
   }
 
   return (
-    <div className="achievement-grid">
+    <div className="achievement-grid four-by-three-grid">
       {achievements.map(achievement => (
         <AchievementCard
           key={achievement.id}
