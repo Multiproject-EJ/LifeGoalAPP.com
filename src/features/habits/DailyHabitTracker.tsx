@@ -886,7 +886,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const currentDate = new Date();
     const todayISO = formatISODate(currentDate);
-    const trackingDateISO = activeDate > todayISO ? todayISO : activeDate;
+    const trackingDateISO = variant === 'compact'
+      ? todayISO
+      : activeDate > todayISO
+        ? todayISO
+        : activeDate;
     // Use selected month/year instead of current month for monthly grid
     const monthStartDate = new Date(selectedYear, selectedMonth, 1);
     const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
@@ -978,7 +982,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     } finally {
       setLoading(false);
     }
-  }, [session, isConfigured, isDemoExperience, selectedMonth, selectedYear, activeDate]);
+  }, [session, isConfigured, isDemoExperience, selectedMonth, selectedYear, activeDate, variant]);
 
   useEffect(() => {
     if (!isConfigured) {
