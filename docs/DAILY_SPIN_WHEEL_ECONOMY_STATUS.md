@@ -10,7 +10,8 @@
   - `src/constants/economy.ts` already defines the economy matrix and XP→Points ratio.
 - **Step 3 — Fix Daily Spin Wheel (Mobile-first): Done**
   - Added mobile-first retry + offline fallback and Score tab refresh event for the daily spin experiences.
-- **Step 4 — Vision Board Claim Animation: Not Started**
+- **Step 4 — Vision Board Claim Animation: Done**
+  - Vision claim animation flies to the Game tab icon on mobile.
 - **Step 5 — Score Tab (Mobile-first Ledger): Done**
   - Score tab shows XP, points, streaks, Zen tokens, and recent activity.
 - **Step 6 — Zen Tokens + Zen Garden: Not Started**
