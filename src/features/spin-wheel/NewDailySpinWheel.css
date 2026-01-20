@@ -27,9 +27,9 @@
 
 .new-daily-spin-modal__content {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  padding: 2rem;
-  max-width: 600px;
+  border-radius: 16px;
+  padding: 1.25rem;
+  max-width: 360px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -56,14 +56,14 @@
   background: rgba(255, 255, 255, 0.2);
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: white;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   transition: all 0.2s ease;
 }
 
@@ -72,11 +72,11 @@
   transform: scale(1.1);
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .new-daily-spin-modal__close {
-    width: 44px;
-    height: 44px;
-    font-size: 1.6rem;
+    width: 32px;
+    height: 32px;
+    font-size: 1.25rem;
   }
 }
 
@@ -87,7 +87,7 @@
 }
 
 .new-daily-spin-modal__header h2 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin: 0 0 0.5rem 0;
   font-weight: 700;
 }
@@ -100,7 +100,7 @@
 
 .new-daily-spin-modal__loading {
   text-align: center;
-  padding: 3rem 2rem;
+  padding: 2.5rem 1.5rem;
   color: white;
 }
 
@@ -183,9 +183,9 @@
 .new-daily-spin-wheel {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 280px;
   aspect-ratio: 1;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1.5rem;
 }
 
 .new-daily-spin-wheel__pointer {
@@ -294,8 +294,8 @@
 
 .new-daily-spin-modal__spin-btn {
   width: 100%;
-  padding: 1rem 2rem;
-  font-size: 1.25rem;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.05rem;
   font-weight: 700;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
@@ -330,7 +330,7 @@
 }
 
 .new-daily-spin-modal__result-icon {
-  font-size: 4rem;
+  font-size: 3rem;
   margin-bottom: 1rem;
   animation: prize-bounce 0.6s ease-out;
 }
@@ -345,13 +345,13 @@
 }
 
 .new-daily-spin-modal__result-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   margin: 0 0 0.5rem 0;
   font-weight: 700;
 }
 
 .new-daily-spin-modal__result-prize {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   margin: 0 0 0.5rem 0;
   font-weight: 600;
 }
@@ -375,8 +375,8 @@
 
 .new-daily-spin-modal__reward-card {
   background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
-  border-radius: 20px;
-  padding: 2rem;
+  border-radius: 18px;
+  padding: 1.5rem;
   text-align: center;
   color: #f8fafc;
   width: min(360px, 90vw);
@@ -391,17 +391,17 @@
 }
 
 .new-daily-spin-modal__reward-title {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   margin: 0 0 0.5rem 0;
 }
 
 .new-daily-spin-modal__reward-icon {
-  font-size: 3.5rem;
+  font-size: 3rem;
   margin-bottom: 0.5rem;
 }
 
 .new-daily-spin-modal__reward-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
 }
@@ -447,12 +447,12 @@
 }
 
 .new-daily-spin-modal__locked-icon {
-  font-size: 3rem;
+  font-size: 2.5rem;
   margin-bottom: 0.5rem;
 }
 
 .new-daily-spin-modal__locked-text {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 500;
   margin: 0;
 }
@@ -475,7 +475,7 @@
 
 .new-daily-spin-modal__legend-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
@@ -501,35 +501,37 @@
   font-size: 0.7rem;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 640px) {
+@media (min-width: 640px) {
   .new-daily-spin-modal__content {
-    padding: 1.5rem;
+    padding: 1.75rem;
+    max-width: 520px;
   }
 
   .new-daily-spin-modal__header h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
 
   .new-daily-spin-wheel {
-    max-width: 300px;
+    max-width: 340px;
   }
 
   .new-daily-spin-wheel__label-icon {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
   }
 
   .new-daily-spin-wheel__label-text {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
 
   .new-daily-spin-modal__spin-btn {
-    font-size: 1rem;
-    padding: 0.875rem 1.5rem;
+    font-size: 1.15rem;
+    padding: 0.95rem 1.75rem;
   }
-}
 
-@media (min-width: 640px) {
+  .new-daily-spin-modal__legend-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
   .new-daily-spin-modal__error-actions,
   .new-daily-spin-modal__fallback-actions {
     flex-direction: row;
@@ -540,5 +542,40 @@
   .new-daily-spin-modal__secondary-btn {
     width: auto;
     min-width: 140px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .new-daily-spin-modal__content {
+    max-width: 600px;
+    padding: 2rem;
+  }
+
+  .new-daily-spin-wheel {
+    max-width: 400px;
+  }
+
+  .new-daily-spin-modal__header h2 {
+    font-size: 2rem;
+  }
+
+  .new-daily-spin-modal__result-icon {
+    font-size: 4rem;
+  }
+
+  .new-daily-spin-modal__result-title {
+    font-size: 1.5rem;
+  }
+
+  .new-daily-spin-modal__result-prize {
+    font-size: 1.25rem;
+  }
+
+  .new-daily-spin-modal__reward-icon {
+    font-size: 3.5rem;
+  }
+
+  .new-daily-spin-modal__reward-title {
+    font-size: 1.4rem;
   }
 }
