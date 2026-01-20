@@ -19,17 +19,42 @@ export function DailySpinWheel({ session }: Props) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<SpinResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
 
   useEffect(() => {
     loadSpinState();
   }, [session.user.id]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const loadSpinState = async () => {
     setLoading(true);
+    setError(null);
     const { data, error: fetchError } = await getDailySpinState(session.user.id);
 
     if (fetchError) {
-      setError('Failed to load spin state');
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+      setIsOffline(offline);
+      setError(
+        offline
+          ? 'You appear to be offline. Check your connection and try again.'
+          : 'We could not reach the spin wheel. Please try again.'
+      );
       console.error(fetchError);
     } else {
       setSpinState(data);
@@ -60,10 +85,15 @@ export function DailySpinWheel({ session }: Props) {
       setTimeout(() => {
         setResult(spinResult);
         setSpinning(false);
-        
+
         // Refresh gamification profile to update points/lives/freezes
         refreshProfile();
-        
+
+        // Emit event for other components
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('dailySpinComplete'));
+        }
+
         // Reload spin state
         loadSpinState();
       }, 3500); // Match spin animation duration
@@ -80,14 +110,6 @@ export function DailySpinWheel({ session }: Props) {
 
   if (!gamificationEnabled) {
     return null;
-  }
-
-  if (loading) {
-    return (
-      <div className="daily-spin-wheel">
-        <div className="daily-spin-wheel__loading">Loading spin wheel...</div>
-      </div>
-    );
   }
 
   const canSpin = spinState && spinState.spinsAvailable > 0 && !spinning;
@@ -115,10 +137,31 @@ export function DailySpinWheel({ session }: Props) {
         />
       </div>
 
+      {loading && (
+        <div className="daily-spin-wheel__loading" role="status">
+          Loading spin wheel...
+        </div>
+      )}
+
       {error && (
-        <p className="daily-spin-wheel__error" role="alert">
-          {error}
-        </p>
+        <div className="daily-spin-wheel__error" role="alert">
+          <p className="daily-spin-wheel__error-text">{error}</p>
+          <div className="daily-spin-wheel__error-actions">
+            <button
+              type="button"
+              className="daily-spin-wheel__retry-button"
+              onClick={loadSpinState}
+              disabled={loading}
+            >
+              Try again
+            </button>
+            {isOffline && (
+              <span className="daily-spin-wheel__error-footnote">
+                Offline mode keeps your place. Reconnect to spin.
+              </span>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="daily-spin-wheel__actions">
