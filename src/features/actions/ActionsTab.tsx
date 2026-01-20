@@ -405,7 +405,7 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
             aria-label="Undo last completed action"
             title={lastCompletedAction ? 'Undo last completed action' : 'Complete an action to enable undo'}
           >
-            ↩️ Undo
+            <span className="actions-tab__undo-icon" aria-hidden="true">←</span>
           </button>
         </div>
       )}
