@@ -1,7 +1,7 @@
 // React hook for gamification features
 // Manages profile loading, XP earning, notifications, and real-time updates
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import type {
@@ -20,6 +20,7 @@ import {
 } from '../services/gamification';
 
 export function useGamification(session: Session | null) {
+  const instanceId = useRef(`gamification-${Math.random().toString(36).slice(2)}`);
   const [enabled, setEnabled] = useState<boolean>(true);
   const [profile, setProfile] = useState<GamificationProfile | null>(null);
   const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
@@ -34,6 +35,16 @@ export function useGamification(session: Session | null) {
   const [levelUpEvent, setLevelUpEvent] = useState<{ newLevel: number; xp: number } | null>(null);
 
   const userId = session?.user?.id;
+  const refreshEventName = 'gamificationProfileUpdated';
+
+  const broadcastRefresh = useCallback(() => {
+    if (typeof window === 'undefined' || !userId) return;
+    window.dispatchEvent(
+      new CustomEvent(refreshEventName, {
+        detail: { userId, sourceId: instanceId.current },
+      })
+    );
+  }, [userId, refreshEventName]);
 
   const loadGamificationData = useCallback(async () => {
     if (!userId) return;
@@ -133,6 +144,33 @@ export function useGamification(session: Session | null) {
     };
   }, [userId, loadGamificationData]);
 
+  useEffect(() => {
+    if (!userId || typeof window === 'undefined') {
+      return;
+    }
+
+    const handleProfileRefresh = (event: Event) => {
+      const payload = event as CustomEvent<{ userId?: string; sourceId?: string }>;
+      if (!payload.detail || payload.detail.userId !== userId) {
+        return;
+      }
+      if (payload.detail.sourceId === instanceId.current) {
+        return;
+      }
+      void loadGamificationData();
+    };
+
+    window.addEventListener(refreshEventName, handleProfileRefresh);
+    return () => {
+      window.removeEventListener(refreshEventName, handleProfileRefresh);
+    };
+  }, [userId, loadGamificationData, refreshEventName]);
+
+  const refreshProfile = useCallback(async () => {
+    await loadGamificationData();
+    broadcastRefresh();
+  }, [loadGamificationData, broadcastRefresh]);
+
   const earnXP = useCallback(
     async (xpAmount: number, sourceType: string, sourceId?: string, description?: string) => {
       if (!userId || !enabled) return;
@@ -154,12 +192,12 @@ export function useGamification(session: Session | null) {
         }
         
         // Refresh profile
-        await loadGamificationData();
+        await refreshProfile();
       }
 
       return result;
     },
-    [userId, enabled, loadGamificationData]
+    [userId, enabled, refreshProfile]
   );
 
   const recordActivity = useCallback(async () => {
@@ -169,11 +207,11 @@ export function useGamification(session: Session | null) {
 
     if (result.success) {
       // Refresh profile
-      await loadGamificationData();
+      await refreshProfile();
     }
 
     return result;
-  }, [userId, enabled]);
+  }, [userId, enabled, refreshProfile]);
 
   const dismissNotification = useCallback(
     async (notificationId: string) => {
@@ -215,6 +253,6 @@ export function useGamification(session: Session | null) {
     xpToasts,
     levelUpEvent,
     dismissLevelUpEvent,
-    refreshProfile: loadGamificationData,
+    refreshProfile,
   };
 }

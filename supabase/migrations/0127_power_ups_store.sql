@@ -1,28 +1,83 @@
 -- ========================================================
--- PHASE 2 POWER-UPS STORE SYSTEM
--- Migration 0127: Enhanced power-ups with types and categories
+-- POWER-UPS STORE SYSTEM
+-- Migration 0127: Consolidated power-ups schema + Phase 2 catalog
 -- ========================================================
 
--- This migration enhances the power-ups system from migration 0111
--- Adding type (temporary/permanent) and category (boosts/protection/upgrades)
--- for Phase 2 of gamification
+-- Add missing columns to achievements table if they don't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = 'public'
+                 AND table_name = 'achievements'
+                 AND column_name = 'points_reward') THEN
+    ALTER TABLE public.achievements ADD COLUMN points_reward INT NOT NULL DEFAULT 0;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = 'public'
+                 AND table_name = 'achievements'
+                 AND column_name = 'sort_order') THEN
+    ALTER TABLE public.achievements ADD COLUMN sort_order INT NOT NULL DEFAULT 0;
+  END IF;
+END $$;
+
+-- Power-ups catalog table
+CREATE TABLE IF NOT EXISTS public.power_ups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  power_up_key TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  cost_points INTEGER NOT NULL,
+  effect_type TEXT NOT NULL, -- 'xp_multiplier', 'streak_freeze', 'instant_xp', 'extra_life', 'spin_token', 'mystery'
+  effect_value NUMERIC NOT NULL,
+  duration_minutes INTEGER, -- NULL for instant/permanent effects
+  type TEXT NOT NULL DEFAULT 'temporary' CHECK (type IN ('temporary', 'permanent')),
+  category TEXT NOT NULL DEFAULT 'boosts' CHECK (category IN ('boosts', 'protection', 'upgrades')),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- User power-ups (purchases and active items)
+CREATE TABLE IF NOT EXISTS public.user_power_ups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  power_up_id UUID NOT NULL REFERENCES public.power_ups(id) ON DELETE CASCADE,
+  purchased_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  activated_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  is_active BOOLEAN NOT NULL DEFAULT false,
+  is_consumed BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Power-up transaction log
+CREATE TABLE IF NOT EXISTS public.power_up_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  power_up_id UUID NOT NULL REFERENCES public.power_ups(id) ON DELETE CASCADE,
+  action TEXT NOT NULL, -- 'purchase', 'activate', 'expire', 'consume'
+  points_spent INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- Add type and category columns to power_ups table if they don't exist
-DO $$ 
+DO $$
 BEGIN
   -- Add type column (temporary vs permanent)
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                 WHERE table_schema = 'public' 
-                 AND table_name = 'power_ups' 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = 'public'
+                 AND table_name = 'power_ups'
                  AND column_name = 'type') THEN
     ALTER TABLE public.power_ups ADD COLUMN type TEXT NOT NULL DEFAULT 'temporary'
       CHECK (type IN ('temporary', 'permanent'));
   END IF;
-  
+
   -- Add category column (boosts, protection, upgrades)
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                 WHERE table_schema = 'public' 
-                 AND table_name = 'power_ups' 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = 'public'
+                 AND table_name = 'power_ups'
                  AND column_name = 'category') THEN
     ALTER TABLE public.power_ups ADD COLUMN category TEXT NOT NULL DEFAULT 'boosts'
       CHECK (category IN ('boosts', 'protection', 'upgrades'));
@@ -58,6 +113,47 @@ END $$;
 -- Add indexes for new columns
 CREATE INDEX IF NOT EXISTS idx_power_ups_type ON public.power_ups(type);
 CREATE INDEX IF NOT EXISTS idx_power_ups_category ON public.power_ups(category);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_power_ups_key ON public.power_ups(power_up_key);
+CREATE INDEX IF NOT EXISTS idx_power_ups_active ON public.power_ups(is_active);
+CREATE INDEX IF NOT EXISTS idx_user_power_ups_user_id ON public.user_power_ups(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_power_ups_active ON public.user_power_ups(user_id, is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_user_power_ups_expires ON public.user_power_ups(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_power_up_transactions_user_id ON public.power_up_transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_power_up_transactions_created_at ON public.power_up_transactions(created_at DESC);
+
+-- RLS Policies
+ALTER TABLE public.power_ups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_power_ups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.power_up_transactions ENABLE ROW LEVEL SECURITY;
+
+-- Power-ups: Anyone can view active power-ups
+CREATE POLICY "Anyone can view active power-ups"
+  ON public.power_ups FOR SELECT
+  USING (is_active = true);
+
+-- User power-ups: Users can view their own
+CREATE POLICY "Users can view their own power-ups"
+  ON public.user_power_ups FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own power-ups"
+  ON public.user_power_ups FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own power-ups"
+  ON public.user_power_ups FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Transactions: Users can view their own
+CREATE POLICY "Users can view their own transactions"
+  ON public.power_up_transactions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own transactions"
+  ON public.power_up_transactions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 -- Clear existing power-ups and insert Phase 2 catalog
 -- This ensures we have the correct power-ups for Phase 2
@@ -122,6 +218,11 @@ BEGIN
 END $$;
 
 -- Comments for documentation
+COMMENT ON TABLE public.power_ups IS 'Catalog of available power-ups in the store';
+COMMENT ON TABLE public.user_power_ups IS 'User purchases and active power-ups';
+COMMENT ON TABLE public.power_up_transactions IS 'Transaction log for all power-up purchases and activations';
+COMMENT ON COLUMN public.power_ups.effect_type IS 'Type of effect: xp_multiplier, streak_freeze, instant_xp, extra_life, spin_token, mystery';
+COMMENT ON COLUMN public.power_ups.duration_minutes IS 'Duration in minutes for timed effects, NULL for instant/permanent';
 COMMENT ON COLUMN public.power_ups.type IS 'temporary: Time-limited or consumable, permanent: Lasting upgrades';
 COMMENT ON COLUMN public.power_ups.category IS 'boosts: XP multipliers and bonuses, protection: Lives and freezes, upgrades: Permanent improvements';
 COMMENT ON COLUMN public.gamification_profiles.freeze_bank_capacity IS 'Maximum number of streak freezes user can hold';
