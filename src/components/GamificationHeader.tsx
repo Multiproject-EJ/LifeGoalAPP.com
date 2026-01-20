@@ -18,6 +18,7 @@ interface GamificationHeaderProps {
 export function GamificationHeader({ profile, levelInfo, session, onLevelClick }: GamificationHeaderProps) {
   const { spinAvailable, loading } = useDailySpinStatus(session?.user?.id);
   const [activePowerUps, setActivePowerUps] = useState<ActiveBoost[]>([]);
+  const zenTokens = profile.zen_tokens ?? 0;
 
   useEffect(() => {
     const userId = session?.user?.id || 'demo_user';
@@ -108,6 +109,13 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
             <span className="gamification-stat__icon">💎</span>
             <span className="gamification-stat__value">{profile.total_points}</span>
             <span className="gamification-stat__label">Points</span>
+          </div>
+
+          {/* Zen Tokens */}
+          <div className="gamification-stat">
+            <span className="gamification-stat__icon">🪷</span>
+            <span className="gamification-stat__value">{zenTokens}</span>
+            <span className="gamification-stat__label">Zen</span>
           </div>
 
           {/* Streak Freezes */}

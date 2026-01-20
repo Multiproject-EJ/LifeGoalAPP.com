@@ -27,6 +27,7 @@ export function ScoreTab({ session, profile, levelInfo, enabled, loading }: Scor
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
   const userId = session?.user?.id ?? profile?.user_id ?? '';
+  const zenTokens = profile?.zen_tokens ?? 0;
 
   useEffect(() => {
     let isMounted = true;
@@ -154,10 +155,10 @@ export function ScoreTab({ session, profile, levelInfo, enabled, loading }: Scor
             <article className="score-tab__card score-tab__card--zen">
               <div className="score-tab__card-row">
                 <h3 className="score-tab__card-title">Zen tokens</h3>
-                <span className="score-tab__pill score-tab__pill--muted">Coming soon</span>
+                <span className="score-tab__pill score-tab__pill--muted">Meditation-only</span>
               </div>
-              <p className="score-tab__value">🪷 0</p>
-              <p className="score-tab__meta">Earn meditation-only currency for the Zen Garden.</p>
+              <p className="score-tab__value">🪷 {formatter.format(zenTokens)}</p>
+              <p className="score-tab__meta">Earn through meditation sessions for Zen Garden unlocks.</p>
             </article>
           </div>
 
