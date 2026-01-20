@@ -1399,7 +1399,11 @@ export default function App() {
           }}
           role="presentation"
         />
-        <div className="mobile-menu-overlay__panel">
+        <div
+          className={`mobile-menu-overlay__panel${
+            isMobileMenuImageActive ? ' mobile-menu-overlay__panel--image' : ''
+          }`}
+        >
           {isMobileThemeSelectorOpen ? (
             <MobileThemeSelector onClose={() => setIsMobileThemeSelectorOpen(false)} />
           ) : (
