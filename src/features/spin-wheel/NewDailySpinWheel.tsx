@@ -30,6 +30,24 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
 
+  const getSpinStatusErrorMessage = (err: unknown, offline: boolean) => {
+    if (offline) {
+      return 'You appear to be offline. Check your connection and try again.';
+    }
+
+    if (err && typeof err === 'object') {
+      const maybeError = err as { code?: string; message?: string };
+      if (
+        maybeError.code === '42P01' ||
+        maybeError.message?.toLowerCase().includes('daily_spins')
+      ) {
+        return 'Daily spins are not configured yet. Run the daily spin migration to enable the wheel.';
+      }
+    }
+
+    return 'We could not reach the spin wheel. Please try again.';
+  };
+
   useEffect(() => {
     loadSpinStatus();
   }, [session.user.id]);
@@ -78,11 +96,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       const offline = typeof navigator !== 'undefined' && !navigator.onLine;
       setIsOffline(offline);
       setCanSpin(false);
-      setError(
-        offline
-          ? 'You appear to be offline. Check your connection and try again.'
-          : 'We could not reach the spin wheel. Please try again.'
-      );
+      setError(getSpinStatusErrorMessage(err, offline));
     } finally {
       setLoading(false);
     }
@@ -179,6 +193,12 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       : 'Better luck tomorrow!'
     : '';
 
+  const headerSubtitle = error
+    ? 'We could not load today’s spin. Check your connection and retry.'
+    : canSpin
+    ? 'Spin once per day for amazing rewards!'
+    : 'Come back tomorrow for another spin!';
+
   return (
     <div className="new-daily-spin-modal" onClick={onClose}>
       <div className="new-daily-spin-modal__content" onClick={(e) => e.stopPropagation()}>
@@ -194,7 +214,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         <header className="new-daily-spin-modal__header">
           <h2>🎡 Daily Spin Wheel</h2>
           <p className="new-daily-spin-modal__subtitle">
-            {canSpin ? 'Spin once per day for amazing rewards!' : 'Come back tomorrow for another spin!'}
+            {headerSubtitle}
           </p>
         </header>
 
