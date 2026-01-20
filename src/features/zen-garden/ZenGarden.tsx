@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { fetchGamificationProfile } from '../../services/gamificationPrefs';
-import { fetchZenGardenInventory, purchaseZenGardenItem } from '../../services/zenGarden';
+import type { ZenTokenTransaction } from '../../types/gamification';
+import { fetchZenGardenInventory, fetchZenTokenTransactions, purchaseZenGardenItem } from '../../services/zenGarden';
 import './ZenGarden.css';
 
 type ZenGardenProps = {
@@ -68,12 +69,19 @@ export function ZenGarden({ session }: ZenGardenProps) {
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<ZenTokenTransaction[]>([]);
+  const [transactionsError, setTransactionsError] = useState<string | null>(null);
 
   const userId = session?.user?.id ?? 'demo_user';
 
   const ownedItems = useMemo(
     () => new Set(inventory),
     [inventory]
+  );
+
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }),
+    []
   );
 
   const loadBalance = async () => {
@@ -92,11 +100,24 @@ export function ZenGarden({ session }: ZenGardenProps) {
     setInventory(data);
   };
 
+  const loadTransactions = async () => {
+    const { data, error } = await fetchZenTokenTransactions(userId, 4);
+    if (error) {
+      setTransactionsError(error.message);
+      setTransactions([]);
+      return;
+    }
+    setTransactionsError(null);
+    setTransactions(data);
+  };
+
   const refresh = async () => {
     setLoading(true);
     setPurchaseError(null);
+    setTransactionsError(null);
     try {
       await Promise.all([loadBalance(), loadInventory()]);
+      await loadTransactions();
     } catch (error) {
       setPurchaseError(error instanceof Error ? error.message : 'Failed to load Zen Garden.');
     } finally {
@@ -113,7 +134,7 @@ export function ZenGarden({ session }: ZenGardenProps) {
     setPurchaseError(null);
     setPurchasingId(item.id);
 
-    const { data, error } = await purchaseZenGardenItem(userId, item.id, item.cost);
+    const { data, error } = await purchaseZenGardenItem(userId, item.id, item.name, item.cost);
     if (error || !data) {
       setPurchaseError(error?.message ?? 'Purchase failed.');
       setPurchasingId(null);
@@ -122,6 +143,7 @@ export function ZenGarden({ session }: ZenGardenProps) {
 
     setBalance(data.balance);
     setInventory(data.inventory);
+    await loadTransactions();
     setPurchaseSuccess(`${item.name} added to your Zen Garden.`);
     setPurchasingId(null);
   };
@@ -185,6 +207,45 @@ export function ZenGarden({ session }: ZenGardenProps) {
               );
             })}
           </div>
+          <section className="zen-garden__ledger">
+            <div className="zen-garden__ledger-header">
+              <div>
+                <p className="zen-garden__eyebrow">Zen Token activity</p>
+                <h3 className="zen-garden__ledger-title">Recent Zen Garden spending</h3>
+              </div>
+              <span className="zen-garden__ledger-pill">Ledger</span>
+            </div>
+
+            {transactionsError && (
+              <p className="zen-garden__ledger-status">{transactionsError}</p>
+            )}
+
+            {!transactionsError && transactions.length === 0 && (
+              <p className="zen-garden__ledger-status">
+                Unlock your first Zen reward to start building your meditation ledger.
+              </p>
+            )}
+
+            {!transactionsError && transactions.length > 0 && (
+              <div className="zen-garden__ledger-list">
+                {transactions.map((transaction) => (
+                  <div key={transaction.id} className="zen-garden__ledger-row">
+                    <div>
+                      <p className="zen-garden__ledger-row-title">
+                        {transaction.description ?? 'Zen Garden unlock'}
+                      </p>
+                      <p className="zen-garden__ledger-row-meta">
+                        {dateFormatter.format(new Date(transaction.created_at))}
+                      </p>
+                    </div>
+                    <span className="zen-garden__ledger-row-value">
+                      -{transaction.token_amount} 🪷
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </>
       )}
     </section>
