@@ -141,6 +141,14 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     return (
       <div className="new-daily-spin-modal" onClick={onClose}>
         <div className="new-daily-spin-modal__content" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className="new-daily-spin-modal__close"
+            onClick={onClose}
+            aria-label="Close spin wheel"
+          >
+            ✕
+          </button>
           <div className="new-daily-spin-modal__loading">
             <div className="spinner">🎡</div>
             <p>Loading spin wheel...</p>
