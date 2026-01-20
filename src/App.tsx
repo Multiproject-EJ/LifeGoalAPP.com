@@ -252,6 +252,7 @@ export default function App() {
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
+  const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
@@ -1584,6 +1585,8 @@ export default function App() {
           onSelect={handleMobileNavSelect}
           onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
+          isDiodeActive={isMobileMenuImageActive}
+          onToggleDiode={setIsMobileMenuImageActive}
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -1765,6 +1768,8 @@ export default function App() {
           onSelect={handleMobileNavSelect}
           onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
+          isDiodeActive={isMobileMenuImageActive}
+          onToggleDiode={setIsMobileMenuImageActive}
         />
       ) : null}
 
