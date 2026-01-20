@@ -1488,7 +1488,7 @@ export default function App() {
         <div className="mobile-gamification-overlay__panel">
           <header className="mobile-gamification-overlay__header">
             <div>
-              <p className="mobile-gamification-overlay__eyebrow">Today</p>
+              <p className="mobile-gamification-overlay__eyebrow">Game Menu</p>
               <h2 className="mobile-gamification-overlay__title">Keep building your streak</h2>
               <p className="mobile-gamification-overlay__subtitle">{todayLabel}</p>
             </div>
