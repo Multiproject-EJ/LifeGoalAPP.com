@@ -240,7 +240,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     ? 'We could not load today’s spin. Check your connection and retry.'
     : canSpin
     ? 'Spin when you have a token for amazing rewards!'
-    : 'Complete habits to earn your next spin!';
+    : 'No spins left. Earn more by completing habits today.';
 
   return (
     <div className="new-daily-spin-modal" onClick={onClose}>
@@ -369,8 +369,13 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             <div className="new-daily-spin-modal__locked">
               <p className="new-daily-spin-modal__locked-icon">🔒</p>
               <p className="new-daily-spin-modal__locked-text">
-                Complete habits to unlock another spin.
+                Earn spins by finishing habits:
               </p>
+              <ul className="new-daily-spin-modal__locked-list">
+                <li>Complete 1+ habits today → 1 spin</li>
+                <li>Complete all of today’s habits → 2 spins</li>
+                <li>Keep a 7+ day streak → +1 bonus spin at reset</li>
+              </ul>
             </div>
           )}
         </div>

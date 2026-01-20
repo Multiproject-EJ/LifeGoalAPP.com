@@ -457,6 +457,22 @@
   margin: 0;
 }
 
+.new-daily-spin-modal__locked-list {
+  margin: 0.75rem auto 0;
+  padding-left: 1.25rem;
+  text-align: left;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.new-daily-spin-modal__locked-list li {
+  margin-bottom: 0.35rem;
+}
+
+.new-daily-spin-modal__locked-list li:last-child {
+  margin-bottom: 0;
+}
+
 /* Prize Legend */
 .new-daily-spin-modal__legend {
   background: rgba(255, 255, 255, 0.1);
