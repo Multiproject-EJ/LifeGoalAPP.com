@@ -11141,6 +11141,26 @@ body {
   position: relative;
 }
 
+.mobile-footer-nav__surface--image {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.mobile-footer-nav__surface--image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('./assets/ControllerLightBlue.webp') center / contain no-repeat;
+  z-index: 0;
+}
+
+.mobile-footer-nav__surface--image > * {
+  position: relative;
+  z-index: 1;
+}
+
 .mobile-footer-nav__list {
   list-style: none;
   margin: 0;

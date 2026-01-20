@@ -55,7 +55,8 @@ export function MobileFooterNav({
       <div
         className={`mobile-footer-nav__surface ${
           isDiodeOff ? 'mobile-footer-nav__surface--diode-off' : ''
-        }`}
+        }${isDiodeActive ? ' mobile-footer-nav__surface--image' : ''}`}
+        data-diode-active={isDiodeActive}
       >
         {onOpenMenu ? (
           <div className="mobile-footer-nav__menu-row">
