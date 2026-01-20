@@ -4,10 +4,10 @@
 .daily-spin-wheel {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.25rem;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   color: white;
-  max-width: 600px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -17,21 +17,21 @@
 }
 
 .daily-spin-wheel__header h2 {
-  font-size: 2rem;
+  font-size: 1.6rem;
   margin: 0 0 0.5rem 0;
   font-weight: bold;
 }
 
 .daily-spin-wheel__subtitle {
-  font-size: 1rem;
+  font-size: 0.95rem;
   opacity: 0.9;
   margin: 0;
 }
 
 .daily-spin-wheel__loading {
   text-align: center;
-  padding: 2rem;
-  font-size: 1.1rem;
+  padding: 1rem;
+  font-size: 1rem;
 }
 
 /* =====================================================
@@ -50,17 +50,17 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
 .spin-token-indicator__icon {
-  font-size: 2rem;
+  font-size: 1.7rem;
 }
 
 .spin-token-indicator__count {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #ffd700;
 }
 
@@ -79,9 +79,9 @@
    ===================================================== */
 .daily-spin-wheel__wheel-container {
   position: relative;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   width: 100%;
-  max-width: 400px;
+  max-width: 320px;
 }
 
 .spin-wheel {
@@ -92,10 +92,10 @@
 
 .spin-wheel__pointer {
   position: absolute;
-  top: -20px;
+  top: -16px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 2rem;
+  font-size: 1.6rem;
   z-index: 10;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
@@ -166,12 +166,12 @@
 }
 
 .spin-wheel__segment-icon {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   margin-bottom: 0.25rem;
 }
 
 .spin-wheel__segment-label {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: bold;
   color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -190,8 +190,8 @@
   color: #333;
   border: none;
   border-radius: 50px;
-  padding: 1rem 3rem;
-  font-size: 1.3rem;
+  padding: 0.85rem 2.25rem;
+  font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
@@ -237,10 +237,93 @@
   background: rgba(239, 68, 68, 0.2);
   border: 2px solid rgb(239, 68, 68);
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.9rem;
   margin-top: 1rem;
   text-align: center;
   font-weight: bold;
+}
+
+.daily-spin-wheel__error-text {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+.daily-spin-wheel__error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.daily-spin-wheel__retry-button {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.daily-spin-wheel__retry-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.daily-spin-wheel__error-footnote {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+@media (min-width: 640px) {
+  .daily-spin-wheel {
+    padding: 2rem;
+    max-width: 600px;
+  }
+
+  .daily-spin-wheel__header h2 {
+    font-size: 2rem;
+  }
+
+  .daily-spin-wheel__subtitle {
+    font-size: 1rem;
+  }
+
+  .spin-token-indicator__available {
+    font-size: 1.5rem;
+  }
+
+  .spin-token-indicator__icon {
+    font-size: 2rem;
+  }
+
+  .spin-token-indicator__count {
+    font-size: 2.5rem;
+  }
+
+  .daily-spin-wheel__wheel-container {
+    margin: 2rem auto;
+    max-width: 400px;
+  }
+
+  .spin-wheel__pointer {
+    top: -20px;
+    font-size: 2rem;
+  }
+
+  .spin-wheel__segment-icon {
+    font-size: 1.5rem;
+  }
+
+  .spin-wheel__segment-label {
+    font-size: 0.7rem;
+  }
+
+  .daily-spin-wheel__spin-button {
+    padding: 1rem 3rem;
+    font-size: 1.3rem;
+  }
 }
 
 /* =====================================================
