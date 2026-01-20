@@ -235,6 +235,7 @@ async function awardXPDemo(
     total_xp: 0,
     current_level: 1,
     total_points: 0,
+    zen_tokens: 0,
   };
 
   const oldXP = profile.total_xp || 0;

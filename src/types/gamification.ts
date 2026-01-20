@@ -17,6 +17,7 @@ export interface GamificationProfile {
   streak_freezes: number;
   freeze_bank_capacity: number;
   total_points: number;
+  zen_tokens?: number;
   gamification_enabled: boolean;
   created_at: string;
   updated_at: string;

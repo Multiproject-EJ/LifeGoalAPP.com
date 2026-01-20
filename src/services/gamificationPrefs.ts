@@ -124,6 +124,7 @@ export async function fetchGamificationProfile(userId: string): Promise<{
           streak_freezes: 0,
           freeze_bank_capacity: 3,
           total_points: 0,
+          zen_tokens: 0,
           gamification_enabled: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
