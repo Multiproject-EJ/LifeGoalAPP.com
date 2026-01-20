@@ -5388,6 +5388,13 @@ body {
   transform-origin: center;
 }
 
+@media (max-width: 640px) {
+  .habit-quick-journal__meta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .habit-quick-journal__eyebrow {
   margin: 0;
   text-transform: uppercase;
