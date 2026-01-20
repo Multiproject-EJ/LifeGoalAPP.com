@@ -1,37 +1,25 @@
 # Daily Spin Wheel + Economy Status
 
-## Step 1 — Validate Existing Systems (Prereqs)
-**Status:** Done
-- ✅ Daily spin components and services exist (DailySpinWheel + NewDailySpinWheel).
-- ✅ Points are awarded in demo + Supabase flows (gamification service, spin rewards).
-- ✅ Score tab now displays XP + Points on mobile-first UI.
+Last updated: 2025-02-14
 
-## Step 2 — Economy Matrix (Source of Truth)
-**Status:** In Progress
-- ✅ Added `src/constants/economy.ts` with currency matrix + XP → Points conversion.
-- ✅ XP award flow now uses the conversion ratio when adding points.
-- ⏳ Apply the matrix to remaining earn/spend flows (spin rewards, store spend, achievements) for consistency.
+## Step Status
 
-## Step 3 — Fix Daily Spin Wheel (Mobile-first)
-**Status:** Not Started
-- Requires Step 2 completion for full currency sync.
+- **Step 1 — Validate Existing Systems:** **Done**
+  - Spin wheel UI/service present (`NewDailySpinWheel`, `dailySpins`).
+  - Points/XP economy wiring present (`src/constants/economy.ts`).
+  - Score tab exists (`ScoreTab`).
+- **Step 2 — Economy Matrix:** **Done**
+  - Central economy matrix lives in `src/constants/economy.ts` and is referenced by Score tab copy.
+- **Step 3 — Fix Daily Spin Wheel (Mobile-first):** **Done**
+  - Added retry + offline-friendly fallback UI to avoid blocking mobile users.
+  - Added global refresh hook for score updates after spins.
+- **Step 4 — Vision Board Claim Animation:** **Not Started**
+- **Step 5 — Score Tab (Mobile-first Ledger):** **Not Started**
+- **Step 6 — Zen Tokens + Zen Garden:** **Not Started**
+- **Step 7 — 4x3 Grid Layout:** **Not Started**
+- **Step 8 — Trophies/Plaques/Medals:** **Not Started**
+- **Step 9 — QA + Telemetry:** **Not Started**
 
-## Step 4 — Vision Board Claim Animation
-**Status:** Not Started
-
-## Step 5 — Score Tab (Mobile-first Ledger)
-**Status:** In Progress
-- ✅ Mobile-first Score tab now surfaces XP, Points, and streak summary.
-- ⏳ Add transaction history chips and Zen Token balance once Step 6 is ready.
-
-## Step 6 — Zen Tokens + Zen Garden
-**Status:** Not Started
-
-## Step 7 — 4x3 Grid Layout
-**Status:** Not Started
-
-## Step 8 — Trophies/Plaques/Medals
-**Status:** Not Started
-
-## Step 9 — QA + Telemetry
-**Status:** Not Started
+## Notes
+- Mobile-first UI adjustments should be validated on the daily spin modal before scaling.
+- If any prerequisite regresses, revisit Step 1 and mark Blocked with evidence.

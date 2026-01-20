@@ -117,6 +117,22 @@ export function useGamification(session: Session | null) {
     };
   }, [userId]);
 
+  useEffect(() => {
+    if (!userId || typeof window === 'undefined') {
+      return;
+    }
+
+    const handleSpinComplete = () => {
+      loadGamificationData();
+    };
+
+    window.addEventListener('dailySpinComplete', handleSpinComplete);
+
+    return () => {
+      window.removeEventListener('dailySpinComplete', handleSpinComplete);
+    };
+  }, [userId, loadGamificationData]);
+
   const earnXP = useCallback(
     async (xpAmount: number, sourceType: string, sourceId?: string, description?: string) => {
       if (!userId || !enabled) return;
