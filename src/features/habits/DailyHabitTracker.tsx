@@ -259,16 +259,18 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [yesterdayCollecting, setYesterdayCollecting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationXP, setCelebrationXP] = useState(0);
-  const [celebrationType, setCelebrationType] = useState<'habit' | 'journal' | 'action' | 'breathing' | 'levelup'>('habit');
+  const [celebrationType, setCelebrationType] = useState<'habit' | 'journal' | 'action' | 'breathing' | 'levelup' | 'vision'>('habit');
   const [celebrationOrigin, setCelebrationOrigin] = useState<{ x: number; y: number } | null>(null);
   const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
   const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
   const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
+  const visionButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   // Watch for level-up events
   useEffect(() => {
     if (levelUpEvent) {
+      setCelebrationOrigin(null);
       setCelebrationType('levelup');
       setCelebrationXP(levelUpEvent.xp);
       setShowCelebration(true);
@@ -437,6 +439,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         xpAwarded: result?.xpAwarded ?? xpAmount,
         isSuperBoost,
       });
+      setCelebrationType('vision');
+      setCelebrationXP(result?.xpAwarded ?? xpAmount);
+      setShowCelebration(true);
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
       saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
@@ -463,6 +468,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   }, []);
 
   const handleVisionRewardClick = () => {
+    if (visionButtonRef.current) {
+      const rect = visionButtonRef.current.getBoundingClientRect();
+      setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    } else {
+      setCelebrationOrigin(null);
+    }
     triggerStarBurst();
     void handleVisionReward();
   };
@@ -1424,6 +1435,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   className={`habit-day-nav__vision-button ${
                     !hasClaimedVisionStar ? 'habit-day-nav__vision-button--glow' : ''
                   }`}
+                  ref={visionButtonRef}
                   onClick={handleVisionRewardClick}
                   disabled={visionImagesLoading || visionRewarding}
                   aria-label="Reveal a vision board star boost"
@@ -2698,6 +2710,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             origin={celebrationOrigin}
             onComplete={() => {
               setShowCelebration(false);
+              setCelebrationOrigin(null);
               if (celebrationType === 'levelup') {
                 dismissLevelUpEvent?.();
               }
@@ -2967,6 +2980,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           origin={celebrationOrigin}
           onComplete={() => {
             setShowCelebration(false);
+            setCelebrationOrigin(null);
             if (celebrationType === 'levelup') {
               dismissLevelUpEvent?.();
             }
