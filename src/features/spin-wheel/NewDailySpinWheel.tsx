@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import confetti from 'canvas-confetti';
-import { 
-  checkSpinAvailable, 
-  executeDailySpin
-} from '../../services/dailySpins';
-import type { SpinWheelPrize } from './types';
-import { DAILY_SPIN_PRIZES } from './types';
+import {
+  executeSpin,
+  getDailySpinState,
+  getSpinHistory,
+} from '../../services/dailySpin';
+import type { SpinHistoryEntry, SpinPrize } from '../../types/gamification';
+import { SPIN_PRIZES } from '../../types/gamification';
 import { useGamification } from '../../hooks/useGamification';
 import './NewDailySpinWheel.css';
 
@@ -22,13 +23,26 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(false);
-  const [wonPrize, setWonPrize] = useState<SpinWheelPrize | null>(null);
+  const [wonPrize, setWonPrize] = useState<SpinPrize | null>(null);
   const [rotation, setRotation] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
+  const wheelPrizes = SPIN_PRIZES.map((prize, index) => ({
+    ...prize,
+    color: [
+      '#6b7280',
+      '#8b5cf6',
+      '#f59e0b',
+      '#10b981',
+      '#ef4444',
+      '#3b82f6',
+      '#ec4899',
+      '#14b8a6',
+    ][index % 8],
+  }));
 
   const getSpinStatusErrorMessage = (err: unknown, offline: boolean) => {
     if (offline) {
@@ -39,7 +53,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       const maybeError = err as { code?: string; message?: string };
       if (
         maybeError.code === '42P01' ||
-        maybeError.message?.toLowerCase().includes('daily_spins')
+        maybeError.message?.toLowerCase().includes('daily_spin_state') ||
+        maybeError.message?.toLowerCase().includes('spin_history')
       ) {
         return 'Daily spins are not configured yet. Run the daily spin migration to enable the wheel.';
       }
@@ -73,21 +88,49 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     setWonPrize(null);
 
     try {
-      const { data: availability, error: availError } = await checkSpinAvailable(session.user.id);
-      
-      if (availError) {
-        throw availError;
+      const { data: spinState, error: spinError } = await getDailySpinState(session.user.id);
+
+      if (spinError) {
+        throw spinError;
       }
 
-      if (availability) {
-        setCanSpin(availability.available);
-        // If user already spun, get prize details
-        if (availability.todaysSpin) {
-          const prize = DAILY_SPIN_PRIZES.find(
-            (p) => p.id === availability.todaysSpin!.prize_id
-          );
-          if (prize) {
-            setWonPrize(prize);
+      if (spinState) {
+        setCanSpin(spinState.spinsAvailable > 0);
+
+        const today = new Date().toISOString().split('T')[0];
+        const lastSpinDate = spinState.lastSpinDate;
+
+        if (lastSpinDate === today) {
+          const { data: history, error: historyError } = await getSpinHistory(session.user.id, 1);
+
+          if (historyError) {
+            throw historyError;
+          }
+
+          const lastSpin = (history?.[0] as SpinHistoryEntry | Record<string, unknown> | undefined) ?? null;
+          if (lastSpin) {
+            const spunAt = (lastSpin as SpinHistoryEntry).spunAt ?? (lastSpin as { spun_at?: string }).spun_at;
+            const prizeType =
+              (lastSpin as SpinHistoryEntry).prizeType ??
+              (lastSpin as { prize_type?: SpinPrize['type'] }).prize_type;
+            const prizeValue =
+              (lastSpin as SpinHistoryEntry).prizeValue ??
+              (lastSpin as { prize_value?: number }).prize_value;
+
+            if (!spunAt || !prizeType || typeof prizeValue !== 'number') {
+              return;
+            }
+
+            const spunDate = new Date(spunAt).toISOString().split('T')[0];
+            if (spunDate === today) {
+              const matchedPrize = SPIN_PRIZES.find(
+                (prize) =>
+                  prize.type === prizeType && prize.value === prizeValue
+              );
+              if (matchedPrize) {
+                setWonPrize(matchedPrize);
+              }
+            }
           }
         }
       }
@@ -109,17 +152,19 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     setError(null);
 
     try {
-      const { data, error: spinError } = await executeDailySpin(session.user.id);
+      const { data, error: spinError } = await executeSpin(session.user.id);
 
       if (spinError || !data) {
         throw spinError || new Error('Failed to spin');
       }
 
-      const { prize } = data;
+      const { prize, spinsRemaining } = data;
 
       // Calculate rotation for animation
-      const prizeIndex = DAILY_SPIN_PRIZES.findIndex((p) => p.id === prize.id);
-      const segmentAngle = 360 / DAILY_SPIN_PRIZES.length;
+      const prizeIndex = SPIN_PRIZES.findIndex(
+        (candidate) => candidate.type === prize.type && candidate.value === prize.value
+      );
+      const segmentAngle = 360 / SPIN_PRIZES.length;
       const targetAngle = prizeIndex >= 0 ? prizeIndex * segmentAngle : 0;
       const finalRotation = 360 * 5 + targetAngle; // 5 full rotations + target
 
@@ -128,13 +173,13 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       // Wait for animation to complete
       setTimeout(() => {
         setWonPrize(prize);
-        setCanSpin(false);
+        setCanSpin(spinsRemaining > 0);
         setSpinning(false);
         setShowReward(true);
 
         confetti({
-          particleCount: prize.type === 'CASH' || prize.type === 'FEATURE_UNLOCK' ? 140 : 80,
-          spread: prize.type === 'CASH' || prize.type === 'FEATURE_UNLOCK' ? 80 : 60,
+          particleCount: prize.type === 'points' || prize.type === 'mystery' ? 140 : 80,
+          spread: prize.type === 'points' || prize.type === 'mystery' ? 80 : 60,
           origin: { y: 0.6 },
         });
 
@@ -172,32 +217,30 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     );
   }
 
-  const segmentAngle = 360 / DAILY_SPIN_PRIZES.length;
-  const wheelBackground = `conic-gradient(${DAILY_SPIN_PRIZES.map((prize, index) => {
+  const segmentAngle = 360 / wheelPrizes.length;
+  const wheelBackground = `conic-gradient(${wheelPrizes.map((prize, index) => {
     const start = segmentAngle * index;
     const end = start + segmentAngle;
     return `${prize.color} ${start}deg ${end}deg`;
   }).join(', ')})`;
 
   const rewardSubtitle = wonPrize
-    ? wonPrize.type === 'XP'
+    ? wonPrize.type === 'xp'
       ? 'XP added to your profile!'
-      : wonPrize.type === 'CASH'
-      ? 'Virtual currency credited!'
-      : wonPrize.type === 'GAME_LIVES'
+      : wonPrize.type === 'points'
+      ? 'Points added to your account!'
+      : wonPrize.type === 'life'
       ? 'Lives added to your account!'
-      : wonPrize.type === 'FEATURE_UNLOCK'
-      ? 'Feature unlocked!'
-      : wonPrize.type === 'TASK_BONUS'
-      ? 'Special task bonus activated!'
-      : 'Better luck tomorrow!'
+      : wonPrize.type === 'streak_freeze'
+      ? 'Streak freeze added!'
+      : 'Mystery reward unlocked!'
     : '';
 
   const headerSubtitle = error
     ? 'We could not load today’s spin. Check your connection and retry.'
     : canSpin
-    ? 'Spin once per day for amazing rewards!'
-    : 'Come back tomorrow for another spin!';
+    ? 'Spin when you have a token for amazing rewards!'
+    : 'Complete habits to earn your next spin!';
 
   return (
     <div className="new-daily-spin-modal" onClick={onClose}>
@@ -259,22 +302,18 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               background: wheelBackground,
             }}
           >
-            {DAILY_SPIN_PRIZES.map((prize, index) => {
+            {wheelPrizes.map((prize, index) => {
               const angle = segmentAngle * index + segmentAngle / 2;
               return (
                 <div
-                  key={prize.id}
+                  key={`${prize.type}-${prize.value}`}
                   className="new-daily-spin-wheel__label"
                   style={{ '--label-angle': `${angle}deg` } as React.CSSProperties}
                 >
                   <div className="new-daily-spin-wheel__label-content">
                     <span className="new-daily-spin-wheel__label-icon">{prize.icon}</span>
                     <span className="new-daily-spin-wheel__label-text">
-                      {prize.type === 'CASH'
-                        ? `${(prize.value / 1000000).toFixed(1)}M`
-                        : prize.type === 'XP'
-                        ? `${prize.value} XP`
-                        : prize.name}
+                      {prize.label}
                     </span>
                   </div>
                 </div>
@@ -323,18 +362,14 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             <div className="new-daily-spin-modal__result">
               <div className="new-daily-spin-modal__result-icon">{wonPrize.icon}</div>
               <h3 className="new-daily-spin-modal__result-title">You won!</h3>
-              <p className="new-daily-spin-modal__result-prize">{wonPrize.name}</p>
-              {wonPrize.type !== 'EMPTY' && (
-                <p className="new-daily-spin-modal__result-subtitle">
-                  {rewardSubtitle}
-                </p>
-              )}
+              <p className="new-daily-spin-modal__result-prize">{wonPrize.label}</p>
+              <p className="new-daily-spin-modal__result-subtitle">{rewardSubtitle}</p>
             </div>
           ) : (
             <div className="new-daily-spin-modal__locked">
               <p className="new-daily-spin-modal__locked-icon">🔒</p>
               <p className="new-daily-spin-modal__locked-text">
-                Come back tomorrow for another spin!
+                Complete habits to unlock another spin.
               </p>
             </div>
           )}
@@ -354,10 +389,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               <div className="new-daily-spin-modal__reward-burst">🎉</div>
               <h3 className="new-daily-spin-modal__reward-title">Lilly Reward!</h3>
               <div className="new-daily-spin-modal__reward-icon">{wonPrize.icon}</div>
-              <p className="new-daily-spin-modal__reward-name">{wonPrize.name}</p>
-              {wonPrize.type !== 'EMPTY' && (
-                <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
-              )}
+              <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
+              <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
               <button
                 type="button"
                 className="new-daily-spin-modal__reward-close"
@@ -373,13 +406,10 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         <div className="new-daily-spin-modal__legend">
           <h4>Today's Prizes:</h4>
           <div className="new-daily-spin-modal__legend-grid">
-            {DAILY_SPIN_PRIZES.filter(p => p.type !== 'EMPTY').map((prize) => (
-              <div key={prize.id} className="new-daily-spin-modal__legend-item">
+            {wheelPrizes.map((prize) => (
+              <div key={`${prize.type}-${prize.value}`} className="new-daily-spin-modal__legend-item">
                 <span className="new-daily-spin-modal__legend-icon">{prize.icon}</span>
-                <span className="new-daily-spin-modal__legend-name">{prize.name}</span>
-                <span className="new-daily-spin-modal__legend-chance">
-                  {prize.probability}%
-                </span>
+                <span className="new-daily-spin-modal__legend-name">{prize.label}</span>
               </div>
             ))}
           </div>
