@@ -27,6 +27,46 @@ export function calculateXPForLevel(level: number): number {
   return Math.floor(Math.pow(level, 1.5) * 100);
 }
 
+// =====================================================
+// XP TRANSACTION HISTORY
+// =====================================================
+
+export async function fetchXPTransactions(
+  userId: string,
+  limit = 6
+): Promise<{ data: XPTransaction[]; error: string | null }> {
+  try {
+    if (!canUseSupabaseData()) {
+      const transactions = JSON.parse(localStorage.getItem(DEMO_TRANSACTIONS_KEY) || '[]')
+        .filter((transaction: XPTransaction) => transaction.user_id === userId)
+        .sort((a: XPTransaction, b: XPTransaction) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+        .slice(0, limit);
+
+      return { data: transactions, error: null };
+    }
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('xp_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    return { data: (data as XPTransaction[]) ?? [], error: null };
+  } catch (error) {
+    console.error('Failed to fetch XP transactions:', error);
+    return {
+      data: [],
+      error: error instanceof Error ? error.message : 'Unable to load transactions',
+    };
+  }
+}
+
 /**
  * Calculate current level from total XP
  */
