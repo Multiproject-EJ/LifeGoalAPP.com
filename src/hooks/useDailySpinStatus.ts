@@ -1,8 +1,8 @@
 // Hook to check if daily spin is available for the user
 
 import { useState, useEffect, useCallback } from 'react';
-import { checkSpinAvailable } from '../services/dailySpins';
-import type { SpinAvailability } from '../features/spin-wheel/types';
+import { getDailySpinState } from '../services/dailySpin';
+import type { DailySpinState } from '../types/gamification';
 
 interface UseDailySpinStatusResult {
   spinAvailable: boolean;
@@ -17,7 +17,7 @@ interface UseDailySpinStatusResult {
  * Listens for spin completion events
  */
 export function useDailySpinStatus(userId: string | undefined): UseDailySpinStatusResult {
-  const [availability, setAvailability] = useState<SpinAvailability | null>(null);
+  const [spinState, setSpinState] = useState<DailySpinState | null>(null);
   const [loading, setLoading] = useState(true);
 
   const checkAvailability = useCallback(async () => {
@@ -27,7 +27,7 @@ export function useDailySpinStatus(userId: string | undefined): UseDailySpinStat
     }
 
     setLoading(true);
-    const { data, error } = await checkSpinAvailable(userId);
+    const { data, error } = await getDailySpinState(userId);
 
     if (error) {
       console.error('Failed to check spin availability:', error);
@@ -35,7 +35,7 @@ export function useDailySpinStatus(userId: string | undefined): UseDailySpinStat
       return;
     }
 
-    setAvailability(data);
+    setSpinState(data);
     setLoading(false);
   }, [userId]);
 
@@ -82,9 +82,9 @@ export function useDailySpinStatus(userId: string | undefined): UseDailySpinStat
   }, [checkAvailability]);
 
   return {
-    spinAvailable: availability?.available ?? false,
+    spinAvailable: (spinState?.spinsAvailable ?? 0) > 0,
     loading,
-    lastSpinDate: availability?.lastSpinDate ?? null,
+    lastSpinDate: spinState?.lastSpinDate ?? null,
     refresh: checkAvailability,
   };
 }
