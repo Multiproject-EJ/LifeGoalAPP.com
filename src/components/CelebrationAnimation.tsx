@@ -28,7 +28,6 @@ const SELECTORS = {
   GAME_ICON: '.mobile-footer-nav__status-card',
   FAB_BUTTON: '.quick-actions-fab__toggle',
   FAB_FALLBACK: '[class*="quick-actions-fab"]',
-  MENU_BUTTON: '.mobile-footer-nav__menu-button',
 } as const;
 
 // Animation timing constants
@@ -42,7 +41,6 @@ const TIMING = {
   BACKDROP_FADE_OUT: 2300,    // ms when backdrop starts fading out
   CLEANUP_DELAY: 3000,        // ms before full cleanup
   PULSE_DURATION: 300,        // ms for target pulse animation
-  MENU_PULSE_DURATION: 650,   // ms for main menu pulse animation
 } as const;
 
 const HABIT_TIMING = {
@@ -253,7 +251,6 @@ export function CelebrationAnimation({
       element = document.querySelector(SELECTORS.FAB_BUTTON);
     }
 
-    const menuButton = document.querySelector(SELECTORS.MENU_BUTTON);
     const timeouts: number[] = [];
 
     if (element) {
@@ -265,21 +262,11 @@ export function CelebrationAnimation({
       );
     }
 
-    if (menuButton) {
-      menuButton.classList.add('menu-points-pulse');
-      timeouts.push(
-        window.setTimeout(() => {
-          menuButton?.classList.remove('menu-points-pulse');
-        }, TIMING.MENU_PULSE_DURATION),
-      );
-    }
-
     return () => {
       timeouts.forEach((timeout) => {
         window.clearTimeout(timeout);
       });
       element?.classList.remove('collecting-icons');
-      menuButton?.classList.remove('menu-points-pulse');
     };
   }, [targetPulsing, targetElement]);
 
