@@ -11152,7 +11152,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./assets/ControllerLightBlue.webp') center / 200% auto no-repeat;
+  background: url('./assets/ControllerLightBlue.webp') center / 130% auto no-repeat;
   z-index: 0;
 }
 
@@ -11457,25 +11457,13 @@ body {
   flex-direction: column;
 }
 
-.mobile-menu-overlay__panel--image {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
+.mobile-menu-overlay--diode-on .mobile-menu-overlay__backdrop {
+  background: rgba(15, 23, 42, 0.62);
 }
 
-.mobile-menu-overlay__panel--image::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: url('./assets/ControllerLightBlue.webp') center / cover no-repeat;
-  z-index: 0;
-}
-
-.mobile-menu-overlay__panel--image > * {
-  position: relative;
-  z-index: 1;
+.mobile-menu-overlay--diode-on .mobile-menu-overlay__panel {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  border-color: rgba(148, 163, 184, 0.5);
 }
 
 @keyframes mobileMenuFadeIn {

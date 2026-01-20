@@ -1386,7 +1386,7 @@ export default function App() {
   const mobileMenuOverlay =
     isMobileViewport && isMobileMenuOpen ? (
       <div
-        className="mobile-menu-overlay"
+        className={`mobile-menu-overlay${isMobileMenuImageActive ? ' mobile-menu-overlay--diode-on' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="Open full LifeGoalApp menu"
