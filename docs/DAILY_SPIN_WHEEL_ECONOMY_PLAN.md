@@ -133,6 +133,19 @@ A single, explicit source of truth for how points are earned/spent.
 - Each step above should be marked as **Not Started / In Progress / Blocked / Done** in a follow-up checklist doc or issue.
 - Before starting any step, verify the prerequisites and record evidence.
 
+### Current Status Snapshot
+| Step | Status | Evidence |
+| --- | --- | --- |
+| 1. Validate Existing Systems | Done | Daily spin components + services, points awarded, Score tab present. |
+| 2. Economy Matrix | Done | `src/constants/economy.ts` already serves as source of truth. |
+| 3. Fix Daily Spin Wheel | Done | Error + retry states, offline-friendly fallback, immediate score refresh. |
+| 4. Vision Board Claim Animation | Done | Vision claim flight animation targets Game tab. |
+| 5. Score Tab (Mobile-first Ledger) | Done | XP, Points, Zen Tokens, ledger + chips implemented. |
+| 6. Zen Tokens + Zen Garden | In Progress | Zen Garden UI + Zen Token purchase flow underway (this update). |
+| 7. 4x3 Grid Layout | Done | Shared `four-by-three-grid` utility used in store + achievements. |
+| 8. Trophies/Plaques/Medals | Not Started | Pending store + achievements updates. |
+| 9. QA + Telemetry | Not Started | Pending validation + event tracking. |
+
 ## Deliverables
 - Updated documentation and diagrams.
 - Schema + service changes for new currency.

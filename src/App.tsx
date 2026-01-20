@@ -27,6 +27,7 @@ import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import { ActionsTab } from './features/actions';
 import { ProjectsManager } from './features/projects';
 import { ScoreTab } from './features/gamification/ScoreTab';
+import { ZenGarden } from './features/zen-garden/ZenGarden';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -1329,6 +1330,7 @@ export default function App() {
               <div className="game-hub__sections">
                 <AchievementsPage session={activeSession} />
                 <PowerUpsStore session={activeSession} />
+                <ZenGarden session={activeSession} />
               </div>
             </section>
           </div>
