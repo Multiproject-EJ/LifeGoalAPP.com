@@ -58,6 +58,17 @@ export interface XPTransaction {
   created_at: string;
 }
 
+export interface ZenTokenTransaction {
+  id: string;
+  user_id: string;
+  token_amount: number;
+  action: 'earn' | 'spend';
+  source_type: string;
+  source_id: string | null;
+  description: string | null;
+  created_at: string;
+}
+
 export interface GamificationNotification {
   id: string;
   user_id: string;
