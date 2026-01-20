@@ -6,7 +6,7 @@
 .achievements-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
 }
 
 .achievements-page__header {
@@ -14,7 +14,7 @@
 }
 
 .achievements-page__title h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -24,7 +24,7 @@
 }
 
 .achievements-page__subtitle {
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -63,7 +63,7 @@
 .achievements-stats {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   color: white;
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
 }
@@ -90,7 +90,7 @@
 
 .achievements-stats__progress-text {
   text-align: center;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0;
 }
@@ -115,7 +115,7 @@
 }
 
 .achievements-stats__tier-icon {
-  font-size: 2rem;
+  font-size: 1.75rem;
 }
 
 .achievements-stats__tier-count {
@@ -260,8 +260,8 @@
 /* Achievement Grid */
 .achievement-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
 .achievement-grid__empty {
@@ -278,7 +278,7 @@
   background: var(--bg-primary);
   border: 3px solid;
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
@@ -320,21 +320,21 @@
 }
 
 .achievement-card__icon {
-  font-size: 3rem;
+  font-size: 2.4rem;
   line-height: 1;
   margin: 0.5rem 0;
   transition: opacity 0.3s ease;
 }
 
 .achievement-card__name {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
 
 .achievement-card__description {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
@@ -559,25 +559,26 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .achievements-page {
-    padding: 1rem;
+    padding: 2rem;
   }
 
   .achievements-page__title h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
 
   .achievements-stats {
-    padding: 1.5rem;
+    padding: 2rem;
   }
 
   .achievements-stats__tiers {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .achievement-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
   }
 
   .achievement-filters__status,
@@ -586,7 +587,30 @@
   }
 
   .achievement-detail-modal {
-    width: 95%;
+    width: min(95%, 680px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .achievement-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .achievement-card {
+    padding: 1.5rem;
+  }
+
+  .achievement-card__icon {
+    font-size: 3rem;
+  }
+
+  .achievement-card__name {
+    font-size: 1.25rem;
+  }
+
+  .achievement-card__description {
+    font-size: 0.875rem;
   }
 }
 
