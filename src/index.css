@@ -11457,6 +11457,27 @@ body {
   flex-direction: column;
 }
 
+.mobile-menu-overlay__panel--image {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.mobile-menu-overlay__panel--image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: url('./assets/ControllerLightBlue.webp') center / cover no-repeat;
+  z-index: 0;
+}
+
+.mobile-menu-overlay__panel--image > * {
+  position: relative;
+  z-index: 1;
+}
+
 @keyframes mobileMenuFadeIn {
   from {
     opacity: 0;
