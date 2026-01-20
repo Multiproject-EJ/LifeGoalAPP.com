@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 export type CelebrationAnimationProps = {
-  type: 'habit' | 'journal' | 'action' | 'breathing' | 'levelup';
+  type: 'habit' | 'journal' | 'action' | 'breathing' | 'levelup' | 'vision';
   xpAmount?: number;
   targetElement?: 'game-icon' | 'fab-button';
   origin?: { x: number; y: number } | null;
@@ -28,6 +28,7 @@ const SELECTORS = {
   GAME_ICON: '.mobile-footer-nav__status-card',
   FAB_BUTTON: '.quick-actions-fab__toggle',
   FAB_FALLBACK: '[class*="quick-actions-fab"]',
+  MENU_BUTTON: '.mobile-footer-nav__menu-button',
 } as const;
 
 // Animation timing constants
@@ -41,6 +42,7 @@ const TIMING = {
   BACKDROP_FADE_OUT: 2300,    // ms when backdrop starts fading out
   CLEANUP_DELAY: 3000,        // ms before full cleanup
   PULSE_DURATION: 300,        // ms for target pulse animation
+  MENU_PULSE_DURATION: 650,   // ms for main menu pulse animation
 } as const;
 
 const HABIT_TIMING = {
@@ -82,6 +84,11 @@ const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
   levelup: {
     icons: ['🎉', '🏆', '⭐', '🌟', '💎', '👑', '🎊', '✨'],
     count: 25,  // 20-30 icons
+    target: 'game-icon',
+  },
+  vision: {
+    icons: ['📸', '✨', '🎯', '🌟', '💎', '🖼️'],
+    count: 10,
     target: 'game-icon',
   },
 };
@@ -167,7 +174,7 @@ export function CelebrationAnimation({
     // Generate random icons with initial delay
     const newIcons: IconInstance[] = [];
     for (let i = 0; i < config.count; i++) {
-      const position = type === 'habit' && origin ? origin : getRandomPosition();
+      const position = origin ?? getRandomPosition();
       newIcons.push({
         id: `icon-${i}-${Date.now()}`,
         icon: getRandomIcon(config.icons),
@@ -246,16 +253,34 @@ export function CelebrationAnimation({
       element = document.querySelector(SELECTORS.FAB_BUTTON);
     }
 
+    const menuButton = document.querySelector(SELECTORS.MENU_BUTTON);
+    const timeouts: number[] = [];
+
     if (element) {
       element.classList.add('collecting-icons');
-      const timeout = setTimeout(() => {
-        element?.classList.remove('collecting-icons');
-      }, TIMING.PULSE_DURATION);
-      return () => {
-        clearTimeout(timeout);
-        element?.classList.remove('collecting-icons');
-      };
+      timeouts.push(
+        window.setTimeout(() => {
+          element?.classList.remove('collecting-icons');
+        }, TIMING.PULSE_DURATION),
+      );
     }
+
+    if (menuButton) {
+      menuButton.classList.add('menu-points-pulse');
+      timeouts.push(
+        window.setTimeout(() => {
+          menuButton?.classList.remove('menu-points-pulse');
+        }, TIMING.MENU_PULSE_DURATION),
+      );
+    }
+
+    return () => {
+      timeouts.forEach((timeout) => {
+        window.clearTimeout(timeout);
+      });
+      element?.classList.remove('collecting-icons');
+      menuButton?.classList.remove('menu-points-pulse');
+    };
   }, [targetPulsing, targetElement]);
 
   const targetPos = isFlying ? getTargetPosition(targetElement) : null;

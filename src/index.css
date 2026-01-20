@@ -15886,6 +15886,26 @@ body {
   }
 }
 
+.menu-points-pulse {
+  animation: menu-points-pulse 0.65s ease-in-out;
+  border-color: rgba(14, 165, 233, 0.6);
+  box-shadow:
+    0 0 0 3px rgba(56, 189, 248, 0.25),
+    0 12px 28px rgba(56, 189, 248, 0.35);
+}
+
+@keyframes menu-points-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.12);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+}
+
 /* ===================================
    Instant Feedback Animations (Before Celebration)
    =================================== */
