@@ -265,6 +265,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
   const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
+  const visionClaimButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   // Watch for level-up events
@@ -439,9 +440,6 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         xpAwarded: result?.xpAwarded ?? xpAmount,
         isSuperBoost,
       });
-      setCelebrationType('vision');
-      setCelebrationXP(result?.xpAwarded ?? xpAmount);
-      setShowCelebration(true);
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
       saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
@@ -476,6 +474,20 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
     triggerStarBurst();
     void handleVisionReward();
+  };
+
+  const handleVisionRewardClaim = () => {
+    if (visionClaimButtonRef.current) {
+      const rect = visionClaimButtonRef.current.getBoundingClientRect();
+      setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    } else {
+      setCelebrationOrigin(null);
+    }
+
+    setCelebrationType('vision');
+    setCelebrationXP(visionReward?.xpAwarded ?? 0);
+    setShowCelebration(true);
+    closeVisionReward();
   };
 
   useEffect(() => {
@@ -547,7 +559,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             <button
               type="button"
               className="habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--claim"
-              onClick={closeVisionReward}
+              onClick={handleVisionRewardClaim}
+              ref={visionClaimButtonRef}
             >
               Claim {visionReward.xpAwarded} XP
             </button>

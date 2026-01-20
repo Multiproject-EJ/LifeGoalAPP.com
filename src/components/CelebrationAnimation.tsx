@@ -87,7 +87,7 @@ const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
     target: 'game-icon',
   },
   vision: {
-    icons: ['📸', '✨', '🎯', '🌟', '💎', '🖼️'],
+    icons: ['📸', '✨', '🎯', '🌟', '💎', '🖼️', '✅'],
     count: 10,
     target: 'game-icon',
   },
