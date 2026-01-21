@@ -1711,6 +1711,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const actionsBadgeAria = `${completedActionsCount} actions completed ${
       isViewingToday ? 'today' : 'for this day'
     }`;
+    const showActionsBadge = completedActionsCount > 0;
     const circadianEmoji = isViewingToday ? getCircadianEmoji(currentTime) : null;
     const circadianLabel = isViewingToday ? getCircadianLabel(currentTime) : null;
     const clockEmoji = isViewingToday ? getClockEmoji(currentTime) : null;
@@ -2083,10 +2084,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     </span>
                   ) : null}
                 </span>
-                <span className="habit-checklist-card__actions-badge" aria-label={actionsBadgeAria}>
-                  <span className="habit-checklist-card__actions-label">Actions</span>
-                  <span className="habit-checklist-card__actions-count">{completedActionsCount}</span>
-                </span>
+                {showActionsBadge ? (
+                  <span className="habit-checklist-card__actions-badge" aria-label={actionsBadgeAria}>
+                    <span className="habit-checklist-card__actions-label">Actions</span>
+                    <span className="habit-checklist-card__actions-count">{completedActionsCount}</span>
+                  </span>
+                ) : null}
                 {yesterdayIntentionsEntry ? (
                   <button
                     type="button"
