@@ -211,7 +211,7 @@ export function ZenGarden({ session }: ZenGardenProps) {
             <div className="zen-garden__ledger-header">
               <div>
                 <p className="zen-garden__eyebrow">Zen Token activity</p>
-                <h3 className="zen-garden__ledger-title">Recent Zen Garden spending</h3>
+                <h3 className="zen-garden__ledger-title">Recent Zen Token activity</h3>
               </div>
               <span className="zen-garden__ledger-pill">Ledger</span>
             </div>
@@ -228,21 +228,33 @@ export function ZenGarden({ session }: ZenGardenProps) {
 
             {!transactionsError && transactions.length > 0 && (
               <div className="zen-garden__ledger-list">
-                {transactions.map((transaction) => (
-                  <div key={transaction.id} className="zen-garden__ledger-row">
-                    <div>
-                      <p className="zen-garden__ledger-row-title">
-                        {transaction.description ?? 'Zen Garden unlock'}
-                      </p>
-                      <p className="zen-garden__ledger-row-meta">
-                        {dateFormatter.format(new Date(transaction.created_at))}
-                      </p>
+                {transactions.map((transaction) => {
+                  const isSpend = transaction.action === 'spend';
+                  const fallbackLabel = isSpend ? 'Zen Garden unlock' : 'Meditation reward';
+                  const amountLabel = `${isSpend ? '-' : '+'}${transaction.token_amount} 🪷`;
+
+                  return (
+                    <div key={transaction.id} className="zen-garden__ledger-row">
+                      <div>
+                        <p className="zen-garden__ledger-row-title">
+                          {transaction.description ?? fallbackLabel}
+                        </p>
+                        <p className="zen-garden__ledger-row-meta">
+                          {dateFormatter.format(new Date(transaction.created_at))}
+                        </p>
+                      </div>
+                      <span
+                        className={`zen-garden__ledger-row-value ${
+                          isSpend
+                            ? 'zen-garden__ledger-row-value--spend'
+                            : 'zen-garden__ledger-row-value--earn'
+                        }`}
+                      >
+                        {amountLabel}
+                      </span>
                     </div>
-                    <span className="zen-garden__ledger-row-value">
-                      -{transaction.token_amount} 🪷
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>

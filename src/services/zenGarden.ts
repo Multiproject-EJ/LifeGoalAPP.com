@@ -63,6 +63,56 @@ function logZenTokenTransaction(userId: string, transaction: Omit<ZenTokenTransa
   writeTransactions(userId, [nextTransaction, ...existing]);
 }
 
+export async function awardZenTokens(
+  userId: string,
+  amount: number,
+  sourceType: string,
+  sourceId?: string,
+  description?: string
+): Promise<{ data: { balance: number } | null; error: Error | null }> {
+  try {
+    if (amount <= 0) {
+      return { data: null, error: new Error('Zen Token amount must be greater than zero.') };
+    }
+
+    const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
+    if (profileError || !profile) {
+      throw profileError ?? new Error('Missing gamification profile');
+    }
+
+    const currentBalance = profile.zen_tokens ?? 0;
+    const nextBalance = currentBalance + amount;
+
+    if (!canUseSupabaseData()) {
+      saveDemoProfile({ zen_tokens: nextBalance, updated_at: new Date().toISOString() });
+    } else {
+      const supabase = getSupabaseClient();
+      const { error: updateError } = await supabase
+        .from('gamification_profiles')
+        .update({ zen_tokens: nextBalance, updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+      if (updateError) throw updateError;
+    }
+
+    logZenTokenTransaction(userId, {
+      user_id: userId,
+      token_amount: amount,
+      action: 'earn',
+      source_type: sourceType,
+      source_id: sourceId ?? null,
+      description: description ?? 'Meditation reward',
+      created_at: new Date().toISOString(),
+    });
+
+    return { data: { balance: nextBalance }, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to award Zen Tokens'),
+    };
+  }
+}
+
 export async function fetchZenGardenInventory(userId: string): Promise<{
   data: string[];
   error: Error | null;
