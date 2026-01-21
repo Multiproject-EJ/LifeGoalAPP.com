@@ -45,6 +45,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderSet, setReminderSet] = useState(false);
   const reminderRef = useRef<HTMLDivElement>(null);
+  const [activeMobileTab, setActiveMobileTab] = useState<'breathing' | 'meditation'>('breathing');
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
@@ -270,9 +271,36 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   }
 
   return (
-    <div className="breathing-space">
+    <div className="breathing-space" data-mobile-tab={activeMobileTab}>
+      <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Breathe options">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeMobileTab === 'breathing'}
+          className={`breathing-space__mobile-tab ${
+            activeMobileTab === 'breathing' ? 'breathing-space__mobile-tab--active' : ''
+          }`}
+          onClick={() => setActiveMobileTab('breathing')}
+        >
+          <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🌬️</span>
+          <span className="breathing-space__mobile-tab-title">FOCUS BREATHING</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeMobileTab === 'meditation'}
+          className={`breathing-space__mobile-tab ${
+            activeMobileTab === 'meditation' ? 'breathing-space__mobile-tab--active' : ''
+          }`}
+          onClick={() => setActiveMobileTab('meditation')}
+        >
+          <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🧘</span>
+          <span className="breathing-space__mobile-tab-title">MEDITATION</span>
+        </button>
+      </div>
+
       {/* Left Column: Quick Start & Reminder */}
-      <div className="breathing-space__left-column">
+      <div className="breathing-space__left-column breathing-space__section breathing-space__section--breathing">
         {/* Daily Reminder Toggle */}
         <div className="breathing-space__reminder" ref={reminderRef}>
           <button
@@ -317,7 +345,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
       {/* Right Column: Progress & Library */}
       <div className="breathing-space__right-column">
         {/* Progress Snapshot */}
-        <div className="breathing-space__card breathing-space__progress">
+        <div className="breathing-space__card breathing-space__progress breathing-space__section breathing-space__section--breathing">
           <div className="breathing-space__card-header">
             <span className="breathing-space__card-icon">📊</span>
             <h3 className="breathing-space__card-title">Your Progress</h3>
@@ -345,7 +373,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         </div>
 
         {/* Meditation Library */}
-        <div className="breathing-space__library">
+        <div className="breathing-space__library breathing-space__section breathing-space__section--meditation">
           <h3 className="breathing-space__library-title">Guided Meditations</h3>
 
           <div className="breathing-space__guided-buttons">
@@ -436,7 +464,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
         </div>
 
         {/* Breathing Exercises Library */}
-        <div className="breathing-space__library">
+        <div className="breathing-space__library breathing-space__section breathing-space__section--breathing">
           <h3 className="breathing-space__library-title">Breathing Exercises</h3>
           <div className="breathing-space__button-grid">
             {PLACEHOLDER_SESSIONS.map((s) => (
