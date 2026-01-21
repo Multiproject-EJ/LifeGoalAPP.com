@@ -1557,7 +1557,7 @@ export default function App() {
               role="listitem"
             >
               <img
-                className="mobile-gamification-overlay__stat-icon"
+                className="mobile-gamification-overlay__stat-icon mobile-gamification-overlay__stat-icon--life-spin"
                 src={lifeSpinIcon}
                 alt=""
                 aria-hidden="true"
