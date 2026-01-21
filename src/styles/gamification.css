@@ -1079,11 +1079,31 @@
   border: 1px solid rgba(59, 130, 246, 0.2);
   background: linear-gradient(135deg, rgba(219, 234, 254, 0.9), rgba(224, 231, 255, 0.75));
   color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: flex-start;
 }
 
 .score-tab__note p {
   margin: 0;
   font-size: 0.85rem;
+}
+
+.score-tab__link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.score-tab__link:hover {
+  color: #1e40af;
 }
 
 .score-tab__ledger {

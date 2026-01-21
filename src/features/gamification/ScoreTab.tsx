@@ -11,9 +11,17 @@ interface ScoreTabProps {
   levelInfo: LevelInfo | null;
   enabled: boolean;
   loading: boolean;
+  onNavigateToAchievements: () => void;
 }
 
-export function ScoreTab({ session, profile, levelInfo, enabled, loading }: ScoreTabProps) {
+export function ScoreTab({
+  session,
+  profile,
+  levelInfo,
+  enabled,
+  loading,
+  onNavigateToAchievements,
+}: ScoreTabProps) {
   const formatter = useMemo(() => new Intl.NumberFormat(), []);
   const dateFormatter = useMemo(
     () => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }),
@@ -167,6 +175,13 @@ export function ScoreTab({ session, profile, levelInfo, enabled, loading }: Scor
               Points are derived from XP ({pointsRatioLabel}). Spin rewards and achievements
               add bonus points on top.
             </p>
+            <button
+              type="button"
+              className="score-tab__link"
+              onClick={onNavigateToAchievements}
+            >
+              View achievements
+            </button>
           </div>
 
           <section className="score-tab__ledger">
