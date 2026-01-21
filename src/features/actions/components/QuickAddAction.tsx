@@ -57,16 +57,18 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
   return (
     <section className="actions-tab__quick-add" aria-label="Add new action">
       <div className="actions-tab__quick-add-input-row">
-        <input
-          type="text"
-          className={`actions-tab__quick-add-input ${hasTitle ? '' : 'actions-tab__quick-add-input--pulse'}`}
-          placeholder="What needs to be done?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={adding || disabled}
-          aria-label="New action title"
-        />
+        <div className="actions-tab__quick-add-input-shell">
+          <input
+            type="text"
+            className={`actions-tab__quick-add-input ${hasTitle ? '' : 'actions-tab__quick-add-input--pulse'}`}
+            placeholder="What needs to be done?"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={adding || disabled}
+            aria-label="New action title"
+          />
+        </div>
         <button
           type="button"
           className={`actions-tab__quick-add-button ${hasTitle ? 'actions-tab__quick-add-button--visible' : ''}`}
@@ -79,6 +81,9 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
           {adding ? '...' : '+'}
         </button>
       </div>
+      <span className="actions-tab__quick-add-pulse-text" aria-hidden="true">
+        actions your 3 days tolling todo list
+      </span>
 
       {showCategoryModal && (
         <div
