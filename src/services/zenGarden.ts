@@ -1,6 +1,7 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import type { ZenTokenTransaction } from '../types/gamification';
+import { recordTelemetryEvent } from './telemetry';
 
 const DEMO_ZEN_GARDEN_KEY = 'lifegoal_demo_zen_garden_inventory';
 const DEMO_ZEN_TOKEN_TRANSACTIONS_KEY = 'lifegoal_demo_zen_token_transactions';
@@ -104,6 +105,19 @@ export async function awardZenTokens(
       created_at: new Date().toISOString(),
     });
 
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'economy_earn',
+      metadata: {
+        currency: 'zen_tokens',
+        amount,
+        balance: nextBalance,
+        sourceType,
+        sourceId: sourceId ?? null,
+        description: description ?? 'Meditation reward',
+      },
+    });
+
     return { data: { balance: nextBalance }, error: null };
   } catch (error) {
     return {
@@ -186,6 +200,19 @@ export async function purchaseZenGardenItem(
       source_id: itemId,
       description: `Unlocked ${itemName}`,
       created_at: new Date().toISOString(),
+    });
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'economy_spend',
+      metadata: {
+        currency: 'zen_tokens',
+        amount: cost,
+        balance: nextBalance,
+        sourceType: 'zen_garden',
+        sourceId: itemId,
+        itemName,
+      },
     });
 
     return { data: { balance: nextBalance, inventory: nextInventory }, error: null };

@@ -14,6 +14,7 @@ import type {
   XPTransaction,
 } from '../types/gamification';
 import { XP_REWARDS, DEMO_PROFILE_KEY, DEMO_TRANSACTIONS_KEY, DEMO_ACHIEVEMENTS_KEY } from '../types/gamification';
+import { recordTelemetryEvent } from './telemetry';
 
 // =====================================================
 // LEVEL CALCULATION FUNCTIONS
@@ -125,7 +126,22 @@ export async function awardXP(
 
     // Demo mode
     if (!canUseSupabaseData()) {
-      return await awardXPDemo(userId, finalXPAmount, sourceType, sourceId, description);
+      const result = await awardXPDemo(userId, finalXPAmount, sourceType, sourceId, description);
+      if (result.success) {
+        void recordTelemetryEvent({
+          userId,
+          eventType: 'economy_earn',
+          metadata: {
+            currency: 'xp',
+            xpAmount: finalXPAmount,
+            pointsAwarded: convertXpToPoints(finalXPAmount),
+            sourceType,
+            sourceId: sourceId ?? null,
+            description: description ?? null,
+          },
+        });
+      }
+      return result;
     }
 
     // Supabase mode
@@ -194,6 +210,19 @@ export async function awardXP(
 
     // Check for achievement unlocks
     const achievementsUnlocked = await checkAchievements(userId);
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'economy_earn',
+      metadata: {
+        currency: 'xp',
+        xpAmount: finalXPAmount,
+        pointsAwarded,
+        sourceType,
+        sourceId: sourceId ?? null,
+        description: description ?? null,
+      },
+    });
 
     return {
       success: true,

@@ -16,7 +16,9 @@ export type TelemetryEventType =
   | 'onboarding_completed'
   | 'balance_shift'
   | 'intervention_accepted'
-  | 'micro_quest_completed';
+  | 'micro_quest_completed'
+  | 'economy_earn'
+  | 'economy_spend';
 
 export type TelemetryEventMetadata = Json;
 
