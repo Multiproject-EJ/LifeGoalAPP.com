@@ -557,6 +557,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   }, [visionReward?.imageUrl, isVisionRewardOpen]);
 
   const isVisionRewardReady = Boolean(visionReward);
+  const visionRewardClaimLabel = visionReward
+    ? `Claim ${visionReward.xpAwarded} XP`
+    : 'Preparing reward';
   const shouldShowVisionLoading =
     isVisionRewardSelecting || (visionReward?.imageUrl && !isVisionImageLoaded);
   const visionRewardModal =
@@ -624,7 +627,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               ref={visionClaimButtonRef}
               disabled={!isVisionRewardReady}
             >
-              {isVisionRewardReady ? `Claim ${visionReward?.xpAwarded ?? 0} XP` : 'Preparing reward'}
+              {visionRewardClaimLabel}
             </button>
             <button
               type="button"
