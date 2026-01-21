@@ -19,6 +19,24 @@
   transform: translateY(-1px);
 }
 
+.habit-checklist__edit-btn {
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  color: #1f2937;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.habit-checklist__edit-btn:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  transform: translateY(-1px);
+}
+
 /* Modal overlay and content */
 .habit-alert-modal-overlay {
   position: fixed;
@@ -42,6 +60,143 @@
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.habit-edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+}
+
+.habit-edit-modal-content {
+  background: #ffffff;
+  border-radius: 18px;
+  max-width: 520px;
+  width: min(520px, 95vw);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 1.5rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+}
+
+.habit-edit-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.habit-edit-modal__header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+}
+
+.habit-edit-modal__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.habit-edit-modal__close {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.habit-edit-modal__body {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.habit-edit-modal__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.habit-edit-modal__select {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.habit-edit-modal__section {
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 0.3rem;
+}
+
+.habit-edit-modal__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.habit-edit-modal__error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+}
+
+.habit-edit-modal__footer {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.habit-edit-modal__btn {
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.habit-edit-modal__btn--ghost {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.habit-edit-modal__btn--secondary {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.habit-edit-modal__btn--primary {
+  background: #4338ca;
+  color: #fff;
+}
+
+.habit-edit-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .habit-legacy-modal-overlay {

@@ -310,6 +310,7 @@ export async function updateHabitV2(
   updates: {
     schedule?: Database['public']['Tables']['habits_v2']['Row']['schedule'];
     target_num?: number | null;
+    goal_id?: string | null;
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
@@ -340,6 +341,7 @@ export async function updateHabitFullV2(
     target_unit?: string | null;
     schedule?: Database['public']['Tables']['habits_v2']['Row']['schedule'];
     autoprog?: Database['public']['Tables']['habits_v2']['Row']['autoprog'];
+    goal_id?: string | null;
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
