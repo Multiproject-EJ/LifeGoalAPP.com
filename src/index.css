@@ -11152,13 +11152,21 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./assets/ControllerLightBlue.webp') center / 130% auto no-repeat;
+  background: url('./assets/ControllerLightBlue.webp') center / 95% 95% no-repeat;
   z-index: 0;
 }
 
 .mobile-footer-nav__surface--image > * {
   position: relative;
   z-index: 1;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__list {
+  transform: translateY(-2.4rem);
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__menu-row {
+  margin-bottom: -1.6rem;
 }
 
 .mobile-footer-nav__list {
