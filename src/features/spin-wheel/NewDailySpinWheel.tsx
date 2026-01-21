@@ -43,6 +43,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       '#14b8a6',
     ][index % 8],
   }));
+  const highestPrizeValue = wheelPrizes.reduce((maxValue, prize) => Math.max(maxValue, prize.value), 0);
 
   const getSpinStatusErrorMessage = (err: unknown, offline: boolean) => {
     if (offline) {
@@ -412,7 +413,16 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
           <h4>Today's Prizes:</h4>
           <div className="new-daily-spin-modal__legend-grid">
             {wheelPrizes.map((prize) => (
-              <div key={`${prize.type}-${prize.value}`} className="new-daily-spin-modal__legend-item">
+              <div
+                key={`${prize.type}-${prize.value}`}
+                className={`new-daily-spin-modal__legend-item${
+                  prize.type === 'mystery' ? ' new-daily-spin-modal__legend-item--mystery' : ''
+                }${
+                  prize.type === 'mystery' || prize.value === highestPrizeValue
+                    ? ' new-daily-spin-modal__legend-item--highlight'
+                    : ''
+                }`}
+              >
                 <span className="new-daily-spin-modal__legend-icon">{prize.icon}</span>
                 <span className="new-daily-spin-modal__legend-name">{prize.label}</span>
               </div>
