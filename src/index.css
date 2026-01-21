@@ -4677,7 +4677,7 @@ body {
   align-items: flex-start;
   justify-content: center;
   padding: calc(env(safe-area-inset-top) + 1rem) 1.5rem 2rem;
-  z-index: 50;
+  z-index: 2100;
 }
 
 .habit-day-nav__vision-modal {
@@ -4772,6 +4772,40 @@ body {
   background: radial-gradient(circle at 30% 20%, rgba(224, 231, 255, 0.6), rgba(248, 250, 252, 0.3));
 }
 
+.habit-day-nav__vision-modal-loading-text {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #7c2d12;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 8px rgba(251, 191, 36, 0.35);
+}
+
+.habit-day-nav__vision-modal-loading-dots {
+  display: inline-flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.habit-day-nav__vision-modal-loading-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #f97316;
+  animation: vision-loading-dots 1.2s ease-in-out infinite;
+}
+
+.habit-day-nav__vision-modal-loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.habit-day-nav__vision-modal-loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
 .habit-day-nav__vision-modal-bloom {
   width: 55%;
   height: 55%;
@@ -4786,6 +4820,18 @@ body {
   );
   filter: blur(12px);
   animation: vision-bloom 3.6s ease-in-out infinite;
+}
+
+@keyframes vision-loading-dots {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
 }
 
 .habit-day-nav__vision-modal-claim {

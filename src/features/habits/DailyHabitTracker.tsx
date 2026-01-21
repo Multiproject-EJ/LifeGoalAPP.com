@@ -246,6 +246,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [visionImagesLoading, setVisionImagesLoading] = useState(false);
   const [visionRewarding, setVisionRewarding] = useState(false);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
+  const [isVisionRewardSelecting, setIsVisionRewardSelecting] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
@@ -408,15 +409,18 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
   const handleVisionReward = useCallback(async () => {
     setVisionRewardError(null);
+    setIsVisionRewardSelecting(true);
 
     if (!isConfigured && !isDemoExperience) {
       setVisionRewardError('Connect Supabase to unlock vision board boosts.');
+      setIsVisionRewardSelecting(false);
       return;
     }
 
     if (visionImages.length === 0) {
       setVisionReward(null);
       setVisionRewardError('Add images to your vision board to unlock a star boost.');
+      setIsVisionRewardSelecting(false);
       return;
     }
 
@@ -448,6 +452,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       setIsVisionRewardOpen(true);
     } finally {
       setVisionRewarding(false);
+      setIsVisionRewardSelecting(false);
     }
   }, [
     activeDate,
@@ -506,6 +511,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     } else {
       setCelebrationOrigin(null);
     }
+    setVisionReward(null);
+    setVisionRewardError(null);
+    setIsVisionImageLoaded(false);
+    setIsVisionRewardOpen(true);
+    setIsVisionRewardSelecting(true);
     triggerStarBurst();
     void handleVisionReward();
   };
@@ -537,6 +547,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
   const closeVisionReward = () => {
     setIsVisionRewardOpen(false);
+    setIsVisionRewardSelecting(false);
   };
 
   useEffect(() => {
@@ -545,8 +556,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }
   }, [visionReward?.imageUrl, isVisionRewardOpen]);
 
+  const isVisionRewardReady = Boolean(visionReward);
+  const shouldShowVisionLoading =
+    isVisionRewardSelecting || (visionReward?.imageUrl && !isVisionImageLoaded);
   const visionRewardModal =
-    visionReward && isVisionRewardOpen ? (
+    isVisionRewardOpen ? (
       <div
         className="habit-day-nav__vision-modal-backdrop"
         role="dialog"
@@ -572,41 +586,54 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             📸 🖼️ 🎯 ✨ 🚀
           </div>
           <div className="habit-day-nav__vision-modal-frame">
-            {!isVisionImageLoaded && (
+            {shouldShowVisionLoading && (
               <div className="habit-day-nav__vision-modal-loading" aria-hidden="true">
                 <span className="habit-day-nav__vision-modal-bloom" />
+                <span className="habit-day-nav__vision-modal-loading-text">
+                  Selecting today&apos;s image
+                  <span className="habit-day-nav__vision-modal-loading-dots" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                </span>
               </div>
             )}
-            <img
-              className={`habit-day-nav__vision-modal-image ${
-                isVisionImageLoaded ? 'habit-day-nav__vision-modal-image--loaded' : ''
-              }`}
-              src={visionReward.imageUrl}
-              alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
-              onLoad={() => setIsVisionImageLoaded(true)}
-              onError={() => setIsVisionImageLoaded(true)}
-            />
+            {visionReward?.imageUrl ? (
+              <img
+                className={`habit-day-nav__vision-modal-image ${
+                  isVisionImageLoaded ? 'habit-day-nav__vision-modal-image--loaded' : ''
+                }`}
+                src={visionReward.imageUrl}
+                alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
+                onLoad={() => setIsVisionImageLoaded(true)}
+                onError={() => setIsVisionImageLoaded(true)}
+              />
+            ) : null}
           </div>
           <div className="habit-day-nav__vision-modal-claim">
             <p className="habit-day-nav__vision-modal-caption">
-              {visionReward.caption ?? 'A spark for your next win.'}
+              {visionRewardError
+                ? visionRewardError
+                : visionReward?.caption ?? 'A spark for your next win.'}
             </p>
             <button
               type="button"
               className="habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--claim"
               onClick={handleVisionRewardClaim}
               ref={visionClaimButtonRef}
+              disabled={!isVisionRewardReady}
             >
-              Claim {visionReward.xpAwarded} XP
+              {isVisionRewardReady ? `Claim ${visionReward?.xpAwarded ?? 0} XP` : 'Preparing reward'}
             </button>
             <button
               type="button"
               className={`habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--visualize ${
-                visionReward.isSuperBoost ? 'habit-day-nav__vision-modal-button--super-boost' : ''
+                visionReward?.isSuperBoost ? 'habit-day-nav__vision-modal-button--super-boost' : ''
               }`}
               disabled
             >
-              {visionReward.isSuperBoost ? 'Visualization super boost' : 'Visualization +50 XP'}
+              {visionReward?.isSuperBoost ? 'Visualization super boost' : 'Visualization +50 XP'}
             </button>
           </div>
         </div>
@@ -617,6 +644,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     setIsVisionRewardOpen(false);
     setVisionRewardError(null);
     setIsStarBursting(false);
+    setIsVisionRewardSelecting(false);
   }, [activeDate]);
 
   useEffect(() => {
