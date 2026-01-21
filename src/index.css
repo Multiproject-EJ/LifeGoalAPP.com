@@ -2534,7 +2534,16 @@ body {
     backdrop-filter: none;
   }
 
+  .workspace-stage--account .workspace-stage__body {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
   .account-panel {
+    width: 100%;
+    max-width: 100%;
     padding-inline: clamp(1rem, 5vw, 1.5rem);
   }
 

@@ -1730,6 +1730,7 @@ a,
   background: var(--color-bg-tertiary);
   border-radius: 12px;
   padding: 0.25rem;
+  flex-wrap: wrap;
 }
 
 .theme-mode-toggle__btn {
@@ -1747,6 +1748,7 @@ a,
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 0;
 }
 
 .theme-mode-toggle__btn:hover {
