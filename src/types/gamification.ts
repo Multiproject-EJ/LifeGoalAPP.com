@@ -83,6 +83,23 @@ export interface GamificationNotification {
   created_at: string;
 }
 
+export interface TrophyItem {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'trophy' | 'plaque' | 'medal';
+  costPoints: number;
+}
+
+export interface UserTrophy {
+  id: string;
+  userId: string;
+  trophyId: string;
+  purchasedAt: string;
+  trophy: TrophyItem;
+}
+
 // =====================================================
 // XP REWARDS CONSTANTS
 // =====================================================

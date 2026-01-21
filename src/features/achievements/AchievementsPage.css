@@ -265,6 +265,287 @@
   color: var(--text-secondary);
 }
 
+/* Trophy Case */
+.trophy-case {
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.trophy-case__header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(59, 130, 246, 0.16) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.trophy-case__eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  margin: 0 0 0.25rem;
+}
+
+.trophy-case__title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.trophy-case__subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.trophy-case__balance {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  align-self: flex-start;
+}
+
+.trophy-case__balance-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+}
+
+.trophy-case__balance-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.trophy-case__message {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.trophy-case__message--success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.trophy-case__message--error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.trophy-case__status {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.trophy-case__status--error {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+}
+
+.trophy-case__status button {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trophy-case__grid {
+  width: 100%;
+}
+
+.trophy-card {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  padding: 1.1rem;
+  border: 2px solid var(--border-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 100%;
+}
+
+.trophy-card--unlocked {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.12);
+}
+
+.trophy-card__icon {
+  font-size: 2rem;
+}
+
+.trophy-card__name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.trophy-card__description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.trophy-card__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.trophy-card__footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.trophy-card__status {
+  font-weight: 700;
+  color: #059669;
+}
+
+.trophy-card__lock {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.trophy-card__button {
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.trophy-card__button:disabled {
+  cursor: not-allowed;
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+.trophy-card__button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* Trophy Purchase Modal */
+.trophy-purchase-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: none;
+  border-radius: 16px;
+  padding: 0;
+  width: min(92vw, 420px);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.trophy-purchase-modal::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.trophy-purchase-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.trophy-purchase-modal__header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.trophy-purchase-modal__header button {
+  border: none;
+  background: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.trophy-purchase-modal__body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.trophy-purchase-modal__icon {
+  font-size: 2.5rem;
+}
+
+.trophy-purchase-modal__summary {
+  display: flex;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.trophy-purchase-modal__summary strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.trophy-purchase-modal__actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.trophy-purchase-modal__button {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trophy-purchase-modal__button--primary {
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .trophy-case__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
 /* Achievement Card */
 .achievement-card {
   position: relative;

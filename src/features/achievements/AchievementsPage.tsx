@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { AchievementWithProgress } from '../../types/gamification';
+import type { AchievementWithProgress, TrophyItem, UserTrophy } from '../../types/gamification';
 import {
   fetchAchievementsWithProgress,
   getAchievementStats,
   getNextAchievement,
   type AchievementStats,
 } from '../../services/achievements';
+import { fetchGamificationProfile } from '../../services/gamificationPrefs';
+import { fetchTrophyCatalog, fetchUserTrophies, purchaseTrophy } from '../../services/trophies';
 import { AchievementGrid } from './AchievementGrid';
 import { AchievementFilters } from './AchievementFilters';
 import { AchievementDetailModal } from './AchievementDetailModal';
+import { TrophyCase } from './TrophyCase';
+import { TrophyPurchaseModal } from './TrophyPurchaseModal';
 import { useGamification } from '../../hooks/useGamification';
 import './AchievementsPage.css';
 
@@ -27,9 +31,18 @@ export function AchievementsPage({ session }: Props) {
   const [filterStatus, setFilterStatus] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [filterTier, setFilterTier] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [trophies, setTrophies] = useState<TrophyItem[]>([]);
+  const [ownedTrophies, setOwnedTrophies] = useState<UserTrophy[]>([]);
+  const [trophyLoading, setTrophyLoading] = useState(true);
+  const [trophyError, setTrophyError] = useState<string | null>(null);
+  const [pointsBalance, setPointsBalance] = useState(0);
+  const [selectedTrophy, setSelectedTrophy] = useState<TrophyItem | null>(null);
+  const [trophyMessage, setTrophyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   useEffect(() => {
     loadAchievements();
+    loadTrophyCase();
   }, [session.user.id]);
 
   const loadAchievements = async () => {
@@ -52,6 +65,68 @@ export function AchievementsPage({ session }: Props) {
       setError(err instanceof Error ? err.message : 'Failed to load achievements');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTrophyCase = async () => {
+    setTrophyLoading(true);
+    setTrophyError(null);
+
+    try {
+      const [
+        { data: catalogData, error: catalogError },
+        { data: userTrophiesData, error: userTrophiesError },
+        { data: profile, error: profileError },
+      ] = await Promise.all([
+        fetchTrophyCatalog(),
+        fetchUserTrophies(session.user.id),
+        fetchGamificationProfile(session.user.id),
+      ]);
+
+      if (catalogError) throw catalogError;
+      if (userTrophiesError) throw userTrophiesError;
+      if (profileError) throw profileError;
+
+      setTrophies(catalogData || []);
+      setOwnedTrophies(userTrophiesData || []);
+      setPointsBalance(profile?.total_points || 0);
+    } catch (err) {
+      setTrophyError(err instanceof Error ? err.message : 'Failed to load trophy case');
+    } finally {
+      setTrophyLoading(false);
+    }
+  };
+
+  const handleTrophyPurchase = (trophy: TrophyItem) => {
+    setSelectedTrophy(trophy);
+  };
+
+  const confirmTrophyPurchase = async () => {
+    if (!selectedTrophy) return;
+
+    setIsPurchasing(true);
+    setTrophyMessage(null);
+
+    try {
+      const { data, error } = await purchaseTrophy(session.user.id, selectedTrophy.id);
+
+      if (error) throw error;
+
+      setTrophyMessage({
+        type: 'success',
+        text: `${selectedTrophy.name} unlocked and added to your trophy case!`,
+      });
+      setPointsBalance(data?.newPointsBalance ?? pointsBalance);
+      setSelectedTrophy(null);
+      await loadTrophyCase();
+    } catch (err) {
+      setTrophyMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Unable to unlock this accolade',
+      });
+      setSelectedTrophy(null);
+    } finally {
+      setIsPurchasing(false);
     }
   };
 
@@ -183,6 +258,17 @@ export function AchievementsPage({ session }: Props) {
         </div>
       )}
 
+      <TrophyCase
+        trophies={trophies}
+        ownedTrophies={ownedTrophies}
+        currentPoints={pointsBalance}
+        isLoading={trophyLoading}
+        error={trophyError}
+        message={trophyMessage}
+        onRetry={loadTrophyCase}
+        onPurchase={handleTrophyPurchase}
+      />
+
       <AchievementFilters
         filterStatus={filterStatus}
         filterTier={filterTier}
@@ -196,6 +282,16 @@ export function AchievementsPage({ session }: Props) {
         achievements={filteredAchievements}
         onAchievementClick={setSelectedAchievement}
       />
+
+      {selectedTrophy && (
+        <TrophyPurchaseModal
+          trophy={selectedTrophy}
+          currentPoints={pointsBalance}
+          isProcessing={isPurchasing}
+          onConfirm={confirmTrophyPurchase}
+          onCancel={() => setSelectedTrophy(null)}
+        />
+      )}
 
       {selectedAchievement && (
         <AchievementDetailModal
