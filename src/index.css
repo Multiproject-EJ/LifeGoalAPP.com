@@ -11536,6 +11536,15 @@ body {
   flex-direction: column;
 }
 
+.mobile-menu-overlay__panel::before,
+.mobile-menu-overlay__panel::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+}
+
 .mobile-menu-overlay--diode-on .mobile-menu-overlay__backdrop {
   background: rgba(15, 23, 42, 0.62);
 }
@@ -11543,6 +11552,41 @@ body {
 .mobile-menu-overlay--diode-on .mobile-menu-overlay__panel {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
   border-color: rgba(148, 163, 184, 0.5);
+}
+
+@media (max-width: 720px) {
+  .mobile-menu-overlay__panel {
+    width: 100%;
+    margin: 0;
+    border-radius: 26px 26px 0 0;
+  }
+
+  .mobile-menu-overlay__panel::before {
+    inset: 0.55rem;
+    border-radius: 20px 20px 0 0;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    opacity: 1;
+  }
+
+  .mobile-menu-overlay__panel::after {
+    inset: 1.05rem;
+    border-radius: 16px 16px 0 0;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    opacity: 1;
+  }
+
+  .mobile-footer-nav {
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+  }
+
+  .mobile-footer-nav__surface {
+    width: 100%;
+  }
+
+  .mobile-footer-nav__surface--image::before {
+    background-size: 100% 100%;
+  }
 }
 
 @keyframes mobileMenuFadeIn {
