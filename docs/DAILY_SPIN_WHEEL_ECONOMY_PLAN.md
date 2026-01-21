@@ -95,9 +95,9 @@ A single, explicit source of truth for how points are earned/spent.
 **Objective:** Add meditation-only currency and restrict Zen Garden purchases to Zen Tokens.
 
 **Checklist:**
-- [ ] Add Zen Token balance to profile.
-- [ ] Add transaction log (mirror points).
-- [ ] Restrict Zen Garden shop currency.
+- [x] Add Zen Token balance to profile.
+- [x] Add transaction log (mirror points).
+- [x] Restrict Zen Garden shop currency.
 
 ### Step 7 — 4x3 Grid Layout
 **Objective:** Add a reusable 4x3 grid for shop/achievements/Zen Garden.
@@ -141,7 +141,7 @@ A single, explicit source of truth for how points are earned/spent.
 | 3. Fix Daily Spin Wheel | Done | Error + retry states, offline-friendly fallback, immediate score refresh. |
 | 4. Vision Board Claim Animation | Done | Vision claim flight animation targets Game tab. |
 | 5. Score Tab (Mobile-first Ledger) | Done | XP, Points, Zen Tokens, ledger + chips implemented. |
-| 6. Zen Tokens + Zen Garden | In Progress | Zen Garden UI + Zen Token purchase flow underway (this update). |
+| 6. Zen Tokens + Zen Garden | Done | Zen Tokens now awarded for meditation sessions; Zen Garden ledger tracks earn/spend. |
 | 7. 4x3 Grid Layout | Done | Shared `four-by-three-grid` utility used in store + achievements. |
 | 8. Trophies/Plaques/Medals | Not Started | Pending store + achievements updates. |
 | 9. QA + Telemetry | Not Started | Pending validation + event tracking. |

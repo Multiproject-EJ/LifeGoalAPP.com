@@ -20,6 +20,11 @@ export function convertXpToPoints(xpAmount: number): number {
   return Math.floor(xpAmount * XP_TO_POINTS_RATIO);
 }
 
+export const ZEN_TOKEN_REWARDS = {
+  MEDITATION_SESSION: 1,
+  MEDITATION_LONG_SESSION_BONUS: 1,
+} as const;
+
 export const ECONOMY_MATRIX = {
   earnSources: {
     habits: 'Habits + routines completion',

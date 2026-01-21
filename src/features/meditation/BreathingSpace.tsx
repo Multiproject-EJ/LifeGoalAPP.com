@@ -13,7 +13,9 @@ import type { RevealMode } from '../../types/meditation';
 import { FEATURE_BREATHING_SPACE } from './constants';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { ZEN_TOKEN_REWARDS } from '../../constants/economy';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { awardZenTokens } from '../../services/zenGarden';
 import './BreathingSpace.css';
 
 type BreathingSpaceProps = {
@@ -164,7 +166,18 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           setJustCompletedSession(false);
         }, 600);
 
+        const zenTokenAmount = isLongSession
+          ? ZEN_TOKEN_REWARDS.MEDITATION_SESSION + ZEN_TOKEN_REWARDS.MEDITATION_LONG_SESSION_BONUS
+          : ZEN_TOKEN_REWARDS.MEDITATION_SESSION;
+
         await earnXP(xpAmount, 'meditation_session', result.data?.id);
+        await awardZenTokens(
+          session.user.id,
+          zenTokenAmount,
+          'breathing_session',
+          result.data?.id,
+          'Breathing session reward'
+        );
         await recordActivity();
 
         // Reload stats after successful save
@@ -223,7 +236,18 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           setJustCompletedSession(false);
         }, 600);
 
+        const zenTokenAmount = isLongSession
+          ? ZEN_TOKEN_REWARDS.MEDITATION_SESSION + ZEN_TOKEN_REWARDS.MEDITATION_LONG_SESSION_BONUS
+          : ZEN_TOKEN_REWARDS.MEDITATION_SESSION;
+
         await earnXP(xpAmount, 'meditation_session', result.data?.id);
+        await awardZenTokens(
+          session.user.id,
+          zenTokenAmount,
+          'meditation_session',
+          result.data?.id,
+          'Guided meditation reward'
+        );
         await recordActivity();
 
         // Reload stats after successful save

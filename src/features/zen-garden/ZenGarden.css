@@ -158,6 +158,14 @@
   color: #f8fafc;
 }
 
+.zen-garden__ledger-row-value--earn {
+  color: #86efac;
+}
+
+.zen-garden__ledger-row-value--spend {
+  color: #f8fafc;
+}
+
 .zen-garden__card {
   display: flex;
   flex-direction: column;
