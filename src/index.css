@@ -11407,8 +11407,9 @@ body {
 .mobile-footer-nav__menu-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
+  padding-right: 0.4rem;
 }
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-row {
@@ -11417,7 +11418,7 @@ body {
   left: 0;
   right: 0;
   height: 0;
-  justify-content: center;
+  justify-content: flex-end;
   overflow: visible;
 }
 
