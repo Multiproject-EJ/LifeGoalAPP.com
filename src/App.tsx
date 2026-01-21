@@ -1502,14 +1502,6 @@ export default function App() {
             <div className="mobile-gamification-overlay__controls">
               <button
                 type="button"
-                className="mobile-gamification-overlay__close"
-                aria-label="Close Game of Life insights"
-                onClick={() => setShowMobileGamification(false)}
-              >
-                ×
-              </button>
-              <button
-                type="button"
                 className={`mobile-footer-nav__diode-toggle mobile-gamification-overlay__diode-toggle ${
                   isMobileMenuImageActive
                     ? 'mobile-footer-nav__diode-toggle--on'
@@ -1519,6 +1511,14 @@ export default function App() {
                 aria-label="Toggle diode indicator"
                 onClick={() => setIsMobileMenuImageActive((prev) => !prev)}
               />
+              <button
+                type="button"
+                className="mobile-gamification-overlay__close"
+                aria-label="Close Game of Life insights"
+                onClick={() => setShowMobileGamification(false)}
+              >
+                ×
+              </button>
             </div>
           </header>
 
