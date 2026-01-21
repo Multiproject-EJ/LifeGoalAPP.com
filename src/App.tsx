@@ -1260,6 +1260,10 @@ export default function App() {
               levelInfo={levelInfo}
               enabled={gamificationEnabled}
               loading={gamificationLoading}
+              onNavigateToAchievements={() => {
+                setActiveWorkspaceNav('game');
+                setShowMobileHome(false);
+              }}
             />
           </div>
         );
@@ -1323,21 +1327,6 @@ export default function App() {
         return (
           <div className="workspace-content">
             <section className="game-hub">
-              <div className="game-hub__header">
-                <div>
-                  <h2 className="game-hub__title">Game of Life</h2>
-                  <p className="game-hub__subtitle">
-                    Track achievements, stock up on power-ups, and tap into your AI coach.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="game-hub__coach-button"
-                  onClick={() => setShowAiCoachModal(true)}
-                >
-                  Open AI Coach chat
-                </button>
-              </div>
               <div className="game-hub__sections">
                 <AchievementsPage session={activeSession} />
                 <PowerUpsStore session={activeSession} />
