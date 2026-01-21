@@ -12132,8 +12132,8 @@ body {
 }
 
 .mobile-gamification-overlay__stat-icon--life-spin {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
