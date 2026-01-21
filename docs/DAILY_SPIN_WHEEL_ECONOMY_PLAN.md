@@ -143,7 +143,7 @@ A single, explicit source of truth for how points are earned/spent.
 | 5. Score Tab (Mobile-first Ledger) | Done | XP, Points, Zen Tokens, ledger + chips implemented. |
 | 6. Zen Tokens + Zen Garden | Done | Zen Tokens now awarded for meditation sessions; Zen Garden ledger tracks earn/spend. |
 | 7. 4x3 Grid Layout | Done | Shared `four-by-three-grid` utility used in store + achievements. |
-| 8. Trophies/Plaques/Medals | Not Started | Pending store + achievements updates. |
+| 8. Trophies/Plaques/Medals | Done | Trophy case + purchase flow now available from Achievements. |
 | 9. QA + Telemetry | Not Started | Pending validation + event tracking. |
 
 ## Deliverables
