@@ -1499,14 +1499,27 @@ export default function App() {
               <h2 className="mobile-gamification-overlay__title">Keep building your streak</h2>
               <p className="mobile-gamification-overlay__subtitle">{todayLabel}</p>
             </div>
-            <button
-              type="button"
-              className="mobile-gamification-overlay__close"
-              aria-label="Close Game of Life insights"
-              onClick={() => setShowMobileGamification(false)}
-            >
-              ×
-            </button>
+            <div className="mobile-gamification-overlay__controls">
+              <button
+                type="button"
+                className="mobile-gamification-overlay__close"
+                aria-label="Close Game of Life insights"
+                onClick={() => setShowMobileGamification(false)}
+              >
+                ×
+              </button>
+              <button
+                type="button"
+                className={`mobile-footer-nav__diode-toggle mobile-gamification-overlay__diode-toggle ${
+                  isMobileMenuImageActive
+                    ? 'mobile-footer-nav__diode-toggle--on'
+                    : 'mobile-footer-nav__diode-toggle--off'
+                }`}
+                aria-pressed={isMobileMenuImageActive}
+                aria-label="Toggle diode indicator"
+                onClick={() => setIsMobileMenuImageActive((prev) => !prev)}
+              />
+            </div>
           </header>
 
           <button
@@ -1590,7 +1603,6 @@ export default function App() {
           onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
-          onToggleDiode={setIsMobileMenuImageActive}
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -1773,7 +1785,6 @@ export default function App() {
           onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
-          onToggleDiode={setIsMobileMenuImageActive}
         />
       ) : null}
 

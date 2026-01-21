@@ -23,7 +23,6 @@ type MobileFooterNavProps = {
   onSelect: (itemId: string) => void;
   onOpenMenu?: () => void;
   isDiodeActive: boolean;
-  onToggleDiode: (nextState: boolean) => void;
   status?: MobileFooterStatus;
   onStatusClick?: () => void;
 };
@@ -36,7 +35,6 @@ export function MobileFooterNav({
   onSelect,
   onOpenMenu,
   isDiodeActive,
-  onToggleDiode,
   status,
   onStatusClick,
 }: MobileFooterNavProps) {
@@ -60,15 +58,6 @@ export function MobileFooterNav({
       >
         {onOpenMenu ? (
           <div className="mobile-footer-nav__menu-row">
-            <button
-              type="button"
-              className={`mobile-footer-nav__diode-toggle ${
-                isDiodeActive ? 'mobile-footer-nav__diode-toggle--on' : 'mobile-footer-nav__diode-toggle--off'
-              }`}
-              aria-pressed={isDiodeActive}
-              aria-label="Toggle diode indicator"
-              onClick={() => onToggleDiode(!isDiodeActive)}
-            />
             <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
               <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
                 •
@@ -77,7 +66,7 @@ export function MobileFooterNav({
             </button>
           </div>
         ) : null}
-        <ul className="mobile-footer-nav__list" style={listStyle}>
+        <ul className="mobile-footer-nav__list mobile-footer-nav__list--stacked" style={listStyle}>
           {listItems.map((item) => {
             if ('type' in item && item.type === 'status' && status) {
               return (
@@ -116,7 +105,7 @@ export function MobileFooterNav({
 
             const isActive = item.id === activeId;
             return (
-              <li key={item.id} className="mobile-footer-nav__item">
+              <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}`}>
                 <button
                   type="button"
                   className={`mobile-footer-nav__button ${
