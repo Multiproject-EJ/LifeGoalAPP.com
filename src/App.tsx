@@ -9,6 +9,7 @@ import {
 } from 'react';
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
+import lifeSpinIcon from './assets/Lifespinicon.webp';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace, LifeGoalsSection } from './features/goals';
@@ -1563,7 +1564,12 @@ export default function App() {
               onClick={() => setShowDailySpinWheel(true)}
               role="listitem"
             >
-              <span className="mobile-gamification-overlay__stat-icon" aria-hidden="true">🎡</span>
+              <img
+                className="mobile-gamification-overlay__stat-icon"
+                src={lifeSpinIcon}
+                alt=""
+                aria-hidden="true"
+              />
               <div className="mobile-gamification-overlay__stat-content">
                 <p className="mobile-gamification-overlay__stat-label">Life Spin</p>
                 <p className="mobile-gamification-overlay__stat-hint">Spin once per day for a surprise boost.</p>
