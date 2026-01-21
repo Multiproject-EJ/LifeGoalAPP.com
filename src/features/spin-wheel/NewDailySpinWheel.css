@@ -211,6 +211,21 @@
   overflow: hidden;
 }
 
+.new-daily-spin-wheel__disc::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(120deg, transparent 15%, rgba(255, 255, 255, 0.8) 45%, rgba(255, 255, 255, 0.15) 55%, transparent 75%);
+  opacity: 0;
+  transform: translateX(-120%) rotate(15deg);
+  animation: spin-wheel-shine 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.new-daily-spin-wheel__disc--spinning::after {
+  animation: spin-wheel-shine 6s ease-in-out infinite;
+}
+
 .new-daily-spin-wheel__disc--spinning {
   /* Animation is controlled by inline style */
 }
@@ -449,6 +464,8 @@
 .new-daily-spin-modal__locked-icon {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
+  display: inline-block;
+  animation: lock-shake 6s ease-in-out infinite;
 }
 
 .new-daily-spin-modal__locked-text {
@@ -503,6 +520,25 @@
   padding: 0.25rem;
 }
 
+.new-daily-spin-modal__legend-item--highlight .new-daily-spin-modal__legend-icon,
+.new-daily-spin-modal__legend-item--highlight .new-daily-spin-modal__legend-name {
+  animation: prize-pulse 2.4s ease-in-out infinite;
+}
+
+.new-daily-spin-modal__legend-item--mystery {
+  gap: 0.85rem;
+}
+
+.new-daily-spin-modal__legend-item--mystery .new-daily-spin-modal__legend-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.new-daily-spin-modal__legend-item--mystery .new-daily-spin-modal__legend-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
 .new-daily-spin-modal__legend-icon {
   font-size: 1rem;
 }
@@ -515,6 +551,57 @@
 .new-daily-spin-modal__legend-chance {
   opacity: 0.8;
   font-size: 0.7rem;
+}
+
+@keyframes lock-shake {
+  0%,
+  88%,
+  100% {
+    transform: translateX(0);
+  }
+  90% {
+    transform: translateX(-3px) rotate(-4deg);
+  }
+  92% {
+    transform: translateX(3px) rotate(4deg);
+  }
+  94% {
+    transform: translateX(-2px) rotate(-2deg);
+  }
+  96% {
+    transform: translateX(2px) rotate(2deg);
+  }
+}
+
+@keyframes spin-wheel-shine {
+  0%,
+  84%,
+  100% {
+    opacity: 0;
+    transform: translateX(-120%) rotate(15deg);
+  }
+  86% {
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 0.9;
+    transform: translateX(120%) rotate(15deg);
+  }
+  92% {
+    opacity: 0;
+  }
+}
+
+@keyframes prize-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 
 @media (min-width: 640px) {
