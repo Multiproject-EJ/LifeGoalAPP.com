@@ -33,11 +33,10 @@ import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } fr
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
-import { MobileThemeSelector } from './components/MobileThemeSelector';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
-import { useTheme, AVAILABLE_THEMES } from './contexts/ThemeContext';
+import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import {
@@ -226,7 +225,7 @@ export default function App() {
     signInWithGoogle,
     signOut,
   } = useSupabaseAuth();
-  const { theme, themeMode } = useTheme();
+  const { theme } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -254,7 +253,6 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
-  const [isMobileThemeSelectorOpen, setIsMobileThemeSelectorOpen] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
@@ -1396,7 +1394,6 @@ export default function App() {
           className="mobile-menu-overlay__backdrop"
           onClick={() => {
             setIsMobileMenuOpen(false);
-            setIsMobileThemeSelectorOpen(false);
           }}
           role="presentation"
         />
@@ -1405,77 +1402,72 @@ export default function App() {
             isMobileMenuImageActive ? ' mobile-menu-overlay__panel--image' : ''
           }`}
         >
-          {isMobileThemeSelectorOpen ? (
-            <MobileThemeSelector onClose={() => setIsMobileThemeSelectorOpen(false)} />
-          ) : (
-            <>
-              <div className="mobile-menu-overlay__header">
-                <h2 className="mobile-menu-overlay__title">Profile</h2>
+          <>
+            <div className="mobile-menu-overlay__header">
+              <h2 className="mobile-menu-overlay__title">Profile</h2>
+              <button
+                type="button"
+                className="mobile-menu-overlay__close"
+                aria-label="Close menu"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="mobile-menu-overlay__content">
+              <ul className="mobile-menu-overlay__list">
+                {mobileMenuNavItems
+                  .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
+                  .map((item) => (
+                    <li key={item.id} className="mobile-menu-overlay__item">
+                      <button
+                        type="button"
+                        onClick={() => handleMobileNavSelect(item.id)}
+                        aria-label={item.ariaLabel}
+                        className={
+                          item.id === 'game' && isGameNearNextLevel
+                            ? 'mobile-menu-overlay__game-button mobile-menu-overlay__game-button--charged'
+                            : undefined
+                        }
+                      >
+                        <span aria-hidden="true" className="mobile-menu-overlay__icon">
+                          {item.icon}
+                        </span>
+                        <span className="mobile-menu-overlay__texts">
+                          <span
+                            className={`mobile-menu-overlay__label${
+                              item.id === 'game' && isGameNearNextLevel ? ' mobile-menu-overlay__label--charged' : ''
+                            }`}
+                          >
+                            {item.label}
+                          </span>
+                          <span className="mobile-menu-overlay__summary">{item.summary}</span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            <div className="mobile-menu-overlay__settings">
+              <div className="mobile-menu-overlay__news-card" role="status" aria-live="polite">
+                <div className="mobile-menu-overlay__news-header">
+                  <span className="mobile-menu-overlay__news-eyebrow">News</span>
+                  <span className="mobile-menu-overlay__news-tag">Recommended next step</span>
+                </div>
+                <p className="mobile-menu-overlay__news-title">Lock in one priority for today</p>
+                <p className="mobile-menu-overlay__news-body">
+                  Open Today to pick a focus goal and check it off before the day ends.
+                </p>
                 <button
                   type="button"
-                  className="mobile-menu-overlay__close"
-                  aria-label="Close menu"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="mobile-menu-overlay__news-button"
+                  onClick={() => handleMobileNavSelect('planning')}
                 >
-                  ×
+                  Go to Today
                 </button>
               </div>
-              <div className="mobile-menu-overlay__content">
-                <ul className="mobile-menu-overlay__list">
-                  {mobileMenuNavItems
-                    .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
-                    .map((item) => (
-                      <li key={item.id} className="mobile-menu-overlay__item">
-                        <button
-                          type="button"
-                          onClick={() => handleMobileNavSelect(item.id)}
-                          aria-label={item.ariaLabel}
-                          className={
-                            item.id === 'game' && isGameNearNextLevel
-                              ? 'mobile-menu-overlay__game-button mobile-menu-overlay__game-button--charged'
-                              : undefined
-                          }
-                        >
-                          <span aria-hidden="true" className="mobile-menu-overlay__icon">
-                            {item.icon}
-                          </span>
-                          <span className="mobile-menu-overlay__texts">
-                            <span
-                              className={`mobile-menu-overlay__label${
-                                item.id === 'game' && isGameNearNextLevel ? ' mobile-menu-overlay__label--charged' : ''
-                              }`}
-                            >
-                              {item.label}
-                            </span>
-                            <span className="mobile-menu-overlay__summary">{item.summary}</span>
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-              <div className="mobile-menu-overlay__settings">
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__theme-selector-button mobile-menu-overlay__theme-selector-button--expanded"
-                  onClick={() => setIsMobileThemeSelectorOpen(true)}
-                  aria-label="Open theme selector"
-                >
-                  <span className="mobile-menu-overlay__theme-selector-label">
-                    <span className="mobile-menu-overlay__theme-selector-title">Theme</span>
-                    <span className="mobile-menu-overlay__theme-selector-current">
-                      {AVAILABLE_THEMES.find(t => t.id === theme)?.name || 'Theme'} 
-                      {' • '}
-                      {themeMode === 'system' ? '💻 System' : themeMode === 'dark' ? '🌙 Dark' : '☀️ Light'}
-                    </span>
-                  </span>
-                  <span className="mobile-menu-overlay__theme-selector-icon" aria-hidden="true">
-                    {AVAILABLE_THEMES.find(t => t.id === theme)?.icon || '🎨'}
-                  </span>
-                </button>
-              </div>
-            </>
-          )}
+            </div>
+          </>
         </div>
       </div>
     ) : null;
