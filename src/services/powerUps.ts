@@ -3,6 +3,7 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import type { PowerUp, UserPowerUp, PurchaseResult, ActiveBoost } from '../types/gamification';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { awardXP } from './gamification';
+import { recordTelemetryEvent } from './telemetry';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -355,6 +356,20 @@ export async function purchasePowerUp(
       effectApplied = await applyInstantEffect(userId, powerUp, profile);
     }
 
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'economy_spend',
+      metadata: {
+        currency: 'points',
+        amount: powerUp.costPoints,
+        balance: newBalance,
+        sourceType: 'power_up',
+        sourceId: powerUp.id,
+        itemName: powerUp.name,
+        effectType: powerUp.effectType,
+      },
+    });
+
     return {
       data: {
         success: true,
@@ -402,6 +417,20 @@ export async function purchasePowerUp(
     power_up_id: powerUpId,
     action: 'purchase',
     points_spent: powerUp.costPoints,
+  });
+
+  void recordTelemetryEvent({
+    userId,
+    eventType: 'economy_spend',
+    metadata: {
+      currency: 'points',
+      amount: powerUp.costPoints,
+      balance: profile.total_points - powerUp.costPoints,
+      sourceType: 'power_up',
+      sourceId: powerUp.id,
+      itemName: powerUp.name,
+      effectType: powerUp.effectType,
+    },
   });
 
   // Apply instant effect

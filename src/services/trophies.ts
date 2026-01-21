@@ -1,6 +1,7 @@
 import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import type { TrophyItem, UserTrophy } from '../types/gamification';
+import { recordTelemetryEvent } from './telemetry';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -120,6 +121,20 @@ export async function purchaseTrophy(
       return { data: null, error: updateError };
     }
   }
+
+  void recordTelemetryEvent({
+    userId,
+    eventType: 'economy_spend',
+    metadata: {
+      currency: 'points',
+      amount: trophy.costPoints,
+      balance: newBalance,
+      sourceType: 'trophy',
+      sourceId: trophy.id,
+      itemName: trophy.name,
+      category: trophy.category,
+    },
+  });
 
   const userTrophy: UserTrophy = {
     id: `trophy-${Date.now()}`,
