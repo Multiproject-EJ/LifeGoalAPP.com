@@ -1564,9 +1564,12 @@ export default function App() {
               onClick={() => setShowDailySpinWheel(true)}
               role="listitem"
             >
-              <span className="mobile-gamification-overlay__stat-icon" aria-hidden="true">
-                <img className="mobile-gamification-overlay__stat-icon-image" src={lifeSpinIcon} alt="" />
-              </span>
+              <img
+                className="mobile-gamification-overlay__stat-icon"
+                src={lifeSpinIcon}
+                alt=""
+                aria-hidden="true"
+              />
               <div className="mobile-gamification-overlay__stat-content">
                 <p className="mobile-gamification-overlay__stat-label">Life Spin</p>
                 <p className="mobile-gamification-overlay__stat-hint">Spin once per day for a surprise boost.</p>
