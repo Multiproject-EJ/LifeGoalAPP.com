@@ -16,6 +16,8 @@ export function ThemeSelector() {
     setDarkTheme,
     cycleThemeMode,
   } = useTheme();
+  const showLightThemes = themeMode === 'light';
+  const showDarkThemes = themeMode === 'dark';
 
   return (
     <div className="theme-selector">
@@ -57,76 +59,80 @@ export function ThemeSelector() {
       </div>
 
       {/* Light Theme Section */}
-      <div className="theme-selector__section">
-        <h4 className="theme-selector__section-title">
-          <span aria-hidden="true">☀️</span> Light Themes
-        </h4>
-        <p className="theme-selector__section-hint">
-          Choose your preferred light theme for bright environments.
-        </p>
-        <div className="theme-selector__grid">
-          {LIGHT_THEMES.map((themeOption) => {
-            const isActive = lightTheme === themeOption.id;
-            return (
-              <button
-                key={themeOption.id}
-                type="button"
-                className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''}`}
-                onClick={() => setLightTheme(themeOption.id)}
-                aria-pressed={isActive}
-                aria-label={`Select ${themeOption.name} as light theme`}
-              >
-                <span className="theme-selector__icon" aria-hidden="true">
-                  {themeOption.icon}
-                </span>
-                <span className="theme-selector__name">{themeOption.name}</span>
-                <span className="theme-selector__hint">{themeOption.description}</span>
-                {isActive && (
-                  <span className="theme-selector__badge" aria-label="Currently active">
-                    ✓
+      {showLightThemes ? (
+        <div className="theme-selector__section">
+          <h4 className="theme-selector__section-title">
+            <span aria-hidden="true">☀️</span> Light Themes
+          </h4>
+          <p className="theme-selector__section-hint">
+            Choose your preferred light theme for bright environments.
+          </p>
+          <div className="theme-selector__grid">
+            {LIGHT_THEMES.map((themeOption) => {
+              const isActive = lightTheme === themeOption.id;
+              return (
+                <button
+                  key={themeOption.id}
+                  type="button"
+                  className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''}`}
+                  onClick={() => setLightTheme(themeOption.id)}
+                  aria-pressed={isActive}
+                  aria-label={`Select ${themeOption.name} as light theme`}
+                >
+                  <span className="theme-selector__icon" aria-hidden="true">
+                    {themeOption.icon}
                   </span>
-                )}
-              </button>
-            );
-          })}
+                  <span className="theme-selector__name">{themeOption.name}</span>
+                  <span className="theme-selector__hint">{themeOption.description}</span>
+                  {isActive && (
+                    <span className="theme-selector__badge" aria-label="Currently active">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/* Dark Theme Section */}
-      <div className="theme-selector__section">
-        <h4 className="theme-selector__section-title">
-          <span aria-hidden="true">🌙</span> Dark Themes
-        </h4>
-        <p className="theme-selector__section-hint">
-          Choose your preferred dark theme for low-light environments.
-        </p>
-        <div className="theme-selector__grid">
-          {DARK_THEMES.map((themeOption) => {
-            const isActive = darkTheme === themeOption.id;
-            return (
-              <button
-                key={themeOption.id}
-                type="button"
-                className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''}`}
-                onClick={() => setDarkTheme(themeOption.id)}
-                aria-pressed={isActive}
-                aria-label={`Select ${themeOption.name} as dark theme`}
-              >
-                <span className="theme-selector__icon" aria-hidden="true">
-                  {themeOption.icon}
-                </span>
-                <span className="theme-selector__name">{themeOption.name}</span>
-                <span className="theme-selector__hint">{themeOption.description}</span>
-                {isActive && (
-                  <span className="theme-selector__badge" aria-label="Currently active">
-                    ✓
+      {showDarkThemes ? (
+        <div className="theme-selector__section">
+          <h4 className="theme-selector__section-title">
+            <span aria-hidden="true">🌙</span> Dark Themes
+          </h4>
+          <p className="theme-selector__section-hint">
+            Choose your preferred dark theme for low-light environments.
+          </p>
+          <div className="theme-selector__grid">
+            {DARK_THEMES.map((themeOption) => {
+              const isActive = darkTheme === themeOption.id;
+              return (
+                <button
+                  key={themeOption.id}
+                  type="button"
+                  className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''}`}
+                  onClick={() => setDarkTheme(themeOption.id)}
+                  aria-pressed={isActive}
+                  aria-label={`Select ${themeOption.name} as dark theme`}
+                >
+                  <span className="theme-selector__icon" aria-hidden="true">
+                    {themeOption.icon}
                   </span>
-                )}
-              </button>
-            );
-          })}
+                  <span className="theme-selector__name">{themeOption.name}</span>
+                  <span className="theme-selector__hint">{themeOption.description}</span>
+                  {isActive && (
+                    <span className="theme-selector__badge" aria-label="Currently active">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
