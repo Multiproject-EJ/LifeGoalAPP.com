@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
+import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import {
   clearHabitCompletion,
   fetchHabitLogsForRange,
@@ -28,6 +29,8 @@ import {
 } from '../../services/journal';
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
+import { fetchGoals, insertGoal } from '../../services/goals';
+import { updateHabitV2 } from '../../services/habitsV2';
 import {
   getYesterdayRecapEnabled,
   getYesterdayRecapLastCollected,
@@ -36,6 +39,7 @@ import {
   setYesterdayRecapLastShown,
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
@@ -83,6 +87,13 @@ type HabitInsights = {
   currentStreak: number;
   longestStreak: number;
   lastCompletedOn: string | null;
+};
+
+type HabitEditDraft = {
+  id: string;
+  name: string;
+  schedule: Json | null;
+  goalId: string | null;
 };
 
 type QuickJournalDraft = {
@@ -134,6 +145,8 @@ const LIFE_WHEEL_COLORS: Record<string, string> = {
 
 const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatically once you reconnect.';
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
+const LIFE_WHEEL_UNASSIGNED = 'unassigned';
+const GOAL_UNASSIGNED = 'unassigned';
 
 const quickJournalDraftKey = (userId: string, dateISO: string) =>
   `lifegoal.quick-journal:${userId}:${dateISO}`;
@@ -212,6 +225,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   >({});
   // State for alert configuration modal
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
+  const [editHabit, setEditHabit] = useState<HabitEditDraft | null>(null);
+  const [editLifeWheelKey, setEditLifeWheelKey] = useState<string>(LIFE_WHEEL_UNASSIGNED);
+  const [editGoalId, setEditGoalId] = useState<string>(GOAL_UNASSIGNED);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [goals, setGoals] = useState<Database['public']['Tables']['goals']['Row'][]>([]);
+  const [goalsLoading, setGoalsLoading] = useState(false);
+  const [creatingGoal, setCreatingGoal] = useState(false);
   const [showLegacyHabitAssets, setShowLegacyHabitAssets] = useState(false);
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
   const [quickJournalMorning, setQuickJournalMorning] = useState('');
@@ -1052,6 +1073,39 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     setYesterdayRecapLastShown(session.user.id, todayISO);
   }, [loading, showYesterdayRecap, session?.user?.id, habits, historicalLogs, yesterdayISO]);
 
+  useEffect(() => {
+    if (!editHabit) {
+      setEditLifeWheelKey(LIFE_WHEEL_UNASSIGNED);
+      setEditGoalId(GOAL_UNASSIGNED);
+      setEditError(null);
+      return;
+    }
+
+    const domainMeta = extractLifeWheelDomain(editHabit.schedule);
+    setEditLifeWheelKey(domainMeta?.key ?? LIFE_WHEEL_UNASSIGNED);
+    setEditGoalId(editHabit.goalId ?? GOAL_UNASSIGNED);
+    setEditError(null);
+  }, [editHabit]);
+
+  useEffect(() => {
+    if (!editHabit) return;
+    setGoalsLoading(true);
+    void (async () => {
+      try {
+        const { data, error } = await fetchGoals();
+        if (error) throw error;
+        setGoals(data ?? []);
+      } catch (error) {
+        setGoals([]);
+        setEditError(
+          error instanceof Error ? error.message : 'Unable to load goals right now.',
+        );
+      } finally {
+        setGoalsLoading(false);
+      }
+    })();
+  }, [editHabit]);
+
   // Extracted function to load monthly statistics (reused in useEffect and handleMonthChange)
   const loadMonthlyStats = useCallback(async (year: number, month: number) => {
     if (!isConfigured || !session?.user?.id) {
@@ -1455,6 +1509,95 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     }));
   };
 
+  const handleOpenEdit = (habit: HabitWithGoal) => {
+    setEditHabit({
+      id: habit.id,
+      name: habit.name,
+      schedule: habit.schedule ?? null,
+      goalId: habit.goal?.id ?? null,
+    });
+  };
+
+  const handleCloseEdit = () => {
+    setEditHabit(null);
+    setEditSaving(false);
+    setEditError(null);
+    setCreatingGoal(false);
+  };
+
+  const handleCreateGoalFromHabit = async () => {
+    if (!editHabit) return;
+    if (!isConfigured && !isDemoExperience) {
+      setEditError('Supabase credentials are not configured. Add them to continue.');
+      return;
+    }
+
+    setCreatingGoal(true);
+    setEditError(null);
+
+    try {
+      const lifeWheelCategory =
+        editLifeWheelKey !== LIFE_WHEEL_UNASSIGNED
+          ? (editLifeWheelKey as LifeWheelCategoryKey)
+          : null;
+      const { data, error } = await insertGoal({
+        user_id: session.user.id,
+        title: editHabit.name,
+        description: null,
+        life_wheel_category: lifeWheelCategory,
+        start_date: null,
+        target_date: null,
+        estimated_duration_days: null,
+        timing_notes: null,
+        status_tag: DEFAULT_GOAL_STATUS,
+      });
+      if (error) {
+        throw error;
+      }
+      if (!data) {
+        throw new Error('Failed to create goal.');
+      }
+      setGoals((current) => [data, ...current]);
+      setEditGoalId(data.id);
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : 'Unable to create the goal right now.');
+    } finally {
+      setCreatingGoal(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editHabit) return;
+    if (!isConfigured && !isDemoExperience) {
+      setEditError('Supabase credentials are not configured. Add them to continue.');
+      return;
+    }
+
+    setEditSaving(true);
+    setEditError(null);
+
+    const lifeWheelKey =
+      editLifeWheelKey !== LIFE_WHEEL_UNASSIGNED ? editLifeWheelKey : null;
+    const nextSchedule = buildScheduleWithLifeWheel(editHabit.schedule, lifeWheelKey);
+    const nextGoalId = editGoalId !== GOAL_UNASSIGNED ? editGoalId : null;
+
+    try {
+      const { error } = await updateHabitV2(editHabit.id, {
+        schedule: nextSchedule,
+        goal_id: nextGoalId,
+      });
+      if (error) {
+        throw error;
+      }
+      handleCloseEdit();
+      await refreshHabits();
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : 'Unable to update habit details.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const renderDayNavigation = (variant: 'compact' | 'full', showDetails = true) => {
     const displayLabel = formatDateLabel(activeDate);
     const canGoForward = activeDate < today;
@@ -1684,6 +1827,16 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                       }}
                     >
                       🔔 Alerts
+                    </button>
+                    <button
+                      type="button"
+                      className="habit-checklist__edit-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenEdit(habit);
+                      }}
+                    >
+                      ✏️ Edit
                     </button>
                   </div>
                 </div>
@@ -3038,6 +3191,104 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         </div>
       )}
 
+      {editHabit && (
+        <div className="habit-edit-modal-overlay" onClick={handleCloseEdit}>
+          <div className="habit-edit-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="habit-edit-modal__header">
+              <div>
+                <p className="habit-edit-modal__eyebrow">Edit habit focus</p>
+                <h3>{editHabit.name}</h3>
+              </div>
+              <button
+                type="button"
+                className="habit-edit-modal__close"
+                onClick={handleCloseEdit}
+                aria-label="Close habit edit"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="habit-edit-modal__body">
+              <label className="habit-edit-modal__label" htmlFor="habit-life-wheel-select">
+                Life wheel area
+              </label>
+              <select
+                id="habit-life-wheel-select"
+                className="habit-edit-modal__select"
+                value={editLifeWheelKey}
+                onChange={(event) => setEditLifeWheelKey(event.target.value)}
+              >
+                <option value={LIFE_WHEEL_UNASSIGNED}>Unassigned</option>
+                {LIFE_WHEEL_CATEGORIES.map((category) => (
+                  <option key={category.key} value={category.key}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+
+              <div className="habit-edit-modal__section">
+                <label className="habit-edit-modal__label" htmlFor="habit-goal-select">
+                  Attach to a goal
+                </label>
+                {goalsLoading ? (
+                  <p className="habit-edit-modal__hint">Loading goals…</p>
+                ) : (
+                  <>
+                    <select
+                      id="habit-goal-select"
+                      className="habit-edit-modal__select"
+                      value={editGoalId}
+                      onChange={(event) => setEditGoalId(event.target.value)}
+                    >
+                      <option value={GOAL_UNASSIGNED}>No goal</option>
+                      {goals.map((goal) => (
+                        <option key={goal.id} value={goal.id}>
+                          {goal.title || 'Untitled goal'}
+                        </option>
+                      ))}
+                    </select>
+                    {goals.length === 0 ? (
+                      <p className="habit-edit-modal__hint">
+                        No goals yet. Create one to link this habit.
+                      </p>
+                    ) : null}
+                  </>
+                )}
+                <button
+                  type="button"
+                  className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
+                  onClick={handleCreateGoalFromHabit}
+                  disabled={creatingGoal}
+                >
+                  {creatingGoal ? 'Creating…' : '➕ Start a new goal from this habit'}
+                </button>
+              </div>
+
+              {editError ? <p className="habit-edit-modal__error">{editError}</p> : null}
+            </div>
+
+            <div className="habit-edit-modal__footer">
+              <button
+                type="button"
+                className="habit-edit-modal__btn habit-edit-modal__btn--ghost"
+                onClick={handleCloseEdit}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="habit-edit-modal__btn habit-edit-modal__btn--primary"
+                onClick={() => void handleSaveEdit()}
+                disabled={editSaving}
+              >
+                {editSaving ? 'Saving…' : 'Save changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showLegacyHabitAssets && (
         <div className="habit-legacy-modal-overlay" onClick={() => setShowLegacyHabitAssets(false)}>
           <div className="habit-legacy-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3142,6 +3393,33 @@ function formatLifeWheelDomainLabel(domain: LifeWheelDomainMeta): string | null 
   }
 
   return null;
+}
+
+function buildScheduleWithLifeWheel(schedule: Json | null, lifeWheelKey: string | null): Json | null {
+  if (!lifeWheelKey && (!schedule || typeof schedule !== 'object' || Array.isArray(schedule))) {
+    return schedule;
+  }
+
+  const nextSchedule: Record<string, Json> =
+    schedule && typeof schedule === 'object' && !Array.isArray(schedule)
+      ? { ...(schedule as Record<string, Json>) }
+      : {};
+
+  if (lifeWheelKey) {
+    const match = LIFE_WHEEL_CATEGORIES.find((category) => category.key === lifeWheelKey);
+    nextSchedule.life_wheel_domain = {
+      key: lifeWheelKey,
+      label: match?.label ?? formatLifeWheelDomainLabel({ key: lifeWheelKey, label: null }),
+    };
+  } else {
+    delete nextSchedule.life_wheel_domain;
+  }
+
+  if (Object.keys(nextSchedule).length === 0) {
+    return null;
+  }
+
+  return nextSchedule;
 }
 
 function formatHabitMeta(frequency: string, schedule: Json | null) {
