@@ -26,6 +26,7 @@ import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import { ActionsTab } from './features/actions';
+import { TimerTab } from './features/timer';
 import { ProjectsManager } from './features/projects';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
@@ -1237,7 +1238,17 @@ export default function App() {
       case 'actions':
         return (
           <div className="workspace-content">
-            <ActionsTab session={activeSession} onNavigateToProjects={() => setActiveWorkspaceNav('projects')} />
+            <ActionsTab
+              session={activeSession}
+              onNavigateToProjects={() => setActiveWorkspaceNav('projects')}
+              onNavigateToTimer={() => setActiveWorkspaceNav('timer')}
+            />
+          </div>
+        );
+      case 'timer':
+        return (
+          <div className="workspace-content">
+            <TimerTab onNavigateToActions={() => setActiveWorkspaceNav('actions')} />
           </div>
         );
       case 'score':

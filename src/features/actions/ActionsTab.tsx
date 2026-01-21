@@ -30,6 +30,7 @@ const shouldAlwaysShow = (action: Action): boolean => {
 type ActionsTabProps = {
   session: Session;
   onNavigateToProjects?: () => void;
+  onNavigateToTimer?: () => void;
 };
 
 type StatusMessage = {
@@ -37,7 +38,7 @@ type StatusMessage = {
   message: string;
 } | null;
 
-export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
+export function ActionsTab({ session, onNavigateToProjects, onNavigateToTimer }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
   const { actions, loading, error, createAction, updateAction, completeAction, deleteAction, refresh } = useActions(session);
   const { projects } = useProjects(session);
@@ -360,13 +361,24 @@ export function ActionsTab({ session, onNavigateToProjects }: ActionsTabProps) {
         <div className="actions-tab__header-actions">
           {onNavigateToProjects && (
             <button
-              className="actions-tab__projects-icon"
+              className="actions-tab__header-icon"
               onClick={onNavigateToProjects}
               type="button"
               aria-label="Go to Projects"
               title="Go to Projects"
             >
               📦
+            </button>
+          )}
+          {onNavigateToTimer && (
+            <button
+              className="actions-tab__header-icon"
+              onClick={onNavigateToTimer}
+              type="button"
+              aria-label="Open Timer"
+              title="Open Timer"
+            >
+              ⏱️
             </button>
           )}
           {isDemoExperience && (
