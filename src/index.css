@@ -11207,7 +11207,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./assets/ControllerLightBlue.webp') center bottom / 100% auto no-repeat;
+  background: url('./assets/ControllerLightBlue.webp') center bottom / 140% auto no-repeat;
   z-index: 0;
 }
 
