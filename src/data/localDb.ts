@@ -21,17 +21,41 @@ interface LifeGoalAppDB extends DBSchema {
       'by-updated_at': string;
     };
   };
+  personality_tests: {
+    key: string;
+    value: {
+      id: string;
+      user_id: string;
+      taken_at: string;
+      traits: Record<string, number>;
+      axes: Record<string, number>;
+      answers: Record<string, number>;
+      version: string;
+      _dirty?: boolean;
+    };
+    indexes: {
+      'by-user_id': string;
+      'by-taken_at': string;
+    };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<LifeGoalAppDB>> | null = null;
 
 function getDb() {
   if (!dbPromise) {
-    dbPromise = openDB<LifeGoalAppDB>('lifegoalapp-db', 1, {
+    dbPromise = openDB<LifeGoalAppDB>('lifegoalapp-db', 2, {
       upgrade(db) {
-        const goals = db.createObjectStore('goals', { keyPath: 'id' });
-        goals.createIndex('by-user_id', 'user_id');
-        goals.createIndex('by-updated_at', 'updated_at');
+        if (!db.objectStoreNames.contains('goals')) {
+          const goals = db.createObjectStore('goals', { keyPath: 'id' });
+          goals.createIndex('by-user_id', 'user_id');
+          goals.createIndex('by-updated_at', 'updated_at');
+        }
+        if (!db.objectStoreNames.contains('personality_tests')) {
+          const tests = db.createObjectStore('personality_tests', { keyPath: 'id' });
+          tests.createIndex('by-user_id', 'user_id');
+          tests.createIndex('by-taken_at', 'taken_at');
+        }
       },
     });
   }
@@ -39,6 +63,7 @@ function getDb() {
 }
 
 export type GoalValue = LifeGoalAppDB['goals']['value'];
+export type PersonalityTestValue = LifeGoalAppDB['personality_tests']['value'];
 
 // ---------- Goals basic operations ----------
 
@@ -76,4 +101,26 @@ export async function getDirtyGoals(): Promise<GoalValue[]> {
   const store = tx.store;
   const allGoals = await store.getAll();
   return allGoals.filter((g) => g._dirty);
+}
+
+// ---------- Personality tests basic operations ----------
+
+export async function getPersonalityTestsForUser(
+  userId: string,
+): Promise<PersonalityTestValue[]> {
+  const db = await getDb();
+  return db.getAllFromIndex('personality_tests', 'by-user_id', IDBKeyRange.only(userId));
+}
+
+export async function putPersonalityTest(test: PersonalityTestValue): Promise<void> {
+  const db = await getDb();
+  await db.put('personality_tests', test);
+}
+
+export async function getDirtyPersonalityTests(): Promise<PersonalityTestValue[]> {
+  const db = await getDb();
+  const tx = db.transaction('personality_tests');
+  const store = tx.store;
+  const allTests = await store.getAll();
+  return allTests.filter((test) => test._dirty);
 }

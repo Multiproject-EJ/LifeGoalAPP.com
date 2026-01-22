@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   AnswerValue,
@@ -6,6 +6,9 @@ import {
   PersonalityQuestion,
 } from './personalityTestData';
 import { PersonalityScores, scorePersonality } from './personalityScoring';
+import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
+import { createDemoSession } from '../../services/demoSession';
+import { queuePersonalityTestResult } from '../../data/personalityTestRepo';
 
 type TestStep = 'intro' | 'quiz' | 'results';
 
@@ -229,9 +232,23 @@ const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
 };
 
 export default function PersonalityTest() {
+  const { session, mode } = useSupabaseAuth();
   const [step, setStep] = useState<TestStep>('intro');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const savedResultRef = useRef<string | null>(null);
+
+  const activeSession = useMemo(() => {
+    if (session) {
+      return session;
+    }
+    if (mode === 'demo') {
+      return createDemoSession();
+    }
+    return null;
+  }, [mode, session]);
+
+  const activeUserId = activeSession?.user?.id ?? null;
 
   const currentQuestion: PersonalityQuestion | undefined =
     PERSONALITY_QUESTION_BANK[currentIndex];
@@ -255,6 +272,7 @@ export default function PersonalityTest() {
     setStep('quiz');
     setCurrentIndex(0);
     setAnswers({});
+    savedResultRef.current = null;
   };
 
   const handleSelect = (value: AnswerValue) => {
@@ -298,7 +316,31 @@ export default function PersonalityTest() {
     setStep('quiz');
     setCurrentIndex(0);
     setAnswers({});
+    savedResultRef.current = null;
   };
+
+  useEffect(() => {
+    if (step !== 'results' || !scores || !activeUserId) {
+      return;
+    }
+
+    if (savedResultRef.current) {
+      return;
+    }
+
+    queuePersonalityTestResult({
+      userId: activeUserId,
+      answers,
+      scores,
+      version: 'v1',
+    })
+      .then((record) => {
+        savedResultRef.current = record.id;
+      })
+      .catch(() => {
+        // Fail silently; results are still shown locally.
+      });
+  }, [activeUserId, answers, scores, step]);
 
   return (
     <section className="identity-hub">
