@@ -252,6 +252,8 @@ export default function App() {
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isBreatheSubmenuOpen, setIsBreatheSubmenuOpen] = useState(false);
+  const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<'breathing' | 'meditation'>('breathing');
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
@@ -350,6 +352,12 @@ export default function App() {
       } satisfies MobileMenuNavItem;
     });
   }, [workspaceNavItems]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      setIsBreatheSubmenuOpen(false);
+    }
+  }, [isMobileMenuOpen]);
 
   const mobileFooterNavItems = useMemo(() => {
     const footerIds: MobileMenuNavItem['id'][] = [
@@ -1307,7 +1315,11 @@ export default function App() {
       case 'breathing-space':
         return (
           <div className="workspace-content">
-            <BreathingSpace session={activeSession} />
+            <BreathingSpace
+              session={activeSession}
+              initialMobileTab={breathingSpaceMobileTab}
+              onMobileTabChange={setBreathingSpaceMobileTab}
+            />
           </div>
         );
       case 'insights':
@@ -1418,34 +1430,90 @@ export default function App() {
               <ul className="mobile-menu-overlay__list">
                 {mobileMenuNavItems
                   .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
-                  .map((item) => (
-                    <li key={item.id} className="mobile-menu-overlay__item">
-                      <button
-                        type="button"
-                        onClick={() => handleMobileNavSelect(item.id)}
-                        aria-label={item.ariaLabel}
-                        className={
-                          item.id === 'game' && isGameNearNextLevel
-                            ? 'mobile-menu-overlay__game-button mobile-menu-overlay__game-button--charged'
-                            : undefined
-                        }
-                      >
-                        <span aria-hidden="true" className="mobile-menu-overlay__icon">
-                          {item.icon}
-                        </span>
-                        <span className="mobile-menu-overlay__texts">
-                          <span
-                            className={`mobile-menu-overlay__label${
-                              item.id === 'game' && isGameNearNextLevel ? ' mobile-menu-overlay__label--charged' : ''
+                  .map((item) => {
+                    const isBreathingItem = item.id === 'breathing-space';
+                    const isSubmenuOpen = isBreathingItem && isBreatheSubmenuOpen;
+                    const submenuId = 'mobile-breathe-submenu';
+                    const handleItemClick = () => {
+                      if (isBreathingItem) {
+                        setIsBreatheSubmenuOpen((prev) => !prev);
+                        return;
+                      }
+                      handleMobileNavSelect(item.id);
+                    };
+
+                    return (
+                      <li key={item.id} className="mobile-menu-overlay__item">
+                        <button
+                          type="button"
+                          onClick={handleItemClick}
+                          aria-label={item.ariaLabel}
+                          aria-expanded={isBreathingItem ? isSubmenuOpen : undefined}
+                          aria-controls={isBreathingItem ? submenuId : undefined}
+                          className={
+                            item.id === 'game' && isGameNearNextLevel
+                              ? 'mobile-menu-overlay__game-button mobile-menu-overlay__game-button--charged'
+                              : undefined
+                          }
+                        >
+                          <span aria-hidden="true" className="mobile-menu-overlay__icon">
+                            {item.icon}
+                          </span>
+                          <span className="mobile-menu-overlay__texts">
+                            <span
+                              className={`mobile-menu-overlay__label${
+                                item.id === 'game' && isGameNearNextLevel ? ' mobile-menu-overlay__label--charged' : ''
+                              }`}
+                            >
+                              {item.label}
+                            </span>
+                            <span className="mobile-menu-overlay__summary">{item.summary}</span>
+                          </span>
+                          {isBreathingItem ? (
+                            <span
+                              aria-hidden="true"
+                              className={`mobile-menu-overlay__caret${
+                                isSubmenuOpen ? ' mobile-menu-overlay__caret--open' : ''
+                              }`}
+                            >
+                              ▾
+                            </span>
+                          ) : null}
+                        </button>
+                        {isBreathingItem ? (
+                          <div
+                            id={submenuId}
+                            className={`mobile-menu-overlay__submenu${
+                              isSubmenuOpen ? ' mobile-menu-overlay__submenu--open' : ''
                             }`}
                           >
-                            {item.label}
-                          </span>
-                          <span className="mobile-menu-overlay__summary">{item.summary}</span>
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                            <button
+                              type="button"
+                              className="mobile-menu-overlay__submenu-button"
+                              onClick={() => {
+                                setBreathingSpaceMobileTab('breathing');
+                                handleMobileNavSelect('breathing-space');
+                              }}
+                            >
+                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🌬️</span>
+                              Focus breathing
+                            </button>
+                            <button
+                              type="button"
+                              className="mobile-menu-overlay__submenu-button"
+                              onClick={() => {
+                                setBreathingSpaceMobileTab('meditation');
+                                handleMobileNavSelect('breathing-space');
+                              }}
+                            >
+                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🧘</span>
+                              Meditation
+                            </button>
+                          </div>
+                        ) : null}
+                      </li>
+                    );
+                  })}
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
