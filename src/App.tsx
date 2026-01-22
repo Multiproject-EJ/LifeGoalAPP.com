@@ -25,6 +25,7 @@ import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
 import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
+import PersonalityTest from './features/identity/PersonalityTest';
 import { ActionsTab } from './features/actions';
 import { TimerTab } from './features/timer';
 import { ProjectsManager } from './features/projects';
@@ -1355,22 +1356,7 @@ export default function App() {
       case 'identity':
         return (
           <div className="workspace-content">
-            <section className="identity-hub">
-              <div className="identity-hub__header">
-                <div>
-                  <h2 className="identity-hub__title">🪪 Your ID</h2>
-                  <p className="identity-hub__subtitle">
-                    Explore your personality, preferences, and what makes you unique.
-                  </p>
-                </div>
-              </div>
-              <div className="identity-hub__placeholder">
-                <p className="identity-hub__placeholder-text">
-                  This section is coming soon. Here you'll be able to discover insights about your personality, 
-                  set preferences, and tailor your LifeGoal experience to match who you are.
-                </p>
-              </div>
-            </section>
+            <PersonalityTest />
           </div>
         );
       case 'placeholder':
