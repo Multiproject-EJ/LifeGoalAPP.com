@@ -81,9 +81,6 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
           {adding ? '...' : '+'}
         </button>
       </div>
-      <span className="actions-tab__quick-add-pulse-text" aria-hidden="true">
-        actions your 3 days tolling todo list
-      </span>
 
       {showCategoryModal && (
         <div
