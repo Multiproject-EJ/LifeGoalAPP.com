@@ -271,6 +271,11 @@ export default function App() {
     loading: gamificationLoading,
   } = useGamification(supabaseSession);
 
+  const pointsBalance = gamificationProfile?.total_points ?? 0;
+  const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
+  const streakMomentum = gamificationProfile?.current_streak ?? 0;
+  const currentLevel = levelInfo?.currentLevel ?? 1;
+
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
       const createNavImage = (src: string) => (
@@ -1659,18 +1664,48 @@ export default function App() {
 
           <div className="mobile-gamification-overlay__grid" role="list">
             <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">Goals + Habits</p>
-              <p className="mobile-gamification-overlay__stat-value mobile-gamification-overlay__stat-value--compact">
-                {(workspaceStats?.goalCount ?? 0)} goals · {(workspaceStats?.habitCount ?? 0)} habits
+              <p className="mobile-gamification-overlay__stat-label">Goals + Habits + Check-ins + Journals</p>
+              <div className="mobile-gamification-overlay__stat-quad">
+                <div className="mobile-gamification-overlay__stat-mini">
+                  <p className="mobile-gamification-overlay__stat-mini-label">Goals</p>
+                  <p className="mobile-gamification-overlay__stat-mini-value">{workspaceStats?.goalCount ?? 0}</p>
+                </div>
+                <div className="mobile-gamification-overlay__stat-mini">
+                  <p className="mobile-gamification-overlay__stat-mini-label">Habits</p>
+                  <p className="mobile-gamification-overlay__stat-mini-value">{workspaceStats?.habitCount ?? 0}</p>
+                </div>
+                <div className="mobile-gamification-overlay__stat-mini">
+                  <p className="mobile-gamification-overlay__stat-mini-label">Check-ins</p>
+                  <p className="mobile-gamification-overlay__stat-mini-value">{workspaceStats?.checkinCount ?? 0}</p>
+                </div>
+                <div className="mobile-gamification-overlay__stat-mini">
+                  <p className="mobile-gamification-overlay__stat-mini-label">Journals</p>
+                  <p className="mobile-gamification-overlay__stat-mini-value">{workspaceStats?.journalCount ?? 0}</p>
+                </div>
+              </div>
+              <p className="mobile-gamification-overlay__stat-hint">
+                Tracked focus areas, routines, reflections, and daily check-ins.
               </p>
-              <p className="mobile-gamification-overlay__stat-hint">Tracked focus areas and routines.</p>
             </div>
-            <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">Check-ins + Journals</p>
-              <p className="mobile-gamification-overlay__stat-value mobile-gamification-overlay__stat-value--compact">
-                {(workspaceStats?.checkinCount ?? 0)} check-ins · {(workspaceStats?.journalCount ?? 0)} journals
-              </p>
-              <p className="mobile-gamification-overlay__stat-hint">Moments logged and reflections captured.</p>
+            <div className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--mini-grid" role="listitem">
+              <div className="mobile-gamification-overlay__mini-grid">
+                <div className="mobile-gamification-overlay__mini-card">
+                  <p className="mobile-gamification-overlay__mini-label">Points wallet</p>
+                  <p className="mobile-gamification-overlay__mini-value">💎 {pointsBalance.toLocaleString()}</p>
+                </div>
+                <div className="mobile-gamification-overlay__mini-card">
+                  <p className="mobile-gamification-overlay__mini-label">Zen Tokens</p>
+                  <p className="mobile-gamification-overlay__mini-value">🪷 {zenTokenBalance.toLocaleString()}</p>
+                </div>
+                <div className="mobile-gamification-overlay__mini-card">
+                  <p className="mobile-gamification-overlay__mini-label">Streak momentum</p>
+                  <p className="mobile-gamification-overlay__mini-value">🔥 {streakMomentum.toLocaleString()}</p>
+                </div>
+                <div className="mobile-gamification-overlay__mini-card">
+                  <p className="mobile-gamification-overlay__mini-label">Current level</p>
+                  <p className="mobile-gamification-overlay__mini-value">🏆 L{currentLevel}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

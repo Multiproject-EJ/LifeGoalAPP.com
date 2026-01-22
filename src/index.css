@@ -12116,8 +12116,8 @@ body {
   gap: 0.65rem;
   padding: 0.85rem 0.9rem;
   border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(94, 234, 212, 0.12));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
@@ -12222,6 +12222,38 @@ body {
   font-weight: 700;
 }
 
+.mobile-gamification-overlay__stat-quad {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+
+.mobile-gamification-overlay__stat-mini {
+  padding: 0.5rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.75);
+  display: grid;
+  gap: 0.15rem;
+}
+
+.mobile-gamification-overlay__stat-mini-label {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mobile-gamification-overlay__stat-mini-value {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
 .mobile-gamification-overlay__stat-hint {
   margin: 0;
   font-size: 0.8rem;
@@ -12262,11 +12294,46 @@ body {
   width: 100%;
   height: auto;
   max-width: 100%;
-  max-height: 120px;
+  max-height: 240px;
   display: block;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.mobile-gamification-overlay__stat--mini-grid {
+  padding: 0.7rem;
+}
+
+.mobile-gamification-overlay__mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.mobile-gamification-overlay__mini-card {
+  padding: 0.65rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.75);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.mobile-gamification-overlay__mini-label {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mobile-gamification-overlay__mini-value {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .mobile-gamification-overlay__coach-button {
