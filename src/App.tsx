@@ -1583,6 +1583,27 @@ export default function App() {
             </div>
           </header>
 
+          <section className="mobile-gamification-overlay__level-chart" aria-label="Level progress">
+            <div className="mobile-gamification-overlay__level-chart-header">
+              <p className="mobile-gamification-overlay__level-chart-title">Level progress</p>
+              <p className="mobile-gamification-overlay__level-chart-range">Level 1–100</p>
+            </div>
+            <div className="mobile-gamification-overlay__level-chart-bars" aria-hidden="true">
+              {Array.from({ length: 100 }, (_, index) => {
+                const level = index + 1;
+                const completedLevel = (levelInfo?.currentLevel ?? 1) >= level;
+                return (
+                  <span
+                    key={`level-bar-${level}`}
+                    className={`mobile-gamification-overlay__level-chart-bar${
+                      completedLevel ? ' mobile-gamification-overlay__level-chart-bar--complete' : ''
+                    }`}
+                  />
+                );
+              })}
+            </div>
+          </section>
+
           <button
             type="button"
             className="mobile-gamification-overlay__status mobile-gamification-overlay__status-button"
@@ -1608,11 +1629,10 @@ export default function App() {
           <div className="mobile-gamification-overlay__cta-row" role="list">
             <button
               type="button"
-              className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat-button"
+              className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat--quick-gains mobile-gamification-overlay__stat-button"
               onClick={() => setShowAiCoachModal(true)}
               role="listitem"
             >
-              <span className="mobile-gamification-overlay__stat-icon" aria-hidden="true">🤖</span>
               <div className="mobile-gamification-overlay__stat-content">
                 <p className="mobile-gamification-overlay__stat-label">Quick Gains</p>
                 <p className="mobile-gamification-overlay__stat-hint">Ask for a quick nudge or focus reset.</p>
@@ -1620,7 +1640,7 @@ export default function App() {
             </button>
             <button
               type="button"
-              className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat-button"
+              className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat--life-spin mobile-gamification-overlay__stat-button"
               onClick={() => setShowDailySpinWheel(true)}
               role="listitem"
             >

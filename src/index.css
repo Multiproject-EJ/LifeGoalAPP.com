@@ -12111,6 +12111,54 @@ body {
   box-shadow: 0 6px 14px rgba(56, 189, 248, 0.35);
 }
 
+.mobile-gamification-overlay__level-chart {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.mobile-gamification-overlay__level-chart-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.mobile-gamification-overlay__level-chart-title {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.mobile-gamification-overlay__level-chart-range {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.mobile-gamification-overlay__level-chart-bars {
+  display: grid;
+  grid-template-columns: repeat(20, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.mobile-gamification-overlay__level-chart-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.mobile-gamification-overlay__level-chart-bar--complete {
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  box-shadow: 0 6px 12px rgba(56, 189, 248, 0.35);
+}
+
 .mobile-gamification-overlay__cta-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -12188,6 +12236,15 @@ body {
   border-color: rgba(59, 130, 246, 0.35);
 }
 
+.mobile-gamification-overlay__stat--quick-gains {
+  grid-template-columns: 1fr;
+}
+
+.mobile-gamification-overlay__stat--life-spin {
+  grid-template-columns: 45% 55%;
+  align-items: center;
+}
+
 .mobile-gamification-overlay__stat-icon {
   width: 40px;
   height: 40px;
@@ -12202,8 +12259,11 @@ body {
 }
 
 .mobile-gamification-overlay__stat-icon--life-spin {
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 120px;
+  display: block;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
