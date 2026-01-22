@@ -333,7 +333,7 @@
 @keyframes actions-tab-input-glow {
   0%,
   25% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 0 rgba(255, 221, 0, 0);
   }
   45% {
     box-shadow:
@@ -341,10 +341,10 @@
       0 0 34px 12px rgba(255, 255, 255, 0.55);
   }
   65% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 0 rgba(255, 221, 0, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 0 rgba(255, 221, 0, 0);
   }
 }
 
