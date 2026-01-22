@@ -17,6 +17,28 @@
     <main role="main">
       <div id="root"></div>
     </main>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var redirectPath = params.get('p');
+        if (!redirectPath) return;
+
+        var query = params.get('q');
+        var decodedPath = decodeURIComponent(redirectPath);
+        var decodedQuery = query ? decodeURIComponent(query) : '';
+        var newUrl = window.location.origin + '/' + decodedPath;
+
+        if (decodedQuery) {
+          newUrl += '?' + decodedQuery;
+        }
+
+        if (window.location.hash) {
+          newUrl += window.location.hash;
+        }
+
+        window.history.replaceState(null, '', newUrl);
+      })();
+    </script>
     <script type="module" src="/src/bootstrap.ts" id="lifegoal-bootstrap"></script>
     <script>
       (() => {
