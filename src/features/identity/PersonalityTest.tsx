@@ -37,6 +37,197 @@ const AXIS_LABELS: Record<keyof PersonalityScores['axes'], string> = {
   cognitive_entry: 'Cognitive Entry',
 };
 
+const TRAIT_NARRATIVES: Record<
+  keyof PersonalityScores['traits'],
+  { high: string; mid: string; low: string }
+> = {
+  openness: {
+    high: 'You lean into curiosity and love exploring ideas that expand your worldview.',
+    mid: 'You balance imagination with practicality, adapting to what each situation needs.',
+    low: 'You feel most grounded with proven routines and practical, concrete thinking.',
+  },
+  conscientiousness: {
+    high: 'You thrive when you can organize your days and follow through on commitments.',
+    mid: 'You flex between structure and spontaneity depending on what matters most.',
+    low: 'You value freedom and tend to operate best when you can stay flexible.',
+  },
+  extraversion: {
+    high: 'You recharge through people and environments that keep the energy moving.',
+    mid: 'You can dial your social energy up or down depending on the context.',
+    low: 'You do your best thinking in quieter spaces that allow for deep focus.',
+  },
+  agreeableness: {
+    high: 'You naturally notice what others need and enjoy supporting the people around you.',
+    mid: 'You aim for harmony while still standing firm when your values are tested.',
+    low: 'You value candor and independence, even if it means challenging the status quo.',
+  },
+  emotional_stability: {
+    high: 'You stay composed under pressure and recover quickly when life feels intense.',
+    mid: 'You experience normal ups and downs and are learning what keeps you steady.',
+    low: 'Your emotions run deep, so it helps to create space for grounding routines.',
+  },
+};
+
+const AXIS_NARRATIVES: Record<
+  keyof PersonalityScores['axes'],
+  { high: string; mid: string; low: string }
+> = {
+  regulation_style: {
+    high: 'Structure helps you stay aligned—clear plans and rituals will keep you steady.',
+    mid: 'You can switch between structure and improvisation as your goals evolve.',
+    low: 'You flourish with flexibility, so keep systems light and adaptive.',
+  },
+  stress_response: {
+    high: 'You handle stress with resilience and can stay centered when stakes rise.',
+    mid: 'You respond to stress with awareness and benefit from regular resets.',
+    low: 'Stress can feel intense, so calming practices will make a big difference.',
+  },
+  identity_sensitivity: {
+    high: 'Your identity and values are core anchors—you do best when they are honored.',
+    mid: 'You reflect on identity when needed and keep a healthy distance when appropriate.',
+    low: 'You adapt to new roles easily and can stay open to shifting priorities.',
+  },
+  cognitive_entry: {
+    high: 'You like to understand the “why” before taking action, so context matters.',
+    mid: 'You blend intuition with logic, choosing what feels most effective.',
+    low: 'You prefer practical next steps and learn best by doing.',
+  },
+};
+
+type Recommendation = {
+  id: string;
+  icon: string;
+  label: string;
+  description: string;
+};
+
+const DEFAULT_RECOMMENDATIONS: Recommendation[] = [
+  {
+    id: 'focus-review',
+    icon: '🎯',
+    label: 'Weekly focus review',
+    description: 'Pick one outcome that matters most this week and track it daily.',
+  },
+  {
+    id: 'daily-checkin',
+    icon: '📝',
+    label: 'Daily check-in',
+    description: 'Spend two minutes naming your top priority and emotional state.',
+  },
+  {
+    id: 'breathing-reset',
+    icon: '🌬️',
+    label: 'Breathing reset',
+    description: 'Use a short breathing exercise to reset your nervous system.',
+  },
+];
+
+const HIGH_THRESHOLD = 65;
+const LOW_THRESHOLD = 40;
+
+const getTraitBucket = (value: number) => {
+  if (value >= HIGH_THRESHOLD) return 'high';
+  if (value <= LOW_THRESHOLD) return 'low';
+  return 'mid';
+};
+
+const buildNarrative = (scores: PersonalityScores): string[] => {
+  const traitEntries = Object.entries(scores.traits).sort((a, b) => b[1] - a[1]);
+  const axisEntries = Object.entries(scores.axes).sort(
+    (a, b) => Math.abs(b[1] - 50) - Math.abs(a[1] - 50),
+  );
+
+  const [primaryTraitKey] = traitEntries[0];
+  const [secondaryTraitKey] = traitEntries[1];
+  const [primaryAxisKey] = axisEntries[0];
+
+  const primaryTrait = primaryTraitKey as keyof PersonalityScores['traits'];
+  const secondaryTrait = secondaryTraitKey as keyof PersonalityScores['traits'];
+  const primaryAxis = primaryAxisKey as keyof PersonalityScores['axes'];
+
+  const primaryTraitBucket = getTraitBucket(scores.traits[primaryTrait]);
+  const secondaryTraitBucket = getTraitBucket(scores.traits[secondaryTrait]);
+  const axisBucket = getTraitBucket(scores.axes[primaryAxis]);
+
+  return [
+    `${TRAIT_LABELS[primaryTrait]} stands out in your profile. ${
+      TRAIT_NARRATIVES[primaryTrait][primaryTraitBucket]
+    }`,
+    `${TRAIT_LABELS[secondaryTrait]} supports your style. ${
+      TRAIT_NARRATIVES[secondaryTrait][secondaryTraitBucket]
+    }`,
+    `${AXIS_LABELS[primaryAxis]} is a key axis for you. ${
+      AXIS_NARRATIVES[primaryAxis][axisBucket]
+    }`,
+  ];
+};
+
+const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
+  const picks: Recommendation[] = [];
+
+  if (scores.axes.stress_response <= LOW_THRESHOLD) {
+    picks.push({
+      id: 'stress-tools',
+      icon: '🧘‍♀️',
+      label: 'Stress support',
+      description: 'Lean on meditation and grounding rituals when things feel heavy.',
+    });
+  }
+
+  if (scores.axes.regulation_style >= HIGH_THRESHOLD) {
+    picks.push({
+      id: 'structured-plans',
+      icon: '🗓️',
+      label: 'Structured planning',
+      description: 'Use detailed goal plans and habit streaks to stay on track.',
+    });
+  } else if (scores.axes.regulation_style <= LOW_THRESHOLD) {
+    picks.push({
+      id: 'flexible-plans',
+      icon: '🌊',
+      label: 'Flexible planning',
+      description: 'Try lighter habit prompts and focus on momentum over rigidity.',
+    });
+  }
+
+  if (scores.traits.extraversion >= HIGH_THRESHOLD) {
+    picks.push({
+      id: 'social-energy',
+      icon: '🤝',
+      label: 'Social momentum',
+      description: 'Plan goals with a buddy or share progress in community spaces.',
+    });
+  } else if (scores.traits.extraversion <= LOW_THRESHOLD) {
+    picks.push({
+      id: 'solo-focus',
+      icon: '📚',
+      label: 'Quiet focus',
+      description: 'Block solo deep-work sessions and celebrate private wins.',
+    });
+  }
+
+  if (scores.traits.openness >= HIGH_THRESHOLD) {
+    picks.push({
+      id: 'explore',
+      icon: '🧭',
+      label: 'Explore & learn',
+      description: 'Add learning quests or skill sprints that keep curiosity alive.',
+    });
+  }
+
+  const unique = new Map<string, Recommendation>();
+  for (const pick of picks) {
+    unique.set(pick.id, pick);
+  }
+
+  for (const fallback of DEFAULT_RECOMMENDATIONS) {
+    if (unique.size >= 3) break;
+    unique.set(fallback.id, fallback);
+  }
+
+  return Array.from(unique.values()).slice(0, 3);
+};
+
 export default function PersonalityTest() {
   const [step, setStep] = useState<TestStep>('intro');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -52,6 +243,13 @@ export default function PersonalityTest() {
 
     return scorePersonality(answers);
   }, [answers, step]);
+
+  const narrative = useMemo(() => (scores ? buildNarrative(scores) : []), [scores]);
+
+  const recommendations = useMemo(
+    () => (scores ? buildRecommendations(scores) : []),
+    [scores],
+  );
 
   const handleStart = () => {
     setStep('quiz');
@@ -171,8 +369,8 @@ export default function PersonalityTest() {
         <div className="identity-hub__card">
           <h3 className="identity-hub__card-title">Your snapshot results</h3>
           <p className="identity-hub__card-text">
-            Here is a quick preview based on your answers. Full insights and recommendations
-            will appear in the next step.
+            Here is a personalized snapshot based on your answers, plus a few ways to build
+            momentum right away.
           </p>
           <div className="identity-hub__results">
             <div>
@@ -197,6 +395,28 @@ export default function PersonalityTest() {
                 ))}
               </ul>
             </div>
+          </div>
+          <div className="identity-hub__narrative">
+            <h4 className="identity-hub__results-title">Profile summary</h4>
+            {narrative.map((paragraph) => (
+              <p key={paragraph} className="identity-hub__narrative-text">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+          <div className="identity-hub__recommendations">
+            <h4 className="identity-hub__results-title">Recommended next actions</h4>
+            <ul className="identity-hub__recommendations-list">
+              {recommendations.map((item) => (
+                <li key={item.id} className="identity-hub__recommendations-item">
+                  <span className="identity-hub__recommendations-icon">{item.icon}</span>
+                  <div>
+                    <p className="identity-hub__recommendations-label">{item.label}</p>
+                    <p className="identity-hub__recommendations-text">{item.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="identity-hub__actions">
             <button className="identity-hub__secondary" type="button" onClick={handleRetake}>
