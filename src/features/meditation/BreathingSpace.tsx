@@ -20,6 +20,8 @@ import './BreathingSpace.css';
 
 type BreathingSpaceProps = {
   session: Session;
+  initialMobileTab?: 'breathing' | 'meditation';
+  onMobileTabChange?: (tab: 'breathing' | 'meditation') => void;
 };
 
 type MeditationStats = {
@@ -28,7 +30,7 @@ type MeditationStats = {
   currentStreak: number;
 };
 
-export function BreathingSpace({ session }: BreathingSpaceProps) {
+export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }: BreathingSpaceProps) {
   const [stats, setStats] = useState<MeditationStats>({
     totalMinutes: 0,
     totalSessions: 0,
@@ -45,7 +47,9 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderSet, setReminderSet] = useState(false);
   const reminderRef = useRef<HTMLDivElement>(null);
-  const [activeMobileTab, setActiveMobileTab] = useState<'breathing' | 'meditation'>('breathing');
+  const [activeMobileTab, setActiveMobileTab] = useState<'breathing' | 'meditation'>(
+    initialMobileTab ?? 'breathing'
+  );
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
@@ -59,6 +63,11 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
   const [celebrationType, setCelebrationType] = useState<'breathing' | 'levelup'>('breathing');
   const [justCompletedSession, setJustCompletedSession] = useState(false);
   const { earnXP, recordActivity, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
+
+  const handleMobileTabChange = (tab: 'breathing' | 'meditation') => {
+    setActiveMobileTab(tab);
+    onMobileTabChange?.(tab);
+  };
 
   // Watch for level-up events
   useEffect(() => {
@@ -87,6 +96,12 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
       window.removeEventListener('breathing:open', handleBreathingOpen as EventListener);
     };
   }, [session.user.id]);
+
+  useEffect(() => {
+    if (initialMobileTab) {
+      setActiveMobileTab(initialMobileTab);
+    }
+  }, [initialMobileTab]);
 
   useEffect(() => {
     if (!reminderOpen) {
@@ -280,7 +295,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           className={`breathing-space__mobile-tab ${
             activeMobileTab === 'breathing' ? 'breathing-space__mobile-tab--active' : ''
           }`}
-          onClick={() => setActiveMobileTab('breathing')}
+          onClick={() => handleMobileTabChange('breathing')}
         >
           <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🌬️</span>
           <span className="breathing-space__mobile-tab-title">FOCUS BREATHING</span>
@@ -292,7 +307,7 @@ export function BreathingSpace({ session }: BreathingSpaceProps) {
           className={`breathing-space__mobile-tab ${
             activeMobileTab === 'meditation' ? 'breathing-space__mobile-tab--active' : ''
           }`}
-          onClick={() => setActiveMobileTab('meditation')}
+          onClick={() => handleMobileTabChange('meditation')}
         >
           <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🧘</span>
           <span className="breathing-space__mobile-tab-title">MEDITATION</span>

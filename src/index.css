@@ -11761,6 +11761,67 @@ body {
   display: none;
 }
 
+.mobile-menu-overlay__item button {
+  position: relative;
+}
+
+.mobile-menu-overlay__caret {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.65rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.mobile-menu-overlay__caret--open {
+  transform: rotate(180deg);
+}
+
+.mobile-menu-overlay__submenu {
+  margin-top: 0.5rem;
+  display: none;
+  gap: 0.5rem;
+}
+
+.mobile-menu-overlay__submenu--open {
+  display: grid;
+}
+
+.mobile-menu-overlay__submenu-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.mobile-menu-overlay__submenu-button:hover,
+.mobile-menu-overlay__submenu-button:focus-visible {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.35);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.mobile-menu-overlay__submenu-button:active {
+  transform: translateY(0);
+}
+
+.mobile-menu-overlay__submenu-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .mobile-menu-overlay__settings {
   border-top: 1px solid rgba(148, 163, 184, 0.25);
   padding-top: 1rem;
