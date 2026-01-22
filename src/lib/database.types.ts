@@ -26,18 +26,123 @@ export interface Database {
           created_at: string | null;
           display_name: string | null;
           tz: string | null;
+          personality_traits: Json | null;
+          personality_axes: Json | null;
+          personality_profile_type: string | null;
+          personality_summary: string | null;
+          personality_last_tested_at: string | null;
         };
         Insert: {
           user_id: string;
           created_at?: string | null;
           display_name?: string | null;
           tz?: string | null;
+          personality_traits?: Json | null;
+          personality_axes?: Json | null;
+          personality_profile_type?: string | null;
+          personality_summary?: string | null;
+          personality_last_tested_at?: string | null;
         };
         Update: {
           user_id?: string;
           created_at?: string | null;
           display_name?: string | null;
           tz?: string | null;
+          personality_traits?: Json | null;
+          personality_axes?: Json | null;
+          personality_profile_type?: string | null;
+          personality_summary?: string | null;
+          personality_last_tested_at?: string | null;
+        };
+        Relationships: [];
+      };
+      personality_tests: {
+        Row: {
+          id: string;
+          user_id: string;
+          taken_at: string | null;
+          traits: Json;
+          axes: Json;
+          answers: Json | null;
+          version: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          taken_at?: string | null;
+          traits: Json;
+          axes: Json;
+          answers?: Json | null;
+          version?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          taken_at?: string | null;
+          traits?: Json;
+          axes?: Json;
+          answers?: Json | null;
+          version?: string;
+        };
+        Relationships: [];
+      };
+      personality_questions: {
+        Row: {
+          id: string;
+          text: string;
+          trait_key: string;
+          axis_type: string;
+          reverse_scored: boolean;
+          order_index: number | null;
+        };
+        Insert: {
+          id: string;
+          text: string;
+          trait_key: string;
+          axis_type: string;
+          reverse_scored?: boolean;
+          order_index?: number | null;
+        };
+        Update: {
+          id?: string;
+          text?: string;
+          trait_key?: string;
+          axis_type?: string;
+          reverse_scored?: boolean;
+          order_index?: number | null;
+        };
+        Relationships: [];
+      };
+      personality_recommendations: {
+        Row: {
+          id: string;
+          trait_key: string;
+          min_value: number | null;
+          max_value: number | null;
+          label: string;
+          description: string;
+          action_link: Json | null;
+          priority: number | null;
+        };
+        Insert: {
+          id?: string;
+          trait_key: string;
+          min_value?: number | null;
+          max_value?: number | null;
+          label: string;
+          description: string;
+          action_link?: Json | null;
+          priority?: number | null;
+        };
+        Update: {
+          id?: string;
+          trait_key?: string;
+          min_value?: number | null;
+          max_value?: number | null;
+          label?: string;
+          description?: string;
+          action_link?: Json | null;
+          priority?: number | null;
         };
         Relationships: [];
       };
