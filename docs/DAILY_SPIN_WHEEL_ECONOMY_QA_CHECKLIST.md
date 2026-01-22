@@ -4,7 +4,7 @@ This checklist implements Step 9 (QA + Telemetry) from the master plan. Focus on
 
 ## Status
 - **Overall:** In Progress
-- **Last updated:** 2025-02-14
+- **Last updated:** 2025-02-15
 
 ## Mobile-first QA Checklist
 
@@ -36,4 +36,6 @@ This checklist implements Step 9 (QA + Telemetry) from the master plan. Focus on
 ## Evidence Log
 Add notes here as QA completes.
 
-- _TBD_
+- **Code review (telemetry wiring):** economy earn/spend events emit `currency`, `amount`, `balance`, and `sourceType`/`sourceId` metadata from daily spin + shop/zen garden flows. (`src/services/dailySpin.ts`, `src/services/powerUps.ts`, `src/services/zenGarden.ts`, `src/services/trophies.ts`)
+- **Code review (telemetry schema):** `economy_earn` + `economy_spend` are first-class event types in telemetry service. (`src/services/telemetry.ts`)
+- _QA validation pending for mobile UI behavior and event ingestion._
