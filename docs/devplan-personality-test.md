@@ -105,8 +105,8 @@
 
 ## Step-by-step checklist (small steps)
 1. **Step 1** ✅: Replace ID tab placeholder with Personality Test intro stub.
-2. **Step 2**: Add question data model and single-question flow state (no Supabase).
-3. Step 3: Add scoring helper + local results preview (no persistence).
+2. **Step 2** ✅: Add question bank, strong typing, and scoring module + test harness.
+3. Step 3: Add single-question flow state and local results preview (no persistence).
 4. Step 4: Add results UI with template narrative and static recommendations.
 5. Step 5: Add offline queue + local history storage (idb).
 6. Step 6: Add Supabase tables + service layer for sync.
@@ -123,9 +123,10 @@
 
 ## Done
 - Step 1: Personality Test intro stub wired to ID tab.
+- Step 2: Local question bank, strong typing, and scoring module with test harness.
 
 ## Next
-- Step 2: Add question data model + single-question flow state (no persistence).
+- Step 3: Add single-question flow state and local results preview (no persistence).
 
 ## Blockers
 - None.
