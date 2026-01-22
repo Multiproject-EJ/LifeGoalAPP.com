@@ -131,6 +131,7 @@ A single, explicit source of truth for how points are earned/spent.
 
 ## Tracking Status
 - Each step above should be marked as **Not Started / In Progress / Blocked / Done** in a follow-up checklist doc or issue.
+- QA checklist: `docs/DAILY_SPIN_WHEEL_ECONOMY_QA_CHECKLIST.md`.
 - Before starting any step, verify the prerequisites and record evidence.
 
 ### Current Status Snapshot
@@ -144,7 +145,7 @@ A single, explicit source of truth for how points are earned/spent.
 | 6. Zen Tokens + Zen Garden | Done | Zen Tokens now awarded for meditation sessions; Zen Garden ledger tracks earn/spend. |
 | 7. 4x3 Grid Layout | Done | Shared `four-by-three-grid` utility used in store + achievements. |
 | 8. Trophies/Plaques/Medals | Done | Trophy case + purchase flow now available from Achievements. |
-| 9. QA + Telemetry | In Progress | Economy earn/spend telemetry events wired; QA validation pending. |
+| 9. QA + Telemetry | In Progress | Economy earn/spend telemetry events wired; QA checklist created and validation pending. |
 
 ## Deliverables
 - Updated documentation and diagrams.
