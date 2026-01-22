@@ -109,7 +109,7 @@
 3. **Step 3** ✅: Add single-question flow state and local results preview (no persistence).
 4. **Step 4** ✅: Add results UI with template narrative and static recommendations.
 5. **Step 5** ✅: Add offline queue + local history storage (idb).
-6. Step 6: Add Supabase tables + service layer for sync.
+6. **Step 6** ✅: Add Supabase tables + service layer for sync.
 7. Step 7: Add recommendations table + rule filtering from Supabase.
 8. Step 8: Add history list (no comparisons).
 9. Step 9: Optional AI narrative (guarded + opt-in).
@@ -127,9 +127,10 @@
 - Step 3: Single-question flow state and local results preview (no persistence).
 - Step 4: Add results UI with template narrative and static recommendations.
 - Step 5: Add offline queue + local history storage (idb).
+- Step 6: Add Supabase tables + service layer for sync.
 
 ## Next
-- Step 6: Add Supabase tables + service layer for sync.
+- Step 7: Add recommendations table + rule filtering from Supabase.
 
 ## Blockers
 - None.
@@ -141,6 +142,7 @@
 - PWA/service worker setup is in `public/sw.js` and `src/registerServiceWorker.ts`.
 - Feature modules are grouped under `src/features/*` with barrel exports.
 - Notes/Assumptions: The user request asked for Step 4 (results UI), but the living plan already marked it complete and Step 5 as next, so Step 5 (offline queue + local history storage) was implemented to stay aligned with the plan.
+- Notes/Assumptions: The prompt requested Step 5 (Supabase schema), but the living plan marked Step 6 as next, so Step 6 (Supabase schema + sync service layer) was implemented to stay aligned with the plan.
 
 ---
 
