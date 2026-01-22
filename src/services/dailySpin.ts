@@ -2,7 +2,8 @@ import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { DailySpinState, SpinResult, SpinPrize, PrizeType } from '../types/gamification';
 import { awardXP } from './gamification';
-import { fetchGamificationProfile } from './gamificationPrefs';
+import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
+import { recordTelemetryEvent } from './telemetry';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -398,51 +399,95 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
       break;
 
     case 'points':
-      if (!canUseSupabaseData()) {
-        // In demo mode, we'd update localStorage, but for simplicity we'll skip
-        break;
-      }
-      const { data: profile } = await fetchGamificationProfile(userId);
-      if (profile) {
-        await supabase
-          .from('gamification_profiles')
-          .update({
-            total_points: profile.total_points + prize.value,
-          })
-          .eq('user_id', userId);
+      {
+        const { data: profile } = await fetchGamificationProfile(userId);
+        if (!profile) break;
+        const nextBalance = profile.total_points + prize.value;
+
+        if (!canUseSupabaseData()) {
+          saveDemoProfile({ total_points: nextBalance, updated_at: new Date().toISOString() });
+        } else {
+          await supabase
+            .from('gamification_profiles')
+            .update({
+              total_points: nextBalance,
+            })
+            .eq('user_id', userId);
+        }
+
+        void recordTelemetryEvent({
+          userId,
+          eventType: 'economy_earn',
+          metadata: {
+            currency: 'points',
+            amount: prize.value,
+            balance: nextBalance,
+            sourceType: 'daily_spin',
+            sourceId: prize.label,
+          },
+        });
       }
       break;
 
     case 'streak_freeze':
-      if (!canUseSupabaseData()) {
-        break;
-      }
-      const { data: freezeProfile } = await fetchGamificationProfile(userId);
-      if (freezeProfile) {
-        await supabase
-          .from('gamification_profiles')
-          .update({
-            streak_freezes: freezeProfile.streak_freezes + prize.value,
-          })
-          .eq('user_id', userId);
+      {
+        const { data: freezeProfile } = await fetchGamificationProfile(userId);
+        if (!freezeProfile) break;
+        const nextFreezeCount = freezeProfile.streak_freezes + prize.value;
+
+        if (!canUseSupabaseData()) {
+          saveDemoProfile({ streak_freezes: nextFreezeCount, updated_at: new Date().toISOString() });
+        } else {
+          await supabase
+            .from('gamification_profiles')
+            .update({
+              streak_freezes: nextFreezeCount,
+            })
+            .eq('user_id', userId);
+        }
+
+        void recordTelemetryEvent({
+          userId,
+          eventType: 'economy_earn',
+          metadata: {
+            currency: 'streak_freeze',
+            amount: prize.value,
+            balance: nextFreezeCount,
+            sourceType: 'daily_spin',
+            sourceId: prize.label,
+          },
+        });
       }
       break;
 
     case 'life':
-      if (!canUseSupabaseData()) {
-        break;
-      }
-      const { data: lifeProfile } = await fetchGamificationProfile(userId);
-      if (lifeProfile) {
-        await supabase
-          .from('gamification_profiles')
-          .update({
-            lives: Math.min(
-              lifeProfile.lives + prize.value,
-              lifeProfile.max_lives
-            ),
-          })
-          .eq('user_id', userId);
+      {
+        const { data: lifeProfile } = await fetchGamificationProfile(userId);
+        if (!lifeProfile) break;
+        const nextLives = Math.min(lifeProfile.lives + prize.value, lifeProfile.max_lives);
+
+        if (!canUseSupabaseData()) {
+          saveDemoProfile({ lives: nextLives, updated_at: new Date().toISOString() });
+        } else {
+          await supabase
+            .from('gamification_profiles')
+            .update({
+              lives: nextLives,
+            })
+            .eq('user_id', userId);
+        }
+
+        void recordTelemetryEvent({
+          userId,
+          eventType: 'economy_earn',
+          metadata: {
+            currency: 'lives',
+            amount: prize.value,
+            balance: nextLives,
+            sourceType: 'daily_spin',
+            sourceId: prize.label,
+          },
+        });
       }
       break;
   }
