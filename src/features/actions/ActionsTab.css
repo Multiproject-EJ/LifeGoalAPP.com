@@ -157,11 +157,11 @@
 
 /* Quick add section */
 .actions-tab__quick-add {
-  background: var(--surface-primary, #fff);
-  border-radius: 12px;
-  padding: 1rem;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   max-width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -235,7 +235,7 @@
   position: absolute;
   inset: -6px;
   border-radius: 14px;
-  background: radial-gradient(circle at center, rgba(129, 140, 248, 0.35), rgba(79, 70, 229, 0));
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
   opacity: 0;
   pointer-events: none;
   transform: scale(0.92);
@@ -336,7 +336,9 @@
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
   45% {
-    box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.18);
+    box-shadow:
+      0 0 18px 4px rgba(255, 255, 255, 0.8),
+      0 0 34px 12px rgba(255, 255, 255, 0.55);
   }
   65% {
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
