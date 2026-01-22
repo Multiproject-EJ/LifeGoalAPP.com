@@ -107,7 +107,7 @@
 1. **Step 1** ✅: Replace ID tab placeholder with Personality Test intro stub.
 2. **Step 2** ✅: Add question bank, strong typing, and scoring module + test harness.
 3. **Step 3** ✅: Add single-question flow state and local results preview (no persistence).
-4. Step 4: Add results UI with template narrative and static recommendations.
+4. **Step 4** ✅: Add results UI with template narrative and static recommendations.
 5. Step 5: Add offline queue + local history storage (idb).
 6. Step 6: Add Supabase tables + service layer for sync.
 7. Step 7: Add recommendations table + rule filtering from Supabase.
@@ -125,9 +125,10 @@
 - Step 1: Personality Test intro stub wired to ID tab.
 - Step 2: Local question bank, strong typing, and scoring module with test harness.
 - Step 3: Single-question flow state and local results preview (no persistence).
+- Step 4: Add results UI with template narrative and static recommendations.
 
 ## Next
-- Step 4: Add results UI with template narrative and static recommendations.
+- Step 5: Add offline queue + local history storage (idb).
 
 ## Blockers
 - None.
@@ -138,6 +139,7 @@
 - Offline and local cache patterns exist in `src/data/localDb.ts` and `src/data/goalsRepo.ts`.
 - PWA/service worker setup is in `public/sw.js` and `src/registerServiceWorker.ts`.
 - Feature modules are grouped under `src/features/*` with barrel exports.
+- Notes/Assumptions: The user request referenced Step 3, but the living plan marked Step 4 as next, so Step 4 was implemented to stay aligned with the plan.
 
 ---
 
