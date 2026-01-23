@@ -32,6 +32,7 @@ type LegacyHabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
 type LegacyHabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
 
 export type LegacyHabitWithGoal = LegacyHabitRow & {
+  emoji?: string | null;
   goal: {
     id: string;
     title: string;
@@ -75,6 +76,7 @@ function tolegacyHabit(v2Habit: HabitV2Row): LegacyHabitRow {
 function toLegacyHabitWithGoal(v2Habit: HabitV2Row): LegacyHabitWithGoal {
   return {
     ...tolegacyHabit(v2Habit),
+    emoji: v2Habit.emoji ?? null,
     goal: v2Habit.goal_id ? {
       id: v2Habit.goal_id,
       title: '', // Goal title not available from v2 habit directly
