@@ -64,7 +64,7 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [celebrationType, setCelebrationType] = useState<'breathing' | 'levelup'>('breathing');
   const [justCompletedSession, setJustCompletedSession] = useState(false);
-  const { earnXP, recordActivity, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
+  const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   const handleMobileTabChange = (tab: 'breathing' | 'meditation') => {
     setActiveMobileTab(tab);
@@ -164,10 +164,7 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
       } else {
         // Award XP for breathing session
         const durationMinutes = selectedSession.duration / 60;
-        const isLongSession = durationMinutes >= 10;
-        const xpAmount = isLongSession
-          ? XP_REWARDS.MEDITATION_SESSION + 10  // Bonus for longer sessions
-          : XP_REWARDS.MEDITATION_SESSION;
+        const xpAmount = XP_REWARDS.BREATHING_SESSION;
 
         // 1. Immediately add instant feedback (pop/glow)
         setJustCompletedSession(true);
@@ -184,11 +181,9 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
           setJustCompletedSession(false);
         }, 600);
 
-        const zenTokenAmount = isLongSession
-          ? ZEN_TOKEN_REWARDS.MEDITATION_SESSION + ZEN_TOKEN_REWARDS.MEDITATION_LONG_SESSION_BONUS
-          : ZEN_TOKEN_REWARDS.MEDITATION_SESSION;
+        const zenTokenAmount = ZEN_TOKEN_REWARDS.BREATHING_SESSION;
 
-        await earnXP(xpAmount, 'meditation_session', result.data?.id);
+        await earnXP(xpAmount, 'breathing_session', result.data?.id);
         await awardZenTokens(
           session.user.id,
           zenTokenAmount,
@@ -197,6 +192,7 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
           'Breathing session reward'
         );
         await recordActivity();
+        await refreshProfile();
 
         // Reload stats after successful save
         await loadStats();
@@ -236,7 +232,7 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
         // Award XP for guided meditation session
         const isLongSession = meditationDuration >= 10;
         const xpAmount = isLongSession
-          ? XP_REWARDS.MEDITATION_SESSION + 10  // Bonus for longer sessions
+          ? XP_REWARDS.MEDITATION_SESSION + XP_REWARDS.MEDITATION_LONG_SESSION
           : XP_REWARDS.MEDITATION_SESSION;
 
         // 1. Immediately add instant feedback (pop/glow)
@@ -267,6 +263,7 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
           'Guided meditation reward'
         );
         await recordActivity();
+        await refreshProfile();
 
         // Reload stats after successful save
         await loadStats();
