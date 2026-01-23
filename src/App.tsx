@@ -1492,6 +1492,18 @@ export default function App() {
           <>
             <div className="mobile-menu-overlay__header">
               <h2 className="mobile-menu-overlay__title">Profile</h2>
+              <div className="mobile-menu-overlay__meta" aria-label="Profile summary">
+                <div className="mobile-menu-overlay__meta-row">
+                  <span className="mobile-menu-overlay__meta-label">Name</span>
+                  <span className="mobile-menu-overlay__meta-value">
+                    {normalizedDisplayName || userDisplay || 'Guest'}
+                  </span>
+                </div>
+                <div className="mobile-menu-overlay__meta-row">
+                  <span className="mobile-menu-overlay__meta-label">Type</span>
+                  <span className="mobile-menu-overlay__meta-value">Personality test</span>
+                </div>
+              </div>
               <button
                 type="button"
                 className="mobile-menu-overlay__close"
@@ -1589,6 +1601,19 @@ export default function App() {
                       </li>
                     );
                   })}
+                <li className="mobile-menu-overlay__item mobile-menu-overlay__item--coach">
+                  <button
+                    type="button"
+                    className="mobile-menu-overlay__coach-button"
+                    onClick={() => setShowAiCoachModal(true)}
+                  >
+                    <span aria-hidden="true" className="mobile-menu-overlay__coach-icon">🧑‍🏫</span>
+                    <span className="mobile-menu-overlay__coach-texts">
+                      <span className="mobile-menu-overlay__coach-title">Coach</span>
+                      <span className="mobile-menu-overlay__coach-subtitle">Get a guided next step</span>
+                    </span>
+                  </button>
+                </li>
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
