@@ -1678,7 +1678,7 @@ export default function App() {
 
           <div className="mobile-gamification-overlay__grid" role="list">
             <div className="mobile-gamification-overlay__stat" role="listitem">
-              <p className="mobile-gamification-overlay__stat-label">Goals + Habits + Check-ins + Journals</p>
+              <p className="mobile-gamification-overlay__stat-label">All Time</p>
               <div className="mobile-gamification-overlay__stat-quad">
                 <div className="mobile-gamification-overlay__stat-mini">
                   <p className="mobile-gamification-overlay__stat-mini-label">Goals</p>
@@ -1697,9 +1697,6 @@ export default function App() {
                   <p className="mobile-gamification-overlay__stat-mini-value">{workspaceStats?.journalCount ?? 0}</p>
                 </div>
               </div>
-              <p className="mobile-gamification-overlay__stat-hint">
-                Tracked focus areas, routines, reflections, and daily check-ins.
-              </p>
             </div>
             <div className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--mini-grid" role="listitem">
               <div className="mobile-gamification-overlay__mini-grid">
