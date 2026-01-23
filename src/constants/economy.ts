@@ -22,6 +22,7 @@ export function convertXpToPoints(xpAmount: number): number {
 
 export const ZEN_TOKEN_REWARDS = {
   MEDITATION_SESSION: 1,
+  BREATHING_SESSION: 1,
   MEDITATION_LONG_SESSION_BONUS: 1,
 } as const;
 
