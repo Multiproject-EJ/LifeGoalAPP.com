@@ -33,7 +33,7 @@
   letter-spacing: 0.08em;
   color: var(--text);
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, padding 0.25s ease, gap 0.25s ease;
 }
 
 .breathing-space__mobile-tab:hover {
@@ -46,15 +46,31 @@
   border-color: var(--accent);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16), var(--shadow-glow);
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+  padding: var(--space-2) var(--space-4);
+  gap: var(--space-1);
 }
 
 .breathing-space__mobile-tab-icon {
   font-size: 2rem;
   line-height: 1;
+  transition: font-size 0.25s ease, transform 0.25s ease;
+}
+
+.breathing-space__mobile-tab--active .breathing-space__mobile-tab-icon {
+  font-size: 1.6rem;
+  transform: translateY(1px);
 }
 
 .breathing-space__mobile-tab-title {
   font-size: var(--fs-xs);
+  transition: opacity 0.2s ease, max-height 0.25s ease, transform 0.25s ease;
+}
+
+.breathing-space__mobile-tab--active .breathing-space__mobile-tab-title {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-6px);
+  overflow: hidden;
 }
 
 .breathing-space__left-column {
@@ -256,6 +272,56 @@
   margin: 0 0 var(--space-4) 0;
   color: var(--text);
   letter-spacing: -0.01em;
+}
+
+.breathing-space__library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.breathing-space__library-header .breathing-space__library-title {
+  margin-bottom: 0;
+}
+
+.breathing-space__expand-toggle {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.breathing-space__expand-toggle:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.breathing-space__guided-details,
+.breathing-space__breathing-details {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-6px);
+  transition: max-height 0.3s ease, opacity 0.25s ease, transform 0.25s ease;
+}
+
+.breathing-space__guided-details--open,
+.breathing-space__breathing-details--open {
+  max-height: 2000px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.breathing-space__guided-start-button--standalone {
+  margin-bottom: var(--space-4);
 }
 
 .breathing-space__guided-buttons {
