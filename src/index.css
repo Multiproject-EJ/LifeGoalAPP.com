@@ -11439,6 +11439,27 @@ body {
   padding-right: 0.4rem;
 }
 
+.mobile-footer-nav--flash .mobile-footer-nav__button,
+.mobile-footer-nav--flash .mobile-footer-nav__status-card,
+.mobile-footer-nav--flash .mobile-footer-nav__menu-button {
+  animation: mobile-footer-nav-flash 0.6s ease-out 1;
+}
+
+@keyframes mobile-footer-nav-flash {
+  0% {
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.4);
+  }
+  35% {
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.45);
+    background: rgba(255, 255, 255, 0.85);
+  }
+  100% {
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.4);
+  }
+}
+
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-row {
   position: absolute;
   top: -2.6rem;

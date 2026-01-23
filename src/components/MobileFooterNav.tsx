@@ -23,6 +23,7 @@ type MobileFooterNavProps = {
   onSelect: (itemId: string) => void;
   onOpenMenu?: () => void;
   isDiodeActive: boolean;
+  isFlashActive?: boolean;
   status?: MobileFooterStatus;
   onStatusClick?: () => void;
 };
@@ -35,6 +36,7 @@ export function MobileFooterNav({
   onSelect,
   onOpenMenu,
   isDiodeActive,
+  isFlashActive = false,
   status,
   onStatusClick,
 }: MobileFooterNavProps) {
@@ -49,7 +51,10 @@ export function MobileFooterNav({
   const listStyle = { '--mobile-footer-columns': totalColumns } as CSSProperties;
 
   return (
-    <nav className="mobile-footer-nav" aria-label="Primary navigation">
+    <nav
+      className={`mobile-footer-nav${isFlashActive ? ' mobile-footer-nav--flash' : ''}`}
+      aria-label="Primary navigation"
+    >
       <div
         className={`mobile-footer-nav__surface ${
           isDiodeOff ? 'mobile-footer-nav__surface--diode-off' : ''
