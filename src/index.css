@@ -11207,7 +11207,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./assets/ControllerLightBlue.webp') center bottom / 168% auto no-repeat;
+  background: url('./assets/ControllerLightBlue.webp') center bottom / 100% auto no-repeat;
   z-index: 0;
 }
 
@@ -11633,7 +11633,7 @@ body {
   }
 
   .mobile-footer-nav__surface--image::before {
-    background-size: 100% 100%;
+    background-size: 100% auto;
   }
 }
 
