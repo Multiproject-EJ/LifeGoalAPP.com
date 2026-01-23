@@ -1602,6 +1602,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const displayLabel = formatDateLabel(activeDate);
     const canGoForward = activeDate < today;
     const isViewingToday = activeDate === today;
+    const isCompactVariant = variant === 'compact';
     const navClasses = ['habit-day-nav', `habit-day-nav--${variant}`];
     const visionRewardForDay = visionRewardDate === activeDate ? visionReward : null;
     const isNextVisionSuperBoost = !hasClaimedVisionStar && (visionStarCount + 1) % 20 === 0;
@@ -1619,41 +1620,65 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           type="button"
           className="habit-day-nav__button habit-day-nav__button--prev"
           onClick={() => changeActiveDateBy(-1)}
+          aria-label="Previous day"
         >
-          ← Previous day
+          {isCompactVariant ? '←' : '← Previous day'}
         </button>
 
         {showDetails ? (
           <div className="habit-day-nav__info">
-            <p className={`habit-day-nav__label ${shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''}`}>
-              Tracking day
-            </p>
-            <p className={`habit-day-nav__value ${shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''}`}>
-              {displayLabel}
-            </p>
-            <div className="habit-day-nav__actions">
-              {isViewingToday ? (
-                <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
-              ) : (
-                <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
-                  Jump to today
-                </button>
-              )}
-              <label className="habit-day-nav__picker" aria-label="Select a date to track">
-                <span className="sr-only">Select a date to track</span>
-                <span className="habit-day-nav__picker-pill">
-                  <span className="habit-day-nav__picker-icon" aria-hidden="true">
-                    📅
+            {isCompactVariant ? (
+              <div className="habit-day-nav__actions habit-day-nav__actions--compact">
+                <span className="sr-only">Tracking day {displayLabel}</span>
+                <label className="habit-day-nav__picker habit-day-nav__picker--icon-only" aria-label="Select a date to track">
+                  <span className="sr-only">Select a date to track</span>
+                  <span className="habit-day-nav__picker-pill habit-day-nav__picker-pill--icon-only">
+                    <span className="habit-day-nav__picker-icon" aria-hidden="true">
+                      📅
+                    </span>
+                    <input
+                      className="habit-day-nav__picker-input--icon-only"
+                      type="date"
+                      value={activeDate}
+                      max={today}
+                      onChange={(event) => handleDateInputChange(event.target.value)}
+                    />
                   </span>
-                  <input
-                    type="date"
-                    value={activeDate}
-                    max={today}
-                    onChange={(event) => handleDateInputChange(event.target.value)}
-                  />
-                </span>
-              </label>
-            </div>
+                </label>
+              </div>
+            ) : (
+              <>
+                <p className={`habit-day-nav__label ${shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''}`}>
+                  Tracking day
+                </p>
+                <p className={`habit-day-nav__value ${shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''}`}>
+                  {displayLabel}
+                </p>
+                <div className="habit-day-nav__actions">
+                  {isViewingToday ? (
+                    <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
+                  ) : (
+                    <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
+                      Jump to today
+                    </button>
+                  )}
+                  <label className="habit-day-nav__picker" aria-label="Select a date to track">
+                    <span className="sr-only">Select a date to track</span>
+                    <span className="habit-day-nav__picker-pill">
+                      <span className="habit-day-nav__picker-icon" aria-hidden="true">
+                        📅
+                      </span>
+                      <input
+                        type="date"
+                        value={activeDate}
+                        max={today}
+                        onChange={(event) => handleDateInputChange(event.target.value)}
+                      />
+                    </span>
+                  </label>
+                </div>
+              </>
+            )}
             {!hasClaimedVisionStar ? (
               <div className="habit-day-nav__vision-row">
                 <button
@@ -1723,8 +1748,9 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
           className="habit-day-nav__button habit-day-nav__button--next"
           onClick={() => changeActiveDateBy(1)}
           disabled={!canGoForward}
+          aria-label="Next day"
         >
-          Next day →
+          {isCompactVariant ? '→' : 'Next day →'}
         </button>
       </div>
     );
@@ -1797,6 +1823,11 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     disabled={isSaving || (!scheduledToday && !isCompleted)}
                   />
                   <span className="habit-checklist__name">
+                    {!isCompactView && habit.emoji ? (
+                      <span className="habit-checklist__icon" aria-hidden="true">
+                        {habit.emoji}
+                      </span>
+                    ) : null}
                     {habit.name}
                   </span>
                 </div>
