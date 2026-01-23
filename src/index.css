@@ -11512,8 +11512,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 88px;
+  height: 88px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.3);
   background: rgba(255, 255, 255, 0.5);
@@ -11523,6 +11523,7 @@ body {
   letter-spacing: 0.01em;
   transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-18px);
 }
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button {
@@ -11536,11 +11537,11 @@ body {
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(148, 163, 184, 0.45);
   outline: none;
-  transform: translateY(-1px);
+  transform: translateY(-19px);
 }
 
 .mobile-footer-nav__menu-icon {
-  font-size: 1.6rem;
+  font-size: 3.2rem;
   line-height: 1;
 }
 
