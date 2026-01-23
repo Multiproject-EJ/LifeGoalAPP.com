@@ -11207,7 +11207,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./assets/ControllerLightBlue.webp') center bottom / 140% auto no-repeat;
+  background: url('./assets/ControllerLightBlue.webp') center bottom / 168% auto no-repeat;
   z-index: 0;
 }
 
@@ -11240,6 +11240,22 @@ body {
   grid-template-areas:
     "breathing status score"
     "today . actions";
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__list--stacked {
+  grid-template-areas:
+    "today status actions"
+    "breathing . score";
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__list--stacked {
+  grid-template-columns: repeat(var(--mobile-footer-columns, 5), minmax(0, 1fr));
+  grid-template-areas: none;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__item,
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__status {
+  grid-area: auto;
 }
 
 .mobile-footer-nav__item {
@@ -11421,6 +11437,27 @@ body {
   justify-content: flex-end;
   gap: 12px;
   padding-right: 0.4rem;
+}
+
+.mobile-footer-nav--flash .mobile-footer-nav__button,
+.mobile-footer-nav--flash .mobile-footer-nav__status-card,
+.mobile-footer-nav--flash .mobile-footer-nav__menu-button {
+  animation: mobile-footer-nav-flash 0.6s ease-out 1;
+}
+
+@keyframes mobile-footer-nav-flash {
+  0% {
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.4);
+  }
+  35% {
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.45);
+    background: rgba(255, 255, 255, 0.85);
+  }
+  100% {
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.4);
+  }
 }
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-row {

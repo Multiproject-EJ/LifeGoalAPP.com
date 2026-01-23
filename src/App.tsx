@@ -262,6 +262,8 @@ export default function App() {
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
+  const [isMobileMenuFlashActive, setIsMobileMenuFlashActive] = useState(false);
+  const mobileMenuFlashTimeoutRef = useRef<number | null>(null);
 
   const {
     xpToasts,
@@ -365,6 +367,14 @@ export default function App() {
     }
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (mobileMenuFlashTimeoutRef.current !== null) {
+        window.clearTimeout(mobileMenuFlashTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const mobileFooterNavItems = useMemo(() => {
     const footerIds: MobileMenuNavItem['id'][] = [
       'planning',
@@ -376,6 +386,17 @@ export default function App() {
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
   }, [mobileMenuNavItems]);
+
+  const triggerMobileMenuFlash = () => {
+    if (mobileMenuFlashTimeoutRef.current !== null) {
+      window.clearTimeout(mobileMenuFlashTimeoutRef.current);
+    }
+    setIsMobileMenuFlashActive(true);
+    mobileMenuFlashTimeoutRef.current = window.setTimeout(() => {
+      setIsMobileMenuFlashActive(false);
+      mobileMenuFlashTimeoutRef.current = null;
+    }, 700);
+  };
 
   const todayLabel = useMemo(
     () =>
@@ -1561,7 +1582,14 @@ export default function App() {
                 }`}
                 aria-pressed={isMobileMenuImageActive}
                 aria-label="Toggle diode indicator"
-                onClick={() => setIsMobileMenuImageActive((prev) => !prev)}
+                onClick={() => {
+                  const nextIsActive = !isMobileMenuImageActive;
+                  setIsMobileMenuImageActive(nextIsActive);
+                  if (nextIsActive) {
+                    setShowMobileGamification(false);
+                  }
+                  triggerMobileMenuFlash();
+                }}
               />
               <button
                 type="button"
@@ -1710,6 +1738,7 @@ export default function App() {
           onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
+          isFlashActive={isMobileMenuFlashActive}
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -1892,6 +1921,7 @@ export default function App() {
           onStatusClick={handleMobileGameStatusClick}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
+          isFlashActive={isMobileMenuFlashActive}
         />
       ) : null}
 
