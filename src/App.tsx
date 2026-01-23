@@ -213,6 +213,10 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'placeholder',
 ] as const;
 
+const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'score', 'breathing-space']);
+const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
+const MOBILE_FOOTER_SNAP_RESET_MS = 160;
+
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
@@ -259,6 +263,10 @@ export default function App() {
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
+  const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
+  const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
+  const mobileFooterCollapseTimeoutRef = useRef<number | null>(null);
+  const mobileFooterSnapTimeoutRef = useRef<number | null>(null);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
@@ -372,6 +380,12 @@ export default function App() {
       if (mobileMenuFlashTimeoutRef.current !== null) {
         window.clearTimeout(mobileMenuFlashTimeoutRef.current);
       }
+      if (mobileFooterCollapseTimeoutRef.current !== null) {
+        window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
+      }
+      if (mobileFooterSnapTimeoutRef.current !== null) {
+        window.clearTimeout(mobileFooterSnapTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -430,6 +444,55 @@ export default function App() {
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
 
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
+  const shouldAutoCollapseMobileFooter =
+    isMobileViewport && mobileActiveNavId !== null && MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId);
+
+  const scheduleMobileFooterCollapse = useCallback(() => {
+    if (!shouldAutoCollapseMobileFooter) {
+      return;
+    }
+    if (mobileFooterCollapseTimeoutRef.current !== null) {
+      window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
+    }
+    mobileFooterCollapseTimeoutRef.current = window.setTimeout(() => {
+      setIsMobileFooterCollapsed(true);
+      mobileFooterCollapseTimeoutRef.current = null;
+    }, MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS);
+  }, [shouldAutoCollapseMobileFooter]);
+
+  const handleMobileFooterExpand = useCallback(
+    (shouldSnap: boolean) => {
+      if (!shouldAutoCollapseMobileFooter) {
+        return;
+      }
+      if (shouldSnap) {
+        if (mobileFooterSnapTimeoutRef.current !== null) {
+          window.clearTimeout(mobileFooterSnapTimeoutRef.current);
+        }
+        setIsMobileFooterSnapActive(true);
+        mobileFooterSnapTimeoutRef.current = window.setTimeout(() => {
+          setIsMobileFooterSnapActive(false);
+          mobileFooterSnapTimeoutRef.current = null;
+        }, MOBILE_FOOTER_SNAP_RESET_MS);
+      }
+      setIsMobileFooterCollapsed(false);
+      scheduleMobileFooterCollapse();
+    },
+    [scheduleMobileFooterCollapse, shouldAutoCollapseMobileFooter],
+  );
+
+  useEffect(() => {
+    if (!shouldAutoCollapseMobileFooter) {
+      setIsMobileFooterCollapsed(false);
+      if (mobileFooterCollapseTimeoutRef.current !== null) {
+        window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
+        mobileFooterCollapseTimeoutRef.current = null;
+      }
+      return;
+    }
+    setIsMobileFooterCollapsed(true);
+    scheduleMobileFooterCollapse();
+  }, [scheduleMobileFooterCollapse, shouldAutoCollapseMobileFooter]);
 
   const isDemoMode = mode === 'demo';
   const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
@@ -1736,6 +1799,10 @@ export default function App() {
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
           isFlashActive={isMobileMenuFlashActive}
+          isCollapsed={isMobileFooterCollapsed}
+          isSnapActive={isMobileFooterSnapActive}
+          onExpand={() => handleMobileFooterExpand(false)}
+          onSnapExpand={() => handleMobileFooterExpand(true)}
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -1919,6 +1986,10 @@ export default function App() {
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
           isFlashActive={isMobileMenuFlashActive}
+          isCollapsed={isMobileFooterCollapsed}
+          isSnapActive={isMobileFooterSnapActive}
+          onExpand={() => handleMobileFooterExpand(false)}
+          onSnapExpand={() => handleMobileFooterExpand(true)}
         />
       ) : null}
 

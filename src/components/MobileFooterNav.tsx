@@ -24,8 +24,12 @@ type MobileFooterNavProps = {
   onOpenMenu?: () => void;
   isDiodeActive: boolean;
   isFlashActive?: boolean;
+  isCollapsed?: boolean;
+  isSnapActive?: boolean;
   status?: MobileFooterStatus;
   onStatusClick?: () => void;
+  onExpand?: () => void;
+  onSnapExpand?: () => void;
 };
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
@@ -37,8 +41,12 @@ export function MobileFooterNav({
   onOpenMenu,
   isDiodeActive,
   isFlashActive = false,
+  isCollapsed = false,
+  isSnapActive = false,
   status,
   onStatusClick,
+  onExpand,
+  onSnapExpand,
 }: MobileFooterNavProps) {
   const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
@@ -49,10 +57,19 @@ export function MobileFooterNav({
 
   const totalColumns = listItems.length || items.length;
   const listStyle = { '--mobile-footer-columns': totalColumns } as CSSProperties;
+  const handlePointerDown = () => {
+    if (onSnapExpand) {
+      onSnapExpand();
+      return;
+    }
+    onExpand?.();
+  };
 
   return (
     <nav
-      className={`mobile-footer-nav${isFlashActive ? ' mobile-footer-nav--flash' : ''}`}
+      className={`mobile-footer-nav${isFlashActive ? ' mobile-footer-nav--flash' : ''}${
+        isCollapsed ? ' mobile-footer-nav--collapsed' : ''
+      }${isSnapActive ? ' mobile-footer-nav--snap' : ''}`}
       aria-label="Primary navigation"
     >
       <div
@@ -60,6 +77,9 @@ export function MobileFooterNav({
           isDiodeOff ? 'mobile-footer-nav__surface--diode-off' : ''
         }${isDiodeActive ? ' mobile-footer-nav__surface--image' : ''}`}
         data-diode-active={isDiodeActive}
+        onMouseEnter={onExpand}
+        onFocusCapture={onExpand}
+        onPointerDown={handlePointerDown}
       >
         {onOpenMenu ? (
           <div className="mobile-footer-nav__menu-row">
