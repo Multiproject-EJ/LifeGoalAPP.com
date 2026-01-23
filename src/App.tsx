@@ -267,6 +267,7 @@ export default function App() {
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
   const mobileFooterCollapseTimeoutRef = useRef<number | null>(null);
   const mobileFooterSnapTimeoutRef = useRef<number | null>(null);
+  const [isProfileStrengthOpen, setIsProfileStrengthOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
@@ -1617,60 +1618,101 @@ export default function App() {
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
-              <div className="mobile-menu-overlay__profile-dashboard" role="status" aria-live="polite">
-                <div className="mobile-menu-overlay__profile-header">
-                  <div>
-                    <span className="mobile-menu-overlay__profile-eyebrow">Profile strength</span>
-                    <p className="mobile-menu-overlay__profile-title">84% charged</p>
-                    <p className="mobile-menu-overlay__profile-subtitle">
-                      Momentum is high. One focused win keeps the charge climbing.
-                    </p>
-                  </div>
-                  <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
-                    <span className="mobile-menu-overlay__profile-ring-value">84%</span>
-                    <span className="mobile-menu-overlay__profile-ring-label">Power</span>
-                  </div>
+              <button
+                type="button"
+                className="mobile-menu-overlay__profile-summary"
+                onClick={() => setIsProfileStrengthOpen(true)}
+              >
+                <div>
+                  <span className="mobile-menu-overlay__profile-eyebrow">Profile strength</span>
+                  <p className="mobile-menu-overlay__profile-title">84% charged</p>
+                  <p className="mobile-menu-overlay__profile-subtitle">
+                    Momentum is high. Tap to see how this score is calculated.
+                  </p>
                 </div>
-                <div className="mobile-menu-overlay__profile-metrics">
-                  <div className="mobile-menu-overlay__profile-metric">
-                    <span className="mobile-menu-overlay__profile-metric-label">Focus streak</span>
-                    <span className="mobile-menu-overlay__profile-metric-value">6 days</span>
-                    <span className="mobile-menu-overlay__profile-metric-note">+2 since last week</span>
-                  </div>
-                  <div className="mobile-menu-overlay__profile-metric">
-                    <span className="mobile-menu-overlay__profile-metric-label">Habits locked</span>
-                    <span className="mobile-menu-overlay__profile-metric-value">3 / 4</span>
-                    <span className="mobile-menu-overlay__profile-metric-note">1 more for bonus XP</span>
-                  </div>
-                  <div className="mobile-menu-overlay__profile-metric">
-                    <span className="mobile-menu-overlay__profile-metric-label">Energy peak</span>
-                    <span className="mobile-menu-overlay__profile-metric-value">9:00 AM</span>
-                    <span className="mobile-menu-overlay__profile-metric-note">Schedule deep work</span>
-                  </div>
+                <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
+                  <span className="mobile-menu-overlay__profile-ring-value">84%</span>
+                  <span className="mobile-menu-overlay__profile-ring-label">Power</span>
                 </div>
-                <div className="mobile-menu-overlay__profile-track">
-                  <div className="mobile-menu-overlay__profile-track-labels">
-                    <span>Strength boost</span>
-                    <span>84 / 100</span>
-                  </div>
-                  <div className="mobile-menu-overlay__profile-track-bar" aria-hidden="true">
-                    <span className="mobile-menu-overlay__profile-track-fill" />
-                  </div>
-                </div>
-                <div className="mobile-menu-overlay__profile-highlights">
-                  <span className="mobile-menu-overlay__profile-highlight">🌟 New title in 120 XP</span>
-                  <span className="mobile-menu-overlay__profile-highlight">🔥 Best focus window: 2h</span>
-                  <span className="mobile-menu-overlay__profile-highlight">🧠 Mindset: Clear</span>
-                </div>
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__profile-button"
-                  onClick={() => handleMobileNavSelect('planning')}
-                >
-                  Boost today
-                </button>
-              </div>
+              </button>
             </div>
+            {isProfileStrengthOpen ? (
+              <div className="mobile-menu-overlay__strength-modal" role="dialog" aria-modal="true">
+                <div
+                  className="mobile-menu-overlay__strength-backdrop"
+                  role="presentation"
+                  onClick={() => setIsProfileStrengthOpen(false)}
+                />
+                <div className="mobile-menu-overlay__strength-panel">
+                  <div className="mobile-menu-overlay__strength-header">
+                    <div>
+                      <p className="mobile-menu-overlay__strength-eyebrow">Profile strength</p>
+                      <h3 className="mobile-menu-overlay__strength-title">How we calculate your charge</h3>
+                    </div>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__strength-close"
+                      aria-label="Close profile strength details"
+                      onClick={() => setIsProfileStrengthOpen(false)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="mobile-menu-overlay__profile-dashboard" role="status" aria-live="polite">
+                    <div className="mobile-menu-overlay__profile-header">
+                      <div>
+                        <p className="mobile-menu-overlay__profile-title">84% charged</p>
+                        <p className="mobile-menu-overlay__profile-subtitle">
+                          Your score combines streaks, habit momentum, and focus energy.
+                        </p>
+                      </div>
+                      <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
+                        <span className="mobile-menu-overlay__profile-ring-value">84%</span>
+                        <span className="mobile-menu-overlay__profile-ring-label">Power</span>
+                      </div>
+                    </div>
+                    <div className="mobile-menu-overlay__profile-metrics">
+                      <div className="mobile-menu-overlay__profile-metric">
+                        <span className="mobile-menu-overlay__profile-metric-label">Focus streak</span>
+                        <span className="mobile-menu-overlay__profile-metric-value">6 days</span>
+                        <span className="mobile-menu-overlay__profile-metric-note">+2 since last week</span>
+                      </div>
+                      <div className="mobile-menu-overlay__profile-metric">
+                        <span className="mobile-menu-overlay__profile-metric-label">Habits locked</span>
+                        <span className="mobile-menu-overlay__profile-metric-value">3 / 4</span>
+                        <span className="mobile-menu-overlay__profile-metric-note">1 more for bonus XP</span>
+                      </div>
+                      <div className="mobile-menu-overlay__profile-metric">
+                        <span className="mobile-menu-overlay__profile-metric-label">Energy peak</span>
+                        <span className="mobile-menu-overlay__profile-metric-value">9:00 AM</span>
+                        <span className="mobile-menu-overlay__profile-metric-note">Schedule deep work</span>
+                      </div>
+                    </div>
+                    <div className="mobile-menu-overlay__profile-track">
+                      <div className="mobile-menu-overlay__profile-track-labels">
+                        <span>Strength boost</span>
+                        <span>84 / 100</span>
+                      </div>
+                      <div className="mobile-menu-overlay__profile-track-bar" aria-hidden="true">
+                        <span className="mobile-menu-overlay__profile-track-fill" />
+                      </div>
+                    </div>
+                    <div className="mobile-menu-overlay__profile-highlights">
+                      <span className="mobile-menu-overlay__profile-highlight">🌟 New title in 120 XP</span>
+                      <span className="mobile-menu-overlay__profile-highlight">🔥 Best focus window: 2h</span>
+                      <span className="mobile-menu-overlay__profile-highlight">🧠 Mindset: Clear</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__profile-button"
+                      onClick={() => handleMobileNavSelect('planning')}
+                    >
+                      Boost today
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </>
         </div>
       </div>
