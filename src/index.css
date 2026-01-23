@@ -4139,7 +4139,7 @@ body {
   inset: 0;
   display: grid;
   place-items: center;
-  z-index: 40;
+  z-index: 120;
 }
 
 @media (max-width: 640px) {
@@ -9277,7 +9277,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  z-index: 20;
+  z-index: 120;
 }
 
 .vision-board__modal {
@@ -11179,6 +11179,17 @@ body {
   display: flex;
   justify-content: center;
   pointer-events: none;
+  transform: translateY(0);
+  transition: transform 0.38s ease;
+  will-change: transform;
+}
+
+.mobile-footer-nav--collapsed {
+  transform: translateY(70%);
+}
+
+.mobile-footer-nav--snap {
+  transition-duration: 0s;
 }
 
 .mobile-footer-nav__surface {
@@ -11194,6 +11205,12 @@ body {
   gap: clamp(0.5rem, 2vw, 0.85rem);
   pointer-events: auto;
   position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-footer-nav {
+    transition: none;
+  }
 }
 
 .mobile-footer-nav__surface--image {
