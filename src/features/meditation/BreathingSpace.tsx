@@ -56,6 +56,8 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
   const [selectedMeditationId, setSelectedMeditationId] = useState<string>('attempting-breath');
   const [meditationDuration, setMeditationDuration] = useState<number>(5);
   const [revealMode, setRevealMode] = useState<RevealMode>('sentence');
+  const [guidedDetailsOpen, setGuidedDetailsOpen] = useState(false);
+  const [breathingDetailsOpen, setBreathingDetailsOpen] = useState(false);
   
   // Celebration and gamification state
   const [showCelebration, setShowCelebration] = useState(false);
@@ -389,115 +391,155 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
 
         {/* Meditation Library */}
         <div className="breathing-space__library breathing-space__section breathing-space__section--meditation">
-          <h3 className="breathing-space__library-title">Guided Meditations</h3>
-
-          <div className="breathing-space__guided-buttons">
-            {GUIDED_MEDITATIONS.map((meditation) => (
-              <button
-                key={meditation.id}
-                type="button"
-                className="breathing-space__guided-button"
-                onClick={() => handleStartGuidedMeditation(meditation.id)}
-                disabled={meditation.isPlaceholder}
-              >
-                <span className="breathing-space__guided-button-title">{meditation.title}</span>
-                <span className="breathing-space__guided-button-meta">
-                  {meditation.isPlaceholder ? 'Coming soon' : `${meditationDuration} min`}
-                </span>
-              </button>
-            ))}
-          </div>
-          
-          {/* Meditation Controls */}
-          <div className="breathing-space__guided-controls">
-            <div className="breathing-space__control-group">
-              <label htmlFor="meditation-select" className="breathing-space__control-label">
-                Meditation
-              </label>
-              <select
-                id="meditation-select"
-                className="breathing-space__control-select"
-                value={selectedMeditationId}
-                onChange={(e) => setSelectedMeditationId(e.target.value)}
-              >
-                {GUIDED_MEDITATIONS.map((med) => (
-                  <option key={med.id} value={med.id}>
-                    {med.title} {med.isPlaceholder ? '(Coming Soon)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="breathing-space__control-group">
-              <label htmlFor="duration-select" className="breathing-space__control-label">
-                Duration
-              </label>
-              <select
-                id="duration-select"
-                className="breathing-space__control-select"
-                value={meditationDuration}
-                onChange={(e) => setMeditationDuration(Number(e.target.value))}
-              >
-                <option value={2}>2 minutes</option>
-                <option value={5}>5 minutes</option>
-                <option value={10}>10 minutes</option>
-              </select>
-            </div>
-
-            <div className="breathing-space__control-group">
-              <label htmlFor="reveal-mode-select" className="breathing-space__control-label">
-                Reveal Mode
-              </label>
-              <select
-                id="reveal-mode-select"
-                className="breathing-space__control-select"
-                value={revealMode}
-                onChange={(e) => setRevealMode(e.target.value as RevealMode)}
-              >
-                <option value="word">Word by Word</option>
-                <option value="sentence">Sentence by Sentence</option>
-                <option value="paragraph">Paragraph by Paragraph</option>
-              </select>
-            </div>
-
+          <div className="breathing-space__library-header">
+            <h3 className="breathing-space__library-title">Guided Meditations</h3>
             <button
-              className="btn btn--primary breathing-space__guided-start-button"
-              onClick={() => handleStartGuidedMeditation(selectedMeditationId)}
+              type="button"
+              className="breathing-space__expand-toggle"
+              onClick={() => setGuidedDetailsOpen((prev) => !prev)}
+              aria-expanded={guidedDetailsOpen}
             >
-              Begin Meditation
+              {guidedDetailsOpen ? 'Hide details' : 'Expand details'}
             </button>
           </div>
 
-          {/* Selected meditation details */}
-          {GUIDED_MEDITATIONS.find((m) => m.id === selectedMeditationId) && (
-            <div className="breathing-space__meditation-preview">
-              <p className="breathing-space__meditation-theme">
-                {GUIDED_MEDITATIONS.find((m) => m.id === selectedMeditationId)?.theme}
-              </p>
+          <button
+            className="btn btn--primary breathing-space__guided-start-button breathing-space__guided-start-button--standalone"
+            onClick={() => handleStartGuidedMeditation(selectedMeditationId)}
+          >
+            Begin Meditation
+          </button>
+
+          <div
+            className={`breathing-space__guided-details ${
+              guidedDetailsOpen ? 'breathing-space__guided-details--open' : ''
+            }`}
+          >
+            <div className="breathing-space__guided-buttons">
+              {GUIDED_MEDITATIONS.map((meditation) => (
+                <button
+                  key={meditation.id}
+                  type="button"
+                  className="breathing-space__guided-button"
+                  onClick={() => handleStartGuidedMeditation(meditation.id)}
+                  disabled={meditation.isPlaceholder}
+                >
+                  <span className="breathing-space__guided-button-title">{meditation.title}</span>
+                  <span className="breathing-space__guided-button-meta">
+                    {meditation.isPlaceholder ? 'Coming soon' : `${meditationDuration} min`}
+                  </span>
+                </button>
+              ))}
             </div>
-          )}
+
+            {/* Meditation Controls */}
+            <div className="breathing-space__guided-controls">
+              <div className="breathing-space__control-group">
+                <label htmlFor="meditation-select" className="breathing-space__control-label">
+                  Meditation
+                </label>
+                <select
+                  id="meditation-select"
+                  className="breathing-space__control-select"
+                  value={selectedMeditationId}
+                  onChange={(e) => setSelectedMeditationId(e.target.value)}
+                >
+                  {GUIDED_MEDITATIONS.map((med) => (
+                    <option key={med.id} value={med.id}>
+                      {med.title} {med.isPlaceholder ? '(Coming Soon)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="breathing-space__control-group">
+                <label htmlFor="duration-select" className="breathing-space__control-label">
+                  Duration
+                </label>
+                <select
+                  id="duration-select"
+                  className="breathing-space__control-select"
+                  value={meditationDuration}
+                  onChange={(e) => setMeditationDuration(Number(e.target.value))}
+                >
+                  <option value={2}>2 minutes</option>
+                  <option value={5}>5 minutes</option>
+                  <option value={10}>10 minutes</option>
+                </select>
+              </div>
+
+              <div className="breathing-space__control-group">
+                <label htmlFor="reveal-mode-select" className="breathing-space__control-label">
+                  Reveal Mode
+                </label>
+                <select
+                  id="reveal-mode-select"
+                  className="breathing-space__control-select"
+                  value={revealMode}
+                  onChange={(e) => setRevealMode(e.target.value as RevealMode)}
+                >
+                  <option value="word">Word by Word</option>
+                  <option value="sentence">Sentence by Sentence</option>
+                  <option value="paragraph">Paragraph by Paragraph</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Selected meditation details */}
+            {GUIDED_MEDITATIONS.find((m) => m.id === selectedMeditationId) && (
+              <div className="breathing-space__meditation-preview">
+                <p className="breathing-space__meditation-theme">
+                  {GUIDED_MEDITATIONS.find((m) => m.id === selectedMeditationId)?.theme}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Breathing Exercises Library */}
         <div className="breathing-space__library breathing-space__section breathing-space__section--breathing">
-          <h3 className="breathing-space__library-title">Breathing Exercises</h3>
-          <div className="breathing-space__button-grid">
-            {PLACEHOLDER_SESSIONS.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                className="breathing-space__exercise-button"
-                onClick={() => handleStartSession(s.title, s.duration)}
-              >
-                <span className="breathing-space__exercise-button-icon">{s.icon}</span>
-                <span className="breathing-space__exercise-button-text">
-                  <span className="breathing-space__exercise-button-title">{s.title}</span>
-                  <span className="breathing-space__exercise-button-meta">
-                    {Math.floor(s.duration / 60)} min
+          <div className="breathing-space__library-header">
+            <h3 className="breathing-space__library-title">Breathing Exercises</h3>
+            <button
+              type="button"
+              className="breathing-space__expand-toggle"
+              onClick={() => setBreathingDetailsOpen((prev) => !prev)}
+              aria-expanded={breathingDetailsOpen}
+            >
+              {breathingDetailsOpen ? 'Hide details' : 'Expand details'}
+            </button>
+          </div>
+
+          <button
+            className="btn btn--primary breathing-space__guided-start-button breathing-space__guided-start-button--standalone"
+            onClick={() => handleStartSession('Focus Breathing', 180)}
+          >
+            Begin Focus Breathing
+          </button>
+
+          <div
+            className={`breathing-space__breathing-details ${
+              breathingDetailsOpen ? 'breathing-space__breathing-details--open' : ''
+            }`}
+          >
+            <div className="breathing-space__button-grid">
+              {PLACEHOLDER_SESSIONS.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="breathing-space__exercise-button"
+                  onClick={() => handleStartSession(s.title, s.duration)}
+                >
+                  <span className="breathing-space__exercise-button-icon">{s.icon}</span>
+                  <span className="breathing-space__exercise-button-text">
+                    <span className="breathing-space__exercise-button-title">{s.title}</span>
+                    <span className="breathing-space__exercise-button-meta">
+                      {Math.floor(s.duration / 60)} min
+                    </span>
                   </span>
-                </span>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
