@@ -1592,21 +1592,57 @@ export default function App() {
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
-              <div className="mobile-menu-overlay__news-card" role="status" aria-live="polite">
-                <div className="mobile-menu-overlay__news-header">
-                  <span className="mobile-menu-overlay__news-eyebrow">News</span>
-                  <span className="mobile-menu-overlay__news-tag">Recommended next step</span>
+              <div className="mobile-menu-overlay__profile-dashboard" role="status" aria-live="polite">
+                <div className="mobile-menu-overlay__profile-header">
+                  <div>
+                    <span className="mobile-menu-overlay__profile-eyebrow">Profile strength</span>
+                    <p className="mobile-menu-overlay__profile-title">84% charged</p>
+                    <p className="mobile-menu-overlay__profile-subtitle">
+                      Momentum is high. One focused win keeps the charge climbing.
+                    </p>
+                  </div>
+                  <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
+                    <span className="mobile-menu-overlay__profile-ring-value">84%</span>
+                    <span className="mobile-menu-overlay__profile-ring-label">Power</span>
+                  </div>
                 </div>
-                <p className="mobile-menu-overlay__news-title">Lock in one priority for today</p>
-                <p className="mobile-menu-overlay__news-body">
-                  Open Today to pick a focus goal and check it off before the day ends.
-                </p>
+                <div className="mobile-menu-overlay__profile-metrics">
+                  <div className="mobile-menu-overlay__profile-metric">
+                    <span className="mobile-menu-overlay__profile-metric-label">Focus streak</span>
+                    <span className="mobile-menu-overlay__profile-metric-value">6 days</span>
+                    <span className="mobile-menu-overlay__profile-metric-note">+2 since last week</span>
+                  </div>
+                  <div className="mobile-menu-overlay__profile-metric">
+                    <span className="mobile-menu-overlay__profile-metric-label">Habits locked</span>
+                    <span className="mobile-menu-overlay__profile-metric-value">3 / 4</span>
+                    <span className="mobile-menu-overlay__profile-metric-note">1 more for bonus XP</span>
+                  </div>
+                  <div className="mobile-menu-overlay__profile-metric">
+                    <span className="mobile-menu-overlay__profile-metric-label">Energy peak</span>
+                    <span className="mobile-menu-overlay__profile-metric-value">9:00 AM</span>
+                    <span className="mobile-menu-overlay__profile-metric-note">Schedule deep work</span>
+                  </div>
+                </div>
+                <div className="mobile-menu-overlay__profile-track">
+                  <div className="mobile-menu-overlay__profile-track-labels">
+                    <span>Strength boost</span>
+                    <span>84 / 100</span>
+                  </div>
+                  <div className="mobile-menu-overlay__profile-track-bar" aria-hidden="true">
+                    <span className="mobile-menu-overlay__profile-track-fill" />
+                  </div>
+                </div>
+                <div className="mobile-menu-overlay__profile-highlights">
+                  <span className="mobile-menu-overlay__profile-highlight">🌟 New title in 120 XP</span>
+                  <span className="mobile-menu-overlay__profile-highlight">🔥 Best focus window: 2h</span>
+                  <span className="mobile-menu-overlay__profile-highlight">🧠 Mindset: Clear</span>
+                </div>
                 <button
                   type="button"
-                  className="mobile-menu-overlay__news-button"
+                  className="mobile-menu-overlay__profile-button"
                   onClick={() => handleMobileNavSelect('planning')}
                 >
-                  Go to Today
+                  Boost today
                 </button>
               </div>
             </div>
