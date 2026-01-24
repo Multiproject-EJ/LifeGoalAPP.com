@@ -11630,9 +11630,13 @@ body {
 
 .mobile-footer-nav__surface[data-diode-active='true'] .mobile-footer-nav__diamond-counter {
   left: 50%;
-  top: -3.8rem;
+  top: -2.75rem;
   right: auto;
   transform: translateX(-50%);
+}
+
+.mobile-footer-nav__diamond-counter--diode-on {
+  top: -2.75rem;
 }
 
 .mobile-footer-nav--flash .mobile-footer-nav__button,
@@ -11879,6 +11883,13 @@ body {
   gap: 0.75rem;
   margin-bottom: 0.75rem;
   flex-wrap: wrap;
+}
+
+.mobile-menu-overlay__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
 }
 
 .mobile-menu-overlay__title {
