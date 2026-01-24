@@ -56,7 +56,9 @@ import {
   isProfileStrengthDebugEnabled,
   logProfileStrengthDebugSnapshot,
 } from './features/profile-strength/debugProfileStrength';
-import type { ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
+import { loadProfileStrengthSignals } from './features/profile-strength/profileStrengthData';
+import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
+import type { AreaKey, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -80,6 +82,15 @@ type MobileMenuNavItem = {
   ariaLabel: string;
   icon: ReactNode;
   summary: string;
+};
+
+const PROFILE_STRENGTH_AREA_LABELS: Record<AreaKey, string> = {
+  goals: 'Goals',
+  habits: 'Habits',
+  journal: 'Journal',
+  vision_board: 'Vision Board',
+  life_wheel: 'Life Wheel',
+  identity: 'Identity',
 };
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
@@ -542,6 +553,9 @@ export default function App() {
 
   const [profileStrengthDebugSnapshot, setProfileStrengthDebugSnapshot] =
     useState<ProfileStrengthResult | null>(null);
+  const [profileStrengthSnapshot, setProfileStrengthSnapshot] =
+    useState<ProfileStrengthResult | null>(null);
+  const [isProfileStrengthLoading, setIsProfileStrengthLoading] = useState(false);
 
   useEffect(() => {
     if (!isProfileStrengthDebugActive) {
@@ -569,6 +583,39 @@ export default function App() {
 
     logProfileStrengthDebugSnapshot(profileStrengthDebugSnapshot);
   }, [isProfileStrengthDebugActive, profileStrengthDebugSnapshot]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      return;
+    }
+
+    let isMounted = true;
+    setIsProfileStrengthLoading(true);
+
+    loadProfileStrengthSignals(activeSession?.user?.id ?? null)
+      .then((signals) => {
+        if (!isMounted) {
+          return;
+        }
+        const snapshot = scoreProfileStrength(signals);
+        setProfileStrengthSnapshot(snapshot);
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+        setProfileStrengthSnapshot((previous) => previous ?? scoreProfileStrength());
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsProfileStrengthLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeSession?.user?.id, isMobileMenuOpen]);
 
   useEffect(() => {
     if (!supabaseSession) {
@@ -911,6 +958,14 @@ export default function App() {
     setShowMobileHome(false);
   };
 
+  const handleProfileStrengthTaskClick = () => {
+    if (profileStrengthTask?.action.type === 'navigate') {
+      handleMobileNavSelect(profileStrengthTask.action.target);
+      return;
+    }
+    handleMobileNavSelect('planning');
+  };
+
   const handleMobileGameOverlayCardClick = () => {
     setActiveWorkspaceNav('game');
     setShowMobileHome(false);
@@ -1192,6 +1247,45 @@ export default function App() {
   // Use initials from profile if enabled, otherwise use first letter
   const shouldShowInitials = isAuthenticated && workspaceProfile?.show_initials_in_menu && profileInitials;
   const menuIconContent = shouldShowInitials ? profileInitials : '🌿';
+
+  const profileStrengthPercent = profileStrengthSnapshot?.overallPercent;
+  const profileStrengthPercentLabel =
+    profileStrengthPercent !== null && profileStrengthPercent !== undefined
+      ? `${profileStrengthPercent}%`
+      : '—';
+  const profileStrengthTitle =
+    profileStrengthPercent !== null && profileStrengthPercent !== undefined
+      ? `${profileStrengthPercent}% charged`
+      : 'Profile strength';
+  const profileStrengthTask = profileStrengthSnapshot?.globalNextTask ?? null;
+  const profileStrengthSubtitle = profileStrengthTask
+    ? `Next: ${profileStrengthTask.title}`
+    : profileStrengthPercent !== null && profileStrengthPercent !== undefined
+      ? 'Keep improving your profile for stronger guidance.'
+      : isProfileStrengthLoading
+        ? 'Checking your profile data…'
+        : 'Add more details to unlock your strength score.';
+  const profileStrengthDetailSubtitle =
+    profileStrengthPercent !== null && profileStrengthPercent !== undefined
+      ? 'Based on coverage, quality, and recency across your profile.'
+      : 'We will calculate this once enough profile data is available.';
+
+  const profileStrengthTopGaps = useMemo(() => {
+    if (!profileStrengthSnapshot) {
+      return [];
+    }
+    const entries = Object.entries(profileStrengthSnapshot.areaScores)
+      .filter(([, score]) => typeof score === 'number')
+      .map(([area, score]) => ({
+        area: area as AreaKey,
+        score: score as number,
+      }))
+      .sort((a, b) => a.score - b.score);
+    return entries.slice(0, 2).map(({ area, score }) => ({
+      label: PROFILE_STRENGTH_AREA_LABELS[area],
+      score,
+    }));
+  }, [profileStrengthSnapshot]);
   
   const activeWorkspaceItem =
     workspaceNavItems.find((item) => item.id === activeWorkspaceNav) ??
@@ -1707,13 +1801,11 @@ export default function App() {
               >
                 <div>
                   <span className="mobile-menu-overlay__profile-eyebrow">Profile strength</span>
-                  <p className="mobile-menu-overlay__profile-title">84% charged</p>
-                  <p className="mobile-menu-overlay__profile-subtitle">
-                    Momentum is high. Tap to see how this score is calculated.
-                  </p>
+                  <p className="mobile-menu-overlay__profile-title">{profileStrengthTitle}</p>
+                  <p className="mobile-menu-overlay__profile-subtitle">{profileStrengthSubtitle}</p>
                 </div>
                 <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
-                  <span className="mobile-menu-overlay__profile-ring-value">84%</span>
+                  <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
                   <span className="mobile-menu-overlay__profile-ring-label">Power</span>
                 </div>
               </button>
@@ -1743,53 +1835,81 @@ export default function App() {
                   <div className="mobile-menu-overlay__profile-dashboard" role="status" aria-live="polite">
                     <div className="mobile-menu-overlay__profile-header">
                       <div>
-                        <p className="mobile-menu-overlay__profile-title">84% charged</p>
-                        <p className="mobile-menu-overlay__profile-subtitle">
-                          Your score combines streaks, habit momentum, and focus energy.
-                        </p>
+                        <p className="mobile-menu-overlay__profile-title">{profileStrengthTitle}</p>
+                        <p className="mobile-menu-overlay__profile-subtitle">{profileStrengthDetailSubtitle}</p>
                       </div>
                       <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
-                        <span className="mobile-menu-overlay__profile-ring-value">84%</span>
+                        <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
                         <span className="mobile-menu-overlay__profile-ring-label">Power</span>
                       </div>
                     </div>
                     <div className="mobile-menu-overlay__profile-metrics">
                       <div className="mobile-menu-overlay__profile-metric">
-                        <span className="mobile-menu-overlay__profile-metric-label">Focus streak</span>
-                        <span className="mobile-menu-overlay__profile-metric-value">6 days</span>
-                        <span className="mobile-menu-overlay__profile-metric-note">+2 since last week</span>
+                        <span className="mobile-menu-overlay__profile-metric-label">Top gaps</span>
+                        <span className="mobile-menu-overlay__profile-metric-value">
+                          {profileStrengthTopGaps.length > 0
+                            ? profileStrengthTopGaps
+                                .map((gap) => `${gap.label} (${gap.score}/10)`)
+                                .join(', ')
+                            : 'Awaiting data'}
+                        </span>
+                        <span className="mobile-menu-overlay__profile-metric-note">
+                          {profileStrengthTopGaps.length > 0
+                            ? 'Lowest-scoring areas right now.'
+                            : 'Add more profile data to reveal your gaps.'}
+                        </span>
                       </div>
                       <div className="mobile-menu-overlay__profile-metric">
-                        <span className="mobile-menu-overlay__profile-metric-label">Habits locked</span>
-                        <span className="mobile-menu-overlay__profile-metric-value">3 / 4</span>
-                        <span className="mobile-menu-overlay__profile-metric-note">1 more for bonus XP</span>
-                      </div>
-                      <div className="mobile-menu-overlay__profile-metric">
-                        <span className="mobile-menu-overlay__profile-metric-label">Energy peak</span>
-                        <span className="mobile-menu-overlay__profile-metric-value">9:00 AM</span>
-                        <span className="mobile-menu-overlay__profile-metric-note">Schedule deep work</span>
+                        <span className="mobile-menu-overlay__profile-metric-label">Recommended next step</span>
+                        <span className="mobile-menu-overlay__profile-metric-value">
+                          {profileStrengthTask ? profileStrengthTask.title : 'No task yet'}
+                        </span>
+                        <span className="mobile-menu-overlay__profile-metric-note">
+                          {profileStrengthTask
+                            ? `~${profileStrengthTask.etaMinutes} min • ${profileStrengthTask.xpReward} XP`
+                            : 'Complete one area to unlock guidance.'}
+                        </span>
                       </div>
                     </div>
                     <div className="mobile-menu-overlay__profile-track">
                       <div className="mobile-menu-overlay__profile-track-labels">
                         <span>Strength boost</span>
-                        <span>84 / 100</span>
+                        <span>
+                          {profileStrengthPercent !== null && profileStrengthPercent !== undefined
+                            ? `${profileStrengthPercent} / 100`
+                            : '— / 100'}
+                        </span>
                       </div>
                       <div className="mobile-menu-overlay__profile-track-bar" aria-hidden="true">
-                        <span className="mobile-menu-overlay__profile-track-fill" />
+                        <span
+                          className="mobile-menu-overlay__profile-track-fill"
+                          style={{
+                            width:
+                              profileStrengthPercent !== null && profileStrengthPercent !== undefined
+                                ? `${profileStrengthPercent}%`
+                                : '0%',
+                          }}
+                        />
                       </div>
                     </div>
                     <div className="mobile-menu-overlay__profile-highlights">
-                      <span className="mobile-menu-overlay__profile-highlight">🌟 New title in 120 XP</span>
-                      <span className="mobile-menu-overlay__profile-highlight">🔥 Best focus window: 2h</span>
-                      <span className="mobile-menu-overlay__profile-highlight">🧠 Mindset: Clear</span>
+                      <span className="mobile-menu-overlay__profile-highlight">
+                        {profileStrengthSnapshot?.meta.usedFallbackData
+                          ? '⚠️ Some profile data is unavailable.'
+                          : '✅ Profile data synced.'}
+                      </span>
+                      <span className="mobile-menu-overlay__profile-highlight">
+                        {profileStrengthTask
+                          ? `🎯 Next up: ${profileStrengthTask.title}`
+                          : '🧭 Add more details to unlock next steps.'}
+                      </span>
                     </div>
                     <button
                       type="button"
                       className="mobile-menu-overlay__profile-button"
-                      onClick={() => handleMobileNavSelect('planning')}
+                      onClick={handleProfileStrengthTaskClick}
                     >
-                      Boost today
+                      Take next step
                     </button>
                   </div>
                 </div>
