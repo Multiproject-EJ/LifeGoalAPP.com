@@ -497,7 +497,7 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 3 — Replace hardcoded strength card (next)
+- Current chunk: Chunk 4 — Add menu icon badges (next)
 - Branch: work
 - Last updated: 2026-01-24
 
@@ -506,22 +506,22 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 0.5 — Dev-only debug view / telemetry hooks
 - [x] Chunk 1 — Strength scoring engine
 - [x] Chunk 2 — Wire real data into scoring
-- [ ] Chunk 3 — Replace hardcoded strength card
+- [x] Chunk 3 — Replace hardcoded strength card
 - [ ] Chunk 4 — Add menu icon badges
 - [ ] Chunk 5 — Press-and-hold gesture
 - [ ] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Replace the hardcoded Profile Strength card copy with computed values and a single recommended task.
-- Files likely touched: src/App.tsx, src/features/profile-strength/…
-- Risks: Medium; must keep mobile layout stable and degrade gracefully on missing data.
-- Acceptance checks: Card renders real scores or neutral states, preserves existing layout, and avoids crashes on null data.
-- Rollback plan: Revert the Profile Strength card rendering to the previous hardcoded UI.
+- Goal: Add per-area score badges (0–10) to the profile menu icons.
+- Files likely touched: src/App.tsx, styles/workspace.css (badge styling).
+- Risks: Low-medium; badges must not shift layout or break tap navigation.
+- Acceptance checks: Badges render for each area (0–10 or neutral), mobile layout stays intact, badges are non-selectable.
+- Rollback plan: Remove the badge rendering and CSS from the mobile menu icon list.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Added a data aggregation layer for profile strength signals and wired debug snapshots to score real service data.
-- What was validated: npm run build (warnings only).
-- Follow-ups: Replace the Profile Strength card with computed values and a minimal next-task summary.
+- What changed: Replaced the hardcoded Profile Strength card content with computed values, top gaps, and a single recommended task.
+- What was validated: npm run build.
+- Follow-ups: Add per-area score badges to the profile menu icons.
 
 ---
 
