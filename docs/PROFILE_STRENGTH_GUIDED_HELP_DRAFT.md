@@ -497,31 +497,31 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 2 — Wire real data into scoring (next)
+- Current chunk: Chunk 3 — Replace hardcoded strength card (next)
 - Branch: work
-- Last updated: 2025-02-14
+- Last updated: 2026-01-24
 
 ### 15.2 Completed chunks
 - [x] Chunk 0 — Repo orientation + guardrails
 - [x] Chunk 0.5 — Dev-only debug view / telemetry hooks
 - [x] Chunk 1 — Strength scoring engine
-- [ ] Chunk 2 — Wire real data into scoring
+- [x] Chunk 2 — Wire real data into scoring
 - [ ] Chunk 3 — Replace hardcoded strength card
 - [ ] Chunk 4 — Add menu icon badges
 - [ ] Chunk 5 — Press-and-hold gesture
 - [ ] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Feed the scoring engine with real profile data from existing services (no UI changes).
-- Files likely touched: src/features/profile-strength/…, src/services/…, src/data/…
-- Risks: Medium; must guard against missing data and avoid regressions in existing flows.
-- Acceptance checks: Scoring engine can run from real data, returns null scores for unavailable data, and preserves the missing-data policy.
-- Rollback plan: Revert the new data aggregation layer and wiring exports.
+- Goal: Replace the hardcoded Profile Strength card copy with computed values and a single recommended task.
+- Files likely touched: src/App.tsx, src/features/profile-strength/…
+- Risks: Medium; must keep mobile layout stable and degrade gracefully on missing data.
+- Acceptance checks: Card renders real scores or neutral states, preserves existing layout, and avoids crashes on null data.
+- Rollback plan: Revert the Profile Strength card rendering to the previous hardcoded UI.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Added a pure scoring module that outputs the Profile Strength contract and updated debug snapshots to use it.
+- What changed: Added a data aggregation layer for profile strength signals and wired debug snapshots to score real service data.
 - What was validated: npm run build (warnings only).
-- Follow-ups: Aggregate real signals and feed them into the scoring engine in Chunk 2.
+- Follow-ups: Replace the Profile Strength card with computed values and a minimal next-task summary.
 
 ---
 
