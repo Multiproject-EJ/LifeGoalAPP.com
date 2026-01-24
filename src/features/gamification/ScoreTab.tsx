@@ -113,6 +113,13 @@ export function ScoreTab({
             <h2 className="score-tab__headline">Track your daily economy</h2>
           </div>
         </div>
+        <button
+          type="button"
+          className="score-tab__achievements-link"
+          onClick={onNavigateToAchievements}
+        >
+          Achievements
+        </button>
         <p className="score-tab__subtitle">
           Review XP, points, and streak momentum before you spin or shop.
         </p>
