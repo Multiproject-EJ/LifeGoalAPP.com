@@ -497,13 +497,13 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 0.5 — Dev-only debug view / telemetry hooks (next)
+- Current chunk: Chunk 1 — Strength scoring engine (next)
 - Branch: work
-- Last updated: 2025-10-02
+- Last updated: 2026-01-24
 
 ### 15.2 Completed chunks
 - [x] Chunk 0 — Repo orientation + guardrails
-- [ ] Chunk 0.5 — Dev-only debug view / telemetry hooks
+- [x] Chunk 0.5 — Dev-only debug view / telemetry hooks
 - [ ] Chunk 1 — Strength scoring engine
 - [ ] Chunk 2 — Wire real data into scoring
 - [ ] Chunk 3 — Replace hardcoded strength card
@@ -512,16 +512,16 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [ ] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Add a dev-only debug output for profile strength scoring (no end-user UI impact).
-- Files likely touched: src/features/…, src/services/…, src/App.tsx (dev gate only)
-- Risks: Low; ensure debug output is gated and does not ship to production UI.
-- Acceptance checks: Debug output shows scores/reasons/next task when enabled; no production UI changes.
-- Rollback plan: Remove debug component/flag and any wiring code.
+- Goal: Build the pure scoring module that returns the Profile Strength contract (no UI changes).
+- Files likely touched: src/features/profile-strength/…, src/constants/profileStrength.ts
+- Risks: Low; keep logic deterministic, handle missing data safely.
+- Acceptance checks: Module never throws, clamps scores to 0–10, returns reason codes and next task data.
+- Rollback plan: Revert new scoring module files and any exports.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Documented current data/UI touchpoints and added a profile strength constants file.
-- What was validated: No runtime changes introduced in this chunk.
-- Follow-ups: Use `src/constants/profileStrength.ts` in the scoring engine (Chunk 1).
+- What changed: Added a dev-only profile strength debug snapshot + console logger gated by a localStorage flag.
+- What was validated: Debug logging only runs in dev when explicitly enabled; no production UI changes.
+- Follow-ups: Replace the fallback snapshot with real scoring output in Chunk 1.
 
 ---
 
