@@ -57,9 +57,18 @@ import {
   isProfileStrengthDebugEnabled,
   logProfileStrengthDebugSnapshot,
 } from './features/profile-strength/debugProfileStrength';
-import { loadProfileStrengthSignals } from './features/profile-strength/profileStrengthData';
+import {
+  loadProfileStrengthSignals,
+  type ProfileStrengthSignalSnapshot,
+} from './features/profile-strength/profileStrengthData';
 import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
 import type { AreaKey, NextTask, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
+import {
+  applyProfileStrengthXpEvent,
+  buildProfileStrengthXpEvents,
+  loadProfileStrengthXpState,
+  saveProfileStrengthXpState,
+} from './features/profile-strength/profileStrengthXp';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -311,8 +320,11 @@ export default function App() {
   const profileStrengthHoldTimeoutRef = useRef<number | null>(null);
   const profileStrengthHoldTriggeredRef = useRef(false);
   const profileStrengthHoldStartRef = useRef<{ x: number; y: number } | null>(null);
+  const profileStrengthSnapshotRef = useRef<ProfileStrengthResult | null>(null);
+  const profileStrengthSignalsRef = useRef<ProfileStrengthSignalSnapshot | null>(null);
 
   const {
+    earnXP,
     xpToasts,
     dismissXPToast,
     levelInfo,
@@ -575,6 +587,8 @@ export default function App() {
     useState<ProfileStrengthResult | null>(null);
   const [profileStrengthSnapshot, setProfileStrengthSnapshot] =
     useState<ProfileStrengthResult | null>(null);
+  const [profileStrengthSignals, setProfileStrengthSignals] =
+    useState<ProfileStrengthSignalSnapshot | null>(null);
   const [isProfileStrengthLoading, setIsProfileStrengthLoading] = useState(false);
 
   useEffect(() => {
@@ -617,6 +631,7 @@ export default function App() {
         if (!isMounted) {
           return;
         }
+        setProfileStrengthSignals(signals);
         const snapshot = scoreProfileStrength(signals);
         setProfileStrengthSnapshot(snapshot);
       })
@@ -636,6 +651,62 @@ export default function App() {
       isMounted = false;
     };
   }, [activeSession?.user?.id, isMobileMenuOpen]);
+
+  useEffect(() => {
+    if (!profileStrengthSnapshot || !profileStrengthSignals) {
+      return;
+    }
+
+    const previousSnapshot = profileStrengthSnapshotRef.current;
+    const previousSignals = profileStrengthSignalsRef.current;
+    profileStrengthSnapshotRef.current = profileStrengthSnapshot;
+    profileStrengthSignalsRef.current = profileStrengthSignals;
+
+    if (!previousSnapshot || !previousSignals) {
+      return;
+    }
+
+    if (!gamificationEnabled || !earnXP) {
+      return;
+    }
+
+    const userId = activeSession?.user?.id;
+    if (!userId) {
+      return;
+    }
+
+    const state = loadProfileStrengthXpState(userId);
+    const events = buildProfileStrengthXpEvents({
+      previousSnapshot,
+      nextSnapshot: profileStrengthSnapshot,
+      nextSignals: profileStrengthSignals,
+      state,
+    });
+
+    if (events.length === 0) {
+      return;
+    }
+
+    const awardEvents = async () => {
+      let nextState = state;
+      for (const event of events) {
+        const result = await earnXP(event.xp, event.sourceType, event.sourceId, event.description);
+        if (!result?.success) {
+          continue;
+        }
+        nextState = applyProfileStrengthXpEvent(nextState, event);
+        saveProfileStrengthXpState(userId, nextState);
+      }
+    };
+
+    void awardEvents();
+  }, [
+    activeSession?.user?.id,
+    earnXP,
+    gamificationEnabled,
+    profileStrengthSnapshot,
+    profileStrengthSignals,
+  ]);
 
   useEffect(() => {
     if (!supabaseSession) {

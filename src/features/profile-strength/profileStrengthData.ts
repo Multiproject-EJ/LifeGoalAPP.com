@@ -6,6 +6,7 @@ import { listJournalEntries } from '../../services/journal';
 import { fetchVisionImages } from '../../services/visionBoard';
 import { loadPersonalityTestHistory } from '../../data/personalityTestRepo';
 import { normalizeGoalStatus } from '../goals/goalStatus';
+import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import type { AreaSignalInput, ProfileStrengthInput } from './profileStrengthTypes';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -68,6 +69,21 @@ const buildUnavailableSignal = (): AreaSignalInput => ({
 const buildNoDataSignal = (): AreaSignalInput => ({
   status: 'no_data',
 });
+
+export type ProfileStrengthSignalMetrics = {
+  goalCategoryCounts: Record<LifeWheelCategoryKey, number>;
+  habitDomainCounts: Record<LifeWheelCategoryKey, number>;
+};
+
+export type ProfileStrengthSignalSnapshot = ProfileStrengthInput & {
+  metrics: ProfileStrengthSignalMetrics;
+};
+
+const createLifeWheelCountMap = (): Record<LifeWheelCategoryKey, number> =>
+  LIFE_WHEEL_CATEGORIES.reduce<Record<LifeWheelCategoryKey, number>>((acc, category) => {
+    acc[category.key] = 0;
+    return acc;
+  }, {} as Record<LifeWheelCategoryKey, number>);
 
 const buildGoalsSignal = (goals: GoalRow[]): AreaSignalInput => {
   if (goals.length === 0) {
@@ -250,7 +266,7 @@ const buildIdentitySignal = (tests: Awaited<ReturnType<typeof loadPersonalityTes
 
 export const loadProfileStrengthSignals = async (
   userId?: string | null,
-): Promise<ProfileStrengthInput> => {
+): Promise<ProfileStrengthSignalSnapshot> => {
   const computedAt = new Date().toISOString();
 
   const goalsPromise = fetchGoals().catch(() => ({ data: null, error: new Error('goals') }));
@@ -285,6 +301,26 @@ export const loadProfileStrengthSignals = async (
     identityPromise,
   ]);
 
+  const goalCategoryCounts = createLifeWheelCountMap();
+  if (goalsResult.data) {
+    for (const goal of goalsResult.data) {
+      const key = goal.life_wheel_category as LifeWheelCategoryKey | null;
+      if (key && key in goalCategoryCounts) {
+        goalCategoryCounts[key] += 1;
+      }
+    }
+  }
+
+  const habitDomainCounts = createLifeWheelCountMap();
+  if (habitsResult.data) {
+    for (const habit of habitsResult.data) {
+      const key = habit.domain_key as LifeWheelCategoryKey | null;
+      if (key && key in habitDomainCounts) {
+        habitDomainCounts[key] += 1;
+      }
+    }
+  }
+
   const goalsSignal =
     goalsResult.error || !goalsResult.data
       ? buildUnavailableSignal()
@@ -309,6 +345,10 @@ export const loadProfileStrengthSignals = async (
 
   return {
     computedAt,
+    metrics: {
+      goalCategoryCounts,
+      habitDomainCounts,
+    },
     areas: {
       goals: goalsSignal,
       habits: habitsSignal,
