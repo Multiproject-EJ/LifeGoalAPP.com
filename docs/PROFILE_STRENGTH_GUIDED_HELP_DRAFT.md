@@ -497,7 +497,7 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 6 — XP hooks + bonuses (next)
+- Current chunk: Chunk 7 — Heuristic spec tables + constants (next)
 - Branch: work
 - Last updated: 2026-01-24
 
@@ -509,19 +509,19 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 3 — Replace hardcoded strength card
 - [x] Chunk 4 — Add menu icon badges
 - [x] Chunk 5 — Press-and-hold gesture
-- [ ] Chunk 6 — XP hooks + bonuses
+- [x] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Add XP hooks for completed improvements and coverage bonuses with transition guards.
-- Files likely touched: scoring/XP hooks (to be identified), gamification services, profile strength task completion handlers.
-- Risks: Medium-high; must ensure XP fires only on unmet → met transitions.
-- Acceptance checks: XP only fires once per completion, bonuses are non-repeatable, no regressions to core flows.
-- Rollback plan: Remove XP emission calls and transition tracking state.
+- Goal: Convert heuristics into per-area spec tables and consolidate constants (Section 17).
+- Files likely touched: docs/PROFILE_STRENGTH_GUIDED_HELP_DRAFT.md, constants seed list references.
+- Risks: Low; documentation-only update.
+- Acceptance checks: Tables cover signals, thresholds, reason codes, next-task templates, and XP triggers.
+- Rollback plan: Revert doc edits.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Added press-and-hold gesture on profile menu icons to open a small “Improve this area” suggestion panel, plus hold-safe styling to prevent text selection/callouts.
+- What changed: Added XP hooks for completed profile strength improvements, plus coverage bonuses with state-transition guards.
 - What was validated: npm run build.
-- Follow-ups: Implement XP hooks and bonuses with transition guards.
+- Follow-ups: Convert heuristics into per-area spec tables + consolidate constants.
 
 ---
 

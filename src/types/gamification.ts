@@ -273,7 +273,9 @@ export type XPSource =
   | 'breathing_session'
   | 'body_session'
   | 'meditation_goal_complete'
-  | 'daily_challenge';
+  | 'daily_challenge'
+  | 'profile_strength_improvement'
+  | 'profile_strength_bonus';
 
 // =====================================================
 // DEMO MODE TYPES
