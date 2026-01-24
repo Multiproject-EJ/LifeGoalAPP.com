@@ -11565,6 +11565,52 @@ body {
   padding-right: 0.4rem;
 }
 
+.mobile-footer-nav__diamond-counter {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.22)),
+    rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  box-shadow:
+    0 16px 30px rgba(15, 23, 42, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 18px rgba(56, 189, 248, 0.35);
+  color: #e2e8f0;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  z-index: 3;
+  transition: transform 0.35s ease, top 0.35s ease, right 0.35s ease;
+}
+
+.mobile-footer-nav__diamond-icon {
+  font-size: 1.1rem;
+  filter: drop-shadow(0 6px 10px rgba(56, 189, 248, 0.45));
+}
+
+.mobile-footer-nav__diamond-value {
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.mobile-footer-nav__surface[data-diode-active='false'] .mobile-footer-nav__diamond-counter {
+  top: -2.1rem;
+  right: 6.6rem;
+  transform: translateY(0);
+}
+
+.mobile-footer-nav__surface[data-diode-active='true'] .mobile-footer-nav__diamond-counter {
+  left: 50%;
+  top: -3.8rem;
+  right: auto;
+  transform: translateX(-50%);
+}
+
 .mobile-footer-nav--flash .mobile-footer-nav__button,
 .mobile-footer-nav--flash .mobile-footer-nav__status-card,
 .mobile-footer-nav--flash .mobile-footer-nav__menu-button {
@@ -11656,6 +11702,12 @@ body {
   position: absolute;
   right: 0.4rem;
   top: 0;
+  transform: translateY(-46px);
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button:hover,
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button:focus-visible {
+  transform: translateY(-47px);
 }
 
 .mobile-footer-nav__menu-button:hover,
