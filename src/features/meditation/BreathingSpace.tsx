@@ -184,13 +184,16 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
         const zenTokenAmount = ZEN_TOKEN_REWARDS.BREATHING_SESSION;
 
         await earnXP(xpAmount, 'breathing_session', result.data?.id);
-        await awardZenTokens(
+        const zenAwardResult = await awardZenTokens(
           session.user.id,
           zenTokenAmount,
           'breathing_session',
           result.data?.id,
           'Breathing session reward'
         );
+        if (zenAwardResult.error) {
+          console.error('Failed to award zen tokens for breathing session:', zenAwardResult.error);
+        }
         await recordActivity();
         await refreshProfile();
 
@@ -255,13 +258,16 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
           : ZEN_TOKEN_REWARDS.MEDITATION_SESSION;
 
         await earnXP(xpAmount, 'meditation_session', result.data?.id);
-        await awardZenTokens(
+        const zenAwardResult = await awardZenTokens(
           session.user.id,
           zenTokenAmount,
           'meditation_session',
           result.data?.id,
           'Guided meditation reward'
         );
+        if (zenAwardResult.error) {
+          console.error('Failed to award zen tokens for meditation session:', zenAwardResult.error);
+        }
         await recordActivity();
         await refreshProfile();
 
