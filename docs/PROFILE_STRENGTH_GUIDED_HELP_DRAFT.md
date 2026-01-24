@@ -497,9 +497,9 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 5 — Press-and-hold gesture (next)
+- Current chunk: Chunk 6 — XP hooks + bonuses (next)
 - Branch: work
-- Last updated: 2026-01-25
+- Last updated: 2026-01-24
 
 ### 15.2 Completed chunks
 - [x] Chunk 0 — Repo orientation + guardrails
@@ -508,20 +508,20 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 2 — Wire real data into scoring
 - [x] Chunk 3 — Replace hardcoded strength card
 - [x] Chunk 4 — Add menu icon badges
-- [ ] Chunk 5 — Press-and-hold gesture
+- [x] Chunk 5 — Press-and-hold gesture
 - [ ] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Add press-and-hold gesture to profile menu icons to open “Improve this area.”
-- Files likely touched: src/App.tsx, src/index.css (hold-safe styles).
-- Risks: Medium; must not break tap navigation or trigger native text selection.
-- Acceptance checks: Tap still navigates, hold opens improvement suggestion, hold cancels on move/scroll, no text selection.
-- Rollback plan: Remove pointer/hold handlers and any related UI wiring.
+- Goal: Add XP hooks for completed improvements and coverage bonuses with transition guards.
+- Files likely touched: scoring/XP hooks (to be identified), gamification services, profile strength task completion handlers.
+- Risks: Medium-high; must ensure XP fires only on unmet → met transitions.
+- Acceptance checks: XP only fires once per completion, bonuses are non-repeatable, no regressions to core flows.
+- Rollback plan: Remove XP emission calls and transition tracking state.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Added per-area strength score badges to the mobile profile menu icons with neutral fallback styling.
+- What changed: Added press-and-hold gesture on profile menu icons to open a small “Improve this area” suggestion panel, plus hold-safe styling to prevent text selection/callouts.
 - What was validated: npm run build.
-- Follow-ups: Implement the press-and-hold “Improve this area” gesture.
+- Follow-ups: Implement XP hooks and bonuses with transition guards.
 
 ---
 
