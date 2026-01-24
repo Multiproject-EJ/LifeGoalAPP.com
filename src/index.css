@@ -11964,8 +11964,12 @@ body {
 }
 
 .mobile-menu-overlay__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 2rem;
   line-height: 1;
+  color: #0f172a;
 }
 
 .mobile-menu-overlay__icon img {
