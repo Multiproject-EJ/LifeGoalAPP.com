@@ -40,7 +40,17 @@ type StatusMessage = {
 
 export function ActionsTab({ session, onNavigateToProjects, onNavigateToTimer }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
-  const { actions, loading, error, createAction, updateAction, completeAction, deleteAction, refresh } = useActions(session);
+  const {
+    actions,
+    loading,
+    error,
+    createAction,
+    updateAction,
+    completeAction,
+    deleteAction,
+    reorderActionsByCategory,
+    refresh,
+  } = useActions(session);
   const { projects } = useProjects(session);
   const { awardActionXP, awardClearAllMustDoBonus, shouldAwardClearBonus, levelUpEvent, dismissLevelUpEvent } = useActionXP(session);
   
@@ -238,6 +248,22 @@ export function ActionsTab({ session, onNavigateToProjects, onNavigateToTimer }:
     }
   }, [updateAction, refresh]);
 
+  const handleReorderCategory = useCallback(
+    async (category: ActionCategory, orderedIds: string[]) => {
+      try {
+        await reorderActionsByCategory(category, orderedIds);
+        setStatus({ kind: 'success', message: 'Priority updated' });
+      } catch (err) {
+        setStatus({
+          kind: 'error',
+          message: err instanceof Error ? err.message : 'Failed to update priority',
+        });
+        refresh();
+      }
+    },
+    [reorderActionsByCategory, refresh]
+  );
+
   // Handle move to project
   const handleMoveToProject = useCallback(async (actionId: string, projectId: string) => {
     const action = actions.find((a) => a.id === actionId);
@@ -429,6 +455,7 @@ export function ActionsTab({ session, onNavigateToProjects, onNavigateToTimer }:
           onComplete={handleCompleteAction}
           onDelete={handleDeleteAction}
           onOpenDetail={(action) => setSelectedAction(action)}
+          onReorderCategory={handleReorderCategory}
           selectedIndex={selectedIndex}
           selectedIds={selectedIds}
           justCompletedActionId={justCompletedActionId}
