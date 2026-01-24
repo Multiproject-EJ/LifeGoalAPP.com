@@ -12057,9 +12057,40 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   font-size: 2rem;
   line-height: 1;
   color: #0f172a;
+}
+
+.mobile-menu-overlay__icon,
+.mobile-menu-overlay__icon * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.mobile-menu-overlay__icon-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.45rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: #0ea5e9;
+  color: #f8fafc;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+}
+
+.mobile-menu-overlay__icon-badge--neutral {
+  background: #e2e8f0;
+  color: #64748b;
+  box-shadow: none;
 }
 
 .mobile-menu-overlay__icon img {

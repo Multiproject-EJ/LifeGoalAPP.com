@@ -93,6 +93,15 @@ const PROFILE_STRENGTH_AREA_LABELS: Record<AreaKey, string> = {
   identity: 'Identity',
 };
 
+const PROFILE_STRENGTH_MENU_AREAS: Partial<Record<MobileMenuNavItem['id'], AreaKey>> = {
+  support: 'goals',
+  habits: 'habits',
+  journal: 'journal',
+  insights: 'vision_board',
+  rituals: 'life_wheel',
+  identity: 'identity',
+};
+
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'goals',
@@ -1698,6 +1707,17 @@ export default function App() {
                     const isBreathingItem = item.id === 'breathing-space';
                     const isSubmenuOpen = isBreathingItem && isBreatheSubmenuOpen;
                     const submenuId = 'mobile-breathe-submenu';
+                    const profileStrengthArea = PROFILE_STRENGTH_MENU_AREAS[item.id];
+                    const profileStrengthScore =
+                      profileStrengthArea ? profileStrengthSnapshot?.areaScores[profileStrengthArea] ?? null : null;
+                    const profileStrengthBadgeValue =
+                      profileStrengthScore === null || profileStrengthScore === undefined
+                        ? '–'
+                        : String(profileStrengthScore);
+                    const profileStrengthBadgeClassName =
+                      profileStrengthScore === null || profileStrengthScore === undefined
+                        ? 'mobile-menu-overlay__icon-badge mobile-menu-overlay__icon-badge--neutral'
+                        : 'mobile-menu-overlay__icon-badge';
                     const handleItemClick = () => {
                       if (isBreathingItem) {
                         setIsBreatheSubmenuOpen((prev) => !prev);
@@ -1722,6 +1742,9 @@ export default function App() {
                         >
                           <span aria-hidden="true" className="mobile-menu-overlay__icon">
                             {item.icon}
+                            {profileStrengthArea ? (
+                              <span className={profileStrengthBadgeClassName}>{profileStrengthBadgeValue}</span>
+                            ) : null}
                           </span>
                           <span className="mobile-menu-overlay__texts">
                             <span
