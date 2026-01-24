@@ -11418,16 +11418,13 @@ body {
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__item--planning .mobile-footer-nav__button {
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding-right: 0.9rem;
+  align-items: center;
   text-align: center;
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__item--actions .mobile-footer-nav__button {
+  align-items: center;
   justify-content: flex-end;
-  align-items: flex-start;
-  padding-left: 0.9rem;
   text-align: center;
 }
 
