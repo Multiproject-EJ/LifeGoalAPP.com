@@ -61,6 +61,7 @@ export function MobileFooterNav({
   const listStyle = { '--mobile-footer-columns': totalColumns } as CSSProperties;
   const formattedPointsBalance =
     typeof pointsBalance === 'number' ? Math.max(0, pointsBalance).toLocaleString() : null;
+  const shouldShowDiamondCounter = Boolean(isDiodeActive && formattedPointsBalance);
   const handlePointerDown = () => {
     if (onSnapExpand) {
       onSnapExpand();
@@ -95,8 +96,11 @@ export function MobileFooterNav({
             </button>
           </div>
         ) : null}
-        {formattedPointsBalance ? (
-          <div className="mobile-footer-nav__diamond-counter" aria-live="polite">
+        {shouldShowDiamondCounter ? (
+          <div
+            className={`mobile-footer-nav__diamond-counter${isDiodeActive ? ' mobile-footer-nav__diamond-counter--diode-on' : ''}`}
+            aria-live="polite"
+          >
             <span className="mobile-footer-nav__diamond-icon" aria-hidden="true">
               💎
             </span>

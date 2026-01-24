@@ -267,6 +267,7 @@ export default function App() {
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
   const mobileFooterCollapseTimeoutRef = useRef<number | null>(null);
   const mobileFooterSnapTimeoutRef = useRef<number | null>(null);
+  const lastMobileScrollYRef = useRef(0);
   const [isProfileStrengthOpen, setIsProfileStrengthOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
@@ -446,7 +447,9 @@ export default function App() {
 
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
   const shouldAutoCollapseMobileFooter =
-    isMobileViewport && mobileActiveNavId !== null && MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId);
+    isMobileViewport &&
+    (isMobileMenuImageActive ||
+      (mobileActiveNavId !== null && MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId)));
 
   const scheduleMobileFooterCollapse = useCallback(() => {
     if (!shouldAutoCollapseMobileFooter) {
@@ -494,6 +497,31 @@ export default function App() {
     setIsMobileFooterCollapsed(true);
     scheduleMobileFooterCollapse();
   }, [scheduleMobileFooterCollapse, shouldAutoCollapseMobileFooter]);
+
+  useEffect(() => {
+    if (!isMobileViewport || !isMobileMenuImageActive || typeof window === 'undefined') {
+      return;
+    }
+
+    lastMobileScrollYRef.current = window.scrollY;
+    const threshold = 8;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastMobileScrollYRef.current;
+
+      if (delta > threshold) {
+        setIsMobileFooterCollapsed(true);
+      } else if (delta < -threshold) {
+        handleMobileFooterExpand(false);
+      }
+
+      lastMobileScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileViewport]);
 
   const isDemoMode = mode === 'demo';
   const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
@@ -1505,14 +1533,31 @@ export default function App() {
                   <span className="mobile-menu-overlay__meta-value">Personality test</span>
                 </div>
               </div>
-              <button
-                type="button"
-                className="mobile-menu-overlay__close"
-                aria-label="Close menu"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                ×
-              </button>
+              <div className="mobile-menu-overlay__controls">
+                <button
+                  type="button"
+                  className={`mobile-footer-nav__diode-toggle ${
+                    isMobileMenuImageActive
+                      ? 'mobile-footer-nav__diode-toggle--on'
+                      : 'mobile-footer-nav__diode-toggle--off'
+                  }`}
+                  aria-pressed={isMobileMenuImageActive}
+                  aria-label="Toggle diode indicator"
+                  onClick={() => {
+                    const nextIsActive = !isMobileMenuImageActive;
+                    setIsMobileMenuImageActive(nextIsActive);
+                    triggerMobileMenuFlash();
+                  }}
+                />
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__close"
+                  aria-label="Close menu"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div className="mobile-menu-overlay__content">
               <ul className="mobile-menu-overlay__list">
