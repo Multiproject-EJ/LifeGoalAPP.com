@@ -508,9 +508,9 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 8 — Constants alignment pass (next)
+- Current chunk: Chunk 9 — TBD (next)
 - Branch: work
-- Last updated: 2026-01-25
+- Last updated: 2026-01-24
 
 ### 15.2 Completed chunks
 - [x] Chunk 0 — Repo orientation + guardrails
@@ -522,18 +522,19 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 5 — Press-and-hold gesture
 - [x] Chunk 6 — XP hooks + bonuses
 - [x] Chunk 7 — Heuristic spec tables + constants
+- [x] Chunk 8 — Constants alignment pass
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Align code constants with the spec tables (Section 17.2) and tighten naming.
-- Files likely touched: src/constants/profileStrength.ts, any usage references.
-- Risks: Low; avoid breaking gesture handling or score stability.
-- Acceptance checks: Defaults match doc constants; no behavior change beyond values.
-- Rollback plan: Revert constant updates.
+- Goal: Define the next smallest scoped improvement for Profile Strength v1 (if any) or close the loop.
+- Files likely touched: docs/PROFILE_STRENGTH_GUIDED_HELP_DRAFT.md only.
+- Risks: Low; avoid expanding scope beyond v1.
+- Acceptance checks: Next chunk is clear and small, or v1 is marked complete.
+- Rollback plan: Revert plan updates.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Added per-area spec tables (signals, thresholds, reasons, next tasks, XP triggers) and a consolidated constants list.
+- What changed: Aligned code constants to the spec defaults (recency windows, coverage thresholds, XP defaults, gesture values).
 - What was validated: npm run build.
-- Follow-ups: Align code constants with the spec tables (Section 17.2).
+- Follow-ups: Decide whether any additional v1 polish is needed or close out.
 
 ---
 
