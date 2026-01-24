@@ -386,6 +386,19 @@ Acceptance criteria:
 - Clear map of data inputs and UI touchpoints.
 - No UI changes yet.
 
+Chunk 0 findings (repo orientation):
+- Data inputs (current sources):
+  - Goals: `src/services/goals.ts` (Supabase + demo) and `src/data/goalsRepo.ts` (offline-first cache). 
+  - Habits: `src/services/habitsV2.ts` (habits, logs, streaks).
+  - Journal: `src/services/journal.ts` (entries + demo fallback).
+  - Vision Board: `src/services/visionBoard.ts` (vision_images + demo fallback).
+  - Life Wheel Check-ins: `src/services/checkins.ts` (checkins + demo fallback).
+  - Identity/Personality: `src/services/personalityTest.ts` and `src/data/personalityTestRepo.ts` (local storage sync).
+- UI touchpoints (v1 scope):
+  - Mobile profile menu list + icons: `src/App.tsx` (mobile menu overlay list items).
+  - Profile Strength summary card + modal: `src/App.tsx` (profile strength card + modal content).
+- Constants seed file for thresholds/weights: `src/constants/profileStrength.ts`.
+
 #### Chunk 0.5 — Dev-only debug view / telemetry hooks
 Goal: verify scoring safely before UI changes.
 
@@ -483,13 +496,13 @@ Acceptance criteria:
 This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
-- Current phase:
-- Current chunk:
-- Branch:
-- Last updated:
+- Current phase: Profile Strength v1
+- Current chunk: Chunk 0.5 — Dev-only debug view / telemetry hooks (next)
+- Branch: work
+- Last updated: 2025-10-02
 
 ### 15.2 Completed chunks
-- [ ] Chunk 0 — Repo orientation + guardrails
+- [x] Chunk 0 — Repo orientation + guardrails
 - [ ] Chunk 0.5 — Dev-only debug view / telemetry hooks
 - [ ] Chunk 1 — Strength scoring engine
 - [ ] Chunk 2 — Wire real data into scoring
@@ -499,16 +512,16 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [ ] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal:
-- Files likely touched:
-- Risks:
-- Acceptance checks:
-- Rollback plan:
+- Goal: Add a dev-only debug output for profile strength scoring (no end-user UI impact).
+- Files likely touched: src/features/…, src/services/…, src/App.tsx (dev gate only)
+- Risks: Low; ensure debug output is gated and does not ship to production UI.
+- Acceptance checks: Debug output shows scores/reasons/next task when enabled; no production UI changes.
+- Rollback plan: Remove debug component/flag and any wiring code.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed:
-- What was validated:
-- Follow-ups:
+- What changed: Documented current data/UI touchpoints and added a profile strength constants file.
+- What was validated: No runtime changes introduced in this chunk.
+- Follow-ups: Use `src/constants/profileStrength.ts` in the scoring engine (Chunk 1).
 
 ---
 
