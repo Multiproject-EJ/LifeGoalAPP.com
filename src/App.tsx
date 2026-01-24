@@ -56,6 +56,7 @@ import {
   isProfileStrengthDebugEnabled,
   logProfileStrengthDebugSnapshot,
 } from './features/profile-strength/debugProfileStrength';
+import type { ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -294,18 +295,6 @@ export default function App() {
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
   const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
-  const profileStrengthDebugSnapshot = useMemo(
-    () => (isProfileStrengthDebugActive ? getProfileStrengthDebugSnapshot() : null),
-    [isProfileStrengthDebugActive],
-  );
-
-  useEffect(() => {
-    if (!isProfileStrengthDebugActive || !profileStrengthDebugSnapshot) {
-      return;
-    }
-
-    logProfileStrengthDebugSnapshot(profileStrengthDebugSnapshot);
-  }, [isProfileStrengthDebugActive, profileStrengthDebugSnapshot]);
 
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
@@ -550,6 +539,36 @@ export default function App() {
     }
     return createDemoSession();
   }, [supabaseSession, demoProfile]);
+
+  const [profileStrengthDebugSnapshot, setProfileStrengthDebugSnapshot] =
+    useState<ProfileStrengthResult | null>(null);
+
+  useEffect(() => {
+    if (!isProfileStrengthDebugActive) {
+      setProfileStrengthDebugSnapshot(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    getProfileStrengthDebugSnapshot(activeSession?.user?.id ?? null).then((snapshot) => {
+      if (isMounted) {
+        setProfileStrengthDebugSnapshot(snapshot);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeSession?.user?.id, isProfileStrengthDebugActive]);
+
+  useEffect(() => {
+    if (!isProfileStrengthDebugActive || !profileStrengthDebugSnapshot) {
+      return;
+    }
+
+    logProfileStrengthDebugSnapshot(profileStrengthDebugSnapshot);
+  }, [isProfileStrengthDebugActive, profileStrengthDebugSnapshot]);
 
   useEffect(() => {
     if (!supabaseSession) {

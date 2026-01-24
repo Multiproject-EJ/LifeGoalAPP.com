@@ -1,4 +1,5 @@
 import type { ProfileStrengthResult } from './profileStrengthTypes';
+import { loadProfileStrengthSignals } from './profileStrengthData';
 import { scoreProfileStrength } from './scoreProfileStrength';
 
 export const PROFILE_STRENGTH_DEBUG_STORAGE_KEY = 'profileStrengthDebug';
@@ -13,17 +14,12 @@ export const isProfileStrengthDebugEnabled = (): boolean => {
   return window.localStorage.getItem(PROFILE_STRENGTH_DEBUG_STORAGE_KEY) === 'true';
 };
 
-export const getProfileStrengthDebugSnapshot = (): ProfileStrengthResult =>
-  scoreProfileStrength({
-    areas: {
-      goals: { status: 'no_data' },
-      habits: { status: 'no_data' },
-      journal: { status: 'no_data' },
-      vision_board: { status: 'no_data' },
-      life_wheel: { status: 'no_data' },
-      identity: { status: 'no_data' },
-    },
-  });
+export const getProfileStrengthDebugSnapshot = async (
+  userId?: string | null,
+): Promise<ProfileStrengthResult> => {
+  const input = await loadProfileStrengthSignals(userId);
+  return scoreProfileStrength(input);
+};
 
 export const logProfileStrengthDebugSnapshot = (snapshot: ProfileStrengthResult): void => {
   const summary = {
