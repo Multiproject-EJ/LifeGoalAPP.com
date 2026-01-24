@@ -497,14 +497,14 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 1 — Strength scoring engine (next)
+- Current chunk: Chunk 2 — Wire real data into scoring (next)
 - Branch: work
-- Last updated: 2026-01-24
+- Last updated: 2025-02-14
 
 ### 15.2 Completed chunks
 - [x] Chunk 0 — Repo orientation + guardrails
 - [x] Chunk 0.5 — Dev-only debug view / telemetry hooks
-- [ ] Chunk 1 — Strength scoring engine
+- [x] Chunk 1 — Strength scoring engine
 - [ ] Chunk 2 — Wire real data into scoring
 - [ ] Chunk 3 — Replace hardcoded strength card
 - [ ] Chunk 4 — Add menu icon badges
@@ -512,16 +512,16 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [ ] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Build the pure scoring module that returns the Profile Strength contract (no UI changes).
-- Files likely touched: src/features/profile-strength/…, src/constants/profileStrength.ts
-- Risks: Low; keep logic deterministic, handle missing data safely.
-- Acceptance checks: Module never throws, clamps scores to 0–10, returns reason codes and next task data.
-- Rollback plan: Revert new scoring module files and any exports.
+- Goal: Feed the scoring engine with real profile data from existing services (no UI changes).
+- Files likely touched: src/features/profile-strength/…, src/services/…, src/data/…
+- Risks: Medium; must guard against missing data and avoid regressions in existing flows.
+- Acceptance checks: Scoring engine can run from real data, returns null scores for unavailable data, and preserves the missing-data policy.
+- Rollback plan: Revert the new data aggregation layer and wiring exports.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Added a dev-only profile strength debug snapshot + console logger gated by a localStorage flag.
-- What was validated: Debug logging only runs in dev when explicitly enabled; no production UI changes.
-- Follow-ups: Replace the fallback snapshot with real scoring output in Chunk 1.
+- What changed: Added a pure scoring module that outputs the Profile Strength contract and updated debug snapshots to use it.
+- What was validated: npm run build (warnings only).
+- Follow-ups: Aggregate real signals and feed them into the scoring engine in Chunk 2.
 
 ---
 
