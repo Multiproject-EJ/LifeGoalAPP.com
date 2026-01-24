@@ -490,6 +490,17 @@ Acceptance criteria:
 - XP only fires once per completed action.
 - Bonuses fire only when criteria transition from unmet → met.
 
+#### Chunk 7 — Heuristic spec tables + constants (doc-only)
+Goal: convert heuristics into per-area spec tables and consolidate constants.
+
+Deliverables:
+- Per-area tables for signals, thresholds, reason codes, next-task templates, XP triggers.
+- Single constants list (default values + tuning notes).
+
+Acceptance criteria:
+- Tables exist for all six v1 areas.
+- Constants list is complete and references current defaults.
+
 ---
 
 ## 15) Alive plan tracker (must be updated every chunk)
@@ -497,9 +508,9 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 7 — Heuristic spec tables + constants (next)
+- Current chunk: Chunk 8 — Constants alignment pass (next)
 - Branch: work
-- Last updated: 2026-01-24
+- Last updated: 2026-01-25
 
 ### 15.2 Completed chunks
 - [x] Chunk 0 — Repo orientation + guardrails
@@ -510,18 +521,19 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 4 — Add menu icon badges
 - [x] Chunk 5 — Press-and-hold gesture
 - [x] Chunk 6 — XP hooks + bonuses
+- [x] Chunk 7 — Heuristic spec tables + constants
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Convert heuristics into per-area spec tables and consolidate constants (Section 17).
-- Files likely touched: docs/PROFILE_STRENGTH_GUIDED_HELP_DRAFT.md, constants seed list references.
-- Risks: Low; documentation-only update.
-- Acceptance checks: Tables cover signals, thresholds, reason codes, next-task templates, and XP triggers.
-- Rollback plan: Revert doc edits.
+- Goal: Align code constants with the spec tables (Section 17.2) and tighten naming.
+- Files likely touched: src/constants/profileStrength.ts, any usage references.
+- Risks: Low; avoid breaking gesture handling or score stability.
+- Acceptance checks: Defaults match doc constants; no behavior change beyond values.
+- Rollback plan: Revert constant updates.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Added XP hooks for completed profile strength improvements, plus coverage bonuses with state-transition guards.
+- What changed: Added per-area spec tables (signals, thresholds, reasons, next tasks, XP triggers) and a consolidated constants list.
 - What was validated: npm run build.
-- Follow-ups: Convert heuristics into per-area spec tables + consolidate constants.
+- Follow-ups: Align code constants with the spec tables (Section 17.2).
 
 ---
 
@@ -554,6 +566,100 @@ For each area, define:
 
 This will reduce interpretation risk and make each chunk more deterministic.
 
+Below are the v1 spec tables (doc-only, minimal; tune later if needed).
+
+#### 17.1.1 Goals (v1)
+**Signals + thresholds**
+| Signal | Measurement | Thresholds | Reason codes | Score impact |
+| --- | --- | --- | --- | --- |
+| Coverage | Life wheel categories with ≥1 active goal | 0 → none, 1–2 → low, 3–5 → medium, 6+ → strong | `no_data`, `low_coverage` | 0–4 |
+| Depth | Categories with ≥2 active goals | 0 → none, 1–2 → low, 3+ → good | `low_quality` | 0–2 |
+| Quality | Goals with metric/next action/time horizon | <30% → low, 30–60% → medium, 60%+ → good | `low_quality` | 0–2 |
+| Recency/Health | At least one active goal updated recently | none → stale | `low_recency`, `needs_review` | 0–2 |
+
+**Next-task templates + XP triggers**
+| Task | When to show | XP trigger | Minimum viable improvement |
+| --- | --- | --- | --- |
+| Add first goal in empty category | Coverage = 0 | +50 XP when first goal saved | 1 goal with category |
+| Add a second goal in a weak category | Depth low | +35 XP when 2nd goal saved | 2 goals in same category |
+| Add a success metric or next action | Quality low | +25 XP when metric/action saved | One metric or next action |
+
+#### 17.1.2 Habits (v1)
+**Signals + thresholds**
+| Signal | Measurement | Thresholds | Reason codes | Score impact |
+| --- | --- | --- | --- | --- |
+| Existence | Active habits count | 0 → none, 1–2 → low, 3–5 → medium, 6+ → strong | `no_data`, `low_coverage` | 0–3 |
+| Schedule | Habits with a schedule | <50% → low, 50–80% → medium, 80%+ → good | `low_quality` | 0–3 |
+| Recency | Completions in last 14 days | 0 → none, 1–4 → low, 5+ → good | `low_recency` | 0–2 |
+| Spread | Habits mapped to ≥3 life wheel areas | <3 → low, 3+ → good | `low_coverage` | 0–2 |
+
+**Next-task templates + XP triggers**
+| Task | When to show | XP trigger | Minimum viable improvement |
+| --- | --- | --- | --- |
+| Create first habit | Existence = 0 | +50 XP when habit saved | 1 habit with schedule |
+| Add schedule to an unscheduled habit | Schedule low | +25 XP when schedule saved | 1 habit scheduled |
+| Log today’s habit completion | Recency low | +15 XP when log saved | 1 completion |
+
+#### 17.1.3 Journal (v1)
+**Signals + thresholds**
+| Signal | Measurement | Thresholds | Reason codes | Score impact |
+| --- | --- | --- | --- | --- |
+| Recency | Last entry age | >14 days → stale | `low_recency` | 0–4 |
+| Frequency | Entries in last 7 days | 0 → none, 1–2 → low, 3+ → good | `low_coverage` | 0–3 |
+| Depth | Entries with >N chars or structured mode | <30% → low | `low_quality` | 0–3 |
+
+**Next-task templates + XP triggers**
+| Task | When to show | XP trigger | Minimum viable improvement |
+| --- | --- | --- | --- |
+| Write a first entry | Frequency = 0 | +40 XP when entry saved | 1 entry |
+| Try a structured prompt | Depth low | +25 XP when structured entry saved | 1 structured entry |
+| Add a short reflection today | Recency stale | +15 XP when entry saved | 1 recent entry |
+
+#### 17.1.4 Vision Board (v1)
+**Signals + thresholds**
+| Signal | Measurement | Thresholds | Reason codes | Score impact |
+| --- | --- | --- | --- | --- |
+| Existence | Board items count | 0 → none, 1–3 → low, 4–8 → medium, 9+ → strong | `no_data`, `low_coverage` | 0–4 |
+| Tagging | Items tagged to life wheel areas | <40% → low, 40–70% → medium, 70%+ → good | `low_quality` | 0–3 |
+| Recency | Last update age | >60 days → stale | `low_recency` | 0–3 |
+
+**Next-task templates + XP triggers**
+| Task | When to show | XP trigger | Minimum viable improvement |
+| --- | --- | --- | --- |
+| Add first vision item | Existence = 0 | +40 XP when item saved | 1 item |
+| Tag existing items | Tagging low | +20 XP when tagging saved | 1 item tagged |
+| Refresh an item | Recency stale | +15 XP when item edited | 1 item updated |
+
+#### 17.1.5 Life Wheel Check-ins (v1)
+**Signals + thresholds**
+| Signal | Measurement | Thresholds | Reason codes | Score impact |
+| --- | --- | --- | --- | --- |
+| Existence | Check-ins count | 0 → none, 1–2 → low, 3+ → good | `no_data`, `low_coverage` | 0–4 |
+| Recency | Last check-in age | >30 days → stale | `low_recency` | 0–4 |
+| Consistency | Check-ins in last 90 days | 0–1 → low, 2–3 → medium, 4+ → good | `low_quality` | 0–2 |
+
+**Next-task templates + XP triggers**
+| Task | When to show | XP trigger | Minimum viable improvement |
+| --- | --- | --- | --- |
+| Do a first check-in | Existence = 0 | +50 XP when check-in saved | 1 check-in |
+| Do a quick check-in today | Recency stale | +20 XP when check-in saved | 1 recent check-in |
+| Add a second check-in this month | Consistency low | +20 XP when check-in saved | 2 check-ins in 30 days |
+
+#### 17.1.6 Personality / Identity (v1)
+**Signals + thresholds**
+| Signal | Measurement | Thresholds | Reason codes | Score impact |
+| --- | --- | --- | --- | --- |
+| Test completion | Personality test completed | No → none, Yes → good | `no_data` | 0–5 |
+| Profile fields | Identity fields filled | <40% → low, 40–70% → medium, 70%+ → good | `low_quality` | 0–3 |
+| Refresh | Confirmation in last 180 days | >180 days → stale | `needs_review` | 0–2 |
+
+**Next-task templates + XP triggers**
+| Task | When to show | XP trigger | Minimum viable improvement |
+| --- | --- | --- | --- |
+| Take personality test | Test incomplete | +60 XP when test saved | Test result saved |
+| Fill identity basics | Profile fields low | +25 XP when fields saved | 1–2 identity fields |
+| Refresh identity check | Refresh stale | +15 XP when confirmation saved | 1 confirmation |
+
 ### 17.2 Keep “one source of truth” for constants
 Even at planning stage, list the constants we expect:
 - hold duration,
@@ -561,5 +667,21 @@ Even at planning stage, list the constants we expect:
 - recency windows,
 - coverage thresholds,
 - XP values.
+
+**Draft constants (v1 defaults)**
+- Hold duration: `1000ms` (matches current gesture default).
+- Hold slop radius: `10px` (matches current gesture default).
+- Goals recency window: `30 days`.
+- Habits recency window: `14 days`.
+- Journal recency window: `14 days`.
+- Vision board recency window: `60 days`.
+- Check-ins recency window: `30 days`.
+- Identity refresh window: `180 days`.
+- Coverage thresholds (life wheel categories):
+  - Goals coverage: `0 / 1–2 / 3–5 / 6+`.
+  - Habits spread: `<3` vs `3+`.
+- XP defaults:
+  - Base task range: `15–60 XP` depending on task size.
+  - Coverage bonuses (unchanged): goals coverage +100 XP, habits coverage +250 XP.
 
 That keeps future edits safe and consistent.
