@@ -51,6 +51,11 @@ import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { generateInitials } from './utils/initials';
 import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
+import {
+  getProfileStrengthDebugSnapshot,
+  isProfileStrengthDebugEnabled,
+  logProfileStrengthDebugSnapshot,
+} from './features/profile-strength/debugProfileStrength';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -288,6 +293,19 @@ export default function App() {
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
+  const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
+  const profileStrengthDebugSnapshot = useMemo(
+    () => (isProfileStrengthDebugActive ? getProfileStrengthDebugSnapshot() : null),
+    [isProfileStrengthDebugActive],
+  );
+
+  useEffect(() => {
+    if (!isProfileStrengthDebugActive || !profileStrengthDebugSnapshot) {
+      return;
+    }
+
+    logProfileStrengthDebugSnapshot(profileStrengthDebugSnapshot);
+  }, [isProfileStrengthDebugActive, profileStrengthDebugSnapshot]);
 
   const workspaceNavItems = useMemo(() => {
     if (theme === 'bio-day') {
