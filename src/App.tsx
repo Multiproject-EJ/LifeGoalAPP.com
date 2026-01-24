@@ -1751,9 +1751,7 @@ export default function App() {
                 onClick={() => {
                   const nextIsActive = !isMobileMenuImageActive;
                   setIsMobileMenuImageActive(nextIsActive);
-                  if (nextIsActive) {
-                    setShowMobileGamification(false);
-                  }
+                  setShowMobileGamification(false);
                   triggerMobileMenuFlash();
                 }}
               />
@@ -1906,6 +1904,7 @@ export default function App() {
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
+          pointsBalance={pointsBalance}
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -2093,6 +2092,7 @@ export default function App() {
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
+          pointsBalance={pointsBalance}
         />
       ) : null}
 

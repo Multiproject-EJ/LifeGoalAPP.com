@@ -30,6 +30,7 @@ type MobileFooterNavProps = {
   onStatusClick?: () => void;
   onExpand?: () => void;
   onSnapExpand?: () => void;
+  pointsBalance?: number;
 };
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
@@ -47,6 +48,7 @@ export function MobileFooterNav({
   onStatusClick,
   onExpand,
   onSnapExpand,
+  pointsBalance,
 }: MobileFooterNavProps) {
   const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
@@ -57,6 +59,8 @@ export function MobileFooterNav({
 
   const totalColumns = listItems.length || items.length;
   const listStyle = { '--mobile-footer-columns': totalColumns } as CSSProperties;
+  const formattedPointsBalance =
+    typeof pointsBalance === 'number' ? Math.max(0, pointsBalance).toLocaleString() : null;
   const handlePointerDown = () => {
     if (onSnapExpand) {
       onSnapExpand();
@@ -89,6 +93,14 @@ export function MobileFooterNav({
               </span>
               <span className="sr-only">Open full navigation</span>
             </button>
+          </div>
+        ) : null}
+        {formattedPointsBalance ? (
+          <div className="mobile-footer-nav__diamond-counter" aria-live="polite">
+            <span className="mobile-footer-nav__diamond-icon" aria-hidden="true">
+              💎
+            </span>
+            <span className="mobile-footer-nav__diamond-value">{formattedPointsBalance}</span>
           </div>
         ) : null}
         <ul className="mobile-footer-nav__list mobile-footer-nav__list--stacked" style={listStyle}>
