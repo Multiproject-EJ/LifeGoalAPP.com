@@ -497,9 +497,9 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1
-- Current chunk: Chunk 4 — Add menu icon badges (next)
+- Current chunk: Chunk 5 — Press-and-hold gesture (next)
 - Branch: work
-- Last updated: 2026-01-24
+- Last updated: 2026-01-25
 
 ### 15.2 Completed chunks
 - [x] Chunk 0 — Repo orientation + guardrails
@@ -507,21 +507,21 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 1 — Strength scoring engine
 - [x] Chunk 2 — Wire real data into scoring
 - [x] Chunk 3 — Replace hardcoded strength card
-- [ ] Chunk 4 — Add menu icon badges
+- [x] Chunk 4 — Add menu icon badges
 - [ ] Chunk 5 — Press-and-hold gesture
 - [ ] Chunk 6 — XP hooks + bonuses
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Add per-area score badges (0–10) to the profile menu icons.
-- Files likely touched: src/App.tsx, styles/workspace.css (badge styling).
-- Risks: Low-medium; badges must not shift layout or break tap navigation.
-- Acceptance checks: Badges render for each area (0–10 or neutral), mobile layout stays intact, badges are non-selectable.
-- Rollback plan: Remove the badge rendering and CSS from the mobile menu icon list.
+- Goal: Add press-and-hold gesture to profile menu icons to open “Improve this area.”
+- Files likely touched: src/App.tsx, src/index.css (hold-safe styles).
+- Risks: Medium; must not break tap navigation or trigger native text selection.
+- Acceptance checks: Tap still navigates, hold opens improvement suggestion, hold cancels on move/scroll, no text selection.
+- Rollback plan: Remove pointer/hold handlers and any related UI wiring.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Replaced the hardcoded Profile Strength card content with computed values, top gaps, and a single recommended task.
+- What changed: Added per-area strength score badges to the mobile profile menu icons with neutral fallback styling.
 - What was validated: npm run build.
-- Follow-ups: Add per-area score badges to the profile menu icons.
+- Follow-ups: Implement the press-and-hold “Improve this area” gesture.
 
 ---
 
