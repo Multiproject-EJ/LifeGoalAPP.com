@@ -1,5 +1,6 @@
 import {
   FormEvent,
+  PointerEvent,
   ReactNode,
   useCallback,
   useEffect,
@@ -58,7 +59,7 @@ import {
 } from './features/profile-strength/debugProfileStrength';
 import { loadProfileStrengthSignals } from './features/profile-strength/profileStrengthData';
 import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
-import type { AreaKey, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
+import type { AreaKey, NextTask, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -101,6 +102,9 @@ const PROFILE_STRENGTH_MENU_AREAS: Partial<Record<MobileMenuNavItem['id'], AreaK
   rituals: 'life_wheel',
   identity: 'identity',
 };
+
+const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
+const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
@@ -295,11 +299,18 @@ export default function App() {
   const mobileFooterSnapTimeoutRef = useRef<number | null>(null);
   const lastMobileScrollYRef = useRef(0);
   const [isProfileStrengthOpen, setIsProfileStrengthOpen] = useState(false);
+  const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
+    area: AreaKey;
+    task: NextTask | null;
+  } | null>(null);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
   const [isMobileMenuFlashActive, setIsMobileMenuFlashActive] = useState(false);
   const mobileMenuFlashTimeoutRef = useRef<number | null>(null);
+  const profileStrengthHoldTimeoutRef = useRef<number | null>(null);
+  const profileStrengthHoldTriggeredRef = useRef(false);
+  const profileStrengthHoldStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const {
     xpToasts,
@@ -974,6 +985,91 @@ export default function App() {
     }
     handleMobileNavSelect('planning');
   };
+
+  const clearProfileStrengthHoldTimer = useCallback(() => {
+    if (profileStrengthHoldTimeoutRef.current !== null) {
+      window.clearTimeout(profileStrengthHoldTimeoutRef.current);
+      profileStrengthHoldTimeoutRef.current = null;
+    }
+  }, []);
+
+  const openProfileStrengthHold = useCallback(
+    (area: AreaKey) => {
+      const task = profileStrengthSnapshot?.nextTasksByArea[area]?.[0] ?? null;
+      setActiveProfileStrengthHold({ area, task });
+    },
+    [profileStrengthSnapshot],
+  );
+
+  const handleProfileStrengthHoldStart = useCallback(
+    (event: PointerEvent<HTMLButtonElement>, area: AreaKey | null) => {
+      if (!isMobileViewport || !area || event.pointerType === 'mouse') {
+        return;
+      }
+      profileStrengthHoldTriggeredRef.current = false;
+      profileStrengthHoldStartRef.current = { x: event.clientX, y: event.clientY };
+      clearProfileStrengthHoldTimer();
+      profileStrengthHoldTimeoutRef.current = window.setTimeout(() => {
+        profileStrengthHoldTriggeredRef.current = true;
+        openProfileStrengthHold(area);
+      }, PROFILE_STRENGTH_HOLD_DURATION_MS);
+    },
+    [clearProfileStrengthHoldTimer, isMobileViewport, openProfileStrengthHold],
+  );
+
+  const handleProfileStrengthHoldMove = useCallback(
+    (event: PointerEvent<HTMLButtonElement>, area: AreaKey | null) => {
+      if (!isMobileViewport || !area || !profileStrengthHoldStartRef.current) {
+        return;
+      }
+      const deltaX = event.clientX - profileStrengthHoldStartRef.current.x;
+      const deltaY = event.clientY - profileStrengthHoldStartRef.current.y;
+      if (Math.hypot(deltaX, deltaY) > PROFILE_STRENGTH_HOLD_SLOP_PX) {
+        clearProfileStrengthHoldTimer();
+      }
+    },
+    [clearProfileStrengthHoldTimer, isMobileViewport],
+  );
+
+  const handleProfileStrengthHoldEnd = useCallback(() => {
+    clearProfileStrengthHoldTimer();
+    profileStrengthHoldStartRef.current = null;
+  }, [clearProfileStrengthHoldTimer]);
+
+  const handleProfileStrengthHoldAction = useCallback(() => {
+    if (!activeProfileStrengthHold) {
+      return;
+    }
+    const { task } = activeProfileStrengthHold;
+    if (task?.action.type === 'navigate') {
+      handleMobileNavSelect(task.action.target);
+      setActiveProfileStrengthHold(null);
+      return;
+    }
+    if (task?.action.target) {
+      handleMobileNavSelect(task.action.target);
+      setActiveProfileStrengthHold(null);
+      return;
+    }
+    if (task) {
+      handleMobileNavSelect('planning');
+      setActiveProfileStrengthHold(null);
+      return;
+    }
+    setActiveProfileStrengthHold(null);
+  }, [activeProfileStrengthHold, handleMobileNavSelect]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      setActiveProfileStrengthHold(null);
+    }
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    return () => {
+      clearProfileStrengthHoldTimer();
+    };
+  }, [clearProfileStrengthHoldTimer]);
 
   const handleMobileGameOverlayCardClick = () => {
     setActiveWorkspaceNav('game');
@@ -1719,6 +1815,10 @@ export default function App() {
                         ? 'mobile-menu-overlay__icon-badge mobile-menu-overlay__icon-badge--neutral'
                         : 'mobile-menu-overlay__icon-badge';
                     const handleItemClick = () => {
+                      if (profileStrengthArea && profileStrengthHoldTriggeredRef.current) {
+                        profileStrengthHoldTriggeredRef.current = false;
+                        return;
+                      }
                       if (isBreathingItem) {
                         setIsBreatheSubmenuOpen((prev) => !prev);
                         return;
@@ -1734,6 +1834,16 @@ export default function App() {
                           aria-label={item.ariaLabel}
                           aria-expanded={isBreathingItem ? isSubmenuOpen : undefined}
                           aria-controls={isBreathingItem ? submenuId : undefined}
+                          onPointerDown={(event) => handleProfileStrengthHoldStart(event, profileStrengthArea ?? null)}
+                          onPointerMove={(event) => handleProfileStrengthHoldMove(event, profileStrengthArea ?? null)}
+                          onPointerUp={handleProfileStrengthHoldEnd}
+                          onPointerCancel={handleProfileStrengthHoldEnd}
+                          onPointerLeave={handleProfileStrengthHoldEnd}
+                          onContextMenu={(event) => {
+                            if (profileStrengthArea && isMobileViewport) {
+                              event.preventDefault();
+                            }
+                          }}
                           className={
                             item.id === 'game' && isGameNearNextLevel
                               ? 'mobile-menu-overlay__game-button mobile-menu-overlay__game-button--charged'
@@ -1935,6 +2045,59 @@ export default function App() {
                       Take next step
                     </button>
                   </div>
+                </div>
+              </div>
+            ) : null}
+            {activeProfileStrengthHold ? (
+              <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true">
+                <div
+                  className="mobile-menu-overlay__hold-backdrop"
+                  role="presentation"
+                  onClick={() => {
+                    profileStrengthHoldTriggeredRef.current = false;
+                    setActiveProfileStrengthHold(null);
+                  }}
+                />
+                <div className="mobile-menu-overlay__hold-panel">
+                  <div className="mobile-menu-overlay__hold-header">
+                    <div>
+                      <p className="mobile-menu-overlay__hold-eyebrow">Improve this area</p>
+                      <h3 className="mobile-menu-overlay__hold-title">
+                        {PROFILE_STRENGTH_AREA_LABELS[activeProfileStrengthHold.area]}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__hold-close"
+                      aria-label="Close improve area prompt"
+                      onClick={() => {
+                        profileStrengthHoldTriggeredRef.current = false;
+                        setActiveProfileStrengthHold(null);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="mobile-menu-overlay__hold-body">
+                    <p className="mobile-menu-overlay__hold-task">
+                      {activeProfileStrengthHold.task
+                        ? activeProfileStrengthHold.task.title
+                        : 'Add a bit more data here to unlock a suggestion.'}
+                    </p>
+                    <p className="mobile-menu-overlay__hold-note">
+                      {activeProfileStrengthHold.task
+                        ? activeProfileStrengthHold.task.description
+                        : 'We will surface a fast, focused improvement once this area has activity.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="mobile-menu-overlay__hold-action"
+                    onClick={handleProfileStrengthHoldAction}
+                    disabled={!activeProfileStrengthHold.task}
+                  >
+                    {activeProfileStrengthHold.task ? 'Start this improvement' : 'Suggestion locked'}
+                  </button>
                 </div>
               </div>
             ) : null}
