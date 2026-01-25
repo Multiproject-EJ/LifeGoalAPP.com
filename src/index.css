@@ -11668,6 +11668,7 @@ body {
 }
 
 .mobile-footer-nav__diode-toggle {
+  position: relative;
   width: 18px;
   height: 18px;
   border-radius: 999px;
@@ -11690,6 +11691,27 @@ body {
   background: radial-gradient(circle at 30% 30%, #dcfce7, #22c55e 55%, #15803d 100%);
   border-color: rgba(34, 197, 94, 0.9);
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.65), 0 0 24px rgba(16, 185, 129, 0.5);
+}
+
+.mobile-footer-nav__diode-toggle--on::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: 120px;
+  height: 58px;
+  transform: translate(-50%, 0);
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(14, 116, 144, 0.45),
+    rgba(14, 116, 144, 0.2) 45%,
+    rgba(14, 116, 144, 0) 70%
+  );
+  filter: blur(8px);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .mobile-footer-nav__diode-toggle:hover,
