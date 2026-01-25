@@ -11337,6 +11337,28 @@ body {
   z-index: 0;
 }
 
+.mobile-footer-nav__surface--image::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -24px;
+  width: min(560px, 120%);
+  height: 140px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(15, 118, 110, 0.45),
+    rgba(56, 189, 248, 0.28) 35%,
+    rgba(59, 130, 246, 0.18) 55%,
+    rgba(15, 118, 110, 0) 78%
+  );
+  filter: blur(18px);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .mobile-footer-nav__surface--image > * {
   position: relative;
   z-index: 1;
