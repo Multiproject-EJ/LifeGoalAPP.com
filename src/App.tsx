@@ -496,13 +496,12 @@ export default function App() {
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
 
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
-  const shouldAutoCollapseMobileFooter =
-    isMobileViewport &&
-    (isMobileMenuImageActive ||
-      (mobileActiveNavId !== null && MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId)));
+  const shouldAutoCollapseOnIdle =
+    isMobileViewport && mobileActiveNavId !== null && MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId);
+  const shouldAllowFooterCollapse = isMobileViewport && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
 
   const scheduleMobileFooterCollapse = useCallback(() => {
-    if (!shouldAutoCollapseMobileFooter) {
+    if (!shouldAutoCollapseOnIdle) {
       return;
     }
     if (mobileFooterCollapseTimeoutRef.current !== null) {
@@ -512,11 +511,11 @@ export default function App() {
       setIsMobileFooterCollapsed(true);
       mobileFooterCollapseTimeoutRef.current = null;
     }, MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS);
-  }, [shouldAutoCollapseMobileFooter]);
+  }, [shouldAutoCollapseOnIdle]);
 
   const handleMobileFooterExpand = useCallback(
     (shouldSnap: boolean) => {
-      if (!shouldAutoCollapseMobileFooter) {
+      if (!shouldAllowFooterCollapse) {
         return;
       }
       if (shouldSnap) {
@@ -530,14 +529,23 @@ export default function App() {
         }, MOBILE_FOOTER_SNAP_RESET_MS);
       }
       setIsMobileFooterCollapsed(false);
-      scheduleMobileFooterCollapse();
+      if (shouldAutoCollapseOnIdle) {
+        scheduleMobileFooterCollapse();
+      }
     },
-    [scheduleMobileFooterCollapse, shouldAutoCollapseMobileFooter],
+    [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle],
   );
 
   useEffect(() => {
-    if (!shouldAutoCollapseMobileFooter) {
+    if (!shouldAllowFooterCollapse) {
       setIsMobileFooterCollapsed(false);
+      if (mobileFooterCollapseTimeoutRef.current !== null) {
+        window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
+        mobileFooterCollapseTimeoutRef.current = null;
+      }
+      return;
+    }
+    if (!shouldAutoCollapseOnIdle) {
       if (mobileFooterCollapseTimeoutRef.current !== null) {
         window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
         mobileFooterCollapseTimeoutRef.current = null;
@@ -546,7 +554,7 @@ export default function App() {
     }
     setIsMobileFooterCollapsed(true);
     scheduleMobileFooterCollapse();
-  }, [scheduleMobileFooterCollapse, shouldAutoCollapseMobileFooter]);
+  }, [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle]);
 
   useEffect(() => {
     if (!isMobileViewport || !isMobileMenuImageActive || typeof window === 'undefined') {
