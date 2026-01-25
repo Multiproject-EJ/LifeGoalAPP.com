@@ -1996,7 +1996,7 @@ export default function App() {
                     className="mobile-menu-overlay__coach-button"
                     onClick={() => setShowAiCoachModal(true)}
                   >
-                    <span aria-hidden="true" className="mobile-menu-overlay__coach-icon">🧑‍🏫</span>
+                    <span aria-hidden="true" className="mobile-menu-overlay__coach-icon">🪈</span>
                     <span className="mobile-menu-overlay__coach-texts">
                       <span className="mobile-menu-overlay__coach-title">Coach</span>
                       <span className="mobile-menu-overlay__coach-subtitle">Get a guided next step</span>
