@@ -11967,31 +11967,32 @@ body {
 }
 
 .mobile-menu-overlay__item--coach {
-  grid-column: span 3;
+  grid-column: span 1;
 }
 
 .mobile-menu-overlay__coach-button {
-  flex-direction: row;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  border: none;
-  background: linear-gradient(135deg, #6c5ce7, #00d2d3);
-  color: #ffffff;
-  padding: 0.85rem 1rem;
-  border-radius: 16px;
-  box-shadow: 0 16px 32px rgba(41, 79, 255, 0.25);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.6);
+  color: #0f172a;
+  padding: 1rem 0.5rem;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  gap: 0.35rem;
 }
 
 .mobile-menu-overlay__coach-icon {
-  font-size: 1.6rem;
+  font-size: 2rem;
 }
 
 .mobile-menu-overlay__coach-texts {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.15rem;
-  flex: 1;
+  align-items: center;
+  gap: 0.1rem;
+  flex: 0;
 }
 
 .mobile-menu-overlay__coach-title {
@@ -12000,14 +12001,15 @@ body {
 }
 
 .mobile-menu-overlay__coach-subtitle {
-  font-size: 0.7rem;
-  opacity: 0.9;
+  font-size: 0.65rem;
+  opacity: 0.7;
+  text-align: center;
 }
 
 .mobile-menu-overlay__coach-button:hover,
 .mobile-menu-overlay__coach-button:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 32px rgba(41, 79, 255, 0.35);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .mobile-menu-overlay__game-button--charged {
@@ -12030,8 +12032,8 @@ body {
 
 .mobile-menu-overlay__item--coach .mobile-menu-overlay__coach-button:hover,
 .mobile-menu-overlay__item--coach .mobile-menu-overlay__coach-button:focus-visible {
-  background: linear-gradient(135deg, #6c5ce7, #00d2d3);
-  border-color: transparent;
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(59, 130, 246, 0.35);
 }
 
 .mobile-menu-overlay__item button:active {
