@@ -713,11 +713,16 @@ function renderActiveHabitCard(habit, logs, streaks) {
 function renderDateNavigation(activeDate) {
   const today = getTodayDateString();
   const displayDate = formatDateLabel(activeDate);
+  const isToday = activeDate === today;
 
   return `
     <div class="habit-date-nav">
       <button class="btn-secondary" onclick="habits.changeActiveDate(-1)" aria-label="Previous day">
         ← Prev
+      </button>
+
+      <button class="btn-secondary habit-date-today-btn" onclick="habits.setActiveDate('${today}')" aria-label="Jump to today" ${isToday ? 'disabled' : ''}>
+        📅 Today
       </button>
 
       <div class="habit-date-display">
