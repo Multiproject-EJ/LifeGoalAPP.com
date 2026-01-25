@@ -11417,6 +11417,18 @@ body {
   text-align: center;
 }
 
+.mobile-footer-nav__surface--image .mobile-footer-nav__item--breathing-space .mobile-footer-nav__button {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__item--score .mobile-footer-nav__button {
+  justify-content: flex-end;
+  align-items: flex-end;
+  text-align: right;
+}
+
 .mobile-footer-nav__button:hover,
 .mobile-footer-nav__button:focus-visible {
   background: rgba(255, 255, 255, 0.68);
