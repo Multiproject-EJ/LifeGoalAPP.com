@@ -272,7 +272,8 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
         </div>
         <div className="life-goals-section__mobile-bar" aria-live="polite">
           <span className="life-goals-section__chip">{activeCategoryLabel}</span>
-          <span className="life-goals-section__chip life-goals-section__chip--muted">Tap the wheel to change focus</span>
+          <span className="life-goals-section__chip life-goals-section__chip--muted">Slice by slice</span>
+          <span className="life-goals-section__chip life-goals-section__chip--muted">Guided - coached</span>
         </div>
       </header>
 
