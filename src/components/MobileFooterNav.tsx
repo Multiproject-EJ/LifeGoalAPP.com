@@ -62,6 +62,7 @@ export function MobileFooterNav({
   const formattedPointsBalance =
     typeof pointsBalance === 'number' ? Math.max(0, pointsBalance).toLocaleString() : null;
   const shouldShowDiamondCounter = Boolean(isDiodeActive && formattedPointsBalance);
+  const isCompactGameStatus = isDiodeOff && isCollapsed;
   const handlePointerDown = () => {
     if (onSnapExpand) {
       onSnapExpand();
@@ -123,10 +124,14 @@ export function MobileFooterNav({
                     data-game-tab-icon="true"
                   >
                     <div className="mobile-footer-nav__status-header">
-                      <span className="mobile-footer-nav__status-icon" aria-hidden="true">{status.icon ?? '⭐️'}</span>
+                      <span className="mobile-footer-nav__status-icon" aria-hidden="true">
+                        {isCompactGameStatus ? '⏻' : status.icon ?? '⭐️'}
+                      </span>
                     </div>
-                    <span className="mobile-footer-nav__status-label">{status.label}</span>
-                    {'progress' in status && status.progress !== undefined ? (
+                    <span className="mobile-footer-nav__status-label">
+                      {isCompactGameStatus ? 'GAME' : status.label}
+                    </span>
+                    {!isCompactGameStatus && 'progress' in status && status.progress !== undefined ? (
                       <div className="mobile-footer-nav__status-progress" aria-hidden="true">
                         <span
                           className="mobile-footer-nav__status-progress-bar"
@@ -134,7 +139,9 @@ export function MobileFooterNav({
                         />
                       </div>
                     ) : null}
-                    <span className="mobile-footer-nav__status-level">{status.levelLabel ?? status.label}</span>
+                    {!isCompactGameStatus ? (
+                      <span className="mobile-footer-nav__status-level">{status.levelLabel ?? status.label}</span>
+                    ) : null}
                   </button>
                 </li>
               );
