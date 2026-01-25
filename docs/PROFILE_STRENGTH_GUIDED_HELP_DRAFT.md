@@ -507,8 +507,8 @@ Acceptance criteria:
 This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
-- Current phase: Profile Strength v1
-- Current chunk: Chunk 9 — TBD (next)
+- Current phase: Profile Strength v1 (complete)
+- Current chunk: Chunk 9 — v1 closeout + tracker refresh
 - Branch: work
 - Last updated: 2026-01-24
 
@@ -523,18 +523,19 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 6 — XP hooks + bonuses
 - [x] Chunk 7 — Heuristic spec tables + constants
 - [x] Chunk 8 — Constants alignment pass
+- [x] Chunk 9 — v1 closeout + tracker refresh
 
 ### 15.3 Next chunk plan (fill before coding)
-- Goal: Define the next smallest scoped improvement for Profile Strength v1 (if any) or close the loop.
+- Goal: If new issues arise post-v1, define a single small follow-up chunk; otherwise keep v1 closed.
 - Files likely touched: docs/PROFILE_STRENGTH_GUIDED_HELP_DRAFT.md only.
 - Risks: Low; avoid expanding scope beyond v1.
-- Acceptance checks: Next chunk is clear and small, or v1 is marked complete.
+- Acceptance checks: Next chunk is clear and small, or v1 remains marked complete.
 - Rollback plan: Revert plan updates.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Aligned code constants to the spec defaults (recency windows, coverage thresholds, XP defaults, gesture values).
+- What changed: Marked Profile Strength v1 as complete and refreshed the tracker status.
 - What was validated: npm run build.
-- Follow-ups: Decide whether any additional v1 polish is needed or close out.
+- Follow-ups: None; open a new chunk only if regressions or new scope emerge.
 
 ---
 
