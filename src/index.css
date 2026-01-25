@@ -4404,6 +4404,7 @@ body {
 
 .habit-day-nav__actions--compact {
   gap: 0;
+  flex-wrap: nowrap;
 }
 
 [data-theme='dark-glass'] .habit-day-nav__label {
@@ -4425,6 +4426,7 @@ body {
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
