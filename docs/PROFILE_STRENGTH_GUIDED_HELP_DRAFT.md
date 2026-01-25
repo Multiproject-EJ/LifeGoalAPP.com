@@ -508,7 +508,7 @@ This is the minimal structure an agent should maintain to avoid losing context.
 
 ### 15.1 Status snapshot
 - Current phase: Profile Strength v1 (complete)
-- Current chunk: Chunk 11 — post-v1 follow-up (if needed)
+- Current chunk: Chunk 11 — post-v1 tracker refresh
 - Branch: work
 - Last updated: 2026-01-25
 
@@ -525,6 +525,7 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - [x] Chunk 8 — Constants alignment pass
 - [x] Chunk 9 — v1 closeout + tracker refresh
 - [x] Chunk 10 — v1 maintenance tracker update
+- [x] Chunk 11 — post-v1 tracker refresh
 
 ### 15.3 Next chunk plan (fill before coding)
 - Goal: If new issues arise post-v1, define a single small follow-up chunk; otherwise keep v1 closed.
@@ -534,7 +535,7 @@ This is the minimal structure an agent should maintain to avoid losing context.
 - Rollback plan: Revert plan updates.
 
 ### 15.4 After-chunk notes (fill after coding)
-- What changed: Logged a doc-only maintenance chunk to keep the alive tracker current post-v1.
+- What changed: Logged a doc-only tracker refresh chunk to keep the alive plan current post-v1.
 - What was validated: npm run build.
 - Follow-ups: None; open a new chunk only if regressions or new scope emerge.
 
