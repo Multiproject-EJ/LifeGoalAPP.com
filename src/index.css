@@ -11412,26 +11412,20 @@ body {
   gap: 0.2rem;
   min-height: 100%;
   padding: 0.7rem 0.65rem;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__item--breathing-space .mobile-footer-nav__button {
   justify-content: flex-start;
   align-items: flex-start;
   text-align: left;
 }
 
-.mobile-footer-nav__surface--image .mobile-footer-nav__item--planning .mobile-footer-nav__button {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.mobile-footer-nav__surface--image .mobile-footer-nav__item--actions .mobile-footer-nav__button {
-  align-items: center;
-  justify-content: flex-end;
-  text-align: center;
-}
-
 .mobile-footer-nav__surface--image .mobile-footer-nav__item--score .mobile-footer-nav__button {
-  align-items: flex-end;
   justify-content: flex-end;
+  align-items: flex-end;
   text-align: right;
 }
 
