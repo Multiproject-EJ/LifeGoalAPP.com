@@ -92,6 +92,12 @@
   white-space: nowrap;
 }
 
+.habit-date-today-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .habit-date-display {
   flex: 1;
   min-width: 180px;
