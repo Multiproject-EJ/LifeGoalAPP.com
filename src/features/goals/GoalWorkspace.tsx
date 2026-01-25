@@ -95,6 +95,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<GoalStatusFilter>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [entryChoice, setEntryChoice] = useState<'slice' | 'guided' | null>(null);
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -520,312 +521,353 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
 
   return (
     <section className="goal-workspace">
-      <header className="goal-workspace__header">
-        <div>
-          <h2>Goals &amp; Habits workspace</h2>
-        </div>
-        <button
-          type="button"
-          className="goal-workspace__refresh"
-          onClick={refreshGoals}
-          disabled={loading || !isConfigured}
-        >
-          {loading ? 'Refreshing…' : 'Refresh goals'}
-        </button>
-      </header>
-
-      {isDemoExperience ? (
-        <p className="goal-workspace__status goal-workspace__status--info">
-          You&apos;re working with demo Supabase data stored locally. Capture goals freely and connect Supabase later to sync
-          them to the cloud.
-        </p>
-      ) : !isConfigured ? (
-        <p className="goal-workspace__status goal-workspace__status--warning">
-          Add your Supabase credentials to <code>.env.local</code> to load and persist goals. Until then, you can plan
-          offline, but nothing will sync yet.
-        </p>
-      ) : null}
-
-      {statusMessage ? (
-        <p className="goal-workspace__status goal-workspace__status--success">{statusMessage}</p>
-      ) : null}
-      {errorMessage ? (
-        <p className="goal-workspace__status goal-workspace__status--error">{errorMessage}</p>
-      ) : null}
-
-      <div className="goal-workspace__grid">
-        <div className="goal-form">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3>Capture a new goal</h3>
+      {entryChoice === null ? (
+        <>
+          <header className="goal-workspace__header">
+            <div>
+              <h2>Goals</h2>
+              <p>Choose your path to focus on one clear goals flow.</p>
+            </div>
+          </header>
+          <div className="goal-workspace__entry">
             <button
               type="button"
-              className="goal-workspace__add-life-goal"
-              onClick={handleOpenDialog}
-              disabled={!isConfigured && !isDemoExperience}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: 'var(--color-primary, #4F46E5)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                transition: 'background-color 0.2s',
-              }}
+              className="goal-workspace__entry-card"
+              onClick={() => setEntryChoice('slice')}
             >
-              ✨ Add Life Goal
+              <span className="goal-workspace__entry-icon" aria-hidden="true">
+                🧩
+              </span>
+              <span className="goal-workspace__entry-title">Slice by Slice</span>
+              <span className="goal-workspace__entry-copy">
+                Browse the Life Wheel and focus on one goal at a time.
+              </span>
+            </button>
+            <button
+              type="button"
+              className="goal-workspace__entry-card goal-workspace__entry-card--accent"
+              onClick={() => setEntryChoice('guided')}
+            >
+              <span className="goal-workspace__entry-icon" aria-hidden="true">
+                🧭
+              </span>
+              <span className="goal-workspace__entry-title">Guided – Coached</span>
+              <span className="goal-workspace__entry-copy">
+                Get step-by-step coaching to craft a focused goal.
+              </span>
             </button>
           </div>
-          <p style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--color-text-secondary, #6B7280)' }}>
-            Use the quick form below or click "✨ Add Life Goal" to create a detailed goal with AI assistance, steps, timing, and alerts.
-          </p>
-          <form onSubmit={handleSubmit}>
-          <label className="goal-form__field">
-            <span>Goal title</span>
-            <input
-              type="text"
-              value={draft.title}
-              onChange={handleDraftChange('title')}
-              placeholder="Launch the habit tracker beta"
-              required
-            />
-          </label>
-
-          <label className="goal-form__field">
-            <span>Why it matters</span>
-            <textarea
-              value={draft.description}
-              onChange={handleDraftChange('description')}
-              placeholder="Describe the outcome, success criteria, and the motivation behind this goal."
-              rows={4}
-            />
-          </label>
-
-          <label className="goal-form__field">
-            <span>Target date</span>
-            <input type="date" value={draft.targetDate} onChange={handleDraftChange('targetDate')} />
-          </label>
-
-          <label className="goal-form__field">
-            <span>Status for weekly review</span>
-            <select value={draft.statusTag} onChange={handleDraftChange('statusTag')}>
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <small className="goal-form__hint">
-              {getStatusDescription(draft.statusTag)}
-            </small>
-          </label>
-
-          <label className="goal-form__field">
-            <span>Weekly progress notes</span>
-            <textarea
-              value={draft.progressNotes}
-              onChange={handleDraftChange('progressNotes')}
-              placeholder="Capture highlights, blockers, or next actions for your next review."
-              rows={4}
-            />
-          </label>
-
-          <button type="submit" className="goal-form__submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save goal'}
-          </button>
-          </form>
-        </div>
-
-        <div className="goal-list">
-          <div className="goal-list__header">
-            <h3>Active goals</h3>
-            <span className="goal-list__meta">{listMeta}</span>
-          </div>
-
-          {totalGoals > 0 ? (
-            <div className="goal-list__filters" role="group" aria-label="Filter goals by status">
-              {filterOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={`goal-list__filter ${statusFilter === option.value ? 'goal-list__filter--active' : ''}`}
-                  onClick={() => setStatusFilter(option.value)}
-                  aria-pressed={statusFilter === option.value}
-                >
-                  <span className="goal-list__filter-label">{option.label}</span>
-                  <span className="goal-list__filter-count">{option.count}</span>
-                </button>
-              ))}
+        </>
+      ) : (
+        <>
+          <header className="goal-workspace__header">
+            <div>
+              <h2>Goals &amp; Habits workspace</h2>
             </div>
+            <button
+              type="button"
+              className="goal-workspace__refresh"
+              onClick={refreshGoals}
+              disabled={loading || !isConfigured}
+            >
+              {loading ? 'Refreshing…' : 'Refresh goals'}
+            </button>
+          </header>
+
+          {isDemoExperience ? (
+            <p className="goal-workspace__status goal-workspace__status--info">
+              You&apos;re working with demo Supabase data stored locally. Capture goals freely and connect Supabase later to sync
+              them to the cloud.
+            </p>
+          ) : !isConfigured ? (
+            <p className="goal-workspace__status goal-workspace__status--warning">
+              Add your Supabase credentials to <code>.env.local</code> to load and persist goals. Until then, you can plan
+              offline, but nothing will sync yet.
+            </p>
           ) : null}
 
-          <ul className="goal-list__items">
-            {filteredGoals.map((goal) => {
-              const isEditing = editingGoalId === goal.id;
-              const isPendingDelete = pendingDeleteId === goal.id;
-              const isUpdating = updatingGoalId === goal.id;
-              const isDeleting = deletingGoalId === goal.id;
-              return (
-                <li key={goal.id} className="goal-card">
-                  {isEditing ? (
-                    <form className="goal-card__editor" onSubmit={handleEditSubmit}>
-                      <h4>Edit goal</h4>
-                      <label className="goal-card__field">
-                        <span>Goal title</span>
-                        <input
-                          type="text"
-                          value={editDraft.title}
-                          onChange={handleEditDraftChange('title')}
-                          required
-                        />
-                      </label>
-                      <label className="goal-card__field">
-                        <span>Why it matters</span>
-                        <textarea
-                          value={editDraft.description}
-                          onChange={handleEditDraftChange('description')}
-                          rows={3}
-                        />
-                      </label>
-                      <label className="goal-card__field">
-                        <span>Target date</span>
-                        <input
-                          type="date"
-                          value={editDraft.targetDate}
-                          onChange={handleEditDraftChange('targetDate')}
-                        />
-                      </label>
-                      <label className="goal-card__field">
-                        <span>Status for weekly review</span>
-                        <select value={editDraft.statusTag} onChange={handleEditDraftChange('statusTag')}>
-                          {STATUS_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <small className="goal-card__hint">
-                          {getStatusDescription(editDraft.statusTag)}
-                        </small>
-                      </label>
-                      <label className="goal-card__field">
-                        <span>Weekly progress notes</span>
-                        <textarea
-                          value={editDraft.progressNotes}
-                          onChange={handleEditDraftChange('progressNotes')}
-                          rows={3}
-                          placeholder="Summarize learnings, blockers, or wins."
-                        />
-                      </label>
-                      <div className="goal-card__editor-actions">
-                        <button
-                          type="submit"
-                          className="goal-card__button goal-card__button--primary"
-                          disabled={isUpdating}
-                        >
-                          {isUpdating ? 'Saving…' : 'Save changes'}
-                        </button>
-                        <button
-                          type="button"
-                          className="goal-card__button goal-card__button--ghost"
-                          onClick={cancelEditingGoal}
-                          disabled={isUpdating}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <>
-                      <div className="goal-card__header">
-                        <div className="goal-card__title">
-                          <h4>{goal.title}</h4>
-                          <span className="goal-card__date">
-                            {goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date set'}
-                          </span>
-                        </div>
-                        <span className={`goal-status goal-status--${normalizeGoalStatus(goal.status_tag)}`}>
-                          {getStatusLabel(goal.status_tag)}
-                        </span>
-                      </div>
-                      {goal.description ? <p>{goal.description}</p> : null}
-                      {goal.progress_notes ? (
-                        <div className="goal-card__notes">
-                          <h5>Weekly notes</h5>
-                          <p>{goal.progress_notes}</p>
-                        </div>
+          {statusMessage ? (
+            <p className="goal-workspace__status goal-workspace__status--success">{statusMessage}</p>
+          ) : null}
+          {errorMessage ? (
+            <p className="goal-workspace__status goal-workspace__status--error">{errorMessage}</p>
+          ) : null}
+
+          <div className="goal-workspace__grid">
+            <div className="goal-form">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3>Capture a new goal</h3>
+                <button
+                  type="button"
+                  className="goal-workspace__add-life-goal"
+                  onClick={handleOpenDialog}
+                  disabled={!isConfigured && !isDemoExperience}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'var(--color-primary, #4F46E5)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  ✨ Add Life Goal
+                </button>
+              </div>
+              <p style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--color-text-secondary, #6B7280)' }}>
+                Use the quick form below or click "✨ Add Life Goal" to create a detailed goal with AI assistance, steps, timing, and alerts.
+              </p>
+              <form onSubmit={handleSubmit}>
+                <label className="goal-form__field">
+                  <span>Goal title</span>
+                  <input
+                    type="text"
+                    value={draft.title}
+                    onChange={handleDraftChange('title')}
+                    placeholder="Launch the habit tracker beta"
+                    required
+                  />
+                </label>
+
+                <label className="goal-form__field">
+                  <span>Why it matters</span>
+                  <textarea
+                    value={draft.description}
+                    onChange={handleDraftChange('description')}
+                    placeholder="Describe the outcome, success criteria, and the motivation behind this goal."
+                    rows={4}
+                  />
+                </label>
+
+                <label className="goal-form__field">
+                  <span>Target date</span>
+                  <input type="date" value={draft.targetDate} onChange={handleDraftChange('targetDate')} />
+                </label>
+
+                <label className="goal-form__field">
+                  <span>Status for weekly review</span>
+                  <select value={draft.statusTag} onChange={handleDraftChange('statusTag')}>
+                    {STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <small className="goal-form__hint">
+                    {getStatusDescription(draft.statusTag)}
+                  </small>
+                </label>
+
+                <label className="goal-form__field">
+                  <span>Weekly progress notes</span>
+                  <textarea
+                    value={draft.progressNotes}
+                    onChange={handleDraftChange('progressNotes')}
+                    placeholder="Capture highlights, blockers, or next actions for your next review."
+                    rows={4}
+                  />
+                </label>
+
+                <button type="submit" className="goal-form__submit" disabled={saving}>
+                  {saving ? 'Saving…' : 'Save goal'}
+                </button>
+              </form>
+            </div>
+
+            <div className="goal-list">
+              <div className="goal-list__header">
+                <h3>Active goals</h3>
+                <span className="goal-list__meta">{listMeta}</span>
+              </div>
+
+              {totalGoals > 0 ? (
+                <div className="goal-list__filters" role="group" aria-label="Filter goals by status">
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`goal-list__filter ${statusFilter === option.value ? 'goal-list__filter--active' : ''}`}
+                      onClick={() => setStatusFilter(option.value)}
+                      aria-pressed={statusFilter === option.value}
+                    >
+                      <span className="goal-list__filter-label">{option.label}</span>
+                      <span className="goal-list__filter-count">{option.count}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              <ul className="goal-list__items">
+                {filteredGoals.map((goal) => {
+                  const isEditing = editingGoalId === goal.id;
+                  const isPendingDelete = pendingDeleteId === goal.id;
+                  const isUpdating = updatingGoalId === goal.id;
+                  const isDeleting = deletingGoalId === goal.id;
+                  return (
+                    <li key={goal.id} className="goal-card">
+                      {isEditing ? (
+                        <form className="goal-card__editor" onSubmit={handleEditSubmit}>
+                          <h4>Edit goal</h4>
+                          <label className="goal-card__field">
+                            <span>Goal title</span>
+                            <input
+                              type="text"
+                              value={editDraft.title}
+                              onChange={handleEditDraftChange('title')}
+                              required
+                            />
+                          </label>
+                          <label className="goal-card__field">
+                            <span>Why it matters</span>
+                            <textarea
+                              value={editDraft.description}
+                              onChange={handleEditDraftChange('description')}
+                              rows={3}
+                            />
+                          </label>
+                          <label className="goal-card__field">
+                            <span>Target date</span>
+                            <input
+                              type="date"
+                              value={editDraft.targetDate}
+                              onChange={handleEditDraftChange('targetDate')}
+                            />
+                          </label>
+                          <label className="goal-card__field">
+                            <span>Status for weekly review</span>
+                            <select value={editDraft.statusTag} onChange={handleEditDraftChange('statusTag')}>
+                              {STATUS_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <small className="goal-card__hint">
+                              {getStatusDescription(editDraft.statusTag)}
+                            </small>
+                          </label>
+                          <label className="goal-card__field">
+                            <span>Weekly progress notes</span>
+                            <textarea
+                              value={editDraft.progressNotes}
+                              onChange={handleEditDraftChange('progressNotes')}
+                              rows={3}
+                              placeholder="Summarize learnings, blockers, or wins."
+                            />
+                          </label>
+                          <div className="goal-card__editor-actions">
+                            <button
+                              type="submit"
+                              className="goal-card__button goal-card__button--primary"
+                              disabled={isUpdating}
+                            >
+                              {isUpdating ? 'Saving…' : 'Save changes'}
+                            </button>
+                            <button
+                              type="button"
+                              className="goal-card__button goal-card__button--ghost"
+                              onClick={cancelEditingGoal}
+                              disabled={isUpdating}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
                       ) : (
-                        <div className="goal-card__notes goal-card__notes--empty">
-                          <p>Use weekly notes to track wins and surface blockers for your next review.</p>
-                        </div>
-                      )}
-                      <footer className="goal-card__footer">
-                        <span>Created {formatRelativeDate(goal.created_at)}</span>
-                        <div className="goal-card__actions">
-                          {isPendingDelete ? (
-                            <>
-                              <button
-                                type="button"
-                                className="goal-card__button goal-card__button--danger"
-                                onClick={() => void confirmDeleteGoal(goal.id)}
-                                disabled={isDeleting}
-                              >
-                                {isDeleting ? 'Removing…' : 'Confirm delete'}
-                              </button>
-                              <button
-                                type="button"
-                                className="goal-card__button goal-card__button--ghost"
-                                onClick={cancelDeleteGoal}
-                                disabled={isDeleting}
-                              >
-                                Cancel
-                              </button>
-                            </>
+                        <>
+                          <div className="goal-card__header">
+                            <div className="goal-card__title">
+                              <h4>{goal.title}</h4>
+                              <span className="goal-card__date">
+                                {goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date set'}
+                              </span>
+                            </div>
+                            <span className={`goal-status goal-status--${normalizeGoalStatus(goal.status_tag)}`}>
+                              {getStatusLabel(goal.status_tag)}
+                            </span>
+                          </div>
+                          {goal.description ? <p>{goal.description}</p> : null}
+                          {goal.progress_notes ? (
+                            <div className="goal-card__notes">
+                              <h5>Weekly notes</h5>
+                              <p>{goal.progress_notes}</p>
+                            </div>
                           ) : (
-                            <>
-                              <button
-                                type="button"
-                                className="goal-card__button goal-card__button--primary"
-                                onClick={() => beginEditingGoal(goal)}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                className="goal-card__button goal-card__button--danger"
-                                onClick={() => requestDeleteGoal(goal.id)}
-                              >
-                                Delete
-                              </button>
-                            </>
+                            <div className="goal-card__notes goal-card__notes--empty">
+                              <p>Use weekly notes to track wins and surface blockers for your next review.</p>
+                            </div>
                           )}
-                        </div>
-                      </footer>
-                    </>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                          <footer className="goal-card__footer">
+                            <span>Created {formatRelativeDate(goal.created_at)}</span>
+                            <div className="goal-card__actions">
+                              {isPendingDelete ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="goal-card__button goal-card__button--danger"
+                                    onClick={() => void confirmDeleteGoal(goal.id)}
+                                    disabled={isDeleting}
+                                  >
+                                    {isDeleting ? 'Removing…' : 'Confirm delete'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="goal-card__button goal-card__button--ghost"
+                                    onClick={cancelDeleteGoal}
+                                    disabled={isDeleting}
+                                  >
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="goal-card__button goal-card__button--primary"
+                                    onClick={() => beginEditingGoal(goal)}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="goal-card__button goal-card__button--danger"
+                                    onClick={() => requestDeleteGoal(goal.id)}
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </footer>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
 
-          {filteredGoals.length === 0 && totalGoals > 0 ? (
-            <p className="goal-list__empty">
-              {statusFilter === 'all'
-                ? 'No goals match the current filters.'
-                : GOAL_STATUS_META[statusFilter].empty}
-            </p>
-          ) : null}
+              {filteredGoals.length === 0 && totalGoals > 0 ? (
+                <p className="goal-list__empty">
+                  {statusFilter === 'all'
+                    ? 'No goals match the current filters.'
+                    : GOAL_STATUS_META[statusFilter].empty}
+                </p>
+              ) : null}
 
-          {filteredGoals.length > 0 && completedGoals.length > 0 ? (
-            <p className="goal-list__status">
-              {completedGoals.length === filteredGoals.length
-                ? 'Every goal here has passed its target date—time to celebrate and set the next milestone!'
-                : `${completedGoals.length} goal${completedGoals.length === 1 ? ' has' : 's have'} crossed the target date.`}
-            </p>
-          ) : null}
-        </div>
-      </div>
+              {filteredGoals.length > 0 && completedGoals.length > 0 ? (
+                <p className="goal-list__status">
+                  {completedGoals.length === filteredGoals.length
+                    ? 'Every goal here has passed its target date—time to celebrate and set the next milestone!'
+                    : `${completedGoals.length} goal${completedGoals.length === 1 ? ' has' : 's have'} crossed the target date.`}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </>
+      )}
 
       <LifeGoalInputDialog
         session={session}
