@@ -10,7 +10,6 @@ import {
 } from 'react';
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
-import lifeSpinIcon from './assets/Lifespinicon.webp';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace, LifeGoalsSection } from './features/goals';
@@ -114,6 +113,7 @@ const PROFILE_STRENGTH_MENU_AREAS: Partial<Record<MobileMenuNavItem['id'], AreaK
 
 const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
+const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
@@ -302,6 +302,10 @@ export default function App() {
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
+  const [showDailyTreatsMenu, setShowDailyTreatsMenu] = useState(false);
+  const [showLeaguePlaceholder, setShowLeaguePlaceholder] = useState(false);
+  const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
+  const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
   const mobileFooterCollapseTimeoutRef = useRef<number | null>(null);
@@ -322,6 +326,18 @@ export default function App() {
   const profileStrengthHoldStartRef = useRef<{ x: number; y: number } | null>(null);
   const profileStrengthSnapshotRef = useRef<ProfileStrengthResult | null>(null);
   const profileStrengthSignalsRef = useRef<ProfileStrengthSignalSnapshot | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setHasSeenDailyTreats(window.localStorage.getItem(DAILY_TREATS_SEEN_KEY) === 'true');
+  }, []);
+
+  const markDailyTreatsSeen = useCallback(() => {
+    setHasSeenDailyTreats(true);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(DAILY_TREATS_SEEN_KEY, 'true');
+    }
+  }, []);
 
   const {
     earnXP,
@@ -2296,19 +2312,26 @@ export default function App() {
             </button>
             <button
               type="button"
-              className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat--life-spin mobile-gamification-overlay__stat-button"
-              onClick={() => setShowDailySpinWheel(true)}
+              className={`mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat--daily-treats mobile-gamification-overlay__stat-button${
+                hasSeenDailyTreats ? '' : ' mobile-gamification-overlay__stat--pulse'
+              }`}
+              onClick={() => {
+                markDailyTreatsSeen();
+                setShowDailyTreatsMenu(true);
+              }}
               role="listitem"
             >
-              <img
-                className="mobile-gamification-overlay__stat-icon mobile-gamification-overlay__stat-icon--life-spin"
-                src={lifeSpinIcon}
-                alt=""
+              <div
+                className="mobile-gamification-overlay__stat-icon mobile-gamification-overlay__stat-icon--daily-treats"
                 aria-hidden="true"
-              />
+              >
+                🍬
+              </div>
               <div className="mobile-gamification-overlay__stat-content">
-                <p className="mobile-gamification-overlay__stat-label">Life Spin</p>
-                <p className="mobile-gamification-overlay__stat-hint">Spin once per day for a surprise boost.</p>
+                <p className="mobile-gamification-overlay__stat-label">Daily Treats</p>
+                <p className="mobile-gamification-overlay__stat-hint">
+                  Open your treats menu for spins, leagues, and countdown secrets.
+                </p>
               </div>
             </button>
           </div>
@@ -2360,6 +2383,156 @@ export default function App() {
       </div>
     ) : null;
 
+  const dailyTreatsModal = showDailyTreatsMenu ? (
+    <div className="daily-treats-modal" role="dialog" aria-modal="true" aria-label="Daily treats">
+      <div
+        className="daily-treats-modal__backdrop"
+        onClick={() => setShowDailyTreatsMenu(false)}
+        role="presentation"
+      />
+      <div className="daily-treats-modal__dialog">
+        <button
+          type="button"
+          className="daily-treats-modal__close"
+          aria-label="Close daily treats menu"
+          onClick={() => setShowDailyTreatsMenu(false)}
+        >
+          ×
+        </button>
+        <header className="daily-treats-modal__header">
+          <p className="daily-treats-modal__eyebrow">Daily Treats</p>
+          <h3 className="daily-treats-modal__title">Choose your reward path</h3>
+          <p className="daily-treats-modal__subtitle">
+            Pick a treat to keep your streak and surprises rolling.
+          </p>
+        </header>
+        <div className="daily-treats-modal__actions">
+          <button
+            type="button"
+            className="daily-treats-modal__action"
+            onClick={() => {
+              setShowDailyTreatsMenu(false);
+              setShowDailySpinWheel(true);
+            }}
+          >
+            <span className="daily-treats-modal__action-icon" aria-hidden="true">
+              🎰
+            </span>
+            <span className="daily-treats-modal__action-text">
+              <strong>Life Spin</strong>
+              <span>Spin the wheel for your daily boost.</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className="daily-treats-modal__action"
+            onClick={() => {
+              setShowDailyTreatsMenu(false);
+              setShowLeaguePlaceholder(true);
+            }}
+          >
+            <span className="daily-treats-modal__action-icon" aria-hidden="true">
+              🏆
+            </span>
+            <span className="daily-treats-modal__action-text">
+              <strong>League Game</strong>
+              <span>Competitive daily matchups (coming soon).</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className="daily-treats-modal__action"
+            onClick={() => {
+              setShowDailyTreatsMenu(false);
+              setShowCalendarPlaceholder(true);
+            }}
+          >
+            <span className="daily-treats-modal__action-icon" aria-hidden="true">
+              📆
+            </span>
+            <span className="daily-treats-modal__action-text">
+              <strong>25-Day Countdown</strong>
+              <span>Unlock tomorrow’s secret calendar hatch.</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const leaguePlaceholderModal = showLeaguePlaceholder ? (
+    <div className="daily-treats-placeholder" role="dialog" aria-modal="true" aria-label="League game">
+      <div
+        className="daily-treats-placeholder__backdrop"
+        onClick={() => setShowLeaguePlaceholder(false)}
+        role="presentation"
+      />
+      <div className="daily-treats-placeholder__dialog">
+        <button
+          type="button"
+          className="daily-treats-placeholder__close"
+          aria-label="Close league game placeholder"
+          onClick={() => setShowLeaguePlaceholder(false)}
+        >
+          ×
+        </button>
+        <div className="daily-treats-placeholder__content">
+          <p className="daily-treats-placeholder__eyebrow">League Game</p>
+          <h3 className="daily-treats-placeholder__title">Challenge mode is loading</h3>
+          <p className="daily-treats-placeholder__text">
+            We’re prepping team matchups, daily leaderboards, and friendly rival rewards.
+          </p>
+          <button
+            type="button"
+            className="daily-treats-placeholder__button"
+            onClick={() => setShowLeaguePlaceholder(false)}
+          >
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const calendarPlaceholderModal = showCalendarPlaceholder ? (
+    <div
+      className="daily-treats-placeholder"
+      role="dialog"
+      aria-modal="true"
+      aria-label="25-day countdown calendar"
+    >
+      <div
+        className="daily-treats-placeholder__backdrop"
+        onClick={() => setShowCalendarPlaceholder(false)}
+        role="presentation"
+      />
+      <div className="daily-treats-placeholder__dialog">
+        <button
+          type="button"
+          className="daily-treats-placeholder__close"
+          aria-label="Close countdown calendar placeholder"
+          onClick={() => setShowCalendarPlaceholder(false)}
+        >
+          ×
+        </button>
+        <div className="daily-treats-placeholder__content">
+          <p className="daily-treats-placeholder__eyebrow">25-Day Countdown</p>
+          <h3 className="daily-treats-placeholder__title">Your next hatch is almost ready</h3>
+          <p className="daily-treats-placeholder__text">
+            Check back after your day’s break for a new daily secret calendar tomorrow.
+          </p>
+          <button
+            type="button"
+            className="daily-treats-placeholder__button"
+            onClick={() => setShowCalendarPlaceholder(false)}
+          >
+            Sweet
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   if (isMobileViewport && showMobileHome) {
     return (
       <>
@@ -2388,6 +2561,9 @@ export default function App() {
         {showDailySpinWheel && (
           <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
         )}
+        {dailyTreatsModal}
+        {leaguePlaceholderModal}
+        {calendarPlaceholderModal}
       </>
     );
   }
@@ -2615,6 +2791,9 @@ export default function App() {
       {showDailySpinWheel && (
         <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
       )}
+      {dailyTreatsModal}
+      {leaguePlaceholderModal}
+      {calendarPlaceholderModal}
 
       {/* Quick Actions FAB - visible app-wide */}
       {!shouldRequireAuthentication && (

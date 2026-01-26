@@ -13091,6 +13091,17 @@ body {
   align-items: center;
 }
 
+.mobile-gamification-overlay__stat--daily-treats {
+  grid-template-columns: 28% 72%;
+  align-items: center;
+  position: relative;
+}
+
+.mobile-gamification-overlay__stat--pulse {
+  animation: daily-treats-pulse 1.9s ease-in-out infinite;
+  box-shadow: 0 0 0 rgba(250, 204, 21, 0.35);
+}
+
 .mobile-gamification-overlay__stat-icon {
   width: 40px;
   height: 40px;
@@ -13113,6 +13124,191 @@ body {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.mobile-gamification-overlay__stat-icon--daily-treats {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.95), rgba(251, 191, 36, 0.35));
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.45);
+  font-size: 1.5rem;
+}
+
+.mobile-gamification-overlay__stat--pulse .mobile-gamification-overlay__stat-icon--daily-treats {
+  animation: daily-treats-icon-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes daily-treats-pulse {
+  0% {
+    box-shadow: 0 0 0 rgba(250, 204, 21, 0.2);
+  }
+  50% {
+    box-shadow: 0 18px 40px rgba(250, 204, 21, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(250, 204, 21, 0.2);
+  }
+}
+
+@keyframes daily-treats-icon-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.35);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 22px rgba(251, 191, 36, 0.65);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.35);
+  }
+}
+
+.daily-treats-modal,
+.daily-treats-placeholder {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.daily-treats-modal__backdrop,
+.daily-treats-placeholder__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.daily-treats-modal__dialog,
+.daily-treats-placeholder__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 420px);
+  border-radius: 22px;
+  padding: 1.4rem 1.35rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.daily-treats-modal__close,
+.daily-treats-placeholder__close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  border: none;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #0f172a;
+}
+
+.daily-treats-modal__header {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding-right: 2rem;
+}
+
+.daily-treats-modal__eyebrow,
+.daily-treats-placeholder__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.daily-treats-modal__title,
+.daily-treats-placeholder__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.daily-treats-modal__subtitle,
+.daily-treats-placeholder__text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.daily-treats-modal__actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.daily-treats-modal__action {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(248, 250, 252, 0.9);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.daily-treats-modal__action:hover,
+.daily-treats-modal__action:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
+  outline: none;
+}
+
+.daily-treats-modal__action-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, rgba(59, 130, 246, 0.15), rgba(14, 165, 233, 0.2));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.daily-treats-modal__action-text {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.daily-treats-modal__action-text strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.daily-treats-placeholder__content {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.daily-treats-placeholder__button {
+  margin-top: 0.5rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.2rem;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
 }
 
 .mobile-gamification-overlay__stat--mini-grid {
