@@ -1,5 +1,25 @@
 # Goals Tab UX Overhaul Plan (Mobile-First)
 
+## Project Status & How to Resume
+
+Use this section first when returning to the plan.
+
+### Status Snapshot (update as work progresses)
+
+> **Note:** Keep this section additive. Do not overwrite phase details below—only update status markers and next tasks here so the plan remains intact.
+
+| Phase | Status | Next Task |
+|-------|--------|-----------|
+| Phase 1 — Entry Simplification | ☐ Not started | |
+| Phase 2 — Single-Goal View | ☐ Not started | |
+| Phase 3 — Guided Flow | ☐ Not started | |
+| Phase 4 — Life Wheel as Submenu | ☐ Not started | |
+
+### First Step (always)
+1. **Determine current build status** by checking recent commits and the app to see which phase is implemented.
+2. Update the Status Snapshot table with ✅/🟡/⛔ and note the next task.
+3. Resume from the first unchecked phase or the documented next task.
+
 ## Objective
 Reduce cognitive overload in the Goals tab by introducing two clear entry paths and a guided, progressive disclosure flow. The user should see **only two primary choices** on entry, and then be guided step‑by‑step into the relevant goal creation/management experience.
 

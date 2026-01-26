@@ -1,5 +1,31 @@
 # Game of Life 2.0 — Development Plan
 
+## Project Status & How to Resume
+
+Use this section first when returning to the plan.
+
+### Status Snapshot (update as work progresses)
+
+> **Note:** Keep this section additive. Do not overwrite milestone details below—only update status markers and next tasks here so the plan itself remains the single source of truth.
+
+| Milestone | Status | Next Task |
+|-----------|--------|-----------|
+| M0. Repo audit + integration map | ☐ Not started | |
+| M1. Onboarding | ☐ Not started | |
+| M2. Balance / Harmony scoring v1 | ☐ Not started | |
+| M3. Rationality micro-system v1 | ☐ Not started | |
+| M4. Auto-progress ladder v1 | ☐ Not started | |
+| M5. Vision Board 2.0 metadata + review loop | ☐ Not started | |
+| M6. AI Coach instruction system | ☐ Not started | |
+| M7. AI Coach interventions v1 | ☐ Not started | |
+| M8. Micro-quests + retention loop v1 | ☐ Not started | |
+| M9. Push notification dispatch plan | ☐ Not started | |
+
+### First Step (always)
+1. **Determine current build status** by checking recent commits and the app for any progress on the milestones above.
+2. Update the Status Snapshot table with ✅/🟡/⛔ and note the next task.
+3. Resume from the first unchecked milestone or the documented next task.
+
 This plan lays out the milestone skeleton required for Game of Life 2.0 delivery. Each milestone includes reuse targets, acceptance criteria, demo-mode parity requirements, and test notes. Order is fixed as requested.
 
 ---
