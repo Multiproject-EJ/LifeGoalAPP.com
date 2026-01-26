@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 
 type MobileFooterNavItem = {
   id: string;
@@ -28,6 +28,7 @@ type MobileFooterNavProps = {
   isSnapActive?: boolean;
   status?: MobileFooterStatus;
   onStatusClick?: () => void;
+  onStatusHoldToggle?: () => void;
   onExpand?: () => void;
   onSnapExpand?: () => void;
   pointsBalance?: number;
@@ -46,10 +47,18 @@ export function MobileFooterNav({
   isSnapActive = false,
   status,
   onStatusClick,
+  onStatusHoldToggle,
   onExpand,
   onSnapExpand,
   pointsBalance,
 }: MobileFooterNavProps) {
+  const [statusHoldProgress, setStatusHoldProgress] = useState(0);
+  const [isStatusHoldActive, setIsStatusHoldActive] = useState(false);
+  const [isStatusHoldSnap, setIsStatusHoldSnap] = useState(false);
+  const statusHoldRafRef = useRef<number | null>(null);
+  const statusHoldTimeoutRef = useRef<number | null>(null);
+  const statusHoldStartRef = useRef<number | null>(null);
+  const statusHoldTriggeredRef = useRef(false);
   const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
@@ -69,6 +78,84 @@ export function MobileFooterNav({
       return;
     }
     onExpand?.();
+  };
+  const holdAccentColor = isDiodeActive ? '248, 113, 113' : '34, 197, 94';
+
+  const clearStatusHoldTimers = () => {
+    if (statusHoldRafRef.current !== null) {
+      window.cancelAnimationFrame(statusHoldRafRef.current);
+      statusHoldRafRef.current = null;
+    }
+    if (statusHoldTimeoutRef.current !== null) {
+      window.clearTimeout(statusHoldTimeoutRef.current);
+      statusHoldTimeoutRef.current = null;
+    }
+  };
+
+  const resetStatusHold = (resetSnap = false) => {
+    clearStatusHoldTimers();
+    statusHoldStartRef.current = null;
+    statusHoldTriggeredRef.current = false;
+    setIsStatusHoldActive(false);
+    setStatusHoldProgress(0);
+    if (resetSnap) {
+      setIsStatusHoldSnap(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearStatusHoldTimers();
+    };
+  }, []);
+
+  const startStatusHold = () => {
+    if (!onStatusHoldToggle) {
+      return;
+    }
+    resetStatusHold(true);
+    statusHoldTriggeredRef.current = false;
+    setIsStatusHoldActive(true);
+    statusHoldStartRef.current = window.performance?.now?.() ?? Date.now();
+    const HOLD_DURATION_MS = 700;
+
+    const step = (timestamp: number) => {
+      if (statusHoldStartRef.current === null) {
+        return;
+      }
+      const elapsed = timestamp - statusHoldStartRef.current;
+      const progress = Math.min(elapsed / HOLD_DURATION_MS, 1);
+      setStatusHoldProgress(progress);
+
+      if (progress >= 1 && !statusHoldTriggeredRef.current) {
+        statusHoldTriggeredRef.current = true;
+        onStatusHoldToggle();
+        setIsStatusHoldSnap(true);
+        setIsStatusHoldActive(false);
+        statusHoldTimeoutRef.current = window.setTimeout(() => {
+          resetStatusHold(true);
+        }, 220);
+        return;
+      }
+
+      statusHoldRafRef.current = window.requestAnimationFrame(step);
+    };
+
+    statusHoldRafRef.current = window.requestAnimationFrame(step);
+  };
+
+  const handleStatusPointerUp = () => {
+    if (!statusHoldTriggeredRef.current) {
+      resetStatusHold();
+    }
+  };
+
+  const handleStatusClick = () => {
+    if (statusHoldTriggeredRef.current) {
+      statusHoldTriggeredRef.current = false;
+      return;
+    }
+    onStatusClick?.();
   };
 
   return (
@@ -117,8 +204,20 @@ export function MobileFooterNav({
                     type="button"
                     className={`mobile-footer-nav__status-card ${
                       onStatusClick ? 'mobile-footer-nav__status-card--interactive' : ''
+                    }${isStatusHoldActive ? ' mobile-footer-nav__status-card--hold' : ''}${
+                      isStatusHoldSnap ? ' mobile-footer-nav__status-card--snap' : ''
                     }`}
-                    onClick={onStatusClick}
+                    style={
+                      {
+                        '--status-hold-progress': statusHoldProgress,
+                        '--status-hold-accent': holdAccentColor,
+                      } as CSSProperties
+                    }
+                    onClick={handleStatusClick}
+                    onPointerDown={startStatusHold}
+                    onPointerUp={handleStatusPointerUp}
+                    onPointerLeave={handleStatusPointerUp}
+                    onPointerCancel={handleStatusPointerUp}
                     aria-label={`View Game of Life details for ${status.label}`}
                     aria-pressed={false}
                     data-game-tab-icon="true"

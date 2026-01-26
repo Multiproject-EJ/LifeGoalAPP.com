@@ -1159,6 +1159,12 @@ export default function App() {
     setShowMobileGamification(true);
   };
 
+  const handleMobileGameStatusHoldToggle = () => {
+    const nextIsActive = !isMobileMenuImageActive;
+    setIsMobileMenuImageActive(nextIsActive);
+    triggerMobileMenuFlash();
+  };
+
   const handleJournalNavigation = useCallback((navId: string) => {
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
@@ -2364,6 +2370,7 @@ export default function App() {
           activeId={null}
           onSelect={handleMobileNavSelect}
           onStatusClick={handleMobileGameStatusClick}
+          onStatusHoldToggle={handleMobileGameStatusHoldToggle}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
           isFlashActive={isMobileMenuFlashActive}
@@ -2552,6 +2559,7 @@ export default function App() {
           activeId={mobileActiveNavId}
           onSelect={handleMobileNavSelect}
           onStatusClick={handleMobileGameStatusClick}
+          onStatusHoldToggle={handleMobileGameStatusHoldToggle}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
           isFlashActive={isMobileMenuFlashActive}
