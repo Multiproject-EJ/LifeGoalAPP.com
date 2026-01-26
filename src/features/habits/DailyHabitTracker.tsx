@@ -30,7 +30,7 @@ import {
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
-import { updateHabitV2 } from '../../services/habitsV2';
+import { updateHabitFullV2 } from '../../services/habitsV2';
 import {
   getYesterdayRecapEnabled,
   getYesterdayRecapLastCollected,
@@ -226,6 +226,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   // State for alert configuration modal
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
   const [editHabit, setEditHabit] = useState<HabitEditDraft | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editNotes, setEditNotes] = useState('');
   const [editLifeWheelKey, setEditLifeWheelKey] = useState<string>(LIFE_WHEEL_UNASSIGNED);
   const [editGoalId, setEditGoalId] = useState<string>(GOAL_UNASSIGNED);
   const [editSaving, setEditSaving] = useState(false);
@@ -1077,6 +1079,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     if (!editHabit) {
       setEditLifeWheelKey(LIFE_WHEEL_UNASSIGNED);
       setEditGoalId(GOAL_UNASSIGNED);
+      setEditTitle('');
+      setEditNotes('');
       setEditError(null);
       return;
     }
@@ -1084,6 +1088,8 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     const domainMeta = extractLifeWheelDomain(editHabit.schedule);
     setEditLifeWheelKey(domainMeta?.key ?? LIFE_WHEEL_UNASSIGNED);
     setEditGoalId(editHabit.goalId ?? GOAL_UNASSIGNED);
+    setEditTitle(editHabit.name);
+    setEditNotes(extractHabitNotes(editHabit.schedule));
     setEditError(null);
   }, [editHabit]);
 
@@ -1540,9 +1546,10 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         editLifeWheelKey !== LIFE_WHEEL_UNASSIGNED
           ? (editLifeWheelKey as LifeWheelCategoryKey)
           : null;
+      const goalTitle = editTitle.trim() || editHabit.name;
       const { data, error } = await insertGoal({
         user_id: session.user.id,
-        title: editHabit.name,
+        title: goalTitle,
         description: null,
         life_wheel_category: lifeWheelCategory,
         start_date: null,
@@ -1573,16 +1580,24 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       return;
     }
 
+    const nextTitle = editTitle.trim();
+    if (!nextTitle) {
+      setEditError('Please enter a habit title.');
+      return;
+    }
+
     setEditSaving(true);
     setEditError(null);
 
     const lifeWheelKey =
       editLifeWheelKey !== LIFE_WHEEL_UNASSIGNED ? editLifeWheelKey : null;
-    const nextSchedule = buildScheduleWithLifeWheel(editHabit.schedule, lifeWheelKey);
+    const scheduleWithLifeWheel = buildScheduleWithLifeWheel(editHabit.schedule, lifeWheelKey);
+    const nextSchedule = buildScheduleWithNotes(scheduleWithLifeWheel, editNotes);
     const nextGoalId = editGoalId !== GOAL_UNASSIGNED ? editGoalId : null;
 
     try {
-      const { error } = await updateHabitV2(editHabit.id, {
+      const { error } = await updateHabitFullV2(editHabit.id, {
+        title: nextTitle,
         schedule: nextSchedule,
         goal_id: nextGoalId,
       });
@@ -3235,7 +3250,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             <div className="habit-edit-modal__header">
               <div>
                 <p className="habit-edit-modal__eyebrow">Edit habit focus</p>
-                <h3>{editHabit.name}</h3>
+                <h3>{editTitle.trim() || editHabit.name}</h3>
               </div>
               <button
                 type="button"
@@ -3248,6 +3263,30 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
             </div>
 
             <div className="habit-edit-modal__body">
+              <label className="habit-edit-modal__label" htmlFor="habit-title-input">
+                Habit title
+              </label>
+              <input
+                id="habit-title-input"
+                className="habit-edit-modal__input"
+                type="text"
+                value={editTitle}
+                onChange={(event) => setEditTitle(event.target.value)}
+                placeholder="Name your habit"
+              />
+
+              <label className="habit-edit-modal__label" htmlFor="habit-notes-input">
+                Notes
+              </label>
+              <textarea
+                id="habit-notes-input"
+                className="habit-edit-modal__textarea"
+                value={editNotes}
+                onChange={(event) => setEditNotes(event.target.value)}
+                placeholder="Add details, motivation, or reminders"
+                rows={4}
+              />
+
               <label className="habit-edit-modal__label" htmlFor="habit-life-wheel-select">
                 Life wheel area
               </label>
@@ -3433,6 +3472,15 @@ function formatLifeWheelDomainLabel(domain: LifeWheelDomainMeta): string | null 
   return null;
 }
 
+function extractHabitNotes(schedule: Json | null): string {
+  if (!schedule || typeof schedule !== 'object' || Array.isArray(schedule)) {
+    return '';
+  }
+
+  const value = schedule as Record<string, Json>;
+  return typeof value.notes === 'string' ? value.notes : '';
+}
+
 function buildScheduleWithLifeWheel(schedule: Json | null, lifeWheelKey: string | null): Json | null {
   if (!lifeWheelKey && (!schedule || typeof schedule !== 'object' || Array.isArray(schedule))) {
     return schedule;
@@ -3451,6 +3499,30 @@ function buildScheduleWithLifeWheel(schedule: Json | null, lifeWheelKey: string 
     };
   } else {
     delete nextSchedule.life_wheel_domain;
+  }
+
+  if (Object.keys(nextSchedule).length === 0) {
+    return null;
+  }
+
+  return nextSchedule;
+}
+
+function buildScheduleWithNotes(schedule: Json | null, notes: string): Json | null {
+  const trimmedNotes = notes.trim();
+  if (!trimmedNotes && (!schedule || typeof schedule !== 'object' || Array.isArray(schedule))) {
+    return schedule;
+  }
+
+  const nextSchedule: Record<string, Json> =
+    schedule && typeof schedule === 'object' && !Array.isArray(schedule)
+      ? { ...(schedule as Record<string, Json>) }
+      : {};
+
+  if (trimmedNotes) {
+    nextSchedule.notes = trimmedNotes;
+  } else {
+    delete nextSchedule.notes;
   }
 
   if (Object.keys(nextSchedule).length === 0) {
