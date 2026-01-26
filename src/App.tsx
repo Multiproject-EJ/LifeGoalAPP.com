@@ -114,6 +114,7 @@ const PROFILE_STRENGTH_MENU_AREAS: Partial<Record<MobileMenuNavItem['id'], AreaK
 const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
+const DAILY_TREATS_DAILY_VISIT_KEY = 'lifegoal_daily_treats_daily_visit';
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
@@ -303,9 +304,12 @@ export default function App() {
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [showDailyTreatsMenu, setShowDailyTreatsMenu] = useState(false);
+  const [showDailyTreatsCongrats, setShowDailyTreatsCongrats] = useState(false);
+  const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLeaguePlaceholder, setShowLeaguePlaceholder] = useState(false);
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
+  const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
   const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
   const mobileFooterCollapseTimeoutRef = useRef<number | null>(null);
@@ -330,7 +334,10 @@ export default function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     setHasSeenDailyTreats(window.localStorage.getItem(DAILY_TREATS_SEEN_KEY) === 'true');
+    setDailyTreatsFirstVisitDate(window.localStorage.getItem(DAILY_TREATS_DAILY_VISIT_KEY));
   }, []);
+
+  const getTodayDateKey = useCallback(() => new Date().toISOString().split('T')[0], []);
 
   const markDailyTreatsSeen = useCallback(() => {
     setHasSeenDailyTreats(true);
@@ -338,6 +345,22 @@ export default function App() {
       window.localStorage.setItem(DAILY_TREATS_SEEN_KEY, 'true');
     }
   }, []);
+
+  const markDailyTreatsDailyVisit = useCallback(() => {
+    const todayKey = getTodayDateKey();
+    setDailyTreatsFirstVisitDate(todayKey);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(DAILY_TREATS_DAILY_VISIT_KEY, todayKey);
+    }
+  }, [getTodayDateKey]);
+
+  const handleDailyTreatsCongratsClose = useCallback(() => {
+    setShowDailyTreatsCongrats(false);
+    if (pendingDailyTreatsOpen) {
+      setShowDailyTreatsMenu(true);
+      setPendingDailyTreatsOpen(false);
+    }
+  }, [pendingDailyTreatsOpen]);
 
   const {
     earnXP,
@@ -2317,6 +2340,16 @@ export default function App() {
               }`}
               onClick={() => {
                 markDailyTreatsSeen();
+                const todayKey = getTodayDateKey();
+                const shouldShowCongrats =
+                  isMobileMenuImageActive && dailyTreatsFirstVisitDate !== todayKey;
+                if (shouldShowCongrats) {
+                  markDailyTreatsDailyVisit();
+                  setPendingDailyTreatsOpen(true);
+                  setShowDailyTreatsCongrats(true);
+                  return;
+                }
+                setPendingDailyTreatsOpen(false);
                 setShowDailyTreatsMenu(true);
               }}
               role="listitem"
@@ -2382,6 +2415,76 @@ export default function App() {
         </div>
       </div>
     ) : null;
+
+  const dailyTreatsCongratsModal = showDailyTreatsCongrats ? (
+    <div
+      className="daily-treats-congrats"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Daily treats bonus unlock"
+    >
+      <div
+        className="daily-treats-congrats__backdrop"
+        onClick={handleDailyTreatsCongratsClose}
+        role="presentation"
+      />
+      <div className="daily-treats-congrats__dialog">
+        <button
+          type="button"
+          className="daily-treats-congrats__close"
+          aria-label="Close daily treats bonus"
+          onClick={handleDailyTreatsCongratsClose}
+        >
+          ×
+        </button>
+        <div className="daily-treats-congrats__content">
+          <p className="daily-treats-congrats__eyebrow">Daily Treats</p>
+          <h3 className="daily-treats-congrats__title">Congrats on your first visit today!</h3>
+          <p className="daily-treats-congrats__subtitle">
+            Your controller is powered up with fresh rewards.
+          </p>
+          <div className="daily-treats-congrats__rewards">
+            <div className="daily-treats-congrats__reward">
+              <span className="daily-treats-congrats__reward-icon" aria-hidden="true">
+                🎟️
+              </span>
+              <div>
+                <p className="daily-treats-congrats__reward-title">2 Free Spin Tickets</p>
+                <p className="daily-treats-congrats__reward-detail">Jump into Life Spin with bonus turns.</p>
+              </div>
+            </div>
+            <div className="daily-treats-congrats__reward">
+              <span className="daily-treats-congrats__reward-icon" aria-hidden="true">
+                ❤️
+              </span>
+              <div>
+                <p className="daily-treats-congrats__reward-title">5 League Hearts</p>
+                <p className="daily-treats-congrats__reward-detail">Fuel your daily matches and streaks.</p>
+              </div>
+            </div>
+            <div className="daily-treats-congrats__reward">
+              <span className="daily-treats-congrats__reward-icon" aria-hidden="true">
+                🥚
+              </span>
+              <div>
+                <p className="daily-treats-congrats__reward-title">New Daily Hatch</p>
+                <p className="daily-treats-congrats__reward-detail">
+                  Day 25 countdown stays ready for the next reveal.
+                </p>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="daily-treats-congrats__button"
+            onClick={handleDailyTreatsCongratsClose}
+          >
+            Claim today’s treats
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   const dailyTreatsModal = showDailyTreatsMenu ? (
     <div className="daily-treats-modal" role="dialog" aria-modal="true" aria-label="Daily treats">
@@ -2561,6 +2664,7 @@ export default function App() {
         {showDailySpinWheel && (
           <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
         )}
+        {dailyTreatsCongratsModal}
         {dailyTreatsModal}
         {leaguePlaceholderModal}
         {calendarPlaceholderModal}
