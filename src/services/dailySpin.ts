@@ -1,7 +1,7 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
-import type { DailySpinState, SpinResult, SpinPrize, PrizeType } from '../types/gamification';
-import { awardXP } from './gamification';
+import type { DailySpinState, SpinResult, SpinPrize } from '../types/gamification';
+import { SPIN_PRIZES } from '../types/gamification';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { recordTelemetryEvent } from './telemetry';
 
@@ -178,75 +178,21 @@ export async function getSpinHistory(userId: string, limit: number = 10): Promis
  * Implements the prize selection algorithm from the spec
  */
 export function getRandomPrize(): SpinPrize {
-  const roll = Math.random() * 100;
-  
-  // Legendary: 0-3 (3%)
-  if (roll < 3) {
-    return getLegendaryPrize();
+  if (SPIN_PRIZES.length === 0) {
+    return { type: 'points', value: 0, label: '0 Points', icon: '💎' };
   }
-  // Epic: 3-15 (12%)
-  else if (roll < 15) {
-    return getEpicPrize();
+
+  const totalWeight = SPIN_PRIZES.reduce((sum, prize) => sum + (prize.wheelWeight ?? 1), 0);
+  let roll = Math.random() * totalWeight;
+
+  for (const prize of SPIN_PRIZES) {
+    roll -= prize.wheelWeight ?? 1;
+    if (roll <= 0) {
+      return prize;
+    }
   }
-  // Rare: 15-40 (25%)
-  else if (roll < 40) {
-    return getRarePrize();
-  }
-  // Common: 40-100 (60%)
-  else {
-    return getCommonPrize();
-  }
-}
 
-/**
- * Get a common prize (60%)
- */
-function getCommonPrize(): SpinPrize {
-  const commonPrizes = [
-    { type: 'xp' as PrizeType, value: 50, label: '50 XP', icon: '💰' },
-    { type: 'xp' as PrizeType, value: 75, label: '75 XP', icon: '💰' },
-    { type: 'xp' as PrizeType, value: 100, label: '100 XP', icon: '💰' },
-    { type: 'points' as PrizeType, value: 5, label: '5 Points', icon: '💎' },
-    { type: 'points' as PrizeType, value: 10, label: '10 Points', icon: '💎' },
-  ];
-  return commonPrizes[Math.floor(Math.random() * commonPrizes.length)];
-}
-
-/**
- * Get a rare prize (25%)
- */
-function getRarePrize(): SpinPrize {
-  const rarePrizes = [
-    { type: 'xp' as PrizeType, value: 200, label: '200 XP', icon: '💰' },
-    { type: 'streak_freeze' as PrizeType, value: 1, label: '1 Streak Freeze', icon: '🛡️' },
-    { type: 'points' as PrizeType, value: 20, label: '20 Points', icon: '💎' },
-  ];
-  return rarePrizes[Math.floor(Math.random() * rarePrizes.length)];
-}
-
-/**
- * Get an epic prize (12%)
- */
-function getEpicPrize(): SpinPrize {
-  const epicPrizes = [
-    { type: 'xp' as PrizeType, value: 500, label: '500 XP', icon: '🌟' },
-    { type: 'life' as PrizeType, value: 1, label: '1 Extra Life', icon: '❤️' },
-    { type: 'life' as PrizeType, value: 2, label: '2 Extra Lives', icon: '❤️' },
-    { type: 'points' as PrizeType, value: 50, label: '50 Points', icon: '💎' },
-  ];
-  return epicPrizes[Math.floor(Math.random() * epicPrizes.length)];
-}
-
-/**
- * Get a legendary prize (3%)
- */
-function getLegendaryPrize(): SpinPrize {
-  const legendaryPrizes = [
-    { type: 'xp' as PrizeType, value: 1000, label: '1000 XP', icon: '🔥' },
-    { type: 'streak_freeze' as PrizeType, value: 3, label: '3 Streak Freezes', icon: '🛡️' },
-    { type: 'points' as PrizeType, value: 100, label: '100 Points', icon: '💎' },
-  ];
-  return legendaryPrizes[Math.floor(Math.random() * legendaryPrizes.length)];
+  return SPIN_PRIZES[0];
 }
 
 /**
@@ -394,11 +340,8 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
   const supabase = getSupabaseClient();
 
   switch (prize.type) {
-    case 'xp':
-      await awardXP(userId, prize.value, 'daily_login', undefined, `Daily spin: ${prize.label}`);
-      break;
-
     case 'points':
+    case 'treasure_chest':
       {
         const { data: profile } = await fetchGamificationProfile(userId);
         if (!profile) break;
@@ -424,68 +367,7 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
             balance: nextBalance,
             sourceType: 'daily_spin',
             sourceId: prize.label,
-          },
-        });
-      }
-      break;
-
-    case 'streak_freeze':
-      {
-        const { data: freezeProfile } = await fetchGamificationProfile(userId);
-        if (!freezeProfile) break;
-        const nextFreezeCount = freezeProfile.streak_freezes + prize.value;
-
-        if (!canUseSupabaseData()) {
-          saveDemoProfile({ streak_freezes: nextFreezeCount, updated_at: new Date().toISOString() });
-        } else {
-          await supabase
-            .from('gamification_profiles')
-            .update({
-              streak_freezes: nextFreezeCount,
-            })
-            .eq('user_id', userId);
-        }
-
-        void recordTelemetryEvent({
-          userId,
-          eventType: 'economy_earn',
-          metadata: {
-            currency: 'streak_freeze',
-            amount: prize.value,
-            balance: nextFreezeCount,
-            sourceType: 'daily_spin',
-            sourceId: prize.label,
-          },
-        });
-      }
-      break;
-
-    case 'life':
-      {
-        const { data: lifeProfile } = await fetchGamificationProfile(userId);
-        if (!lifeProfile) break;
-        const nextLives = Math.min(lifeProfile.lives + prize.value, lifeProfile.max_lives);
-
-        if (!canUseSupabaseData()) {
-          saveDemoProfile({ lives: nextLives, updated_at: new Date().toISOString() });
-        } else {
-          await supabase
-            .from('gamification_profiles')
-            .update({
-              lives: nextLives,
-            })
-            .eq('user_id', userId);
-        }
-
-        void recordTelemetryEvent({
-          userId,
-          eventType: 'economy_earn',
-          metadata: {
-            currency: 'lives',
-            amount: prize.value,
-            balance: nextLives,
-            sourceType: 'daily_spin',
-            sourceId: prize.label,
+            rewardType: prize.type,
           },
         });
       }

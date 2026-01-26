@@ -305,7 +305,7 @@ export const DEMO_ACHIEVEMENTS_KEY = 'lifegoal_demo_user_achievements';
 // =====================================================
 
 // Daily Spin types
-export type PrizeType = 'xp' | 'points' | 'streak_freeze' | 'life' | 'mystery';
+export type PrizeType = 'points' | 'treasure_chest';
 
 export interface DailySpinState {
   userId: string;
@@ -331,6 +331,8 @@ export interface SpinPrize {
   label: string;
   icon: string;
   details?: Record<string, unknown>;
+  wheelSize?: 'small' | 'medium' | 'large';
+  wheelWeight?: number;
 }
 
 export interface SpinResult {
@@ -340,26 +342,42 @@ export interface SpinResult {
 
 // Prize configuration
 export const SPIN_PRIZES: SpinPrize[] = [
-  { type: 'xp', value: 50, label: '50 XP', icon: '💰' },
-  { type: 'xp', value: 100, label: '100 XP', icon: '💰' },
-  { type: 'xp', value: 200, label: '200 XP', icon: '💰' },
-  { type: 'points', value: 25, label: '25 Points', icon: '💎' },
-  { type: 'points', value: 50, label: '50 Points', icon: '💎' },
-  { type: 'streak_freeze', value: 1, label: 'Streak Freeze', icon: '🛡️' },
-  { type: 'life', value: 1, label: 'Extra Life', icon: '❤️' },
-  { type: 'mystery', value: 0, label: 'Mystery Box', icon: '🎁' },
+  { type: 'points', value: 10, label: '10 Points', icon: '💎', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'points', value: 20, label: '20 Points', icon: '💎', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'points', value: 30, label: '30 Points', icon: '💎', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'points', value: 40, label: '40 Points', icon: '💎', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'points', value: 50, label: '50 Points', icon: '💎', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'points', value: 60, label: '60 Points', icon: '💎', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'points', value: 75, label: '75 Points', icon: '💎', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'points', value: 90, label: '90 Points', icon: '💎', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 50, label: 'Small Treasury Chest (50)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'treasure_chest', value: 80, label: 'Small Treasury Chest (80)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'treasure_chest', value: 120, label: 'Medium Treasury Chest (120)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'treasure_chest', value: 150, label: 'Medium Treasury Chest (150)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'treasure_chest', value: 180, label: 'Medium Treasury Chest (180)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'treasure_chest', value: 220, label: 'Large Treasury Chest (220)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 260, label: 'Large Treasury Chest (260)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 320, label: 'Large Treasury Chest (320)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
 ];
 
 // Weighted prize probabilities (must sum to 100)
 export const PRIZE_WEIGHTS: Record<number, number> = {
-  0: 30,  // 50 XP - 30%
-  1: 25,  // 100 XP - 25%
-  2: 10,  // 200 XP - 10%
-  3: 20,  // 25 Points - 20%
-  4: 8,   // 50 Points - 8%
-  5: 4,   // Streak Freeze - 4%
-  6: 2,   // Extra Life - 2%
-  7: 1,   // Mystery - 1%
+  0: 6,  // 10 Points
+  1: 6,  // 20 Points
+  2: 8,  // 30 Points
+  3: 8,  // 40 Points
+  4: 8,  // 50 Points
+  5: 9,  // 60 Points
+  6: 9,  // 75 Points
+  7: 9,  // 90 Points
+  8: 6,  // Small Chest (50)
+  9: 6,  // Small Chest (80)
+  10: 8, // Medium Chest (120)
+  11: 8, // Medium Chest (150)
+  12: 8, // Medium Chest (180)
+  13: 9, // Large Chest (220)
+  14: 9, // Large Chest (260)
+  15: 9, // Large Chest (320)
 };
 
 // =====================================================

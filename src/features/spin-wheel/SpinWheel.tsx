@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import type { SpinPrize } from '../../types/gamification';
 import { SPIN_PRIZES } from '../../types/gamification';
+import { buildWheelSegments } from './spinWheelUtils';
 
 type Props = {
   spinning: boolean;
@@ -9,23 +10,23 @@ type Props = {
 
 export function SpinWheel({ spinning, result }: Props) {
   const [rotation, setRotation] = useState(0);
+  const wheelSegments = useMemo(() => buildWheelSegments(SPIN_PRIZES), []);
 
   useEffect(() => {
     if (spinning && result) {
       // Calculate target rotation
-      const prizeIndex = SPIN_PRIZES.findIndex(p => 
-        p.type === result.type && p.value === result.value && p.label === result.label
+      const targetSegment = wheelSegments.find(
+        (prize) =>
+          prize.type === result.type && prize.value === result.value && prize.label === result.label,
       );
-      
-      const segmentAngle = 360 / SPIN_PRIZES.length;
-      const targetAngle = prizeIndex >= 0 ? prizeIndex * segmentAngle : 0;
+      const targetAngle = targetSegment ? targetSegment.centerAngle : 0;
       
       // Add 5 full rotations + target angle for dramatic effect
       const finalRotation = 360 * 5 + targetAngle;
       
       setRotation(finalRotation);
     }
-  }, [spinning, result]);
+  }, [spinning, result, wheelSegments]);
 
   return (
     <div className="spin-wheel">
@@ -34,21 +35,26 @@ export function SpinWheel({ spinning, result }: Props) {
         className={`spin-wheel__disc ${spinning ? 'spin-wheel__disc--spinning' : ''}`}
         style={{
           transform: `rotate(${rotation}deg)`,
+          background: `conic-gradient(${wheelSegments
+            .map(
+              (prize) => `${prize.color} ${prize.startAngle}deg ${prize.endAngle}deg`,
+            )
+            .join(', ')})`,
         }}
       >
-        {SPIN_PRIZES.map((prize, index) => {
-          const angle = (360 / SPIN_PRIZES.length) * index;
+        {wheelSegments.map((prize) => {
+          const angle = prize.centerAngle;
           return (
             <div
-              key={index}
-              className="spin-wheel__segment"
-              style={{
-                transform: `rotate(${angle}deg)`,
-              }}
+              key={`${prize.type}-${prize.value}-${prize.label}`}
+              className={`spin-wheel__label spin-wheel__label--${prize.wheelSize}${
+                prize.type === 'treasure_chest' ? ' spin-wheel__label--chest' : ''
+              }`}
+              style={{ '--label-angle': `${angle}deg` } as CSSProperties}
             >
-              <div className="spin-wheel__segment-content">
-                <span className="spin-wheel__segment-icon">{prize.icon}</span>
-                <span className="spin-wheel__segment-label">{prize.label}</span>
+              <div className="spin-wheel__label-content">
+                <span className="spin-wheel__label-icon">{prize.icon}</span>
+                <span className="spin-wheel__label-text">{prize.label}</span>
               </div>
             </div>
           );
