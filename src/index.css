@@ -11579,6 +11579,14 @@ body {
   border: none;
   outline: none;
   background-clip: padding-box;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  --status-hold-progress: 0;
+  --status-hold-accent: 248, 113, 113;
 }
 
 .mobile-footer-nav__status-card--interactive {
@@ -11586,8 +11594,41 @@ body {
   transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.mobile-footer-nav__status-card--interactive:hover,
-.mobile-footer-nav__status-card--interactive:focus-visible {
+.mobile-footer-nav__status-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: radial-gradient(
+    circle at 50% 15%,
+    rgba(var(--status-hold-accent), calc(0.18 + (0.55 * var(--status-hold-progress)))),
+    rgba(var(--status-hold-accent), 0) 65%
+  );
+  opacity: var(--status-hold-progress);
+  transition: opacity 0.12s ease;
+  pointer-events: none;
+}
+
+.mobile-footer-nav__status-card--hold {
+  transform: translateY(calc(-6px * var(--status-hold-progress)))
+    scale(calc(1 + (0.08 * var(--status-hold-progress))));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 18px 32px rgba(15, 23, 42, 0.18),
+    0 0 18px rgba(var(--status-hold-accent), calc(0.35 + (0.4 * var(--status-hold-progress))));
+  border-color: rgba(var(--status-hold-accent), calc(0.4 + (0.5 * var(--status-hold-progress))));
+}
+
+.mobile-footer-nav__status-card--snap {
+  animation: mobile-footer-nav-snap 0.2s ease-out 1;
+}
+
+.mobile-footer-nav__status-card--snap::after {
+  opacity: 1;
+}
+
+.mobile-footer-nav__status-card--interactive:not(.mobile-footer-nav__status-card--hold):hover,
+.mobile-footer-nav__status-card--interactive:not(.mobile-footer-nav__status-card--hold):focus-visible {
   transform: translateY(-2px);
   border-color: rgba(59, 130, 246, 0.38);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 14px 28px rgba(15, 23, 42, 0.16);
@@ -11736,6 +11777,18 @@ body {
   100% {
     box-shadow: none;
     background: rgba(255, 255, 255, 0.4);
+  }
+}
+
+@keyframes mobile-footer-nav-snap {
+  0% {
+    transform: scale(1.08);
+  }
+  55% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
