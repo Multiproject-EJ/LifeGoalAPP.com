@@ -70,7 +70,10 @@
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 1.5rem;
+  padding: calc(env(safe-area-inset-top, 0px) + 1.5rem)
+    calc(env(safe-area-inset-right, 0px) + 1.5rem)
+    calc(env(safe-area-inset-bottom, 0px) + 1.5rem)
+    calc(env(safe-area-inset-left, 0px) + 1.5rem);
 }
 
 .habit-edit-modal-content {
@@ -79,9 +82,12 @@
   max-width: 520px;
   width: min(520px, 95vw);
   max-height: 90vh;
-  overflow: auto;
+  overflow: hidden;
   padding: 1.5rem;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .habit-edit-modal__header {
@@ -132,6 +138,7 @@
   color: #0f172a;
 }
 
+.habit-edit-modal__input,
 .habit-edit-modal__select {
   width: 100%;
   padding: 0.65rem 0.8rem;
@@ -139,6 +146,16 @@
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   font-size: 0.95rem;
+}
+
+.habit-edit-modal__textarea {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.95rem;
+  resize: none;
 }
 
 .habit-edit-modal__section {
@@ -168,6 +185,30 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
+}
+
+@media (max-width: 768px) {
+  .habit-edit-modal-overlay {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .habit-edit-modal-content {
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    height: 100%;
+    border-radius: 24px;
+    padding: 1.25rem;
+  }
+
+  .habit-edit-modal__body {
+    gap: 0.75rem;
+  }
+
+  .habit-edit-modal__footer {
+    margin-top: auto;
+  }
 }
 
 .habit-edit-modal__btn {
