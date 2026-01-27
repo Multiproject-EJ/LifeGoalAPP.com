@@ -4,6 +4,7 @@ import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckin
 import type { GoalStatusTag } from '../features/goals/goalStatus';
 import { DEFAULT_GOAL_STATUS, GOAL_STATUS_OPTIONS } from '../features/goals/goalStatus';
 import useAiGoalSuggestion from '../hooks/useAiGoalSuggestion';
+import { AI_FEATURE_ICON } from '../constants/ai';
 
 type LifeGoalStep = {
   id: string;
@@ -348,7 +349,7 @@ export function LifeGoalInputDialog({
                   onClick={handleGenerateAiSuggestion}
                   disabled={!formData.description.trim() || aiLoading}
                 >
-                  {aiLoading ? '🤖 Generating...' : '✨ Generate with AI'}
+                  {aiLoading ? `${AI_FEATURE_ICON} Generating...` : `${AI_FEATURE_ICON} Generate with AI`}
                 </button>
 
                 {aiLoading && (
