@@ -5,6 +5,7 @@ import { PROJECT_STATUS_CONFIG } from '../../../types/actions';
 import { useProjectTasks } from '../hooks/useProjectTasks';
 import { useProjectProgress } from '../hooks/useProjectProgress';
 import { useGamification } from '../../../hooks/useGamification';
+import { AI_FEATURE_ICON } from '../../../constants/ai';
 import { ProjectProgress } from './ProjectProgress';
 import { TaskList } from './TaskList';
 import { AIProjectBreakdown } from './AIProjectBreakdown';
@@ -175,7 +176,7 @@ export function ProjectDetail({
               onClick={() => setShowAIBreakdown(true)}
               title="Break down with AI"
             >
-              🤖 AI Breakdown
+              {AI_FEATURE_ICON} AI Breakdown
             </button>
           </div>
           <TaskList

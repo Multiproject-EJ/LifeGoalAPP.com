@@ -12,6 +12,7 @@ import { listJournalEntries, type JournalEntry } from '../../services/journal';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
 import { recordTelemetryEvent } from '../../services/telemetry';
+import { AI_FEATURE_ICON } from '../../constants/ai';
 
 export interface AiCoachProps {
   session: Session;
@@ -659,7 +660,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
           <div className="ai-coach-modal__header-content">
             <div className="ai-coach-modal__avatar">
               <div className="ai-coach-modal__robot">
-                <span className="ai-coach-modal__robot-face">🤖</span>
+                <span className="ai-coach-modal__robot-face">{AI_FEATURE_ICON}</span>
                 <div className="ai-coach-modal__robot-glow" />
               </div>
             </div>
