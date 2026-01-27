@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AI_FEATURE_ICON } from '../../constants/ai';
 import { generateHabitSuggestion } from '../../services/habitAiSuggestions';
+import './HabitWizard.css';
 
 // Placeholder schedule type - will be refined to match habits_v2 JSON schema later
 export interface ScheduleDraft {
@@ -469,7 +470,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       )}
 
       {/* Navigation buttons */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+      <div className="habit-wizard-actions" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
         <button
           onClick={step === 1 ? onCancel : handleBack}
           style={{

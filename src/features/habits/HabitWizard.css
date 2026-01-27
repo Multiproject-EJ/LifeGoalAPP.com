@@ -1,0 +1,22 @@
+.habit-wizard-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.habit-wizard-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .habit-wizard-container {
+    padding: 1.25rem !important;
+  }
+
+  .habit-wizard-actions {
+    flex-direction: column;
+  }
+
+  .habit-wizard-actions button {
+    width: 100%;
+  }
+}
