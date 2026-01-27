@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { AI_FEATURE_ICON } from '../../constants/ai';
+import { generateHabitSuggestion } from '../../services/habitAiSuggestions';
 
 // Placeholder schedule type - will be refined to match habits_v2 JSON schema later
 export interface ScheduleDraft {
@@ -45,6 +47,10 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   const [targetUnit, setTargetUnit] = useState<string>('');
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
   const [reminderTime, setReminderTime] = useState<string>('08:00');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiApplied, setAiApplied] = useState(false);
+  const [aiSource, setAiSource] = useState<'openai' | 'fallback' | 'unavailable' | null>(null);
 
   // Reset wizard state when initialDraft changes
   useEffect(() => {
@@ -58,8 +64,45 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       setRemindersEnabled(initialDraft.remindersEnabled ?? false);
       setReminderTime(initialDraft.reminderTimes?.[0] || '08:00');
       setStep(1); // Reset to first step
+      setAiError(null);
+      setAiApplied(false);
+      setAiSource(null);
     }
   }, [initialDraft]);
+
+  const handleGenerateAi = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    setAiApplied(false);
+
+    try {
+      const result = await generateHabitSuggestion({ prompt: title });
+      if (result.error) {
+        setAiError(result.error);
+        setAiSource(result.source);
+        return;
+      }
+
+      if (result.suggestion) {
+        const suggestion = result.suggestion;
+        setTitle(suggestion.title);
+        setEmoji(suggestion.emoji || '');
+        setType(suggestion.type);
+        setScheduleChoice(suggestion.scheduleChoice);
+        setTargetValue(suggestion.targetValue ?? undefined);
+        setTargetUnit(suggestion.targetUnit || '');
+        setRemindersEnabled(suggestion.remindersEnabled);
+        setReminderTime(suggestion.reminderTime || '08:00');
+        setAiApplied(true);
+        setAiSource(result.source);
+      }
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Unable to generate a habit suggestion.');
+      setAiSource('unavailable');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleNext = () => {
     if (step < 3) {
@@ -210,6 +253,43 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
                 boxSizing: 'border-box',
               }}
             />
+            {!isEditMode && (
+              <div style={{ marginTop: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={handleGenerateAi}
+                  disabled={!title.trim() || aiLoading}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '999px',
+                    border: '1px solid #c7d2fe',
+                    background: aiLoading ? '#e0e7ff' : '#eef2ff',
+                    color: '#4338ca',
+                    fontWeight: 600,
+                    cursor: !title.trim() || aiLoading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {AI_FEATURE_ICON}
+                  {aiLoading ? 'Generating...' : 'Generate with AI'}
+                </button>
+                <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#64748b' }}>
+                  Add a quick habit idea, then let AI suggest a starter plan.
+                </p>
+                {aiError && (
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>
+                    {aiError}
+                  </p>
+                )}
+                {aiApplied && (
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#16a34a' }}>
+                    AI suggestion applied{aiSource === 'fallback' ? ' (local)' : ''}.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>

@@ -6,6 +6,7 @@ This document is the living source of truth for AI across the PWA: what is live 
 - **Create Life Goal → “✨ Generate with AI”**: The goal creation dialog calls the `useAiGoalSuggestion` hook to POST to the Supabase Edge Function (`suggest-goal`) and returns a structured goal, milestones, and tasks. The endpoint is configured via `VITE_AI_GOAL_SUGGEST_URL`.【F:src/hooks/useAiGoalSuggestion.ts†L1-L123】
 - **Demo fallback when AI is unavailable**: If Supabase is not configured or the edge function fails, the app generates a local demo suggestion so the UI remains usable in demo mode.【F:src/services/goalSuggestions.ts†L31-L168】
 - **AI-assisted reflection prompts (ready for edge function)**: The goal reflection journal already surfaces AI follow-up prompts and can switch to live AI responses once the `generate-reflection-prompts` edge function is connected.【F:src/features/goals/GoalReflectionJournal.tsx†L738-L781】
+- **Habit creation AI**: The habit wizard can generate starter habits (title, type, schedule, reminders) using OpenAI when configured and falls back to local suggestions when not. The UI applies the suggestion directly to the draft for quick creation.【F:src/features/habits/HabitWizard.tsx†L41-L233】【F:src/services/habitAiSuggestions.ts†L1-L194】
 
 ## 🔧 Setup & configuration (edge functions + env)
 1. Add `VITE_AI_GOAL_SUGGEST_URL` to `.env.local` (points to the Supabase Edge Function: `https://<project>.supabase.co/functions/v1/suggest-goal`).【F:.env.example†L7-L8】
@@ -15,7 +16,7 @@ This document is the living source of truth for AI across the PWA: what is live 
 ## 🧭 AI delivery checklist (live)
 - [x] **Goal suggestion in Create Life Goal** (`✨ Generate with AI` → `suggest-goal` edge function).【F:src/hooks/useAiGoalSuggestion.ts†L35-L114】
 - [ ] **Auto-populate Steps, Timing, and Alerts** using the existing AI suggestion payload (expand UI to fill remaining tabs).
-- [ ] **Habit creation AI**: generate habit ideas + scheduling defaults inside the Create Habit flow.
+- [x] **Habit creation AI**: generate habit ideas + scheduling defaults inside the Create Habit flow.【F:src/features/habits/HabitWizard.tsx†L41-L233】【F:src/services/habitAiSuggestions.ts†L1-L194】
 - [ ] **Today screen habit edit AI**: help rephrase, reschedule, or improve an existing habit directly in the Today list.
 - [ ] **AI reflection prompts**: connect `generate-reflection-prompts` edge function to replace demo prompts with live AI output.【F:src/features/goals/GoalReflectionJournal.tsx†L738-L781】
 - [ ] **AI Coach upgrade**: connect the strategy assistant UI to a real LLM backend and honor the privacy controls in Account → AI Settings.
