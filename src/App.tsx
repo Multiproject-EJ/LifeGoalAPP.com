@@ -37,10 +37,14 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
+import { PointsBadge } from './components/PointsBadge';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
 import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
+import { convertXpToPoints } from './constants/economy';
+import { ACTIONS_XP_REWARDS } from './types/actions';
+import { SPIN_PRIZES, XP_REWARDS } from './types/gamification';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -257,6 +261,12 @@ const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'score', 'breathing
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 
+const formatPointsRange = (min: number, max: number) => {
+  const normalizedMin = Math.min(min, max);
+  const normalizedMax = Math.max(min, max);
+  return normalizedMin === normalizedMax ? `${normalizedMin}` : `${normalizedMin}-${normalizedMax}`;
+};
+
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
@@ -376,6 +386,65 @@ export default function App() {
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
+  const shouldShowPointsBadges = gamificationEnabled && isMobileMenuImageActive;
+  const mobileMenuPointsBadges = useMemo(() => {
+    const habitBasePoints = convertXpToPoints(XP_REWARDS.HABIT_COMPLETE);
+    const habitBonusPoints = convertXpToPoints(XP_REWARDS.ALL_DAILY_HABITS);
+    const habitLabel = formatPointsRange(habitBasePoints, Math.max(habitBasePoints, habitBonusPoints));
+
+    const actionMinPoints = convertXpToPoints(ACTIONS_XP_REWARDS.COMPLETE_NICE_TO_DO);
+    const actionMaxPoints = convertXpToPoints(ACTIONS_XP_REWARDS.COMPLETE_MUST_DO);
+    const actionLabel = formatPointsRange(actionMinPoints, actionMaxPoints);
+
+    const journalBasePoints = convertXpToPoints(XP_REWARDS.JOURNAL_ENTRY);
+    const journalMaxPoints = convertXpToPoints(XP_REWARDS.JOURNAL_ENTRY + XP_REWARDS.JOURNAL_LONG_ENTRY);
+    const journalLabel = formatPointsRange(journalBasePoints, journalMaxPoints);
+
+    const breathingPoints = convertXpToPoints(XP_REWARDS.BREATHING_SESSION);
+    const meditationMaxPoints = convertXpToPoints(
+      XP_REWARDS.MEDITATION_SESSION + XP_REWARDS.MEDITATION_LONG_SESSION
+    );
+    const breathingLabel = formatPointsRange(breathingPoints, meditationMaxPoints);
+
+    const checkinPoints = convertXpToPoints(XP_REWARDS.CHECKIN);
+    const checkinLabel = formatPointsRange(checkinPoints, checkinPoints);
+
+    const visionBasePoints = convertXpToPoints(XP_REWARDS.VISION_BOARD);
+    const visionBonusPoints = convertXpToPoints(XP_REWARDS.VISION_BOARD + XP_REWARDS.VISION_BOARD_CAPTION);
+    const visionLabel = formatPointsRange(visionBasePoints, visionBonusPoints);
+
+    const goalMinPoints = convertXpToPoints(XP_REWARDS.GOAL_MILESTONE);
+    const goalMaxPoints = convertXpToPoints(XP_REWARDS.GOAL_COMPLETE + XP_REWARDS.GOAL_COMPLETE_EARLY);
+    const goalLabel = formatPointsRange(goalMinPoints, goalMaxPoints);
+
+    return {
+      planning: habitLabel,
+      habits: habitLabel,
+      actions: actionLabel,
+      journal: journalLabel,
+      rituals: checkinLabel,
+      'breathing-space': breathingLabel,
+      insights: visionLabel,
+      support: goalLabel,
+    } satisfies Partial<Record<MobileMenuNavItem['id'], string>>;
+  }, []);
+  const mobileFooterPointsBadges = useMemo(
+    () => ({
+      planning: mobileMenuPointsBadges.planning,
+      actions: mobileMenuPointsBadges.actions,
+      'breathing-space': mobileMenuPointsBadges['breathing-space'],
+    }),
+    [mobileMenuPointsBadges],
+  );
+  const spinPointsRange = useMemo(() => {
+    const pointValues = SPIN_PRIZES.filter((prize) => prize.type === 'points').map((prize) => prize.value);
+    if (pointValues.length === 0) {
+      return null;
+    }
+    const minPoints = Math.min(...pointValues);
+    const maxPoints = Math.max(...pointValues);
+    return formatPointsRange(minPoints, maxPoints);
+  }, []);
   const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
 
   const workspaceNavItems = useMemo(() => {
@@ -1938,6 +2007,13 @@ export default function App() {
                       profileStrengthScore === null || profileStrengthScore === undefined
                         ? 'mobile-menu-overlay__icon-badge mobile-menu-overlay__icon-badge--neutral'
                         : 'mobile-menu-overlay__icon-badge';
+                    const pointsBadgeValue =
+                      shouldShowPointsBadges && item.id in mobileMenuPointsBadges
+                        ? mobileMenuPointsBadges[item.id as keyof typeof mobileMenuPointsBadges]
+                        : undefined;
+                    const pointsBadge = shouldShowPointsBadges && pointsBadgeValue ? (
+                      <PointsBadge value={pointsBadgeValue} className="points-badge--inline" />
+                    ) : null;
                     const handleItemClick = () => {
                       if (profileStrengthArea && profileStrengthHoldTriggeredRef.current) {
                         profileStrengthHoldTriggeredRef.current = false;
@@ -1987,6 +2063,7 @@ export default function App() {
                               }`}
                             >
                               {item.label}
+                              {pointsBadge}
                             </span>
                             <span className="mobile-menu-overlay__summary">{item.summary}</span>
                           </span>
@@ -2522,7 +2599,12 @@ export default function App() {
               🎰
             </span>
             <span className="daily-treats-modal__action-text">
-              <strong>Life Spin</strong>
+              <span className="daily-treats-modal__action-title">
+                <strong>Life Spin</strong>
+                {shouldShowPointsBadges && spinPointsRange ? (
+                  <PointsBadge value={spinPointsRange} className="daily-treats-modal__points-badge" />
+                ) : null}
+              </span>
               <span>Spin the wheel for your daily boost.</span>
             </span>
           </button>
@@ -2649,6 +2731,8 @@ export default function App() {
           onStatusHoldToggle={handleMobileGameStatusHoldToggle}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
+          pointsBadges={mobileFooterPointsBadges}
+          showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
           isCollapsed={isMobileFooterCollapsed}
           isSnapActive={isMobileFooterSnapActive}
@@ -2842,6 +2926,8 @@ export default function App() {
           onStatusHoldToggle={handleMobileGameStatusHoldToggle}
           onOpenMenu={() => setIsMobileMenuOpen(true)}
           isDiodeActive={isMobileMenuImageActive}
+          pointsBadges={mobileFooterPointsBadges}
+          showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
           isCollapsed={isMobileFooterCollapsed}
           isSnapActive={isMobileFooterSnapActive}

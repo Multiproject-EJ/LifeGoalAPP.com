@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { PointsBadge } from './PointsBadge';
 
 type MobileFooterNavItem = {
   id: string;
@@ -23,6 +24,8 @@ type MobileFooterNavProps = {
   onSelect: (itemId: string) => void;
   onOpenMenu?: () => void;
   isDiodeActive: boolean;
+  pointsBadges?: Partial<Record<MobileFooterNavItem['id'], string>>;
+  showPointsBadges?: boolean;
   isFlashActive?: boolean;
   isCollapsed?: boolean;
   isSnapActive?: boolean;
@@ -42,6 +45,8 @@ export function MobileFooterNav({
   onSelect,
   onOpenMenu,
   isDiodeActive,
+  pointsBadges = {},
+  showPointsBadges = false,
   isFlashActive = false,
   isCollapsed = false,
   isSnapActive = false,
@@ -251,6 +256,7 @@ export function MobileFooterNav({
             }
 
             const isActive = item.id === activeId;
+            const pointsBadgeValue = showPointsBadges ? pointsBadges[item.id] : undefined;
             return (
               <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}`}>
                 <button
@@ -265,7 +271,16 @@ export function MobileFooterNav({
                   <span aria-hidden="true" className="mobile-footer-nav__icon">
                     {item.icon}
                   </span>
-                  <span className="mobile-footer-nav__label">{item.label}</span>
+                  <span className="mobile-footer-nav__label">
+                    {item.label}
+                    {pointsBadgeValue ? (
+                      <PointsBadge
+                        value={pointsBadgeValue}
+                        size="mini"
+                        className="mobile-footer-nav__points-badge"
+                      />
+                    ) : null}
+                  </span>
                 </button>
               </li>
             );
