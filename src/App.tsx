@@ -2007,7 +2007,10 @@ export default function App() {
                       profileStrengthScore === null || profileStrengthScore === undefined
                         ? 'mobile-menu-overlay__icon-badge mobile-menu-overlay__icon-badge--neutral'
                         : 'mobile-menu-overlay__icon-badge';
-                    const pointsBadgeValue = mobileMenuPointsBadges[item.id];
+                    const pointsBadgeValue =
+                      shouldShowPointsBadges && item.id in mobileMenuPointsBadges
+                        ? mobileMenuPointsBadges[item.id as keyof typeof mobileMenuPointsBadges]
+                        : undefined;
                     const pointsBadge = shouldShowPointsBadges && pointsBadgeValue ? (
                       <PointsBadge value={pointsBadgeValue} className="points-badge--inline" />
                     ) : null;
