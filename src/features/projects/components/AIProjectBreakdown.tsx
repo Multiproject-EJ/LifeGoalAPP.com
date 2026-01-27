@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { Project, CreateProjectTaskInput } from '../../../types/actions';
+import { AI_FEATURE_ICON } from '../../../constants/ai';
 import './AIProjectBreakdown.css';
 
 interface AIProjectBreakdownProps {
@@ -70,7 +71,7 @@ export function AIProjectBreakdown({ project, session, onAddTasks, onClose }: AI
   return (
     <div className="ai-breakdown">
       <div className="ai-breakdown__header">
-        <span className="ai-breakdown__icon">🤖</span>
+        <span className="ai-breakdown__icon">{AI_FEATURE_ICON}</span>
         <h3 className="ai-breakdown__title">AI Project Breakdown</h3>
         <button className="ai-breakdown__close" onClick={onClose}>×</button>
       </div>
@@ -83,7 +84,7 @@ export function AIProjectBreakdown({ project, session, onAddTasks, onClose }: AI
               className="ai-breakdown__generate-btn"
               onClick={generateSuggestions}
             >
-              ✨ Generate Tasks
+              {AI_FEATURE_ICON} Generate Tasks
             </button>
           </div>
         )}

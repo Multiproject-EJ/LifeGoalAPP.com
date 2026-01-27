@@ -17,6 +17,7 @@ import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals
 import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { AI_FEATURE_ICON } from '../../constants/ai';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
@@ -614,11 +615,11 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
                     transition: 'background-color 0.2s',
                   }}
                 >
-                  ✨ Add Life Goal
+                  {AI_FEATURE_ICON} Add Life Goal
                 </button>
               </div>
               <p style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--color-text-secondary, #6B7280)' }}>
-                Use the quick form below or click "✨ Add Life Goal" to create a detailed goal with AI assistance, steps, timing, and alerts.
+                Use the quick form below or click "{AI_FEATURE_ICON} Add Life Goal" to create a detailed goal with AI assistance, steps, timing, and alerts.
               </p>
               <form onSubmit={handleSubmit}>
                 <label className="goal-form__field">

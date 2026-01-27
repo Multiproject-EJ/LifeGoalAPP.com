@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AI_FEATURE_ICON } from '../constants/ai';
 import { suggestGoal, type SuggestGoalResponse } from '../services/goalSuggestions';
 
 /**
@@ -87,7 +88,7 @@ export function AiGoalSuggestion({ onSaveGoal, onCancel, className = '' }: AiGoa
   return (
     <div className={`ai-goal-suggestion ${className}`}>
       <div className="ai-goal-suggestion__header">
-        <h2>✨ AI Goal Suggestion</h2>
+        <h2>{AI_FEATURE_ICON} AI Goal Suggestion</h2>
         <p className="ai-goal-suggestion__subtitle">
           Describe what you want to achieve, and get a structured goal with milestones and tasks
         </p>
@@ -162,7 +163,7 @@ export function AiGoalSuggestion({ onSaveGoal, onCancel, className = '' }: AiGoa
                 </>
               ) : (
                 <>
-                  ✨ Suggest Goal
+                  {AI_FEATURE_ICON} Suggest Goal
                 </>
               )}
             </button>
@@ -230,7 +231,7 @@ export function AiGoalSuggestion({ onSaveGoal, onCancel, className = '' }: AiGoa
               className="btn btn--secondary"
               onClick={handleReset}
             >
-              ✨ Try Again
+              {AI_FEATURE_ICON} Try Again
             </button>
 
             {onCancel && (

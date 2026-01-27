@@ -12,6 +12,7 @@ import { getTelemetryDifficultyAdjustment } from '../../services/telemetry';
 import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
+import './HabitsModule.css';
 import {
   AUTO_PROGRESS_TIERS,
   AUTO_PROGRESS_UPGRADE_RULES,
@@ -913,13 +914,16 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       )}
 
       {/* Streaks Section */}
-      <div style={{
-        background: 'white',
-        border: '2px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '2rem',
-        marginBottom: '2rem'
-      }}>
+      <div
+        className="habits-module-card"
+        style={{
+          background: 'white',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '2rem',
+          marginBottom: '2rem',
+        }}
+      >
         <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>Streaks</h2>
 
         {streaksLoading ? (
@@ -987,14 +991,25 @@ export function HabitsModule({ session }: HabitsModuleProps) {
 
       {/* Templates Gallery */}
       {!showWizard && (
-        <div style={{
-          background: 'white',
-          border: '2px solid #e2e8f0',
-          borderRadius: '12px',
-          padding: '2rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div
+          className="habits-module-card"
+          style={{
+            background: 'white',
+            border: '2px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '2rem',
+            marginBottom: '2rem',
+          }}
+        >
+          <div
+            className="habits-module-card__header"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem',
+            }}
+          >
             <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Templates</h2>
             <button
               onClick={() => {
@@ -1031,11 +1046,14 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           )}
 
           {!templatesLoading && !templatesError && templates.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: '1rem'
-            }}>
+            <div
+              className="habits-module-templates-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '1rem',
+              }}
+            >
               {templates.map((template) => {
                 // Generate a short schedule description
                 let scheduleDesc = '';
@@ -1124,19 +1142,25 @@ export function HabitsModule({ session }: HabitsModuleProps) {
       )}
 
       {/* Two-column layout: Your habits | Today's checklist */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '2rem',
-        marginBottom: '2rem'
-      }}>
+      <div
+        className="habits-module-columns"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '2rem',
+          marginBottom: '2rem',
+        }}
+      >
         {/* Left column: Your habits */}
-        <div style={{
-          background: 'white',
-          border: '2px solid #e2e8f0',
-          borderRadius: '12px',
-          padding: '2rem'
-        }}>
+        <div
+          className="habits-module-card"
+          style={{
+            background: 'white',
+            border: '2px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '2rem',
+          }}
+        >
           <div style={{ marginBottom: '1.5rem' }}>
             <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Your habits</h2>
           </div>

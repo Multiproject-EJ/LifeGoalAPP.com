@@ -13,6 +13,7 @@ import { AiCoach } from '../features/ai-coach';
 import '../features/ai-coach/AiCoach.css';
 import { GamificationHeader } from './GamificationHeader';
 import { NewDailySpinWheel } from '../features/spin-wheel/NewDailySpinWheel';
+import { AI_FEATURE_ICON } from '../constants/ai';
 
 type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule';
 
@@ -489,7 +490,7 @@ export function QuickActionsFAB({
     },
     {
       id: 'life-coach',
-      icon: '🤖',
+      icon: AI_FEATURE_ICON,
       label: 'Life Coach AI',
       color: '#0ea5e9',
       onClick: handleLifeCoachClick,
