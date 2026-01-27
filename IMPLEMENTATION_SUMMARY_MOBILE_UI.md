@@ -405,3 +405,28 @@ All requirements from the problem statement have been implemented:
 ✅ 5. Only choose from pre-existing projects (required selection)
 ✅ 6. Third button "Sick" between "Skip today" and "Vacation"
 ✅ 7. Log journal entries for all day status buttons with appropriate messages
+
+---
+
+# Game Mode Points Badges (Mobile UI)
+
+## Goal
+Make it obvious which mobile entry points award points when Game of Life mode is active (green toggle), while keeping the badges tiny so they don’t crowd the UI.
+
+## What Changed
+- Added a reusable `PointsBadge` component that renders a compact 💎 icon plus the numeric value, designed for tight spaces.
+- Wired badge visibility to the mobile game toggle so badges only appear when the toggle is green.
+- Added point range badges to mobile menu entries that lead to point‑awarding flows (habits, actions, journals, check‑ins, meditation/breathing, vision boards, and goal progress).
+- Added a badge next to the Daily Treats → Life Spin action to communicate the point range available in spins.
+- Extended the mobile footer navigation to optionally display the same mini badges for the footer’s primary entries.
+
+## Why This Way
+- The mobile menu and footer are the most consistent entry points for these point‑granting activities, so they create a centralized “game mode” layer without touching every individual screen.
+- Keeping the badge compact and next to the label avoids extra rows or oversized icons.
+- Point ranges (instead of a single number) handle reward types that vary (e.g., habits, actions, spins).
+
+## Files Updated
+- `src/components/PointsBadge.tsx`, `src/components/PointsBadge.css`
+- `src/components/MobileFooterNav.tsx`
+- `src/App.tsx`
+- `src/index.css`
