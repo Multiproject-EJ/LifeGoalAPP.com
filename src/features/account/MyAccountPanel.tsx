@@ -4,6 +4,7 @@ import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
 import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel, ReminderAnalyticsDashboard } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
+import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
@@ -273,6 +274,8 @@ export function MyAccountPanel({
       <AiSettingsSection session={session} />
 
       <GamificationSettings session={session} />
+
+      <ExperimentalFeaturesSection session={session} />
 
       <TelemetrySettingsSection session={session} isDemoExperience={isDemoExperience} />
 
