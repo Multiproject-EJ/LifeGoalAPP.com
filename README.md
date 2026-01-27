@@ -39,6 +39,11 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 
 > Each phase builds on the previous one. Update this checklist as new capabilities are delivered.
 
+## AI Enablement & Roadmap (Living Spec)
+
+The AI plan is now tracked in a dedicated document so it can evolve without bloating the main README. See
+[AI_ENABLEMENT_ROADMAP.md](./docs/AI_ENABLEMENT_ROADMAP.md) for live production status, setup instructions, and the delivery checklist.
+
 ## Design System
 
 LifeGoalApp features a modern glassmorphic design system with light/dark themes and reusable components.
