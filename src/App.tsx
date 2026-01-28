@@ -307,7 +307,9 @@ export default function App() {
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBreatheSubmenuOpen, setIsBreatheSubmenuOpen] = useState(false);
-  const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<'breathing' | 'meditation'>('breathing');
+  const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
+    'breathing' | 'meditation' | 'yoga' | null
+  >(null);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
@@ -1120,8 +1122,13 @@ export default function App() {
     setShowMobileHome(true);
   };
 
-  const handleMobileNavSelect = (navId: string) => {
+  const handleMobileNavSelect = (navId: string, options?: { preserveBreatheTab?: boolean }) => {
     setIsMobileMenuOpen(false);
+    const preserveBreatheTab = options?.preserveBreatheTab ?? false;
+
+    if (navId === 'breathing-space' && !preserveBreatheTab) {
+      setBreathingSpaceMobileTab(null);
+    }
 
     if (navId === 'game' && isMobileViewport) {
       setShowMobileGamification(true);
@@ -1903,7 +1910,7 @@ export default function App() {
             <BreathingSpace
               session={activeSession}
               initialMobileTab={breathingSpaceMobileTab}
-              onMobileTabChange={setBreathingSpaceMobileTab}
+              onMobileTabChange={(tab) => setBreathingSpaceMobileTab(tab)}
             />
           </div>
         );
@@ -2136,7 +2143,7 @@ export default function App() {
                               className="mobile-menu-overlay__submenu-button"
                               onClick={() => {
                                 setBreathingSpaceMobileTab('breathing');
-                                handleMobileNavSelect('breathing-space');
+                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
                               }}
                             >
                               <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🌬️</span>
@@ -2147,11 +2154,22 @@ export default function App() {
                               className="mobile-menu-overlay__submenu-button"
                               onClick={() => {
                                 setBreathingSpaceMobileTab('meditation');
-                                handleMobileNavSelect('breathing-space');
+                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
                               }}
                             >
                               <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🧘</span>
                               Meditation
+                            </button>
+                            <button
+                              type="button"
+                              className="mobile-menu-overlay__submenu-button"
+                              onClick={() => {
+                                setBreathingSpaceMobileTab('yoga');
+                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
+                              }}
+                            >
+                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🧘‍♀️</span>
+                              Yoga
                             </button>
                           </div>
                         ) : null}

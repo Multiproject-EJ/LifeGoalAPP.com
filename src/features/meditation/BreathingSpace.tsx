@@ -20,9 +20,11 @@ import './BreathingSpace.css';
 
 type BreathingSpaceProps = {
   session: Session;
-  initialMobileTab?: 'breathing' | 'meditation';
-  onMobileTabChange?: (tab: 'breathing' | 'meditation') => void;
+  initialMobileTab?: MobileTab | null;
+  onMobileTabChange?: (tab: MobileTab) => void;
 };
+
+type MobileTab = 'breathing' | 'meditation' | 'yoga';
 
 type MeditationStats = {
   totalMinutes: number;
@@ -47,9 +49,7 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderSet, setReminderSet] = useState(false);
   const reminderRef = useRef<HTMLDivElement>(null);
-  const [activeMobileTab, setActiveMobileTab] = useState<'breathing' | 'meditation'>(
-    initialMobileTab ?? 'breathing'
-  );
+  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(initialMobileTab ?? null);
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
@@ -66,7 +66,7 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
   const [justCompletedSession, setJustCompletedSession] = useState(false);
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
-  const handleMobileTabChange = (tab: 'breathing' | 'meditation') => {
+  const handleMobileTabChange = (tab: MobileTab) => {
     setActiveMobileTab(tab);
     onMobileTabChange?.(tab);
   };
@@ -100,8 +100,8 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
   }, [session.user.id]);
 
   useEffect(() => {
-    if (initialMobileTab) {
-      setActiveMobileTab(initialMobileTab);
+    if (initialMobileTab !== undefined) {
+      setActiveMobileTab(initialMobileTab ?? null);
     }
   }, [initialMobileTab]);
 
@@ -291,33 +291,74 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
   }
 
   return (
-    <div className="breathing-space" data-mobile-tab={activeMobileTab}>
-      <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Breathe options">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeMobileTab === 'breathing'}
-          className={`breathing-space__mobile-tab ${
-            activeMobileTab === 'breathing' ? 'breathing-space__mobile-tab--active' : ''
-          }`}
-          onClick={() => handleMobileTabChange('breathing')}
-        >
-          <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🌬️</span>
-          <span className="breathing-space__mobile-tab-title">FOCUS BREATHING</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeMobileTab === 'meditation'}
-          className={`breathing-space__mobile-tab ${
-            activeMobileTab === 'meditation' ? 'breathing-space__mobile-tab--active' : ''
-          }`}
-          onClick={() => handleMobileTabChange('meditation')}
-        >
-          <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🧘</span>
-          <span className="breathing-space__mobile-tab-title">MEDITATION</span>
-        </button>
-      </div>
+    <div className="breathing-space" data-mobile-tab={activeMobileTab ?? 'none'}>
+      {activeMobileTab ? (
+        <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Breathe options">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeMobileTab === 'breathing'}
+            className={`breathing-space__mobile-tab ${
+              activeMobileTab === 'breathing' ? 'breathing-space__mobile-tab--active' : ''
+            }`}
+            onClick={() => handleMobileTabChange('breathing')}
+          >
+            <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🌬️</span>
+            <span className="breathing-space__mobile-tab-title">FOCUS BREATHING</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeMobileTab === 'meditation'}
+            className={`breathing-space__mobile-tab ${
+              activeMobileTab === 'meditation' ? 'breathing-space__mobile-tab--active' : ''
+            }`}
+            onClick={() => handleMobileTabChange('meditation')}
+          >
+            <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🧘</span>
+            <span className="breathing-space__mobile-tab-title">MEDITATION</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeMobileTab === 'yoga'}
+            className={`breathing-space__mobile-tab ${
+              activeMobileTab === 'yoga' ? 'breathing-space__mobile-tab--active' : ''
+            }`}
+            onClick={() => handleMobileTabChange('yoga')}
+          >
+            <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🧘‍♀️</span>
+            <span className="breathing-space__mobile-tab-title">YOGA</span>
+          </button>
+        </div>
+      ) : (
+        <div className="breathing-space__mobile-launch" role="group" aria-label="Choose a breathe focus">
+          <button
+            type="button"
+            className="breathing-space__mobile-launch-card"
+            onClick={() => handleMobileTabChange('breathing')}
+          >
+            <span className="breathing-space__mobile-launch-icon" aria-hidden="true">🌬️</span>
+            <span className="breathing-space__mobile-launch-title">Focus Breathing</span>
+          </button>
+          <button
+            type="button"
+            className="breathing-space__mobile-launch-card"
+            onClick={() => handleMobileTabChange('meditation')}
+          >
+            <span className="breathing-space__mobile-launch-icon" aria-hidden="true">🧘</span>
+            <span className="breathing-space__mobile-launch-title">Meditation</span>
+          </button>
+          <button
+            type="button"
+            className="breathing-space__mobile-launch-card"
+            onClick={() => handleMobileTabChange('yoga')}
+          >
+            <span className="breathing-space__mobile-launch-icon" aria-hidden="true">🧘‍♀️</span>
+            <span className="breathing-space__mobile-launch-title">Yoga</span>
+          </button>
+        </div>
+      )}
 
       {/* Left Column: Quick Start & Reminder */}
       <div className="breathing-space__left-column breathing-space__section breathing-space__section--breathing">
@@ -360,6 +401,18 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
           </button>
         </div>
 
+        <div className="breathing-space__card breathing-space__section breathing-space__section--yoga">
+          <div className="breathing-space__card-header">
+            <span className="breathing-space__card-icon">🧘‍♀️</span>
+            <h3 className="breathing-space__card-title">Yoga Reset</h3>
+          </div>
+          <p className="breathing-space__card-description">
+            Slow down with a grounding flow designed for calm, stretch, and balance.
+          </p>
+          <button className="btn btn--primary breathing-space__start-button" type="button">
+            Start 8-minute flow
+          </button>
+        </div>
       </div>
 
       {/* Right Column: Progress & Library */}
@@ -543,6 +596,27 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="breathing-space__library breathing-space__section breathing-space__section--yoga">
+          <div className="breathing-space__library-header">
+            <h3 className="breathing-space__library-title">Yoga Sessions</h3>
+          </div>
+          <div className="breathing-space__button-grid">
+            {[
+              { title: 'Morning Mobility', duration: '10 min' },
+              { title: 'Posture Reset', duration: '6 min' },
+              { title: 'Evening Wind Down', duration: '12 min' },
+            ].map((sessionItem) => (
+              <button key={sessionItem.title} type="button" className="breathing-space__exercise-button">
+                <span className="breathing-space__exercise-button-icon">🧘‍♀️</span>
+                <span className="breathing-space__exercise-button-text">
+                  <span className="breathing-space__exercise-button-title">{sessionItem.title}</span>
+                  <span className="breathing-space__exercise-button-meta">{sessionItem.duration}</span>
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

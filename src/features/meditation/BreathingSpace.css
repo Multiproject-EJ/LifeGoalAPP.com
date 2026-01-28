@@ -15,8 +15,46 @@
 
 .breathing-space__mobile-tabs {
   display: none;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+.breathing-space__mobile-launch {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--space-3);
+}
+
+.breathing-space__mobile-launch-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.breathing-space__mobile-launch-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.breathing-space__mobile-launch-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.breathing-space__mobile-launch-title {
+  font-size: var(--fs-xs);
 }
 
 .breathing-space__mobile-tab {
@@ -485,13 +523,23 @@
     display: grid;
   }
 
+  .breathing-space[data-mobile-tab='none'] .breathing-space__mobile-tabs {
+    display: none;
+  }
+
+  .breathing-space[data-mobile-tab='none'] .breathing-space__mobile-launch {
+    display: grid;
+  }
+
   .breathing-space__section--breathing,
-  .breathing-space__section--meditation {
+  .breathing-space__section--meditation,
+  .breathing-space__section--yoga {
     display: none;
   }
 
   .breathing-space[data-mobile-tab='breathing'] .breathing-space__section--breathing,
-  .breathing-space[data-mobile-tab='meditation'] .breathing-space__section--meditation {
+  .breathing-space[data-mobile-tab='meditation'] .breathing-space__section--meditation,
+  .breathing-space[data-mobile-tab='yoga'] .breathing-space__section--yoga {
     display: var(--breathing-space-section-display, block);
   }
 
