@@ -37,6 +37,24 @@
   transform: translateY(-1px);
 }
 
+.habit-checklist__skip-btn {
+  padding: 0.5rem 1rem;
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.habit-checklist__skip-btn:hover {
+  background: #ffedd5;
+  border-color: #fdba74;
+  transform: translateY(-1px);
+}
+
 /* Modal overlay and content */
 .habit-alert-modal-overlay {
   position: fixed;
