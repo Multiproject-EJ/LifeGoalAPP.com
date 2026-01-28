@@ -1,0 +1,40 @@
+.points-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: rgba(248, 250, 252, 0.9);
+  color: #0f172a;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.points-badge--small {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.points-badge__icon {
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.points-badge__value {
+  line-height: 1;
+}
+
+.points-badge--inline {
+  margin-left: 0.4rem;
+}
+
+.points-badge--corner {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+}
