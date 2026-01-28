@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
 import type React from 'react';
 import type { Action } from '../../../types/actions';
-import { ACTION_CATEGORY_CONFIG, calculateTimeRemaining } from '../../../types/actions';
+import { ACTION_CATEGORY_CONFIG, ACTIONS_XP_REWARDS, calculateTimeRemaining } from '../../../types/actions';
+import { convertXpToPoints } from '../../../constants/economy';
+import { PointsBadge } from '../../../components/PointsBadge';
 import { ActionTimer } from './ActionTimer';
 
 export interface ActionItemProps {
@@ -16,6 +18,7 @@ export interface ActionItemProps {
   onDragStart?: () => void;
   onDragEnter?: () => void;
   onDragEnd?: () => void;
+  showPointsBadge?: boolean;
 }
 
 export function ActionItem({
@@ -30,6 +33,7 @@ export function ActionItem({
   onDragStart,
   onDragEnter,
   onDragEnd,
+  showPointsBadge = false,
 }: ActionItemProps) {
   const timeRemaining = calculateTimeRemaining(action.expires_at);
   const config = ACTION_CATEGORY_CONFIG[action.category];
@@ -138,6 +142,16 @@ export function ActionItem({
     .filter(Boolean)
     .join(' ');
 
+  const pointsLabel = (() => {
+    if (!showPointsBadge) return null;
+    const xpReward = action.category === 'must_do'
+      ? ACTIONS_XP_REWARDS.COMPLETE_MUST_DO
+      : action.category === 'nice_to_do'
+        ? ACTIONS_XP_REWARDS.COMPLETE_NICE_TO_DO
+        : ACTIONS_XP_REWARDS.COMPLETE_PROJECT_ACTION;
+    return convertXpToPoints(xpReward).toString();
+  })();
+
   return (
     <li
       className={itemClasses}
@@ -152,6 +166,9 @@ export function ActionItem({
       onDragEnd={onDragEnd}
       onDrop={handleDrop}
     >
+      {pointsLabel ? (
+        <PointsBadge value={pointsLabel} className="points-badge--corner action-item__points-badge" size="mini" />
+      ) : null}
       <button
         type="button"
         className="action-item__drag-handle"

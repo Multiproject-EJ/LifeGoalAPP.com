@@ -13,6 +13,7 @@ export interface ActionsListProps {
   selectedIndex?: number;
   selectedIds?: Set<string>;
   justCompletedActionId?: string | null;
+  showPointsBadges?: boolean;
 }
 
 type ActionsByCategory = Record<ActionCategory, Action[]>;
@@ -56,6 +57,7 @@ export function ActionsList({
   selectedIndex = -1,
   selectedIds = new Set(),
   justCompletedActionId = null,
+  showPointsBadges = false,
 }: ActionsListProps) {
   const computedByCategory = useMemo(() => buildActionsByCategory(actions), [actions]);
   const [orderedByCategory, setOrderedByCategory] = useState<ActionsByCategory>(computedByCategory);
@@ -178,6 +180,7 @@ export function ActionsList({
                 onDragStart={() => handleDragStart(category, action.id)}
                 onDragEnter={() => handleDragEnter(category, action.id)}
                 onDragEnd={handleDragEnd}
+                showPointsBadge={showPointsBadges}
               />
             );
           })}

@@ -405,3 +405,33 @@ All requirements from the problem statement have been implemented:
 ✅ 5. Only choose from pre-existing projects (required selection)
 ✅ 6. Third button "Sick" between "Skip today" and "Vacation"
 ✅ 7. Log journal entries for all day status buttons with appropriate messages
+
+---
+
+# Game Mode Points Badges (Mobile UI)
+
+## Goal
+Make it obvious which individual items award points when Game of Life mode is active (green toggle), while keeping the badges tiny so they don’t crowd the UI.
+
+## What Changed
+- Added a reusable `PointsBadge` component that renders a compact 💎 icon plus the numeric value, designed for tight spaces.
+- Wired badge visibility to the mobile game toggle so badges only appear when the toggle is green.
+- Added mini corner badges directly on individual habit items (Today list + full habit cards) to show the point award per completion.
+- Added mini corner badges on individual action items to show the point award per completion.
+- Kept a badge next to the Daily Treats → Life Spin action to communicate the point range available in spins.
+
+## Why This Way
+- The most helpful place to show point rewards is on the actual items users complete (habits and actions), not just on navigation.
+- Corner placement keeps the badge visible without adding extra lines or large icons.
+- Point ranges (instead of a single number) handle reward types that vary (e.g., habits, spins).
+
+## Files Updated
+- `src/components/PointsBadge.tsx`, `src/components/PointsBadge.css`
+- `src/features/habits/DailyHabitTracker.tsx`
+- `src/features/actions/components/ActionItem.tsx`
+- `src/features/actions/components/ActionsList.tsx`
+- `src/features/actions/ActionsTab.tsx`
+- `src/features/habits/MobileHabitHome.tsx`
+- `src/App.tsx`
+- `src/index.css`
+- `src/features/actions/ActionsTab.css`

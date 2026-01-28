@@ -778,6 +778,10 @@
   position: relative;
 }
 
+.action-item__points-badge {
+  background: rgba(248, 250, 252, 0.95);
+}
+
 .action-item:hover {
   box-shadow:
     0 14px 28px rgba(15, 23, 42, 0.1),
