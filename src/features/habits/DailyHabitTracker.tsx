@@ -51,6 +51,7 @@ type DailyHabitTrackerProps = {
   session: Session;
   variant?: DailyHabitTrackerVariant;
   showPointsBadges?: boolean;
+  onVisionRewardOpenChange?: (isOpen: boolean) => void;
 };
 
 type HabitCompletionState = {
@@ -197,6 +198,7 @@ export function DailyHabitTracker({
   session,
   variant = 'full',
   showPointsBadges = false,
+  onVisionRewardOpenChange,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
@@ -686,6 +688,10 @@ export function DailyHabitTracker({
         </div>
       </div>
     ) : null;
+
+  useEffect(() => {
+    onVisionRewardOpenChange?.(isVisionRewardOpen);
+  }, [isVisionRewardOpen, onVisionRewardOpenChange]);
 
   useEffect(() => {
     setIsVisionRewardOpen(false);

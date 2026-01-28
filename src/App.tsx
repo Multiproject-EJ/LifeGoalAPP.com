@@ -256,7 +256,7 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'placeholder',
 ] as const;
 
-const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'score', 'breathing-space']);
+const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'breathing-space']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 
@@ -321,6 +321,7 @@ export default function App() {
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
   const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
+  const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const mobileFooterCollapseTimeoutRef = useRef<number | null>(null);
   const mobileFooterSnapTimeoutRef = useRef<number | null>(null);
   const lastMobileScrollYRef = useRef(0);
@@ -511,6 +512,7 @@ export default function App() {
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
   }, [mobileMenuNavItems]);
+  const mobileFooterPointsBadges: Partial<Record<MobileMenuNavItem['id'], string>> = {};
 
   const triggerMobileMenuFlash = () => {
     if (mobileMenuFlashTimeoutRef.current !== null) {
@@ -556,7 +558,9 @@ export default function App() {
 
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
   const shouldAutoCollapseOnIdle =
-    isMobileViewport && mobileActiveNavId !== null && MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId);
+    isMobileViewport &&
+    mobileActiveNavId !== null &&
+    MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId);
   const shouldAllowFooterCollapse = isMobileViewport && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
 
   const scheduleMobileFooterCollapse = useCallback(() => {
@@ -639,6 +643,17 @@ export default function App() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileViewport]);
+
+  useEffect(() => {
+    if (!isVisionRewardOpen || !isMobileViewport || !isMobileMenuImageActive) {
+      return;
+    }
+    if (mobileFooterCollapseTimeoutRef.current !== null) {
+      window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
+      mobileFooterCollapseTimeoutRef.current = null;
+    }
+    setIsMobileFooterCollapsed(true);
+  }, [isVisionRewardOpen, isMobileMenuImageActive, isMobileViewport]);
 
   const isDemoMode = mode === 'demo';
   const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
@@ -1738,7 +1753,11 @@ export default function App() {
                 </button>
               </div>
             ) : null}
-            <DailyHabitTracker session={activeSession} showPointsBadges={shouldShowPointsBadges} />
+            <DailyHabitTracker
+              session={activeSession}
+              showPointsBadges={shouldShowPointsBadges}
+              onVisionRewardOpenChange={setIsVisionRewardOpen}
+            />
             <HabitsModule session={activeSession} />
           </div>
         );
@@ -2634,7 +2653,11 @@ export default function App() {
   if (isMobileViewport && showMobileHome) {
     return (
       <>
-        <MobileHabitHome session={activeSession} showPointsBadges={shouldShowPointsBadges} />
+        <MobileHabitHome
+          session={activeSession}
+          showPointsBadges={shouldShowPointsBadges}
+          onVisionRewardOpenChange={setIsVisionRewardOpen}
+        />
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
