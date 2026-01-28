@@ -384,7 +384,8 @@ export default function App() {
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
-  const shouldShowPointsBadges = gamificationEnabled && isMobileMenuImageActive && isMobileViewport;
+  const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
+  const shouldShowPointsBadges = isGameModeActive && isMobileViewport;
   const spinPointsRange = useMemo(() => {
     const pointValues = SPIN_PRIZES.filter((prize) => prize.type === 'points').map((prize) => prize.value);
     if (pointValues.length === 0) {
