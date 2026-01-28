@@ -60,10 +60,18 @@ export function MobileFooterNav({
   const [statusHoldProgress, setStatusHoldProgress] = useState(0);
   const [isStatusHoldActive, setIsStatusHoldActive] = useState(false);
   const [isStatusHoldSnap, setIsStatusHoldSnap] = useState(false);
+  const [displayPointsBalance, setDisplayPointsBalance] = useState<number | null>(
+    typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
+  );
+  const [isPointsAnimating, setIsPointsAnimating] = useState(false);
+  const displayPointsBalanceRef = useRef<number | null>(
+    typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
+  );
   const statusHoldRafRef = useRef<number | null>(null);
   const statusHoldTimeoutRef = useRef<number | null>(null);
   const statusHoldStartRef = useRef<number | null>(null);
   const statusHoldTriggeredRef = useRef(false);
+  const pointsTimerRef = useRef<number | null>(null);
   const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
@@ -74,7 +82,7 @@ export function MobileFooterNav({
   const totalColumns = listItems.length || items.length;
   const listStyle = { '--mobile-footer-columns': totalColumns } as CSSProperties;
   const formattedPointsBalance =
-    typeof pointsBalance === 'number' ? Math.max(0, pointsBalance).toLocaleString() : null;
+    typeof displayPointsBalance === 'number' ? Math.max(0, displayPointsBalance).toLocaleString() : null;
   const shouldShowDiamondCounter = Boolean(isDiodeActive && formattedPointsBalance);
   const isCompactGameStatus = isDiodeOff && isCollapsed;
   const handlePointerDown = () => {
@@ -113,6 +121,71 @@ export function MobileFooterNav({
       clearStatusHoldTimers();
     };
   }, []);
+
+  useEffect(() => {
+    displayPointsBalanceRef.current = displayPointsBalance;
+  }, [displayPointsBalance]);
+
+  useEffect(() => {
+    if (typeof pointsBalance !== 'number') {
+      setDisplayPointsBalance(null);
+      setIsPointsAnimating(false);
+      if (pointsTimerRef.current !== null) {
+        window.clearInterval(pointsTimerRef.current);
+        pointsTimerRef.current = null;
+      }
+      return;
+    }
+
+    const nextBalance = Math.max(0, Math.floor(pointsBalance));
+    setDisplayPointsBalance((current) => {
+      if (current === null) {
+        return nextBalance;
+      }
+      return current;
+    });
+
+    const startBalance = displayPointsBalanceRef.current ?? nextBalance;
+
+    if (nextBalance <= startBalance) {
+      if (pointsTimerRef.current !== null) {
+        window.clearInterval(pointsTimerRef.current);
+        pointsTimerRef.current = null;
+      }
+      setDisplayPointsBalance(nextBalance);
+      setIsPointsAnimating(false);
+      return;
+    }
+
+    if (pointsTimerRef.current !== null) {
+      window.clearInterval(pointsTimerRef.current);
+      pointsTimerRef.current = null;
+    }
+
+    setIsPointsAnimating(true);
+    let currentValue = startBalance;
+    const delta = nextBalance - startBalance;
+    const stepInterval = Math.max(24, Math.min(80, Math.round(1200 / Math.max(delta, 1))));
+
+    pointsTimerRef.current = window.setInterval(() => {
+      currentValue += 1;
+      setDisplayPointsBalance(currentValue);
+      if (currentValue >= nextBalance) {
+        if (pointsTimerRef.current !== null) {
+          window.clearInterval(pointsTimerRef.current);
+          pointsTimerRef.current = null;
+        }
+        setIsPointsAnimating(false);
+      }
+    }, stepInterval);
+
+    return () => {
+      if (pointsTimerRef.current !== null) {
+        window.clearInterval(pointsTimerRef.current);
+        pointsTimerRef.current = null;
+      }
+    };
+  }, [pointsBalance]);
 
   const startStatusHold = () => {
     if (!onStatusHoldToggle) {
@@ -194,13 +267,23 @@ export function MobileFooterNav({
         ) : null}
         {shouldShowDiamondCounter ? (
           <div
-            className={`mobile-footer-nav__diamond-counter${isDiodeActive ? ' mobile-footer-nav__diamond-counter--diode-on' : ''}`}
+            className={`mobile-footer-nav__diamond-counter${
+              isDiodeActive ? ' mobile-footer-nav__diamond-counter--diode-on' : ''
+            }${isCollapsed ? ' mobile-footer-nav__diamond-counter--hidden' : ''}${
+              isPointsAnimating ? ' mobile-footer-nav__diamond-counter--active' : ''
+            }`}
             aria-live="polite"
           >
             <span className="mobile-footer-nav__diamond-icon" aria-hidden="true">
               💎
             </span>
-            <span className="mobile-footer-nav__diamond-value">{formattedPointsBalance}</span>
+            <span
+              className={`mobile-footer-nav__diamond-value${
+                isPointsAnimating ? ' mobile-footer-nav__diamond-value--active' : ''
+              }`}
+            >
+              {formattedPointsBalance}
+            </span>
           </div>
         ) : null}
         <ul className="mobile-footer-nav__list mobile-footer-nav__list--stacked" style={listStyle}>
