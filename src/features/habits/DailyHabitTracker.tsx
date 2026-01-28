@@ -1805,6 +1805,55 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     );
   };
 
+  const handleToggleSkipMenu = (habitId: string) => {
+    setSkipMenuHabitId((current) => (current === habitId ? null : habitId));
+    setSkipReasonHabitId(null);
+    setSkipReason('');
+    setSkipError(null);
+  };
+
+  const handleLogHabitSkip = async (habit: HabitWithGoal, reason?: string) => {
+    if (!isConfigured && !isDemoExperience) {
+      setSkipError('Connect Supabase to log skip reasons.');
+      return;
+    }
+
+    const trimmedReason = reason?.trim();
+    const content = trimmedReason
+      ? `Reason:\n${trimmedReason}`
+      : `Skipped ${habit.name} today.`;
+
+    setSkipSaving(true);
+    setSkipError(null);
+
+    try {
+      await createJournalEntry({
+        user_id: session.user.id,
+        entry_date: activeDate,
+        title: `Skipped habit: ${habit.name}`,
+        content,
+        mood: null,
+        tags: ['habit_skip'],
+        linked_goal_ids: habit.goal?.id ? [habit.goal.id] : null,
+        linked_habit_ids: [habit.id],
+        is_private: true,
+        type: 'quick',
+        mood_score: null,
+        category: null,
+        unlock_date: null,
+        goal_id: habit.goal?.id ?? null,
+      });
+
+      setSkipMenuHabitId(null);
+      setSkipReasonHabitId(null);
+      setSkipReason('');
+    } catch (error) {
+      setSkipError(error instanceof Error ? error.message : 'Unable to log the skip right now.');
+    } finally {
+      setSkipSaving(false);
+    }
+  };
+
   const renderCompactList = () => {
     const completedHabits = sortedHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
     const activeHabits = sortedHabits.filter((habit) => !completions[habit.id]?.completed);
