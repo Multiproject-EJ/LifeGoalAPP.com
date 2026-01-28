@@ -5399,6 +5399,7 @@ body {
   padding: 0.5rem 0.75rem;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   border: 1px solid rgba(15, 23, 42, 0.05);
+  position: relative;
 }
 
 .habit-checklist__item--rest {
@@ -6468,6 +6469,11 @@ body {
   display: grid;
   gap: 0.45rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.habit-points-badge {
+  background: rgba(248, 250, 252, 0.95);
 }
 
 .habit-card--completed {
@@ -13410,6 +13416,16 @@ body {
   gap: 0.25rem;
   font-size: 0.85rem;
   color: #475569;
+}
+
+.daily-treats-modal__action-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.daily-treats-modal__points-badge {
+  margin-left: 0;
 }
 
 .daily-treats-modal__action-text strong {

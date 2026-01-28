@@ -37,10 +37,12 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
+import { PointsBadge } from './components/PointsBadge';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
 import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
+import { SPIN_PRIZES } from './types/gamification';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -257,6 +259,12 @@ const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'score', 'breathing
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 
+const formatPointsRange = (min: number, max: number) => {
+  const normalizedMin = Math.min(min, max);
+  const normalizedMax = Math.max(min, max);
+  return normalizedMin === normalizedMax ? `${normalizedMin}` : `${normalizedMin}-${normalizedMax}`;
+};
+
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
@@ -376,6 +384,17 @@ export default function App() {
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
+  const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
+  const shouldShowPointsBadges = isGameModeActive && isMobileViewport;
+  const spinPointsRange = useMemo(() => {
+    const pointValues = SPIN_PRIZES.filter((prize) => prize.type === 'points').map((prize) => prize.value);
+    if (pointValues.length === 0) {
+      return null;
+    }
+    const minPoints = Math.min(...pointValues);
+    const maxPoints = Math.max(...pointValues);
+    return formatPointsRange(minPoints, maxPoints);
+  }, []);
   const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
 
   const workspaceNavItems = useMemo(() => {
@@ -1718,7 +1737,7 @@ export default function App() {
                 </button>
               </div>
             ) : null}
-            <DailyHabitTracker session={activeSession} />
+            <DailyHabitTracker session={activeSession} showPointsBadges={shouldShowPointsBadges} />
             <HabitsModule session={activeSession} />
           </div>
         );
@@ -1727,6 +1746,7 @@ export default function App() {
           <div className="workspace-content">
             <ActionsTab
               session={activeSession}
+              showPointsBadges={shouldShowPointsBadges}
               onNavigateToProjects={() => setActiveWorkspaceNav('projects')}
               onNavigateToTimer={() => setActiveWorkspaceNav('timer')}
             />
@@ -2522,7 +2542,12 @@ export default function App() {
               🎰
             </span>
             <span className="daily-treats-modal__action-text">
-              <strong>Life Spin</strong>
+              <span className="daily-treats-modal__action-title">
+                <strong>Life Spin</strong>
+                {shouldShowPointsBadges && spinPointsRange ? (
+                  <PointsBadge value={spinPointsRange} className="daily-treats-modal__points-badge" />
+                ) : null}
+              </span>
               <span>Spin the wheel for your daily boost.</span>
             </span>
           </button>
@@ -2639,7 +2664,7 @@ export default function App() {
   if (isMobileViewport && showMobileHome) {
     return (
       <>
-        <MobileHabitHome session={activeSession} />
+        <MobileHabitHome session={activeSession} showPointsBadges={shouldShowPointsBadges} />
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}

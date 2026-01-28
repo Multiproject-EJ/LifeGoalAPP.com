@@ -31,6 +31,7 @@ type ActionsTabProps = {
   session: Session;
   onNavigateToProjects?: () => void;
   onNavigateToTimer?: () => void;
+  showPointsBadges?: boolean;
 };
 
 type StatusMessage = {
@@ -38,7 +39,12 @@ type StatusMessage = {
   message: string;
 } | null;
 
-export function ActionsTab({ session, onNavigateToProjects, onNavigateToTimer }: ActionsTabProps) {
+export function ActionsTab({
+  session,
+  onNavigateToProjects,
+  onNavigateToTimer,
+  showPointsBadges = false,
+}: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
   const {
     actions,
@@ -459,6 +465,7 @@ export function ActionsTab({ session, onNavigateToProjects, onNavigateToTimer }:
           selectedIndex={selectedIndex}
           selectedIds={selectedIds}
           justCompletedActionId={justCompletedActionId}
+          showPointsBadges={showPointsBadges}
         />
       ) : (
         <ActionEmptyState />
