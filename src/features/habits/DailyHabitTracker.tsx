@@ -246,6 +246,12 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [showCompletedHabits, setShowCompletedHabits] = useState(false);
   const [quickJournalStatus, setQuickJournalStatus] = useState<string | null>(null);
+  const [skipMenuHabitId, setSkipMenuHabitId] = useState<string | null>(null);
+  const [skipReasonHabitId, setSkipReasonHabitId] = useState<string | null>(null);
+  const [skipReason, setSkipReason] = useState('');
+  const [skipSaving, setSkipSaving] = useState(false);
+  const [skipError, setSkipError] = useState<string | null>(null);
+  const skipMenuRef = useRef<HTMLDivElement | null>(null);
   const [isCompactView, setIsCompactView] = useState(false);
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
@@ -731,6 +737,27 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     quickJournalInteractions,
     quickJournalFreeform,
   ]);
+
+  useEffect(() => {
+    if (!skipMenuHabitId) return undefined;
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (!skipMenuRef.current) return;
+      if (skipMenuRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setSkipMenuHabitId(null);
+      setSkipReasonHabitId(null);
+      setSkipReason('');
+      setSkipError(null);
+    };
+
+    document.addEventListener('click', handleDocumentClick);
+
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [skipMenuHabitId]);
 
   useEffect(() => {
     const todayDraft = loadIntentionsDraft(session.user.id, activeDate, 'today');
@@ -1778,6 +1805,55 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
     );
   };
 
+  const handleToggleSkipMenu = (habitId: string) => {
+    setSkipMenuHabitId((current) => (current === habitId ? null : habitId));
+    setSkipReasonHabitId(null);
+    setSkipReason('');
+    setSkipError(null);
+  };
+
+  const handleLogHabitSkip = async (habit: HabitWithGoal, reason?: string) => {
+    if (!isConfigured && !isDemoExperience) {
+      setSkipError('Connect Supabase to log skip reasons.');
+      return;
+    }
+
+    const trimmedReason = reason?.trim();
+    const content = trimmedReason
+      ? `Reason:\n${trimmedReason}`
+      : `Skipped ${habit.name} today.`;
+
+    setSkipSaving(true);
+    setSkipError(null);
+
+    try {
+      await createJournalEntry({
+        user_id: session.user.id,
+        entry_date: activeDate,
+        title: `Skipped habit: ${habit.name}`,
+        content,
+        mood: null,
+        tags: ['habit_skip'],
+        linked_goal_ids: habit.goal?.id ? [habit.goal.id] : null,
+        linked_habit_ids: [habit.id],
+        is_private: true,
+        type: 'quick',
+        mood_score: null,
+        category: null,
+        unlock_date: null,
+        goal_id: habit.goal?.id ?? null,
+      });
+
+      setSkipMenuHabitId(null);
+      setSkipReasonHabitId(null);
+      setSkipReason('');
+    } catch (error) {
+      setSkipError(error instanceof Error ? error.message : 'Unable to log the skip right now.');
+    } finally {
+      setSkipSaving(false);
+    }
+  };
+
   const renderCompactList = () => {
     const completedHabits = sortedHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
     const activeHabits = sortedHabits.filter((habit) => !completions[habit.id]?.completed);
@@ -1891,6 +1967,90 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     >
                       ✏️ Edit
                     </button>
+                    <div className="habit-checklist__skip-wrap">
+                      <button
+                        type="button"
+                        className="habit-checklist__skip-btn"
+                        aria-expanded={skipMenuHabitId === habit.id}
+                        aria-haspopup="true"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleSkipMenu(habit.id);
+                        }}
+                      >
+                        ⏭️ Skip
+                      </button>
+                      {skipMenuHabitId === habit.id ? (
+                        <div
+                          className="habit-checklist__skip-menu"
+                          ref={skipMenuRef}
+                          role="menu"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="habit-checklist__skip-option"
+                            onClick={() => void handleLogHabitSkip(habit)}
+                            disabled={skipSaving}
+                          >
+                            Skip
+                          </button>
+                          <button
+                            type="button"
+                            className="habit-checklist__skip-option"
+                            onClick={() => setSkipReasonHabitId(habit.id)}
+                            disabled={skipSaving}
+                          >
+                            Skip - Add reason
+                          </button>
+                          {skipReasonHabitId === habit.id ? (
+                            <div className="habit-checklist__skip-reason">
+                              <label>
+                                <span className="sr-only">Reason for skipping</span>
+                                <textarea
+                                  rows={3}
+                                  value={skipReason}
+                                  placeholder="Why are you skipping this habit?"
+                                  onChange={(event) => setSkipReason(event.target.value)}
+                                  disabled={skipSaving}
+                                />
+                              </label>
+                              <div className="habit-checklist__skip-reason-actions">
+                                <button
+                                  type="button"
+                                  className="habit-checklist__skip-confirm"
+                                  onClick={() => {
+                                    if (!skipReason.trim()) {
+                                      setSkipError('Add a reason to log this skip.');
+                                      return;
+                                    }
+                                    void handleLogHabitSkip(habit, skipReason);
+                                  }}
+                                  disabled={skipSaving}
+                                >
+                                  {skipSaving ? 'Saving…' : 'Log skip'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="habit-checklist__skip-cancel"
+                                  onClick={() => {
+                                    setSkipReasonHabitId(null);
+                                    setSkipReason('');
+                                    setSkipError(null);
+                                  }}
+                                  disabled={skipSaving}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
+                          {skipError ? (
+                            <p className="habit-checklist__skip-error">{skipError}</p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </li>
@@ -1974,16 +2134,37 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
 
     const handleOpenQuickJournal = () => {
       setIsQuickJournalOpen(true);
-      setQuickJournalMorning('');
-      setQuickJournalDay('');
-      setQuickJournalEvening('');
-      setQuickJournalInteractions('');
-      setQuickJournalFreeform('');
       setQuickJournalError(null);
       setQuickJournalStatus(null);
     };
 
-    const handleSaveQuickJournal = async () => {
+    const handleSaveQuickJournalDraft = () => {
+      const hasContent = Boolean(
+        quickJournalMorning.trim() ||
+          quickJournalDay.trim() ||
+          quickJournalEvening.trim() ||
+          quickJournalInteractions.trim() ||
+          quickJournalFreeform.trim()
+      );
+
+      if (!hasContent) {
+        setQuickJournalError('Add at least one entry before saving.');
+        return;
+      }
+
+      setQuickJournalError(null);
+      setQuickJournalStatus('Draft saved for later.');
+      saveDraft(quickJournalDraftKey(session.user.id, activeDate), {
+        isOpen: true,
+        morning: quickJournalMorning,
+        day: quickJournalDay,
+        evening: quickJournalEvening,
+        interactions: quickJournalInteractions,
+        freeform: quickJournalFreeform,
+      } satisfies QuickJournalDraft);
+    };
+
+    const handleSubmitQuickJournal = async () => {
       // Build concatenated content from all fields
       const parts: string[] = [];
       
@@ -2006,7 +2187,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
       const content = parts.join('\n\n');
       
       if (!content) {
-        setQuickJournalError('Add at least one entry before saving.');
+        setQuickJournalError('Add at least one entry before submitting.');
         return;
       }
 
@@ -2050,7 +2231,7 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
         setQuickJournalEvening('');
         setQuickJournalInteractions('');
         setQuickJournalFreeform('');
-        setQuickJournalStatus('Saved to your journal.');
+        setQuickJournalStatus('Submitted to your journal.');
       } catch (err) {
         setQuickJournalError(err instanceof Error ? err.message : 'Unable to save your journal entry.');
       } finally {
@@ -2450,10 +2631,18 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                     <button
                       type="button"
                       className="habit-quick-journal__save"
-                      onClick={() => void handleSaveQuickJournal()}
+                      onClick={handleSaveQuickJournalDraft}
                       disabled={quickJournalSaving}
                     >
-                      {quickJournalSaving ? 'Saving…' : 'Save entry'}
+                      Save draft
+                    </button>
+                    <button
+                      type="button"
+                      className="habit-quick-journal__save"
+                      onClick={() => void handleSubmitQuickJournal()}
+                      disabled={quickJournalSaving}
+                    >
+                      {quickJournalSaving ? 'Submitting…' : 'Submit journal'}
                     </button>
                     <button
                       type="button"
