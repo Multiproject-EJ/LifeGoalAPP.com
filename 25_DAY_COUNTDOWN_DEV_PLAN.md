@@ -80,10 +80,10 @@
 ---
 
 ### Phase 2 — Data & Logic (Chunk B)
-- [ ] Implement RNG utilities using `crypto.getRandomValues`.
-- [ ] Build weighted symbol picker.
-- [ ] Build number generation + 3-of-a-kind detection.
-- [ ] Create cycle/rest-day calculator (server and/or client).
+- [x] Implement RNG utilities using `crypto.getRandomValues`.
+- [x] Build weighted symbol picker.
+- [x] Build number generation + 3-of-a-kind detection.
+- [x] Create cycle/rest-day calculator (server and/or client).
 - [ ] Persist symbol counters and progress.
 
 **Deliverables:**
@@ -132,6 +132,7 @@
 
 ## Changelog
 - 2025-01-01: Initial plan drafted.
+- 2025-01-01: Implemented scratch-card RNG, weighted symbol picker, and number matching utilities.
 
 ## Next Actions (Update Weekly)
 - [ ] Review this plan with product/design.
