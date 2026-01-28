@@ -13294,7 +13294,8 @@ body {
 }
 
 .daily-treats-modal,
-.daily-treats-placeholder {
+.daily-treats-placeholder,
+.daily-treats-calendar {
   position: fixed;
   inset: 0;
   z-index: 70;
@@ -13445,6 +13446,93 @@ body {
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
   border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.daily-treats-calendar__dialog {
+  width: min(94vw, 540px);
+  max-height: min(84vh, 720px);
+  overflow: hidden;
+}
+
+.daily-treats-calendar__content {
+  display: grid;
+  gap: 0.65rem;
+  padding-right: 0.25rem;
+}
+
+.daily-treats-calendar__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.daily-treats-calendar__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.daily-treats-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.daily-treats-calendar__hatch {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  text-align: center;
+  min-height: 58px;
+  align-content: center;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.daily-treats-calendar__hatch-number {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.daily-treats-calendar__hatch-status {
+  font-size: 0.55rem;
+  font-weight: 600;
+}
+
+.daily-treats-calendar__hatch--opened {
+  background: rgba(226, 232, 240, 0.85);
+  color: #1e293b;
+}
+
+.daily-treats-calendar__hatch--today {
+  background: linear-gradient(150deg, rgba(59, 130, 246, 0.25), rgba(14, 165, 233, 0.2));
+  border-color: rgba(59, 130, 246, 0.6);
+  color: #0f172a;
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.15);
+}
+
+.daily-treats-calendar__hatch--locked {
+  background: rgba(226, 232, 240, 0.45);
+  color: rgba(100, 116, 139, 0.8);
+}
+
+.daily-treats-calendar__button {
+  margin-top: 0.35rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.2rem;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
 }
 
 .daily-treats-modal__close,

@@ -93,7 +93,7 @@
 ---
 
 ### Phase 3 — UI/UX Implementation (Chunk C)
-- [ ] Calendar grid view (25 hatches).
+- [x] Calendar grid view (25 hatches).
 - [ ] Scratch-card reveal component (canvas or library).
 - [ ] Reward reveal state (animation + copy).
 - [ ] Rest-day countdown screen with themed art.
@@ -134,6 +134,7 @@
 - 2025-01-01: Initial plan drafted.
 - 2025-01-01: Implemented scratch-card RNG, weighted symbol picker, and number matching utilities.
 - 2026-01-28: Added persisted scratch-card progress helpers for symbol counters and cycle tracking.
+- 2026-01-28: Added the 25-day countdown calendar grid modal in the Daily Treats flow.
 
 ## Next Actions (Update Weekly)
 - [ ] Review this plan with product/design.
