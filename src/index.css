@@ -11525,6 +11525,8 @@ body {
     rgba(15, 118, 110, 0) 78%
   );
   filter: blur(18px);
+  backdrop-filter: blur(16px);
+  background-color: rgba(15, 118, 110, 0.08);
   opacity: 0.85;
   pointer-events: none;
   z-index: 0;
@@ -11588,7 +11590,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  border: 1px solid transparent;
+  border: 1px solid rgba(148, 163, 184, 0);
   border-radius: 14px;
   padding: 1rem 0.35rem;
   background: rgba(255, 255, 255, 0.4);
@@ -11597,8 +11599,8 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0);
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__button {
@@ -11625,9 +11627,16 @@ body {
 .mobile-footer-nav__button:hover,
 .mobile-footer-nav__button:focus-visible {
   background: rgba(255, 255, 255, 0.68);
-  border-color: rgba(148, 163, 184, 0.45);
+  border-color: rgba(148, 163, 184, 0.2);
   outline: none;
   transform: translateY(-1px);
+}
+
+.mobile-footer-nav__button:active {
+  border-color: rgba(148, 163, 184, 0.75);
+  box-shadow:
+    0 0 12px rgba(148, 163, 184, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .mobile-footer-nav__button--active {
@@ -12012,14 +12021,14 @@ body {
   width: 88px;
   height: 88px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid rgba(148, 163, 184, 0);
   background: rgba(255, 255, 255, 0.5);
   color: #0f172a;
   cursor: pointer;
   font-weight: 700;
   letter-spacing: 0.01em;
-  transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0);
   transform: translateY(-18px);
 }
 
@@ -12038,9 +12047,16 @@ body {
 .mobile-footer-nav__menu-button:hover,
 .mobile-footer-nav__menu-button:focus-visible {
   background: rgba(255, 255, 255, 0.72);
-  border-color: rgba(148, 163, 184, 0.45);
+  border-color: rgba(148, 163, 184, 0.2);
   outline: none;
   transform: translateY(-19px);
+}
+
+.mobile-footer-nav__menu-button:active {
+  border-color: rgba(148, 163, 184, 0.75);
+  box-shadow:
+    0 0 14px rgba(148, 163, 184, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .mobile-footer-nav__menu-icon {
