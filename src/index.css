@@ -12624,6 +12624,53 @@ body {
   box-shadow: none;
 }
 
+.mobile-menu-overlay__helper-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+
+.mobile-menu-overlay__helper-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.mobile-menu-overlay__helper-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 1.5rem;
+}
+
+.mobile-menu-overlay__helper-close {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(15, 23, 42, 0.35);
+  color: #f8fafc;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 16px;
+  font-size: 2rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.mobile-menu-overlay__helper-close:hover,
+.mobile-menu-overlay__helper-close:focus-visible {
+  background: rgba(15, 23, 42, 0.55);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .mobile-menu-overlay__strength-header {
   display: flex;
   align-items: flex-start;

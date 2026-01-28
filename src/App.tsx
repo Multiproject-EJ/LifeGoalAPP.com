@@ -330,6 +330,7 @@ export default function App() {
     area: AreaKey;
     task: NextTask | null;
   } | null>(null);
+  const [activeMobileMenuHelper, setActiveMobileMenuHelper] = useState<MobileMenuNavItem | null>(null);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
@@ -338,6 +339,9 @@ export default function App() {
   const profileStrengthHoldTimeoutRef = useRef<number | null>(null);
   const profileStrengthHoldTriggeredRef = useRef(false);
   const profileStrengthHoldStartRef = useRef<{ x: number; y: number } | null>(null);
+  const menuHelperHoldTimeoutRef = useRef<number | null>(null);
+  const menuHelperHoldTriggeredRef = useRef(false);
+  const menuHelperHoldStartRef = useRef<{ x: number; y: number } | null>(null);
   const profileStrengthSnapshotRef = useRef<ProfileStrengthResult | null>(null);
   const profileStrengthSignalsRef = useRef<ProfileStrengthSignalSnapshot | null>(null);
 
@@ -1153,6 +1157,13 @@ export default function App() {
     }
   }, []);
 
+  const clearMenuHelperHoldTimer = useCallback(() => {
+    if (menuHelperHoldTimeoutRef.current !== null) {
+      window.clearTimeout(menuHelperHoldTimeoutRef.current);
+      menuHelperHoldTimeoutRef.current = null;
+    }
+  }, []);
+
   const openProfileStrengthHold = useCallback(
     (area: AreaKey) => {
       const task = profileStrengthSnapshot?.nextTasksByArea[area]?.[0] ?? null;
@@ -1177,6 +1188,22 @@ export default function App() {
     [clearProfileStrengthHoldTimer, isMobileViewport, openProfileStrengthHold],
   );
 
+  const handleMenuHelperHoldStart = useCallback(
+    (event: PointerEvent<HTMLButtonElement>, item: MobileMenuNavItem | null) => {
+      if (!isMobileViewport || !item || event.pointerType === 'mouse') {
+        return;
+      }
+      menuHelperHoldTriggeredRef.current = false;
+      menuHelperHoldStartRef.current = { x: event.clientX, y: event.clientY };
+      clearMenuHelperHoldTimer();
+      menuHelperHoldTimeoutRef.current = window.setTimeout(() => {
+        menuHelperHoldTriggeredRef.current = true;
+        setActiveMobileMenuHelper(item);
+      }, PROFILE_STRENGTH_HOLD_DURATION_MS);
+    },
+    [clearMenuHelperHoldTimer, isMobileViewport],
+  );
+
   const handleProfileStrengthHoldMove = useCallback(
     (event: PointerEvent<HTMLButtonElement>, area: AreaKey | null) => {
       if (!isMobileViewport || !area || !profileStrengthHoldStartRef.current) {
@@ -1191,10 +1218,39 @@ export default function App() {
     [clearProfileStrengthHoldTimer, isMobileViewport],
   );
 
+  const handleMenuHelperHoldMove = useCallback(
+    (event: PointerEvent<HTMLButtonElement>, item: MobileMenuNavItem | null) => {
+      if (!isMobileViewport || !item || !menuHelperHoldStartRef.current) {
+        return;
+      }
+      const deltaX = event.clientX - menuHelperHoldStartRef.current.x;
+      const deltaY = event.clientY - menuHelperHoldStartRef.current.y;
+      if (Math.hypot(deltaX, deltaY) > PROFILE_STRENGTH_HOLD_SLOP_PX) {
+        clearMenuHelperHoldTimer();
+      }
+    },
+    [clearMenuHelperHoldTimer, isMobileViewport],
+  );
+
   const handleProfileStrengthHoldEnd = useCallback(() => {
     clearProfileStrengthHoldTimer();
     profileStrengthHoldStartRef.current = null;
   }, [clearProfileStrengthHoldTimer]);
+
+  const handleMenuHelperHoldEnd = useCallback(() => {
+    clearMenuHelperHoldTimer();
+    menuHelperHoldStartRef.current = null;
+  }, [clearMenuHelperHoldTimer]);
+
+  const handleMobileMenuHoldEnd = useCallback(() => {
+    handleProfileStrengthHoldEnd();
+    handleMenuHelperHoldEnd();
+  }, [handleMenuHelperHoldEnd, handleProfileStrengthHoldEnd]);
+
+  const closeMobileMenuHelper = useCallback(() => {
+    menuHelperHoldTriggeredRef.current = false;
+    setActiveMobileMenuHelper(null);
+  }, []);
 
   const handleProfileStrengthHoldAction = useCallback(() => {
     if (!activeProfileStrengthHold) {
@@ -1222,14 +1278,17 @@ export default function App() {
   useEffect(() => {
     if (!isMobileMenuOpen) {
       setActiveProfileStrengthHold(null);
+      setActiveMobileMenuHelper(null);
+      menuHelperHoldTriggeredRef.current = false;
     }
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
     return () => {
       clearProfileStrengthHoldTimer();
+      clearMenuHelperHoldTimer();
     };
-  }, [clearProfileStrengthHoldTimer]);
+  }, [clearProfileStrengthHoldTimer, clearMenuHelperHoldTimer]);
 
   const handleMobileGameOverlayCardClick = () => {
     setActiveWorkspaceNav('game');
@@ -1985,9 +2044,14 @@ export default function App() {
                       profileStrengthScore === null || profileStrengthScore === undefined
                         ? 'mobile-menu-overlay__icon-badge mobile-menu-overlay__icon-badge--neutral'
                         : 'mobile-menu-overlay__icon-badge';
+                    const isHelperHoldTarget = !profileStrengthArea;
                     const handleItemClick = () => {
                       if (profileStrengthArea && profileStrengthHoldTriggeredRef.current) {
                         profileStrengthHoldTriggeredRef.current = false;
+                        return;
+                      }
+                      if (isHelperHoldTarget && menuHelperHoldTriggeredRef.current) {
+                        menuHelperHoldTriggeredRef.current = false;
                         return;
                       }
                       if (isBreathingItem) {
@@ -2005,13 +2069,25 @@ export default function App() {
                           aria-label={item.ariaLabel}
                           aria-expanded={isBreathingItem ? isSubmenuOpen : undefined}
                           aria-controls={isBreathingItem ? submenuId : undefined}
-                          onPointerDown={(event) => handleProfileStrengthHoldStart(event, profileStrengthArea ?? null)}
-                          onPointerMove={(event) => handleProfileStrengthHoldMove(event, profileStrengthArea ?? null)}
-                          onPointerUp={handleProfileStrengthHoldEnd}
-                          onPointerCancel={handleProfileStrengthHoldEnd}
-                          onPointerLeave={handleProfileStrengthHoldEnd}
+                          onPointerDown={(event) => {
+                            if (profileStrengthArea) {
+                              handleProfileStrengthHoldStart(event, profileStrengthArea);
+                              return;
+                            }
+                            handleMenuHelperHoldStart(event, item);
+                          }}
+                          onPointerMove={(event) => {
+                            if (profileStrengthArea) {
+                              handleProfileStrengthHoldMove(event, profileStrengthArea);
+                              return;
+                            }
+                            handleMenuHelperHoldMove(event, item);
+                          }}
+                          onPointerUp={handleMobileMenuHoldEnd}
+                          onPointerCancel={handleMobileMenuHoldEnd}
+                          onPointerLeave={handleMobileMenuHoldEnd}
                           onContextMenu={(event) => {
-                            if (profileStrengthArea && isMobileViewport) {
+                            if ((profileStrengthArea || isHelperHoldTarget) && isMobileViewport) {
                               event.preventDefault();
                             }
                           }}
@@ -2268,6 +2344,30 @@ export default function App() {
                     disabled={!activeProfileStrengthHold.task}
                   >
                     {activeProfileStrengthHold.task ? 'Start this improvement' : 'Suggestion locked'}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {activeMobileMenuHelper ? (
+              <div
+                className="mobile-menu-overlay__helper-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label={`${activeMobileMenuHelper.label} helper`}
+              >
+                <div
+                  className="mobile-menu-overlay__helper-backdrop"
+                  role="presentation"
+                  onClick={closeMobileMenuHelper}
+                />
+                <div className="mobile-menu-overlay__helper-panel">
+                  <button
+                    type="button"
+                    className="mobile-menu-overlay__helper-close"
+                    aria-label="Close helper"
+                    onClick={closeMobileMenuHelper}
+                  >
+                    ×
                   </button>
                 </div>
               </div>
