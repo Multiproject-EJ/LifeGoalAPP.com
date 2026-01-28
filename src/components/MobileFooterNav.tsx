@@ -135,6 +135,9 @@ export function MobileFooterNav({
       if (progress >= 1 && !statusHoldTriggeredRef.current) {
         statusHoldTriggeredRef.current = true;
         onStatusHoldToggle();
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          navigator.vibrate([80, 40, 80, 40, 160]);
+        }
         setIsStatusHoldSnap(true);
         setIsStatusHoldActive(false);
         statusHoldTimeoutRef.current = window.setTimeout(() => {
