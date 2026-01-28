@@ -519,13 +519,7 @@ export default function App() {
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
   }, [mobileMenuNavItems]);
-  const mobileFooterPointsBadges = useMemo(() => {
-    const badges: Record<string, string> = {};
-    if (pointsBalance > 0) {
-      badges.score = pointsBalance.toLocaleString();
-    }
-    return badges;
-  }, [pointsBalance]);
+  const mobileFooterPointsBadges: Partial<Record<MobileMenuNavItem['id'], string>> = {};
 
   const triggerMobileMenuFlash = () => {
     if (mobileMenuFlashTimeoutRef.current !== null) {
