@@ -27,6 +27,12 @@ export type RestDayResult = {
 
 export type RevealCardResult = ScratchCardResult | RestDayResult;
 
+export type ScratchCardStoredState = {
+  version: number;
+  savedAt: string;
+  state: ScratchCardState;
+};
+
 export const DEFAULT_SYMBOLS: ScratchSymbol[] = [
   { emoji: '🎁', name: 'gift', weight: 5, needed: 3 },
   { emoji: '🍀', name: 'clover', weight: 5, needed: 3 },
@@ -43,6 +49,23 @@ export const DEFAULT_SYMBOLS: ScratchSymbol[] = [
 ];
 
 const RANDOM_BUFFER = new Uint32Array(1);
+const STORAGE_VERSION = 1;
+const STORAGE_KEY = 'lifegoal:daily-treats:scratch-card';
+
+const safeLocalStorage = (() => {
+  try {
+    return window.localStorage;
+  } catch (error) {
+    console.warn('Scratch card storage unavailable.', error);
+    return null;
+  }
+})();
+
+const createInitialScratchCardState = (): ScratchCardState => ({
+  cycleIndex: 1,
+  dayInCycle: 1,
+  symbolCounts: {},
+});
 
 const getSecureRandomFloat = () => {
   if (globalThis.crypto?.getRandomValues) {
@@ -57,6 +80,64 @@ export const getRandomIntInclusive = (min: number, max: number) => {
   const safeMin = Math.ceil(min);
   const safeMax = Math.floor(max);
   return Math.floor(getSecureRandomFloat() * (safeMax - safeMin + 1)) + safeMin;
+};
+
+const getStorageKey = (userId?: string) => (userId ? `${STORAGE_KEY}:${userId}` : STORAGE_KEY);
+
+const isValidScratchCardState = (value: unknown): value is ScratchCardState => {
+  if (!value || typeof value !== 'object') return false;
+  const state = value as ScratchCardState;
+  return (
+    typeof state.cycleIndex === 'number' &&
+    Number.isFinite(state.cycleIndex) &&
+    typeof state.dayInCycle === 'number' &&
+    Number.isFinite(state.dayInCycle) &&
+    typeof state.symbolCounts === 'object' &&
+    state.symbolCounts !== null
+  );
+};
+
+export const loadScratchCardState = (userId?: string): ScratchCardState => {
+  if (!safeLocalStorage) return createInitialScratchCardState();
+
+  try {
+    const stored = safeLocalStorage.getItem(getStorageKey(userId));
+    if (!stored) return createInitialScratchCardState();
+    const parsed = JSON.parse(stored) as ScratchCardStoredState | ScratchCardState;
+    if ('state' in parsed && isValidScratchCardState(parsed.state)) {
+      return parsed.state;
+    }
+    if (isValidScratchCardState(parsed)) {
+      return parsed;
+    }
+    return createInitialScratchCardState();
+  } catch (error) {
+    console.warn('Scratch card state load failed.', error);
+    return createInitialScratchCardState();
+  }
+};
+
+export const saveScratchCardState = (state: ScratchCardState, userId?: string) => {
+  if (!safeLocalStorage) return;
+  try {
+    const payload: ScratchCardStoredState = {
+      version: STORAGE_VERSION,
+      savedAt: new Date().toISOString(),
+      state,
+    };
+    safeLocalStorage.setItem(getStorageKey(userId), JSON.stringify(payload));
+  } catch (error) {
+    console.warn('Scratch card state save failed.', error);
+  }
+};
+
+export const resetScratchCardState = (userId?: string) => {
+  if (!safeLocalStorage) return;
+  try {
+    safeLocalStorage.removeItem(getStorageKey(userId));
+  } catch (error) {
+    console.warn('Scratch card state reset failed.', error);
+  }
 };
 
 export const pickWeightedSymbol = (symbols: ScratchSymbol[]) => {
@@ -101,6 +182,17 @@ export const countdownToNextCycle = (dayInCycle: number, restDays = 2) => {
   const seconds = Math.floor(diffMs / 1000) % 60;
 
   return `${hours}h ${minutes}m ${seconds}s`;
+};
+
+export const revealScratchCardWithPersistence = (
+  userId?: string,
+  symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
+  restDays = 2,
+): RevealCardResult => {
+  const state = loadScratchCardState(userId);
+  const result = revealScratchCard(state, symbols, restDays);
+  saveScratchCardState(state, userId);
+  return result;
 };
 
 export const revealScratchCard = (

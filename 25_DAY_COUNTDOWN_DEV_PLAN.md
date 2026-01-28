@@ -4,7 +4,7 @@
 
 ## Status Snapshot
 - **Current phase:** Discovery & architecture
-- **Last updated:** 2025-01-01 (update this date as work progresses)
+- **Last updated:** 2026-01-28 (update this date as work progresses)
 - **Owner:** Product + Engineering
 - **Tracking:** Update the checkboxes + changelog when tasks are completed.
 
@@ -84,7 +84,7 @@
 - [x] Build weighted symbol picker.
 - [x] Build number generation + 3-of-a-kind detection.
 - [x] Create cycle/rest-day calculator (server and/or client).
-- [ ] Persist symbol counters and progress.
+- [x] Persist symbol counters and progress.
 
 **Deliverables:**
 - Utilities module for RNG + symbol/number logic
@@ -133,6 +133,7 @@
 ## Changelog
 - 2025-01-01: Initial plan drafted.
 - 2025-01-01: Implemented scratch-card RNG, weighted symbol picker, and number matching utilities.
+- 2026-01-28: Added persisted scratch-card progress helpers for symbol counters and cycle tracking.
 
 ## Next Actions (Update Weekly)
 - [ ] Review this plan with product/design.
