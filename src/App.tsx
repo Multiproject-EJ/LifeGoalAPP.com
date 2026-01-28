@@ -387,6 +387,13 @@ export default function App() {
   const currentLevel = levelInfo?.currentLevel ?? 1;
   const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
   const shouldShowPointsBadges = isGameModeActive && isMobileViewport;
+  const mobileMenuPointsBadges = useMemo(() => {
+    const badges: Record<string, string> = {};
+    if (pointsBalance > 0) {
+      badges.score = pointsBalance.toLocaleString();
+    }
+    return badges;
+  }, [pointsBalance]);
   const spinPointsRange = useMemo(() => {
     const pointValues = SPIN_PRIZES.filter((prize) => prize.type === 'points').map((prize) => prize.value);
     if (pointValues.length === 0) {
@@ -511,6 +518,13 @@ export default function App() {
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item));
   }, [mobileMenuNavItems]);
+  const mobileFooterPointsBadges = useMemo(() => {
+    const badges: Record<string, string> = {};
+    if (pointsBalance > 0) {
+      badges.score = pointsBalance.toLocaleString();
+    }
+    return badges;
+  }, [pointsBalance]);
 
   const triggerMobileMenuFlash = () => {
     if (mobileMenuFlashTimeoutRef.current !== null) {
