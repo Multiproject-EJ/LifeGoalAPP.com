@@ -11,6 +11,8 @@ import {
 } from '../../compat/legacyHabitsAdapter';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { convertXpToPoints } from '../../constants/economy';
+import { PointsBadge } from '../../components/PointsBadge';
 import {
   getHabitCompletionsByMonth,
   getMonthlyCompletionGrid,
@@ -48,6 +50,7 @@ type DailyHabitTrackerVariant = 'full' | 'compact';
 type DailyHabitTrackerProps = {
   session: Session;
   variant?: DailyHabitTrackerVariant;
+  showPointsBadges?: boolean;
 };
 
 type HabitCompletionState = {
@@ -190,7 +193,11 @@ const loadIntentionsDraft = (userId: string, dateISO: string, type: 'today' | 't
   return null;
 };
 
-export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrackerProps) {
+export function DailyHabitTracker({
+  session,
+  variant = 'full',
+  showPointsBadges = false,
+}: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const isCompact = variant === 'compact';
@@ -297,6 +304,14 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
   const visionClaimButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
+  const habitPointsLabel = useMemo(() => {
+    const basePoints = convertXpToPoints(XP_REWARDS.HABIT_COMPLETE);
+    const earlyPoints = convertXpToPoints(XP_REWARDS.HABIT_COMPLETE_EARLY);
+    const minPoints = Math.min(basePoints, earlyPoints);
+    const maxPoints = Math.max(basePoints, earlyPoints);
+    return minPoints === maxPoints ? `${minPoints}` : `${minPoints}-${maxPoints}`;
+  }, []);
+  const shouldShowHabitPoints = showPointsBadges && gamificationEnabled;
 
   // Watch for level-up events
   useEffect(() => {
@@ -1890,6 +1905,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
                   isCompleted ? 'habit-checklist__item--completed' : ''
                 } ${isJustCompleted ? 'habit-item--just-completed' : ''}`}
               >
+                {shouldShowHabitPoints ? (
+                  <PointsBadge
+                    value={habitPointsLabel}
+                    className="points-badge--corner habit-points-badge"
+                    size="mini"
+                  />
+                ) : null}
                 <div
                   className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
                   role="button"
@@ -3315,6 +3337,13 @@ export function DailyHabitTracker({ session, variant = 'full' }: DailyHabitTrack
               const isJustCompleted = justCompletedHabitId === habit.id;
               return (
                 <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? 'habit-item--just-completed' : ''}`}>
+                  {shouldShowHabitPoints ? (
+                    <PointsBadge
+                      value={habitPointsLabel}
+                      className="points-badge--corner habit-points-badge"
+                      size="mini"
+                    />
+                  ) : null}
                   <div className="habit-card__content">
                     <div className="habit-card__details">
                       <h3>{habit.name}</h3>

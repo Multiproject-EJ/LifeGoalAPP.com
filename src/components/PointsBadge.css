@@ -31,3 +31,10 @@
 .points-badge--inline {
   margin-left: 0.4rem;
 }
+
+.points-badge--corner {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+}

@@ -42,9 +42,7 @@ import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQue
 import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
-import { convertXpToPoints } from './constants/economy';
-import { ACTIONS_XP_REWARDS } from './types/actions';
-import { SPIN_PRIZES, XP_REWARDS } from './types/gamification';
+import { SPIN_PRIZES } from './types/gamification';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -386,56 +384,7 @@ export default function App() {
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
-  const shouldShowPointsBadges = gamificationEnabled && isMobileMenuImageActive;
-  const mobileMenuPointsBadges = useMemo(() => {
-    const habitBasePoints = convertXpToPoints(XP_REWARDS.HABIT_COMPLETE);
-    const habitBonusPoints = convertXpToPoints(XP_REWARDS.ALL_DAILY_HABITS);
-    const habitLabel = formatPointsRange(habitBasePoints, Math.max(habitBasePoints, habitBonusPoints));
-
-    const actionMinPoints = convertXpToPoints(ACTIONS_XP_REWARDS.COMPLETE_NICE_TO_DO);
-    const actionMaxPoints = convertXpToPoints(ACTIONS_XP_REWARDS.COMPLETE_MUST_DO);
-    const actionLabel = formatPointsRange(actionMinPoints, actionMaxPoints);
-
-    const journalBasePoints = convertXpToPoints(XP_REWARDS.JOURNAL_ENTRY);
-    const journalMaxPoints = convertXpToPoints(XP_REWARDS.JOURNAL_ENTRY + XP_REWARDS.JOURNAL_LONG_ENTRY);
-    const journalLabel = formatPointsRange(journalBasePoints, journalMaxPoints);
-
-    const breathingPoints = convertXpToPoints(XP_REWARDS.BREATHING_SESSION);
-    const meditationMaxPoints = convertXpToPoints(
-      XP_REWARDS.MEDITATION_SESSION + XP_REWARDS.MEDITATION_LONG_SESSION
-    );
-    const breathingLabel = formatPointsRange(breathingPoints, meditationMaxPoints);
-
-    const checkinPoints = convertXpToPoints(XP_REWARDS.CHECKIN);
-    const checkinLabel = formatPointsRange(checkinPoints, checkinPoints);
-
-    const visionBasePoints = convertXpToPoints(XP_REWARDS.VISION_BOARD);
-    const visionBonusPoints = convertXpToPoints(XP_REWARDS.VISION_BOARD + XP_REWARDS.VISION_BOARD_CAPTION);
-    const visionLabel = formatPointsRange(visionBasePoints, visionBonusPoints);
-
-    const goalMinPoints = convertXpToPoints(XP_REWARDS.GOAL_MILESTONE);
-    const goalMaxPoints = convertXpToPoints(XP_REWARDS.GOAL_COMPLETE + XP_REWARDS.GOAL_COMPLETE_EARLY);
-    const goalLabel = formatPointsRange(goalMinPoints, goalMaxPoints);
-
-    return {
-      planning: habitLabel,
-      habits: habitLabel,
-      actions: actionLabel,
-      journal: journalLabel,
-      rituals: checkinLabel,
-      'breathing-space': breathingLabel,
-      insights: visionLabel,
-      support: goalLabel,
-    } satisfies Partial<Record<MobileMenuNavItem['id'], string>>;
-  }, []);
-  const mobileFooterPointsBadges = useMemo(
-    () => ({
-      planning: mobileMenuPointsBadges.planning,
-      actions: mobileMenuPointsBadges.actions,
-      'breathing-space': mobileMenuPointsBadges['breathing-space'],
-    }),
-    [mobileMenuPointsBadges],
-  );
+  const shouldShowPointsBadges = gamificationEnabled && isMobileMenuImageActive && isMobileViewport;
   const spinPointsRange = useMemo(() => {
     const pointValues = SPIN_PRIZES.filter((prize) => prize.type === 'points').map((prize) => prize.value);
     if (pointValues.length === 0) {
@@ -1787,7 +1736,7 @@ export default function App() {
                 </button>
               </div>
             ) : null}
-            <DailyHabitTracker session={activeSession} />
+            <DailyHabitTracker session={activeSession} showPointsBadges={shouldShowPointsBadges} />
             <HabitsModule session={activeSession} />
           </div>
         );
@@ -1796,6 +1745,7 @@ export default function App() {
           <div className="workspace-content">
             <ActionsTab
               session={activeSession}
+              showPointsBadges={shouldShowPointsBadges}
               onNavigateToProjects={() => setActiveWorkspaceNav('projects')}
               onNavigateToTimer={() => setActiveWorkspaceNav('timer')}
             />
@@ -2721,7 +2671,7 @@ export default function App() {
   if (isMobileViewport && showMobileHome) {
     return (
       <>
-        <MobileHabitHome session={activeSession} />
+        <MobileHabitHome session={activeSession} showPointsBadges={shouldShowPointsBadges} />
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
