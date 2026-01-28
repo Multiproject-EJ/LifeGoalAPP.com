@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import {
   countdownToNextCycle,
   loadScratchCardState,
+  revealScratchCardWithPersistence,
+  type RevealCardResult,
   type ScratchCardState,
 } from './scratchCard';
+import { ScratchCardReveal } from './ScratchCardReveal';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
@@ -23,10 +26,12 @@ export const CountdownCalendarModal = ({
   userId,
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
+  const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     setScratchState(loadScratchCardState(userId));
+    setRevealResult(null);
   }, [isOpen, userId]);
 
   if (!isOpen) return null;
@@ -40,6 +45,9 @@ export const CountdownCalendarModal = ({
   const subtitle = isRestDay
     ? `Rest day in progress • next cycle starts in ${countdown}`
     : `Day ${activeDay} of 25 • open today’s hatch to reveal your treat.`;
+  const showScratchAction = !isRestDay && !revealResult;
+  const revealedCard = revealResult && 'rest' in revealResult ? null : revealResult;
+  const restResult = revealResult && 'rest' in revealResult ? revealResult : null;
 
   return (
     <div
@@ -89,6 +97,26 @@ export const CountdownCalendarModal = ({
               );
             })}
           </div>
+          {showScratchAction ? (
+            <button
+              type="button"
+              className="daily-treats-calendar__button"
+              onClick={() => {
+                const result = revealScratchCardWithPersistence(userId);
+                setRevealResult(result);
+                setScratchState(loadScratchCardState(userId));
+              }}
+            >
+              Scratch today’s hatch
+            </button>
+          ) : null}
+          {revealedCard ? (
+            <ScratchCardReveal result={revealedCard} />
+          ) : restResult ? (
+            <div className="daily-treats-calendar__rest">
+              <p>Rest day active. Next cycle begins in {restResult.nextCycleStartsIn}.</p>
+            </div>
+          ) : null}
           <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
             Back to Daily Treats
           </button>
