@@ -1959,13 +1959,6 @@ export default function App() {
                       profileStrengthScore === null || profileStrengthScore === undefined
                         ? 'mobile-menu-overlay__icon-badge mobile-menu-overlay__icon-badge--neutral'
                         : 'mobile-menu-overlay__icon-badge';
-                    const pointsBadgeValue =
-                      shouldShowPointsBadges && item.id in mobileMenuPointsBadges
-                        ? mobileMenuPointsBadges[item.id as keyof typeof mobileMenuPointsBadges]
-                        : undefined;
-                    const pointsBadge = shouldShowPointsBadges && pointsBadgeValue ? (
-                      <PointsBadge value={pointsBadgeValue} className="points-badge--inline" />
-                    ) : null;
                     const handleItemClick = () => {
                       if (profileStrengthArea && profileStrengthHoldTriggeredRef.current) {
                         profileStrengthHoldTriggeredRef.current = false;
@@ -2015,7 +2008,6 @@ export default function App() {
                               }`}
                             >
                               {item.label}
-                              {pointsBadge}
                             </span>
                             <span className="mobile-menu-overlay__summary">{item.summary}</span>
                           </span>
