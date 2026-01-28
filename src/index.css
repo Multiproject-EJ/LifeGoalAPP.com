@@ -5519,6 +5519,111 @@ body {
   align-items: center;
 }
 
+.habit-checklist__skip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.habit-checklist__skip-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 0.75rem;
+  padding: 0.6rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.15);
+  display: grid;
+  gap: 0.4rem;
+  min-width: 200px;
+  z-index: 5;
+}
+
+.habit-checklist__skip-option {
+  border: none;
+  background: rgba(14, 165, 233, 0.1);
+  color: #0f172a;
+  font-weight: 600;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.6rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.habit-checklist__skip-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.habit-checklist__skip-reason {
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed rgba(15, 23, 42, 0.15);
+}
+
+.habit-checklist__skip-reason textarea {
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 0.6rem;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.habit-checklist__skip-reason-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.habit-checklist__skip-confirm,
+.habit-checklist__skip-cancel {
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.habit-checklist__skip-confirm {
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.habit-checklist__skip-cancel {
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+.habit-checklist__skip-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+[data-theme='dark-glass'] .habit-checklist__skip-menu {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark-glass'] .habit-checklist__skip-option {
+  background: rgba(56, 189, 248, 0.2);
+  color: #e2e8f0;
+}
+
+[data-theme='dark-glass'] .habit-checklist__skip-reason textarea {
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+[data-theme='dark-glass'] .habit-checklist__skip-cancel {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
 .habit-checklist__group {
   display: grid;
   gap: 0.6rem;
@@ -11546,6 +11651,22 @@ body {
 
 .mobile-footer-nav__label {
   font-size: 0.82rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.mobile-footer-nav__item--breathing-space .mobile-footer-nav__label {
+  align-items: flex-start;
+}
+
+.mobile-footer-nav__item--score .mobile-footer-nav__label {
+  align-items: flex-end;
+}
+
+.mobile-footer-nav__points-badge {
+  margin: 0;
 }
 
 .mobile-footer-nav__status {
