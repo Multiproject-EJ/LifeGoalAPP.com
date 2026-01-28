@@ -164,6 +164,11 @@ User Experience Design (UX Flow)
 
 Overall Flow: The personality test will reside under a new “ID” tab in the app’s navigation. Only logged-in users can access it (since results tie to user profiles). The high-level flow:
 	1.	ID Tab Home: Brief introduction to the personality test (its purpose and how it can help users with their life goals). Shows a button like “Take Your Personality Test” (or “Update Your Profile” if taken before). Possibly show a visual (icon or avatar) to make it inviting.
+		•	Upgrade Your Player framing: Present the test as an “upgrade your player” moment (you are the player). The copy should clarify that this is about understanding your playstyle so the app can personalize tools, rewards, and growth paths.
+		•	Monetization concept (optional, not MVP): Introduce a “Get Upgrades” callout that unlocks cosmetic and functional upgrades themed to the user’s personality archetype (think Habitica-style, but unique to each profile). Suggested approach:
+			•	Free for subscribers; à la carte purchases for non-subscribers.
+			•	Upgrades are identity-aligned (colorways, badges, avatars, UI skins, themed challenges) so it feels like “my personality power-up,” not generic gamification.
+			•	Keep this as a future enhancement unless product wants to prioritize monetization.
 	2.	Questionnaire: A sequence of 20–30 statements the user responds to. This will be a one-question-per-screen interface on mobile for clarity. Users indicate agreement on a Likert scale (e.g. 1–5 from “Strongly Disagree” to “Strongly Agree”). After each response, the next question loads. A progress indicator (e.g. “Question 5 of 28”) is shown to motivate completion. This single-question view avoids overwhelming the user and minimizes confusion, as recommended for mobile quizzes . Users can navigate back to previous questions if needed (with their answers saved).
 	3.	Results Loading: After the last question, the app instantly computes scores (locally, since all data is on-device) and transitions to the results view. A fun loading animation or message (“Analyzing your answers…”) can be shown for a second or two to build anticipation (if using GPT for narrative, this is also a good time to call the API).
 	4.	Personality Profile View: The user sees their profile, which includes:
