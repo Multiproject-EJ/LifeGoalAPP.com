@@ -17857,6 +17857,96 @@ body {
   color: var(--color-text-secondary, #cbd5e1);
 }
 
+[data-theme='dark-glass'] .mobile-gamification-overlay__panel {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.92));
+  border-color: var(--color-border-primary, rgba(148, 163, 184, 0.18));
+  box-shadow: 0 -10px 36px rgba(2, 6, 23, 0.7);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__eyebrow,
+[data-theme='dark-glass'] .mobile-gamification-overlay__title,
+[data-theme='dark-glass'] .mobile-gamification-overlay__status-label,
+[data-theme='dark-glass'] .mobile-gamification-overlay__level-chart-title,
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-value,
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-mini-value,
+[data-theme='dark-glass'] .mobile-gamification-overlay__mini-value {
+  color: var(--color-text-primary, #f8fafc);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__subtitle,
+[data-theme='dark-glass'] .mobile-gamification-overlay__status-desc,
+[data-theme='dark-glass'] .mobile-gamification-overlay__level-chart-range,
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-label,
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-hint,
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-mini-label,
+[data-theme='dark-glass'] .mobile-gamification-overlay__mini-label {
+  color: var(--color-text-secondary, #cbd5e1);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__close {
+  background: rgba(15, 23, 42, 0.7);
+  color: var(--color-text-primary, #f8fafc);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__close:hover,
+[data-theme='dark-glass'] .mobile-gamification-overlay__close:focus-visible {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__status,
+[data-theme='dark-glass'] .mobile-gamification-overlay__status-button {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(14, 116, 144, 0.22));
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__status-icon {
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__level-chart {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(14, 116, 144, 0.2));
+  border-color: rgba(56, 189, 248, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__level-chart-bar {
+  background: rgba(148, 163, 184, 0.25);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat,
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-mini {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat--cta {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.35), rgba(20, 83, 78, 0.25));
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-button:hover,
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-button:focus-visible {
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.45);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-icon {
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__stat-icon--daily-treats {
+  background: radial-gradient(circle at top, rgba(248, 250, 252, 0.25), rgba(251, 191, 36, 0.25));
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.35);
+}
+
+[data-theme='dark-glass'] .mobile-gamification-overlay__mini-card {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.7));
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 14px rgba(2, 6, 23, 0.45);
+}
+
 /* Enhanced highlighted launcher icon for midnight-purple theme */
 [data-theme='midnight-purple'] .quick-actions-fab__main {
   background: linear-gradient(135deg, #a855f7, #d946ef, #8b5cf6);
