@@ -165,19 +165,44 @@ export function MobileFooterNav({
     setIsPointsAnimating(true);
     let currentValue = startBalance;
     const delta = nextBalance - startBalance;
-    const stepInterval = Math.max(24, Math.min(80, Math.round(1200 / Math.max(delta, 1))));
+    const slowDelta = Math.min(delta, 100);
+    const slowStepInterval = Math.max(24, Math.min(80, Math.round(1200 / Math.max(slowDelta, 1))));
+    const FAST_INTERVAL_MS = 20;
+    const MAX_FAST_DURATION_MS = 480;
+    const fastTarget = delta > slowDelta ? nextBalance - slowDelta : nextBalance;
 
-    pointsTimerRef.current = window.setInterval(() => {
-      currentValue += 1;
-      setDisplayPointsBalance(currentValue);
-      if (currentValue >= nextBalance) {
-        if (pointsTimerRef.current !== null) {
-          window.clearInterval(pointsTimerRef.current);
-          pointsTimerRef.current = null;
+    const startSlowPhase = () => {
+      pointsTimerRef.current = window.setInterval(() => {
+        currentValue += 1;
+        setDisplayPointsBalance(currentValue);
+        if (currentValue >= nextBalance) {
+          if (pointsTimerRef.current !== null) {
+            window.clearInterval(pointsTimerRef.current);
+            pointsTimerRef.current = null;
+          }
+          setIsPointsAnimating(false);
         }
-        setIsPointsAnimating(false);
-      }
-    }, stepInterval);
+      }, slowStepInterval);
+    };
+
+    if (delta > slowDelta) {
+      const fastDelta = fastTarget - currentValue;
+      const fastSteps = Math.max(1, Math.ceil(MAX_FAST_DURATION_MS / FAST_INTERVAL_MS));
+      const fastStepSize = Math.max(1, Math.ceil(fastDelta / fastSteps));
+      pointsTimerRef.current = window.setInterval(() => {
+        currentValue = Math.min(fastTarget, currentValue + fastStepSize);
+        setDisplayPointsBalance(currentValue);
+        if (currentValue >= fastTarget) {
+          if (pointsTimerRef.current !== null) {
+            window.clearInterval(pointsTimerRef.current);
+            pointsTimerRef.current = null;
+          }
+          startSlowPhase();
+        }
+      }, FAST_INTERVAL_MS);
+    } else {
+      startSlowPhase();
+    }
 
     return () => {
       if (pointsTimerRef.current !== null) {
