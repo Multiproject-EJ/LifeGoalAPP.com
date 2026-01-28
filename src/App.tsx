@@ -42,6 +42,7 @@ import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQue
 import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
+import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { SPIN_PRIZES } from './types/gamification';
 import {
   fetchWorkspaceProfile,
@@ -2630,44 +2631,13 @@ export default function App() {
     </div>
   ) : null;
 
-  const calendarPlaceholderModal = showCalendarPlaceholder ? (
-    <div
-      className="daily-treats-placeholder"
-      role="dialog"
-      aria-modal="true"
-      aria-label="25-day countdown calendar"
-    >
-      <div
-        className="daily-treats-placeholder__backdrop"
-        onClick={() => setShowCalendarPlaceholder(false)}
-        role="presentation"
-      />
-      <div className="daily-treats-placeholder__dialog">
-        <button
-          type="button"
-          className="daily-treats-placeholder__close"
-          aria-label="Close countdown calendar placeholder"
-          onClick={() => setShowCalendarPlaceholder(false)}
-        >
-          ×
-        </button>
-        <div className="daily-treats-placeholder__content">
-          <p className="daily-treats-placeholder__eyebrow">25-Day Countdown</p>
-          <h3 className="daily-treats-placeholder__title">Your next hatch is almost ready</h3>
-          <p className="daily-treats-placeholder__text">
-            Check back after your day’s break for a new daily secret calendar tomorrow.
-          </p>
-          <button
-            type="button"
-            className="daily-treats-placeholder__button"
-            onClick={() => setShowCalendarPlaceholder(false)}
-          >
-            Sweet
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null;
+  const countdownCalendarModal = (
+    <CountdownCalendarModal
+      isOpen={showCalendarPlaceholder}
+      onClose={() => setShowCalendarPlaceholder(false)}
+      userId={activeSession?.user?.id}
+    />
+  );
 
   if (isMobileViewport && showMobileHome) {
     return (
@@ -2702,7 +2672,7 @@ export default function App() {
         {dailyTreatsCongratsModal}
         {dailyTreatsModal}
         {leaguePlaceholderModal}
-        {calendarPlaceholderModal}
+        {countdownCalendarModal}
       </>
     );
   }
@@ -2934,7 +2904,7 @@ export default function App() {
       )}
       {dailyTreatsModal}
       {leaguePlaceholderModal}
-      {calendarPlaceholderModal}
+      {countdownCalendarModal}
 
       {/* Quick Actions FAB - visible app-wide */}
       {!shouldRequireAuthentication && (
