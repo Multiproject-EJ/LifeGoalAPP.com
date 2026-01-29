@@ -60,6 +60,8 @@ export function MobileFooterNav({
   const [statusHoldProgress, setStatusHoldProgress] = useState(0);
   const [isStatusHoldActive, setIsStatusHoldActive] = useState(false);
   const [isStatusHoldSnap, setIsStatusHoldSnap] = useState(false);
+  const [areControlsFaded, setAreControlsFaded] = useState(false);
+  const [isDiamondFaded, setIsDiamondFaded] = useState(false);
   const [displayPointsBalance, setDisplayPointsBalance] = useState<number | null>(
     typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
   );
@@ -72,6 +74,8 @@ export function MobileFooterNav({
   const statusHoldStartRef = useRef<number | null>(null);
   const statusHoldTriggeredRef = useRef(false);
   const pointsTimerRef = useRef<number | null>(null);
+  const controlFadeTimeoutRef = useRef<number | null>(null);
+  const diamondFadeTimeoutRef = useRef<number | null>(null);
   const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
@@ -86,6 +90,9 @@ export function MobileFooterNav({
   const shouldShowDiamondCounter = Boolean(isDiodeActive && formattedPointsBalance);
   const isCompactGameStatus = isDiodeOff && isCollapsed;
   const handlePointerDown = () => {
+    if (isDiodeActive) {
+      revealControllerUI();
+    }
     if (onSnapExpand) {
       onSnapExpand();
       return;
@@ -116,15 +123,64 @@ export function MobileFooterNav({
     }
   };
 
+  const clearFadeTimers = () => {
+    if (controlFadeTimeoutRef.current !== null) {
+      window.clearTimeout(controlFadeTimeoutRef.current);
+      controlFadeTimeoutRef.current = null;
+    }
+    if (diamondFadeTimeoutRef.current !== null) {
+      window.clearTimeout(diamondFadeTimeoutRef.current);
+      diamondFadeTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleFadeOut = () => {
+    if (!isDiodeActive) {
+      return;
+    }
+    controlFadeTimeoutRef.current = window.setTimeout(() => {
+      setAreControlsFaded(true);
+    }, 1000);
+    diamondFadeTimeoutRef.current = window.setTimeout(() => {
+      setIsDiamondFaded(true);
+    }, 2000);
+  };
+
+  const revealControllerUI = () => {
+    if (!isDiodeActive) {
+      return;
+    }
+    clearFadeTimers();
+    setAreControlsFaded(false);
+    setIsDiamondFaded(false);
+    scheduleFadeOut();
+  };
+
   useEffect(() => {
     return () => {
       clearStatusHoldTimers();
+      clearFadeTimers();
     };
   }, []);
 
   useEffect(() => {
     displayPointsBalanceRef.current = displayPointsBalance;
   }, [displayPointsBalance]);
+
+  useEffect(() => {
+    clearFadeTimers();
+    if (!isDiodeActive) {
+      setAreControlsFaded(false);
+      setIsDiamondFaded(false);
+      return;
+    }
+    setAreControlsFaded(false);
+    setIsDiamondFaded(false);
+    scheduleFadeOut();
+    return () => {
+      clearFadeTimers();
+    };
+  }, [isDiodeActive]);
 
   useEffect(() => {
     if (typeof pointsBalance !== 'number') {
@@ -261,6 +317,9 @@ export function MobileFooterNav({
       statusHoldTriggeredRef.current = false;
       return;
     }
+    if (isDiodeActive) {
+      revealControllerUI();
+    }
     onStatusClick?.();
   };
 
@@ -268,7 +327,9 @@ export function MobileFooterNav({
     <nav
       className={`mobile-footer-nav${isFlashActive ? ' mobile-footer-nav--flash' : ''}${
         isCollapsed ? ' mobile-footer-nav--collapsed' : ''
-      }${isSnapActive ? ' mobile-footer-nav--snap' : ''}`}
+      }${isSnapActive ? ' mobile-footer-nav--snap' : ''}${isDiodeActive ? ' mobile-footer-nav--diode-on' : ''}${
+        areControlsFaded ? ' mobile-footer-nav--controls-faded' : ''
+      }${isDiamondFaded ? ' mobile-footer-nav--diamond-faded' : ''}`}
       aria-label="Primary navigation"
     >
       <div
@@ -282,7 +343,14 @@ export function MobileFooterNav({
       >
         {onOpenMenu ? (
           <div className="mobile-footer-nav__menu-row">
-            <button type="button" className="mobile-footer-nav__menu-button" onClick={onOpenMenu}>
+            <button
+              type="button"
+              className="mobile-footer-nav__menu-button"
+              onClick={() => {
+                revealControllerUI();
+                onOpenMenu();
+              }}
+            >
               <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
                 •
               </span>
@@ -375,7 +443,10 @@ export function MobileFooterNav({
                   className={`mobile-footer-nav__button ${
                     isActive ? 'mobile-footer-nav__button--active' : ''
                   }`}
-                  onClick={() => onSelect(item.id)}
+                  onClick={() => {
+                    revealControllerUI();
+                    onSelect(item.id);
+                  }}
                   aria-label={item.ariaLabel ?? item.label}
                   aria-pressed={isActive}
                 >
