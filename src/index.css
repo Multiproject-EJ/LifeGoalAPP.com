@@ -13767,6 +13767,11 @@ body {
   overflow: hidden;
 }
 
+.daily-treats-scratch__card--revealed {
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
 .daily-treats-scratch__content {
   position: relative;
   z-index: 1;
@@ -13811,6 +13816,32 @@ body {
 }
 
 .daily-treats-scratch__reward p {
+  margin: 0;
+}
+
+.daily-treats-scratch__reveal {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #475569;
+  font-size: 0.8rem;
+}
+
+.daily-treats-scratch__reveal--win {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #1e3a8a;
+}
+
+.daily-treats-scratch__reveal-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.daily-treats-scratch__reveal-copy {
   margin: 0;
 }
 

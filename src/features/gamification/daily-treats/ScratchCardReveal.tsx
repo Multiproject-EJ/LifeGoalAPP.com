@@ -29,6 +29,11 @@ export const ScratchCardReveal = ({ result, onComplete }: ScratchCardRevealProps
   const [isRevealed, setIsRevealed] = useState(false);
   const [scratchCount, setScratchCount] = useState(0);
   const isDrawingRef = useRef(false);
+  const hasReward = Boolean(result.numberReward || result.symbolReward);
+  const rewardHeadline = hasReward ? 'Treat unlocked!' : 'No match today';
+  const rewardDetail = hasReward
+    ? 'Your streaks and number matches are updated in the tracker.'
+    : 'Keep collecting symbols to unlock the next bonus.';
 
   useEffect(() => {
     setIsRevealed(false);
@@ -99,7 +104,11 @@ export const ScratchCardReveal = ({ result, onComplete }: ScratchCardRevealProps
 
   return (
     <div className="daily-treats-scratch">
-      <div className="daily-treats-scratch__card" aria-live="polite" ref={cardRef}>
+      <div
+        className={`daily-treats-scratch__card${isRevealed ? ' daily-treats-scratch__card--revealed' : ''}`}
+        aria-live="polite"
+        ref={cardRef}
+      >
         <div className="daily-treats-scratch__content">
           <p className="daily-treats-scratch__eyebrow">Today&apos;s hatch</p>
           <div className="daily-treats-scratch__symbol" aria-hidden="true">
@@ -141,6 +150,17 @@ export const ScratchCardReveal = ({ result, onComplete }: ScratchCardRevealProps
           aria-label="Scratch card overlay"
         />
       </div>
+      {isRevealed ? (
+        <div
+          className={`daily-treats-scratch__reveal${
+            hasReward ? ' daily-treats-scratch__reveal--win' : ''
+          }`}
+          role="status"
+        >
+          <p className="daily-treats-scratch__reveal-title">{rewardHeadline}</p>
+          <p className="daily-treats-scratch__reveal-copy">{rewardDetail}</p>
+        </div>
+      ) : null}
       <button type="button" className="daily-treats-scratch__button" onClick={handleRevealNow}>
         {isRevealed ? 'Revealed' : 'Reveal without scratching'}
       </button>
