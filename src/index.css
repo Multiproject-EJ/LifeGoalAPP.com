@@ -13612,7 +13612,7 @@ body {
 
 .daily-treats-calendar__grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.5rem;
   margin-top: 0.35rem;
 }
@@ -13641,6 +13641,11 @@ body {
 .daily-treats-calendar__hatch-status {
   font-size: 0.55rem;
   font-weight: 600;
+}
+
+.daily-treats-calendar__hatch-symbol {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .daily-treats-calendar__hatch--opened {
@@ -13678,6 +13683,59 @@ body {
   background: rgba(15, 23, 42, 0.05);
   color: #334155;
   font-size: 0.85rem;
+}
+
+.daily-treats-calendar__tracker {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.daily-treats-calendar__tracker-title {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.daily-treats-calendar__tracker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 0.4rem;
+}
+
+.daily-treats-calendar__tracker-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.daily-treats-calendar__tracker-item--active {
+  opacity: 1;
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.daily-treats-calendar__tracker-emoji {
+  font-size: 1rem;
+}
+
+.daily-treats-calendar__tracker-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .daily-treats-scratch {

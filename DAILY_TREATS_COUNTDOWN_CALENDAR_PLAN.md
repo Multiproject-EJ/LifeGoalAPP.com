@@ -1,7 +1,7 @@
-# Daily Treats: 25-Day Countdown Calendar (Planning Draft)
+# Daily Treats: Monthly Treat Calendar (Planning Draft)
 
 ## Concept Overview
-- **Goal:** Introduce a 25-day countdown calendar inside the Daily Treats menu that refreshes daily with a new hatch to open.
+- **Goal:** Introduce a monthly rolling calendar inside the Daily Treats menu that refreshes daily with a new hatch to open.
 - **Core loop:**
   1. User returns each day.
   2. The next hatch becomes active after the daily cooldown window.
@@ -10,14 +10,15 @@
 ## Player Experience
 - **Daily ritual:** A quick, satisfying “open hatch” animation with a surprise reveal.
 - **Weekly rhythm:** Special milestones every 5th hatch (larger reward, narrative beat, or unlock).
-- **Reset cadence:** After the 25th hatch, the calendar “rolls around” with a brief break and a new theme.
+- **Visual memory:** Opened hatches keep the revealed emoji visible, and a reward tracker shows progress toward symbol streaks.
+- **Reset cadence:** When the month ends, the calendar rolls into the next month with no downtime.
 
 ## Calendar Structure
-- **Hatches:** 25 total per season.
+- **Hatches:** One hatch per calendar day in the active month.
 - **Daily availability:** One hatch per day. If a day is missed, we can either:
   - Keep it locked (FOMO), or
   - Allow a “catch-up” with a small cost (tokens/points).
-- **Season themes:** Each 25-day block has a story/visual motif (ex: cosmic, ocean, forest).
+- **Season themes:** Each month can have a story/visual motif (ex: cosmic, ocean, forest).
 
 ## Rewards & Pricing Ideas
 - **Free track:**
@@ -31,7 +32,7 @@
 ## Fun Hatch Ideas
 - “Mystery confetti” pop with a short animation.
 - Tiny mini-game (tap 3 times to crack the hatch).
-- Narrative snippets that evolve into a short story by day 25.
+- Narrative snippets that evolve into a short story by the end of the month.
 - Collectible tiles that form a larger artwork.
 
 ## Animation & Visual Notes
@@ -56,12 +57,11 @@
 ## Scheduling & Unlock Logic
 - **Daily lock:** Unlock next hatch at local midnight or a fixed server time.
 - **Grace period:** Optional 4–8 hour window to reduce timezone frustration.
-- **Break period:** 1–3 days between seasons to build anticipation.
+- **Break period:** None; cycle is continuous across months.
 
 ## Next Build Steps
-1. Design the calendar grid UI (25 tiles with hover/locked states).
+1. Design the calendar grid UI (one tile per calendar day, with hover/locked states).
 2. Create the hatch opening animation sequence.
 3. Implement Supabase tables + RLS for user progress.
 4. Add server-side logic (edge function) to generate rewards.
 5. Integrate Daily Treats menu button to open the calendar modal.
-
