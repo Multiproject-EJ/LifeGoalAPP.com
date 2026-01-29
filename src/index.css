@@ -13699,6 +13699,28 @@ body {
   font-size: 0.85rem;
 }
 
+.daily-treats-calendar__rollover {
+  padding: 0.75rem 0.9rem;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.12), rgba(14, 165, 233, 0.08));
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #0f172a;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.daily-treats-calendar__rollover-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.daily-treats-calendar__rollover-copy {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
 .daily-treats-calendar__tracker {
   display: grid;
   gap: 0.45rem;
