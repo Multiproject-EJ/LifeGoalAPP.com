@@ -42,6 +42,7 @@ import {
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
+import visionStarButton from '../../assets/Daily_visionstar.webp';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
@@ -1759,24 +1760,15 @@ export function DailyHabitTracker({
                   disabled={visionImagesLoading || visionRewarding}
                   aria-label="Reveal a vision board star boost"
                 >
-                  <span
-                    className={`habit-day-nav__star ${
-                      isStarBursting || visionRewarding ? 'habit-day-nav__star--burst' : ''
+                  <img
+                    className={`habit-day-nav__vision-button-image ${
+                      isStarBursting || visionRewarding ? 'habit-day-nav__vision-button-image--burst' : ''
                     }`}
+                    src={visionStarButton}
+                    alt=""
                     aria-hidden="true"
-                  >
-                    <span className="habit-day-nav__star-icon">★</span>
-                    <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--one">
-                      ✨
-                    </span>
-                    <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--two">
-                      🏆
-                    </span>
-                    <span className="habit-day-nav__star-sparkle habit-day-nav__star-sparkle--three">
-                      📸
-                    </span>
-                  </span>
-                  <span className="habit-day-nav__vision-text">
+                  />
+                  <span className="habit-day-nav__vision-button-text">
                     <span className="habit-day-nav__vision-title">Vision star</span>
                     <span className="habit-day-nav__vision-subtitle">{visionBoostLabel}</span>
                   </span>
