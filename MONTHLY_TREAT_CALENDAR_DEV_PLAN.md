@@ -4,7 +4,7 @@
 
 ## Status Snapshot
 - **Current phase:** Discovery & architecture
-- **Last updated:** 2026-02-01 (update this date as work progresses)
+- **Last updated:** 2026-01-29 (update this date as work progresses)
 - **Owner:** Product + Engineering
 - **Tracking:** Update the checkboxes + changelog when tasks are completed.
 
@@ -95,7 +95,7 @@
 ### Phase 3 — UI/UX Implementation (Chunk C)
 - [x] Calendar grid view (monthly hatches).
 - [x] Scratch-card reveal component (canvas or library).
-- [ ] Reward reveal state (animation + copy).
+- [x] Reward reveal state (animation + copy).
 - [ ] Month-end rollover screen with themed art (optional).
 
 **Deliverables:**
@@ -135,8 +135,9 @@
 - 2025-01-01: Implemented scratch-card RNG, weighted symbol picker, and number matching utilities.
 - 2026-01-28: Added persisted scratch-card progress helpers for symbol counters and cycle tracking.
 - 2026-01-28: Added the countdown calendar grid modal in the Daily Treats flow.
-- 2026-02-01: Added scratch-card reveal canvas for daily hatch previews.
 - 2026-01-29: Synced calendar hatches to local month/day cadence with missed-day states and daily open gating.
+- 2026-01-29: Added reward reveal status messaging to scratch card results.
+- 2026-02-01: Added scratch-card reveal canvas for daily hatch previews.
 - 2026-02-02: Made the monthly treat calendar modal body scrollable without visible scrollbars.
 
 ## Next Actions (Update Weekly)
