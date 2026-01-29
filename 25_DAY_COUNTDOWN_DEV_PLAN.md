@@ -136,6 +136,7 @@
 - 2026-01-28: Added persisted scratch-card progress helpers for symbol counters and cycle tracking.
 - 2026-01-28: Added the countdown calendar grid modal in the Daily Treats flow.
 - 2026-02-01: Added scratch-card reveal canvas for daily hatch previews.
+- 2026-01-29: Synced calendar hatches to local month/day cadence with missed-day states and daily open gating.
 
 ## Next Actions (Update Weekly)
 - [ ] Review this plan with product/design.

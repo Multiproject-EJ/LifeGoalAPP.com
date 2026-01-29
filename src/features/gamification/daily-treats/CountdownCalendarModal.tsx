@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   DEFAULT_SYMBOLS,
+  hasOpenedToday,
   loadScratchCardState,
   revealScratchCardWithPersistence,
   type RevealCardResult,
@@ -47,13 +48,14 @@ export const CountdownCalendarModal = ({
     0,
   ).getDate();
   const activeDay = Math.min(dayInCycle, totalDaysInMonth);
+  const alreadyOpenedToday = hasOpenedToday(resolvedState);
   const monthLabel = new Date(resolvedState.cycleYear, resolvedState.cycleMonth).toLocaleString(
     'default',
     { month: 'long', year: 'numeric' },
   );
 
   const subtitle = `Day ${activeDay} of ${totalDaysInMonth} • open today’s hatch to reveal your treat.`;
-  const showScratchAction = !revealResult;
+  const showScratchAction = !revealResult && !alreadyOpenedToday;
 
   return (
     <div
@@ -81,10 +83,15 @@ export const CountdownCalendarModal = ({
           <div className="daily-treats-calendar__grid" role="list">
             {Array.from({ length: totalDaysInMonth }, (_, index) => {
               const day = index + 1;
-              const status =
-                day < dayInCycle ? 'opened' : day === dayInCycle ? 'today' : 'locked';
-              const label = `Day ${day} ${status === 'today' ? '(today)' : `(${status})`}`;
               const revealedSymbol = resolvedState.revealedSymbols?.[day];
+              const status = revealedSymbol
+                ? 'opened'
+                : day === activeDay
+                  ? 'today'
+                  : day < activeDay
+                    ? 'missed'
+                    : 'locked';
+              const label = `Day ${day} ${status === 'today' ? '(today)' : `(${status})`}`;
 
               return (
                 <div
@@ -100,7 +107,13 @@ export const CountdownCalendarModal = ({
                     </span>
                   ) : (
                     <span className="daily-treats-calendar__hatch-status">
-                      {status === 'opened' ? 'Opened' : status === 'today' ? 'Today' : 'Locked'}
+                      {status === 'opened'
+                        ? 'Opened'
+                        : status === 'today'
+                          ? 'Today'
+                          : status === 'missed'
+                            ? 'Missed'
+                            : 'Locked'}
                     </span>
                   )}
                 </div>
@@ -119,6 +132,11 @@ export const CountdownCalendarModal = ({
             >
               Scratch today’s hatch
             </button>
+          ) : null}
+          {alreadyOpenedToday ? (
+            <div className="daily-treats-calendar__rest">
+              You opened today’s hatch. Come back tomorrow for the next reveal.
+            </div>
           ) : null}
           {revealResult ? <ScratchCardReveal result={revealResult} /> : null}
           <div className="daily-treats-calendar__tracker">
