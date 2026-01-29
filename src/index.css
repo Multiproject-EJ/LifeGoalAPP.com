@@ -11960,14 +11960,6 @@ body {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
-.mobile-footer-nav--diode-on.mobile-footer-nav--controls-faded .mobile-footer-nav__label,
-.mobile-footer-nav--diode-on.mobile-footer-nav--controls-faded .mobile-footer-nav__status-label,
-.mobile-footer-nav--diode-on.mobile-footer-nav--controls-faded .mobile-footer-nav__status-level,
-.mobile-footer-nav--diode-on.mobile-footer-nav--controls-faded .mobile-footer-nav__status-progress {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
 .mobile-footer-nav--diamond-faded .mobile-footer-nav__diamond-counter {
   opacity: 0;
   transform: var(--diamond-transform, translateY(0)) translateY(6px) scale(0.98);
