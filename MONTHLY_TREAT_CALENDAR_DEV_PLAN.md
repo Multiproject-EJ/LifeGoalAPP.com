@@ -4,7 +4,7 @@
 
 ## Status Snapshot
 - **Current phase:** Discovery & architecture
-- **Last updated:** 2026-01-29 (update this date as work progresses)
+- **Last updated:** 2026-02-03 (update this date as work progresses)
 - **Owner:** Product + Engineering
 - **Tracking:** Update the checkboxes + changelog when tasks are completed.
 
@@ -96,7 +96,7 @@
 - [x] Calendar grid view (monthly hatches).
 - [x] Scratch-card reveal component (canvas or library).
 - [x] Reward reveal state (animation + copy).
-- [ ] Month-end rollover screen with themed art (optional).
+- [x] Month-end rollover screen with themed art (optional).
 
 **Deliverables:**
 - Scratch-card component
@@ -139,6 +139,7 @@
 - 2026-01-29: Added reward reveal status messaging to scratch card results.
 - 2026-02-01: Added scratch-card reveal canvas for daily hatch previews.
 - 2026-02-02: Made the monthly treat calendar modal body scrollable without visible scrollbars.
+- 2026-02-03: Added a month-end rollover callout once the final hatch is opened.
 
 ## Next Actions (Update Weekly)
 - [ ] Review this plan with product/design.

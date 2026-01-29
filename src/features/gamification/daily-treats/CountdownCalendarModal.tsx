@@ -56,6 +56,7 @@ export const CountdownCalendarModal = ({
 
   const subtitle = `Day ${activeDay} of ${totalDaysInMonth} • open today’s hatch to reveal your treat.`;
   const showScratchAction = !revealResult && !alreadyOpenedToday;
+  const isMonthComplete = alreadyOpenedToday && activeDay === totalDaysInMonth;
 
   return (
     <div
@@ -136,6 +137,15 @@ export const CountdownCalendarModal = ({
           {alreadyOpenedToday ? (
             <div className="daily-treats-calendar__rest">
               You opened today’s hatch. Come back tomorrow for the next reveal.
+            </div>
+          ) : null}
+          {isMonthComplete ? (
+            <div className="daily-treats-calendar__rollover">
+              <p className="daily-treats-calendar__rollover-title">Cycle complete 🎉</p>
+              <p className="daily-treats-calendar__rollover-copy">
+                You finished every hatch for {monthLabel}. A fresh calendar starts tomorrow with a
+                brand-new theme.
+              </p>
             </div>
           ) : null}
           {revealResult ? <ScratchCardReveal result={revealResult} /> : null}
