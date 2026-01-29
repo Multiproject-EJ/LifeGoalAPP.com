@@ -988,11 +988,9 @@ export function DailyHabitTracker({
 
     const currentDate = new Date();
     const todayISO = formatISODate(currentDate);
-    const trackingDateISO = variant === 'compact'
+    const trackingDateISO = activeDate > todayISO
       ? todayISO
-      : activeDate > todayISO
-        ? todayISO
-        : activeDate;
+      : activeDate;
     // Use selected month/year instead of current month for monthly grid
     const monthStartDate = new Date(selectedYear, selectedMonth, 1);
     const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
