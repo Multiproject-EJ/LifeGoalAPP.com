@@ -13442,6 +13442,38 @@ body {
   padding: 1.5rem;
 }
 
+.daily-treats-calendar--theme-aurora .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(224, 231, 255, 0.9));
+}
+
+.daily-treats-calendar--theme-aurora .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+}
+
+.daily-treats-calendar--theme-sunset .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(254, 226, 226, 0.9));
+}
+
+.daily-treats-calendar--theme-sunset .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #f97316, #f43f5e);
+}
+
+.daily-treats-calendar--theme-ocean .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(186, 230, 253, 0.85));
+}
+
+.daily-treats-calendar--theme-ocean .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #0ea5e9, #22d3ee);
+}
+
+.daily-treats-calendar--theme-forest .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(220, 252, 231, 0.9));
+}
+
+.daily-treats-calendar--theme-forest .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #22c55e, #84cc16);
+}
+
 .daily-treats-congrats {
   position: fixed;
   inset: 0;

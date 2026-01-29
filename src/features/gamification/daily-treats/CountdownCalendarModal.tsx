@@ -31,6 +31,7 @@ export const CountdownCalendarModal = ({
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
   const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
+  const themes = ['aurora', 'sunset', 'ocean', 'forest'];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -53,6 +54,7 @@ export const CountdownCalendarModal = ({
     'default',
     { month: 'long', year: 'numeric' },
   );
+  const themeName = themes[(resolvedState.cycleIndex - 1) % themes.length];
 
   const subtitle = `Day ${activeDay} of ${totalDaysInMonth} • open today’s hatch to reveal your treat.`;
   const showScratchAction = !revealResult && !alreadyOpenedToday;
@@ -60,7 +62,7 @@ export const CountdownCalendarModal = ({
 
   return (
     <div
-      className="daily-treats-calendar"
+      className={`daily-treats-calendar daily-treats-calendar--theme-${themeName}`}
       role="dialog"
       aria-modal="true"
       aria-label="Monthly treat calendar"
