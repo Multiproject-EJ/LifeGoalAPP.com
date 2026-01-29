@@ -1,6 +1,6 @@
-# 25-Day Countdown Scratch-Card Calendar — Living Dev Plan
+# Monthly Treat Calendar Scratch-Card — Living Dev Plan
 
-> **Purpose:** This is a living, step-by-step plan for implementing the 25-day rolling scratch-card calendar. It is designed so an AI agent (or human) can work in chunks, mark progress, and keep next steps visible.
+> **Purpose:** This is a living, step-by-step plan for implementing the monthly rolling scratch-card calendar. It is designed so an AI agent (or human) can work in chunks, mark progress, and keep next steps visible.
 
 ## Status Snapshot
 - **Current phase:** Discovery & architecture
@@ -9,10 +9,9 @@
 - **Tracking:** Update the checkboxes + changelog when tasks are completed.
 
 ## Goals
-- Ship a 25-day rolling scratch-card calendar with daily reveals.
-- Provide a “rest day” countdown between cycles.
+- Ship a monthly rolling scratch-card calendar with daily reveals.
 - Deliver fair, transparent randomness and balanced rewards.
-- Support themed cycles with seasonal styling.
+- Support themed cycles with monthly styling.
 
 ## Non-Goals (for v1)
 - Real-money gambling mechanics.
@@ -24,7 +23,7 @@
 - **Scratch effect:** Scratch to reveal numbers/symbol (canvas or library).
 - **Match logic:** 5 numbers around a center symbol; match 3+ numbers for a small reward.
 - **Symbol collection:** Symbols are weighted (common → rare) and tracked across the cycle.
-- **Cycle cadence:** 25 daily cards + rest day(s) with a countdown to the next cycle.
+- **Cycle cadence:** One daily card for every day in the active month.
 
 ## Research-Backed Design Guidelines (from scratch-card patterns)
 - **Clear match pattern:** 3-of-a-kind is familiar and intuitive.
@@ -48,15 +47,16 @@
 | 👑 | crown | 1 | 10 | very rare |
 | 🧑‍🎄 | santa | 1 | 10 | seasonal mega |
 
-## Theme System (Per 25-Day Cycle)
+## Theme System (Per Monthly Cycle)
 - Create a `themes[]` array for CSS classes or background assets.
 - Apply theme by cycle index: `themes[cycleIndex % themes.length]`.
-- Include a themed “rest day” page with countdown to next cycle.
+- Roll themes forward at each new month.
 
 ## Data & State (Draft)
 **Local State (client):**
 - `cycleIndex` (integer)
-- `dayInCycle` (1–25)
+- `dayInCycle` (1–daysInMonth)
+- `cycleMonth` + `cycleYear` (calendar boundaries)
 - `symbolCounts` (map: symbolName → count)
 
 **Persistent State (server/db):**
@@ -69,7 +69,7 @@
 
 ### Phase 1 — Product + Design (Chunk A)
 - [ ] Finalize reward tiers + symbol list (including seasonal swaps).
-- [ ] Define cycle cadence (25 days + rest duration).
+- [ ] Define cycle cadence (calendar month length, no rest days).
 - [ ] Confirm theming system (themes array, background assets).
 - [ ] Decide if missed days are locked or offer a catch-up option.
 
@@ -83,7 +83,7 @@
 - [x] Implement RNG utilities using `crypto.getRandomValues`.
 - [x] Build weighted symbol picker.
 - [x] Build number generation + 3-of-a-kind detection.
-- [x] Create cycle/rest-day calculator (server and/or client).
+- [x] Create monthly cycle calculator (client).
 - [x] Persist symbol counters and progress.
 
 **Deliverables:**
@@ -93,10 +93,10 @@
 ---
 
 ### Phase 3 — UI/UX Implementation (Chunk C)
-- [x] Calendar grid view (25 hatches).
+- [x] Calendar grid view (monthly hatches).
 - [x] Scratch-card reveal component (canvas or library).
 - [ ] Reward reveal state (animation + copy).
-- [ ] Rest-day countdown screen with themed art.
+- [ ] Month-end rollover screen with themed art (optional).
 
 **Deliverables:**
 - Scratch-card component
@@ -134,10 +134,10 @@
 - 2025-01-01: Initial plan drafted.
 - 2025-01-01: Implemented scratch-card RNG, weighted symbol picker, and number matching utilities.
 - 2026-01-28: Added persisted scratch-card progress helpers for symbol counters and cycle tracking.
-- 2026-01-28: Added the 25-day countdown calendar grid modal in the Daily Treats flow.
+- 2026-01-28: Added the countdown calendar grid modal in the Daily Treats flow.
 - 2026-02-01: Added scratch-card reveal canvas for daily hatch previews.
 
 ## Next Actions (Update Weekly)
 - [ ] Review this plan with product/design.
-- [ ] Confirm cycle cadence + rest day length.
+- [ ] Confirm cycle cadence + month transition rules.
 - [ ] Decide catch-up mechanic.

@@ -9,6 +9,9 @@ export type ScratchCardState = {
   cycleIndex: number;
   dayInCycle: number;
   symbolCounts: Record<string, number>;
+  revealedSymbols: Record<number, ScratchSymbol>;
+  cycleMonth: number;
+  cycleYear: number;
 };
 
 export type ScratchCardResult = {
@@ -20,12 +23,7 @@ export type ScratchCardResult = {
   symbolReward: string | null;
 };
 
-export type RestDayResult = {
-  rest: true;
-  nextCycleStartsIn: string;
-};
-
-export type RevealCardResult = ScratchCardResult | RestDayResult;
+export type RevealCardResult = ScratchCardResult;
 
 export type ScratchCardStoredState = {
   version: number;
@@ -49,7 +47,7 @@ export const DEFAULT_SYMBOLS: ScratchSymbol[] = [
 ];
 
 const RANDOM_BUFFER = new Uint32Array(1);
-const STORAGE_VERSION = 1;
+const STORAGE_VERSION = 2;
 const STORAGE_KEY = 'lifegoal:daily-treats:scratch-card';
 
 const safeLocalStorage = (() => {
@@ -61,11 +59,17 @@ const safeLocalStorage = (() => {
   }
 })();
 
-const createInitialScratchCardState = (): ScratchCardState => ({
-  cycleIndex: 1,
-  dayInCycle: 1,
-  symbolCounts: {},
-});
+const createInitialScratchCardState = (): ScratchCardState => {
+  const now = new Date();
+  return {
+    cycleIndex: 1,
+    dayInCycle: 1,
+    symbolCounts: {},
+    revealedSymbols: {},
+    cycleMonth: now.getMonth(),
+    cycleYear: now.getFullYear(),
+  };
+};
 
 const getSecureRandomFloat = () => {
   if (globalThis.crypto?.getRandomValues) {
@@ -97,6 +101,18 @@ const isValidScratchCardState = (value: unknown): value is ScratchCardState => {
   );
 };
 
+const normalizeScratchCardState = (state: ScratchCardState): ScratchCardState => {
+  const now = new Date();
+  const resolved: ScratchCardState = {
+    ...state,
+    symbolCounts: state.symbolCounts ?? {},
+    revealedSymbols: state.revealedSymbols ?? {},
+    cycleMonth: Number.isFinite(state.cycleMonth) ? state.cycleMonth : now.getMonth(),
+    cycleYear: Number.isFinite(state.cycleYear) ? state.cycleYear : now.getFullYear(),
+  };
+  return resolved;
+};
+
 export const loadScratchCardState = (userId?: string): ScratchCardState => {
   if (!safeLocalStorage) return createInitialScratchCardState();
 
@@ -105,10 +121,10 @@ export const loadScratchCardState = (userId?: string): ScratchCardState => {
     if (!stored) return createInitialScratchCardState();
     const parsed = JSON.parse(stored) as ScratchCardStoredState | ScratchCardState;
     if ('state' in parsed && isValidScratchCardState(parsed.state)) {
-      return parsed.state;
+      return normalizeScratchCardState(parsed.state);
     }
     if (isValidScratchCardState(parsed)) {
-      return parsed;
+      return normalizeScratchCardState(parsed);
     }
     return createInitialScratchCardState();
   } catch (error) {
@@ -154,6 +170,29 @@ export const pickWeightedSymbol = (symbols: ScratchSymbol[]) => {
   return symbols[0];
 };
 
+const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+
+const advanceCycleMonth = (year: number, month: number) => {
+  if (month === 11) {
+    return { year: year + 1, month: 0 };
+  }
+  return { year, month: month + 1 };
+};
+
+const ensureCycleWithinMonth = (state: ScratchCardState) => {
+  let totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
+  while (state.dayInCycle > totalDays) {
+    const next = advanceCycleMonth(state.cycleYear, state.cycleMonth);
+    state.cycleYear = next.year;
+    state.cycleMonth = next.month;
+    state.cycleIndex += 1;
+    state.dayInCycle = 1;
+    state.symbolCounts = {};
+    state.revealedSymbols = {};
+    totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
+  }
+};
+
 export const generateNumbers = (count = 5, min = 1, max = 10) => {
   const numbers = Array.from({ length: count }, () => getRandomIntInclusive(min, max));
   const tallies = numbers.reduce<Record<number, number>>((acc, value) => {
@@ -168,29 +207,12 @@ export const generateNumbers = (count = 5, min = 1, max = 10) => {
   };
 };
 
-export const countdownToNextCycle = (dayInCycle: number, restDays = 2) => {
-  const now = new Date();
-  const daysUntilNextCycle = Math.max(restDays, 0) + (25 - dayInCycle + 1);
-  const nextCycleDate = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + daysUntilNextCycle,
-  );
-  const diffMs = Math.max(nextCycleDate.getTime() - now.getTime(), 0);
-  const hours = Math.floor(diffMs / 3600000) % 24;
-  const minutes = Math.floor(diffMs / 60000) % 60;
-  const seconds = Math.floor(diffMs / 1000) % 60;
-
-  return `${hours}h ${minutes}m ${seconds}s`;
-};
-
 export const revealScratchCardWithPersistence = (
   userId?: string,
   symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
-  restDays = 2,
 ): RevealCardResult => {
   const state = loadScratchCardState(userId);
-  const result = revealScratchCard(state, symbols, restDays);
+  const result = revealScratchCard(state, symbols);
   saveScratchCardState(state, userId);
   return result;
 };
@@ -198,19 +220,15 @@ export const revealScratchCardWithPersistence = (
 export const revealScratchCard = (
   state: ScratchCardState,
   symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
-  restDays = 2,
 ): RevealCardResult => {
-  if (state.dayInCycle > 25) {
-    return {
-      rest: true,
-      nextCycleStartsIn: countdownToNextCycle(state.dayInCycle, restDays),
-    };
-  }
+  ensureCycleWithinMonth(state);
+  const totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
 
   const symbol = pickWeightedSymbol(symbols);
   const { numbers, reward } = generateNumbers();
 
   state.symbolCounts[symbol.name] = (state.symbolCounts[symbol.name] ?? 0) + 1;
+  state.revealedSymbols[state.dayInCycle] = symbol;
   let symbolReward: string | null = null;
 
   if (state.symbolCounts[symbol.name] >= symbol.needed) {
@@ -229,9 +247,14 @@ export const revealScratchCard = (
 
   state.dayInCycle += 1;
 
-  if (state.dayInCycle > 25 + restDays) {
+  if (state.dayInCycle > totalDays) {
+    const next = advanceCycleMonth(state.cycleYear, state.cycleMonth);
+    state.cycleYear = next.year;
+    state.cycleMonth = next.month;
     state.cycleIndex += 1;
     state.dayInCycle = 1;
+    state.symbolCounts = {};
+    state.revealedSymbols = {};
   }
 
   return card;

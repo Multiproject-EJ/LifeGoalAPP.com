@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  countdownToNextCycle,
+  DEFAULT_SYMBOLS,
   loadScratchCardState,
   revealScratchCardWithPersistence,
   type RevealCardResult,
@@ -18,6 +18,9 @@ const fallbackState: ScratchCardState = {
   cycleIndex: 1,
   dayInCycle: 1,
   symbolCounts: {},
+  revealedSymbols: {},
+  cycleMonth: new Date().getMonth(),
+  cycleYear: new Date().getFullYear(),
 };
 
 export const CountdownCalendarModal = ({
@@ -38,23 +41,26 @@ export const CountdownCalendarModal = ({
 
   const resolvedState = scratchState ?? fallbackState;
   const dayInCycle = resolvedState.dayInCycle;
-  const isRestDay = dayInCycle > 25;
-  const activeDay = Math.min(dayInCycle, 25);
-  const countdown = isRestDay ? countdownToNextCycle(dayInCycle) : null;
+  const totalDaysInMonth = new Date(
+    resolvedState.cycleYear,
+    resolvedState.cycleMonth + 1,
+    0,
+  ).getDate();
+  const activeDay = Math.min(dayInCycle, totalDaysInMonth);
+  const monthLabel = new Date(resolvedState.cycleYear, resolvedState.cycleMonth).toLocaleString(
+    'default',
+    { month: 'long', year: 'numeric' },
+  );
 
-  const subtitle = isRestDay
-    ? `Rest day in progress • next cycle starts in ${countdown}`
-    : `Day ${activeDay} of 25 • open today’s hatch to reveal your treat.`;
-  const showScratchAction = !isRestDay && !revealResult;
-  const revealedCard = revealResult && 'rest' in revealResult ? null : revealResult;
-  const restResult = revealResult && 'rest' in revealResult ? revealResult : null;
+  const subtitle = `Day ${activeDay} of ${totalDaysInMonth} • open today’s hatch to reveal your treat.`;
+  const showScratchAction = !revealResult;
 
   return (
     <div
       className="daily-treats-calendar"
       role="dialog"
       aria-modal="true"
-      aria-label="25-day countdown calendar"
+      aria-label="Monthly treat calendar"
     >
       <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
       <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
@@ -67,20 +73,18 @@ export const CountdownCalendarModal = ({
           ×
         </button>
         <div className="daily-treats-calendar__content">
-          <p className="daily-treats-modal__eyebrow">25-Day Countdown</p>
-          <h3 className="daily-treats-calendar__title">Cycle {resolvedState.cycleIndex}</h3>
+          <p className="daily-treats-modal__eyebrow">Monthly Treat Calendar</p>
+          <h3 className="daily-treats-calendar__title">
+            {monthLabel} • Cycle {resolvedState.cycleIndex}
+          </h3>
           <p className="daily-treats-calendar__subtitle">{subtitle}</p>
           <div className="daily-treats-calendar__grid" role="list">
-            {Array.from({ length: 25 }, (_, index) => {
+            {Array.from({ length: totalDaysInMonth }, (_, index) => {
               const day = index + 1;
-              const status = isRestDay
-                ? 'opened'
-                : day < dayInCycle
-                  ? 'opened'
-                  : day === dayInCycle
-                    ? 'today'
-                    : 'locked';
+              const status =
+                day < dayInCycle ? 'opened' : day === dayInCycle ? 'today' : 'locked';
               const label = `Day ${day} ${status === 'today' ? '(today)' : `(${status})`}`;
+              const revealedSymbol = resolvedState.revealedSymbols?.[day];
 
               return (
                 <div
@@ -90,9 +94,15 @@ export const CountdownCalendarModal = ({
                   aria-label={label}
                 >
                   <span className="daily-treats-calendar__hatch-number">{day}</span>
-                  <span className="daily-treats-calendar__hatch-status">
-                    {status === 'opened' ? 'Opened' : status === 'today' ? 'Today' : 'Locked'}
-                  </span>
+                  {revealedSymbol ? (
+                    <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">
+                      {revealedSymbol.emoji}
+                    </span>
+                  ) : (
+                    <span className="daily-treats-calendar__hatch-status">
+                      {status === 'opened' ? 'Opened' : status === 'today' ? 'Today' : 'Locked'}
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -110,13 +120,31 @@ export const CountdownCalendarModal = ({
               Scratch today’s hatch
             </button>
           ) : null}
-          {revealedCard ? (
-            <ScratchCardReveal result={revealedCard} />
-          ) : restResult ? (
-            <div className="daily-treats-calendar__rest">
-              <p>Rest day active. Next cycle begins in {restResult.nextCycleStartsIn}.</p>
+          {revealResult ? <ScratchCardReveal result={revealResult} /> : null}
+          <div className="daily-treats-calendar__tracker">
+            <p className="daily-treats-calendar__tracker-title">Reward tracker</p>
+            <div className="daily-treats-calendar__tracker-grid">
+              {DEFAULT_SYMBOLS.map((symbol) => {
+                const count = resolvedState.symbolCounts?.[symbol.name] ?? 0;
+                const isActive = count > 0;
+                return (
+                  <div
+                    key={`symbol-tracker-${symbol.name}`}
+                    className={`daily-treats-calendar__tracker-item${
+                      isActive ? ' daily-treats-calendar__tracker-item--active' : ''
+                    }`}
+                  >
+                    <span className="daily-treats-calendar__tracker-emoji" aria-hidden="true">
+                      {symbol.emoji}
+                    </span>
+                    <span className="daily-treats-calendar__tracker-label">
+                      {count}/{symbol.needed}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          ) : null}
+          </div>
           <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
             Back to Daily Treats
           </button>
