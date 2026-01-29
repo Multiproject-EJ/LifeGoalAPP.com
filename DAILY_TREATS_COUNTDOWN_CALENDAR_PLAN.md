@@ -58,6 +58,7 @@
 - **Daily lock:** Unlock next hatch at local midnight or a fixed server time.
 - **Grace period:** Optional 4–8 hour window to reduce timezone frustration.
 - **Break period:** None; cycle is continuous across months.
+- **Monthly cadence:** Use the calendar date as the active hatch day; missed days remain marked as missed/locked.
 
 ## Next Build Steps
 1. Design the calendar grid UI (one tile per calendar day, with hover/locked states).

@@ -12,6 +12,8 @@ export type ScratchCardState = {
   revealedSymbols: Record<number, ScratchSymbol>;
   cycleMonth: number;
   cycleYear: number;
+  lastOpenedDate?: string;
+  lastOpenedDay?: number;
 };
 
 export type ScratchCardResult = {
@@ -68,6 +70,8 @@ const createInitialScratchCardState = (): ScratchCardState => {
     revealedSymbols: {},
     cycleMonth: now.getMonth(),
     cycleYear: now.getFullYear(),
+    lastOpenedDate: undefined,
+    lastOpenedDay: undefined,
   };
 };
 
@@ -109,8 +113,44 @@ const normalizeScratchCardState = (state: ScratchCardState): ScratchCardState =>
     revealedSymbols: state.revealedSymbols ?? {},
     cycleMonth: Number.isFinite(state.cycleMonth) ? state.cycleMonth : now.getMonth(),
     cycleYear: Number.isFinite(state.cycleYear) ? state.cycleYear : now.getFullYear(),
+    lastOpenedDate: state.lastOpenedDate ?? undefined,
+    lastOpenedDay: Number.isFinite(state.lastOpenedDay) ? state.lastOpenedDay : undefined,
   };
   return resolved;
+};
+
+const getMonthDelta = (fromYear: number, fromMonth: number, toYear: number, toMonth: number) =>
+  (toYear - fromYear) * 12 + (toMonth - fromMonth);
+
+export const getLocalDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const hasOpenedToday = (state: ScratchCardState, now = new Date()) =>
+  state.lastOpenedDate === getLocalDateKey(now);
+
+const syncScratchCardState = (state: ScratchCardState, now = new Date()) => {
+  const todayMonth = now.getMonth();
+  const todayYear = now.getFullYear();
+  const todayDay = now.getDate();
+  const monthDelta = getMonthDelta(state.cycleYear, state.cycleMonth, todayYear, todayMonth);
+
+  if (monthDelta !== 0) {
+    state.cycleIndex = Math.max(1, state.cycleIndex + monthDelta);
+    state.cycleYear = todayYear;
+    state.cycleMonth = todayMonth;
+    state.dayInCycle = todayDay;
+    state.symbolCounts = {};
+    state.revealedSymbols = {};
+    state.lastOpenedDate = undefined;
+    state.lastOpenedDay = undefined;
+    return;
+  }
+
+  state.dayInCycle = todayDay;
 };
 
 export const loadScratchCardState = (userId?: string): ScratchCardState => {
@@ -121,10 +161,16 @@ export const loadScratchCardState = (userId?: string): ScratchCardState => {
     if (!stored) return createInitialScratchCardState();
     const parsed = JSON.parse(stored) as ScratchCardStoredState | ScratchCardState;
     if ('state' in parsed && isValidScratchCardState(parsed.state)) {
-      return normalizeScratchCardState(parsed.state);
+      const normalized = normalizeScratchCardState(parsed.state);
+      syncScratchCardState(normalized);
+      saveScratchCardState(normalized, userId);
+      return normalized;
     }
     if (isValidScratchCardState(parsed)) {
-      return normalizeScratchCardState(parsed);
+      const normalized = normalizeScratchCardState(parsed);
+      syncScratchCardState(normalized);
+      saveScratchCardState(normalized, userId);
+      return normalized;
     }
     return createInitialScratchCardState();
   } catch (error) {
@@ -180,17 +226,8 @@ const advanceCycleMonth = (year: number, month: number) => {
 };
 
 const ensureCycleWithinMonth = (state: ScratchCardState) => {
-  let totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
-  while (state.dayInCycle > totalDays) {
-    const next = advanceCycleMonth(state.cycleYear, state.cycleMonth);
-    state.cycleYear = next.year;
-    state.cycleMonth = next.month;
-    state.cycleIndex += 1;
-    state.dayInCycle = 1;
-    state.symbolCounts = {};
-    state.revealedSymbols = {};
-    totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
-  }
+  const totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
+  state.dayInCycle = Math.min(state.dayInCycle, totalDays);
 };
 
 export const generateNumbers = (count = 5, min = 1, max = 10) => {
@@ -212,6 +249,16 @@ export const revealScratchCardWithPersistence = (
   symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
 ): RevealCardResult => {
   const state = loadScratchCardState(userId);
+  if (hasOpenedToday(state)) {
+    return {
+      cycle: state.cycleIndex,
+      day: state.dayInCycle,
+      symbol: state.revealedSymbols[state.dayInCycle] ?? pickWeightedSymbol(symbols),
+      numbers: [],
+      numberReward: null,
+      symbolReward: null,
+    };
+  }
   const result = revealScratchCard(state, symbols);
   saveScratchCardState(state, userId);
   return result;
@@ -222,13 +269,14 @@ export const revealScratchCard = (
   symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
 ): RevealCardResult => {
   ensureCycleWithinMonth(state);
-  const totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
 
   const symbol = pickWeightedSymbol(symbols);
   const { numbers, reward } = generateNumbers();
 
   state.symbolCounts[symbol.name] = (state.symbolCounts[symbol.name] ?? 0) + 1;
   state.revealedSymbols[state.dayInCycle] = symbol;
+  state.lastOpenedDate = getLocalDateKey(new Date());
+  state.lastOpenedDay = state.dayInCycle;
   let symbolReward: string | null = null;
 
   if (state.symbolCounts[symbol.name] >= symbol.needed) {
@@ -244,18 +292,6 @@ export const revealScratchCard = (
     numberReward: reward,
     symbolReward,
   };
-
-  state.dayInCycle += 1;
-
-  if (state.dayInCycle > totalDays) {
-    const next = advanceCycleMonth(state.cycleYear, state.cycleMonth);
-    state.cycleYear = next.year;
-    state.cycleMonth = next.month;
-    state.cycleIndex += 1;
-    state.dayInCycle = 1;
-    state.symbolCounts = {};
-    state.revealedSymbols = {};
-  }
 
   return card;
 };

@@ -13665,6 +13665,12 @@ body {
   color: rgba(100, 116, 139, 0.8);
 }
 
+.daily-treats-calendar__hatch--missed {
+  background: rgba(226, 232, 240, 0.35);
+  color: rgba(100, 116, 139, 0.85);
+  border-style: dashed;
+}
+
 .daily-treats-calendar__button {
   margin-top: 0.35rem;
   border: none;
