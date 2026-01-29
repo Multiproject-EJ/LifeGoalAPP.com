@@ -13595,6 +13595,14 @@ body {
   display: grid;
   gap: 0.65rem;
   padding-right: 0.25rem;
+  max-height: calc(84vh - 3rem);
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.daily-treats-calendar__content::-webkit-scrollbar {
+  display: none;
 }
 
 .daily-treats-calendar__title {
