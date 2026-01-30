@@ -23,6 +23,9 @@ type MobileFooterNavProps = {
   activeId: string | null;
   onSelect: (itemId: string) => void;
   onOpenMenu?: () => void;
+  isEnergyMenuOpen?: boolean;
+  onEnergyToggle?: () => void;
+  onEnergySelect?: (category: 'mind' | 'body') => void;
   isDiodeActive: boolean;
   pointsBadges?: Partial<Record<MobileFooterNavItem['id'], string>>;
   showPointsBadges?: boolean;
@@ -44,6 +47,9 @@ export function MobileFooterNav({
   activeId,
   onSelect,
   onOpenMenu,
+  isEnergyMenuOpen = false,
+  onEnergyToggle,
+  onEnergySelect,
   isDiodeActive,
   pointsBadges = {},
   showPointsBadges = false,
@@ -436,8 +442,41 @@ export function MobileFooterNav({
 
             const isActive = item.id === activeId;
             const pointsBadgeValue = showPointsBadges ? pointsBadges[item.id] : undefined;
+            const isEnergyItem = item.id === 'breathing-space' && Boolean(onEnergySelect);
             return (
               <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}`}>
+                {isEnergyItem ? (
+                  <div
+                    className={`mobile-footer-nav__energy-menu${
+                      isEnergyMenuOpen ? ' mobile-footer-nav__energy-menu--open' : ''
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      className="mobile-footer-nav__energy-button"
+                      onClick={() => {
+                        revealControllerUI();
+                        onEnergySelect?.('mind');
+                      }}
+                      aria-label="Open mind energy tools"
+                    >
+                      🧠
+                      <span className="mobile-footer-nav__energy-label">Mind</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="mobile-footer-nav__energy-button"
+                      onClick={() => {
+                        revealControllerUI();
+                        onEnergySelect?.('body');
+                      }}
+                      aria-label="Open body energy tools"
+                    >
+                      💪
+                      <span className="mobile-footer-nav__energy-label">Body</span>
+                    </button>
+                  </div>
+                ) : null}
                 <button
                   type="button"
                   className={`mobile-footer-nav__button ${
@@ -445,6 +484,10 @@ export function MobileFooterNav({
                   }`}
                   onClick={() => {
                     revealControllerUI();
+                    if (isEnergyItem) {
+                      onEnergyToggle?.();
+                      return;
+                    }
                     onSelect(item.id);
                   }}
                   aria-label={item.ariaLabel ?? item.label}

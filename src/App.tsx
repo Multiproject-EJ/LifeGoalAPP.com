@@ -256,7 +256,7 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'placeholder',
 ] as const;
 
-const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'breathing-space']);
+const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 
@@ -308,8 +308,10 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBreatheSubmenuOpen, setIsBreatheSubmenuOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
-    'breathing' | 'meditation' | 'yoga' | null
+    'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
   >(null);
+  const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
+  const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
@@ -467,10 +469,20 @@ export default function App() {
       if (navId === 'body') {
         return {
           id: navId,
-          label: 'Body',
-          ariaLabel: 'Body routines and care',
+          label: 'Healht',
+          ariaLabel: 'Health routines and care',
           icon: '💪',
           summary: 'Refresh your body-focused routines and personal care rituals.',
+        } satisfies MobileMenuNavItem;
+      }
+
+      if (navId === 'breathing-space') {
+        return {
+          id: navId,
+          label: 'Energy',
+          ariaLabel: 'Energy routines and focus tools',
+          icon: '⚡️',
+          summary: 'Boost your energy with mind and body resets.',
         } satisfies MobileMenuNavItem;
       }
 
@@ -1124,6 +1136,7 @@ export default function App() {
 
   const handleMobileNavSelect = (navId: string, options?: { preserveBreatheTab?: boolean }) => {
     setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
     const preserveBreatheTab = options?.preserveBreatheTab ?? false;
 
     if (navId === 'breathing-space' && !preserveBreatheTab) {
@@ -1147,6 +1160,12 @@ export default function App() {
 
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
+  };
+
+  const handleEnergySelect = (category: 'mind' | 'body') => {
+    setBreathingSpaceMobileCategory(category);
+    setBreathingSpaceMobileTab(null);
+    handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
   };
 
   const handleProfileStrengthTaskClick = () => {
@@ -1910,7 +1929,9 @@ export default function App() {
             <BreathingSpace
               session={activeSession}
               initialMobileTab={breathingSpaceMobileTab}
+              initialMobileCategory={breathingSpaceMobileCategory}
               onMobileTabChange={(tab) => setBreathingSpaceMobileTab(tab)}
+              onMobileCategoryChange={(category) => setBreathingSpaceMobileCategory(category)}
             />
           </div>
         );
@@ -2790,7 +2811,16 @@ export default function App() {
           onSelect={handleMobileNavSelect}
           onStatusClick={handleMobileGameStatusClick}
           onStatusHoldToggle={handleMobileGameStatusHoldToggle}
-          onOpenMenu={() => setIsMobileMenuOpen(true)}
+          onOpenMenu={() => {
+            setIsMobileMenuOpen(true);
+            setIsEnergyMenuOpen(false);
+          }}
+          isEnergyMenuOpen={isEnergyMenuOpen}
+          onEnergyToggle={() => {
+            setIsEnergyMenuOpen((prev) => !prev);
+            handleMobileFooterExpand(true);
+          }}
+          onEnergySelect={handleEnergySelect}
           isDiodeActive={isMobileMenuImageActive}
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
@@ -2985,7 +3015,16 @@ export default function App() {
           onSelect={handleMobileNavSelect}
           onStatusClick={handleMobileGameStatusClick}
           onStatusHoldToggle={handleMobileGameStatusHoldToggle}
-          onOpenMenu={() => setIsMobileMenuOpen(true)}
+          onOpenMenu={() => {
+            setIsMobileMenuOpen(true);
+            setIsEnergyMenuOpen(false);
+          }}
+          isEnergyMenuOpen={isEnergyMenuOpen}
+          onEnergyToggle={() => {
+            setIsEnergyMenuOpen((prev) => !prev);
+            handleMobileFooterExpand(true);
+          }}
+          onEnergySelect={handleEnergySelect}
           isDiodeActive={isMobileMenuImageActive}
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
