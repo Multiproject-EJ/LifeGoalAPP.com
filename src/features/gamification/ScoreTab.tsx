@@ -12,6 +12,8 @@ interface ScoreTabProps {
   enabled: boolean;
   loading: boolean;
   onNavigateToAchievements: () => void;
+  onNavigateToBank?: () => void;
+  onNavigateToShop?: () => void;
 }
 
 export function ScoreTab({
@@ -21,6 +23,8 @@ export function ScoreTab({
   enabled,
   loading,
   onNavigateToAchievements,
+  onNavigateToBank,
+  onNavigateToShop,
 }: ScoreTabProps) {
   const formatter = useMemo(() => new Intl.NumberFormat(), []);
   const dateFormatter = useMemo(
@@ -31,6 +35,7 @@ export function ScoreTab({
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
   const pointsRatioLabel = `1 point per ${Math.round(1 / XP_TO_POINTS_RATIO)} XP`;
+  const [activeTab, setActiveTab] = useState<'bank' | 'shop'>('bank');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -113,13 +118,37 @@ export function ScoreTab({
             <h2 className="score-tab__headline">Track your daily economy</h2>
           </div>
         </div>
-        <button
-          type="button"
-          className="score-tab__achievements-link"
-          onClick={onNavigateToAchievements}
-        >
-          Achievements
-        </button>
+        <div className="score-tab__tabs" aria-label="Score shortcuts">
+          <button
+            type="button"
+            className="score-tab__tab score-tab__tab--primary"
+            onClick={onNavigateToAchievements}
+          >
+            Achievements
+          </button>
+          <button
+            type="button"
+            className={`score-tab__tab${activeTab === 'bank' ? ' score-tab__tab--active' : ''}`}
+            onClick={() => {
+              setActiveTab('bank');
+              onNavigateToBank?.();
+            }}
+          >
+            <span className="score-tab__tab-icon" aria-hidden="true">🏦</span>
+            Bank
+          </button>
+          <button
+            type="button"
+            className={`score-tab__tab${activeTab === 'shop' ? ' score-tab__tab--active' : ''}`}
+            onClick={() => {
+              setActiveTab('shop');
+              onNavigateToShop?.();
+            }}
+          >
+            <span className="score-tab__tab-icon" aria-hidden="true">🛍️</span>
+            Shop
+          </button>
+        </div>
         <p className="score-tab__subtitle">
           Review XP, points, and streak momentum before you spin or shop.
         </p>
@@ -137,7 +166,7 @@ export function ScoreTab({
         </div>
       )}
 
-      {!loading && enabled && profile && levelInfo && (
+      {!loading && enabled && profile && levelInfo && activeTab === 'bank' && (
         <div className="score-tab__content">
           <GamificationHeader profile={profile} levelInfo={levelInfo} session={session ?? undefined} />
 
@@ -250,9 +279,15 @@ export function ScoreTab({
         </div>
       )}
 
-      {!loading && enabled && (!profile || !levelInfo) && (
+      {!loading && enabled && activeTab === 'bank' && (!profile || !levelInfo) && (
         <div className="score-tab__status">
           No score data yet. Complete a habit or spin the wheel to start earning XP.
+        </div>
+      )}
+
+      {!loading && enabled && activeTab === 'shop' && (
+        <div className="score-tab__status">
+          The shop is getting stocked. Check back soon for upgrades and rewards.
         </div>
       )}
     </section>
