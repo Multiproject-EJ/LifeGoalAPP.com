@@ -19,6 +19,38 @@
   gap: var(--space-3);
 }
 
+.breathing-space__mobile-category-tabs {
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.breathing-space__mobile-category-tab {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.breathing-space__mobile-category-tab:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.breathing-space__mobile-category-tab--active {
+  border-color: var(--accent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16), var(--shadow-glow);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+}
+
 .breathing-space__mobile-launch {
   display: none;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -523,6 +555,10 @@
     display: grid;
   }
 
+  .breathing-space__mobile-category-tabs {
+    display: grid;
+  }
+
   .breathing-space[data-mobile-tab='none'] .breathing-space__mobile-tabs {
     display: none;
   }
@@ -533,13 +569,17 @@
 
   .breathing-space__section--breathing,
   .breathing-space__section--meditation,
-  .breathing-space__section--yoga {
+  .breathing-space__section--yoga,
+  .breathing-space__section--food,
+  .breathing-space__section--exercise {
     display: none;
   }
 
   .breathing-space[data-mobile-tab='breathing'] .breathing-space__section--breathing,
   .breathing-space[data-mobile-tab='meditation'] .breathing-space__section--meditation,
-  .breathing-space[data-mobile-tab='yoga'] .breathing-space__section--yoga {
+  .breathing-space[data-mobile-tab='yoga'] .breathing-space__section--yoga,
+  .breathing-space[data-mobile-tab='food'] .breathing-space__section--food,
+  .breathing-space[data-mobile-tab='exercise'] .breathing-space__section--exercise {
     display: var(--breathing-space-section-display, block);
   }
 

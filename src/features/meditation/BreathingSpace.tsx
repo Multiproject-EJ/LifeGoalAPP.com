@@ -21,10 +21,13 @@ import './BreathingSpace.css';
 type BreathingSpaceProps = {
   session: Session;
   initialMobileTab?: MobileTab | null;
+  initialMobileCategory?: MobileCategory;
   onMobileTabChange?: (tab: MobileTab) => void;
+  onMobileCategoryChange?: (category: MobileCategory) => void;
 };
 
-type MobileTab = 'breathing' | 'meditation' | 'yoga';
+type MobileTab = 'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise';
+type MobileCategory = 'mind' | 'body';
 
 type MeditationStats = {
   totalMinutes: number;
@@ -32,7 +35,25 @@ type MeditationStats = {
   currentStreak: number;
 };
 
-export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }: BreathingSpaceProps) {
+const MOBILE_CATEGORY_TABS: Record<MobileCategory, MobileTab[]> = {
+  mind: ['breathing', 'meditation'],
+  body: ['yoga', 'food', 'exercise'],
+};
+
+const getCategoryForTab = (tab: MobileTab): MobileCategory => {
+  if (MOBILE_CATEGORY_TABS.body.includes(tab)) {
+    return 'body';
+  }
+  return 'mind';
+};
+
+export function BreathingSpace({
+  session,
+  initialMobileTab,
+  initialMobileCategory,
+  onMobileTabChange,
+  onMobileCategoryChange,
+}: BreathingSpaceProps) {
   const [stats, setStats] = useState<MeditationStats>({
     totalMinutes: 0,
     totalSessions: 0,
@@ -50,6 +71,26 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
   const [reminderSet, setReminderSet] = useState(false);
   const reminderRef = useRef<HTMLDivElement>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(initialMobileTab ?? null);
+  const [activeMobileCategory, setActiveMobileCategory] = useState<MobileCategory>(
+    initialMobileCategory ?? (initialMobileTab ? getCategoryForTab(initialMobileTab) : 'mind'),
+  );
+
+  useEffect(() => {
+    setActiveMobileTab(initialMobileTab ?? null);
+    if (initialMobileTab) {
+      const nextCategory = getCategoryForTab(initialMobileTab);
+      setActiveMobileCategory(nextCategory);
+    }
+  }, [initialMobileTab]);
+
+  useEffect(() => {
+    if (initialMobileCategory) {
+      setActiveMobileCategory(initialMobileCategory);
+      if (activeMobileTab && !MOBILE_CATEGORY_TABS[initialMobileCategory].includes(activeMobileTab)) {
+        setActiveMobileTab(null);
+      }
+    }
+  }, [activeMobileTab, initialMobileCategory]);
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
@@ -68,7 +109,20 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
 
   const handleMobileTabChange = (tab: MobileTab) => {
     setActiveMobileTab(tab);
+    const nextCategory = getCategoryForTab(tab);
+    if (nextCategory !== activeMobileCategory) {
+      setActiveMobileCategory(nextCategory);
+      onMobileCategoryChange?.(nextCategory);
+    }
     onMobileTabChange?.(tab);
+  };
+
+  const handleMobileCategoryChange = (category: MobileCategory) => {
+    setActiveMobileCategory(category);
+    onMobileCategoryChange?.(category);
+    if (activeMobileTab && !MOBILE_CATEGORY_TABS[category].includes(activeMobileTab)) {
+      setActiveMobileTab(null);
+    }
   };
 
   // Watch for level-up events
@@ -290,73 +344,81 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
     return null;
   }
 
+  const mobileTabOptions: Record<MobileTab, { icon: string; label: string; uppercaseLabel: string }> = {
+    breathing: { icon: '🌬️', label: 'Focus Breathing', uppercaseLabel: 'FOCUS BREATHING' },
+    meditation: { icon: '🧘', label: 'Meditation', uppercaseLabel: 'MEDITATION' },
+    yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
+    food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
+    exercise: { icon: '🏋️', label: 'Excersise', uppercaseLabel: 'EXCERSISE' },
+  };
+
+  const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
+
   return (
-    <div className="breathing-space" data-mobile-tab={activeMobileTab ?? 'none'}>
+    <div
+      className="breathing-space"
+      data-mobile-tab={activeMobileTab ?? 'none'}
+      data-mobile-category={activeMobileCategory}
+    >
+      <div className="breathing-space__mobile-category-tabs" role="tablist" aria-label="Energy focus">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeMobileCategory === 'mind'}
+          className={`breathing-space__mobile-category-tab ${
+            activeMobileCategory === 'mind' ? 'breathing-space__mobile-category-tab--active' : ''
+          }`}
+          onClick={() => handleMobileCategoryChange('mind')}
+        >
+          Mind
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeMobileCategory === 'body'}
+          className={`breathing-space__mobile-category-tab ${
+            activeMobileCategory === 'body' ? 'breathing-space__mobile-category-tab--active' : ''
+          }`}
+          onClick={() => handleMobileCategoryChange('body')}
+        >
+          Body
+        </button>
+      </div>
       {activeMobileTab ? (
-        <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Breathe options">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeMobileTab === 'breathing'}
-            className={`breathing-space__mobile-tab ${
-              activeMobileTab === 'breathing' ? 'breathing-space__mobile-tab--active' : ''
-            }`}
-            onClick={() => handleMobileTabChange('breathing')}
-          >
-            <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🌬️</span>
-            <span className="breathing-space__mobile-tab-title">FOCUS BREATHING</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeMobileTab === 'meditation'}
-            className={`breathing-space__mobile-tab ${
-              activeMobileTab === 'meditation' ? 'breathing-space__mobile-tab--active' : ''
-            }`}
-            onClick={() => handleMobileTabChange('meditation')}
-          >
-            <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🧘</span>
-            <span className="breathing-space__mobile-tab-title">MEDITATION</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeMobileTab === 'yoga'}
-            className={`breathing-space__mobile-tab ${
-              activeMobileTab === 'yoga' ? 'breathing-space__mobile-tab--active' : ''
-            }`}
-            onClick={() => handleMobileTabChange('yoga')}
-          >
-            <span className="breathing-space__mobile-tab-icon" aria-hidden="true">🧘‍♀️</span>
-            <span className="breathing-space__mobile-tab-title">YOGA</span>
-          </button>
+        <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Energy options">
+          {activeCategoryTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={activeMobileTab === tab}
+              className={`breathing-space__mobile-tab ${
+                activeMobileTab === tab ? 'breathing-space__mobile-tab--active' : ''
+              }`}
+              onClick={() => handleMobileTabChange(tab)}
+            >
+              <span className="breathing-space__mobile-tab-icon" aria-hidden="true">
+                {mobileTabOptions[tab].icon}
+              </span>
+              <span className="breathing-space__mobile-tab-title">{mobileTabOptions[tab].uppercaseLabel}</span>
+            </button>
+          ))}
         </div>
       ) : (
-        <div className="breathing-space__mobile-launch" role="group" aria-label="Choose a breathe focus">
-          <button
-            type="button"
-            className="breathing-space__mobile-launch-card"
-            onClick={() => handleMobileTabChange('breathing')}
-          >
-            <span className="breathing-space__mobile-launch-icon" aria-hidden="true">🌬️</span>
-            <span className="breathing-space__mobile-launch-title">Focus Breathing</span>
-          </button>
-          <button
-            type="button"
-            className="breathing-space__mobile-launch-card"
-            onClick={() => handleMobileTabChange('meditation')}
-          >
-            <span className="breathing-space__mobile-launch-icon" aria-hidden="true">🧘</span>
-            <span className="breathing-space__mobile-launch-title">Meditation</span>
-          </button>
-          <button
-            type="button"
-            className="breathing-space__mobile-launch-card"
-            onClick={() => handleMobileTabChange('yoga')}
-          >
-            <span className="breathing-space__mobile-launch-icon" aria-hidden="true">🧘‍♀️</span>
-            <span className="breathing-space__mobile-launch-title">Yoga</span>
-          </button>
+        <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
+          {activeCategoryTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className="breathing-space__mobile-launch-card"
+              onClick={() => handleMobileTabChange(tab)}
+            >
+              <span className="breathing-space__mobile-launch-icon" aria-hidden="true">
+                {mobileTabOptions[tab].icon}
+              </span>
+              <span className="breathing-space__mobile-launch-title">{mobileTabOptions[tab].label}</span>
+            </button>
+          ))}
         </div>
       )}
 
@@ -411,6 +473,32 @@ export function BreathingSpace({ session, initialMobileTab, onMobileTabChange }:
           </p>
           <button className="btn btn--primary breathing-space__start-button" type="button">
             Start 8-minute flow
+          </button>
+        </div>
+
+        <div className="breathing-space__card breathing-space__section breathing-space__section--food">
+          <div className="breathing-space__card-header">
+            <span className="breathing-space__card-icon">🥗</span>
+            <h3 className="breathing-space__card-title">Food</h3>
+          </div>
+          <p className="breathing-space__card-description">
+            Build fueling routines and mindful nutrition habits here soon.
+          </p>
+          <button className="btn btn--primary breathing-space__start-button" type="button">
+            Coming soon
+          </button>
+        </div>
+
+        <div className="breathing-space__card breathing-space__section breathing-space__section--exercise">
+          <div className="breathing-space__card-header">
+            <span className="breathing-space__card-icon">🏋️</span>
+            <h3 className="breathing-space__card-title">Excersise</h3>
+          </div>
+          <p className="breathing-space__card-description">
+            Curate movement rituals and body resets with guided workouts.
+          </p>
+          <button className="btn btn--primary breathing-space__start-button" type="button">
+            Coming soon
           </button>
         </div>
       </div>
