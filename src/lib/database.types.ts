@@ -1376,6 +1376,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      holiday_preferences: {
+        Row: {
+          user_id: string;
+          holidays: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          holidays?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          holidays?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       habit_completions: {
         Row: {
           id: string;

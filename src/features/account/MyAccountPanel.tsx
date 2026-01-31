@@ -10,6 +10,7 @@ import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderButton } from '../../components/SettingsFolderButton';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
+import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
@@ -50,6 +51,7 @@ export function MyAccountPanel({
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
+  const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
@@ -281,6 +283,17 @@ export function MyAccountPanel({
 
       <YesterdayRecapSettings session={session} />
 
+      {/* Collapsible Folder: Holiday Themes */}
+      <section className="account-panel__card">
+        <SettingsFolderButton
+          title="Holiday Themes"
+          description="Pick which seasonal moments can trigger themed experiences"
+          icon="🎊"
+          itemCount={HOLIDAY_OPTIONS.length}
+          onClick={() => setHolidayFolderOpen(true)}
+        />
+      </section>
+
       {/* Collapsible Folder 1: Developer & Analytics Tools */}
       <section className="account-panel__card">
         <SettingsFolderButton
@@ -373,6 +386,15 @@ export function MyAccountPanel({
         <DailyReminderPreferences session={session} />
 
         <PerHabitReminderPrefs session={session} />
+      </SettingsFolderPopup>
+
+      {/* Holiday Preferences Popup */}
+      <SettingsFolderPopup
+        isOpen={holidayFolderOpen}
+        onClose={() => setHolidayFolderOpen(false)}
+        title="Holiday Themes"
+      >
+        <HolidayPreferencesSection session={session} isDemoExperience={isDemoExperience} />
       </SettingsFolderPopup>
 
       <div className="account-panel__actions">
