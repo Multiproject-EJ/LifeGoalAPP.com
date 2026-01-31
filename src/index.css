@@ -11507,6 +11507,15 @@ body {
   z-index: 0;
 }
 
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-footer-nav__surface--image::before {
+  background: url('./assets/Dark_controller.webp') center bottom / 100% auto no-repeat;
+}
+
 .mobile-footer-nav__surface--image::after {
   content: '';
   position: absolute;

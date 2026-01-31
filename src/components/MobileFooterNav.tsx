@@ -41,6 +41,12 @@ type MobileFooterNavProps = {
 };
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
+const DAILY_GAME_ICONS = ['💎', '🔑', '🗝️', '🎁', '🔓'];
+
+const getDailyGameIcon = () => {
+  const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+  return DAILY_GAME_ICONS[dayIndex % DAILY_GAME_ICONS.length];
+};
 
 export function MobileFooterNav({
   items,
@@ -94,7 +100,8 @@ export function MobileFooterNav({
   const formattedPointsBalance =
     typeof displayPointsBalance === 'number' ? Math.max(0, displayPointsBalance).toLocaleString() : null;
   const shouldShowDiamondCounter = Boolean(isDiodeActive && formattedPointsBalance);
-  const isCompactGameStatus = isDiodeOff && isCollapsed;
+  const isCompactGameStatus = isDiodeOff;
+  const compactGameIcon = isDiodeOff ? getDailyGameIcon() : null;
   const handlePointerDown = () => {
     if (isDiodeActive) {
       revealControllerUI();
@@ -416,11 +423,11 @@ export function MobileFooterNav({
                   >
                     <div className="mobile-footer-nav__status-header">
                       <span className="mobile-footer-nav__status-icon" aria-hidden="true">
-                        {isCompactGameStatus ? '⏻' : status.icon ?? '⭐️'}
+                        {isCompactGameStatus ? compactGameIcon : status.icon ?? '⭐️'}
                       </span>
                     </div>
                     <span className="mobile-footer-nav__status-label">
-                      {isCompactGameStatus ? 'GAME' : status.label}
+                      {status.label}
                     </span>
                     {!isCompactGameStatus && 'progress' in status && status.progress !== undefined ? (
                       <div className="mobile-footer-nav__status-progress" aria-hidden="true">
