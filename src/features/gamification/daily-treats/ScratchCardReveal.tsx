@@ -29,6 +29,9 @@ export const ScratchCardReveal = ({ result, onComplete }: ScratchCardRevealProps
   const [isRevealed, setIsRevealed] = useState(false);
   const [scratchCount, setScratchCount] = useState(0);
   const isDrawingRef = useRef(false);
+  const today = new Date();
+  const isToday = result.day === today.getDate();
+  const hatchLabel = isToday ? "Today's hatch" : `Day ${result.day} hatch`;
   const hasReward = Boolean(result.numberReward || result.symbolReward);
   const rewardHeadline = hasReward ? 'Treat unlocked!' : 'No match today';
   const rewardDetail = hasReward
@@ -110,7 +113,7 @@ export const ScratchCardReveal = ({ result, onComplete }: ScratchCardRevealProps
         ref={cardRef}
       >
         <div className="daily-treats-scratch__content">
-          <p className="daily-treats-scratch__eyebrow">Today&apos;s hatch</p>
+          <p className="daily-treats-scratch__eyebrow">{hatchLabel}</p>
           <div className="daily-treats-scratch__symbol" aria-hidden="true">
             {result.symbol.emoji}
           </div>
