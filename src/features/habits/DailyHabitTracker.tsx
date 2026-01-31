@@ -2105,6 +2105,7 @@ export function DailyHabitTracker({
 
   const renderCompactExperience = () => {
     const dateLabel = formatCompactDateLabel(activeDate);
+    const yearLabel = parseISODate(activeDate).getFullYear();
     const scheduledTarget = compactStats.scheduled || compactStats.total;
     const completedCount = Math.min(compactStats.completed, scheduledTarget);
     const progressLabel = scheduledTarget
@@ -2557,6 +2558,7 @@ export function DailyHabitTracker({
               <div className="habit-checklist-card__date-group">
                 {!isCompactView ? progressNode : null}
                 <p className="habit-checklist-card__date">
+                  <span className="habit-checklist-card__date-year">{yearLabel}</span>
                   <span className="habit-checklist-card__date-text">{dateLabel}</span>
                 </p>
               </div>
@@ -2588,22 +2590,22 @@ export function DailyHabitTracker({
                     ←
                   </button>
                   <div className="habit-checklist-card__nav-center">
-                    <div className="habit-checklist-card__nav-pill" role="group" aria-label="Today and calendar controls">
+                    <div className="habit-checklist-card__nav-pills" role="group" aria-label="Today and calendar controls">
                       {isViewingToday ? (
-                        <span className="habit-checklist-card__nav-pill-segment habit-checklist-card__nav-pill-segment--current">
+                        <span className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--current">
                           Today
                         </span>
                       ) : (
                         <button
                           type="button"
-                          className="habit-checklist-card__nav-pill-segment"
+                          className="habit-checklist-card__nav-pill"
                           onClick={resetToToday}
                         >
                           Today
                         </button>
                       )}
                       <label
-                        className="habit-checklist-card__nav-pill-segment habit-checklist-card__nav-pill-segment--calendar"
+                        className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--calendar"
                         aria-label="Select a date to track"
                       >
                         <span className="habit-checklist-card__nav-pill-icon" aria-hidden="true">
