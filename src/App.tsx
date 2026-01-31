@@ -1861,6 +1861,7 @@ export default function App() {
               showPointsBadges={shouldShowPointsBadges}
               onNavigateToProjects={() => setActiveWorkspaceNav('projects')}
               onNavigateToTimer={() => setActiveWorkspaceNav('timer')}
+              isMobileView={isMobileViewport}
             />
           </div>
         );
@@ -1880,6 +1881,10 @@ export default function App() {
               enabled={gamificationEnabled}
               loading={gamificationLoading}
               onNavigateToAchievements={() => {
+                setActiveWorkspaceNav('game');
+                setShowMobileHome(false);
+              }}
+              onNavigateToZenGarden={() => {
                 setActiveWorkspaceNav('game');
                 setShowMobileHome(false);
               }}

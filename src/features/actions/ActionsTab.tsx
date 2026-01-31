@@ -32,6 +32,7 @@ type ActionsTabProps = {
   onNavigateToProjects?: () => void;
   onNavigateToTimer?: () => void;
   showPointsBadges?: boolean;
+  isMobileView?: boolean;
 };
 
 type StatusMessage = {
@@ -44,6 +45,7 @@ export function ActionsTab({
   onNavigateToProjects,
   onNavigateToTimer,
   showPointsBadges = false,
+  isMobileView = false,
 }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
   const {
@@ -71,6 +73,7 @@ export function ActionsTab({
   const [justCompletedActionId, setJustCompletedActionId] = useState<string | null>(null);
   const [lastDeletedAction, setLastDeletedAction] = useState<Action | null>(null);
   const [lastCompletedAction, setLastCompletedAction] = useState<Action | null>(null);
+  const [activeView, setActiveView] = useState<'launcher' | 'tasks'>(isMobileView ? 'launcher' : 'tasks');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Watch for level-up events
@@ -363,6 +366,14 @@ export function ActionsTab({
     return () => clearTimeout(timer);
   }, [lastDeletedAction]);
 
+  useEffect(() => {
+    if (isMobileView) {
+      setActiveView('launcher');
+      return;
+    }
+    setActiveView('tasks');
+  }, [isMobileView]);
+
   if (loading) {
     return (
       <div className="actions-tab actions-tab--loading">
@@ -380,6 +391,69 @@ export function ActionsTab({
   }
 
   const hasActions = actions.filter((a) => !a.completed).length > 0;
+
+  if (activeView === 'launcher') {
+    return (
+      <div className="actions-tab actions-tab--launcher">
+        <header className="actions-tab__header actions-tab__header--launcher">
+          <div className="actions-tab__header-content">
+            <h2 className="actions-tab__title">Actions</h2>
+            <p className="actions-tab__subtitle">Start a task or jump to a workspace.</p>
+          </div>
+          {isDemoExperience && (
+            <span className="actions-tab__demo-badge">Demo Mode</span>
+          )}
+        </header>
+
+        {status && (
+          <div
+            className={`actions-tab__status actions-tab__status--${status.kind}`}
+            role="status"
+            aria-live="polite"
+          >
+            <span className="actions-tab__status-message">{status.message}</span>
+          </div>
+        )}
+
+        <div className="actions-tab__launcher-card">
+          <QuickAddAction onAdd={handleAddAction} projects={projects} />
+          <div className="actions-tab__launcher-actions">
+            {onNavigateToProjects && (
+              <button
+                type="button"
+                className="actions-tab__launcher-button"
+                onClick={onNavigateToProjects}
+                aria-label="Open projects"
+              >
+                <span className="actions-tab__launcher-icon" aria-hidden="true">📦</span>
+                <span className="actions-tab__launcher-label">Projects</span>
+              </button>
+            )}
+            {onNavigateToTimer && (
+              <button
+                type="button"
+                className="actions-tab__launcher-button"
+                onClick={onNavigateToTimer}
+                aria-label="Open timer"
+              >
+                <span className="actions-tab__launcher-icon" aria-hidden="true">⏱️</span>
+                <span className="actions-tab__launcher-label">Timer</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="actions-tab__launcher-button actions-tab__launcher-button--primary"
+              onClick={() => setActiveView('tasks')}
+              aria-label="Open tasks list"
+            >
+              <span className="actions-tab__launcher-icon" aria-hidden="true">🗂️</span>
+              <span className="actions-tab__launcher-label">Tasks</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="actions-tab">

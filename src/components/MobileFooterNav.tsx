@@ -335,7 +335,9 @@ export function MobileFooterNav({
         isCollapsed ? ' mobile-footer-nav--collapsed' : ''
       }${isSnapActive ? ' mobile-footer-nav--snap' : ''}${isDiodeActive ? ' mobile-footer-nav--diode-on' : ''}${
         areControlsFaded ? ' mobile-footer-nav--controls-faded' : ''
-      }${isDiamondFaded ? ' mobile-footer-nav--diamond-faded' : ''}`}
+      }${isDiamondFaded ? ' mobile-footer-nav--diamond-faded' : ''}${
+        isEnergyMenuOpen && isDiodeActive ? ' mobile-footer-nav--energy-focus' : ''
+      }`}
       aria-label="Primary navigation"
     >
       <div
