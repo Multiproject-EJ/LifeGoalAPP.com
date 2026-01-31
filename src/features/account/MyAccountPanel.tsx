@@ -22,6 +22,7 @@ type MyAccountPanelProps = {
   isAuthenticated: boolean;
   onSignOut: () => void | Promise<void>;
   onEditProfile: () => void;
+  onLaunchOnboarding?: (options?: { reset?: boolean }) => void;
   profile: WorkspaceProfileRow | null;
   stats: WorkspaceStats | null;
   profileLoading: boolean;
@@ -43,6 +44,7 @@ export function MyAccountPanel({
   isAuthenticated,
   onSignOut,
   onEditProfile,
+  onLaunchOnboarding,
   profile,
   stats,
   profileLoading,
@@ -221,6 +223,32 @@ export function MyAccountPanel({
             </div>
           </div>
         </section>
+
+        {onLaunchOnboarding ? (
+          <section className="account-panel__card" aria-labelledby="account-onboarding">
+            <p className="account-panel__eyebrow">Onboarding</p>
+            <h3 id="account-onboarding">Onboarding tools</h3>
+            <p className="account-panel__hint">
+              Launch or restart the 20-step onboarding to preview every loop.
+            </p>
+            <div className="account-panel__actions-row">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => onLaunchOnboarding()}
+              >
+                Launch onboarding
+              </button>
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => onLaunchOnboarding({ reset: true })}
+              >
+                Restart 20-step onboarding
+              </button>
+            </div>
+          </section>
+        ) : null}
 
         <section className="account-panel__card" aria-labelledby="account-subscription">
           <p className="account-panel__eyebrow">Subscription</p>

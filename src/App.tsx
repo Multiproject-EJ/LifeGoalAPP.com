@@ -260,6 +260,8 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
 const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
+const ONBOARDING_NUDGE_KEY = 'gol_onboarding_nudge_at';
+const ONBOARDING_NUDGE_INTERVAL_MS = 1000 * 60 * 60 * 6;
 
 const formatPointsRange = (min: number, max: number) => {
   const normalizedMin = Math.min(min, max);
@@ -338,6 +340,9 @@ export default function App() {
   const [activeMobileMenuHelper, setActiveMobileMenuHelper] = useState<MobileMenuNavItem | null>(null);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
+  const [isOnboardingDismissed, setIsOnboardingDismissed] = useState(false);
+  const [isOnboardingOverride, setIsOnboardingOverride] = useState(false);
+  const [showOnboardingNudge, setShowOnboardingNudge] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
   const [isMobileMenuFlashActive, setIsMobileMenuFlashActive] = useState(false);
   const mobileMenuFlashTimeoutRef = useRef<number | null>(null);
@@ -947,6 +952,39 @@ export default function App() {
   const isOnboardingComplete = useMemo(() => {
     return Boolean(activeSession.user.user_metadata?.onboarding_complete);
   }, [activeSession]);
+
+  useEffect(() => {
+    if (!isOnboardingComplete) return;
+    setIsOnboardingDismissed(false);
+    setIsOnboardingOverride(false);
+    setShowOnboardingNudge(false);
+  }, [isOnboardingComplete]);
+
+  useEffect(() => {
+    if (isOnboardingComplete || !isOnboardingDismissed) {
+      setShowOnboardingNudge(false);
+      return;
+    }
+    const lastShown = Number(window.localStorage.getItem(ONBOARDING_NUDGE_KEY) || 0);
+    const now = Date.now();
+    if (now - lastShown >= ONBOARDING_NUDGE_INTERVAL_MS) {
+      setShowOnboardingNudge(true);
+      window.localStorage.setItem(ONBOARDING_NUDGE_KEY, String(now));
+    }
+  }, [isOnboardingComplete, isOnboardingDismissed]);
+
+  const handleLaunchOnboarding = useCallback(
+    (options?: { reset?: boolean }) => {
+      if (options?.reset) {
+        window.localStorage.removeItem(`gol_onboarding_${activeSession.user.id}`);
+      }
+      setIsOnboardingDismissed(false);
+      setIsOnboardingOverride(true);
+      setShowOnboardingNudge(false);
+      setActiveWorkspaceNav('goals');
+    },
+    [activeSession.user.id],
+  );
 
   const handleDemoProfileSave = useCallback(
     (payload: { displayName: string; onboardingComplete: boolean }) => {
@@ -1733,7 +1771,10 @@ export default function App() {
 
   const profileSaving = manualProfileSaving || isProfileAutosaving;
   const isOnboardingGateActive = true;
-  const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete;
+  const shouldShowOnboarding =
+    isOnboardingGateActive &&
+    (isOnboardingOverride || (!isOnboardingComplete && !isOnboardingDismissed));
+  const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete || isOnboardingOverride;
 
   const shouldRequireAuthentication = !isAuthenticated && !isDemoMode;
 
@@ -1775,7 +1816,7 @@ export default function App() {
     if (activeWorkspaceNav === 'goals') {
       return (
         <>
-          {isOnboardingGateActive && !isOnboardingComplete && (
+          {shouldShowOnboarding ? (
             <GameOfLifeOnboarding
               session={activeSession}
               displayName={displayName}
@@ -1788,8 +1829,56 @@ export default function App() {
               onSaveDemoProfile={handleDemoProfileSave}
               onNavigateDashboard={() => setActiveWorkspaceNav('goals')}
               onOpenCoach={() => setShowAiCoachModal(true)}
+              onClose={() => {
+                setIsOnboardingDismissed(true);
+                setIsOnboardingOverride(false);
+              }}
             />
-          )}
+          ) : null}
+
+          {!shouldShowOnboarding && !isOnboardingComplete ? (
+            <div className="onboarding-start-card">
+              <div>
+                <p className="onboarding-start-card__eyebrow">Onboarding</p>
+                <h3>Continue your mini loops</h3>
+                <p>Resume the 20-step onboarding to keep your momentum and rewards flowing.</p>
+              </div>
+              <div className="onboarding-start-card__actions">
+                <button
+                  type="button"
+                  className="supabase-auth__action"
+                  onClick={() => handleLaunchOnboarding()}
+                >
+                  Visual-start onboarding
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {showOnboardingNudge && !shouldShowOnboarding && !isOnboardingComplete ? (
+            <div className="onboarding-nudge">
+              <div>
+                <strong>Ready for your next loop?</strong>
+                <p>Take the next 60-second nudge to unlock another reward.</p>
+              </div>
+              <div className="onboarding-nudge__actions">
+                <button
+                  type="button"
+                  className="supabase-auth__action"
+                  onClick={() => handleLaunchOnboarding()}
+                >
+                  Continue onboarding
+                </button>
+                <button
+                  type="button"
+                  className="supabase-auth__secondary"
+                  onClick={() => setShowOnboardingNudge(false)}
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {canAccessWorkspace ? (
             <div className="workspace-content">
@@ -1807,12 +1896,13 @@ export default function App() {
     if (activeWorkspaceNav === 'account') {
       return (
         <div className="workspace-content">
-          <MyAccountPanel
+            <MyAccountPanel
             session={activeSession}
             isDemoExperience={isDemoExperience}
             isAuthenticated={isAuthenticated}
             onSignOut={handleSignOut}
             onEditProfile={handleEditAccountDetails}
+            onLaunchOnboarding={handleLaunchOnboarding}
             profile={workspaceProfile}
             stats={workspaceStats}
             profileLoading={workspaceProfileLoading}
