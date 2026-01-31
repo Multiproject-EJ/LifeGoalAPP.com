@@ -14,6 +14,7 @@ interface ScoreTabProps {
   onNavigateToAchievements: () => void;
   onNavigateToBank?: () => void;
   onNavigateToShop?: () => void;
+  onNavigateToZenGarden?: () => void;
 }
 
 export function ScoreTab({
@@ -25,6 +26,7 @@ export function ScoreTab({
   onNavigateToAchievements,
   onNavigateToBank,
   onNavigateToShop,
+  onNavigateToZenGarden,
 }: ScoreTabProps) {
   const formatter = useMemo(() => new Intl.NumberFormat(), []);
   const dateFormatter = useMemo(
@@ -146,11 +148,19 @@ export function ScoreTab({
             }}
           >
             <span className="score-tab__tab-icon" aria-hidden="true">🛍️</span>
-            Shop
+            Player Shop
+          </button>
+          <button
+            type="button"
+            className="score-tab__tab"
+            onClick={() => onNavigateToZenGarden?.()}
+          >
+            <span className="score-tab__tab-icon" aria-hidden="true">🪷</span>
+            Zen Garden
           </button>
         </div>
         <p className="score-tab__subtitle">
-          Review XP, points, and streak momentum before you spin or shop.
+          Review XP, points, and streak momentum before you spin or visit the player shop.
         </p>
       </header>
 

@@ -11957,6 +11957,18 @@ body {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
+.mobile-footer-nav--energy-focus .mobile-footer-nav__item:not(.mobile-footer-nav__item--breathing-space) .mobile-footer-nav__button,
+.mobile-footer-nav--energy-focus .mobile-footer-nav__status-card,
+.mobile-footer-nav--energy-focus .mobile-footer-nav__menu-button {
+  opacity: 0.7;
+}
+
+.mobile-footer-nav--energy-focus .mobile-footer-nav__button,
+.mobile-footer-nav--energy-focus .mobile-footer-nav__status-card,
+.mobile-footer-nav--energy-focus .mobile-footer-nav__menu-button {
+  transition: opacity 0.25s ease;
+}
+
 .mobile-footer-nav--diamond-faded .mobile-footer-nav__diamond-counter {
   opacity: 0;
   transform: var(--diamond-transform, translateY(0)) translateY(6px) scale(0.98);
