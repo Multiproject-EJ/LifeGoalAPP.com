@@ -8623,9 +8623,210 @@ body {
   color: rgba(148, 197, 248, 0.9);
 }
 
+.gol-onboarding__header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.gol-onboarding__close {
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.4);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.gol-onboarding__progress {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 197, 248, 0.75);
+}
+
+.gol-onboarding__progress-bar {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.gol-onboarding__progress-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+}
+
 .gol-onboarding__panel {
   display: grid;
   gap: 1.25rem;
+}
+
+.gol-onboarding__choices {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gol-onboarding__choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  color: inherit;
+  text-align: left;
+}
+
+.gol-onboarding__choice strong {
+  display: block;
+}
+
+.gol-onboarding__choice small {
+  display: block;
+  color: rgba(248, 250, 252, 0.7);
+  margin-top: 0.25rem;
+}
+
+.gol-onboarding__choice.is-selected {
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+}
+
+.gol-onboarding__score {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.gol-onboarding__score button,
+.gol-onboarding__pill-list button {
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.4);
+  color: inherit;
+}
+
+.gol-onboarding__score button.is-selected,
+.gol-onboarding__pill-list button.is-selected {
+  border-color: rgba(59, 130, 246, 0.8);
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.gol-onboarding__pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gol-onboarding__callout {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.gol-onboarding__reward {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.gol-onboarding__reward h4 {
+  margin: 0 0 0.25rem;
+}
+
+.gol-onboarding__reward p {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.gol-onboarding__shop {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.gol-onboarding__shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.gol-onboarding__tokens {
+  font-weight: 600;
+  color: rgba(148, 197, 248, 0.9);
+}
+
+.gol-onboarding__shop-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gol-onboarding__shop-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.45);
+  color: inherit;
+}
+
+.gol-onboarding__shop-item p {
+  margin: 0.35rem 0 0;
+  color: rgba(248, 250, 252, 0.7);
+  font-size: 0.9rem;
+}
+
+.gol-onboarding__shop-item span {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.gol-onboarding__shop-item.is-owned {
+  border-color: rgba(16, 185, 129, 0.7);
+}
+
+.gol-onboarding__shop-unlocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  font-size: 0.9rem;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.gol-onboarding__shop-unlocks ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .gol-onboarding__axes {
@@ -8663,6 +8864,39 @@ body {
 .gol-onboarding__actions--stack {
   flex-direction: column;
   align-items: stretch;
+}
+
+.onboarding-start-card,
+.onboarding-nudge {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 18px;
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  color: #f8fafc;
+  margin-bottom: 1.5rem;
+}
+
+.onboarding-start-card__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: rgba(148, 197, 248, 0.8);
+}
+
+.onboarding-start-card__actions,
+.onboarding-nudge__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.onboarding-nudge p {
+  margin: 0.35rem 0 0;
+  color: rgba(248, 250, 252, 0.7);
 }
 
 @media (max-width: 600px) {
