@@ -178,21 +178,17 @@ export function ActionsTab({
         const bonusXP = await awardClearAllMustDoBonus();
         setStatus({ kind: 'success', message: `Completed! +${xpReward + bonusXP} XP (with bonus!)` });
         
-        // 2. After pop animation completes, trigger celebration with bonus
-        setTimeout(() => {
-          setCelebrationType('action');
-          setCelebrationXP(xpReward + bonusXP);
-          setShowCelebration(true);
-        }, 400);
+        // 2. Trigger celebration immediately for instant feedback
+        setCelebrationType('action');
+        setCelebrationXP(xpReward + bonusXP);
+        setShowCelebration(true);
       } else {
         setStatus({ kind: 'success', message: `Completed! +${xpReward} XP` });
         
-        // 2. After pop animation completes, trigger celebration
-        setTimeout(() => {
-          setCelebrationType('action');
-          setCelebrationXP(xpReward);
-          setShowCelebration(true);
-        }, 400);
+        // 2. Trigger celebration immediately for instant feedback
+        setCelebrationType('action');
+        setCelebrationXP(xpReward);
+        setShowCelebration(true);
       }
       
       // 3. Clean up instant feedback class
@@ -581,7 +577,7 @@ export function ActionsTab({
         <CelebrationAnimation
           type={celebrationType}
           xpAmount={celebrationXP}
-          targetElement="fab-button"
+          targetElement="game-icon"
           onComplete={() => {
             setShowCelebration(false);
             if (celebrationType === 'levelup') {
