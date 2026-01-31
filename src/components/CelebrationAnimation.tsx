@@ -56,7 +56,7 @@ const HABIT_TIMING = {
 } as const;
 
 const getTiming = (type: CelebrationAnimationProps['type']) =>
-  type === 'habit' ? HABIT_TIMING : TIMING;
+  type === 'habit' || type === 'action' ? HABIT_TIMING : TIMING;
 
 const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
   habit: {
@@ -70,8 +70,8 @@ const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
     target: 'fab-button',
   },
   action: {
-    icons: ['⚡', '✨', '💫', '🚀', '💥'],
-    count: 8,   // 6-10 icons
+    icons: ['✨'],
+    count: 9,   // match habit snap feedback
     target: 'fab-button',
   },
   breathing: {
@@ -154,8 +154,8 @@ export function CelebrationAnimation({
 
   const config = ICON_CONFIGS[type];
   const timing = getTiming(type);
-  const allowBackdrop = type !== 'habit';
-  const allowXP = type !== 'habit';
+  const allowBackdrop = type !== 'habit' && type !== 'action';
+  const allowXP = type !== 'habit' && type !== 'action';
   const targetElement = targetElementProp ?? config.target;
 
   const cleanup = useCallback(() => {

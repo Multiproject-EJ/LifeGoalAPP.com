@@ -1660,7 +1660,7 @@ export function DailyHabitTracker({
     }
   };
 
-  const renderDayNavigation = (variant: 'compact' | 'full', showDetails = true) => {
+  const renderDayNavigation = (variant: 'compact' | 'full', showDetails = true, showNavigationControls = true) => {
     const displayLabel = formatDateLabel(activeDate);
     const canGoForward = activeDate < today;
     const isViewingToday = activeDate === today;
@@ -1678,14 +1678,16 @@ export function DailyHabitTracker({
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
-        <button
-          type="button"
-          className="habit-day-nav__button habit-day-nav__button--prev"
-          onClick={() => changeActiveDateBy(-1)}
-          aria-label="Previous day"
-        >
-          {isCompactVariant ? '←' : '← Previous day'}
-        </button>
+        {showNavigationControls ? (
+          <button
+            type="button"
+            className="habit-day-nav__button habit-day-nav__button--prev"
+            onClick={() => changeActiveDateBy(-1)}
+            aria-label="Previous day"
+          >
+            {isCompactVariant ? '←' : '← Previous day'}
+          </button>
+        ) : null}
 
         {showDetails ? (
           <div className="habit-day-nav__info">
@@ -1803,15 +1805,17 @@ export function DailyHabitTracker({
           </div>
         ) : null}
 
-        <button
-          type="button"
-          className="habit-day-nav__button habit-day-nav__button--next"
-          onClick={() => changeActiveDateBy(1)}
-          disabled={!canGoForward}
-          aria-label="Next day"
-        >
-          {isCompactVariant ? '→' : 'Next day →'}
-        </button>
+        {showNavigationControls ? (
+          <button
+            type="button"
+            className="habit-day-nav__button habit-day-nav__button--next"
+            onClick={() => changeActiveDateBy(1)}
+            disabled={!canGoForward}
+            aria-label="Next day"
+          >
+            {isCompactVariant ? '→' : 'Next day →'}
+          </button>
+        ) : null}
       </div>
     );
   };
@@ -2123,6 +2127,7 @@ export function DailyHabitTracker({
     const titleText = 'My Habits';
     const subtitleText = null;
     const isViewingToday = activeDate === today;
+    const canGoForward = activeDate < today;
     const actionsBadgeAria = `${completedActionsCount} actions completed ${
       isViewingToday ? 'today' : 'for this day'
     }`;
@@ -2147,6 +2152,44 @@ export function DailyHabitTracker({
         : !isConfigured
           ? 'warning'
           : 'muted';
+
+    const progressNode = (
+      <span
+        className={`habit-checklist-card__progress${
+          progressStage !== 'none' ? ` habit-checklist-card__progress--${progressStage}` : ''
+        }`}
+        role="img"
+        aria-label={progressLabel}
+      >
+        <span className="sr-only">{progressLabel}</span>
+        <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
+          <defs>
+            <linearGradient id={progressGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="50%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+          </defs>
+          <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
+          <circle
+            className="habit-checklist-card__progress-value"
+            cx="18"
+            cy="18"
+            r="16"
+            strokeDasharray={`${progressPercent} 100`}
+            stroke={`url(#${progressGradientId})`}
+          />
+        </svg>
+        <span className="habit-checklist-card__progress-count" aria-hidden="true">
+          {completedCount}
+        </span>
+        {progressIcon ? (
+          <span className="habit-checklist-card__progress-symbol" aria-hidden="true">
+            {progressIcon}
+          </span>
+        ) : null}
+      </span>
+    );
 
     const ariaLabel = `Habit checklist for ${formatDateLabel(activeDate)}`;
 
@@ -2512,6 +2555,7 @@ export function DailyHabitTracker({
           <div className="habit-checklist-card__board-head">
             <div className="habit-checklist-card__date-wrap">
               <div className="habit-checklist-card__date-group">
+                {!isCompactView ? progressNode : null}
                 <p className="habit-checklist-card__date">
                   <span className="habit-checklist-card__date-text">{dateLabel}</span>
                 </p>
@@ -2534,64 +2578,82 @@ export function DailyHabitTracker({
             </div>
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">
-                <span
-                  className={`habit-checklist-card__progress${
-                    progressStage !== 'none' ? ` habit-checklist-card__progress--${progressStage}` : ''
-                  }`}
-                  role="img"
-                  aria-label={progressLabel}
-                >
-                  <span className="sr-only">{progressLabel}</span>
-                  <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
-                    <defs>
-                      <linearGradient id={progressGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#38bdf8" />
-                        <stop offset="50%" stopColor="#a855f7" />
-                        <stop offset="100%" stopColor="#f59e0b" />
-                      </linearGradient>
-                    </defs>
-                    <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
-                    <circle
-                      className="habit-checklist-card__progress-value"
-                      cx="18"
-                      cy="18"
-                      r="16"
-                      strokeDasharray={`${progressPercent} 100`}
-                      stroke={`url(#${progressGradientId})`}
-                    />
-                  </svg>
-                  <span className="habit-checklist-card__progress-count" aria-hidden="true">
-                    {completedCount}
-                  </span>
-                  {progressIcon ? (
-                    <span className="habit-checklist-card__progress-symbol" aria-hidden="true">
-                      {progressIcon}
-                    </span>
-                  ) : null}
-                </span>
-                {showActionsBadge ? (
-                  <span className="habit-checklist-card__actions-badge" aria-label={actionsBadgeAria}>
-                    <span className="habit-checklist-card__actions-label">Actions</span>
-                    <span className="habit-checklist-card__actions-count">{completedActionsCount}</span>
-                  </span>
-                ) : null}
-                {yesterdayIntentionsEntry ? (
+                <div className="habit-checklist-card__nav-row">
                   <button
                     type="button"
-                    className={`habit-checklist-card__intentions-button ${
-                      isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen' : ''
-                    }`}
-                    onClick={handleOpenIntentionsNotice}
+                    className="habit-day-nav__button habit-day-nav__button--prev"
+                    onClick={() => changeActiveDateBy(-1)}
+                    aria-label="Previous day"
                   >
-                    Intentions
+                    ←
                   </button>
-                ) : null}
+                  <div className="habit-checklist-card__nav-center">
+                    <div className="habit-checklist-card__nav-pill" role="group" aria-label="Today and calendar controls">
+                      {isViewingToday ? (
+                        <span className="habit-checklist-card__nav-pill-segment habit-checklist-card__nav-pill-segment--current">
+                          Today
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="habit-checklist-card__nav-pill-segment"
+                          onClick={resetToToday}
+                        >
+                          Today
+                        </button>
+                      )}
+                      <label
+                        className="habit-checklist-card__nav-pill-segment habit-checklist-card__nav-pill-segment--calendar"
+                        aria-label="Select a date to track"
+                      >
+                        <span className="habit-checklist-card__nav-pill-icon" aria-hidden="true">
+                          📅
+                        </span>
+                        <input
+                          className="habit-checklist-card__nav-pill-input"
+                          type="date"
+                          value={activeDate}
+                          max={today}
+                          onChange={(event) => handleDateInputChange(event.target.value)}
+                        />
+                      </label>
+                    </div>
+                    <div className="habit-checklist-card__nav-meta">
+                      {showActionsBadge ? (
+                        <span className="habit-checklist-card__actions-badge" aria-label={actionsBadgeAria}>
+                          <span className="habit-checklist-card__actions-label">Actions</span>
+                          <span className="habit-checklist-card__actions-count">{completedActionsCount}</span>
+                        </span>
+                      ) : null}
+                      {yesterdayIntentionsEntry ? (
+                        <button
+                          type="button"
+                          className={`habit-checklist-card__intentions-button ${
+                            isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen' : ''
+                          }`}
+                          onClick={handleOpenIntentionsNotice}
+                        >
+                          Intentions
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="habit-day-nav__button habit-day-nav__button--next"
+                    onClick={() => changeActiveDateBy(1)}
+                    disabled={!canGoForward}
+                    aria-label="Next day"
+                  >
+                    →
+                  </button>
+                </div>
               </div>
             ) : null}
           </div>
 
           <div className="habit-checklist-card__board-body">
-            {renderDayNavigation('compact', !isCompactView)}
+            {renderDayNavigation('compact', false, isCompactView)}
             {!isCompactView ? (
               <div className="habit-checklist-card__title">
                 <h2>{titleText}</h2>
