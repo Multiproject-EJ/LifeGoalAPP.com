@@ -10,6 +10,7 @@ import {
 } from 'react';
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
+import lifespinIcon from './assets/Lifespinicon.webp';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace, LifeGoalsSection } from './features/goals';
@@ -2629,6 +2630,11 @@ export default function App() {
           ×
         </button>
         <div className="daily-treats-congrats__content">
+          <img
+            className="daily-treats-congrats__hero-icon"
+            src={lifespinIcon}
+            alt="Life Spin icon"
+          />
           <p className="daily-treats-congrats__eyebrow">Daily Treats</p>
           <h3 className="daily-treats-congrats__title">Congrats on your first visit today!</h3>
           <p className="daily-treats-congrats__subtitle">
