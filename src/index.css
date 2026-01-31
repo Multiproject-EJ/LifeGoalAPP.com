@@ -7018,7 +7018,18 @@ body {
 }
 
 .progress-dashboard__panel-content--vision-board {
-  background: linear-gradient(150deg, #eef2ff, #f8fafc);
+  background: url('./assets/Visiontablight.webp') center / cover no-repeat;
+  background-color: #eef2ff;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .progress-dashboard__panel-content--vision-board {
+  background: url('./assets/Visiontabdark.webp') center / cover no-repeat;
+  background-color: #0f172a;
 }
 
 .progress-dashboard__panel-content--balance {
