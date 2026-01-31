@@ -2745,8 +2745,8 @@ export default function App() {
               📆
             </span>
             <span className="daily-treats-modal__action-text">
-              <strong>25-Day Countdown</strong>
-              <span>Unlock tomorrow’s secret calendar hatch.</span>
+              <strong>Daily Calendar Hatch</strong>
+              <span>Open every hatch, including the days you missed.</span>
             </span>
           </button>
         </div>

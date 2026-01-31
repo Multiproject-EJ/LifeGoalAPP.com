@@ -249,16 +249,6 @@ export const revealScratchCardWithPersistence = (
   symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
 ): RevealCardResult => {
   const state = loadScratchCardState(userId);
-  if (hasOpenedToday(state)) {
-    return {
-      cycle: state.cycleIndex,
-      day: state.dayInCycle,
-      symbol: state.revealedSymbols[state.dayInCycle] ?? pickWeightedSymbol(symbols),
-      numbers: [],
-      numberReward: null,
-      symbolReward: null,
-    };
-  }
   const result = revealScratchCard(state, symbols);
   saveScratchCardState(state, userId);
   return result;
@@ -268,15 +258,61 @@ export const revealScratchCard = (
   state: ScratchCardState,
   symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
 ): RevealCardResult => {
+  return (
+    revealScratchCardForDay(state, state.dayInCycle, symbols) ?? {
+      cycle: state.cycleIndex,
+      day: state.dayInCycle,
+      symbol: state.revealedSymbols[state.dayInCycle] ?? pickWeightedSymbol(symbols),
+      numbers: [],
+      numberReward: null,
+      symbolReward: null,
+    }
+  );
+};
+
+export const revealScratchCardForDayWithPersistence = (
+  userId: string | undefined,
+  day: number,
+  symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
+): RevealCardResult | null => {
+  const state = loadScratchCardState(userId);
+  const result = revealScratchCardForDay(state, day, symbols);
+  if (!result) return null;
+  saveScratchCardState(state, userId);
+  return result;
+};
+
+export const revealScratchCardForDay = (
+  state: ScratchCardState,
+  day: number,
+  symbols: ScratchSymbol[] = DEFAULT_SYMBOLS,
+): RevealCardResult | null => {
   ensureCycleWithinMonth(state);
+  const totalDays = getDaysInMonth(state.cycleYear, state.cycleMonth);
+  const targetDay = Math.min(Math.max(1, day), totalDays);
+
+  if (targetDay > state.dayInCycle) return null;
+
+  if (state.revealedSymbols[targetDay]) {
+    return {
+      cycle: state.cycleIndex,
+      day: targetDay,
+      symbol: state.revealedSymbols[targetDay],
+      numbers: [],
+      numberReward: null,
+      symbolReward: null,
+    };
+  }
 
   const symbol = pickWeightedSymbol(symbols);
   const { numbers, reward } = generateNumbers();
 
   state.symbolCounts[symbol.name] = (state.symbolCounts[symbol.name] ?? 0) + 1;
-  state.revealedSymbols[state.dayInCycle] = symbol;
-  state.lastOpenedDate = getLocalDateKey(new Date());
-  state.lastOpenedDay = state.dayInCycle;
+  state.revealedSymbols[targetDay] = symbol;
+  if (targetDay === state.dayInCycle) {
+    state.lastOpenedDate = getLocalDateKey(new Date());
+    state.lastOpenedDay = targetDay;
+  }
   let symbolReward: string | null = null;
 
   if (state.symbolCounts[symbol.name] >= symbol.needed) {
@@ -284,14 +320,12 @@ export const revealScratchCard = (
     state.symbolCounts[symbol.name] = 0;
   }
 
-  const card: ScratchCardResult = {
+  return {
     cycle: state.cycleIndex,
-    day: state.dayInCycle,
+    day: targetDay,
     symbol,
     numbers,
     numberReward: reward,
     symbolReward,
   };
-
-  return card;
 };

@@ -3,7 +3,7 @@ import {
   DEFAULT_SYMBOLS,
   hasOpenedToday,
   loadScratchCardState,
-  revealScratchCardWithPersistence,
+  revealScratchCardForDayWithPersistence,
   type RevealCardResult,
   type ScratchCardState,
 } from './scratchCard';
@@ -56,9 +56,12 @@ export const CountdownCalendarModal = ({
   );
   const themeName = themes[(resolvedState.cycleIndex - 1) % themes.length];
 
-  const subtitle = `Day ${activeDay} of ${totalDaysInMonth} • open today’s hatch to reveal your treat.`;
-  const showScratchAction = !revealResult && !alreadyOpenedToday;
+  const subtitle = `Day ${activeDay} of ${totalDaysInMonth} • open any available hatch to reveal your treat.`;
   const isMonthComplete = alreadyOpenedToday && activeDay === totalDaysInMonth;
+  const hasOpenableHatch = Array.from({ length: activeDay }, (_, index) => {
+    const day = index + 1;
+    return !resolvedState.revealedSymbols?.[day];
+  }).some(Boolean);
 
   return (
     <div
@@ -83,6 +86,9 @@ export const CountdownCalendarModal = ({
             {monthLabel} • Cycle {resolvedState.cycleIndex}
           </h3>
           <p className="daily-treats-calendar__subtitle">{subtitle}</p>
+          {hasOpenableHatch ? (
+            <p className="daily-treats-calendar__hint">Tap any available hatch to open it.</p>
+          ) : null}
           <div className="daily-treats-calendar__grid" role="list">
             {Array.from({ length: totalDaysInMonth }, (_, index) => {
               const day = index + 1;
@@ -92,17 +98,13 @@ export const CountdownCalendarModal = ({
                 : day === activeDay
                   ? 'today'
                   : day < activeDay
-                    ? 'missed'
+                    ? 'available'
                     : 'locked';
               const label = `Day ${day} ${status === 'today' ? '(today)' : `(${status})`}`;
+              const canOpen = day <= activeDay && !revealedSymbol;
 
-              return (
-                <div
-                  key={`calendar-day-${day}`}
-                  className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status}`}
-                  role="listitem"
-                  aria-label={label}
-                >
+              const hatchBody = (
+                <>
                   <span className="daily-treats-calendar__hatch-number">{day}</span>
                   {revealedSymbol ? (
                     <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">
@@ -114,28 +116,42 @@ export const CountdownCalendarModal = ({
                         ? 'Opened'
                         : status === 'today'
                           ? 'Today'
-                          : status === 'missed'
-                            ? 'Missed'
+                          : status === 'available'
+                            ? 'Open'
                             : 'Locked'}
                     </span>
                   )}
+                </>
+              );
+
+              return canOpen ? (
+                <button
+                  key={`calendar-day-${day}`}
+                  type="button"
+                  className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
+                  role="listitem"
+                  aria-label={label}
+                  onClick={() => {
+                    const result = revealScratchCardForDayWithPersistence(userId, day);
+                    if (!result) return;
+                    setRevealResult(result);
+                    setScratchState(loadScratchCardState(userId));
+                  }}
+                >
+                  {hatchBody}
+                </button>
+              ) : (
+                <div
+                  key={`calendar-day-${day}`}
+                  className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status}`}
+                  role="listitem"
+                  aria-label={label}
+                >
+                  {hatchBody}
                 </div>
               );
             })}
           </div>
-          {showScratchAction ? (
-            <button
-              type="button"
-              className="daily-treats-calendar__button"
-              onClick={() => {
-                const result = revealScratchCardWithPersistence(userId);
-                setRevealResult(result);
-                setScratchState(loadScratchCardState(userId));
-              }}
-            >
-              Scratch today’s hatch
-            </button>
-          ) : null}
           {alreadyOpenedToday ? (
             <div className="daily-treats-calendar__rest">
               You opened today’s hatch. Come back tomorrow for the next reveal.
@@ -157,6 +173,14 @@ export const CountdownCalendarModal = ({
               {DEFAULT_SYMBOLS.map((symbol) => {
                 const count = resolvedState.symbolCounts?.[symbol.name] ?? 0;
                 const isActive = count > 0;
+                const foundSymbols =
+                  count > 0
+                    ? Array.from({ length: count }, (_, index) => (
+                        <span key={`${symbol.name}-${index}`} aria-hidden="true">
+                          {symbol.emoji}
+                        </span>
+                      ))
+                    : '—';
                 return (
                   <div
                     key={`symbol-tracker-${symbol.name}`}
@@ -167,8 +191,11 @@ export const CountdownCalendarModal = ({
                     <span className="daily-treats-calendar__tracker-emoji" aria-hidden="true">
                       {symbol.emoji}
                     </span>
-                    <span className="daily-treats-calendar__tracker-label">
-                      {count}/{symbol.needed}
+                    <span
+                      className="daily-treats-calendar__tracker-label"
+                      aria-label={`${count} ${symbol.name} collected`}
+                    >
+                      {foundSymbols}
                     </span>
                   </div>
                 );
