@@ -863,6 +863,22 @@ body {
   inset: 0;
   background: radial-gradient(circle at 50% -5%, rgba(59, 130, 246, 0.2), transparent 45%);
   opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.app--vision-board {
+  position: relative;
+  --vision-board-bg: url('./assets/Visiontablight.webp');
+}
+
+.app--vision-board::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--vision-board-bg) center / cover no-repeat;
+  background-color: #eef2ff;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -1396,9 +1412,8 @@ body {
 }
 
 .workspace-main--vision-board {
-  --vision-board-bg: url('./assets/Visiontablight.webp');
-  background: var(--vision-board-bg) center / cover no-repeat;
-  background-color: #e8edff;
+  background: transparent;
+  background-color: transparent;
 }
 
 :is(
@@ -1407,8 +1422,25 @@ body {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .workspace-main--vision-board {
+  background: transparent;
+  background-color: transparent;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .app--vision-board {
   --vision-board-bg: url('./assets/Visiontabdark.webp');
-  background: var(--vision-board-bg) center / cover no-repeat;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .app--vision-board::after {
   background-color: #0b1226;
 }
 
