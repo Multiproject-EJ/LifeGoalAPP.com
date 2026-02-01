@@ -9,6 +9,10 @@ import { PersonalityScores, scorePersonality } from './personalityScoring';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { createDemoSession } from '../../services/demoSession';
 import { queuePersonalityTestResult } from '../../data/personalityTestRepo';
+import {
+  fetchPersonalityRecommendations,
+  type PersonalityRecommendationRow,
+} from '../../services/personalityRecommendations';
 
 type TestStep = 'intro' | 'quiz' | 'results';
 
@@ -104,6 +108,19 @@ type Recommendation = {
   description: string;
 };
 
+const RECOMMENDATION_ICONS: Record<string, string> = {
+  openness: '🧭',
+  conscientiousness: '🗓️',
+  extraversion: '🤝',
+  agreeableness: '💛',
+  emotional_stability: '🧘',
+  regulation_style: '🧩',
+  stress_response: '🌬️',
+  identity_sensitivity: '🪞',
+  cognitive_entry: '🧠',
+  overall: '✨',
+};
+
 const DEFAULT_RECOMMENDATIONS: Recommendation[] = [
   {
     id: 'focus-review',
@@ -132,6 +149,62 @@ const getTraitBucket = (value: number) => {
   if (value >= HIGH_THRESHOLD) return 'high';
   if (value <= LOW_THRESHOLD) return 'low';
   return 'mid';
+};
+
+const matchesRange = (value: number, minValue: number | null, maxValue: number | null) => {
+  if (minValue !== null && value < minValue) {
+    return false;
+  }
+  if (maxValue !== null && value > maxValue) {
+    return false;
+  }
+  return true;
+};
+
+const resolveRecommendationScore = (
+  scores: PersonalityScores,
+  traitKey: string,
+): number | null => {
+  if (traitKey === 'overall') {
+    return 50;
+  }
+
+  if (traitKey in scores.traits) {
+    return scores.traits[traitKey as keyof PersonalityScores['traits']];
+  }
+
+  if (traitKey in scores.axes) {
+    return scores.axes[traitKey as keyof PersonalityScores['axes']];
+  }
+
+  return null;
+};
+
+const buildSupabaseRecommendations = (
+  rows: PersonalityRecommendationRow[],
+  scores: PersonalityScores,
+): Recommendation[] => {
+  const matches = rows
+    .filter((row) => {
+      const value = resolveRecommendationScore(scores, row.trait_key);
+      if (value === null) {
+        return false;
+      }
+      return matchesRange(value, row.min_value, row.max_value);
+    })
+    .sort((a, b) => {
+      const priorityA = a.priority ?? 999;
+      const priorityB = b.priority ?? 999;
+      return priorityA - priorityB;
+    })
+    .map((row) => ({
+      id: row.id,
+      icon: RECOMMENDATION_ICONS[row.trait_key] ?? '✨',
+      label: row.label,
+      description: row.description,
+    }));
+
+  return matches;
 };
 
 const buildNarrative = (scores: PersonalityScores): string[] => {
@@ -237,6 +310,7 @@ export default function PersonalityTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
+  const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -264,8 +338,31 @@ export default function PersonalityTest() {
   const narrative = useMemo(() => (scores ? buildNarrative(scores) : []), [scores]);
 
   const recommendations = useMemo(
-    () => (scores ? buildRecommendations(scores) : []),
-    [scores],
+    () => {
+      if (!scores) {
+        return [];
+      }
+
+      const remote = supabaseRecommendations;
+      if (remote.length === 0) {
+        return buildRecommendations(scores);
+      }
+
+      const merged = [...remote];
+      if (merged.length < 3) {
+        for (const fallback of buildRecommendations(scores)) {
+          if (!merged.find((item) => item.id === fallback.id)) {
+            merged.push(fallback);
+          }
+          if (merged.length >= 3) {
+            break;
+          }
+        }
+      }
+
+      return merged.slice(0, 3);
+    },
+    [scores, supabaseRecommendations],
   );
 
   const handleStart = () => {
@@ -341,6 +438,32 @@ export default function PersonalityTest() {
         // Fail silently; results are still shown locally.
       });
   }, [activeUserId, answers, scores, step]);
+
+  useEffect(() => {
+    if (step !== 'results' || !scores) {
+      return;
+    }
+
+    let cancelled = false;
+
+    fetchPersonalityRecommendations()
+      .then((rows) => {
+        if (cancelled) {
+          return;
+        }
+        const filtered = buildSupabaseRecommendations(rows, scores);
+        setSupabaseRecommendations(filtered);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSupabaseRecommendations([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scores, step]);
 
   return (
     <section className="identity-hub">
