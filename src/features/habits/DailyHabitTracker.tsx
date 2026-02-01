@@ -2396,7 +2396,7 @@ export function DailyHabitTracker({
       }
     };
 
-    const checklistCardClassName = `habit-checklist-card${isCompactView ? ' habit-checklist-card--glass' : ''}`;
+    const checklistCardClassName = `habit-checklist-card${isCompactView ? '' : ' habit-checklist-card--glass'}`;
     const intentionsNoticeKey = intentionsNoticeStorageKey(session.user.id, today);
     const handleOpenIntentionsNotice = () => {
       setIsIntentionsNoticeOpen(true);
