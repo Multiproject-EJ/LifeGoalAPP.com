@@ -1009,6 +1009,19 @@ export function DailyHabitTracker({
   }, [isVisionRewardOpen, onVisionRewardOpenChange]);
 
   useEffect(() => {
+    if (!visionPreviewImage) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [visionPreviewImage]);
+
+  useEffect(() => {
     setIsVisionRewardOpen(false);
     setVisionRewardError(null);
     setIsStarBursting(false);
@@ -2257,19 +2270,6 @@ export function DailyHabitTracker({
                     }}
                     disabled={isSaving || (!scheduledToday && !isCompleted)}
                   />
-                  {linkedVisionImage ? (
-                    <button
-                      type="button"
-                      className="habit-checklist__vision-thumb"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setVisionPreviewImage(linkedVisionImage);
-                      }}
-                      aria-label={`View vision board image for ${habit.name}`}
-                    >
-                      <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
-                    </button>
-                  ) : null}
                   <span className="habit-checklist__name">
                     {!isCompactView && habit.emoji ? (
                       <span className="habit-checklist__icon" aria-hidden="true">
@@ -2293,6 +2293,19 @@ export function DailyHabitTracker({
                   </p>
                   {lastCompletedText ? (
                     <p className="habit-checklist__note">{lastCompletedText}</p>
+                  ) : null}
+                  {linkedVisionImage ? (
+                    <button
+                      type="button"
+                      className="habit-checklist__vision-preview"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setVisionPreviewImage(linkedVisionImage);
+                      }}
+                      aria-label={`View vision board image for ${habit.name}`}
+                    >
+                      <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
+                    </button>
                   ) : null}
                   <div className="habit-checklist__detail-actions">
                     {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}

@@ -5769,29 +5769,6 @@ body {
   font-size: 1.1rem;
 }
 
-.habit-checklist__vision-thumb {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: 12px;
-  padding: 0;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #fff;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
-  cursor: pointer;
-}
-
-.habit-checklist__vision-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
 .habit-checklist__chevron {
   width: 1rem;
   height: 1rem;
@@ -5816,7 +5793,7 @@ body {
 }
 
 .habit-checklist__details-panel--open {
-  max-height: 220px;
+  max-height: 320px;
   opacity: 1;
   padding-top: 0.5rem;
   border-top: 1px dashed rgba(15, 23, 42, 0.1);
@@ -5837,6 +5814,28 @@ body {
   font-size: 0.85rem;
   color: rgba(15, 23, 42, 0.6);
   margin: 0;
+}
+
+.habit-checklist__vision-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+  cursor: pointer;
+}
+
+.habit-checklist__vision-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .habit-checklist__detail-actions {
@@ -5914,18 +5913,20 @@ body {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 24px;
   padding: 1.5rem;
-  width: min(420px, 90vw);
-  max-height: 85vh;
+  width: min(520px, 92vw);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
   box-shadow: 0 24px 50px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
 }
 
 .habit-vision-modal__image {
   width: 100%;
-  max-height: 65vh;
+  max-height: 70vh;
   border-radius: 18px;
   object-fit: cover;
 }
