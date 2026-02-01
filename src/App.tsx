@@ -3031,7 +3031,9 @@ export default function App() {
     );
   }
 
-  const appClassName = `app app--workspace ${isAnyModalVisible ? 'app--auth-overlay' : ''}`;
+  const appClassName = `app app--workspace${activeWorkspaceNav === 'insights' ? ' app--vision-board' : ''} ${
+    isAnyModalVisible ? 'app--auth-overlay' : ''
+  }`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }${!isMobileViewport && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;
