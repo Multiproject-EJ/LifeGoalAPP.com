@@ -12463,6 +12463,27 @@ body {
 }
 
 :is(
+  [data-theme='bright-sky'],
+  [data-theme='arctic-frost']
+) .mobile-footer-nav__surface--image::before {
+  background: url('./assets/Controller_lightblue.webp') center bottom / 100% auto no-repeat;
+}
+
+:is(
+  [data-theme='sunset-glow'],
+  [data-theme='desert-sand']
+) .mobile-footer-nav__surface--image::before {
+  background: url('./assets/Gold_controller.webp') center bottom / 100% auto no-repeat;
+}
+
+:is(
+  [data-theme='flow-day'],
+  [data-theme='bio-day']
+) .mobile-footer-nav__surface--image::before {
+  background: url('./assets/Blue_darkcontroller.webp') center bottom / 100% auto no-repeat;
+}
+
+:is(
   [data-theme='dark-glass'],
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
