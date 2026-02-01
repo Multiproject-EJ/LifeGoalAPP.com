@@ -350,14 +350,14 @@ body {
 
 /* Vision board with glassmorphism */
 .vision-board {
-  background: var(--color-surface-secondary);
+  background: var(--vision-board-bg) center / cover no-repeat;
   border: 1px solid var(--color-border-primary);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
 .vision-board__card {
-  background: var(--color-surface-primary);
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
   border: 1px solid var(--color-border-primary);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
