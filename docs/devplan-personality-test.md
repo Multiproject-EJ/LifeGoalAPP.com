@@ -27,8 +27,23 @@
    - trait bars for Big Five (custom axes in secondary section)
    - narrative paragraphs (templated; AI optional)
    - recommended tools with links into app
+   - trait cards overview (playing-card style; see “Trait Cards” section below)
 5. **Retake & History**: show previous sessions list (no comparison yet).
 6. **Offline banner**: if offline, show “Results will sync when you reconnect.”
+
+## Trait Cards (playing-card metaphor)
+- Each core trait becomes a **Trait Card** (visual playing-card style) with:
+  - trait name + icon
+  - short strength statement
+  - short growth edge statement
+- A user’s **hand** (their combined cards) highlights how traits interact:
+  - strengths: where traits reinforce each other
+  - weaknesses: where traits pull in opposite directions
+- The hand is reusable across the app (e.g., Conflict Resolver, coaching prompts) and becomes the user’s “playstyle.”
+- When multiple users are involved (e.g., conflict resolution), their hands are combined to infer:
+  - compatibility friction points
+  - complementary strengths
+  - AI tone and guidance matching each person’s card language
 
 ## Data model & migrations plan (Supabase)
 ### Tables
