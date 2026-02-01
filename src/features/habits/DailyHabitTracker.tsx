@@ -2307,6 +2307,22 @@ export function DailyHabitTracker({
 
     return (
       <div className="habit-checklist__group">
+        {isTimeLimitedOfferActive && nextOfferHabit ? (
+          <div className="habit-checklist__offer">
+            <div>
+              <p className="habit-checklist__offer-eyebrow">⏳ Time-limited offer</p>
+              <h3 className="habit-checklist__offer-title">
+                Next up: {nextOfferHabit.name} for <span>💎 85</span>
+              </h3>
+              {badOfferHabit ? (
+                <p className="habit-checklist__offer-subtitle">
+                  Bad habit boost: {badOfferHabit.name} for <span>💎 250</span>
+                </p>
+              ) : null}
+            </div>
+            <span className="habit-checklist__offer-pill">Limited time</span>
+          </div>
+        ) : null}
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
