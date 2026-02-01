@@ -128,7 +128,7 @@
 4. **Step 4** ✅: Add results UI with template narrative and static recommendations.
 5. **Step 5** ✅: Add offline queue + local history storage (idb).
 6. **Step 6** ✅: Add Supabase tables + service layer for sync.
-7. Step 7: Add recommendations table + rule filtering from Supabase.
+7. **Step 7** ✅: Add recommendations table + rule filtering from Supabase.
 8. Step 8: Add history list (no comparisons).
 9. Step 9: Optional AI narrative (guarded + opt-in).
 
@@ -146,9 +146,10 @@
 - Step 4: Add results UI with template narrative and static recommendations.
 - Step 5: Add offline queue + local history storage (idb).
 - Step 6: Add Supabase tables + service layer for sync.
+- Step 7: Add recommendations table + rule filtering from Supabase.
 
 ## Next
-- Step 7: Add recommendations table + rule filtering from Supabase.
+- Step 8: Add history list (no comparisons).
 
 ## Blockers
 - None.
