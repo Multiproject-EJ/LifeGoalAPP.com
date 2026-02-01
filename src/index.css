@@ -7444,8 +7444,8 @@ body {
 }
 
 .progress-dashboard__panel-content--vision-board {
-  background: url('./assets/Visiontablight.webp') center / cover no-repeat;
-  background-color: #eef2ff;
+  background: transparent;
+  background-color: transparent;
 }
 
 :is(
@@ -7454,8 +7454,8 @@ body {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .progress-dashboard__panel-content--vision-board {
-  background: url('./assets/Visiontabdark.webp') center / cover no-repeat;
-  background-color: #0f172a;
+  background: transparent;
+  background-color: transparent;
 }
 
 .progress-dashboard__panel-content--balance {
@@ -9358,7 +9358,7 @@ body {
 }
 
 .vision-board {
-  background: rgba(255, 255, 255, 0.75);
+  background: transparent;
   border-radius: 20px;
   padding: clamp(1.5rem, 3vw, 2.25rem);
   display: grid;
@@ -9372,7 +9372,7 @@ body {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .vision-board {
-  background: rgba(15, 23, 42, 0.7);
+  background: transparent;
 }
 
 .vision-board__header {
