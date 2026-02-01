@@ -11914,6 +11914,109 @@ body {
   color: rgba(226, 232, 240, 0.72);
 }
 
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__item {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 14px 30px rgba(5, 10, 20, 0.55);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__row--expanded {
+  background: rgba(56, 189, 248, 0.18);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__name {
+  color: #f8fafc;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__item--completed .habit-checklist__name,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__item--completed .habit-checklist__meta,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__item--completed .habit-checklist__note {
+  color: rgba(148, 163, 184, 0.8);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__meta {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__meta--secondary,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__note {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__chevron {
+  border-right-color: rgba(226, 232, 240, 0.7);
+  border-bottom-color: rgba(226, 232, 240, 0.7);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__details-panel--open {
+  border-top-color: rgba(148, 163, 184, 0.25);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__pill {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
 .mobile-footer-nav {
   position: fixed;
   left: 0;
