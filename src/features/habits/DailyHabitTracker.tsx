@@ -11,7 +11,7 @@ import {
 } from '../../compat/legacyHabitsAdapter';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
-import { convertXpToPoints } from '../../constants/economy';
+import { XP_TO_POINTS_RATIO, convertXpToPoints } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
   getHabitCompletionsByMonth,
@@ -165,6 +165,8 @@ const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
 const visionStarStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star:${userId}:${dateISO}`;
 const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
+const timeLimitedOfferStorageKey = (userId: string, dateISO: string) =>
+  `lifegoal.time-limited-offer:${userId}:${dateISO}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -351,6 +353,16 @@ export function DailyHabitTracker({
     return map;
   }, [visionImages]);
 
+  const isBadHabit = useCallback((habit: HabitWithGoal) => {
+    const name = habit.name.toLowerCase();
+    return (
+      name.startsWith('bad:') ||
+      name.includes('bad habit') ||
+      name.includes('[bad]') ||
+      habit.name.includes('😈')
+    );
+  }, []);
+
   // Watch for level-up events
   useEffect(() => {
     if (levelUpEvent) {
@@ -377,24 +389,52 @@ export function DailyHabitTracker({
       return;
     }
 
-    if (timeLimitedOffer.date === activeDate) {
+    const storedOffer = loadDraft<{
+      date: string;
+      nextHabitId: string | null;
+      badHabitId: string | null;
+      expiresAt: number | null;
+    }>(timeLimitedOfferStorageKey(session.user.id, activeDate));
+
+    if (storedOffer?.date === activeDate) {
+      setTimeLimitedOffer(storedOffer);
       return;
     }
 
-    const nextHabit = habits[0] ?? null;
+    const nextHabit =
+      sortedHabits.find((habit) => !completions[habit.id]?.completed) ?? sortedHabits[0] ?? null;
     const badHabit =
-      habits.find((habit) => habit.name.toLowerCase().includes('bad') && habit.id !== nextHabit?.id) ??
-      habits.find((habit) => habit.id !== nextHabit?.id) ??
+      sortedHabits.find((habit) => isBadHabit(habit) && habit.id !== nextHabit?.id) ??
+      sortedHabits.find((habit) => habit.id !== nextHabit?.id) ??
       null;
     const expiresAt = Date.now() + (24 * 60 + 24) * 1000;
 
-    setTimeLimitedOffer({
+    const nextOffer = {
       date: activeDate,
       nextHabitId: nextHabit?.id ?? null,
       badHabitId: badHabit?.id ?? null,
       expiresAt,
-    });
-  }, [activeDate, habits, isTimeLimitedOfferActive, timeLimitedOffer.date]);
+    };
+
+    setTimeLimitedOffer(nextOffer);
+    saveDraft(timeLimitedOfferStorageKey(session.user.id, activeDate), nextOffer);
+  }, [
+    activeDate,
+    completions,
+    habits.length,
+    isBadHabit,
+    isTimeLimitedOfferActive,
+    session.user.id,
+    sortedHabits,
+  ]);
+
+  useEffect(() => {
+    if (!timeLimitedOffer.date) {
+      return;
+    }
+
+    saveDraft(timeLimitedOfferStorageKey(session.user.id, timeLimitedOffer.date), timeLimitedOffer);
+  }, [session.user.id, timeLimitedOffer]);
 
   useEffect(() => {
     if (!timeLimitedOffer.expiresAt) {
@@ -766,13 +806,13 @@ export function DailyHabitTracker({
     visionVisualizationSeconds % 60,
   ).padStart(2, '0')}`;
   const timeLimitedCountdownLabel = useMemo(() => {
-    if (!isTimeLimitedOfferActive || !timeLimitedCountdown) {
+    if (!isTimeLimitedOfferActive || !timeLimitedOffer.expiresAt) {
       return null;
     }
     const minutes = Math.floor(timeLimitedCountdown / 60);
     const seconds = timeLimitedCountdown % 60;
     return `${minutes}m:${String(seconds).padStart(2, '0')}s`;
-  }, [isTimeLimitedOfferActive, timeLimitedCountdown]);
+  }, [isTimeLimitedOfferActive, timeLimitedCountdown, timeLimitedOffer.expiresAt]);
   const visionRewardModal =
     isVisionRewardOpen ? (
       <div
@@ -1343,13 +1383,17 @@ export function DailyHabitTracker({
     () => new Set([timeLimitedOffer.nextHabitId, timeLimitedOffer.badHabitId].filter(Boolean) as string[]),
     [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
   );
-  const nextOfferHabit = useMemo(
-    () => sortedHabits.find((habit) => habit.id === timeLimitedOffer.nextHabitId) ?? null,
-    [sortedHabits, timeLimitedOffer.nextHabitId],
-  );
-  const badOfferHabit = useMemo(
-    () => sortedHabits.find((habit) => habit.id === timeLimitedOffer.badHabitId) ?? null,
-    [sortedHabits, timeLimitedOffer.badHabitId],
+  const offerPriceByHabitId = useCallback(
+    (habitId: string) => {
+      if (habitId === timeLimitedOffer.nextHabitId) {
+        return 85;
+      }
+      if (habitId === timeLimitedOffer.badHabitId) {
+        return 250;
+      }
+      return null;
+    },
+    [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
   );
   const {
     orderedHabits: timeLimitedOrderedHabits,
@@ -1776,6 +1820,11 @@ export function DailyHabitTracker({
           const xpAmount = now.getHours() < 9
             ? XP_REWARDS.HABIT_COMPLETE_EARLY
             : XP_REWARDS.HABIT_COMPLETE;
+          const offerPrice = offerPriceByHabitId(habit.id);
+          const offerXpAmount =
+            offerPrice && XP_TO_POINTS_RATIO > 0
+              ? Math.round(offerPrice / XP_TO_POINTS_RATIO)
+              : null;
 
           // 1. Immediately add instant feedback (pop/glow)
           setJustCompletedHabitId(habit.id);
@@ -1793,6 +1842,9 @@ export function DailyHabitTracker({
           }, 320);
 
           await earnXP(xpAmount, 'habit_complete', habit.id);
+          if (offerXpAmount) {
+            await earnXP(offerXpAmount, 'habit_offer', habit.id, 'Time-limited habit offer');
+          }
           await recordActivity();
         }
       }
@@ -2344,8 +2396,7 @@ export function DailyHabitTracker({
             const isJustCompleted = justCompletedHabitId === habit.id;
             const linkedVisionImage = visionImagesByHabit.get(habit.id);
             const isOfferHabit = isTimeLimitedOfferActive && offerHabitIds.has(habit.id);
-            const offerPrice =
-              habit.id === nextOfferHabit?.id ? 85 : habit.id === badOfferHabit?.id ? 250 : null;
+            const offerPrice = offerPriceByHabitId(habit.id);
             const isSkipDisabled = isOfferHabit;
 
             return (
