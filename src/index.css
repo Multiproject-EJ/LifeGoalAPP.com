@@ -1560,6 +1560,23 @@ body {
   border-color: rgba(15, 23, 42, 0.8);
 }
 
+.app--vision-board .workspace-stage--vision-board {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.35);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .app--vision-board .workspace-stage--vision-board {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
 .workspace-stage__header {
   display: flex;
   flex-direction: column;
@@ -7458,6 +7475,13 @@ body {
   background-color: transparent;
 }
 
+.app--vision-board .progress-dashboard__panel-content--vision-board {
+  background: transparent;
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .progress-dashboard__panel-content--balance {
   background: linear-gradient(140deg, rgba(226, 232, 240, 0.7), rgba(244, 247, 255, 0.9));
 }
@@ -9373,6 +9397,12 @@ body {
   [data-theme='bio-night']
 ) .vision-board {
   background: transparent;
+}
+
+.app--vision-board .vision-board {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .vision-board__header {
