@@ -5816,6 +5816,73 @@ body {
   margin: 0;
 }
 
+.habit-checklist__offer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.habit-checklist__offer-eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.habit-checklist__offer-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.habit-checklist__offer-title span {
+  color: #0ea5e9;
+}
+
+.habit-checklist__offer-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.habit-checklist__offer-subtitle span {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.habit-checklist__offer-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.habit-checklist__offer-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.75rem;
+  background: rgba(14, 165, 233, 0.12);
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.habit-checklist__offer-price {
+  color: #f59e0b;
+}
+
 .habit-checklist__vision-preview {
   width: 72px;
   height: 72px;

@@ -1272,11 +1272,44 @@ export function DailyHabitTracker({
       const aLongest = aInsight?.longestStreak ?? 0;
       const bLongest = bInsight?.longestStreak ?? 0;
       if (aLongest !== bLongest) {
-        return bLongest - aLongest;
-      }
-      return a.name.localeCompare(b.name);
-    });
+      return bLongest - aLongest;
+    }
+    return a.name.localeCompare(b.name);
+  });
   }, [habits, habitInsights, completions]);
+
+  const isTimeLimitedOfferActive = isViewingToday;
+  const {
+    orderedHabits: timeLimitedOrderedHabits,
+    nextOfferHabit,
+    badOfferHabit,
+    offerHabitIds,
+  } = useMemo(() => {
+    if (!isTimeLimitedOfferActive) {
+      return {
+        orderedHabits: sortedHabits,
+        nextOfferHabit: null,
+        badOfferHabit: null,
+        offerHabitIds: new Set<string>(),
+      };
+    }
+
+    const nextHabit = sortedHabits.find((habit) => !completions[habit.id]?.completed) ?? sortedHabits[0] ?? null;
+    const badHabit =
+      sortedHabits.find((habit) => habit.name.toLowerCase().includes('bad')) ??
+      sortedHabits.find((habit) => habit.id !== nextHabit?.id) ??
+      null;
+    const prioritized = [nextHabit, badHabit].filter((habit): habit is HabitWithGoal => Boolean(habit));
+    const seen = new Set(prioritized.map((habit) => habit.id));
+    const remaining = sortedHabits.filter((habit) => !seen.has(habit.id));
+
+    return {
+      orderedHabits: [...prioritized, ...remaining],
+      nextOfferHabit: nextHabit,
+      badOfferHabit: badHabit,
+      offerHabitIds: seen,
+    };
+  }, [completions, isTimeLimitedOfferActive, sortedHabits]);
 
   const sortedMonthlyHabits = useMemo(() => {
     if (!monthlyStats?.habits?.length) {
@@ -2197,14 +2230,31 @@ export function DailyHabitTracker({
   };
 
   const renderCompactList = () => {
-    const completedHabits = sortedHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
-    const activeHabits = sortedHabits.filter((habit) => !completions[habit.id]?.completed);
+    const baseHabits = isTimeLimitedOfferActive ? timeLimitedOrderedHabits : sortedHabits;
+    const completedHabits = baseHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
+    const activeHabits = baseHabits.filter((habit) => !completions[habit.id]?.completed);
     const visibleHabits = showCompletedHabits
       ? [...activeHabits, ...completedHabits]
       : activeHabits;
 
     return (
       <div className="habit-checklist__group">
+        {isTimeLimitedOfferActive && nextOfferHabit ? (
+          <div className="habit-checklist__offer">
+            <div>
+              <p className="habit-checklist__offer-eyebrow">⏳ Time-limited offer</p>
+              <h3 className="habit-checklist__offer-title">
+                Next up: {nextOfferHabit.name} for <span>💎 85</span>
+              </h3>
+              {badOfferHabit ? (
+                <p className="habit-checklist__offer-subtitle">
+                  Bad habit boost: {badOfferHabit.name} for <span>💎 250</span>
+                </p>
+              ) : null}
+            </div>
+            <span className="habit-checklist__offer-pill">Limited time</span>
+          </div>
+        ) : null}
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
@@ -2225,6 +2275,10 @@ export function DailyHabitTracker({
             const isExpanded = Boolean(expandedHabits[habit.id]);
             const isJustCompleted = justCompletedHabitId === habit.id;
             const linkedVisionImage = visionImagesByHabit.get(habit.id);
+            const isOfferHabit = isTimeLimitedOfferActive && offerHabitIds.has(habit.id);
+            const offerPrice =
+              habit.id === nextOfferHabit?.id ? 85 : habit.id === badOfferHabit?.id ? 250 : null;
+            const isSkipDisabled = isOfferHabit;
 
             return (
               <li
@@ -2294,6 +2348,12 @@ export function DailyHabitTracker({
                   {lastCompletedText ? (
                     <p className="habit-checklist__note">{lastCompletedText}</p>
                   ) : null}
+                  {isOfferHabit && offerPrice !== null ? (
+                    <div className="habit-checklist__offer-details">
+                      <span>Time-limited offer</span>
+                      <span className="habit-checklist__offer-price">💎 {offerPrice}</span>
+                    </div>
+                  ) : null}
                   {linkedVisionImage ? (
                     <button
                       type="button"
@@ -2336,12 +2396,16 @@ export function DailyHabitTracker({
                         className="habit-checklist__skip-btn"
                         aria-expanded={skipMenuHabitId === habit.id}
                         aria-haspopup="true"
+                        disabled={isSkipDisabled}
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (isSkipDisabled) {
+                            return;
+                          }
                           handleToggleSkipMenu(habit.id);
                         }}
                       >
-                        ⏭️ Skip
+                        {isSkipDisabled ? '⏳ Offer active' : '⏭️ Skip'}
                       </button>
                       {skipMenuHabitId === habit.id ? (
                         <div
