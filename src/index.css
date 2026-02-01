@@ -9292,7 +9292,8 @@ body {
 }
 
 .vision-board {
-  background: url('./assets/Visiontablight.webp') center / cover no-repeat;
+  --vision-board-bg: url('./assets/Visiontablight.webp');
+  background: var(--vision-board-bg) center / cover no-repeat;
   background-color: #f8fafc;
   border-radius: 20px;
   padding: clamp(1.5rem, 3vw, 2.25rem);
@@ -9307,7 +9308,8 @@ body {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .vision-board {
-  background: url('./assets/Visiontabdark.webp') center / cover no-repeat;
+  --vision-board-bg: url('./assets/Visiontabdark.webp');
+  background: var(--vision-board-bg) center / cover no-repeat;
   background-color: #0f172a;
 }
 
