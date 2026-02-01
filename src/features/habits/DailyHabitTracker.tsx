@@ -284,6 +284,7 @@ export function DailyHabitTracker({
   const [visionRewardError, setVisionRewardError] = useState<string | null>(null);
   const [visionImagesLoading, setVisionImagesLoading] = useState(false);
   const [visionRewarding, setVisionRewarding] = useState(false);
+  const [visionPreviewImage, setVisionPreviewImage] = useState<VisionImage | null>(null);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const [isVisionRewardSelecting, setIsVisionRewardSelecting] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
@@ -315,6 +316,17 @@ export function DailyHabitTracker({
     return minPoints === maxPoints ? `${minPoints}` : `${minPoints}-${maxPoints}`;
   }, []);
   const shouldShowHabitPoints = showPointsBadges && gamificationEnabled;
+  const visionImagesByHabit = useMemo(() => {
+    const map = new Map<string, VisionImage>();
+    visionImages.forEach((image) => {
+      image.linked_habit_ids?.forEach((habitId) => {
+        if (!map.has(habitId)) {
+          map.set(habitId, image);
+        }
+      });
+    });
+    return map;
+  }, [visionImages]);
 
   // Watch for level-up events
   useEffect(() => {
@@ -689,6 +701,28 @@ export function DailyHabitTracker({
         </div>
       </div>
     ) : null;
+  const habitVisionPreviewModal = visionPreviewImage ? (
+    <div className="habit-vision-modal" onClick={() => setVisionPreviewImage(null)}>
+      <div className="habit-vision-modal__content" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          className="habit-vision-modal__close"
+          onClick={() => setVisionPreviewImage(null)}
+          aria-label="Close vision image"
+        >
+          ×
+        </button>
+        <img
+          className="habit-vision-modal__image"
+          src={visionPreviewImage.publicUrl}
+          alt={visionPreviewImage.caption ? `Vision board: ${visionPreviewImage.caption}` : 'Vision board inspiration'}
+        />
+        {visionPreviewImage.caption ? (
+          <p className="habit-vision-modal__caption">{visionPreviewImage.caption}</p>
+        ) : null}
+      </div>
+    </div>
+  ) : null;
 
   useEffect(() => {
     onVisionRewardOpenChange?.(isVisionRewardOpen);
@@ -1897,6 +1931,7 @@ export function DailyHabitTracker({
             const detailPanelId = `habit-details-${habit.id}`;
             const isExpanded = Boolean(expandedHabits[habit.id]);
             const isJustCompleted = justCompletedHabitId === habit.id;
+            const linkedVisionImage = visionImagesByHabit.get(habit.id);
 
             return (
               <li
@@ -1942,6 +1977,19 @@ export function DailyHabitTracker({
                     }}
                     disabled={isSaving || (!scheduledToday && !isCompleted)}
                   />
+                  {linkedVisionImage ? (
+                    <button
+                      type="button"
+                      className="habit-checklist__vision-thumb"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setVisionPreviewImage(linkedVisionImage);
+                      }}
+                      aria-label={`View vision board image for ${habit.name}`}
+                    >
+                      <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
+                    </button>
+                  ) : null}
                   <span className="habit-checklist__name">
                     {!isCompactView && habit.emoji ? (
                       <span className="habit-checklist__icon" aria-hidden="true">
@@ -3313,6 +3361,7 @@ export function DailyHabitTracker({
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
         {visionRewardModal}
+        {habitVisionPreviewModal}
         {/* Celebration animation for habit completion */}
         {showCelebration && (
           <CelebrationAnimation
@@ -3463,6 +3512,7 @@ export function DailyHabitTracker({
         </>
       )}
       {visionRewardModal}
+      {habitVisionPreviewModal}
 
       {showYesterdayRecap && (
         <div className="habit-recap-overlay" onClick={closeYesterdayRecap}>

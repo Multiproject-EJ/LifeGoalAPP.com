@@ -1024,6 +1024,43 @@
   color: var(--color-text-muted, #64748b);
 }
 
+.score-tab__hub {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.score-tab__hub-card {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(226, 248, 255, 0.6));
+  border-radius: 22px;
+  padding: 1.25rem 1rem;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.score-tab__hub-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 36px rgba(15, 23, 42, 0.16);
+}
+
+.score-tab__hub-icon {
+  font-size: 1.6rem;
+}
+
+.score-tab__hub-title {
+  font-size: 1rem;
+}
+
 .score-tab__status {
   padding: 1rem;
   border-radius: 14px;
@@ -1308,6 +1345,10 @@
 }
 
 @media (min-width: 720px) {
+  .score-tab__hub {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .score-tab__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

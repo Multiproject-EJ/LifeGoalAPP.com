@@ -14,7 +14,6 @@ interface ScoreTabProps {
   onNavigateToAchievements: () => void;
   onNavigateToBank?: () => void;
   onNavigateToShop?: () => void;
-  onNavigateToZenGarden?: () => void;
 }
 
 export function ScoreTab({
@@ -26,7 +25,6 @@ export function ScoreTab({
   onNavigateToAchievements,
   onNavigateToBank,
   onNavigateToShop,
-  onNavigateToZenGarden,
 }: ScoreTabProps) {
   const formatter = useMemo(() => new Intl.NumberFormat(), []);
   const dateFormatter = useMemo(
@@ -37,7 +35,7 @@ export function ScoreTab({
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
   const pointsRatioLabel = `1 point per ${Math.round(1 / XP_TO_POINTS_RATIO)} XP`;
-  const [activeTab, setActiveTab] = useState<'bank' | 'shop'>('bank');
+  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen'>('home');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -123,6 +121,13 @@ export function ScoreTab({
         <div className="score-tab__tabs" aria-label="Score shortcuts">
           <button
             type="button"
+            className={`score-tab__tab${activeTab === 'home' ? ' score-tab__tab--active' : ''}`}
+            onClick={() => setActiveTab('home')}
+          >
+            Hub
+          </button>
+          <button
+            type="button"
             className="score-tab__tab score-tab__tab--primary"
             onClick={onNavigateToAchievements}
           >
@@ -152,8 +157,8 @@ export function ScoreTab({
           </button>
           <button
             type="button"
-            className="score-tab__tab"
-            onClick={() => onNavigateToZenGarden?.()}
+            className={`score-tab__tab${activeTab === 'zen' ? ' score-tab__tab--active' : ''}`}
+            onClick={() => setActiveTab('zen')}
           >
             <span className="score-tab__tab-icon" aria-hidden="true">🪷</span>
             Zen Garden
@@ -163,6 +168,41 @@ export function ScoreTab({
           Review XP, points, and streak momentum before you spin or visit the player shop.
         </p>
       </header>
+
+      {activeTab === 'home' && (
+        <div className="score-tab__hub">
+          <button type="button" className="score-tab__hub-card" onClick={onNavigateToAchievements}>
+            <span className="score-tab__hub-icon" aria-hidden="true">🏆</span>
+            <span className="score-tab__hub-title">Achievements</span>
+          </button>
+          <button
+            type="button"
+            className="score-tab__hub-card"
+            onClick={() => {
+              setActiveTab('bank');
+              onNavigateToBank?.();
+            }}
+          >
+            <span className="score-tab__hub-icon" aria-hidden="true">🏦</span>
+            <span className="score-tab__hub-title">Bank</span>
+          </button>
+          <button
+            type="button"
+            className="score-tab__hub-card"
+            onClick={() => {
+              setActiveTab('shop');
+              onNavigateToShop?.();
+            }}
+          >
+            <span className="score-tab__hub-icon" aria-hidden="true">🛍️</span>
+            <span className="score-tab__hub-title">Player Shop</span>
+          </button>
+          <button type="button" className="score-tab__hub-card" onClick={() => setActiveTab('zen')}>
+            <span className="score-tab__hub-icon" aria-hidden="true">🪷</span>
+            <span className="score-tab__hub-title">Zen Garden</span>
+          </button>
+        </div>
+      )}
 
       {loading && (
         <div className="score-tab__status" role="status">
@@ -298,6 +338,12 @@ export function ScoreTab({
       {!loading && enabled && activeTab === 'shop' && (
         <div className="score-tab__status">
           The shop is getting stocked. Check back soon for upgrades and rewards.
+        </div>
+      )}
+
+      {!loading && enabled && activeTab === 'zen' && (
+        <div className="score-tab__status">
+          Zen Garden is ready for calm upgrades. This space is open for your future build.
         </div>
       )}
     </section>
