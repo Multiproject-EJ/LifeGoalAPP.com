@@ -3184,7 +3184,9 @@ export default function App() {
           <section
             className={`workspace-stage ${
               activeWorkspaceNav === 'goals' ? 'workspace-stage--detail' : 'workspace-stage--placeholder'
-            }${activeWorkspaceNav === 'account' ? ' workspace-stage--account' : ''}`}
+            }${activeWorkspaceNav === 'account' ? ' workspace-stage--account' : ''}${
+              activeWorkspaceNav === 'insights' ? ' workspace-stage--vision-board' : ''
+            }`}
             aria-live="polite"
           >
             <div className="workspace-stage__body">{renderWorkspaceSection()}</div>

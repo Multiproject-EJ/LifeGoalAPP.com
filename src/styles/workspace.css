@@ -18,7 +18,7 @@
 }
 
 @media (min-width: calc(var(--workspace-mobile-breakpoint) + 1px)) {
-  .workspace-stage {
+  .workspace-stage:not(.workspace-stage--vision-board) {
     background: transparent;
     border: none;
     border-radius: 0;
