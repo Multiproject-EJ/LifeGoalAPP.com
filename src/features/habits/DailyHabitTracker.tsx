@@ -291,6 +291,17 @@ export function DailyHabitTracker({
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
   const [visionStarCount, setVisionStarCount] = useState(0);
+  const [isVisionVisualizationOpen, setIsVisionVisualizationOpen] = useState(false);
+  const [visionVisualizationStep, setVisionVisualizationStep] = useState<1 | 2 | 3>(1);
+  const [visionNowImagePreview, setVisionNowImagePreview] = useState<string | null>(null);
+  const [visionNowImageName, setVisionNowImageName] = useState('');
+  const [visionGoalImagePreview, setVisionGoalImagePreview] = useState<string | null>(null);
+  const [visionGoalImageName, setVisionGoalImageName] = useState('');
+  const [visionGoalImageCaption, setVisionGoalImageCaption] = useState<string | null>(null);
+  const [visionQuickNowFeeling, setVisionQuickNowFeeling] = useState('');
+  const [visionQuickMicroAction, setVisionQuickMicroAction] = useState('');
+  const [visionVisualizationSeconds, setVisionVisualizationSeconds] = useState(120);
+  const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
@@ -305,6 +316,18 @@ export function DailyHabitTracker({
   const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
   const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
   const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
+  const [timeLimitedOffer, setTimeLimitedOffer] = useState<{
+    date: string;
+    nextHabitId: string | null;
+    badHabitId: string | null;
+    expiresAt: number | null;
+  }>({
+    date: '',
+    nextHabitId: null,
+    badHabitId: null,
+    expiresAt: null,
+  });
+  const [timeLimitedCountdown, setTimeLimitedCountdown] = useState(0);
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
   const visionClaimButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
@@ -348,6 +371,63 @@ export function DailyHabitTracker({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isTimeLimitedOfferActive || habits.length === 0) {
+      return;
+    }
+
+    if (timeLimitedOffer.date === activeDate) {
+      return;
+    }
+
+    const nextHabit = habits[0] ?? null;
+    const badHabit =
+      habits.find((habit) => habit.name.toLowerCase().includes('bad') && habit.id !== nextHabit?.id) ??
+      habits.find((habit) => habit.id !== nextHabit?.id) ??
+      null;
+    const expiresAt = Date.now() + (24 * 60 + 24) * 1000;
+
+    setTimeLimitedOffer({
+      date: activeDate,
+      nextHabitId: nextHabit?.id ?? null,
+      badHabitId: badHabit?.id ?? null,
+      expiresAt,
+    });
+  }, [activeDate, habits, isTimeLimitedOfferActive, timeLimitedOffer.date]);
+
+  useEffect(() => {
+    if (!timeLimitedOffer.expiresAt) {
+      setTimeLimitedCountdown(0);
+      return undefined;
+    }
+
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.floor((timeLimitedOffer.expiresAt - Date.now()) / 1000));
+      setTimeLimitedCountdown(remaining);
+    };
+
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(interval);
+  }, [timeLimitedOffer.expiresAt]);
+
+  useEffect(() => {
+    if (!isVisionVisualizationRunning) return;
+    const interval = window.setInterval(() => {
+      setVisionVisualizationSeconds((prev) => {
+        if (prev <= 1) {
+          setIsVisionVisualizationRunning(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [isVisionVisualizationRunning]);
 
   useEffect(() => {
     let isActive = true;
@@ -609,11 +689,72 @@ export function DailyHabitTracker({
     setIsVisionRewardSelecting(false);
   };
 
+  const revokeObjectUrl = (url: string | null) => {
+    if (url?.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleVisionNowImageChange = (file: File | null) => {
+    revokeObjectUrl(visionNowImagePreview);
+    if (file) {
+      setVisionNowImagePreview(URL.createObjectURL(file));
+      setVisionNowImageName(file.name);
+      return;
+    }
+    setVisionNowImagePreview(null);
+    setVisionNowImageName('');
+  };
+
+  const handleVisionGoalImageChange = (file: File | null) => {
+    revokeObjectUrl(visionGoalImagePreview);
+    if (file) {
+      setVisionGoalImagePreview(URL.createObjectURL(file));
+      setVisionGoalImageName(file.name);
+      setVisionGoalImageCaption(null);
+      return;
+    }
+    setVisionGoalImagePreview(null);
+    setVisionGoalImageName('');
+    setVisionGoalImageCaption(null);
+  };
+
+  const handleVisionGoalImageSelect = (image: VisionImage) => {
+    revokeObjectUrl(visionGoalImagePreview);
+    setVisionGoalImagePreview(image.publicUrl);
+    setVisionGoalImageCaption(image.caption ?? null);
+    setVisionGoalImageName(image.caption ?? 'Vision board image');
+  };
+
+  const openVisionVisualization = () => {
+    setIsVisionVisualizationOpen(true);
+    setVisionVisualizationStep(1);
+    setVisionVisualizationSeconds(120);
+    setIsVisionVisualizationRunning(false);
+    if (visionReward?.imageUrl && !visionGoalImagePreview) {
+      setVisionGoalImagePreview(visionReward.imageUrl);
+      setVisionGoalImageCaption(visionReward.caption ?? null);
+      setVisionGoalImageName(visionReward.caption ?? 'Vision board image');
+    }
+  };
+
+  const closeVisionVisualization = () => {
+    setIsVisionVisualizationOpen(false);
+    setIsVisionVisualizationRunning(false);
+  };
+
   useEffect(() => {
     if (visionReward?.imageUrl) {
       setIsVisionImageLoaded(false);
     }
   }, [visionReward?.imageUrl, isVisionRewardOpen]);
+
+  useEffect(() => {
+    return () => {
+      revokeObjectUrl(visionNowImagePreview);
+      revokeObjectUrl(visionGoalImagePreview);
+    };
+  }, [visionNowImagePreview, visionGoalImagePreview]);
 
   const isVisionRewardReady = Boolean(visionReward);
   const visionRewardClaimLabel = visionReward
@@ -621,6 +762,17 @@ export function DailyHabitTracker({
     : 'Preparing reward';
   const shouldShowVisionLoading =
     isVisionRewardSelecting || (visionReward?.imageUrl && !isVisionImageLoaded);
+  const visionVisualizationTimeLabel = `${Math.floor(visionVisualizationSeconds / 60)}:${String(
+    visionVisualizationSeconds % 60,
+  ).padStart(2, '0')}`;
+  const timeLimitedCountdownLabel = useMemo(() => {
+    if (!isTimeLimitedOfferActive || !timeLimitedCountdown) {
+      return null;
+    }
+    const minutes = Math.floor(timeLimitedCountdown / 60);
+    const seconds = timeLimitedCountdown % 60;
+    return `${minutes}m:${String(seconds).padStart(2, '0')}s`;
+  }, [isTimeLimitedOfferActive, timeLimitedCountdown]);
   const visionRewardModal =
     isVisionRewardOpen ? (
       <div
@@ -693,7 +845,10 @@ export function DailyHabitTracker({
               className={`habit-day-nav__vision-modal-button habit-day-nav__vision-modal-button--visualize ${
                 visionReward?.isSuperBoost ? 'habit-day-nav__vision-modal-button--super-boost' : ''
               }`}
-              disabled
+              onClick={() => {
+                closeVisionReward();
+                openVisionVisualization();
+              }}
             >
               {visionReward?.isSuperBoost ? 'Visualization super boost' : 'Visualization +50 XP'}
             </button>
@@ -701,6 +856,191 @@ export function DailyHabitTracker({
         </div>
       </div>
     ) : null;
+  const visionVisualizationModal = isVisionVisualizationOpen ? (
+    <div
+      className="habit-day-nav__vision-visualize-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Guided vision visualization"
+      onClick={closeVisionVisualization}
+    >
+      <div
+        className="habit-day-nav__vision-visualize-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="habit-day-nav__vision-visualize-close"
+          onClick={closeVisionVisualization}
+          aria-label="Close visualization"
+        >
+          ✕
+        </button>
+        <span className="habit-day-nav__vision-visualize-eyebrow">Vision star journey</span>
+        <h3 className="habit-day-nav__vision-visualize-title">2-minute guided visualization</h3>
+        <p className="habit-day-nav__vision-visualize-subtitle">
+          Step {visionVisualizationStep} of 3 · Bring the now and the end goal together.
+        </p>
+        {visionVisualizationStep === 1 && (
+          <div className="habit-day-nav__vision-visualize-step">
+            <h4>Step 1: Capture your “Now”</h4>
+            <p>Upload a quick snapshot of your current reality (physique, workspace, car, or apartment).</p>
+            <label className="habit-day-nav__vision-visualize-upload">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => handleVisionNowImageChange(event.target.files?.[0] ?? null)}
+              />
+              <span>{visionNowImageName || 'Upload Now image'}</span>
+            </label>
+            {visionNowImagePreview && (
+              <img
+                className="habit-day-nav__vision-visualize-preview"
+                src={visionNowImagePreview}
+                alt="Now image preview"
+              />
+            )}
+          </div>
+        )}
+        {visionVisualizationStep === 2 && (
+          <div className="habit-day-nav__vision-visualize-step">
+            <h4>Step 2: Choose your end goal photo</h4>
+            <p>Select an existing vision board image or upload a new one.</p>
+            {visionImages.length > 0 && (
+              <div className="habit-day-nav__vision-visualize-grid">
+                {visionImages.slice(0, 6).map((image) => (
+                  <button
+                    key={image.id}
+                    type="button"
+                    className={`habit-day-nav__vision-visualize-thumb ${
+                      visionGoalImagePreview === image.publicUrl
+                        ? 'habit-day-nav__vision-visualize-thumb--active'
+                        : ''
+                    }`}
+                    onClick={() => handleVisionGoalImageSelect(image)}
+                  >
+                    <img src={image.publicUrl} alt={image.caption ?? 'Vision board image'} />
+                  </button>
+                ))}
+              </div>
+            )}
+            <label className="habit-day-nav__vision-visualize-upload">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => handleVisionGoalImageChange(event.target.files?.[0] ?? null)}
+              />
+              <span>{visionGoalImageName || 'Upload end-goal image'}</span>
+            </label>
+            {visionGoalImagePreview && (
+              <img
+                className="habit-day-nav__vision-visualize-preview"
+                src={visionGoalImagePreview}
+                alt="End goal preview"
+              />
+            )}
+          </div>
+        )}
+        {visionVisualizationStep === 3 && (
+          <div className="habit-day-nav__vision-visualize-step">
+            <h4>Step 3: Guided visualization</h4>
+            <div className="habit-day-nav__vision-visualize-images">
+              {visionNowImagePreview && (
+                <div>
+                  <p className="habit-day-nav__vision-visualize-label">Now</p>
+                  <img src={visionNowImagePreview} alt="Now state" />
+                </div>
+              )}
+              {visionGoalImagePreview && (
+                <div>
+                  <p className="habit-day-nav__vision-visualize-label">End goal</p>
+                  <img src={visionGoalImagePreview} alt="End goal vision" />
+                </div>
+              )}
+            </div>
+            <div className="habit-day-nav__vision-visualize-questions">
+              <label>
+                Quick question 1: What is the loudest feeling in your “now” image?
+                <input
+                  type="text"
+                  value={visionQuickNowFeeling}
+                  onChange={(event) => setVisionQuickNowFeeling(event.target.value)}
+                  placeholder="One word or short phrase"
+                />
+              </label>
+              <label>
+                Quick question 2: What is one tiny action that moves you toward the end goal today?
+                <input
+                  type="text"
+                  value={visionQuickMicroAction}
+                  onChange={(event) => setVisionQuickMicroAction(event.target.value)}
+                  placeholder="Keep it simple"
+                />
+              </label>
+            </div>
+            <div className="habit-day-nav__vision-visualize-guidance">
+              <p>
+                Take a deep breath. For the next two minutes, imagine the bridge between your current
+                reality and your end goal. Feel the progress, the habits, and the momentum.
+              </p>
+              <div className="habit-day-nav__vision-visualize-timer">
+                <span>{visionVisualizationTimeLabel}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (visionVisualizationSeconds === 0) {
+                      setVisionVisualizationSeconds(120);
+                    }
+                    setIsVisionVisualizationRunning((prev) => !prev);
+                  }}
+                >
+                  {isVisionVisualizationRunning ? 'Pause timer' : 'Start 2-minute visualization'}
+                </button>
+              </div>
+              {visionGoalImageCaption && (
+                <p className="habit-day-nav__vision-visualize-caption">
+                  End-goal focus: {visionGoalImageCaption}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+        <div className="habit-day-nav__vision-visualize-actions">
+          {visionVisualizationStep > 1 && (
+            <button
+              type="button"
+              className="habit-day-nav__vision-visualize-button habit-day-nav__vision-visualize-button--ghost"
+              onClick={() => setVisionVisualizationStep((prev) => (prev - 1) as 1 | 2 | 3)}
+            >
+              Back
+            </button>
+          )}
+          {visionVisualizationStep < 3 && (
+            <button
+              type="button"
+              className="habit-day-nav__vision-visualize-button"
+              onClick={() => setVisionVisualizationStep((prev) => (prev + 1) as 1 | 2 | 3)}
+              disabled={
+                (visionVisualizationStep === 1 && !visionNowImagePreview) ||
+                (visionVisualizationStep === 2 && !visionGoalImagePreview)
+              }
+            >
+              Next
+            </button>
+          )}
+          {visionVisualizationStep === 3 && (
+            <button
+              type="button"
+              className="habit-day-nav__vision-visualize-button"
+              onClick={closeVisionVisualization}
+            >
+              Done
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : null;
   const habitVisionPreviewModal = visionPreviewImage ? (
     <div className="habit-vision-modal" onClick={() => setVisionPreviewImage(null)}>
       <div className="habit-vision-modal__content" onClick={(event) => event.stopPropagation()}>
@@ -727,6 +1067,19 @@ export function DailyHabitTracker({
   useEffect(() => {
     onVisionRewardOpenChange?.(isVisionRewardOpen);
   }, [isVisionRewardOpen, onVisionRewardOpenChange]);
+
+  useEffect(() => {
+    if (!visionPreviewImage) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [visionPreviewImage]);
 
   useEffect(() => {
     setIsVisionRewardOpen(false);
@@ -979,11 +1332,52 @@ export function DailyHabitTracker({
       const aLongest = aInsight?.longestStreak ?? 0;
       const bLongest = bInsight?.longestStreak ?? 0;
       if (aLongest !== bLongest) {
-        return bLongest - aLongest;
-      }
-      return a.name.localeCompare(b.name);
-    });
+      return bLongest - aLongest;
+    }
+    return a.name.localeCompare(b.name);
+  });
   }, [habits, habitInsights, completions]);
+
+  const isTimeLimitedOfferActive = isViewingToday;
+  const offerHabitIds = useMemo(
+    () => new Set([timeLimitedOffer.nextHabitId, timeLimitedOffer.badHabitId].filter(Boolean) as string[]),
+    [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
+  );
+  const nextOfferHabit = useMemo(
+    () => sortedHabits.find((habit) => habit.id === timeLimitedOffer.nextHabitId) ?? null,
+    [sortedHabits, timeLimitedOffer.nextHabitId],
+  );
+  const badOfferHabit = useMemo(
+    () => sortedHabits.find((habit) => habit.id === timeLimitedOffer.badHabitId) ?? null,
+    [sortedHabits, timeLimitedOffer.badHabitId],
+  );
+  const {
+    orderedHabits: timeLimitedOrderedHabits,
+  } = useMemo(() => {
+    if (!isTimeLimitedOfferActive || offerHabitIds.size === 0) {
+      return {
+        orderedHabits: sortedHabits,
+      };
+    }
+
+    return {
+      orderedHabits: [
+        ...[
+          timeLimitedOffer.nextHabitId,
+          timeLimitedOffer.badHabitId,
+        ]
+          .map((habitId) => sortedHabits.find((habit) => habit.id === habitId))
+          .filter((habit): habit is HabitWithGoal => Boolean(habit)),
+        ...sortedHabits.filter((habit) => !offerHabitIds.has(habit.id)),
+      ],
+    };
+  }, [
+    isTimeLimitedOfferActive,
+    offerHabitIds,
+    sortedHabits,
+    timeLimitedOffer.badHabitId,
+    timeLimitedOffer.nextHabitId,
+  ]);
 
   const sortedMonthlyHabits = useMemo(() => {
     if (!monthlyStats?.habits?.length) {
@@ -1904,8 +2298,9 @@ export function DailyHabitTracker({
   };
 
   const renderCompactList = () => {
-    const completedHabits = sortedHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
-    const activeHabits = sortedHabits.filter((habit) => !completions[habit.id]?.completed);
+    const baseHabits = isTimeLimitedOfferActive ? timeLimitedOrderedHabits : sortedHabits;
+    const completedHabits = baseHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
+    const activeHabits = baseHabits.filter((habit) => !completions[habit.id]?.completed);
     const visibleHabits = showCompletedHabits
       ? [...activeHabits, ...completedHabits]
       : activeHabits;
@@ -1932,19 +2327,32 @@ export function DailyHabitTracker({
             const isExpanded = Boolean(expandedHabits[habit.id]);
             const isJustCompleted = justCompletedHabitId === habit.id;
             const linkedVisionImage = visionImagesByHabit.get(habit.id);
+            const isOfferHabit = isTimeLimitedOfferActive && offerHabitIds.has(habit.id);
+            const offerPrice =
+              habit.id === nextOfferHabit?.id ? 85 : habit.id === badOfferHabit?.id ? 250 : null;
+            const isSkipDisabled = isOfferHabit;
 
             return (
               <li
                 key={habit.id}
                 className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
                   isCompleted ? 'habit-checklist__item--completed' : ''
-                } ${isJustCompleted ? 'habit-item--just-completed' : ''}`}
+                } ${isJustCompleted ? 'habit-item--just-completed' : ''} ${
+                  isOfferHabit ? 'habit-checklist__item--offer' : ''
+                }`}
               >
-                {shouldShowHabitPoints ? (
+                {(shouldShowHabitPoints || isOfferHabit) ? (
                   <PointsBadge
-                    value={habitPointsLabel}
-                    className="points-badge--corner habit-points-badge"
+                    value={isOfferHabit && offerPrice !== null ? offerPrice : habitPointsLabel}
+                    className={`points-badge--corner habit-points-badge${
+                      isOfferHabit ? ' habit-points-badge--offer' : ''
+                    }`}
                     size="mini"
+                    ariaLabel={
+                      isOfferHabit && offerPrice !== null
+                        ? `Limited offer: ${offerPrice} diamonds`
+                        : undefined
+                    }
                   />
                 ) : null}
                 <div
@@ -1977,19 +2385,6 @@ export function DailyHabitTracker({
                     }}
                     disabled={isSaving || (!scheduledToday && !isCompleted)}
                   />
-                  {linkedVisionImage ? (
-                    <button
-                      type="button"
-                      className="habit-checklist__vision-thumb"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setVisionPreviewImage(linkedVisionImage);
-                      }}
-                      aria-label={`View vision board image for ${habit.name}`}
-                    >
-                      <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
-                    </button>
-                  ) : null}
                   <span className="habit-checklist__name">
                     {!isCompactView && habit.emoji ? (
                       <span className="habit-checklist__icon" aria-hidden="true">
@@ -1998,6 +2393,11 @@ export function DailyHabitTracker({
                     ) : null}
                     {habit.name}
                   </span>
+                  {isOfferHabit && timeLimitedCountdownLabel ? (
+                    <span className="habit-checklist__offer-timer" aria-label="Offer time remaining">
+                      ⏳ {timeLimitedCountdownLabel}
+                    </span>
+                  ) : null}
                 </div>
                 <div
                   className={`habit-checklist__details-panel ${
@@ -2013,6 +2413,19 @@ export function DailyHabitTracker({
                   </p>
                   {lastCompletedText ? (
                     <p className="habit-checklist__note">{lastCompletedText}</p>
+                  ) : null}
+                  {linkedVisionImage ? (
+                    <button
+                      type="button"
+                      className="habit-checklist__vision-preview"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setVisionPreviewImage(linkedVisionImage);
+                      }}
+                      aria-label={`View vision board image for ${habit.name}`}
+                    >
+                      <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
+                    </button>
                   ) : null}
                   <div className="habit-checklist__detail-actions">
                     {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
@@ -2043,12 +2456,16 @@ export function DailyHabitTracker({
                         className="habit-checklist__skip-btn"
                         aria-expanded={skipMenuHabitId === habit.id}
                         aria-haspopup="true"
+                        disabled={isSkipDisabled}
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (isSkipDisabled) {
+                            return;
+                          }
                           handleToggleSkipMenu(habit.id);
                         }}
                       >
-                        ⏭️ Skip
+                        {isSkipDisabled ? '⏳ Offer active' : '⏭️ Skip'}
                       </button>
                       {skipMenuHabitId === habit.id ? (
                         <div
@@ -3361,6 +3778,7 @@ export function DailyHabitTracker({
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
         {visionRewardModal}
+        {visionVisualizationModal}
         {habitVisionPreviewModal}
         {/* Celebration animation for habit completion */}
         {showCelebration && (
@@ -3512,6 +3930,7 @@ export function DailyHabitTracker({
         </>
       )}
       {visionRewardModal}
+      {visionVisualizationModal}
       {habitVisionPreviewModal}
 
       {showYesterdayRecap && (
