@@ -321,6 +321,8 @@ export default function App() {
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [showDailyTreatsMenu, setShowDailyTreatsMenu] = useState(false);
   const [showDailyTreatsCongrats, setShowDailyTreatsCongrats] = useState(false);
+  const [showQuickGainsMenu, setShowQuickGainsMenu] = useState(false);
+  const [quickGainsHabitText, setQuickGainsHabitText] = useState('');
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLeaguePlaceholder, setShowLeaguePlaceholder] = useState(false);
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
@@ -2603,7 +2605,7 @@ export default function App() {
             <button
               type="button"
               className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat--quick-gains mobile-gamification-overlay__stat-button"
-              onClick={() => setShowAiCoachModal(true)}
+              onClick={() => setShowQuickGainsMenu(true)}
               role="listitem"
             >
               <div className="mobile-gamification-overlay__stat-content">
@@ -2851,6 +2853,90 @@ export default function App() {
     </div>
   ) : null;
 
+  const quickGainsOptionalItems = !hasSeenDailyTreats
+    ? [
+        {
+          id: 'daily-treats',
+          title: 'Unclaimed daily treats',
+          description: 'Open the treats menu to claim a bonus.',
+        },
+      ]
+    : [];
+  const quickGainsFallbackItem =
+    quickGainsOptionalItems.length === 0
+      ? {
+          id: 'placeholder',
+          title: 'More quick gains soon',
+          description: 'We’ll drop fresh boosts here as they unlock.',
+        }
+      : null;
+  const quickGainsItems = [
+    {
+      id: 'water-tree',
+      title: 'Water the wisdom tree',
+      description: 'Give the tree a quick burst of care and growth.',
+    },
+    {
+      id: 'habit-checkoff',
+      title: quickGainsHabitText
+        ? `Check off Habit: ${quickGainsHabitText}`
+        : 'Check off Habit',
+      description: 'Type the habit name you want to check off.',
+    },
+    ...quickGainsOptionalItems,
+    ...(quickGainsFallbackItem ? [quickGainsFallbackItem] : []),
+  ];
+  const quickGainsModal = showQuickGainsMenu ? (
+    <div className="quick-gains-modal" role="dialog" aria-modal="true" aria-label="Quick gains menu">
+      <div
+        className="quick-gains-modal__backdrop"
+        onClick={() => setShowQuickGainsMenu(false)}
+        role="presentation"
+      />
+      <div className="quick-gains-modal__panel">
+        <header className="quick-gains-modal__header">
+          <div>
+            <p className="quick-gains-modal__eyebrow">Quick gains</p>
+            <h2 className="quick-gains-modal__title">Pick a fast boost</h2>
+            <p className="quick-gains-modal__subtitle">Short actions that keep your streak moving.</p>
+          </div>
+          <button
+            type="button"
+            className="quick-gains-modal__close"
+            aria-label="Close quick gains"
+            onClick={() => setShowQuickGainsMenu(false)}
+          >
+            ×
+          </button>
+        </header>
+
+        <div className="quick-gains-modal__list" role="list">
+          {quickGainsItems.map((item) => (
+            <div key={item.id} className="quick-gains-modal__item" role="listitem">
+              <div>
+                <p className="quick-gains-modal__item-title">{item.title}</p>
+                <p className="quick-gains-modal__item-desc">{item.description}</p>
+              </div>
+              {item.id === 'habit-checkoff' ? (
+                <input
+                  className="quick-gains-modal__input"
+                  type="text"
+                  value={quickGainsHabitText}
+                  onChange={(event) => setQuickGainsHabitText(event.target.value)}
+                  placeholder="Add habit text"
+                />
+              ) : (
+                <button type="button" className="quick-gains-modal__action">
+                  Select
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   const leaguePlaceholderModal = showLeaguePlaceholder ? (
     <div className="daily-treats-placeholder" role="dialog" aria-modal="true" aria-label="League game">
       <div
@@ -2936,6 +3022,7 @@ export default function App() {
         {showDailySpinWheel && (
           <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
         )}
+        {quickGainsModal}
         {dailyTreatsCongratsModal}
         {dailyTreatsModal}
         {leaguePlaceholderModal}
@@ -3178,6 +3265,7 @@ export default function App() {
       {showDailySpinWheel && (
         <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
       )}
+      {quickGainsModal}
       {dailyTreatsModal}
       {leaguePlaceholderModal}
       {countdownCalendarModal}
