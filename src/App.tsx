@@ -1975,10 +1975,6 @@ export default function App() {
                 setActiveWorkspaceNav('game');
                 setShowMobileHome(false);
               }}
-              onNavigateToZenGarden={() => {
-                setActiveWorkspaceNav('game');
-                setShowMobileHome(false);
-              }}
             />
           </div>
         );
