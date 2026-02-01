@@ -1544,8 +1544,9 @@ body {
 }
 
 .workspace-stage--vision-board {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.45), rgba(248, 250, 252, 0.28));
-  border-color: rgba(248, 250, 252, 0.4);
+  background: var(--vision-board-bg) center / cover no-repeat;
+  background-color: #eef2ff;
+  border-color: rgba(226, 232, 240, 0.7);
 }
 
 :is(
@@ -1554,8 +1555,9 @@ body {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .workspace-stage--vision-board {
-  background: linear-gradient(160deg, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.25));
-  border-color: rgba(30, 41, 59, 0.7);
+  background: var(--vision-board-bg) center / cover no-repeat;
+  background-color: #0b1226;
+  border-color: rgba(15, 23, 42, 0.8);
 }
 
 .app--vision-board .workspace-stage--vision-board {
