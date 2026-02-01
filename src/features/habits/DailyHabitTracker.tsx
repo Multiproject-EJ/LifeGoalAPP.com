@@ -363,6 +363,91 @@ export function DailyHabitTracker({
     );
   }, []);
 
+  const sortedHabits = useMemo(() => {
+    if (!habits.length) {
+      return habits;
+    }
+
+    return [...habits].sort((a, b) => {
+      const aCompleted = Boolean(completions[a.id]?.completed);
+      const bCompleted = Boolean(completions[b.id]?.completed);
+      if (aCompleted !== bCompleted) {
+        return aCompleted ? 1 : -1;
+      }
+
+      const aInsight = habitInsights[a.id];
+      const bInsight = habitInsights[b.id];
+      const aCurrent = aInsight?.currentStreak ?? 0;
+      const bCurrent = bInsight?.currentStreak ?? 0;
+      if (aCurrent !== bCurrent) {
+        return bCurrent - aCurrent;
+      }
+      const aLongest = aInsight?.longestStreak ?? 0;
+      const bLongest = bInsight?.longestStreak ?? 0;
+      if (aLongest !== bLongest) {
+        return bLongest - aLongest;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [habits, habitInsights, completions]);
+
+  const isTimeLimitedOfferActive = isViewingToday;
+  const offerHabitIds = useMemo(
+    () => new Set([timeLimitedOffer.nextHabitId, timeLimitedOffer.badHabitId].filter(Boolean) as string[]),
+    [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
+  );
+  const offerPriceByHabitId = useCallback(
+    (habitId: string) => {
+      if (habitId === timeLimitedOffer.nextHabitId) {
+        return 85;
+      }
+      if (habitId === timeLimitedOffer.badHabitId) {
+        return 250;
+      }
+      return null;
+    },
+    [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
+  );
+  const {
+    orderedHabits: timeLimitedOrderedHabits,
+  } = useMemo(() => {
+    if (!isTimeLimitedOfferActive || offerHabitIds.size === 0) {
+      return {
+        orderedHabits: sortedHabits,
+      };
+    }
+
+    return {
+      orderedHabits: [
+        ...[
+          timeLimitedOffer.nextHabitId,
+          timeLimitedOffer.badHabitId,
+        ]
+          .map((habitId) => sortedHabits.find((habit) => habit.id === habitId))
+          .filter((habit): habit is HabitWithGoal => Boolean(habit)),
+        ...sortedHabits.filter((habit) => !offerHabitIds.has(habit.id)),
+      ],
+    };
+  }, [
+    isTimeLimitedOfferActive,
+    offerHabitIds,
+    sortedHabits,
+    timeLimitedOffer.badHabitId,
+    timeLimitedOffer.nextHabitId,
+  ]);
+  const nextOfferHabit = useMemo(
+    () =>
+      sortedHabits.find((habit) => habit.id === timeLimitedOffer.nextHabitId) ??
+      null,
+    [sortedHabits, timeLimitedOffer.nextHabitId],
+  );
+  const badOfferHabit = useMemo(
+    () =>
+      sortedHabits.find((habit) => habit.id === timeLimitedOffer.badHabitId) ??
+      null,
+    [sortedHabits, timeLimitedOffer.badHabitId],
+  );
+
   // Watch for level-up events
   useEffect(() => {
     if (levelUpEvent) {
@@ -437,13 +522,14 @@ export function DailyHabitTracker({
   }, [session.user.id, timeLimitedOffer]);
 
   useEffect(() => {
-    if (!timeLimitedOffer.expiresAt) {
+    const expiresAt = timeLimitedOffer.expiresAt;
+    if (!expiresAt) {
       setTimeLimitedCountdown(0);
       return undefined;
     }
 
     const updateCountdown = () => {
-      const remaining = Math.max(0, Math.floor((timeLimitedOffer.expiresAt - Date.now()) / 1000));
+      const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
       setTimeLimitedCountdown(remaining);
     };
 
@@ -1349,79 +1435,6 @@ export function DailyHabitTracker({
 
     return { scheduledTotal, scheduledComplete } as const;
   }, [habits, monthDays, monthlyCompletions]);
-
-  const sortedHabits = useMemo(() => {
-    if (!habits.length) {
-      return habits;
-    }
-
-    return [...habits].sort((a, b) => {
-      const aCompleted = Boolean(completions[a.id]?.completed);
-      const bCompleted = Boolean(completions[b.id]?.completed);
-      if (aCompleted !== bCompleted) {
-        return aCompleted ? 1 : -1;
-      }
-
-      const aInsight = habitInsights[a.id];
-      const bInsight = habitInsights[b.id];
-      const aCurrent = aInsight?.currentStreak ?? 0;
-      const bCurrent = bInsight?.currentStreak ?? 0;
-      if (aCurrent !== bCurrent) {
-        return bCurrent - aCurrent;
-      }
-      const aLongest = aInsight?.longestStreak ?? 0;
-      const bLongest = bInsight?.longestStreak ?? 0;
-      if (aLongest !== bLongest) {
-      return bLongest - aLongest;
-    }
-    return a.name.localeCompare(b.name);
-  });
-  }, [habits, habitInsights, completions]);
-
-  const isTimeLimitedOfferActive = isViewingToday;
-  const offerHabitIds = useMemo(
-    () => new Set([timeLimitedOffer.nextHabitId, timeLimitedOffer.badHabitId].filter(Boolean) as string[]),
-    [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
-  );
-  const offerPriceByHabitId = useCallback(
-    (habitId: string) => {
-      if (habitId === timeLimitedOffer.nextHabitId) {
-        return 85;
-      }
-      if (habitId === timeLimitedOffer.badHabitId) {
-        return 250;
-      }
-      return null;
-    },
-    [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
-  );
-  const {
-    orderedHabits: timeLimitedOrderedHabits,
-  } = useMemo(() => {
-    if (!isTimeLimitedOfferActive || offerHabitIds.size === 0) {
-      return {
-        orderedHabits: sortedHabits,
-      };
-    }
-
-    return {
-      orderedHabits: [
-        ...[
-          timeLimitedOffer.nextHabitId,
-          timeLimitedOffer.badHabitId,
-        ]
-          .map((habitId) => sortedHabits.find((habit) => habit.id === habitId))
-          .filter((habit): habit is HabitWithGoal => Boolean(habit)),
-        ...sortedHabits.filter((habit) => !offerHabitIds.has(habit.id)),
-      ],
-    };
-  }, [
-    isTimeLimitedOfferActive,
-    offerHabitIds,
-    sortedHabits,
-    timeLimitedOffer.badHabitId,
-    timeLimitedOffer.nextHabitId,
-  ]);
 
   const sortedMonthlyHabits = useMemo(() => {
     if (!monthlyStats?.habits?.length) {
