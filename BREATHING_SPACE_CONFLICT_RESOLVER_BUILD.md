@@ -92,3 +92,6 @@ Ship a **mobile-first Conflict Resolver** inside the Breathing Space experience 
 - AI summaries are neutral, structured, and synced between parties.
 - “White Flag” compromise is available at all times and reflected in output.
 - Trait Cards visibly shape guidance tone and suggestions.
+
+## Next-task prompt (copy/paste)
+“Using this doc, draft the **mobile-first UX copy and wireframe notes** for Steps 1–4 (Grounding → Internal Conflict → Collect & Pile → Parallel Read). Keep each step to a single screen, list required UI components, and include the exact CTA labels.” 

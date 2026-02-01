@@ -45,6 +45,9 @@
   - complementary strengths
   - AI tone and guidance matching each person’s card language
 
+## Next-task prompt (copy/paste)
+“Using this plan, design the **Trait Card UI spec**: define card layout, fields, and the rules for composing a user’s hand (strengths/weaknesses). Include a short mapping table from trait score ranges to card copy.” 
+
 ## Data model & migrations plan (Supabase)
 ### Tables
 - `profiles` (extend existing)
