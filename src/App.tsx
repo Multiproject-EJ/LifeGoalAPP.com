@@ -3178,13 +3178,15 @@ export default function App() {
           </aside>
         )}
 
-        <main className="workspace-main">
+        <main className={`workspace-main${activeWorkspaceNav === 'insights' ? ' workspace-main--vision-board' : ''}`}>
           {(authMessage || authError) && <div className="workspace-status">{statusElements}</div>}
 
           <section
             className={`workspace-stage ${
               activeWorkspaceNav === 'goals' ? 'workspace-stage--detail' : 'workspace-stage--placeholder'
-            }${activeWorkspaceNav === 'account' ? ' workspace-stage--account' : ''}`}
+            }${activeWorkspaceNav === 'account' ? ' workspace-stage--account' : ''}${
+              activeWorkspaceNav === 'insights' ? ' workspace-stage--vision-board' : ''
+            }`}
             aria-live="polite"
           >
             <div className="workspace-stage__body">{renderWorkspaceSection()}</div>
