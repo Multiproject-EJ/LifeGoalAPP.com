@@ -1395,6 +1395,23 @@ body {
   align-items: stretch;
 }
 
+.workspace-main--vision-board {
+  --vision-board-bg: url('./assets/Visiontablight.webp');
+  background: var(--vision-board-bg) center / cover no-repeat;
+  background-color: #e8edff;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .workspace-main--vision-board {
+  --vision-board-bg: url('./assets/Visiontabdark.webp');
+  background: var(--vision-board-bg) center / cover no-repeat;
+  background-color: #0b1226;
+}
+
 .workspace-main__mobile-cta {
   align-self: flex-start;
   border-radius: 999px;
@@ -1495,9 +1512,8 @@ body {
 }
 
 .workspace-stage--vision-board {
-  --vision-board-bg: url('./assets/Visiontablight.webp');
-  background: var(--vision-board-bg) center / cover no-repeat;
-  background-color: #eef2ff;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.45), rgba(248, 250, 252, 0.28));
+  border-color: rgba(248, 250, 252, 0.4);
 }
 
 :is(
@@ -1506,9 +1522,8 @@ body {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .workspace-stage--vision-board {
-  --vision-board-bg: url('./assets/Visiontabdark.webp');
-  background: var(--vision-board-bg) center / cover no-repeat;
-  background-color: #0f172a;
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.25));
+  border-color: rgba(30, 41, 59, 0.7);
 }
 
 .workspace-stage__header {
@@ -9309,9 +9324,7 @@ body {
 }
 
 .vision-board {
-  --vision-board-bg: url('./assets/Visiontablight.webp');
-  background: var(--vision-board-bg) center / cover no-repeat;
-  background-color: #f8fafc;
+  background: rgba(255, 255, 255, 0.75);
   border-radius: 20px;
   padding: clamp(1.5rem, 3vw, 2.25rem);
   display: grid;
@@ -9325,9 +9338,7 @@ body {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .vision-board {
-  --vision-board-bg: url('./assets/Visiontabdark.webp');
-  background: var(--vision-board-bg) center / cover no-repeat;
-  background-color: #0f172a;
+  background: rgba(15, 23, 42, 0.7);
 }
 
 .vision-board__header {

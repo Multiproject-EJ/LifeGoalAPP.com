@@ -3178,7 +3178,7 @@ export default function App() {
           </aside>
         )}
 
-        <main className="workspace-main">
+        <main className={`workspace-main${activeWorkspaceNav === 'insights' ? ' workspace-main--vision-board' : ''}`}>
           {(authMessage || authError) && <div className="workspace-status">{statusElements}</div>}
 
           <section

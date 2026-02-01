@@ -316,10 +316,8 @@ body {
 }
 
 .workspace-stage--vision-board {
-  background-image: var(--vision-board-bg);
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
+  background: color-mix(in srgb, var(--color-surface-glass) 55%, transparent);
+  border-color: var(--color-border-secondary);
 }
 
 .workspace-stage__header p {
@@ -357,7 +355,7 @@ body {
 
 /* Vision board with glassmorphism */
 .vision-board {
-  background: var(--vision-board-bg) center / cover no-repeat;
+  background: color-mix(in srgb, var(--color-surface-secondary) 72%, transparent);
   border: 1px solid var(--color-border-primary);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
