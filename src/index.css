@@ -16211,6 +16211,57 @@ body {
   line-height: 1.6;
 }
 
+.identity-hub__ai-narrative {
+  margin-top: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.identity-hub__ai-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.identity-hub__ai-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.identity-hub__ai-status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #4b5563);
+}
+
+.identity-hub__ai-status--warning {
+  color: #b91c1c;
+}
+
+.identity-hub__ai-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.identity-hub__ai-header .identity-hub__secondary {
+  align-self: flex-start;
+}
+
+@media (min-width: 640px) {
+  .identity-hub__ai-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
 .identity-hub__trait-hand {
   display: flex;
   flex-direction: column;
