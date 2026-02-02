@@ -740,11 +740,21 @@ export default function PersonalityTest() {
 
       {step === 'intro' && (
         <div className="identity-hub__card">
-          <h3 className="identity-hub__card-title">Start your Personality Test</h3>
+          <h3 className="identity-hub__card-title">Meet your playstyle</h3>
           <p className="identity-hub__card-text">
-            Answer a few short prompts to personalize your goals, habits, and daily focus. Your
-            results will live here in your ID space.
+            Answer quick prompts to surface the traits that shape your goals, habits, and daily
+            focus. Your results stay in your private ID space.
           </p>
+          <ul className="identity-hub__intro-list">
+            <li>Spot your strongest traits and growth edges.</li>
+            <li>Get a simple playstyle summary and next-step recommendation.</li>
+            <li>Use your trait cards to personalize the rest of LifeGoal.</li>
+          </ul>
+          <div className="identity-hub__intro-meta">
+            <span className="identity-hub__chip">⏱️ 4 minutes</span>
+            <span className="identity-hub__chip">🧠 29 questions</span>
+            <span className="identity-hub__chip">🔒 Private</span>
+          </div>
           <button className="identity-hub__cta" type="button" onClick={handleStart}>
             Start
           </button>
