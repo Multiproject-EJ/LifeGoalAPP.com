@@ -488,13 +488,15 @@ const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
 };
 
 const buildTopTraitSummary = (traits: Record<string, number>): string => {
-  const topTraits = Object.entries(traits)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(([key]) => TRAIT_LABELS[key as keyof PersonalityScores['traits']] ?? key);
-
+  const topTraits = buildTopTraitList(traits, 2);
   return topTraits.length > 0 ? topTraits.join(' · ') : 'Trait snapshot';
 };
+
+const buildTopTraitList = (traits: Record<string, number>, limit: number): string[] =>
+  Object.entries(traits)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([key]) => TRAIT_LABELS[key as keyof PersonalityScores['traits']] ?? key);
 
 const formatHistoryDate = (value: string): string => {
   const date = new Date(value);
@@ -541,6 +543,10 @@ export default function PersonalityTest() {
 
   const narrative = useMemo(() => (scores ? buildNarrative(scores) : []), [scores]);
   const traitCards = useMemo(() => (scores ? buildTraitCards(scores) : []), [scores]);
+  const topTraits = useMemo(
+    () => (scores ? buildTopTraitList(scores.traits, 2) : []),
+    [scores],
+  );
   const handSummary = useMemo(
     () => (traitCards.length > 0 ? buildHandSummary(traitCards) : null),
     [traitCards],
@@ -811,6 +817,25 @@ export default function PersonalityTest() {
           <p className="identity-hub__card-text identity-hub__card-text--compact">
             A quick snapshot of your traits and what to focus on next.
           </p>
+          <div className="identity-hub__results-hero">
+            <p className="identity-hub__results-kicker">Top traits</p>
+            <div className="identity-hub__chip-row">
+              {topTraits.length > 0 ? (
+                topTraits.map((trait) => (
+                  <span key={trait} className="identity-hub__chip identity-hub__chip--subtle">
+                    {trait}
+                  </span>
+                ))
+              ) : (
+                <span className="identity-hub__chip identity-hub__chip--subtle">Trait snapshot</span>
+              )}
+            </div>
+            <p className="identity-hub__results-summary">
+              {topTraits.length > 0
+                ? `Your strongest signals lean ${topTraits.join(' and ')} today.`
+                : 'Your strongest signals feel balanced today.'}
+            </p>
+          </div>
           <div className="identity-hub__results">
             <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Big Five</h4>

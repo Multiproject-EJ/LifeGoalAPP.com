@@ -16102,6 +16102,18 @@ body {
   font-weight: 600;
 }
 
+.identity-hub__chip--subtle {
+  background: rgba(148, 163, 184, 0.2);
+  color: #475569;
+  font-weight: 600;
+}
+
+.identity-hub__chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .identity-hub__cta {
   align-self: flex-start;
   border: none;
@@ -16205,6 +16217,30 @@ body {
 .identity-hub__results {
   display: grid;
   gap: 1.25rem;
+}
+
+.identity-hub__results-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(226, 232, 240, 0.45);
+}
+
+.identity-hub__results-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  margin: 0;
+}
+
+.identity-hub__results-summary {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #6b7280);
+  margin: 0;
 }
 
 .identity-hub__section {

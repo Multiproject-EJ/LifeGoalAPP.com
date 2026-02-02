@@ -237,6 +237,9 @@ Use a consistent banding for all traits.
 3. **Step 3** ✅: Tighten results summary copy and ensure spacing on small screens.
 4. **Step 4** ✅: Add subtle section separators to improve results scanability on mobile.
 
+## Step-by-step checklist (round 3 polish)
+1. **Step 1** ✅: Add a top-traits highlight strip to the results summary.
+
 ## Testing checklist
 - Manual: open ID tab on desktop and mobile widths.
 - Manual: complete quiz with edge answers (all 1s/all 5s).
@@ -259,9 +262,10 @@ Use a consistent banding for all traits.
 - Round 2 - Step 2: Audit quiz microcopy, progress text, and button labels for clarity.
 - Round 2 - Step 3: Tighten results summary copy and ensure spacing on small screens.
 - Round 2 - Step 4: Add subtle section separators to improve results scanability on mobile.
+- Round 3 - Step 1: Add a top-traits highlight strip to the results summary.
 
 ## Next
-- None (round 2 polish complete).
+- None (round 3 polish complete).
 
 ## Blockers
 - None.
