@@ -229,7 +229,7 @@ Use a consistent banding for all traits.
 7. **Step 7** ✅: Add recommendations table + rule filtering from Supabase.
 8. **Step 8** ✅: Add trait card hand UI + hand summary copy (playing-card layout).
 9. **Step 9** ✅: Add history list (no comparisons).
-10. Step 10: Optional AI narrative (guarded + opt-in).
+10. **Step 10** ✅: Optional AI narrative (guarded + opt-in).
 
 ## Testing checklist
 - Manual: open ID tab on desktop and mobile widths.
@@ -248,9 +248,10 @@ Use a consistent banding for all traits.
 - Step 7: Add recommendations table + rule filtering from Supabase.
 - Step 8: Add trait card hand UI + hand summary copy (playing-card layout).
 - Step 9: Add history list (no comparisons).
+- Step 10: Optional AI narrative (guarded + opt-in).
 
 ## Next
-- Step 10: Optional AI narrative (guarded + opt-in).
+- None (plan complete).
 
 ## Blockers
 - None.

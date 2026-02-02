@@ -257,6 +257,8 @@ type Recommendation = {
   description: string;
 };
 
+type AiNarrativeStatus = 'idle' | 'loading' | 'ready' | 'error' | 'unavailable';
+
 const RECOMMENDATION_ICONS: Record<string, string> = {
   openness: '🧭',
   conscientiousness: '🗓️',
@@ -298,6 +300,11 @@ const HISTORY_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
   year: 'numeric',
 });
+
+const hasOpenAiKey = (): boolean => {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  return typeof apiKey === 'string' && apiKey.trim().length > 0;
+};
 
 const getTraitBucket = (value: number) => {
   if (value >= HIGH_THRESHOLD) return 'high';
@@ -392,6 +399,28 @@ const buildNarrative = (scores: PersonalityScores): string[] => {
   ];
 };
 
+const buildAiNarrative = (scores: PersonalityScores, summary: HandSummary | null): string[] => {
+  const topTraits = Object.entries(scores.traits)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([key]) => TRAIT_LABELS[key as keyof PersonalityScores['traits']] ?? key);
+
+  const topTraitsLine =
+    topTraits.length > 0
+      ? `Your strongest signals are ${topTraits.join(' and ')}, shaping your day-to-day playstyle.`
+      : 'Your top traits shape a balanced, adaptable playstyle.';
+
+  const handLine = summary
+    ? `Your current hand highlights ${summary.strengths[0].toLowerCase()}`
+    : 'Your hand highlights how your traits combine into practical strengths.';
+
+  return [
+    'AI narrative (beta): This reflection builds on your trait signals.',
+    topTraitsLine,
+    `${handLine} Focus your next move on one small habit that reinforces this momentum.`,
+  ];
+};
+
 const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
   const picks: Recommendation[] = [];
 
@@ -483,6 +512,9 @@ export default function PersonalityTest() {
   const savedResultRef = useRef<string | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
+  const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
+  const [aiNarrativeStatus, setAiNarrativeStatus] = useState<AiNarrativeStatus>('idle');
+  const [aiNarrative, setAiNarrative] = useState<string[]>([]);
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -666,6 +698,35 @@ export default function PersonalityTest() {
     };
   }, [scores, step]);
 
+  useEffect(() => {
+    if (step !== 'results') {
+      setAiNarrativeEnabled(false);
+      setAiNarrativeStatus('idle');
+      setAiNarrative([]);
+      return;
+    }
+
+    if (!aiNarrativeEnabled || !scores) {
+      return;
+    }
+
+    if (!hasOpenAiKey()) {
+      setAiNarrativeStatus('unavailable');
+      setAiNarrative([]);
+      return;
+    }
+
+    setAiNarrativeStatus('loading');
+    const timeout = window.setTimeout(() => {
+      setAiNarrative(buildAiNarrative(scores, handSummary));
+      setAiNarrativeStatus('ready');
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [aiNarrativeEnabled, handSummary, scores, step]);
+
   return (
     <section className="identity-hub">
       <div className="identity-hub__header">
@@ -769,6 +830,45 @@ export default function PersonalityTest() {
                 {paragraph}
               </p>
             ))}
+          </div>
+          <div className="identity-hub__ai-narrative">
+            <div className="identity-hub__ai-header">
+              <div>
+                <h4 className="identity-hub__results-title">AI narrative (optional)</h4>
+                <p className="identity-hub__card-text">
+                  Turn on an AI-crafted reflection for extra context. This is opt-in and only runs
+                  when AI is configured.
+                </p>
+              </div>
+              <button
+                className="identity-hub__secondary"
+                type="button"
+                onClick={() => setAiNarrativeEnabled((prev) => !prev)}
+              >
+                {aiNarrativeEnabled ? 'Hide AI narrative' : 'Enable AI narrative'}
+              </button>
+            </div>
+            {aiNarrativeEnabled && (
+              <div className="identity-hub__ai-body">
+                {aiNarrativeStatus === 'loading' && (
+                  <p className="identity-hub__ai-status">Generating your AI narrative…</p>
+                )}
+                {aiNarrativeStatus === 'unavailable' && (
+                  <p className="identity-hub__ai-status identity-hub__ai-status--warning">
+                    AI narrative is unavailable. Add an OpenAI API key to enable this feature.
+                  </p>
+                )}
+                {aiNarrativeStatus === 'ready' && (
+                  <div className="identity-hub__ai-copy">
+                    {aiNarrative.map((paragraph) => (
+                      <p key={paragraph} className="identity-hub__narrative-text">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="identity-hub__trait-hand">
             <h4 className="identity-hub__results-title">Your trait cards</h4>
