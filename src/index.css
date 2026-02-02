@@ -15580,6 +15580,60 @@ body {
   color: #1e293b;
 }
 
+@media (max-width: 640px) {
+  .daily-treats-calendar {
+    padding: 1rem;
+    align-items: flex-start;
+  }
+
+  .daily-treats-calendar__dialog {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px;
+  }
+
+  .daily-treats-calendar__content {
+    max-height: calc(92vh - 2.5rem);
+    padding-right: 0;
+    gap: 0.5rem;
+  }
+
+  .daily-treats-calendar__title {
+    font-size: 1.05rem;
+  }
+
+  .daily-treats-calendar__subtitle {
+    font-size: 0.8rem;
+  }
+
+  .daily-treats-calendar__grid {
+    gap: 0.35rem;
+  }
+
+  .daily-treats-calendar__hatch {
+    min-height: 52px;
+    padding: 0.45rem 0.3rem;
+  }
+
+  .daily-treats-calendar__hatch-number {
+    font-size: 0.85rem;
+  }
+
+  .daily-treats-calendar__hatch-status {
+    font-size: 0.5rem;
+  }
+
+  .daily-treats-calendar__tracker-grid {
+    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  }
+
+  .daily-treats-calendar__button {
+    width: 100%;
+    justify-self: stretch;
+    text-align: center;
+  }
+}
+
 .daily-treats-scratch {
   display: grid;
   gap: 0.65rem;
