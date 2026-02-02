@@ -3260,7 +3260,7 @@ export function DailyHabitTracker({
           </div>
 
           <div className="habit-checklist-card__board-body">
-            {renderDayNavigation('compact', false, isCompactView)}
+            {renderDayNavigation('compact', isCompactView, isCompactView)}
             {!isCompactView ? (
               <div className="habit-checklist-card__title">
                 <h2>{titleText}</h2>
