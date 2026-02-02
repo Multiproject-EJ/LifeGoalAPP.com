@@ -764,9 +764,12 @@ export default function PersonalityTest() {
       {step === 'quiz' && currentQuestion && (
         <div className="identity-hub__card">
           <div className="identity-hub__progress">
-            Question {currentIndex + 1} of {PERSONALITY_QUESTION_BANK.length}
+            Question {currentIndex + 1} / {PERSONALITY_QUESTION_BANK.length}
           </div>
           <h3 className="identity-hub__card-title">{currentQuestion.text}</h3>
+          <p className="identity-hub__card-text identity-hub__card-text--compact">
+            Pick the response that feels most like you right now.
+          </p>
           <div className="identity-hub__options">
             {ANSWER_OPTIONS.map((option) => (
               <button
@@ -786,7 +789,7 @@ export default function PersonalityTest() {
           </div>
           <div className="identity-hub__actions">
             <button className="identity-hub__secondary" type="button" onClick={handleBack}>
-              Back
+              Previous
             </button>
             <button
               className="identity-hub__cta"
@@ -795,8 +798,8 @@ export default function PersonalityTest() {
               disabled={!answers[currentQuestion.id]}
             >
               {currentIndex === PERSONALITY_QUESTION_BANK.length - 1
-                ? 'See results'
-                : 'Next'}
+                ? 'View results'
+                : 'Continue'}
             </button>
           </div>
         </div>

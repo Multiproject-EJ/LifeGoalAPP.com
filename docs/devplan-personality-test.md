@@ -233,7 +233,7 @@ Use a consistent banding for all traits.
 
 ## Step-by-step checklist (round 2 polish)
 1. **Step 1** ✅: Refresh intro card copy with benefit bullets + quick meta chips for mobile.
-2. **Step 2** ⬜: Audit quiz microcopy, progress text, and button labels for clarity.
+2. **Step 2** ✅: Audit quiz microcopy, progress text, and button labels for clarity.
 3. **Step 3** ⬜: Tighten results summary copy and ensure spacing on small screens.
 
 ## Testing checklist
@@ -255,9 +255,10 @@ Use a consistent banding for all traits.
 - Step 9: Add history list (no comparisons).
 - Step 10: Optional AI narrative (guarded + opt-in).
 - Round 2 - Step 1: Refresh intro card copy with benefit bullets + quick meta chips for mobile.
+- Round 2 - Step 2: Audit quiz microcopy, progress text, and button labels for clarity.
 
 ## Next
-- Round 2 - Step 2: Audit quiz microcopy, progress text, and button labels for clarity.
+- Round 2 - Step 3: Tighten results summary copy and ensure spacing on small screens.
 
 ## Blockers
 - None.

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const SHELL_CACHE = `lifegoalapp-shell-${CACHE_VERSION}`;
 const DATA_CACHE = `lifegoalapp-data-${CACHE_VERSION}`;
 const APP_SHELL = [

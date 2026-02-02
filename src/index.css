@@ -16069,6 +16069,11 @@ body {
   margin: 0;
 }
 
+.identity-hub__card-text--compact {
+  font-size: 0.95rem;
+  margin-top: -0.25rem;
+}
+
 .identity-hub__intro-list {
   margin: 0;
   padding-left: 1.1rem;
