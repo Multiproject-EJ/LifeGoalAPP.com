@@ -178,6 +178,7 @@ Supabase Postgres tables, each including a `user_id` column tied to the authenti
 - Upload inspirational images to Supabase Storage.
 - Store metadata in `vision_images` and render a responsive gallery.
 - Allow ordering and deletion of entries.
+> Planning and shipped/missing status are tracked in [docs/VISION_BOARD_PLAN.md](./docs/VISION_BOARD_PLAN.md).
 
 ### 5. Check-Ins (Life Wheel)
 - Present questionnaire for rating life categories 1–10.
