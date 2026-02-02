@@ -16207,6 +16207,14 @@ body {
   gap: 1.25rem;
 }
 
+.identity-hub__section {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .identity-hub__results-section {
   display: flex;
   flex-direction: column;

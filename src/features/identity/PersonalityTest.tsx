@@ -835,7 +835,7 @@ export default function PersonalityTest() {
               </ul>
             </div>
           </div>
-          <div className="identity-hub__narrative">
+          <div className="identity-hub__section identity-hub__narrative">
             <h4 className="identity-hub__results-title">Profile summary</h4>
             {narrative.map((paragraph) => (
               <p key={paragraph} className="identity-hub__narrative-text">
@@ -843,7 +843,7 @@ export default function PersonalityTest() {
               </p>
             ))}
           </div>
-          <div className="identity-hub__ai-narrative">
+          <div className="identity-hub__section identity-hub__ai-narrative">
             <div className="identity-hub__ai-header">
               <div>
                 <h4 className="identity-hub__results-title">AI narrative (optional)</h4>
@@ -882,7 +882,7 @@ export default function PersonalityTest() {
               </div>
             )}
           </div>
-          <div className="identity-hub__trait-hand">
+          <div className="identity-hub__section identity-hub__trait-hand">
             <h4 className="identity-hub__results-title">Your trait cards</h4>
             <p className="identity-hub__card-text">
               Each card captures a strength and growth edge. Together they form your playstyle
@@ -925,7 +925,7 @@ export default function PersonalityTest() {
             </div>
           </div>
           {handSummary && (
-            <div className="identity-hub__hand-summary">
+            <div className="identity-hub__section identity-hub__hand-summary">
               <h4 className="identity-hub__results-title">Your hand summary</h4>
               <p className="identity-hub__hand-headline">{handSummary.headline}</p>
               <div className="identity-hub__hand-columns">
@@ -952,7 +952,7 @@ export default function PersonalityTest() {
               </div>
             </div>
           )}
-          <div className="identity-hub__recommendations">
+          <div className="identity-hub__section identity-hub__recommendations">
             <h4 className="identity-hub__results-title">Recommended next actions</h4>
             <ul className="identity-hub__recommendations-list">
               {recommendations.map((item) => (
@@ -966,7 +966,7 @@ export default function PersonalityTest() {
               ))}
             </ul>
           </div>
-          <div className="identity-hub__history">
+          <div className="identity-hub__section identity-hub__history">
             <h4 className="identity-hub__results-title">Recent history</h4>
             {history.length === 0 ? (
               <p className="identity-hub__card-text">

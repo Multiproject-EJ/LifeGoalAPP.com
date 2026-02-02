@@ -235,6 +235,7 @@ Use a consistent banding for all traits.
 1. **Step 1** ✅: Refresh intro card copy with benefit bullets + quick meta chips for mobile.
 2. **Step 2** ✅: Audit quiz microcopy, progress text, and button labels for clarity.
 3. **Step 3** ✅: Tighten results summary copy and ensure spacing on small screens.
+4. **Step 4** ✅: Add subtle section separators to improve results scanability on mobile.
 
 ## Testing checklist
 - Manual: open ID tab on desktop and mobile widths.
@@ -257,6 +258,7 @@ Use a consistent banding for all traits.
 - Round 2 - Step 1: Refresh intro card copy with benefit bullets + quick meta chips for mobile.
 - Round 2 - Step 2: Audit quiz microcopy, progress text, and button labels for clarity.
 - Round 2 - Step 3: Tighten results summary copy and ensure spacing on small screens.
+- Round 2 - Step 4: Add subtle section separators to improve results scanability on mobile.
 
 ## Next
 - None (round 2 polish complete).
