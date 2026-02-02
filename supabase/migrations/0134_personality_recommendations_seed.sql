@@ -1,5 +1,16 @@
 -- Seed personality recommendations for rules-based filtering
 
+CREATE TABLE IF NOT EXISTS public.personality_recommendations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trait_key text NOT NULL,
+  min_value numeric,
+  max_value numeric,
+  label text NOT NULL,
+  description text NOT NULL,
+  action_link jsonb,
+  priority integer DEFAULT 0
+);
+
 INSERT INTO public.personality_recommendations (
   trait_key,
   min_value,
