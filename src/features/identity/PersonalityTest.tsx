@@ -488,13 +488,15 @@ const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
 };
 
 const buildTopTraitSummary = (traits: Record<string, number>): string => {
-  const topTraits = Object.entries(traits)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(([key]) => TRAIT_LABELS[key as keyof PersonalityScores['traits']] ?? key);
-
+  const topTraits = buildTopTraitList(traits, 2);
   return topTraits.length > 0 ? topTraits.join(' · ') : 'Trait snapshot';
 };
+
+const buildTopTraitList = (traits: Record<string, number>, limit: number): string[] =>
+  Object.entries(traits)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([key]) => TRAIT_LABELS[key as keyof PersonalityScores['traits']] ?? key);
 
 const formatHistoryDate = (value: string): string => {
   const date = new Date(value);
@@ -541,6 +543,10 @@ export default function PersonalityTest() {
 
   const narrative = useMemo(() => (scores ? buildNarrative(scores) : []), [scores]);
   const traitCards = useMemo(() => (scores ? buildTraitCards(scores) : []), [scores]);
+  const topTraits = useMemo(
+    () => (scores ? buildTopTraitList(scores.traits, 2) : []),
+    [scores],
+  );
   const handSummary = useMemo(
     () => (traitCards.length > 0 ? buildHandSummary(traitCards) : null),
     [traitCards],
@@ -740,11 +746,21 @@ export default function PersonalityTest() {
 
       {step === 'intro' && (
         <div className="identity-hub__card">
-          <h3 className="identity-hub__card-title">Start your Personality Test</h3>
+          <h3 className="identity-hub__card-title">Meet your playstyle</h3>
           <p className="identity-hub__card-text">
-            Answer a few short prompts to personalize your goals, habits, and daily focus. Your
-            results will live here in your ID space.
+            Answer quick prompts to surface the traits that shape your goals, habits, and daily
+            focus. Your results stay in your private ID space.
           </p>
+          <ul className="identity-hub__intro-list">
+            <li>Spot your strongest traits and growth edges.</li>
+            <li>Get a simple playstyle summary and next-step recommendation.</li>
+            <li>Use your trait cards to personalize the rest of LifeGoal.</li>
+          </ul>
+          <div className="identity-hub__intro-meta">
+            <span className="identity-hub__chip">⏱️ 4 minutes</span>
+            <span className="identity-hub__chip">🧠 29 questions</span>
+            <span className="identity-hub__chip">🔒 Private</span>
+          </div>
           <button className="identity-hub__cta" type="button" onClick={handleStart}>
             Start
           </button>
@@ -754,9 +770,12 @@ export default function PersonalityTest() {
       {step === 'quiz' && currentQuestion && (
         <div className="identity-hub__card">
           <div className="identity-hub__progress">
-            Question {currentIndex + 1} of {PERSONALITY_QUESTION_BANK.length}
+            Question {currentIndex + 1} / {PERSONALITY_QUESTION_BANK.length}
           </div>
           <h3 className="identity-hub__card-title">{currentQuestion.text}</h3>
+          <p className="identity-hub__card-text identity-hub__card-text--compact">
+            Pick the response that feels most like you right now.
+          </p>
           <div className="identity-hub__options">
             {ANSWER_OPTIONS.map((option) => (
               <button
@@ -776,7 +795,7 @@ export default function PersonalityTest() {
           </div>
           <div className="identity-hub__actions">
             <button className="identity-hub__secondary" type="button" onClick={handleBack}>
-              Back
+              Previous
             </button>
             <button
               className="identity-hub__cta"
@@ -785,8 +804,8 @@ export default function PersonalityTest() {
               disabled={!answers[currentQuestion.id]}
             >
               {currentIndex === PERSONALITY_QUESTION_BANK.length - 1
-                ? 'See results'
-                : 'Next'}
+                ? 'View results'
+                : 'Continue'}
             </button>
           </div>
         </div>
@@ -795,12 +814,30 @@ export default function PersonalityTest() {
       {step === 'results' && scores && (
         <div className="identity-hub__card">
           <h3 className="identity-hub__card-title">Your snapshot results</h3>
-          <p className="identity-hub__card-text">
-            Here is a personalized snapshot based on your answers, plus a few ways to build
-            momentum right away.
+          <p className="identity-hub__card-text identity-hub__card-text--compact">
+            A quick snapshot of your traits and what to focus on next.
           </p>
+          <div className="identity-hub__results-hero">
+            <p className="identity-hub__results-kicker">Top traits</p>
+            <div className="identity-hub__chip-row">
+              {topTraits.length > 0 ? (
+                topTraits.map((trait) => (
+                  <span key={trait} className="identity-hub__chip identity-hub__chip--subtle">
+                    {trait}
+                  </span>
+                ))
+              ) : (
+                <span className="identity-hub__chip identity-hub__chip--subtle">Trait snapshot</span>
+              )}
+            </div>
+            <p className="identity-hub__results-summary">
+              {topTraits.length > 0
+                ? `Your strongest signals lean ${topTraits.join(' and ')} today.`
+                : 'Your strongest signals feel balanced today.'}
+            </p>
+          </div>
           <div className="identity-hub__results">
-            <div>
+            <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Big Five</h4>
               <ul className="identity-hub__results-list">
                 {Object.entries(scores.traits).map(([key, value]) => (
@@ -811,7 +848,7 @@ export default function PersonalityTest() {
                 ))}
               </ul>
             </div>
-            <div>
+            <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Custom Axes</h4>
               <ul className="identity-hub__results-list">
                 {Object.entries(scores.axes).map(([key, value]) => (
@@ -823,7 +860,7 @@ export default function PersonalityTest() {
               </ul>
             </div>
           </div>
-          <div className="identity-hub__narrative">
+          <div className="identity-hub__section identity-hub__narrative">
             <h4 className="identity-hub__results-title">Profile summary</h4>
             {narrative.map((paragraph) => (
               <p key={paragraph} className="identity-hub__narrative-text">
@@ -831,7 +868,7 @@ export default function PersonalityTest() {
               </p>
             ))}
           </div>
-          <div className="identity-hub__ai-narrative">
+          <div className="identity-hub__section identity-hub__ai-narrative">
             <div className="identity-hub__ai-header">
               <div>
                 <h4 className="identity-hub__results-title">AI narrative (optional)</h4>
@@ -870,7 +907,7 @@ export default function PersonalityTest() {
               </div>
             )}
           </div>
-          <div className="identity-hub__trait-hand">
+          <div className="identity-hub__section identity-hub__trait-hand">
             <h4 className="identity-hub__results-title">Your trait cards</h4>
             <p className="identity-hub__card-text">
               Each card captures a strength and growth edge. Together they form your playstyle
@@ -913,7 +950,7 @@ export default function PersonalityTest() {
             </div>
           </div>
           {handSummary && (
-            <div className="identity-hub__hand-summary">
+            <div className="identity-hub__section identity-hub__hand-summary">
               <h4 className="identity-hub__results-title">Your hand summary</h4>
               <p className="identity-hub__hand-headline">{handSummary.headline}</p>
               <div className="identity-hub__hand-columns">
@@ -940,7 +977,7 @@ export default function PersonalityTest() {
               </div>
             </div>
           )}
-          <div className="identity-hub__recommendations">
+          <div className="identity-hub__section identity-hub__recommendations">
             <h4 className="identity-hub__results-title">Recommended next actions</h4>
             <ul className="identity-hub__recommendations-list">
               {recommendations.map((item) => (
@@ -954,7 +991,7 @@ export default function PersonalityTest() {
               ))}
             </ul>
           </div>
-          <div className="identity-hub__history">
+          <div className="identity-hub__section identity-hub__history">
             <h4 className="identity-hub__results-title">Recent history</h4>
             {history.length === 0 ? (
               <p className="identity-hub__card-text">
