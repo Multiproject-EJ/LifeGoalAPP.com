@@ -164,6 +164,8 @@ const intentionsNoticeStorageKey = (userId: string, dateISO: string) =>
 const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
 const visionStarStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star:${userId}:${dateISO}`;
+const visionStarRewardKey = (userId: string, dateISO: string) =>
+  `lifegoal.vision-star-reward:${userId}:${dateISO}`;
 const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
@@ -735,6 +737,12 @@ export function DailyHabitTracker({
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
       saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
+      saveDraft(visionStarRewardKey(session.user.id, activeDate), {
+        imageUrl: selection.publicUrl,
+        caption: selection.caption ?? null,
+        xpAwarded: result?.xpAwarded ?? xpAmount,
+        isSuperBoost,
+      } satisfies VisionReward);
       saveDraft(visionStarCountKey(session.user.id), nextCount);
       setVisionStarCount(nextCount);
       setIsVisionRewardOpen(true);
@@ -1250,6 +1258,17 @@ export function DailyHabitTracker({
   useEffect(() => {
     const stored = loadDraft<boolean>(visionStarStorageKey(session.user.id, activeDate));
     setHasClaimedVisionStar(Boolean(stored));
+  }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    const storedReward = loadDraft<VisionReward>(visionStarRewardKey(session.user.id, activeDate));
+    if (storedReward) {
+      setVisionReward(storedReward);
+      setVisionRewardDate(activeDate);
+      return;
+    }
+    setVisionReward(null);
+    setVisionRewardDate(null);
   }, [activeDate, session.user.id]);
 
   useEffect(() => {
