@@ -36,6 +36,7 @@
   - trait name + icon
   - short strength statement
   - short growth edge statement
+- Trait Card UI spec lives in `docs/personality-trait-card-ui-spec.md`.
 - A user’s **hand** (their combined cards) highlights how traits interact:
   - strengths: where traits reinforce each other
   - weaknesses: where traits pull in opposite directions
