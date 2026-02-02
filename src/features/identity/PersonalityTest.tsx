@@ -740,11 +740,21 @@ export default function PersonalityTest() {
 
       {step === 'intro' && (
         <div className="identity-hub__card">
-          <h3 className="identity-hub__card-title">Start your Personality Test</h3>
+          <h3 className="identity-hub__card-title">Meet your playstyle</h3>
           <p className="identity-hub__card-text">
-            Answer a few short prompts to personalize your goals, habits, and daily focus. Your
-            results will live here in your ID space.
+            Answer quick prompts to surface the traits that shape your goals, habits, and daily
+            focus. Your results stay in your private ID space.
           </p>
+          <ul className="identity-hub__intro-list">
+            <li>Spot your strongest traits and growth edges.</li>
+            <li>Get a simple playstyle summary and next-step recommendation.</li>
+            <li>Use your trait cards to personalize the rest of LifeGoal.</li>
+          </ul>
+          <div className="identity-hub__intro-meta">
+            <span className="identity-hub__chip">⏱️ 4 minutes</span>
+            <span className="identity-hub__chip">🧠 29 questions</span>
+            <span className="identity-hub__chip">🔒 Private</span>
+          </div>
           <button className="identity-hub__cta" type="button" onClick={handleStart}>
             Start
           </button>
@@ -754,9 +764,12 @@ export default function PersonalityTest() {
       {step === 'quiz' && currentQuestion && (
         <div className="identity-hub__card">
           <div className="identity-hub__progress">
-            Question {currentIndex + 1} of {PERSONALITY_QUESTION_BANK.length}
+            Question {currentIndex + 1} / {PERSONALITY_QUESTION_BANK.length}
           </div>
           <h3 className="identity-hub__card-title">{currentQuestion.text}</h3>
+          <p className="identity-hub__card-text identity-hub__card-text--compact">
+            Pick the response that feels most like you right now.
+          </p>
           <div className="identity-hub__options">
             {ANSWER_OPTIONS.map((option) => (
               <button
@@ -776,7 +789,7 @@ export default function PersonalityTest() {
           </div>
           <div className="identity-hub__actions">
             <button className="identity-hub__secondary" type="button" onClick={handleBack}>
-              Back
+              Previous
             </button>
             <button
               className="identity-hub__cta"
@@ -785,8 +798,8 @@ export default function PersonalityTest() {
               disabled={!answers[currentQuestion.id]}
             >
               {currentIndex === PERSONALITY_QUESTION_BANK.length - 1
-                ? 'See results'
-                : 'Next'}
+                ? 'View results'
+                : 'Continue'}
             </button>
           </div>
         </div>
@@ -795,12 +808,11 @@ export default function PersonalityTest() {
       {step === 'results' && scores && (
         <div className="identity-hub__card">
           <h3 className="identity-hub__card-title">Your snapshot results</h3>
-          <p className="identity-hub__card-text">
-            Here is a personalized snapshot based on your answers, plus a few ways to build
-            momentum right away.
+          <p className="identity-hub__card-text identity-hub__card-text--compact">
+            A quick snapshot of your traits and what to focus on next.
           </p>
           <div className="identity-hub__results">
-            <div>
+            <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Big Five</h4>
               <ul className="identity-hub__results-list">
                 {Object.entries(scores.traits).map(([key, value]) => (
@@ -811,7 +823,7 @@ export default function PersonalityTest() {
                 ))}
               </ul>
             </div>
-            <div>
+            <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Custom Axes</h4>
               <ul className="identity-hub__results-list">
                 {Object.entries(scores.axes).map(([key, value]) => (
