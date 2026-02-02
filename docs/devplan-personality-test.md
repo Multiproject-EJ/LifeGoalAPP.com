@@ -228,7 +228,7 @@ Use a consistent banding for all traits.
 6. **Step 6** ✅: Add Supabase tables + service layer for sync.
 7. **Step 7** ✅: Add recommendations table + rule filtering from Supabase.
 8. **Step 8** ✅: Add trait card hand UI + hand summary copy (playing-card layout).
-9. Step 9: Add history list (no comparisons).
+9. **Step 9** ✅: Add history list (no comparisons).
 10. Step 10: Optional AI narrative (guarded + opt-in).
 
 ## Testing checklist
@@ -247,9 +247,10 @@ Use a consistent banding for all traits.
 - Step 6: Add Supabase tables + service layer for sync.
 - Step 7: Add recommendations table + rule filtering from Supabase.
 - Step 8: Add trait card hand UI + hand summary copy (playing-card layout).
+- Step 9: Add history list (no comparisons).
 
 ## Next
-- Step 9: Add history list (no comparisons).
+- Step 10: Optional AI narrative (guarded + opt-in).
 
 ## Blockers
 - None.

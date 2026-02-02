@@ -1,4 +1,11 @@
-import React, { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   AnswerValue,
@@ -8,7 +15,11 @@ import {
 import { PersonalityScores, scorePersonality } from './personalityScoring';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { createDemoSession } from '../../services/demoSession';
-import { queuePersonalityTestResult } from '../../data/personalityTestRepo';
+import {
+  loadPersonalityTestHistory,
+  queuePersonalityTestResult,
+  type PersonalityTestRecord,
+} from '../../data/personalityTestRepo';
 import {
   fetchPersonalityRecommendations,
   type PersonalityRecommendationRow,
@@ -282,6 +293,11 @@ const DEFAULT_RECOMMENDATIONS: Recommendation[] = [
 
 const HIGH_THRESHOLD = 65;
 const LOW_THRESHOLD = 40;
+const HISTORY_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+});
 
 const getTraitBucket = (value: number) => {
   if (value >= HIGH_THRESHOLD) return 'high';
@@ -442,6 +458,23 @@ const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
   return Array.from(unique.values()).slice(0, 3);
 };
 
+const buildTopTraitSummary = (traits: Record<string, number>): string => {
+  const topTraits = Object.entries(traits)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([key]) => TRAIT_LABELS[key as keyof PersonalityScores['traits']] ?? key);
+
+  return topTraits.length > 0 ? topTraits.join(' · ') : 'Trait snapshot';
+};
+
+const formatHistoryDate = (value: string): string => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return HISTORY_DATE_FORMATTER.format(date);
+};
+
 export default function PersonalityTest() {
   const { session, mode } = useSupabaseAuth();
   const [step, setStep] = useState<TestStep>('intro');
@@ -449,6 +482,7 @@ export default function PersonalityTest() {
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
+  const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -507,6 +541,21 @@ export default function PersonalityTest() {
     },
     [scores, supabaseRecommendations],
   );
+
+  const refreshHistory = useCallback(() => {
+    if (!activeUserId) {
+      setHistory([]);
+      return Promise.resolve();
+    }
+
+    return loadPersonalityTestHistory(activeUserId)
+      .then((records) => {
+        setHistory(records);
+      })
+      .catch(() => {
+        setHistory([]);
+      });
+  }, [activeUserId]);
 
   const handleStart = () => {
     setStep('quiz');
@@ -576,11 +625,20 @@ export default function PersonalityTest() {
     })
       .then((record) => {
         savedResultRef.current = record.id;
+        void refreshHistory();
       })
       .catch(() => {
         // Fail silently; results are still shown locally.
       });
   }, [activeUserId, answers, scores, step]);
+
+  useEffect(() => {
+    if (step !== 'results') {
+      return;
+    }
+
+    void refreshHistory();
+  }, [refreshHistory, step]);
 
   useEffect(() => {
     if (step !== 'results' || !scores) {
@@ -795,6 +853,36 @@ export default function PersonalityTest() {
                 </li>
               ))}
             </ul>
+          </div>
+          <div className="identity-hub__history">
+            <h4 className="identity-hub__results-title">Recent history</h4>
+            {history.length === 0 ? (
+              <p className="identity-hub__card-text">
+                No saved sessions yet. Complete a test to see your snapshots here.
+              </p>
+            ) : (
+              <ul className="identity-hub__history-list">
+                {history.map((record) => (
+                  <li key={record.id} className="identity-hub__history-item">
+                    <div>
+                      <p className="identity-hub__history-date">
+                        {formatHistoryDate(record.taken_at)}
+                      </p>
+                      <p className="identity-hub__history-summary">
+                        {buildTopTraitSummary(record.traits)}
+                      </p>
+                    </div>
+                    {record._dirty ? (
+                      <span className="identity-hub__history-status">Sync pending</span>
+                    ) : (
+                      <span className="identity-hub__history-status identity-hub__history-status--synced">
+                        Saved
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="identity-hub__actions">
             <button className="identity-hub__secondary" type="button" onClick={handleRetake}>

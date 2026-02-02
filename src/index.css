@@ -16434,6 +16434,61 @@ body {
   line-height: 1.5;
 }
 
+.identity-hub__history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.identity-hub__history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.identity-hub__history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.identity-hub__history-date {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #4b5563);
+}
+
+.identity-hub__history-summary {
+  margin: 0.25rem 0 0;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.identity-hub__history-status {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #92400e;
+  background: rgba(251, 191, 36, 0.2);
+}
+
+.identity-hub__history-status--synced {
+  color: #166534;
+  background: rgba(34, 197, 94, 0.18);
+}
+
 /* Mobile Theme Selector */
 .mobile-theme-selector {
   display: flex;
