@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   AnswerValue,
@@ -13,6 +13,12 @@ import {
   fetchPersonalityRecommendations,
   type PersonalityRecommendationRow,
 } from '../../services/personalityRecommendations';
+import {
+  BAND_LABELS,
+  buildTraitCards,
+  getTraitMicroTip,
+  type TraitCard,
+} from './personalityTraitCopy';
 
 type TestStep = 'intro' | 'quiz' | 'results';
 
@@ -43,6 +49,138 @@ const AXIS_LABELS: Record<keyof PersonalityScores['axes'], string> = {
   identity_sensitivity: 'Identity Sensitivity',
   cognitive_entry: 'Cognitive Entry',
 };
+
+type HandSummary = {
+  headline: string;
+  strengths: string[];
+  tensions: string[];
+  nextMove: string;
+};
+
+const HAND_SYNERGIES = [
+  {
+    id: 'steady-executor',
+    a: 'conscientiousness',
+    b: 'emotional_stability',
+    text: 'Steady executor under pressure.',
+  },
+  {
+    id: 'warm-connector',
+    a: 'extraversion',
+    b: 'agreeableness',
+    text: 'Warm connector and motivator.',
+  },
+  {
+    id: 'creative-planner',
+    a: 'openness',
+    b: 'conscientiousness',
+    text: 'Creative planner who ships.',
+  },
+  {
+    id: 'bold-experimenter',
+    a: 'openness',
+    b: 'stress_response',
+    text: 'Bold experimenter, resilient to setbacks.',
+  },
+];
+
+const HAND_TENSIONS = [
+  {
+    id: 'big-ideas-follow-through',
+    high: 'openness',
+    low: 'conscientiousness',
+    text: 'Big ideas, inconsistent follow-through.',
+    nextMove: 'Try a 3-step daily plan.',
+  },
+  {
+    id: 'steady-but-slow',
+    high: 'conscientiousness',
+    low: 'openness',
+    text: 'Reliable, but slow to embrace new approaches.',
+    nextMove: 'Try a 10-minute curiosity sprint.',
+  },
+  {
+    id: 'direct-and-energetic',
+    high: 'extraversion',
+    low: 'agreeableness',
+    text: 'Direct and energetic, may come off abrasive.',
+    nextMove: 'Try a clear-ask script.',
+  },
+  {
+    id: 'pressure-heavy',
+    high: 'emotional_stability',
+    low: 'stress_response',
+    text: 'Feels pressure strongly; needs strong recovery rituals.',
+    nextMove: 'Try a 5-minute decompression.',
+  },
+  {
+    id: 'sensitive-under-fire',
+    high: 'identity_sensitivity',
+    low: 'stress_response',
+    text: 'Values run deep; stress can feel personal.',
+    nextMove: 'Try a 90-second reset.',
+  },
+];
+
+const SCORE_HIGH = 65;
+const SCORE_BALANCED = 40;
+
+function hasHighLow(
+  scores: Record<string, number>,
+  highKey: string,
+  lowKey: string,
+): boolean {
+  return scores[highKey] >= SCORE_HIGH && scores[lowKey] <= SCORE_BALANCED - 1;
+}
+
+function hasHighBalanced(
+  scores: Record<string, number>,
+  a: string,
+  b: string,
+): boolean {
+  return (
+    (scores[a] >= SCORE_HIGH && scores[b] >= SCORE_BALANCED) ||
+    (scores[b] >= SCORE_HIGH && scores[a] >= SCORE_BALANCED)
+  );
+}
+
+function buildHandSummary(traitCards: TraitCard[]): HandSummary {
+  const scoreMap = traitCards.reduce<Record<string, number>>((acc, card) => {
+    acc[card.key] = card.score;
+    return acc;
+  }, {});
+
+  const topCards = [...traitCards].sort((a, b) => b.score - a.score).slice(0, 2);
+  const headlineParts = topCards.map((card) => card.label);
+  const headline =
+    headlineParts.length === 2
+      ? `Your hand leans ${headlineParts[0]} and ${headlineParts[1]}, shaping how you show up.`
+      : 'Your hand highlights how you show up across your traits.';
+
+  const strengths = HAND_SYNERGIES.filter((rule) =>
+    hasHighBalanced(scoreMap, rule.a, rule.b),
+  )
+    .map((rule) => rule.text)
+    .slice(0, 3);
+
+  const tensions = HAND_TENSIONS.filter((rule) => hasHighLow(scoreMap, rule.high, rule.low))
+    .map((rule) => rule.text)
+    .slice(0, 2);
+
+  const nextMoveRule = HAND_TENSIONS.find((rule) => hasHighLow(scoreMap, rule.high, rule.low));
+  const fallbackTip = topCards[0] ? getTraitMicroTip(topCards[0].key) : undefined;
+  const nextMove = nextMoveRule?.nextMove ?? fallbackTip ?? 'Try a quick reset ritual.';
+
+  return {
+    headline,
+    strengths: strengths.length > 0 ? strengths : ['Balanced strengths across your top traits.'],
+    tensions:
+      tensions.length > 0
+        ? tensions
+        : ['No major tensions stand out; keep reinforcing your steady habits.'],
+    nextMove,
+  };
+}
 
 const TRAIT_NARRATIVES: Record<
   keyof PersonalityScores['traits'],
@@ -336,6 +474,11 @@ export default function PersonalityTest() {
   }, [answers, step]);
 
   const narrative = useMemo(() => (scores ? buildNarrative(scores) : []), [scores]);
+  const traitCards = useMemo(() => (scores ? buildTraitCards(scores) : []), [scores]);
+  const handSummary = useMemo(
+    () => (traitCards.length > 0 ? buildHandSummary(traitCards) : null),
+    [traitCards],
+  );
 
   const recommendations = useMemo(
     () => {
@@ -569,6 +712,76 @@ export default function PersonalityTest() {
               </p>
             ))}
           </div>
+          <div className="identity-hub__trait-hand">
+            <h4 className="identity-hub__results-title">Your trait cards</h4>
+            <p className="identity-hub__card-text">
+              Each card captures a strength and growth edge. Together they form your playstyle
+              hand.
+            </p>
+            <div className="identity-hub__trait-grid">
+              {traitCards.map((card) => (
+                <article
+                  key={card.key}
+                  className="identity-hub__trait-card"
+                  style={{ '--trait-color': card.color } as CSSProperties}
+                >
+                  <div className="identity-hub__trait-header">
+                    <div>
+                      <p className="identity-hub__trait-title">{card.label}</p>
+                      <span
+                        className={`identity-hub__trait-band identity-hub__trait-band--${card.band}`}
+                      >
+                        {BAND_LABELS[card.band]} · {card.score}%
+                      </span>
+                    </div>
+                    <span className="identity-hub__trait-icon" aria-hidden="true">
+                      {card.icon}
+                    </span>
+                  </div>
+                  <p className="identity-hub__trait-power">{card.powerLine}</p>
+                  <div className="identity-hub__trait-block">
+                    <span className="identity-hub__trait-label">Strength</span>
+                    <p>{card.strengthLine}</p>
+                  </div>
+                  <div className="identity-hub__trait-block">
+                    <span className="identity-hub__trait-label">Growth Edge</span>
+                    <p>{card.growthEdgeLine}</p>
+                  </div>
+                  {card.microTip && (
+                    <p className="identity-hub__trait-tip">Try: {card.microTip}</p>
+                  )}
+                </article>
+              ))}
+            </div>
+          </div>
+          {handSummary && (
+            <div className="identity-hub__hand-summary">
+              <h4 className="identity-hub__results-title">Your hand summary</h4>
+              <p className="identity-hub__hand-headline">{handSummary.headline}</p>
+              <div className="identity-hub__hand-columns">
+                <div>
+                  <p className="identity-hub__hand-label">Strengths</p>
+                  <ul className="identity-hub__hand-list">
+                    {handSummary.strengths.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="identity-hub__hand-label">Growth edges</p>
+                  <ul className="identity-hub__hand-list">
+                    {handSummary.tensions.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="identity-hub__hand-next">
+                <span className="identity-hub__hand-chip">Next move</span>
+                <span>{handSummary.nextMove}</span>
+              </div>
+            </div>
+          )}
           <div className="identity-hub__recommendations">
             <h4 className="identity-hub__results-title">Recommended next actions</h4>
             <ul className="identity-hub__recommendations-list">

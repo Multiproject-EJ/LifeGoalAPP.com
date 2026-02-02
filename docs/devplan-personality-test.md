@@ -227,8 +227,9 @@ Use a consistent banding for all traits.
 5. **Step 5** ✅: Add offline queue + local history storage (idb).
 6. **Step 6** ✅: Add Supabase tables + service layer for sync.
 7. **Step 7** ✅: Add recommendations table + rule filtering from Supabase.
-8. Step 8: Add history list (no comparisons).
-9. Step 9: Optional AI narrative (guarded + opt-in).
+8. **Step 8** ✅: Add trait card hand UI + hand summary copy (playing-card layout).
+9. Step 9: Add history list (no comparisons).
+10. Step 10: Optional AI narrative (guarded + opt-in).
 
 ## Testing checklist
 - Manual: open ID tab on desktop and mobile widths.
@@ -245,9 +246,10 @@ Use a consistent banding for all traits.
 - Step 5: Add offline queue + local history storage (idb).
 - Step 6: Add Supabase tables + service layer for sync.
 - Step 7: Add recommendations table + rule filtering from Supabase.
+- Step 8: Add trait card hand UI + hand summary copy (playing-card layout).
 
 ## Next
-- Step 8: Add history list (no comparisons).
+- Step 9: Add history list (no comparisons).
 
 ## Blockers
 - None.
