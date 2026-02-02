@@ -808,12 +808,11 @@ export default function PersonalityTest() {
       {step === 'results' && scores && (
         <div className="identity-hub__card">
           <h3 className="identity-hub__card-title">Your snapshot results</h3>
-          <p className="identity-hub__card-text">
-            Here is a personalized snapshot based on your answers, plus a few ways to build
-            momentum right away.
+          <p className="identity-hub__card-text identity-hub__card-text--compact">
+            A quick snapshot of your traits and what to focus on next.
           </p>
           <div className="identity-hub__results">
-            <div>
+            <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Big Five</h4>
               <ul className="identity-hub__results-list">
                 {Object.entries(scores.traits).map(([key, value]) => (
@@ -824,7 +823,7 @@ export default function PersonalityTest() {
                 ))}
               </ul>
             </div>
-            <div>
+            <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Custom Axes</h4>
               <ul className="identity-hub__results-list">
                 {Object.entries(scores.axes).map(([key, value]) => (
