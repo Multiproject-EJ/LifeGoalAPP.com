@@ -1,0 +1,87 @@
+# Vision Board Master Plan
+
+This document consolidates all Vision Board planning and implementation status into a single source of truth. It replaces scattered plan fragments and documents what is shipped today versus what is still missing.
+
+## Scope
+- Covers the Vision Board experience in the main app (`src/features/vision-board`).
+- Includes Vision Board V2 roadmap items (multi-board, sections, sharing, canvas), previously listed in scattered plan files.
+
+---
+
+## ✅ Shipped (in repo)
+
+### Core Vision Board experience (Phase 3 checklist)
+- Vision Board workspace with Supabase Storage uploads, gallery sorting, captions, and deletion is marked complete in the repo’s Phase 3 checklist and latest updates.【F:README.md†L18-L24】【F:README.md†L231-L233】
+
+### Vision Board 2.0 metadata + review loop (already implemented in code)
+Although the master development plan lists this milestone as “not started,” the Vision Board component already includes:
+- **Vision type metadata** and **review interval** options.【F:src/features/vision-board/VisionBoard.tsx†L61-L79】
+- **Review loop UI** with due items, review count, and “Mark reviewed” actions.【F:src/features/vision-board/VisionBoard.tsx†L1077-L1118】
+- **Orphan detection** (items with no linked goals/habits), surfaced as chips and callouts.【F:src/features/vision-board/VisionBoard.tsx†L1341-L1411】
+- **Goal/habit linking UI** that enables orphan detection to function.【F:src/features/vision-board/VisionBoard.tsx†L1020-L1058】
+
+### Scaffolded canvas + prompts + build checklist
+The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
+
+---
+
+## 🧭 Remaining Work (Vision Board V2 roadmap)
+
+The following items are still marked as **todo** in the Vision Board build plan and/or explicitly called “not yet implemented.”【F:app/vision/buildplan.json†L1-L40】【F:QUICK_START_GUIDE.md†L285-L293】
+
+### Phase 0 — Bootstrap
+- Protect Vision Board tab with Supabase Auth.
+- Run 0101 + 0102 + 0103 migrations.
+- Create private Storage bucket `vision`.
+
+### Phase 1 — Boards & Add Media
+- Board selector (create Vision/Focus) + theme.
+- Add/edit/reorder sections.
+- Add card: upload / paste URL / text-only.
+- Edit card meta: title/affirm/tags/color/size/favorite.
+- Link to Habit now; Goal placeholder.
+
+### Phase 2 — Canvas
+- Drag-drop reorder; move across sections; sizes S/M/L/XL.
+- Filter by tag/color/section/favorites.
+
+### Phase 3 — Prompts & Mantra
+- Prompt chips insert into text cards.
+- Daily Mantra highlight.
+
+### Phase 4 — Story
+- Fullscreen slideshow (interval/shuffle).
+- Daily Spotlight subscribe + test.
+
+### Phase 5 — Gratitude & Mood
+- Daily mood (1–5) + gratitude note.
+- Check-in streak & gentle nudges.
+
+### Phase 6 — Sharing
+- Create/disable share link (slug).
+- Per-card `visible_in_share` toggle.
+
+### Phase 7 — Polish
+- Signed + transform URLs for thumbnails.
+- Offline queue for edits/uploads.
+- Confetti on celebrate hook.
+
+---
+
+## Plan Consolidation Notes
+
+### Source of truth
+- **This file** is now the master Vision Board plan.
+- The general development plan and other docs should reference this file instead of duplicating Vision Board details.
+
+### Related legacy plan sources (kept as references)
+- `DEV_PLAN.md` includes the Vision Board 2.0 milestone but should now link here for status and scope details.【F:DEV_PLAN.md†L135-L151】
+- `app/vision/buildplan.json` remains a structured backlog but is summarized here for human-readable planning context.【F:app/vision/buildplan.json†L1-L40】
+- `QUICK_START_GUIDE.md` lists Vision Board V2 as not yet implemented; this document details what remains.【F:QUICK_START_GUIDE.md†L285-L293】
+
+---
+
+## Next Recommended Actions
+1. Align `DEV_PLAN.md` M5 status and next task with the “Shipped vs Missing” state above.
+2. Keep `app/vision/buildplan.json` for structured task tracking, but avoid duplicating prose elsewhere.
+3. When new Vision Board features ship, update **only this document** for status changes.

@@ -288,7 +288,7 @@ These features have database tables and TypeScript types but need service layer 
 
 - ⚠️ **Habits V2**: Enhanced habits with quantity/duration tracking
 - ⚠️ **Habit Challenges**: Social challenges with leaderboards
-- ⚠️ **Vision Board V2**: Multi-board support with sections and sharing
+- ⚠️ **Vision Board V2**: Multi-board support with sections and sharing (see [docs/VISION_BOARD_PLAN.md](./docs/VISION_BOARD_PLAN.md))
 
 See `SUPABASE_READINESS_REPORT.md` for implementation guidance.
 
