@@ -165,8 +165,8 @@ const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
 const visionStarStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star:${userId}:${dateISO}`;
 const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
-const timeLimitedOfferStorageKey = (userId: string, dateISO: string) =>
-  `lifegoal.time-limited-offer:${userId}:${dateISO}`;
+const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
+  `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -322,12 +322,14 @@ export function DailyHabitTracker({
     date: string;
     nextHabitId: string | null;
     badHabitId: string | null;
-    expiresAt: number | null;
+    windowStart: number | null;
+    windowEnd: number | null;
   }>({
     date: '',
     nextHabitId: null,
     badHabitId: null,
-    expiresAt: null,
+    windowStart: null,
+    windowEnd: null,
   });
   const [timeLimitedCountdown, setTimeLimitedCountdown] = useState(0);
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -391,7 +393,13 @@ export function DailyHabitTracker({
     });
   }, [habits, habitInsights, completions]);
 
-  const isTimeLimitedOfferActive = isViewingToday;
+  const nowTimestamp = Date.now();
+  const isTimeLimitedOfferActive =
+    isViewingToday &&
+    timeLimitedOffer.windowStart !== null &&
+    timeLimitedOffer.windowEnd !== null &&
+    nowTimestamp >= timeLimitedOffer.windowStart &&
+    nowTimestamp <= timeLimitedOffer.windowEnd;
   const offerHabitIds = useMemo(
     () => new Set([timeLimitedOffer.nextHabitId, timeLimitedOffer.badHabitId].filter(Boolean) as string[]),
     [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
@@ -435,18 +443,6 @@ export function DailyHabitTracker({
     timeLimitedOffer.badHabitId,
     timeLimitedOffer.nextHabitId,
   ]);
-  const nextOfferHabit = useMemo(
-    () =>
-      sortedHabits.find((habit) => habit.id === timeLimitedOffer.nextHabitId) ??
-      null,
-    [sortedHabits, timeLimitedOffer.nextHabitId],
-  );
-  const badOfferHabit = useMemo(
-    () =>
-      sortedHabits.find((habit) => habit.id === timeLimitedOffer.badHabitId) ??
-      null,
-    [sortedHabits, timeLimitedOffer.badHabitId],
-  );
 
   // Watch for level-up events
   useEffect(() => {
@@ -469,8 +465,30 @@ export function DailyHabitTracker({
     };
   }, []);
 
+  const buildTimeLimitedOfferWindow = useCallback((dateISO: string) => {
+    const hasOffer = Math.random() < 0.22;
+    if (!hasOffer) {
+      return { windowStart: null, windowEnd: null };
+    }
+
+    const baseDate = parseISODate(dateISO);
+    baseDate.setHours(0, 0, 0, 0);
+    const isLateSlot = Math.random() < 0.35;
+    const startHourMin = isLateSlot ? 20 : 9;
+    const startHourMax = isLateSlot ? 23 : 20;
+    const startHour =
+      startHourMin + Math.floor(Math.random() * (startHourMax - startHourMin + 1));
+    const startMinute = Math.floor(Math.random() * 60);
+    const startDate = new Date(baseDate);
+    startDate.setHours(startHour, startMinute, 0, 0);
+    const durationMinutes = 18 + Math.floor(Math.random() * 22);
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+
+    return { windowStart: startDate.getTime(), windowEnd: endDate.getTime() };
+  }, []);
+
   useEffect(() => {
-    if (!isTimeLimitedOfferActive || habits.length === 0) {
+    if (!isViewingToday || habits.length === 0) {
       return;
     }
 
@@ -478,8 +496,9 @@ export function DailyHabitTracker({
       date: string;
       nextHabitId: string | null;
       badHabitId: string | null;
-      expiresAt: number | null;
-    }>(timeLimitedOfferStorageKey(session.user.id, activeDate));
+      windowStart: number | null;
+      windowEnd: number | null;
+    }>(timeLimitedOfferScheduleKey(session.user.id, activeDate));
 
     if (storedOffer?.date === activeDate) {
       setTimeLimitedOffer(storedOffer);
@@ -492,23 +511,25 @@ export function DailyHabitTracker({
       sortedHabits.find((habit) => isBadHabit(habit) && habit.id !== nextHabit?.id) ??
       sortedHabits.find((habit) => habit.id !== nextHabit?.id) ??
       null;
-    const expiresAt = Date.now() + (24 * 60 + 24) * 1000;
+    const { windowStart, windowEnd } = buildTimeLimitedOfferWindow(activeDate);
 
     const nextOffer = {
       date: activeDate,
       nextHabitId: nextHabit?.id ?? null,
       badHabitId: badHabit?.id ?? null,
-      expiresAt,
+      windowStart,
+      windowEnd,
     };
 
     setTimeLimitedOffer(nextOffer);
-    saveDraft(timeLimitedOfferStorageKey(session.user.id, activeDate), nextOffer);
+    saveDraft(timeLimitedOfferScheduleKey(session.user.id, activeDate), nextOffer);
   }, [
     activeDate,
+    buildTimeLimitedOfferWindow,
     completions,
     habits.length,
     isBadHabit,
-    isTimeLimitedOfferActive,
+    isViewingToday,
     session.user.id,
     sortedHabits,
   ]);
@@ -518,25 +539,27 @@ export function DailyHabitTracker({
       return;
     }
 
-    saveDraft(timeLimitedOfferStorageKey(session.user.id, timeLimitedOffer.date), timeLimitedOffer);
+    saveDraft(timeLimitedOfferScheduleKey(session.user.id, timeLimitedOffer.date), timeLimitedOffer);
   }, [session.user.id, timeLimitedOffer]);
 
   useEffect(() => {
-    const expiresAt = timeLimitedOffer.expiresAt;
-    if (!expiresAt) {
+    const windowStart = timeLimitedOffer.windowStart;
+    const windowEnd = timeLimitedOffer.windowEnd;
+    if (!windowStart || !windowEnd) {
       setTimeLimitedCountdown(0);
       return undefined;
     }
 
     const updateCountdown = () => {
-      const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((windowEnd - now) / 1000));
       setTimeLimitedCountdown(remaining);
     };
 
     updateCountdown();
     const interval = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(interval);
-  }, [timeLimitedOffer.expiresAt]);
+  }, [timeLimitedOffer.windowEnd, timeLimitedOffer.windowStart]);
 
   useEffect(() => {
     if (!isVisionVisualizationRunning) return;
@@ -892,13 +915,23 @@ export function DailyHabitTracker({
     visionVisualizationSeconds % 60,
   ).padStart(2, '0')}`;
   const timeLimitedCountdownLabel = useMemo(() => {
-    if (!isTimeLimitedOfferActive || !timeLimitedOffer.expiresAt) {
+    if (!isTimeLimitedOfferActive || !timeLimitedOffer.windowEnd) {
       return null;
     }
     const minutes = Math.floor(timeLimitedCountdown / 60);
     const seconds = timeLimitedCountdown % 60;
     return `${minutes}m:${String(seconds).padStart(2, '0')}s`;
-  }, [isTimeLimitedOfferActive, timeLimitedCountdown, timeLimitedOffer.expiresAt]);
+  }, [isTimeLimitedOfferActive, timeLimitedCountdown, timeLimitedOffer.windowEnd]);
+  const timeLimitedOfferCopy = useMemo(
+    () => ({
+      eyebrow: '⏳ Time-limited offer',
+      nextUp: 'Next up: 🏁EASY START 15 Beinhev (stol) - 30 sec anytime for 💎 85',
+      badBoost: 'Bad habit boost: 📸🫦Lungs(!), Teeth (acid/sugar), Hair (roller,miondxl). for 💎 250',
+      limited: 'Limited time',
+    }),
+    [],
+  );
+  const shouldShowOfferBonus = hasClaimedVisionStar && isTimeLimitedOfferActive;
   const visionRewardModal =
     isVisionRewardOpen ? (
       <div
@@ -2275,7 +2308,18 @@ export function DailyHabitTracker({
                 shouldGlowBonus ? 'habit-day-nav__bonus--super-boost' : ''
               } ${shouldHideBonus ? 'habit-day-nav__bonus--hidden' : ''}`}
             >
-              {visionRewardForDay ? (
+              {shouldShowOfferBonus ? (
+                <div className="habit-day-nav__bonus-offer">
+                  <span className="habit-day-nav__bonus-offer-title">{timeLimitedOfferCopy.eyebrow}</span>
+                  <span className="habit-day-nav__bonus-offer-line">{timeLimitedOfferCopy.nextUp}</span>
+                  <span className="habit-day-nav__bonus-offer-line">{timeLimitedOfferCopy.badBoost}</span>
+                  {timeLimitedCountdownLabel ? (
+                    <span className="habit-day-nav__bonus-offer-timer">
+                      Ends in {timeLimitedCountdownLabel}
+                    </span>
+                  ) : null}
+                </div>
+              ) : visionRewardForDay ? (
                 <img
                   className="habit-day-nav__bonus-image"
                   src={visionRewardForDay.imageUrl}
@@ -2290,7 +2334,7 @@ export function DailyHabitTracker({
                   {hasClaimedVisionStar ? 'Vision star claimed today.' : 'Tap the star to reveal a random vision board image.'}
                 </span>
               )}
-              {visionRewardForDay?.caption ? (
+              {visionRewardForDay?.caption && !shouldShowOfferBonus ? (
                 <span className="habit-day-nav__bonus-caption">{visionRewardForDay.caption}</span>
               ) : null}
             </div>
@@ -2372,20 +2416,17 @@ export function DailyHabitTracker({
 
     return (
       <div className="habit-checklist__group">
-        {isTimeLimitedOfferActive && nextOfferHabit ? (
+        {isTimeLimitedOfferActive && offerHabitIds.size > 0 ? (
           <div className="habit-checklist__offer">
             <div>
-              <p className="habit-checklist__offer-eyebrow">⏳ Time-limited offer</p>
-              <h3 className="habit-checklist__offer-title">
-                Next up: {nextOfferHabit.name} for <span>💎 85</span>
-              </h3>
-              {badOfferHabit ? (
-                <p className="habit-checklist__offer-subtitle">
-                  Bad habit boost: {badOfferHabit.name} for <span>💎 250</span>
-                </p>
-              ) : null}
+              <p className="habit-checklist__offer-eyebrow">{timeLimitedOfferCopy.eyebrow}</p>
+              <h3 className="habit-checklist__offer-title">{timeLimitedOfferCopy.nextUp}</h3>
+              <p className="habit-checklist__offer-subtitle">{timeLimitedOfferCopy.badBoost}</p>
             </div>
-            <span className="habit-checklist__offer-pill">Limited time</span>
+            <span className="habit-checklist__offer-pill">
+              {timeLimitedOfferCopy.limited}
+              {timeLimitedCountdownLabel ? ` • ${timeLimitedCountdownLabel}` : ''}
+            </span>
           </div>
         ) : null}
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
