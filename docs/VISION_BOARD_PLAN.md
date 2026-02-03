@@ -56,6 +56,11 @@ Although the master development plan lists this milestone as “not started,” 
 - **Check-in streak + gentle nudges** now summarize consecutive check-ins and prompt users to keep the streak alive.【F:app/vision/vision.js†L220-L379】
 - **Build checklist** updated to reflect daily check-ins as shipped in Phase 5.【F:app/vision/buildplan.json†L24-L27】
 
+### Vision Board V2 sharing (Phase 6)
+- **Create/disable share link** flow now lives in the Sharing panel, with slug control and status feedback.【F:app/vision/vision.js†L243-L365】
+- **Per-card visibility toggle** is now editable from the card form to hide items from shared boards.【F:app/vision/vision.js†L1662-L1673】
+- **Build checklist** updated to mark Phase 6 sharing items as done.【F:app/vision/buildplan.json†L30-L33】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -81,10 +86,6 @@ All Phase 4 story items are shipped.
 
 ### Phase 5 — Gratitude & Mood
 All Phase 5 check-in items are shipped.
-
-### Phase 6 — Sharing
-- Create/disable share link (slug).
-- Per-card `visible_in_share` toggle.
 
 ### Phase 7 — Polish
 - Signed + transform URLs for thumbnails.

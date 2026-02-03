@@ -56,6 +56,11 @@ const boardState = {
     current: 0,
     hasToday: false
   },
+  share: {
+    id: null,
+    slug: '',
+    isActive: false
+  },
   filters: {
     sectionId: '',
     tag: '',
@@ -146,6 +151,27 @@ function resetCheckinState() {
   };
 }
 
+function resetShareState() {
+  boardState.share = {
+    id: null,
+    slug: '',
+    isActive: false
+  };
+}
+
+function slugify(value = '') {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+}
+
+function buildShareUrl(slug = '') {
+  if (!slug) return '';
+  return `${window.location.origin}/vision-share/${slug}`;
+}
+
 function getThemeByName(name) {
   return THEME_PRESETS.find(theme => theme.name === name) || DEFAULT_THEME;
 }
@@ -212,6 +238,131 @@ function renderSections() {
     fragment.appendChild(row);
   });
   list.appendChild(fragment);
+}
+
+function setShareStatus(message = '') {
+  const statusEl = document.querySelector('#vb-share-status');
+  if (statusEl) statusEl.textContent = message;
+}
+
+function renderSharePanel() {
+  const slugInput = document.querySelector('#vb-share-slug');
+  const linkEl = document.querySelector('#vb-share-link');
+  const toggle = document.querySelector('#vb-share-toggle');
+  const createBtn = document.querySelector('#vb-share-create');
+  const copyBtn = document.querySelector('#vb-share-copy');
+  if (!slugInput || !linkEl || !toggle || !createBtn || !copyBtn) return;
+  const board = boardState.boards.find(item => item.id === boardState.activeBoardId);
+  const suggestedSlug = slugify(board?.title || '') || 'my-vision-board';
+  const slug = boardState.share.slug || suggestedSlug;
+  slugInput.value = slug;
+  const shareUrl = buildShareUrl(slug);
+  linkEl.textContent = shareUrl ? shareUrl : 'Share link will appear here';
+  linkEl.href = shareUrl || '#';
+  toggle.checked = Boolean(boardState.share.isActive);
+  toggle.disabled = !boardState.share.id;
+  createBtn.textContent = boardState.share.id ? 'Update share link' : 'Create share link';
+  copyBtn.disabled = !boardState.share.id || !boardState.share.isActive;
+  if (!boardState.activeBoardId) {
+    setShareStatus('Select a board to configure sharing.');
+  }
+}
+
+async function loadShare() {
+  if (!boardState.activeBoardId) {
+    resetShareState();
+    renderSharePanel();
+    return;
+  }
+  const { data, error } = await supabase
+    .from('vb_shares')
+    .select('id,slug,is_active')
+    .eq('board_id', boardState.activeBoardId)
+    .maybeSingle();
+  if (error) {
+    resetShareState();
+    renderSharePanel();
+    setShareStatus('Unable to load share link. Check Supabase connection.');
+    return;
+  }
+  boardState.share = {
+    id: data?.id ?? null,
+    slug: data?.slug ?? '',
+    isActive: Boolean(data?.is_active)
+  };
+  renderSharePanel();
+  setShareStatus('');
+}
+
+async function handleSaveShareLink() {
+  if (!boardState.activeBoardId || !boardState.userId) {
+    setShareStatus('Select a board before creating a share link.');
+    return;
+  }
+  const slugInput = document.querySelector('#vb-share-slug');
+  const rawSlug = slugInput?.value || '';
+  const slug = slugify(rawSlug);
+  if (!slug) {
+    setShareStatus('Add a slug to create the share link.');
+    return;
+  }
+  setShareStatus(boardState.share.id ? 'Updating share link...' : 'Creating share link...');
+  const payload = {
+    board_id: boardState.activeBoardId,
+    owner_id: boardState.userId,
+    slug,
+    is_active: true
+  };
+  const query = boardState.share.id
+    ? supabase
+      .from('vb_shares')
+      .update(payload)
+      .eq('id', boardState.share.id)
+      .select('id,slug,is_active')
+      .single()
+    : supabase
+      .from('vb_shares')
+      .insert([payload])
+      .select('id,slug,is_active')
+      .single();
+  const { data, error } = await query;
+  if (error) {
+    setShareStatus('Unable to save share link. Try a different slug.');
+    return;
+  }
+  boardState.share = {
+    id: data.id,
+    slug: data.slug,
+    isActive: Boolean(data.is_active)
+  };
+  renderSharePanel();
+  setShareStatus('Share link saved.');
+}
+
+async function handleToggleShareActive(isActive) {
+  if (!boardState.share.id) {
+    setShareStatus('Create a share link first.');
+    renderSharePanel();
+    return;
+  }
+  setShareStatus(isActive ? 'Enabling share link...' : 'Disabling share link...');
+  const { data, error } = await supabase
+    .from('vb_shares')
+    .update({ is_active: isActive })
+    .eq('id', boardState.share.id)
+    .select('id,slug,is_active')
+    .single();
+  if (error) {
+    setShareStatus('Unable to update share status. Check Supabase connection.');
+    return;
+  }
+  boardState.share = {
+    id: data.id,
+    slug: data.slug,
+    isActive: Boolean(data.is_active)
+  };
+  renderSharePanel();
+  setShareStatus(isActive ? 'Share link enabled.' : 'Share link disabled.');
 }
 
 async function loadSections() {
@@ -527,6 +678,9 @@ function renderCards() {
       metaChips.push(`<span class="vb-chip">Habit · ${habit ? habit.title : 'Linked habit'}</span>`);
     } else if (card.link_type === 'goal') {
       metaChips.push('<span class="vb-chip">Goal · Linked</span>');
+    }
+    if (card.visible_in_share === false) {
+      metaChips.push('<span class="vb-chip">Hidden in share</span>');
     }
     if (card.section_id) {
       const section = boardState.sections.find(item => item.id === card.section_id);
@@ -951,7 +1105,7 @@ async function loadCards() {
   }
   const { data, error } = await supabase
     .from('vb_cards')
-    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id,section_id')
+    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,visible_in_share,link_type,link_id,section_id')
     .eq('board_id', boardState.activeBoardId)
     .order('sort_index', { ascending: true });
   if (error) {
@@ -994,6 +1148,7 @@ function resetCardForm() {
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const habitSelect = document.querySelector('#vb-card-habit');
   const sectionSelect = document.querySelector('#vb-card-section');
+  const shareInput = document.querySelector('#vb-card-share');
   if (titleInput) titleInput.value = '';
   if (typeSelect) typeSelect.value = 'image';
   if (urlInput) urlInput.value = '';
@@ -1005,6 +1160,7 @@ function resetCardForm() {
   if (linkTypeSelect) linkTypeSelect.value = 'none';
   if (habitSelect) habitSelect.value = '';
   if (sectionSelect) sectionSelect.value = '';
+  if (shareInput) shareInput.checked = true;
   boardState.editingCardId = null;
   setCardFormMode(false);
   syncLinkFields();
@@ -1159,6 +1315,7 @@ function startEditingCard(cardId) {
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const habitSelect = document.querySelector('#vb-card-habit');
   const sectionSelect = document.querySelector('#vb-card-section');
+  const shareInput = document.querySelector('#vb-card-share');
   if (titleInput) titleInput.value = card.title || '';
   if (typeSelect) typeSelect.value = card.kind || 'image';
   if (urlInput) urlInput.value = card.img_path || '';
@@ -1170,6 +1327,7 @@ function startEditingCard(cardId) {
   if (linkTypeSelect) linkTypeSelect.value = card.link_type || 'none';
   if (habitSelect) habitSelect.value = card.link_type === 'habit' ? (card.link_id || '') : '';
   if (sectionSelect) sectionSelect.value = card.section_id || '';
+  if (shareInput) shareInput.checked = card.visible_in_share !== false;
   toggleCardForm(true);
   syncCardFormFields();
   syncLinkFields();
@@ -1188,6 +1346,7 @@ async function handleSaveCard() {
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const habitSelect = document.querySelector('#vb-card-habit');
   const sectionSelect = document.querySelector('#vb-card-section');
+  const shareInput = document.querySelector('#vb-card-share');
   if (!boardState.activeBoardId) {
     setBoardStatus('Create a board before adding cards.');
     return;
@@ -1203,6 +1362,7 @@ async function handleSaveCard() {
   const linkType = linkTypeSelect?.value || 'none';
   const habitId = habitSelect?.value || null;
   const sectionId = sectionSelect?.value || null;
+  const visibleInShare = shareInput?.checked !== false;
   if (kind === 'image' && !imgPath) {
     setBoardStatus('Paste an image URL to continue.');
     return;
@@ -1228,6 +1388,7 @@ async function handleSaveCard() {
     favorite,
     color,
     tags,
+    visible_in_share: visibleInShare,
     link_type: linkType === 'none' ? null : linkType,
     link_id: linkType === 'habit' ? habitId : null,
     section_id: sectionId || null
@@ -1237,7 +1398,7 @@ async function handleSaveCard() {
       .from('vb_cards')
       .update(payload)
       .eq('id', boardState.editingCardId)
-      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id,section_id')
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,visible_in_share,link_type,link_id,section_id')
       .single()
     : supabase
       .from('vb_cards')
@@ -1245,7 +1406,7 @@ async function handleSaveCard() {
         ...payload,
         sort_index: getNextCardIndex()
       }])
-      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id,section_id')
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,visible_in_share,link_type,link_id,section_id')
       .single();
   const { data, error } = await query;
   if (error) {
@@ -1280,6 +1441,7 @@ async function loadBoards() {
   await loadSections();
   await loadCards();
   await loadCheckin();
+  await loadShare();
   setBoardStatus(boardState.boards.length ? '' : 'Create your first board to begin.');
 }
 
@@ -1354,6 +1516,8 @@ async function handleCreateBoard() {
   boardState.activeBoardId = data.id;
   renderBoardSelect();
   updateBoardDetails();
+  resetShareState();
+  renderSharePanel();
   toggleBoardForm(false);
   resetBoardForm();
   setBoardStatus('');
@@ -1389,6 +1553,7 @@ export async function mountVisionBoard() {
       <section id="vision-canvas"  data-title="Canvas"></section>
       <section id="vision-prompts" data-title="Prompts & Affirmations"></section>
       <section id="vision-story"   data-title="Story (Slideshow + Spotlight)"></section>
+      <section id="vision-sharing" data-title="Sharing"></section>
       <section id="vision-journal" data-title="Gratitude & Mood"></section>
       <aside   id="vision-build-status" data-title="Build Plan Status"></aside>
     </article>
@@ -1500,6 +1665,12 @@ export async function mountVisionBoard() {
           Mark as favorite
         </label>
       </div>
+      <div class="vb-form-row vb-form-row--inline">
+        <label class="vb-checkbox">
+          <input type="checkbox" id="vb-card-share" checked />
+          Visible in shared board
+        </label>
+      </div>
       <div class="vb-form-actions">
         <button class="vb-btn" id="vb-cancel-card">Cancel</button>
         <button class="vb-btn primary" id="vb-save-card">Add card</button>
@@ -1593,6 +1764,30 @@ export async function mountVisionBoard() {
       <div class="vb-spotlight-preview" id="vb-spotlight-preview"></div>
     </div>
   `;
+  document.querySelector('#vision-sharing').innerHTML = `
+    <div class="vb-card vb-share-card">
+      <div class="vb-share-header">
+        <div>
+          <div class="vb-board-label">Share link</div>
+          <div class="vb-story-title">Invite others to view this board</div>
+        </div>
+        <label class="vb-checkbox">
+          <input type="checkbox" id="vb-share-toggle" />
+          Share enabled
+        </label>
+      </div>
+      <div class="vb-share-row">
+        <label class="vb-label" for="vb-share-slug">Slug</label>
+        <input class="vb-input" id="vb-share-slug" placeholder="my-vision-board" />
+      </div>
+      <div class="vb-share-actions">
+        <button class="vb-btn primary" id="vb-share-create">Create share link</button>
+        <button class="vb-btn vb-btn--ghost" id="vb-share-copy">Copy link</button>
+      </div>
+      <a class="vb-share-link" id="vb-share-link" href="#" target="_blank" rel="noreferrer">Share link will appear here</a>
+      <div class="vb-share-status" id="vb-share-status"></div>
+    </div>
+  `;
   document.querySelector('#vision-journal').innerHTML = `
     <div class="mood-row">
       <div class="mood-dot mood-1" data-mood="1"></div>
@@ -1653,6 +1848,10 @@ export async function mountVisionBoard() {
   const spotlightEnabledInput = document.querySelector('#vb-spotlight-enabled');
   const spotlightTimeSelect = document.querySelector('#vb-spotlight-time');
   const spotlightTestButton = document.querySelector('#vb-spotlight-test');
+  const shareSlugInput = document.querySelector('#vb-share-slug');
+  const shareToggleInput = document.querySelector('#vb-share-toggle');
+  const shareCreateButton = document.querySelector('#vb-share-create');
+  const shareCopyButton = document.querySelector('#vb-share-copy');
   const moodRow = document.querySelector('#vision-journal .mood-row');
   const gratitudeInput = document.querySelector('#vb-gratitude');
 
@@ -1673,6 +1872,7 @@ export async function mountVisionBoard() {
     loadSections();
     loadCards();
     loadCheckin();
+    loadShare();
   });
   themeSelect?.addEventListener('change', event => {
     const theme = getThemeByName(event.target.value);
@@ -1783,6 +1983,33 @@ export async function mountVisionBoard() {
   spotlightTestButton?.addEventListener('click', () => {
     sendSpotlightTest();
   });
+  shareCreateButton?.addEventListener('click', () => {
+    handleSaveShareLink();
+  });
+  shareToggleInput?.addEventListener('change', event => {
+    handleToggleShareActive(event.target.checked);
+  });
+  shareCopyButton?.addEventListener('click', async () => {
+    const link = document.querySelector('#vb-share-link')?.textContent || '';
+    if (!link || link === 'Share link will appear here') {
+      setShareStatus('Create and enable a share link before copying.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      setShareStatus('Share link copied.');
+    } catch (error) {
+      setShareStatus('Unable to copy link. Copy it manually.');
+    }
+  });
+  shareSlugInput?.addEventListener('input', event => {
+    const slug = slugify(event.target.value || '');
+    const linkEl = document.querySelector('#vb-share-link');
+    if (!linkEl) return;
+    const shareUrl = buildShareUrl(slug);
+    linkEl.textContent = shareUrl ? shareUrl : 'Share link will appear here';
+    linkEl.href = shareUrl || '#';
+  });
   moodRow?.addEventListener('click', event => {
     const dot = event.target.closest('.mood-dot');
     if (!dot) return;
@@ -1800,6 +2027,7 @@ export async function mountVisionBoard() {
   });
   syncSpotlightControls();
   renderSpotlightPreview();
+  renderSharePanel();
   if (cardForm) {
     cardForm.id = 'vb-card-form';
   }

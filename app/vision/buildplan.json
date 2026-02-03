@@ -29,8 +29,8 @@
       {"id":"5-streak","label":"Check-in streak & gentle nudges","status":"done"}
     ]},
     {"title":"Phase 6 — Sharing","items":[
-      {"id":"6-share","label":"Create/disable share link (slug)","status":"todo"},
-      {"id":"6-visibility","label":"Per-card visible_in_share toggle","status":"todo"}
+      {"id":"6-share","label":"Create/disable share link (slug)","status":"done"},
+      {"id":"6-visibility","label":"Per-card visible_in_share toggle","status":"done"}
     ]},
     {"title":"Phase 7 — Polish","items":[
       {"id":"7-thumb","label":"Signed + transform URLs for thumbnails","status":"todo"},
