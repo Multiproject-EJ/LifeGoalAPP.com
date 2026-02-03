@@ -15,7 +15,7 @@ Use this section first when returning to the plan.
 | M2. Balance / Harmony scoring v1 | ☐ Not started | |
 | M3. Rationality micro-system v1 | ☐ Not started | |
 | M4. Auto-progress ladder v1 | ☐ Not started | |
-| M5. Vision Board 2.0 metadata + review loop | 🟡 In progress | Consolidate remaining Vision Board V2 gaps in docs/VISION_BOARD_PLAN.md |
+| M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
 | M6. AI Coach instruction system | ☐ Not started | |
 | M7. AI Coach interventions v1 | ☐ Not started | |
 | M8. Micro-quests + retention loop v1 | ☐ Not started | |
