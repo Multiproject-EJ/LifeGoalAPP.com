@@ -47,6 +47,9 @@ Although the master development plan lists this milestone as “not started,” 
 - **Move across sections** is supported by dropping cards onto section rows or onto cards in another section.【F:app/vision/vision.js†L333-L401】
 - **Size-based grid spans** already render S/M/L/XL card sizes in the masonry grid.【F:app/vision/vision.css†L55-L61】
 
+### Vision Board V2 story mode (Phase 4)
+- **Fullscreen slideshow** now plays image + text cards with interval and shuffle controls in the Story section.【F:app/vision/vision.js†L454-L597】【F:app/vision/vision.css†L74-L86】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -68,7 +71,6 @@ All Phase 2 canvas items are shipped.
 All Phase 3 prompt items are shipped.
 
 ### Phase 4 — Story
-- Fullscreen slideshow (interval/shuffle).
 - Daily Spotlight subscribe + test.
 
 ### Phase 5 — Gratitude & Mood
