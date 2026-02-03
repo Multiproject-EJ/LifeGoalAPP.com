@@ -38,6 +38,9 @@ Although the master development plan lists this milestone as “not started,” 
 ### Vision Board V2 canvas filters (Phase 2)
 - **Filter bar** now supports filtering by section, tag, color, and favorites in the Vision Board V2 canvas.【F:app/vision/vision.js†L98-L529】
 
+### Vision Board V2 prompts (Phase 3)
+- **Prompt chips** load from the prompt packs JSON and insert prompts into new text cards.【F:app/vision/vision.js†L291-L801】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -56,7 +59,6 @@ The following items are still marked as **todo** in the Vision Board build plan 
 - Drag-drop reorder; move across sections; sizes S/M/L/XL.
 
 ### Phase 3 — Prompts & Mantra
-- Prompt chips insert into text cards.
 - Daily Mantra highlight.
 
 ### Phase 4 — Story

@@ -51,7 +51,9 @@ const boardState = {
     tag: '',
     color: '',
     favoriteOnly: false
-  }
+  },
+  promptPacks: {},
+  activePromptPack: ''
 };
 
 function applyTheme(theme = {}) {
@@ -311,6 +313,72 @@ function renderCards() {
     fragment.appendChild(item);
   });
   grid.appendChild(fragment);
+}
+
+function renderPromptChips() {
+  const chips = document.querySelector('#vb-prompt-chips');
+  const packSelect = document.querySelector('#vb-prompt-pack');
+  if (!chips || !packSelect) return;
+  const packs = boardState.promptPacks || {};
+  const packNames = Object.keys(packs);
+  packSelect.innerHTML = '';
+  if (!packNames.length) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No prompt packs available';
+    packSelect.appendChild(option);
+    packSelect.disabled = true;
+    chips.innerHTML = '<p class="vb-empty">No prompts found yet.</p>';
+    return;
+  }
+  packSelect.disabled = false;
+  packNames.forEach(name => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    packSelect.appendChild(option);
+  });
+  if (!boardState.activePromptPack || !packs[boardState.activePromptPack]) {
+    boardState.activePromptPack = packNames[0];
+  }
+  packSelect.value = boardState.activePromptPack;
+  const prompts = packs[boardState.activePromptPack] || [];
+  if (!prompts.length) {
+    chips.innerHTML = '<p class="vb-empty">No prompts in this pack yet.</p>';
+    return;
+  }
+  chips.innerHTML = prompts
+    .map(prompt => `<button class="vb-chip" type="button" data-prompt="${prompt.replace(/"/g, '&quot;')}">${prompt}</button>`)
+    .join('');
+}
+
+async function loadPromptPacks() {
+  try {
+    const response = await fetch('/app/vision/prompts.json');
+    if (!response.ok) throw new Error('Unable to load prompts.');
+    const data = await response.json();
+    boardState.promptPacks = data || {};
+    renderPromptChips();
+  } catch (error) {
+    boardState.promptPacks = {};
+    renderPromptChips();
+  }
+}
+
+function applyPromptToCard(prompt) {
+  if (!prompt) return;
+  toggleCardForm(true);
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const titleInput = document.querySelector('#vb-card-title');
+  const affirmInput = document.querySelector('#vb-card-affirm');
+  if (typeSelect) {
+    typeSelect.value = 'text';
+  }
+  syncCardFormFields();
+  if (affirmInput) affirmInput.value = prompt;
+  if (titleInput && !titleInput.value) {
+    titleInput.value = 'Prompted affirmation';
+  }
 }
 
 async function loadCards() {
@@ -911,6 +979,10 @@ export async function mountVisionBoard() {
     <div class="vb-grid" id="vb-grid"></div>
   `;
   document.querySelector('#vision-prompts').innerHTML = `
+    <div class="vb-prompt-toolbar">
+      <label class="vb-label" for="vb-prompt-pack">Prompt pack</label>
+      <select class="vb-select" id="vb-prompt-pack"></select>
+    </div>
     <div class="prompt-chips" id="vb-prompt-chips"></div>
     <div class="mantra" id="vb-mantra">Daily mantra will show here</div>
   `;
@@ -963,6 +1035,8 @@ export async function mountVisionBoard() {
   const filterColorSelect = document.querySelector('#vb-filter-color');
   const filterFavoriteInput = document.querySelector('#vb-filter-favorite');
   const filterResetButton = document.querySelector('#vb-filter-reset');
+  const promptPackSelect = document.querySelector('#vb-prompt-pack');
+  const promptChips = document.querySelector('#vb-prompt-chips');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -1039,6 +1113,16 @@ export async function mountVisionBoard() {
     if (filterFavoriteInput) filterFavoriteInput.checked = false;
     renderCards();
   });
+  promptPackSelect?.addEventListener('change', event => {
+    boardState.activePromptPack = event.target.value;
+    renderPromptChips();
+  });
+  promptChips?.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    const prompt = button.dataset.prompt;
+    applyPromptToCard(prompt);
+  });
   if (cardForm) {
     cardForm.id = 'vb-card-form';
   }
@@ -1067,6 +1151,7 @@ export async function mountVisionBoard() {
   });
   await loadHabits();
   await loadBoards();
+  await loadPromptPacks();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
