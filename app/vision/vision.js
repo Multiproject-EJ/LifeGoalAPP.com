@@ -98,6 +98,7 @@ let activeDragCardId = null;
 let activeDropTargetId = null;
 let slideshowTimer = null;
 let checkinSaveTimer = null;
+let celebrateTimer = null;
 const slideshowState = {
   cards: [],
   index: 0,
@@ -146,6 +147,20 @@ function applyTheme(theme = {}) {
 function setBoardStatus(message = '') {
   const statusEl = document.querySelector('#vb-board-status');
   if (statusEl) statusEl.textContent = message;
+}
+
+function triggerCelebration() {
+  const root = document.querySelector('#vision-root');
+  if (!root) return;
+  root.classList.remove('celebrate');
+  void root.offsetWidth;
+  root.classList.add('celebrate');
+  if (celebrateTimer) {
+    clearTimeout(celebrateTimer);
+  }
+  celebrateTimer = setTimeout(() => {
+    root.classList.remove('celebrate');
+  }, 1000);
 }
 
 function resetCheckinState() {
@@ -436,7 +451,11 @@ function renderCheckinStreak() {
   }
 }
 
-async function loadCheckinStreak() {
+async function loadCheckinStreak({
+  celebrateOnIncrease = false,
+  previousStreak = boardState.checkinStreak.current,
+  previousHasToday = boardState.checkinStreak.hasToday
+} = {}) {
   if (!boardState.userId) return;
   const today = new Date();
   const startDate = new Date();
@@ -477,6 +496,13 @@ async function loadCheckinStreak() {
     hasToday: dates.has(formatDateString(today))
   };
   renderCheckinStreak();
+  if (
+    celebrateOnIncrease &&
+    boardState.checkinStreak.hasToday &&
+    (boardState.checkinStreak.current > previousStreak || !previousHasToday)
+  ) {
+    triggerCelebration();
+  }
 }
 
 async function loadCheckin() {
@@ -535,10 +561,12 @@ async function persistCheckin() {
     }
     resetCheckinState();
     renderCheckin();
-    loadCheckinStreak();
+    await loadCheckinStreak();
     return;
   }
 
+  const previousStreak = boardState.checkinStreak.current;
+  const previousHasToday = boardState.checkinStreak.hasToday;
   const query = boardState.checkin.id
     ? supabase
       .from('vb_checkins')
@@ -564,7 +592,7 @@ async function persistCheckin() {
     date: data?.the_date || payload.the_date
   };
   renderCheckin();
-  loadCheckinStreak();
+  await loadCheckinStreak({ celebrateOnIncrease: true, previousStreak, previousHasToday });
 }
 
 function scheduleCheckinSave() {
