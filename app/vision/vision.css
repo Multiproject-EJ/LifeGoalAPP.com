@@ -90,6 +90,12 @@
 #vision-story .vb-spotlight-header{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
 #vision-story .vb-spotlight-controls{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; justify-content:space-between; }
 #vision-story .vb-spotlight-preview{ padding:10px 12px; border-radius:var(--vb-radius-sm); background:#101522; border:1px solid rgba(255,255,255,.08); color:var(--vb-muted); font-size:.9rem; }
+#vision-sharing .vb-share-card{ display:flex; flex-direction:column; gap:12px; }
+#vision-sharing .vb-share-header{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+#vision-sharing .vb-share-row{ display:flex; flex-direction:column; gap:6px; }
+#vision-sharing .vb-share-actions{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+#vision-sharing .vb-share-link{ color:var(--vb-accent); font-size:.9rem; word-break:break-all; }
+#vision-sharing .vb-share-status{ font-size:.85rem; color:var(--vb-muted); }
 #vision-prompts .prompt-chips{ display:flex; flex-wrap:wrap; gap:8px; }
 #vision-prompts .vb-chip{ cursor:pointer; }
 #vision-prompts .vb-prompt-toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
