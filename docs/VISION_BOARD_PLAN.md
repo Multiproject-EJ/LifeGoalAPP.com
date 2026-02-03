@@ -40,6 +40,7 @@ Although the master development plan lists this milestone as “not started,” 
 
 ### Vision Board V2 prompts (Phase 3)
 - **Prompt chips** load from the prompt packs JSON and insert prompts into new text cards.【F:app/vision/vision.js†L291-L801】
+- **Daily mantra highlight** now rotates a prompt each day for the active pack.【F:app/vision/vision.js†L365-L455】
 
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
@@ -59,7 +60,7 @@ The following items are still marked as **todo** in the Vision Board build plan 
 - Drag-drop reorder; move across sections; sizes S/M/L/XL.
 
 ### Phase 3 — Prompts & Mantra
-- Daily Mantra highlight.
+All Phase 3 prompt items are shipped.
 
 ### Phase 4 — Story
 - Fullscreen slideshow (interval/shuffle).
