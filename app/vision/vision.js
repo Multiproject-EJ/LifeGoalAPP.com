@@ -52,6 +52,10 @@ const boardState = {
     gratitude: '',
     date: ''
   },
+  checkinStreak: {
+    current: 0,
+    hasToday: false
+  },
   filters: {
     sectionId: '',
     tag: '',
@@ -91,12 +95,20 @@ const slideshowState = {
 };
 let spotlightState = getStoredSpotlight();
 const CHECKIN_SAVE_DELAY = 500;
+const CHECKIN_STREAK_LOOKBACK_DAYS = 30;
 
 function getLocalDateString() {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -237,6 +249,69 @@ function renderCheckin() {
   }
 }
 
+function renderCheckinStreak() {
+  const streakEl = document.querySelector('#vb-checkin-streak');
+  const nudgeEl = document.querySelector('#vb-checkin-nudge');
+  if (!streakEl || !nudgeEl) return;
+  const streak = boardState.checkinStreak.current;
+  const hasToday = boardState.checkinStreak.hasToday;
+  if (streak > 0) {
+    streakEl.textContent = `Current streak: ${streak} day${streak === 1 ? '' : 's'}.`;
+  } else {
+    streakEl.textContent = 'No streak yet.';
+  }
+  if (hasToday) {
+    nudgeEl.textContent = streak >= 3
+      ? 'Nice work keeping the momentum going today.'
+      : 'Check-in saved for today.';
+  } else {
+    nudgeEl.textContent = 'Add today’s mood or gratitude note to keep your streak alive.';
+  }
+}
+
+async function loadCheckinStreak() {
+  if (!boardState.userId) return;
+  const today = new Date();
+  const startDate = new Date();
+  startDate.setDate(today.getDate() - (CHECKIN_STREAK_LOOKBACK_DAYS - 1));
+  let query = supabase
+    .from('vb_checkins')
+    .select('the_date')
+    .eq('user_id', boardState.userId)
+    .gte('the_date', formatDateString(startDate))
+    .lte('the_date', formatDateString(today));
+
+  if (boardState.activeBoardId) {
+    query = query.eq('board_id', boardState.activeBoardId);
+  } else {
+    query = query.is('board_id', null);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    boardState.checkinStreak = { current: 0, hasToday: false };
+    renderCheckinStreak();
+    return;
+  }
+  const dates = new Set((data || []).map(entry => entry.the_date));
+  let streak = 0;
+  for (let offset = 0; offset < CHECKIN_STREAK_LOOKBACK_DAYS; offset += 1) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - offset);
+    const key = formatDateString(date);
+    if (dates.has(key)) {
+      streak += 1;
+    } else {
+      break;
+    }
+  }
+  boardState.checkinStreak = {
+    current: streak,
+    hasToday: dates.has(formatDateString(today))
+  };
+  renderCheckinStreak();
+}
+
 async function loadCheckin() {
   if (!boardState.userId) return;
   const date = getLocalDateString();
@@ -267,6 +342,7 @@ async function loadCheckin() {
     date
   };
   renderCheckin();
+  loadCheckinStreak();
 }
 
 async function persistCheckin() {
@@ -292,6 +368,7 @@ async function persistCheckin() {
     }
     resetCheckinState();
     renderCheckin();
+    loadCheckinStreak();
     return;
   }
 
@@ -320,6 +397,7 @@ async function persistCheckin() {
     date: data?.the_date || payload.the_date
   };
   renderCheckin();
+  loadCheckinStreak();
 }
 
 function scheduleCheckinSave() {
@@ -1524,6 +1602,10 @@ export async function mountVisionBoard() {
       <div class="mood-dot mood-5" data-mood="5"></div>
     </div>
     <textarea id="vb-gratitude" placeholder="Today, I'm grateful for..."></textarea>
+    <div class="vb-checkin-meta">
+      <div id="vb-checkin-streak" class="vb-checkin-streak">No streak yet.</div>
+      <div id="vb-checkin-nudge" class="vb-checkin-nudge">Add today’s mood or gratitude note to keep your streak alive.</div>
+    </div>
   `;
   mountBuildChecklist();
   const boardDetail = document.querySelector('.vb-board-detail');

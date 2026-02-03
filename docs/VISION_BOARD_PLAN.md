@@ -53,6 +53,7 @@ Although the master development plan lists this milestone as “not started,” 
 
 ### Vision Board V2 gratitude & mood (Phase 5)
 - **Daily mood (1–5) + gratitude note** now load and save per board in the Gratitude & Mood panel.【F:app/vision/vision.js†L1387-L1715】
+- **Check-in streak + gentle nudges** now summarize consecutive check-ins and prompt users to keep the streak alive.【F:app/vision/vision.js†L220-L379】
 - **Build checklist** updated to reflect daily check-ins as shipped in Phase 5.【F:app/vision/buildplan.json†L24-L27】
 
 ### Scaffolded canvas + prompts + build checklist
@@ -79,7 +80,7 @@ All Phase 3 prompt items are shipped.
 All Phase 4 story items are shipped.
 
 ### Phase 5 — Gratitude & Mood
-- Check-in streak & gentle nudges.
+All Phase 5 check-in items are shipped.
 
 ### Phase 6 — Sharing
 - Create/disable share link (slug).
