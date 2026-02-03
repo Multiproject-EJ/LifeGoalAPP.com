@@ -57,6 +57,17 @@ const boardState = {
 };
 
 const DAILY_MANTRA_KEY = 'vb-daily-mantra';
+const DAILY_SPOTLIGHT_KEY = 'vb-daily-spotlight';
+const SPOTLIGHT_TIMES = [
+  { label: 'Morning (8am)', value: '08:00' },
+  { label: 'Midday (12pm)', value: '12:00' },
+  { label: 'Evening (7pm)', value: '19:00' }
+];
+const DEFAULT_SPOTLIGHT = {
+  enabled: false,
+  time: SPOTLIGHT_TIMES[0].value,
+  lastTested: null
+};
 const SLIDESHOW_INTERVALS = [
   { label: '3s', value: 3000 },
   { label: '5s', value: 5000 },
@@ -71,6 +82,7 @@ const slideshowState = {
   interval: 5000,
   shuffle: false
 };
+let spotlightState = getStoredSpotlight();
 
 function isFilteringActive() {
   return Boolean(
@@ -275,6 +287,7 @@ function renderCards() {
   grid.innerHTML = '';
   if (!boardState.activeBoardId) {
     grid.innerHTML = '<p class="vb-empty">Select a board to view cards.</p>';
+    renderSpotlightPreview();
     return;
   }
   const filteredCards = applyCardFilters(boardState.cards);
@@ -282,6 +295,7 @@ function renderCards() {
     grid.innerHTML = boardState.cards.length
       ? '<p class="vb-empty">No cards match these filters.</p>'
       : '<p class="vb-empty">No cards yet. Add your first image or affirmation.</p>';
+    renderSpotlightPreview();
     return;
   }
   const fragment = document.createDocumentFragment();
@@ -340,6 +354,7 @@ function renderCards() {
     fragment.appendChild(item);
   });
   grid.appendChild(fragment);
+  renderSpotlightPreview();
 }
 
 function clearDragState() {
@@ -485,6 +500,34 @@ function storeMantra(payload) {
   }
 }
 
+function getStoredSpotlight() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(DAILY_SPOTLIGHT_KEY) || '{}');
+    return { ...DEFAULT_SPOTLIGHT, ...stored };
+  } catch (error) {
+    return { ...DEFAULT_SPOTLIGHT };
+  }
+}
+
+function storeSpotlight(payload) {
+  try {
+    localStorage.setItem(DAILY_SPOTLIGHT_KEY, JSON.stringify(payload));
+  } catch (error) {
+    // Ignore storage failures.
+  }
+}
+
+function updateSpotlightState(next) {
+  spotlightState = { ...spotlightState, ...next };
+  storeSpotlight(spotlightState);
+  syncSpotlightControls();
+  renderSpotlightPreview();
+}
+
+function getSpotlightTimeLabel(value) {
+  return SPOTLIGHT_TIMES.find(option => option.value === value)?.label || value;
+}
+
 function renderDailyMantra() {
   const mantraEl = document.querySelector('#vb-mantra');
   if (!mantraEl) return;
@@ -528,6 +571,69 @@ function getStoryCards() {
     }
     return Boolean(card.title || card.affirm);
   });
+}
+
+function getSpotlightCard() {
+  const cards = getStoryCards();
+  if (!cards.length) return null;
+  const favorites = cards.filter(card => card.favorite);
+  const pool = favorites.length ? favorites : cards;
+  const seed = Number(getTodayKey().replace(/-/g, '')) || 1;
+  return pool[seed % pool.length];
+}
+
+function getSpotlightMessage(card) {
+  const title = card?.title || 'Vision Board spotlight';
+  const detail = card?.affirm || '';
+  return detail && detail !== title ? `${title} — ${detail}` : title;
+}
+
+function renderSpotlightPreview() {
+  const preview = document.querySelector('#vb-spotlight-preview');
+  if (!preview) return;
+  const card = getSpotlightCard();
+  if (!card) {
+    preview.textContent = 'Add a few cards to preview your Daily Spotlight.';
+    return;
+  }
+  const message = getSpotlightMessage(card);
+  const timeLabel = getSpotlightTimeLabel(spotlightState.time);
+  preview.textContent = `Next spotlight (${timeLabel}): ${message}`;
+}
+
+function syncSpotlightControls() {
+  const enabledInput = document.querySelector('#vb-spotlight-enabled');
+  const timeSelect = document.querySelector('#vb-spotlight-time');
+  if (enabledInput) enabledInput.checked = Boolean(spotlightState.enabled);
+  if (timeSelect) timeSelect.value = spotlightState.time;
+}
+
+async function sendSpotlightTest() {
+  const card = getSpotlightCard();
+  if (!card) {
+    setBoardStatus('Add cards to send a Daily Spotlight test.');
+    return;
+  }
+  const message = getSpotlightMessage(card);
+  if (!('Notification' in window)) {
+    setBoardStatus('Browser notifications are not supported here. Preview updated instead.');
+    renderSpotlightPreview();
+    return;
+  }
+  let permission = Notification.permission;
+  if (permission === 'default') {
+    permission = await Notification.requestPermission();
+  }
+  if (permission !== 'granted') {
+    setBoardStatus('Enable notifications to test the Daily Spotlight.');
+    return;
+  }
+  new Notification('Daily Spotlight', {
+    body: message,
+    icon: card.img_path || undefined
+  });
+  updateSpotlightState({ lastTested: new Date().toISOString() });
+  setBoardStatus('Daily Spotlight test sent.');
 }
 
 function shuffleCards(cards) {
@@ -1254,6 +1360,28 @@ export async function mountVisionBoard() {
       </div>
       <div class="vb-story-hint">Slideshow uses every image or affirmation in the active board.</div>
     </div>
+    <div class="vb-card vb-spotlight-card">
+      <div class="vb-spotlight-header">
+        <div>
+          <div class="vb-board-label">Daily spotlight</div>
+          <div class="vb-story-title">Highlight one card each day</div>
+        </div>
+        <div class="vb-spotlight-actions">
+          <label class="vb-checkbox">
+            <input type="checkbox" id="vb-spotlight-enabled" />
+            Subscribe
+          </label>
+        </div>
+      </div>
+      <div class="vb-spotlight-controls">
+        <div class="vb-filter-group">
+          <label class="vb-label" for="vb-spotlight-time">Delivery time</label>
+          <select class="vb-select" id="vb-spotlight-time"></select>
+        </div>
+        <button class="vb-btn vb-btn--ghost" id="vb-spotlight-test">Send test spotlight</button>
+      </div>
+      <div class="vb-spotlight-preview" id="vb-spotlight-preview"></div>
+    </div>
   `;
   document.querySelector('#vision-journal').innerHTML = `
     <div class="mood-row">
@@ -1308,6 +1436,9 @@ export async function mountVisionBoard() {
   const storyIntervalSelect = document.querySelector('#vb-story-interval');
   const storyShuffleInput = document.querySelector('#vb-story-shuffle');
   const playSlideshowButton = document.querySelector('#vb-play-slideshow');
+  const spotlightEnabledInput = document.querySelector('#vb-spotlight-enabled');
+  const spotlightTimeSelect = document.querySelector('#vb-spotlight-time');
+  const spotlightTestButton = document.querySelector('#vb-spotlight-test');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -1404,6 +1535,15 @@ export async function mountVisionBoard() {
     });
     storyIntervalSelect.value = String(slideshowState.interval);
   }
+  if (spotlightTimeSelect) {
+    spotlightTimeSelect.innerHTML = '';
+    SPOTLIGHT_TIMES.forEach(({ label, value }) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      spotlightTimeSelect.appendChild(option);
+    });
+  }
   storyIntervalSelect?.addEventListener('change', event => {
     slideshowState.interval = Number(event.target.value) || 5000;
     if (document.querySelector('#vb-slideshow')?.classList.contains('show')) {
@@ -1417,6 +1557,17 @@ export async function mountVisionBoard() {
     setBoardStatus('');
     openSlideshow();
   });
+  spotlightEnabledInput?.addEventListener('change', event => {
+    updateSpotlightState({ enabled: event.target.checked });
+  });
+  spotlightTimeSelect?.addEventListener('change', event => {
+    updateSpotlightState({ time: event.target.value });
+  });
+  spotlightTestButton?.addEventListener('click', () => {
+    sendSpotlightTest();
+  });
+  syncSpotlightControls();
+  renderSpotlightPreview();
   if (cardForm) {
     cardForm.id = 'vb-card-form';
   }

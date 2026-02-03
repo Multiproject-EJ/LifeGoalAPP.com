@@ -86,6 +86,10 @@
 #vision-story .vb-story-actions{ display:flex; flex-direction:column; gap:6px; min-width:140px; }
 #vision-story .vb-story-controls{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; }
 #vision-story .vb-story-hint{ font-size:.86rem; color:var(--vb-muted); }
+#vision-story .vb-spotlight-card{ margin-top:12px; display:flex; flex-direction:column; gap:14px; }
+#vision-story .vb-spotlight-header{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+#vision-story .vb-spotlight-controls{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; justify-content:space-between; }
+#vision-story .vb-spotlight-preview{ padding:10px 12px; border-radius:var(--vb-radius-sm); background:#101522; border:1px solid rgba(255,255,255,.08); color:var(--vb-muted); font-size:.9rem; }
 #vision-prompts .prompt-chips{ display:flex; flex-wrap:wrap; gap:8px; }
 #vision-prompts .vb-chip{ cursor:pointer; }
 #vision-prompts .vb-prompt-toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
