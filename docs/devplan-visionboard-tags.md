@@ -62,7 +62,7 @@
 8. Re-open the tag modal and confirm previously selected categories are pre-checked.
 
 ## Next step
-- ⬜ Run a quick demo-mode sanity pass to confirm tag filters and chips render as expected in the local-only flow.
+- ⚠️ Attempted a demo-mode sanity pass (local dev server + Playwright), but the auth overlay never dismissed to reach the Vision Board view. Needs a manual spot check in a browser to confirm tag filters and chips render in the demo flow.
 
 ### DB verification queries
 ```sql
