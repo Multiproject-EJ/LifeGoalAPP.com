@@ -41,7 +41,10 @@ const THEME_PRESETS = [
 const boardState = {
   boards: [],
   activeBoardId: null,
-  userId: null
+  userId: null,
+  sections: [],
+  cards: [],
+  editingCardId: null
 };
 
 function applyTheme(theme = {}) {
@@ -97,6 +100,375 @@ function updateBoardDetails() {
   applyTheme(board?.theme);
 }
 
+function renderSections() {
+  const list = document.querySelector('#vb-section-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!boardState.activeBoardId) {
+    list.innerHTML = '<p class="vb-empty">Select a board to manage sections.</p>';
+    return;
+  }
+  if (!boardState.sections.length) {
+    list.innerHTML = '<p class="vb-empty">No sections yet. Add one to organize your board.</p>';
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  boardState.sections.forEach((section, index) => {
+    const row = document.createElement('div');
+    row.className = 'vb-section-row';
+    row.dataset.id = section.id;
+    row.innerHTML = `
+      <div class="vb-section-title">${section.title}</div>
+      <div class="vb-section-actions">
+        <button class="vb-btn vb-btn--ghost" data-action="up" ${index === 0 ? 'disabled' : ''}>Up</button>
+        <button class="vb-btn vb-btn--ghost" data-action="down" ${index === boardState.sections.length - 1 ? 'disabled' : ''}>Down</button>
+        <button class="vb-btn vb-btn--ghost" data-action="rename">Rename</button>
+      </div>
+    `;
+    fragment.appendChild(row);
+  });
+  list.appendChild(fragment);
+}
+
+async function loadSections() {
+  if (!boardState.activeBoardId) {
+    boardState.sections = [];
+    renderSections();
+    return;
+  }
+  const { data, error } = await supabase
+    .from('vb_sections')
+    .select('id,title,sort_index')
+    .eq('board_id', boardState.activeBoardId)
+    .order('sort_index', { ascending: true });
+  if (error) {
+    setBoardStatus('Unable to load sections. Run Vision Board V2 migrations to continue.');
+    boardState.sections = [];
+    renderSections();
+    return;
+  }
+  boardState.sections = data || [];
+  renderSections();
+}
+
+function getNextSectionIndex() {
+  return boardState.sections.reduce((max, section) => Math.max(max, section.sort_index ?? 0), -1) + 1;
+}
+
+async function handleAddSection() {
+  const input = document.querySelector('#vb-section-title');
+  const title = input?.value?.trim();
+  if (!boardState.activeBoardId) {
+    setBoardStatus('Create a board before adding sections.');
+    return;
+  }
+  if (!title) {
+    setBoardStatus('Add a section name to continue.');
+    return;
+  }
+  setBoardStatus('Adding section...');
+  const { data, error } = await supabase
+    .from('vb_sections')
+    .insert([{
+      board_id: boardState.activeBoardId,
+      title,
+      sort_index: getNextSectionIndex()
+    }])
+    .select('id,title,sort_index')
+    .single();
+  if (error) {
+    setBoardStatus('Unable to add section. Check Supabase connection.');
+    return;
+  }
+  boardState.sections = [...boardState.sections, data];
+  if (input) input.value = '';
+  setBoardStatus('');
+  renderSections();
+}
+
+async function handleRenameSection(sectionId) {
+  const section = boardState.sections.find(item => item.id === sectionId);
+  if (!section) return;
+  const nextTitle = window.prompt('Rename section', section.title);
+  if (!nextTitle || nextTitle.trim() === section.title) return;
+  setBoardStatus('Updating section...');
+  const { error } = await supabase
+    .from('vb_sections')
+    .update({ title: nextTitle.trim() })
+    .eq('id', sectionId);
+  if (error) {
+    setBoardStatus('Unable to rename section. Check Supabase connection.');
+    return;
+  }
+  boardState.sections = boardState.sections.map(item => (
+    item.id === sectionId ? { ...item, title: nextTitle.trim() } : item
+  ));
+  setBoardStatus('');
+  renderSections();
+}
+
+async function handleMoveSection(sectionId, direction) {
+  const index = boardState.sections.findIndex(item => item.id === sectionId);
+  if (index < 0) return;
+  const swapIndex = direction === 'up' ? index - 1 : index + 1;
+  if (swapIndex < 0 || swapIndex >= boardState.sections.length) return;
+  const current = boardState.sections[index];
+  const target = boardState.sections[swapIndex];
+  setBoardStatus('Reordering sections...');
+  const updates = [
+    { id: current.id, sort_index: target.sort_index },
+    { id: target.id, sort_index: current.sort_index }
+  ];
+  const { error } = await supabase.from('vb_sections').upsert(updates);
+  if (error) {
+    setBoardStatus('Unable to reorder sections. Check Supabase connection.');
+    return;
+  }
+  const nextSections = [...boardState.sections];
+  nextSections[index] = { ...current, sort_index: target.sort_index };
+  nextSections[swapIndex] = { ...target, sort_index: current.sort_index };
+  boardState.sections = nextSections.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+  setBoardStatus('');
+  renderSections();
+}
+
+function renderCards() {
+  const grid = document.querySelector('#vb-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (!boardState.activeBoardId) {
+    grid.innerHTML = '<p class="vb-empty">Select a board to view cards.</p>';
+    return;
+  }
+  if (!boardState.cards.length) {
+    grid.innerHTML = '<p class="vb-empty">No cards yet. Add your first image or affirmation.</p>';
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  boardState.cards.forEach(card => {
+    const item = document.createElement('article');
+    item.className = 'vb-card-item';
+    item.dataset.size = card.size || 'M';
+    item.dataset.id = card.id;
+    const metaChips = [];
+    metaChips.push(`<span class="vb-chip">Size ${card.size || 'M'}</span>`);
+    if (card.favorite) {
+      metaChips.push('<span class="vb-chip">★ Favorite</span>');
+    }
+    if (card.color) {
+      metaChips.push(`<span class="vb-chip"><span class="dot" style="background:${card.color}"></span>${card.color}</span>`);
+    }
+    const tagChips = (card.tags || []).map(tag => `<span class="vb-chip">${tag}</span>`).join('');
+    const meta = `
+      <div class="vb-card-meta">
+        ${metaChips.join('')}
+      </div>
+      ${tagChips ? `<div class="vb-card-tags">${tagChips}</div>` : ''}
+    `;
+    if (card.kind === 'text') {
+      item.innerHTML = `
+        <button class="vb-card-edit" data-action="edit">Edit</button>
+        <div class="vb-card-text">${card.title || card.affirm || 'Untitled'}</div>
+        ${meta}
+      `;
+    } else {
+      const src = card.img_path || '';
+      item.innerHTML = src
+        ? `
+          <button class="vb-card-edit" data-action="edit">Edit</button>
+          <img class="vb-card-media" src="${src}" alt="${card.title || 'Vision card'}" />
+          ${card.title ? `<div class="vb-card-caption">${card.title}</div>` : ''}
+          ${meta}
+        `
+        : `
+          <button class="vb-card-edit" data-action="edit">Edit</button>
+          <div class="vb-card-text">${card.title || 'Image card'}</div>
+          ${meta}
+        `;
+    }
+    fragment.appendChild(item);
+  });
+  grid.appendChild(fragment);
+}
+
+async function loadCards() {
+  if (!boardState.activeBoardId) {
+    boardState.cards = [];
+    renderCards();
+    return;
+  }
+  const { data, error } = await supabase
+    .from('vb_cards')
+    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+    .eq('board_id', boardState.activeBoardId)
+    .order('sort_index', { ascending: true });
+  if (error) {
+    setBoardStatus('Unable to load cards. Run Vision Board V2 migrations to continue.');
+    boardState.cards = [];
+    renderCards();
+    return;
+  }
+  boardState.cards = data || [];
+  renderCards();
+}
+
+function toggleCardForm(show) {
+  const form = document.querySelector('#vb-card-form');
+  if (!form) return;
+  form.toggleAttribute('data-open', show);
+  form.hidden = !show;
+  if (show) {
+    form.querySelector('#vb-card-title')?.focus();
+  }
+}
+
+function setCardFormMode(isEditing) {
+  const saveButton = document.querySelector('#vb-save-card');
+  if (saveButton) {
+    saveButton.textContent = isEditing ? 'Save changes' : 'Add card';
+  }
+}
+
+function resetCardForm() {
+  const titleInput = document.querySelector('#vb-card-title');
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlInput = document.querySelector('#vb-card-url');
+  const affirmInput = document.querySelector('#vb-card-affirm');
+  const sizeSelect = document.querySelector('#vb-card-size');
+  const favoriteInput = document.querySelector('#vb-card-favorite');
+  const colorInput = document.querySelector('#vb-card-color');
+  const tagsInput = document.querySelector('#vb-card-tags');
+  if (titleInput) titleInput.value = '';
+  if (typeSelect) typeSelect.value = 'image';
+  if (urlInput) urlInput.value = '';
+  if (affirmInput) affirmInput.value = '';
+  if (sizeSelect) sizeSelect.value = 'M';
+  if (favoriteInput) favoriteInput.checked = false;
+  if (colorInput) colorInput.value = '';
+  if (tagsInput) tagsInput.value = '';
+  boardState.editingCardId = null;
+  setCardFormMode(false);
+}
+
+function syncCardFormFields() {
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlRow = document.querySelector('#vb-card-url-row');
+  const affirmRow = document.querySelector('#vb-card-affirm-row');
+  if (!typeSelect || !urlRow || !affirmRow) return;
+  const kind = typeSelect.value;
+  const isText = kind === 'text';
+  urlRow.hidden = isText;
+  affirmRow.hidden = !isText;
+}
+
+function getNextCardIndex() {
+  return boardState.cards.reduce((max, card) => Math.max(max, card.sort_index ?? 0), -1) + 1;
+}
+
+function parseTags(value) {
+  if (!value) return [];
+  return value.split(',').map(tag => tag.trim()).filter(Boolean);
+}
+
+function startEditingCard(cardId) {
+  const card = boardState.cards.find(item => item.id === cardId);
+  if (!card) return;
+  boardState.editingCardId = card.id;
+  const titleInput = document.querySelector('#vb-card-title');
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlInput = document.querySelector('#vb-card-url');
+  const affirmInput = document.querySelector('#vb-card-affirm');
+  const sizeSelect = document.querySelector('#vb-card-size');
+  const favoriteInput = document.querySelector('#vb-card-favorite');
+  const colorInput = document.querySelector('#vb-card-color');
+  const tagsInput = document.querySelector('#vb-card-tags');
+  if (titleInput) titleInput.value = card.title || '';
+  if (typeSelect) typeSelect.value = card.kind || 'image';
+  if (urlInput) urlInput.value = card.img_path || '';
+  if (affirmInput) affirmInput.value = card.affirm || '';
+  if (sizeSelect) sizeSelect.value = card.size || 'M';
+  if (favoriteInput) favoriteInput.checked = Boolean(card.favorite);
+  if (colorInput) colorInput.value = card.color || '';
+  if (tagsInput) tagsInput.value = (card.tags || []).join(', ');
+  toggleCardForm(true);
+  syncCardFormFields();
+  setCardFormMode(true);
+}
+
+async function handleSaveCard() {
+  const titleInput = document.querySelector('#vb-card-title');
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlInput = document.querySelector('#vb-card-url');
+  const affirmInput = document.querySelector('#vb-card-affirm');
+  const sizeSelect = document.querySelector('#vb-card-size');
+  const favoriteInput = document.querySelector('#vb-card-favorite');
+  const colorInput = document.querySelector('#vb-card-color');
+  const tagsInput = document.querySelector('#vb-card-tags');
+  if (!boardState.activeBoardId) {
+    setBoardStatus('Create a board before adding cards.');
+    return;
+  }
+  const kind = typeSelect?.value || 'image';
+  const title = titleInput?.value?.trim() || null;
+  const affirm = affirmInput?.value?.trim() || null;
+  const imgPath = urlInput?.value?.trim() || null;
+  const size = sizeSelect?.value || 'M';
+  const favorite = favoriteInput?.checked || false;
+  const color = colorInput?.value?.trim() || null;
+  const tags = parseTags(tagsInput?.value);
+  if (kind === 'image' && !imgPath) {
+    setBoardStatus('Paste an image URL to continue.');
+    return;
+  }
+  if (kind === 'text' && !title && !affirm) {
+    setBoardStatus('Add a title or affirmation to continue.');
+    return;
+  }
+  const isEditing = Boolean(boardState.editingCardId);
+  setBoardStatus(isEditing ? 'Saving card...' : 'Adding card...');
+  const payload = {
+    board_id: boardState.activeBoardId,
+    user_id: boardState.userId,
+    kind,
+    title,
+    affirm,
+    img_path: kind === 'image' ? imgPath : null,
+    size,
+    favorite,
+    color,
+    tags
+  };
+  const query = isEditing
+    ? supabase
+      .from('vb_cards')
+      .update(payload)
+      .eq('id', boardState.editingCardId)
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+      .single()
+    : supabase
+      .from('vb_cards')
+      .insert([{
+        ...payload,
+        sort_index: getNextCardIndex()
+      }])
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+      .single();
+  const { data, error } = await query;
+  if (error) {
+    setBoardStatus('Unable to save card. Check Supabase connection.');
+    return;
+  }
+  if (isEditing) {
+    boardState.cards = boardState.cards.map(card => card.id === data.id ? data : card);
+  } else {
+    boardState.cards = [...boardState.cards, data];
+  }
+  setBoardStatus('');
+  resetCardForm();
+  toggleCardForm(false);
+  renderCards();
+}
+
 async function loadBoards() {
   setBoardStatus('Loading boards...');
   const { data, error } = await supabase
@@ -111,6 +483,8 @@ async function loadBoards() {
   boardState.activeBoardId = boardState.boards[0]?.id || null;
   renderBoardSelect();
   updateBoardDetails();
+  await loadSections();
+  await loadCards();
   setBoardStatus(boardState.boards.length ? '' : 'Create your first board to begin.');
 }
 
@@ -250,6 +624,67 @@ export async function mountVisionBoard() {
       </div>
     </div>
     <div class="vb-status" id="vb-board-status"></div>
+    <div class="vb-card vb-card-form" id="vb-card-form" hidden>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-kind">Card type</label>
+        <select class="vb-select" id="vb-card-kind">
+          <option value="image">Image (URL)</option>
+          <option value="text">Text</option>
+        </select>
+      </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-title">Title</label>
+        <input class="vb-input" id="vb-card-title" placeholder="e.g., Launch my studio" />
+      </div>
+      <div class="vb-form-row" id="vb-card-url-row">
+        <label class="vb-label" for="vb-card-url">Image URL</label>
+        <input class="vb-input" id="vb-card-url" placeholder="https://..." />
+      </div>
+      <div class="vb-form-row" id="vb-card-affirm-row" hidden>
+        <label class="vb-label" for="vb-card-affirm">Affirmation</label>
+        <input class="vb-input" id="vb-card-affirm" placeholder="I show up with confidence." />
+      </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-size">Card size</label>
+        <select class="vb-select" id="vb-card-size">
+          <option value="S">Small</option>
+          <option value="M" selected>Medium</option>
+          <option value="L">Large</option>
+          <option value="XL">Extra large</option>
+        </select>
+      </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-color">Accent color</label>
+        <input class="vb-input" id="vb-card-color" placeholder="#6ee7b7" />
+      </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-tags">Tags</label>
+        <input class="vb-input" id="vb-card-tags" placeholder="growth, career" />
+      </div>
+      <div class="vb-form-row vb-form-row--inline">
+        <label class="vb-checkbox">
+          <input type="checkbox" id="vb-card-favorite" />
+          Mark as favorite
+        </label>
+      </div>
+      <div class="vb-form-actions">
+        <button class="vb-btn" id="vb-cancel-card">Cancel</button>
+        <button class="vb-btn primary" id="vb-save-card">Add card</button>
+      </div>
+    </div>
+    <div class="vb-card vb-section-card">
+      <div class="vb-section-header">
+        <div>
+          <div class="vb-board-label">Board sections</div>
+          <div class="vb-section-subtitle">Group cards into themed areas.</div>
+        </div>
+        <div class="vb-section-form">
+          <input class="vb-input" id="vb-section-title" placeholder="e.g., Career, Wellness" />
+          <button class="vb-btn primary" id="vb-add-section">Add section</button>
+        </div>
+      </div>
+      <div id="vb-section-list" class="vb-section-list"></div>
+    </div>
   `;
   document.querySelector('#vision-canvas').innerHTML = `<div class="vb-grid" id="vb-grid"></div>`;
   document.querySelector('#vision-prompts').innerHTML = `
@@ -291,6 +726,14 @@ export async function mountVisionBoard() {
   const cancelBoardButton = document.querySelector('#vb-cancel-board');
   const saveBoardButton = document.querySelector('#vb-save-board');
   const boardSelect = document.querySelector('#vb-board-select');
+  const sectionList = document.querySelector('#vb-section-list');
+  const addSectionButton = document.querySelector('#vb-add-section');
+  const addCardButton = document.querySelector('#vb-add-card');
+  const cardForm = document.querySelector('#vb-card-form');
+  const cancelCardButton = document.querySelector('#vb-cancel-card');
+  const saveCardButton = document.querySelector('#vb-save-card');
+  const cardKindSelect = document.querySelector('#vb-card-kind');
+  const grid = document.querySelector('#vb-grid');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -306,11 +749,58 @@ export async function mountVisionBoard() {
   boardSelect?.addEventListener('change', event => {
     boardState.activeBoardId = event.target.value;
     updateBoardDetails();
+    loadSections();
+    loadCards();
   });
   themeSelect?.addEventListener('change', event => {
     const theme = getThemeByName(event.target.value);
     if (themePreview) {
       themePreview.style.background = `linear-gradient(135deg, ${theme.accent}, ${theme.accent2})`;
+    }
+  });
+  addSectionButton?.addEventListener('click', () => {
+    handleAddSection();
+  });
+  addCardButton?.addEventListener('click', () => {
+    toggleCardForm(true);
+    boardState.editingCardId = null;
+    setCardFormMode(false);
+    syncCardFormFields();
+  });
+  cancelCardButton?.addEventListener('click', () => {
+    toggleCardForm(false);
+    resetCardForm();
+  });
+  saveCardButton?.addEventListener('click', () => {
+    handleSaveCard();
+  });
+  cardKindSelect?.addEventListener('change', () => {
+    syncCardFormFields();
+  });
+  if (cardForm) {
+    cardForm.id = 'vb-card-form';
+  }
+  grid?.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    const action = button.dataset.action;
+    if (action !== 'edit') return;
+    const cardEl = button.closest('.vb-card-item');
+    const cardId = cardEl?.dataset?.id;
+    if (!cardId) return;
+    startEditingCard(cardId);
+  });
+  sectionList?.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    const row = button.closest('.vb-section-row');
+    const sectionId = row?.dataset?.id;
+    const action = button.dataset.action;
+    if (!sectionId || !action) return;
+    if (action === 'rename') {
+      handleRenameSection(sectionId);
+    } else if (action === 'up' || action === 'down') {
+      handleMoveSection(sectionId, action);
     }
   });
   await loadBoards();
