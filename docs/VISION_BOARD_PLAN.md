@@ -35,6 +35,9 @@ Although the master development plan lists this milestone as “not started,” 
 ### Vision Board V2 habit linking (Phase 1)
 - **Card linking UI** now lets creators link cards to habits, with a goal linking placeholder for the next milestone.【F:app/vision/vision.js†L247-L476】
 
+### Vision Board V2 canvas filters (Phase 2)
+- **Filter bar** now supports filtering by section, tag, color, and favorites in the Vision Board V2 canvas.【F:app/vision/vision.js†L98-L529】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -51,7 +54,6 @@ The following items are still marked as **todo** in the Vision Board build plan 
 
 ### Phase 2 — Canvas
 - Drag-drop reorder; move across sections; sizes S/M/L/XL.
-- Filter by tag/color/section/favorites.
 
 ### Phase 3 — Prompts & Mantra
 - Prompt chips insert into text cards.

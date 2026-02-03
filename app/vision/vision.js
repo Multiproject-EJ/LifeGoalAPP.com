@@ -45,7 +45,13 @@ const boardState = {
   sections: [],
   cards: [],
   habits: [],
-  editingCardId: null
+  editingCardId: null,
+  filters: {
+    sectionId: '',
+    tag: '',
+    color: '',
+    favoriteOnly: false
+  }
 };
 
 function applyTheme(theme = {}) {
@@ -150,6 +156,8 @@ async function loadSections() {
   }
   boardState.sections = data || [];
   renderSections();
+  renderCardSectionOptions();
+  renderFilterOptions();
 }
 
 function getNextSectionIndex() {
@@ -241,12 +249,15 @@ function renderCards() {
     grid.innerHTML = '<p class="vb-empty">Select a board to view cards.</p>';
     return;
   }
-  if (!boardState.cards.length) {
-    grid.innerHTML = '<p class="vb-empty">No cards yet. Add your first image or affirmation.</p>';
+  const filteredCards = applyCardFilters(boardState.cards);
+  if (!filteredCards.length) {
+    grid.innerHTML = boardState.cards.length
+      ? '<p class="vb-empty">No cards match these filters.</p>'
+      : '<p class="vb-empty">No cards yet. Add your first image or affirmation.</p>';
     return;
   }
   const fragment = document.createDocumentFragment();
-  boardState.cards.forEach(card => {
+  filteredCards.forEach(card => {
     const item = document.createElement('article');
     item.className = 'vb-card-item';
     item.dataset.size = card.size || 'M';
@@ -264,6 +275,10 @@ function renderCards() {
       metaChips.push(`<span class="vb-chip">Habit · ${habit ? habit.title : 'Linked habit'}</span>`);
     } else if (card.link_type === 'goal') {
       metaChips.push('<span class="vb-chip">Goal · Linked</span>');
+    }
+    if (card.section_id) {
+      const section = boardState.sections.find(item => item.id === card.section_id);
+      metaChips.push(`<span class="vb-chip">Section · ${section ? section.title : 'Assigned'}</span>`);
     }
     const tagChips = (card.tags || []).map(tag => `<span class="vb-chip">${tag}</span>`).join('');
     const meta = `
@@ -306,7 +321,7 @@ async function loadCards() {
   }
   const { data, error } = await supabase
     .from('vb_cards')
-    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id')
+    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id,section_id')
     .eq('board_id', boardState.activeBoardId)
     .order('sort_index', { ascending: true });
   if (error) {
@@ -316,6 +331,7 @@ async function loadCards() {
     return;
   }
   boardState.cards = data || [];
+  renderFilterOptions();
   renderCards();
 }
 
@@ -347,6 +363,7 @@ function resetCardForm() {
   const tagsInput = document.querySelector('#vb-card-tags');
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const habitSelect = document.querySelector('#vb-card-habit');
+  const sectionSelect = document.querySelector('#vb-card-section');
   if (titleInput) titleInput.value = '';
   if (typeSelect) typeSelect.value = 'image';
   if (urlInput) urlInput.value = '';
@@ -357,6 +374,7 @@ function resetCardForm() {
   if (tagsInput) tagsInput.value = '';
   if (linkTypeSelect) linkTypeSelect.value = 'none';
   if (habitSelect) habitSelect.value = '';
+  if (sectionSelect) sectionSelect.value = '';
   boardState.editingCardId = null;
   setCardFormMode(false);
   syncLinkFields();
@@ -407,6 +425,22 @@ function renderHabitOptions() {
   });
 }
 
+function renderCardSectionOptions() {
+  const select = document.querySelector('#vb-card-section');
+  if (!select) return;
+  select.innerHTML = '';
+  const empty = document.createElement('option');
+  empty.value = '';
+  empty.textContent = 'No section';
+  select.appendChild(empty);
+  boardState.sections.forEach(section => {
+    const option = document.createElement('option');
+    option.value = section.id;
+    option.textContent = section.title;
+    select.appendChild(option);
+  });
+}
+
 function syncLinkFields() {
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const habitRow = document.querySelector('#vb-card-habit-row');
@@ -415,6 +449,69 @@ function syncLinkFields() {
   const linkType = linkTypeSelect.value;
   habitRow.hidden = linkType !== 'habit';
   goalRow.hidden = linkType !== 'goal';
+}
+
+function applyCardFilters(cards = []) {
+  return cards.filter(card => {
+    if (boardState.filters.favoriteOnly && !card.favorite) return false;
+    if (boardState.filters.sectionId && card.section_id !== boardState.filters.sectionId) return false;
+    if (boardState.filters.color && card.color !== boardState.filters.color) return false;
+    if (boardState.filters.tag) {
+      const tags = card.tags || [];
+      if (!tags.includes(boardState.filters.tag)) return false;
+    }
+    return true;
+  });
+}
+
+function renderFilterOptions() {
+  const sectionSelect = document.querySelector('#vb-filter-section');
+  const tagSelect = document.querySelector('#vb-filter-tag');
+  const colorSelect = document.querySelector('#vb-filter-color');
+  if (sectionSelect) {
+    sectionSelect.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = 'All sections';
+    sectionSelect.appendChild(allOption);
+    boardState.sections.forEach(section => {
+      const option = document.createElement('option');
+      option.value = section.id;
+      option.textContent = section.title;
+      sectionSelect.appendChild(option);
+    });
+    sectionSelect.value = boardState.filters.sectionId || '';
+  }
+  if (tagSelect) {
+    const tags = [...new Set(boardState.cards.flatMap(card => card.tags || []))];
+    tagSelect.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = 'All tags';
+    tagSelect.appendChild(allOption);
+    tags.forEach(tag => {
+      const option = document.createElement('option');
+      option.value = tag;
+      option.textContent = tag;
+      tagSelect.appendChild(option);
+    });
+    tagSelect.value = boardState.filters.tag || '';
+  }
+  if (colorSelect) {
+    const colors = [...new Set(boardState.cards.map(card => card.color).filter(Boolean))];
+    colorSelect.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = 'All colors';
+    colorSelect.appendChild(allOption);
+    colors.forEach(color => {
+      const option = document.createElement('option');
+      option.value = color;
+      option.textContent = color;
+      colorSelect.appendChild(option);
+    });
+    colorSelect.value = boardState.filters.color || '';
+  }
 }
 
 function startEditingCard(cardId) {
@@ -431,6 +528,7 @@ function startEditingCard(cardId) {
   const tagsInput = document.querySelector('#vb-card-tags');
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const habitSelect = document.querySelector('#vb-card-habit');
+  const sectionSelect = document.querySelector('#vb-card-section');
   if (titleInput) titleInput.value = card.title || '';
   if (typeSelect) typeSelect.value = card.kind || 'image';
   if (urlInput) urlInput.value = card.img_path || '';
@@ -441,6 +539,7 @@ function startEditingCard(cardId) {
   if (tagsInput) tagsInput.value = (card.tags || []).join(', ');
   if (linkTypeSelect) linkTypeSelect.value = card.link_type || 'none';
   if (habitSelect) habitSelect.value = card.link_type === 'habit' ? (card.link_id || '') : '';
+  if (sectionSelect) sectionSelect.value = card.section_id || '';
   toggleCardForm(true);
   syncCardFormFields();
   syncLinkFields();
@@ -458,6 +557,7 @@ async function handleSaveCard() {
   const tagsInput = document.querySelector('#vb-card-tags');
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const habitSelect = document.querySelector('#vb-card-habit');
+  const sectionSelect = document.querySelector('#vb-card-section');
   if (!boardState.activeBoardId) {
     setBoardStatus('Create a board before adding cards.');
     return;
@@ -472,6 +572,7 @@ async function handleSaveCard() {
   const tags = parseTags(tagsInput?.value);
   const linkType = linkTypeSelect?.value || 'none';
   const habitId = habitSelect?.value || null;
+  const sectionId = sectionSelect?.value || null;
   if (kind === 'image' && !imgPath) {
     setBoardStatus('Paste an image URL to continue.');
     return;
@@ -498,14 +599,15 @@ async function handleSaveCard() {
     color,
     tags,
     link_type: linkType === 'none' ? null : linkType,
-    link_id: linkType === 'habit' ? habitId : null
+    link_id: linkType === 'habit' ? habitId : null,
+    section_id: sectionId || null
   };
   const query = isEditing
     ? supabase
       .from('vb_cards')
       .update(payload)
       .eq('id', boardState.editingCardId)
-      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id')
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id,section_id')
       .single()
     : supabase
       .from('vb_cards')
@@ -513,7 +615,7 @@ async function handleSaveCard() {
         ...payload,
         sort_index: getNextCardIndex()
       }])
-      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id')
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id,section_id')
       .single();
   const { data, error } = await query;
   if (error) {
@@ -749,6 +851,10 @@ export async function mountVisionBoard() {
           <option value="goal" disabled>Goal (coming soon)</option>
         </select>
       </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-section">Section</label>
+        <select class="vb-select" id="vb-card-section"></select>
+      </div>
       <div class="vb-form-row" id="vb-card-habit-row" hidden>
         <label class="vb-label" for="vb-card-habit">Habit</label>
         <select class="vb-select" id="vb-card-habit"></select>
@@ -782,7 +888,28 @@ export async function mountVisionBoard() {
       <div id="vb-section-list" class="vb-section-list"></div>
     </div>
   `;
-  document.querySelector('#vision-canvas').innerHTML = `<div class="vb-grid" id="vb-grid"></div>`;
+  document.querySelector('#vision-canvas').innerHTML = `
+    <div class="vb-filter-bar">
+      <div class="vb-filter-group">
+        <label class="vb-label" for="vb-filter-section">Section</label>
+        <select class="vb-select" id="vb-filter-section"></select>
+      </div>
+      <div class="vb-filter-group">
+        <label class="vb-label" for="vb-filter-tag">Tag</label>
+        <select class="vb-select" id="vb-filter-tag"></select>
+      </div>
+      <div class="vb-filter-group">
+        <label class="vb-label" for="vb-filter-color">Color</label>
+        <select class="vb-select" id="vb-filter-color"></select>
+      </div>
+      <label class="vb-checkbox vb-filter-favorite">
+        <input type="checkbox" id="vb-filter-favorite" />
+        Favorites only
+      </label>
+      <button class="vb-btn vb-btn--ghost" id="vb-filter-reset">Reset filters</button>
+    </div>
+    <div class="vb-grid" id="vb-grid"></div>
+  `;
   document.querySelector('#vision-prompts').innerHTML = `
     <div class="prompt-chips" id="vb-prompt-chips"></div>
     <div class="mantra" id="vb-mantra">Daily mantra will show here</div>
@@ -831,6 +958,11 @@ export async function mountVisionBoard() {
   const cardKindSelect = document.querySelector('#vb-card-kind');
   const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const grid = document.querySelector('#vb-grid');
+  const filterSectionSelect = document.querySelector('#vb-filter-section');
+  const filterTagSelect = document.querySelector('#vb-filter-tag');
+  const filterColorSelect = document.querySelector('#vb-filter-color');
+  const filterFavoriteInput = document.querySelector('#vb-filter-favorite');
+  const filterResetButton = document.querySelector('#vb-filter-reset');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -877,6 +1009,35 @@ export async function mountVisionBoard() {
   });
   linkTypeSelect?.addEventListener('change', () => {
     syncLinkFields();
+  });
+  filterSectionSelect?.addEventListener('change', event => {
+    boardState.filters.sectionId = event.target.value;
+    renderCards();
+  });
+  filterTagSelect?.addEventListener('change', event => {
+    boardState.filters.tag = event.target.value;
+    renderCards();
+  });
+  filterColorSelect?.addEventListener('change', event => {
+    boardState.filters.color = event.target.value;
+    renderCards();
+  });
+  filterFavoriteInput?.addEventListener('change', event => {
+    boardState.filters.favoriteOnly = event.target.checked;
+    renderCards();
+  });
+  filterResetButton?.addEventListener('click', () => {
+    boardState.filters = {
+      sectionId: '',
+      tag: '',
+      color: '',
+      favoriteOnly: false
+    };
+    if (filterSectionSelect) filterSectionSelect.value = '';
+    if (filterTagSelect) filterTagSelect.value = '';
+    if (filterColorSelect) filterColorSelect.value = '';
+    if (filterFavoriteInput) filterFavoriteInput.checked = false;
+    renderCards();
   });
   if (cardForm) {
     cardForm.id = 'vb-card-form';

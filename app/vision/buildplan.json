@@ -14,7 +14,7 @@
     ]},
     {"title":"Phase 2 — Canvas","items":[
       {"id":"2-grid","label":"Drag-drop reorder; move across sections; sizes S/M/L/XL","status":"todo"},
-      {"id":"2-filter","label":"Filter by tag/color/section/favorites","status":"todo"}
+      {"id":"2-filter","label":"Filter by tag/color/section/favorites","status":"done"}
     ]},
     {"title":"Phase 3 — Prompts & Mantra","items":[
       {"id":"3-packs","label":"Prompt chips insert into text cards","status":"todo"},

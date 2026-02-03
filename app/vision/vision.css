@@ -10,6 +10,10 @@
 .vb-card { background:linear-gradient(180deg,var(--vb-surface),var(--vb-surface-2)); border-radius:var(--vb-radius); border:1px solid rgba(255,255,255,.06); box-shadow:0 10px 24px var(--vb-shadow); padding:12px; }
 .vb-toolbar { display:flex; gap:var(--vb-gap); align-items:center; flex-wrap:wrap; margin-bottom:10px; }
 .vb-toolbar .vb-select,.vb-toolbar .vb-input,.vb-toolbar .vb-btn { height:40px; border-radius:var(--vb-radius-sm); border:1px solid rgba(255,255,255,.08); background:#121520; color:var(--vb-text); padding:0 12px; outline:none; }
+.vb-filter-bar{ display:flex; flex-wrap:wrap; gap:var(--vb-gap); align-items:flex-end; padding:12px; border-radius:var(--vb-radius); background:rgba(10,12,18,.55); border:1px solid rgba(255,255,255,.06); margin-bottom:12px; }
+.vb-filter-group{ display:flex; flex-direction:column; gap:6px; min-width:140px; }
+.vb-filter-bar .vb-select{ height:40px; border-radius:var(--vb-radius-sm); border:1px solid rgba(255,255,255,.08); background:#121520; color:var(--vb-text); padding:0 12px; outline:none; }
+.vb-filter-favorite{ align-self:center; margin-top:18px; }
 .vb-btn { display:inline-flex; align-items:center; gap:8px; padding:0 14px; cursor:pointer; transition:transform .05s ease, background .2s ease, border-color .2s ease; }
 .vb-btn:active{ transform:translateY(1px);}
 .vb-btn.primary{ background:linear-gradient(180deg,#1d2840,#1a2440); border-color:rgba(96,165,250,.45); box-shadow:inset 0 0 0 1px rgba(96,165,250,.35); }
