@@ -20,6 +20,10 @@ Although the master development plan lists this milestone as “not started,” 
 - **Orphan detection** (items with no linked goals/habits), surfaced as chips and callouts.【F:src/features/vision-board/VisionBoard.tsx†L1341-L1411】
 - **Goal/habit linking UI** that enables orphan detection to function.【F:src/features/vision-board/VisionBoard.tsx†L1020-L1058】
 
+### Vision Board V2 storage bucket (Phase 0)
+- **Private `vision` storage bucket migration** added for Vision Board V2 assets.【F:supabase/migrations/0136_vision_board_v2_storage_bucket.sql†L1-L15】
+- **Build checklist** updated to mark the storage bucket task as done.【F:app/vision/buildplan.json†L4-L9】
+
 ### Vision Board V2 sections (Phase 1)
 - **Section management UI** for adding, renaming, and reordering sections on a board is now wired up in the Vision Board V2 shell.【F:app/vision/vision.js†L71-L232】
 - **Build checklist** updated to reflect section management as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
@@ -84,7 +88,6 @@ The following items are still marked as **todo** in the Vision Board build plan 
 
 ### Phase 0 — Bootstrap
 - Run 0101 + 0102 + 0103 migrations.
-- Create private Storage bucket `vision`.
   - Helper: `scripts/vision-board-v2-migrations.sh` applies the three Vision Board V2 migrations in order.
 
 ### Phase 2 — Canvas
