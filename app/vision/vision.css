@@ -76,6 +76,7 @@
 .vb-slideshow .controls{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; }
 #vision-prompts .prompt-chips{ display:flex; flex-wrap:wrap; gap:8px; }
 #vision-prompts .vb-chip{ cursor:pointer; }
+#vision-prompts .vb-prompt-toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
 #vision-prompts .mantra{ margin-top:10px; padding:14px; border-radius:var(--vb-radius); background:linear-gradient(180deg,#1a2031,#151a27); border:1px solid rgba(96,165,250,.25); }
 #vision-journal .mood-row{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
 .mood-dot{ width:18px; height:18px; border-radius:50%; border:1px solid rgba(255,255,255,.12); cursor:pointer; }

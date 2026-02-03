@@ -17,7 +17,7 @@
       {"id":"2-filter","label":"Filter by tag/color/section/favorites","status":"done"}
     ]},
     {"title":"Phase 3 — Prompts & Mantra","items":[
-      {"id":"3-packs","label":"Prompt chips insert into text cards","status":"todo"},
+      {"id":"3-packs","label":"Prompt chips insert into text cards","status":"done"},
       {"id":"3-daily","label":"Daily Mantra highlight","status":"todo"}
     ]},
     {"title":"Phase 4 — Story","items":[
