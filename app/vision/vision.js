@@ -42,7 +42,8 @@ const boardState = {
   boards: [],
   activeBoardId: null,
   userId: null,
-  sections: []
+  sections: [],
+  cards: []
 };
 
 function applyTheme(theme = {}) {
@@ -230,6 +231,140 @@ async function handleMoveSection(sectionId, direction) {
   renderSections();
 }
 
+function renderCards() {
+  const grid = document.querySelector('#vb-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (!boardState.activeBoardId) {
+    grid.innerHTML = '<p class="vb-empty">Select a board to view cards.</p>';
+    return;
+  }
+  if (!boardState.cards.length) {
+    grid.innerHTML = '<p class="vb-empty">No cards yet. Add your first image or affirmation.</p>';
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  boardState.cards.forEach(card => {
+    const item = document.createElement('article');
+    item.className = 'vb-card-item';
+    item.dataset.size = card.size || 'M';
+    if (card.kind === 'text') {
+      item.innerHTML = `<div class="vb-card-text">${card.title || card.affirm || 'Untitled'}</div>`;
+    } else {
+      const src = card.img_path || '';
+      item.innerHTML = src
+        ? `<img class="vb-card-media" src="${src}" alt="${card.title || 'Vision card'}" />`
+        : `<div class="vb-card-text">${card.title || 'Image card'}</div>`;
+    }
+    fragment.appendChild(item);
+  });
+  grid.appendChild(fragment);
+}
+
+async function loadCards() {
+  if (!boardState.activeBoardId) {
+    boardState.cards = [];
+    renderCards();
+    return;
+  }
+  const { data, error } = await supabase
+    .from('vb_cards')
+    .select('id,title,affirm,kind,img_path,size,sort_index')
+    .eq('board_id', boardState.activeBoardId)
+    .order('sort_index', { ascending: true });
+  if (error) {
+    setBoardStatus('Unable to load cards. Run Vision Board V2 migrations to continue.');
+    boardState.cards = [];
+    renderCards();
+    return;
+  }
+  boardState.cards = data || [];
+  renderCards();
+}
+
+function toggleCardForm(show) {
+  const form = document.querySelector('#vb-card-form');
+  if (!form) return;
+  form.toggleAttribute('data-open', show);
+  form.hidden = !show;
+  if (show) {
+    form.querySelector('#vb-card-title')?.focus();
+  }
+}
+
+function resetCardForm() {
+  const titleInput = document.querySelector('#vb-card-title');
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlInput = document.querySelector('#vb-card-url');
+  const affirmInput = document.querySelector('#vb-card-affirm');
+  if (titleInput) titleInput.value = '';
+  if (typeSelect) typeSelect.value = 'image';
+  if (urlInput) urlInput.value = '';
+  if (affirmInput) affirmInput.value = '';
+}
+
+function syncCardFormFields() {
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlRow = document.querySelector('#vb-card-url-row');
+  const affirmRow = document.querySelector('#vb-card-affirm-row');
+  if (!typeSelect || !urlRow || !affirmRow) return;
+  const kind = typeSelect.value;
+  const isText = kind === 'text';
+  urlRow.hidden = isText;
+  affirmRow.hidden = !isText;
+}
+
+function getNextCardIndex() {
+  return boardState.cards.reduce((max, card) => Math.max(max, card.sort_index ?? 0), -1) + 1;
+}
+
+async function handleAddCard() {
+  const titleInput = document.querySelector('#vb-card-title');
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlInput = document.querySelector('#vb-card-url');
+  const affirmInput = document.querySelector('#vb-card-affirm');
+  if (!boardState.activeBoardId) {
+    setBoardStatus('Create a board before adding cards.');
+    return;
+  }
+  const kind = typeSelect?.value || 'image';
+  const title = titleInput?.value?.trim() || null;
+  const affirm = affirmInput?.value?.trim() || null;
+  const imgPath = urlInput?.value?.trim() || null;
+  if (kind === 'image' && !imgPath) {
+    setBoardStatus('Paste an image URL to continue.');
+    return;
+  }
+  if (kind === 'text' && !title && !affirm) {
+    setBoardStatus('Add a title or affirmation to continue.');
+    return;
+  }
+  setBoardStatus('Adding card...');
+  const { data, error } = await supabase
+    .from('vb_cards')
+    .insert([{
+      board_id: boardState.activeBoardId,
+      user_id: boardState.userId,
+      kind,
+      title,
+      affirm,
+      img_path: kind === 'image' ? imgPath : null,
+      size: 'M',
+      sort_index: getNextCardIndex()
+    }])
+    .select('id,title,affirm,kind,img_path,size,sort_index')
+    .single();
+  if (error) {
+    setBoardStatus('Unable to add card. Check Supabase connection.');
+    return;
+  }
+  boardState.cards = [...boardState.cards, data];
+  setBoardStatus('');
+  resetCardForm();
+  toggleCardForm(false);
+  renderCards();
+}
+
 async function loadBoards() {
   setBoardStatus('Loading boards...');
   const { data, error } = await supabase
@@ -245,6 +380,7 @@ async function loadBoards() {
   renderBoardSelect();
   updateBoardDetails();
   await loadSections();
+  await loadCards();
   setBoardStatus(boardState.boards.length ? '' : 'Create your first board to begin.');
 }
 
@@ -384,6 +520,31 @@ export async function mountVisionBoard() {
       </div>
     </div>
     <div class="vb-status" id="vb-board-status"></div>
+    <div class="vb-card vb-card-form" id="vb-card-form" hidden>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-kind">Card type</label>
+        <select class="vb-select" id="vb-card-kind">
+          <option value="image">Image (URL)</option>
+          <option value="text">Text</option>
+        </select>
+      </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-title">Title</label>
+        <input class="vb-input" id="vb-card-title" placeholder="e.g., Launch my studio" />
+      </div>
+      <div class="vb-form-row" id="vb-card-url-row">
+        <label class="vb-label" for="vb-card-url">Image URL</label>
+        <input class="vb-input" id="vb-card-url" placeholder="https://..." />
+      </div>
+      <div class="vb-form-row" id="vb-card-affirm-row" hidden>
+        <label class="vb-label" for="vb-card-affirm">Affirmation</label>
+        <input class="vb-input" id="vb-card-affirm" placeholder="I show up with confidence." />
+      </div>
+      <div class="vb-form-actions">
+        <button class="vb-btn" id="vb-cancel-card">Cancel</button>
+        <button class="vb-btn primary" id="vb-save-card">Add card</button>
+      </div>
+    </div>
     <div class="vb-card vb-section-card">
       <div class="vb-section-header">
         <div>
@@ -440,6 +601,11 @@ export async function mountVisionBoard() {
   const boardSelect = document.querySelector('#vb-board-select');
   const sectionList = document.querySelector('#vb-section-list');
   const addSectionButton = document.querySelector('#vb-add-section');
+  const addCardButton = document.querySelector('#vb-add-card');
+  const cardForm = document.querySelector('#vb-card-form');
+  const cancelCardButton = document.querySelector('#vb-cancel-card');
+  const saveCardButton = document.querySelector('#vb-save-card');
+  const cardKindSelect = document.querySelector('#vb-card-kind');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -456,6 +622,7 @@ export async function mountVisionBoard() {
     boardState.activeBoardId = event.target.value;
     updateBoardDetails();
     loadSections();
+    loadCards();
   });
   themeSelect?.addEventListener('change', event => {
     const theme = getThemeByName(event.target.value);
@@ -466,6 +633,23 @@ export async function mountVisionBoard() {
   addSectionButton?.addEventListener('click', () => {
     handleAddSection();
   });
+  addCardButton?.addEventListener('click', () => {
+    toggleCardForm(true);
+    syncCardFormFields();
+  });
+  cancelCardButton?.addEventListener('click', () => {
+    toggleCardForm(false);
+    resetCardForm();
+  });
+  saveCardButton?.addEventListener('click', () => {
+    handleAddCard();
+  });
+  cardKindSelect?.addEventListener('change', () => {
+    syncCardFormFields();
+  });
+  if (cardForm) {
+    cardForm.id = 'vb-card-form';
+  }
   sectionList?.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (!button) return;

@@ -24,6 +24,10 @@ Although the master development plan lists this milestone as “not started,” 
 - **Section management UI** for adding, renaming, and reordering sections on a board is now wired up in the Vision Board V2 shell.【F:app/vision/vision.js†L71-L232】
 - **Build checklist** updated to reflect section management as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
 
+### Vision Board V2 add card (Phase 1)
+- **Card creation UI** now supports adding URL-based image cards or text-only cards to the active board, with client-side rendering in the canvas grid.【F:app/vision/vision.js†L101-L483】
+- **Build checklist** updated to reflect card creation as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -41,7 +45,6 @@ The following items are still marked as **todo** in the Vision Board build plan 
 
 ### Phase 1 — Boards & Add Media
 - Board selector (create Vision/Focus) + theme.
-- Add card: upload / paste URL / text-only.
 - Edit card meta: title/affirm/tags/color/size/favorite.
 - Link to Habit now; Goal placeholder.
 
