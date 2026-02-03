@@ -61,6 +61,10 @@ Although the master development plan lists this milestone as “not started,” 
 - **Per-card visibility toggle** is now editable from the card form to hide items from shared boards.【F:app/vision/vision.js†L1662-L1673】
 - **Build checklist** updated to mark Phase 6 sharing items as done.【F:app/vision/buildplan.json†L30-L33】
 
+### Vision Board V2 thumbnail signing (Phase 7)
+- **Signed + transformed URLs** now power Vision Board image thumbnails with fallback to original URLs.【F:app/vision/vision.js†L69-L122】【F:app/vision/vision.js†L674-L716】【F:app/vision/vision.js†L1428-L1519】
+- **Build checklist** updated to mark thumbnail signing as done.【F:app/vision/buildplan.json†L34-L37】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -88,7 +92,6 @@ All Phase 4 story items are shipped.
 All Phase 5 check-in items are shipped.
 
 ### Phase 7 — Polish
-- Signed + transform URLs for thumbnails.
 - Offline queue for edits/uploads.
 - Confetti on celebrate hook.
 

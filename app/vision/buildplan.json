@@ -33,7 +33,7 @@
       {"id":"6-visibility","label":"Per-card visible_in_share toggle","status":"done"}
     ]},
     {"title":"Phase 7 — Polish","items":[
-      {"id":"7-thumb","label":"Signed + transform URLs for thumbnails","status":"todo"},
+      {"id":"7-thumb","label":"Signed + transform URLs for thumbnails","status":"done"},
       {"id":"7-offline","label":"Offline queue for edits/uploads","status":"todo"},
       {"id":"7-celebrate","label":"Confetti on celebrate hook","status":"todo"}
     ]}
