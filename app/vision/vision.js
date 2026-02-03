@@ -56,6 +56,8 @@ const boardState = {
   activePromptPack: ''
 };
 
+const DAILY_MANTRA_KEY = 'vb-daily-mantra';
+
 function applyTheme(theme = {}) {
   const root = document.querySelector('#vision-root');
   if (!root) return;
@@ -329,6 +331,7 @@ function renderPromptChips() {
     packSelect.appendChild(option);
     packSelect.disabled = true;
     chips.innerHTML = '<p class="vb-empty">No prompts found yet.</p>';
+    renderDailyMantra();
     return;
   }
   packSelect.disabled = false;
@@ -345,11 +348,13 @@ function renderPromptChips() {
   const prompts = packs[boardState.activePromptPack] || [];
   if (!prompts.length) {
     chips.innerHTML = '<p class="vb-empty">No prompts in this pack yet.</p>';
+    renderDailyMantra();
     return;
   }
   chips.innerHTML = prompts
     .map(prompt => `<button class="vb-chip" type="button" data-prompt="${prompt.replace(/"/g, '&quot;')}">${prompt}</button>`)
     .join('');
+  renderDailyMantra();
 }
 
 async function loadPromptPacks() {
@@ -363,6 +368,46 @@ async function loadPromptPacks() {
     boardState.promptPacks = {};
     renderPromptChips();
   }
+}
+
+function getTodayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getStoredMantra() {
+  try {
+    return JSON.parse(localStorage.getItem(DAILY_MANTRA_KEY) || '{}');
+  } catch (error) {
+    return {};
+  }
+}
+
+function storeMantra(payload) {
+  try {
+    localStorage.setItem(DAILY_MANTRA_KEY, JSON.stringify(payload));
+  } catch (error) {
+    // Ignore storage failures.
+  }
+}
+
+function renderDailyMantra() {
+  const mantraEl = document.querySelector('#vb-mantra');
+  if (!mantraEl) return;
+  const packs = boardState.promptPacks || {};
+  const packName = boardState.activePromptPack;
+  const prompts = packName ? (packs[packName] || []) : [];
+  if (!prompts.length) {
+    mantraEl.textContent = 'Daily mantra will show here once you add prompts.';
+    return;
+  }
+  const todayKey = getTodayKey();
+  const stored = getStoredMantra();
+  let mantra = stored.prompt;
+  if (!stored || stored.date !== todayKey || stored.pack !== packName || !mantra || !prompts.includes(mantra)) {
+    mantra = prompts[Math.floor(Math.random() * prompts.length)];
+    storeMantra({ date: todayKey, pack: packName, prompt: mantra });
+  }
+  mantraEl.textContent = `Daily mantra · ${mantra}`;
 }
 
 function applyPromptToCard(prompt) {

@@ -18,7 +18,7 @@
     ]},
     {"title":"Phase 3 — Prompts & Mantra","items":[
       {"id":"3-packs","label":"Prompt chips insert into text cards","status":"done"},
-      {"id":"3-daily","label":"Daily Mantra highlight","status":"todo"}
+      {"id":"3-daily","label":"Daily Mantra highlight","status":"done"}
     ]},
     {"title":"Phase 4 — Story","items":[
       {"id":"4-fs","label":"Fullscreen slideshow (interval/shuffle)","status":"todo"},
