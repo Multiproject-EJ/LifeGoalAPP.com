@@ -28,6 +28,8 @@
 .vb-theme-row{ display:flex; align-items:center; gap:10px; }
 .vb-theme-preview{ width:46px; height:32px; border-radius:10px; border:1px solid rgba(255,255,255,.18); box-shadow:0 4px 12px var(--vb-shadow); }
 .vb-form-actions{ display:flex; gap:10px; justify-content:flex-end; }
+.vb-form-row--inline{ flex-direction:row; align-items:center; }
+.vb-checkbox{ display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--vb-muted); }
 .vb-status{ margin-top:10px; font-size:.85rem; color:var(--vb-muted); }
 .vb-section-card{ margin-top:16px; display:flex; flex-direction:column; gap:12px; }
 .vb-section-header{ display:flex; flex-direction:column; gap:12px; }
@@ -49,6 +51,10 @@
 .vb-card-item[data-size="M"]{ grid-row:span 1; min-height:180px;}
 .vb-card-item[data-size="L"]{ grid-row:span 2; min-height:260px;}
 .vb-card-item[data-size="XL"]{ grid-row:span 3; min-height:360px;}
+.vb-card-edit{ position:absolute; top:10px; right:10px; background:rgba(10,12,18,.7); border:1px solid rgba(255,255,255,.18); color:var(--vb-text); border-radius:10px; padding:6px 10px; font-size:.75rem; cursor:pointer; }
+.vb-card-caption{ padding:10px 12px 0; font-weight:600; }
+.vb-card-meta{ display:flex; flex-wrap:wrap; gap:6px; padding:10px 12px; }
+.vb-card-tags{ display:flex; flex-wrap:wrap; gap:6px; padding:0 12px 12px; }
 .vb-card-media{ width:100%; height:100%; object-fit:cover; }
 .vb-card-text{ padding:16px; font-size:1rem; letter-spacing:.2px; }
 .vb-chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:.78rem; color:var(--vb-text); border:1px solid rgba(255,255,255,.08); background:#101522; }

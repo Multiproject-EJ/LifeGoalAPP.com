@@ -28,6 +28,10 @@ Although the master development plan lists this milestone as “not started,” 
 - **Card creation UI** now supports adding URL-based image cards or text-only cards to the active board, with client-side rendering in the canvas grid.【F:app/vision/vision.js†L101-L483】
 - **Build checklist** updated to reflect card creation as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
 
+### Vision Board V2 card metadata edits (Phase 1)
+- **Card edit flow** now covers title, affirmation, tags, color, size, and favorite state directly from the Vision Board shell UI.【F:app/vision/vision.js†L101-L675】
+- **Build checklist** updated to reflect card metadata editing as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -45,7 +49,6 @@ The following items are still marked as **todo** in the Vision Board build plan 
 
 ### Phase 1 — Boards & Add Media
 - Board selector (create Vision/Focus) + theme.
-- Edit card meta: title/affirm/tags/color/size/favorite.
 - Link to Habit now; Goal placeholder.
 
 ### Phase 2 — Canvas

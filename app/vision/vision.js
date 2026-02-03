@@ -43,7 +43,8 @@ const boardState = {
   activeBoardId: null,
   userId: null,
   sections: [],
-  cards: []
+  cards: [],
+  editingCardId: null
 };
 
 function applyTheme(theme = {}) {
@@ -248,13 +249,42 @@ function renderCards() {
     const item = document.createElement('article');
     item.className = 'vb-card-item';
     item.dataset.size = card.size || 'M';
+    item.dataset.id = card.id;
+    const metaChips = [];
+    metaChips.push(`<span class="vb-chip">Size ${card.size || 'M'}</span>`);
+    if (card.favorite) {
+      metaChips.push('<span class="vb-chip">★ Favorite</span>');
+    }
+    if (card.color) {
+      metaChips.push(`<span class="vb-chip"><span class="dot" style="background:${card.color}"></span>${card.color}</span>`);
+    }
+    const tagChips = (card.tags || []).map(tag => `<span class="vb-chip">${tag}</span>`).join('');
+    const meta = `
+      <div class="vb-card-meta">
+        ${metaChips.join('')}
+      </div>
+      ${tagChips ? `<div class="vb-card-tags">${tagChips}</div>` : ''}
+    `;
     if (card.kind === 'text') {
-      item.innerHTML = `<div class="vb-card-text">${card.title || card.affirm || 'Untitled'}</div>`;
+      item.innerHTML = `
+        <button class="vb-card-edit" data-action="edit">Edit</button>
+        <div class="vb-card-text">${card.title || card.affirm || 'Untitled'}</div>
+        ${meta}
+      `;
     } else {
       const src = card.img_path || '';
       item.innerHTML = src
-        ? `<img class="vb-card-media" src="${src}" alt="${card.title || 'Vision card'}" />`
-        : `<div class="vb-card-text">${card.title || 'Image card'}</div>`;
+        ? `
+          <button class="vb-card-edit" data-action="edit">Edit</button>
+          <img class="vb-card-media" src="${src}" alt="${card.title || 'Vision card'}" />
+          ${card.title ? `<div class="vb-card-caption">${card.title}</div>` : ''}
+          ${meta}
+        `
+        : `
+          <button class="vb-card-edit" data-action="edit">Edit</button>
+          <div class="vb-card-text">${card.title || 'Image card'}</div>
+          ${meta}
+        `;
     }
     fragment.appendChild(item);
   });
@@ -269,7 +299,7 @@ async function loadCards() {
   }
   const { data, error } = await supabase
     .from('vb_cards')
-    .select('id,title,affirm,kind,img_path,size,sort_index')
+    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
     .eq('board_id', boardState.activeBoardId)
     .order('sort_index', { ascending: true });
   if (error) {
@@ -292,15 +322,32 @@ function toggleCardForm(show) {
   }
 }
 
+function setCardFormMode(isEditing) {
+  const saveButton = document.querySelector('#vb-save-card');
+  if (saveButton) {
+    saveButton.textContent = isEditing ? 'Save changes' : 'Add card';
+  }
+}
+
 function resetCardForm() {
   const titleInput = document.querySelector('#vb-card-title');
   const typeSelect = document.querySelector('#vb-card-kind');
   const urlInput = document.querySelector('#vb-card-url');
   const affirmInput = document.querySelector('#vb-card-affirm');
+  const sizeSelect = document.querySelector('#vb-card-size');
+  const favoriteInput = document.querySelector('#vb-card-favorite');
+  const colorInput = document.querySelector('#vb-card-color');
+  const tagsInput = document.querySelector('#vb-card-tags');
   if (titleInput) titleInput.value = '';
   if (typeSelect) typeSelect.value = 'image';
   if (urlInput) urlInput.value = '';
   if (affirmInput) affirmInput.value = '';
+  if (sizeSelect) sizeSelect.value = 'M';
+  if (favoriteInput) favoriteInput.checked = false;
+  if (colorInput) colorInput.value = '';
+  if (tagsInput) tagsInput.value = '';
+  boardState.editingCardId = null;
+  setCardFormMode(false);
 }
 
 function syncCardFormFields() {
@@ -318,11 +365,45 @@ function getNextCardIndex() {
   return boardState.cards.reduce((max, card) => Math.max(max, card.sort_index ?? 0), -1) + 1;
 }
 
-async function handleAddCard() {
+function parseTags(value) {
+  if (!value) return [];
+  return value.split(',').map(tag => tag.trim()).filter(Boolean);
+}
+
+function startEditingCard(cardId) {
+  const card = boardState.cards.find(item => item.id === cardId);
+  if (!card) return;
+  boardState.editingCardId = card.id;
   const titleInput = document.querySelector('#vb-card-title');
   const typeSelect = document.querySelector('#vb-card-kind');
   const urlInput = document.querySelector('#vb-card-url');
   const affirmInput = document.querySelector('#vb-card-affirm');
+  const sizeSelect = document.querySelector('#vb-card-size');
+  const favoriteInput = document.querySelector('#vb-card-favorite');
+  const colorInput = document.querySelector('#vb-card-color');
+  const tagsInput = document.querySelector('#vb-card-tags');
+  if (titleInput) titleInput.value = card.title || '';
+  if (typeSelect) typeSelect.value = card.kind || 'image';
+  if (urlInput) urlInput.value = card.img_path || '';
+  if (affirmInput) affirmInput.value = card.affirm || '';
+  if (sizeSelect) sizeSelect.value = card.size || 'M';
+  if (favoriteInput) favoriteInput.checked = Boolean(card.favorite);
+  if (colorInput) colorInput.value = card.color || '';
+  if (tagsInput) tagsInput.value = (card.tags || []).join(', ');
+  toggleCardForm(true);
+  syncCardFormFields();
+  setCardFormMode(true);
+}
+
+async function handleSaveCard() {
+  const titleInput = document.querySelector('#vb-card-title');
+  const typeSelect = document.querySelector('#vb-card-kind');
+  const urlInput = document.querySelector('#vb-card-url');
+  const affirmInput = document.querySelector('#vb-card-affirm');
+  const sizeSelect = document.querySelector('#vb-card-size');
+  const favoriteInput = document.querySelector('#vb-card-favorite');
+  const colorInput = document.querySelector('#vb-card-color');
+  const tagsInput = document.querySelector('#vb-card-tags');
   if (!boardState.activeBoardId) {
     setBoardStatus('Create a board before adding cards.');
     return;
@@ -331,6 +412,10 @@ async function handleAddCard() {
   const title = titleInput?.value?.trim() || null;
   const affirm = affirmInput?.value?.trim() || null;
   const imgPath = urlInput?.value?.trim() || null;
+  const size = sizeSelect?.value || 'M';
+  const favorite = favoriteInput?.checked || false;
+  const color = colorInput?.value?.trim() || null;
+  const tags = parseTags(tagsInput?.value);
   if (kind === 'image' && !imgPath) {
     setBoardStatus('Paste an image URL to continue.');
     return;
@@ -339,26 +424,45 @@ async function handleAddCard() {
     setBoardStatus('Add a title or affirmation to continue.');
     return;
   }
-  setBoardStatus('Adding card...');
-  const { data, error } = await supabase
-    .from('vb_cards')
-    .insert([{
-      board_id: boardState.activeBoardId,
-      user_id: boardState.userId,
-      kind,
-      title,
-      affirm,
-      img_path: kind === 'image' ? imgPath : null,
-      size: 'M',
-      sort_index: getNextCardIndex()
-    }])
-    .select('id,title,affirm,kind,img_path,size,sort_index')
-    .single();
+  const isEditing = Boolean(boardState.editingCardId);
+  setBoardStatus(isEditing ? 'Saving card...' : 'Adding card...');
+  const payload = {
+    board_id: boardState.activeBoardId,
+    user_id: boardState.userId,
+    kind,
+    title,
+    affirm,
+    img_path: kind === 'image' ? imgPath : null,
+    size,
+    favorite,
+    color,
+    tags
+  };
+  const query = isEditing
+    ? supabase
+      .from('vb_cards')
+      .update(payload)
+      .eq('id', boardState.editingCardId)
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+      .single()
+    : supabase
+      .from('vb_cards')
+      .insert([{
+        ...payload,
+        sort_index: getNextCardIndex()
+      }])
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+      .single();
+  const { data, error } = await query;
   if (error) {
-    setBoardStatus('Unable to add card. Check Supabase connection.');
+    setBoardStatus('Unable to save card. Check Supabase connection.');
     return;
   }
-  boardState.cards = [...boardState.cards, data];
+  if (isEditing) {
+    boardState.cards = boardState.cards.map(card => card.id === data.id ? data : card);
+  } else {
+    boardState.cards = [...boardState.cards, data];
+  }
   setBoardStatus('');
   resetCardForm();
   toggleCardForm(false);
@@ -540,6 +644,29 @@ export async function mountVisionBoard() {
         <label class="vb-label" for="vb-card-affirm">Affirmation</label>
         <input class="vb-input" id="vb-card-affirm" placeholder="I show up with confidence." />
       </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-size">Card size</label>
+        <select class="vb-select" id="vb-card-size">
+          <option value="S">Small</option>
+          <option value="M" selected>Medium</option>
+          <option value="L">Large</option>
+          <option value="XL">Extra large</option>
+        </select>
+      </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-color">Accent color</label>
+        <input class="vb-input" id="vb-card-color" placeholder="#6ee7b7" />
+      </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-tags">Tags</label>
+        <input class="vb-input" id="vb-card-tags" placeholder="growth, career" />
+      </div>
+      <div class="vb-form-row vb-form-row--inline">
+        <label class="vb-checkbox">
+          <input type="checkbox" id="vb-card-favorite" />
+          Mark as favorite
+        </label>
+      </div>
       <div class="vb-form-actions">
         <button class="vb-btn" id="vb-cancel-card">Cancel</button>
         <button class="vb-btn primary" id="vb-save-card">Add card</button>
@@ -606,6 +733,7 @@ export async function mountVisionBoard() {
   const cancelCardButton = document.querySelector('#vb-cancel-card');
   const saveCardButton = document.querySelector('#vb-save-card');
   const cardKindSelect = document.querySelector('#vb-card-kind');
+  const grid = document.querySelector('#vb-grid');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -635,6 +763,8 @@ export async function mountVisionBoard() {
   });
   addCardButton?.addEventListener('click', () => {
     toggleCardForm(true);
+    boardState.editingCardId = null;
+    setCardFormMode(false);
     syncCardFormFields();
   });
   cancelCardButton?.addEventListener('click', () => {
@@ -642,7 +772,7 @@ export async function mountVisionBoard() {
     resetCardForm();
   });
   saveCardButton?.addEventListener('click', () => {
-    handleAddCard();
+    handleSaveCard();
   });
   cardKindSelect?.addEventListener('change', () => {
     syncCardFormFields();
@@ -650,6 +780,16 @@ export async function mountVisionBoard() {
   if (cardForm) {
     cardForm.id = 'vb-card-form';
   }
+  grid?.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    const action = button.dataset.action;
+    if (action !== 'edit') return;
+    const cardEl = button.closest('.vb-card-item');
+    const cardId = cardEl?.dataset?.id;
+    if (!cardId) return;
+    startEditingCard(cardId);
+  });
   sectionList?.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (!button) return;

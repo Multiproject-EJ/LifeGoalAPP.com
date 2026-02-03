@@ -9,7 +9,7 @@
       {"id":"1-board","label":"Board selector (create Vision/Focus) + theme","status":"done"},
       {"id":"1-sections","label":"Add/edit/reorder sections","status":"done"},
       {"id":"1-add","label":"Add card: upload / paste URL / text-only","status":"done"},
-      {"id":"1-meta","label":"Edit card meta: title/affirm/tags/color/size/favorite","status":"todo"},
+      {"id":"1-meta","label":"Edit card meta: title/affirm/tags/color/size/favorite","status":"done"},
       {"id":"1-link","label":"Link to Habit now; Goal placeholder","status":"todo"}
     ]},
     {"title":"Phase 2 — Canvas","items":[
