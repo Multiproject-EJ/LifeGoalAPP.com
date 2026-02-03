@@ -32,6 +32,9 @@ Although the master development plan lists this milestone as “not started,” 
 - **Card edit flow** now covers title, affirmation, tags, color, size, and favorite state directly from the Vision Board shell UI.【F:app/vision/vision.js†L101-L675】
 - **Build checklist** updated to reflect card metadata editing as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
 
+### Vision Board V2 habit linking (Phase 1)
+- **Card linking UI** now lets creators link cards to habits, with a goal linking placeholder for the next milestone.【F:app/vision/vision.js†L247-L476】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -42,14 +45,9 @@ The latest update notes a scaffolded Vision Board tab with canvas, prompts, and 
 The following items are still marked as **todo** in the Vision Board build plan and/or explicitly called “not yet implemented.”【F:app/vision/buildplan.json†L1-L40】【F:QUICK_START_GUIDE.md†L285-L293】
 
 ### Phase 0 — Bootstrap
-- Protect Vision Board tab with Supabase Auth.
 - Run 0101 + 0102 + 0103 migrations.
 - Create private Storage bucket `vision`.
   - Helper: `scripts/vision-board-v2-migrations.sh` applies the three Vision Board V2 migrations in order.
-
-### Phase 1 — Boards & Add Media
-- Board selector (create Vision/Focus) + theme.
-- Link to Habit now; Goal placeholder.
 
 ### Phase 2 — Canvas
 - Drag-drop reorder; move across sections; sizes S/M/L/XL.

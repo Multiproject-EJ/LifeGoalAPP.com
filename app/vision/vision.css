@@ -25,6 +25,7 @@
 .vb-card-form[data-open="false"]{ display:none; }
 .vb-form-row{ display:flex; flex-direction:column; gap:6px; }
 .vb-label{ font-size:.78rem; text-transform:uppercase; letter-spacing:.2px; color:var(--vb-muted); }
+.vb-help{ font-size:.8rem; color:var(--vb-muted); }
 .vb-theme-row{ display:flex; align-items:center; gap:10px; }
 .vb-theme-preview{ width:46px; height:32px; border-radius:10px; border:1px solid rgba(255,255,255,.18); box-shadow:0 4px 12px var(--vb-shadow); }
 .vb-form-actions{ display:flex; gap:10px; justify-content:flex-end; }

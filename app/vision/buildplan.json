@@ -10,7 +10,7 @@
       {"id":"1-sections","label":"Add/edit/reorder sections","status":"done"},
       {"id":"1-add","label":"Add card: upload / paste URL / text-only","status":"done"},
       {"id":"1-meta","label":"Edit card meta: title/affirm/tags/color/size/favorite","status":"done"},
-      {"id":"1-link","label":"Link to Habit now; Goal placeholder","status":"todo"}
+      {"id":"1-link","label":"Link to Habit now; Goal placeholder","status":"done"}
     ]},
     {"title":"Phase 2 — Canvas","items":[
       {"id":"2-grid","label":"Drag-drop reorder; move across sections; sizes S/M/L/XL","status":"todo"},
