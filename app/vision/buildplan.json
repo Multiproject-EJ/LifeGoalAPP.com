@@ -1,7 +1,7 @@
 {
   "phases":[
     {"title":"Phase 0 — Bootstrap","items":[
-      {"id":"0-auth","label":"Protect Vision Board tab with Supabase Auth","status":"todo"},
+      {"id":"0-auth","label":"Protect Vision Board tab with Supabase Auth","status":"done"},
       {"id":"0-sql","label":"Run 0101 + 0102 + 0103 migrations","status":"todo"},
       {"id":"0-bucket","label":"Create private Storage bucket 'vision'","status":"todo"}
     ]},

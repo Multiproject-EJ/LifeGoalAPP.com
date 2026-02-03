@@ -1175,6 +1175,10 @@ export default function App() {
     setShowMobileHome(true);
   };
 
+  const requiresAuthenticatedAccess = (navId: string) => navId === 'insights';
+
+  const shouldRequireAuthentication = !isAuthenticated && !isDemoMode;
+
   const handleMobileNavSelect = (navId: string, options?: { preserveBreatheTab?: boolean }) => {
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
@@ -1186,6 +1190,11 @@ export default function App() {
 
     if (navId === 'game' && isMobileViewport) {
       setShowMobileGamification(true);
+      return;
+    }
+
+    if (requiresAuthenticatedAccess(navId) && shouldRequireAuthentication) {
+      openAuthOverlay('login');
       return;
     }
 
@@ -1777,8 +1786,6 @@ export default function App() {
     isOnboardingGateActive &&
     (isOnboardingOverride || (!isOnboardingComplete && !isOnboardingDismissed));
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete || isOnboardingOverride;
-
-  const shouldRequireAuthentication = !isAuthenticated && !isDemoMode;
 
   useEffect(() => {
     if (profileAutosaveError) {
@@ -3106,6 +3113,10 @@ export default function App() {
                     scheduleDesktopMenuAutoHide();
                     if (item.id === 'account' && !isAuthenticated) {
                       handleAccountClick();
+                      return;
+                    }
+                    if (requiresAuthenticatedAccess(item.id) && shouldRequireAuthentication) {
+                      openAuthOverlay('login');
                       return;
                     }
                     setActiveWorkspaceNav(item.id);
