@@ -69,6 +69,10 @@ Although the master development plan lists this milestone as “not started,” 
 - **Celebrate hook confetti** now triggers a visual burst when a fresh check-in increases the streak, using the existing Vision Board confetti overlay styling.【F:app/vision/vision.js†L120-L523】【F:app/vision/vision.css†L115-L122】
 - **Build checklist** updated to mark celebrate confetti as done.【F:app/vision/buildplan.json†L34-L38】
 
+### Vision Board V2 offline queue (Phase 7)
+- **Offline queue** now buffers card edits and card reorders locally, syncing queued updates once the device reconnects.【F:app/vision/vision.js†L96-L903】
+- **Build checklist** updated to mark offline queue as done.【F:app/vision/buildplan.json†L34-L38】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -96,7 +100,7 @@ All Phase 4 story items are shipped.
 All Phase 5 check-in items are shipped.
 
 ### Phase 7 — Polish
-- Offline queue for edits/uploads.
+- All Phase 7 polish items are shipped.
 
 ---
 

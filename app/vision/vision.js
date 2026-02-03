@@ -73,6 +73,7 @@ const boardState = {
 
 const DAILY_MANTRA_KEY = 'vb-daily-mantra';
 const DAILY_SPOTLIGHT_KEY = 'vb-daily-spotlight';
+const OFFLINE_QUEUE_KEY = 'vb-offline-queue';
 const SPOTLIGHT_TIMES = [
   { label: 'Morning (8am)', value: '08:00' },
   { label: 'Midday (12pm)', value: '12:00' },
@@ -108,6 +109,81 @@ const slideshowState = {
 let spotlightState = getStoredSpotlight();
 const CHECKIN_SAVE_DELAY = 500;
 const CHECKIN_STREAK_LOOKBACK_DAYS = 30;
+
+function loadOfflineQueue() {
+  try {
+    const raw = window.localStorage.getItem(OFFLINE_QUEUE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveOfflineQueue(queue) {
+  window.localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+}
+
+function queueOfflineAction(action) {
+  const queue = loadOfflineQueue();
+  queue.push({ ...action, queuedAt: new Date().toISOString() });
+  saveOfflineQueue(queue);
+}
+
+function isOfflineError(error) {
+  if (!navigator.onLine) return true;
+  const message = typeof error?.message === 'string' ? error.message.toLowerCase() : '';
+  return message.includes('failed to fetch') || message.includes('network') || message.includes('offline');
+}
+
+async function flushOfflineQueue({ silent = false } = {}) {
+  const queue = loadOfflineQueue();
+  if (!queue.length) return;
+  if (!navigator.onLine) {
+    if (!silent) {
+      setBoardStatus('Offline: changes queued. They will sync when you reconnect.');
+    }
+    return;
+  }
+  setBoardStatus('Syncing offline changes...');
+  const remaining = [];
+  for (const action of queue) {
+    try {
+      if (action.type === 'card-upsert') {
+        const { data, error } = await supabase
+          .from('vb_cards')
+          .upsert([action.payload], { onConflict: 'id' })
+          .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,visible_in_share,link_type,link_id,section_id')
+          .single();
+        if (error) throw error;
+        const enriched = await enrichCardImage(data);
+        const hasCard = boardState.cards.some(card => card.id === enriched.id);
+        boardState.cards = hasCard
+          ? boardState.cards.map(card => card.id === enriched.id ? enriched : card)
+          : [...boardState.cards, enriched];
+      } else if (action.type === 'card-order') {
+        const { error } = await supabase
+          .from('vb_cards')
+          .upsert(action.payload, { onConflict: 'id' });
+        if (error) throw error;
+      }
+    } catch (error) {
+      remaining.push(action);
+      if (!isOfflineError(error)) {
+        setBoardStatus('Unable to sync offline changes. Try again later.');
+      } else {
+        setBoardStatus('Offline: changes queued. They will sync when you reconnect.');
+      }
+      saveOfflineQueue(remaining);
+      return;
+    }
+  }
+  saveOfflineQueue([]);
+  if (boardState.activeBoardId) {
+    await loadCards();
+  }
+  setBoardStatus('Offline changes synced.');
+}
 
 function getLocalDateString() {
   const now = new Date();
@@ -789,10 +865,20 @@ async function persistCardOrder(nextCards) {
     sort_index: index,
     section_id: card.section_id || null
   }));
+  if (!navigator.onLine) {
+    queueOfflineAction({ type: 'card-order', payload: updates });
+    setBoardStatus('Offline: card order queued to sync.');
+    return;
+  }
   const { error } = await supabase
     .from('vb_cards')
     .upsert(updates, { onConflict: 'id' });
   if (error) {
+    if (isOfflineError(error)) {
+      queueOfflineAction({ type: 'card-order', payload: updates });
+      setBoardStatus('Offline: card order queued to sync.');
+      return;
+    }
     setBoardStatus('Unable to save card order. Check Supabase connection.');
   } else {
     setBoardStatus('');
@@ -1231,6 +1317,27 @@ function parseTags(value) {
   return value.split(',').map(tag => tag.trim()).filter(Boolean);
 }
 
+function upsertLocalCard(payload, { isEditing } = {}) {
+  const id = payload.id || boardState.editingCardId || crypto.randomUUID();
+  const existing = boardState.cards.find(card => card.id === id);
+  const sortIndex = payload.sort_index ?? existing?.sort_index ?? getNextCardIndex();
+  const nextCard = {
+    ...payload,
+    id,
+    sort_index: sortIndex
+  };
+  if (nextCard.kind === 'image' && nextCard.img_path && isExternalUrl(nextCard.img_path)) {
+    nextCard.img_url = nextCard.img_path;
+    nextCard.thumb_url = nextCard.img_path;
+  }
+  if (isEditing) {
+    boardState.cards = boardState.cards.map(card => card.id === id ? { ...card, ...nextCard } : card);
+  } else {
+    boardState.cards = [...boardState.cards, nextCard];
+  }
+  return nextCard;
+}
+
 function renderHabitOptions() {
   const select = document.querySelector('#vb-card-habit');
   if (!select) return;
@@ -1438,6 +1545,21 @@ async function handleSaveCard() {
     link_id: linkType === 'habit' ? habitId : null,
     section_id: sectionId || null
   };
+  if (!navigator.onLine) {
+    const existingSortIndex = boardState.cards.find(card => card.id === boardState.editingCardId)?.sort_index;
+    const offlinePayload = {
+      ...payload,
+      id: boardState.editingCardId || crypto.randomUUID(),
+      sort_index: isEditing ? (existingSortIndex ?? getNextCardIndex()) : getNextCardIndex()
+    };
+    upsertLocalCard(offlinePayload, { isEditing });
+    queueOfflineAction({ type: 'card-upsert', payload: offlinePayload });
+    setBoardStatus('Offline: card queued to sync.');
+    resetCardForm();
+    toggleCardForm(false);
+    renderCards();
+    return;
+  }
   const query = isEditing
     ? supabase
       .from('vb_cards')
@@ -1455,6 +1577,21 @@ async function handleSaveCard() {
       .single();
   const { data, error } = await query;
   if (error) {
+    if (isOfflineError(error)) {
+      const existingSortIndex = boardState.cards.find(card => card.id === boardState.editingCardId)?.sort_index;
+      const offlinePayload = {
+        ...payload,
+        id: boardState.editingCardId || crypto.randomUUID(),
+        sort_index: isEditing ? (existingSortIndex ?? getNextCardIndex()) : getNextCardIndex()
+      };
+      upsertLocalCard(offlinePayload, { isEditing });
+      queueOfflineAction({ type: 'card-upsert', payload: offlinePayload });
+      setBoardStatus('Offline: card queued to sync.');
+      resetCardForm();
+      toggleCardForm(false);
+      renderCards();
+      return;
+    }
     setBoardStatus('Unable to save card. Check Supabase connection.');
     return;
   }
@@ -1608,6 +1745,9 @@ export async function mountVisionBoard() {
   const session = await requireAuth();
   const user = session?.user; if (!user) return;
   boardState.userId = user.id;
+  window.addEventListener('online', () => {
+    flushOfflineQueue();
+  });
 
   // Find “Vision Board” panel
   let panel = document.querySelector('#tab-vision-board')
@@ -2230,6 +2370,7 @@ export async function mountVisionBoard() {
   await loadHabits();
   await loadBoards();
   await loadPromptPacks();
+  await flushOfflineQueue({ silent: true });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
