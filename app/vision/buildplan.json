@@ -22,7 +22,7 @@
     ]},
     {"title":"Phase 4 — Story","items":[
       {"id":"4-fs","label":"Fullscreen slideshow (interval/shuffle)","status":"done"},
-      {"id":"4-push","label":"Daily Spotlight subscribe + test","status":"todo"}
+      {"id":"4-push","label":"Daily Spotlight subscribe + test","status":"done"}
     ]},
     {"title":"Phase 5 — Gratitude & Mood","items":[
       {"id":"5-checkin","label":"Daily mood (1–5) + gratitude note","status":"todo"},
