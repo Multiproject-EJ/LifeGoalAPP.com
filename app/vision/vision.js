@@ -57,6 +57,17 @@ const boardState = {
 };
 
 const DAILY_MANTRA_KEY = 'vb-daily-mantra';
+let activeDragCardId = null;
+let activeDropTargetId = null;
+
+function isFilteringActive() {
+  return Boolean(
+    boardState.filters.sectionId ||
+    boardState.filters.tag ||
+    boardState.filters.color ||
+    boardState.filters.favoriteOnly
+  );
+}
 
 function applyTheme(theme = {}) {
   const root = document.querySelector('#vision-root');
@@ -128,6 +139,7 @@ function renderSections() {
     const row = document.createElement('div');
     row.className = 'vb-section-row';
     row.dataset.id = section.id;
+    row.dataset.sectionId = section.id;
     row.innerHTML = `
       <div class="vb-section-title">${section.title}</div>
       <div class="vb-section-actions">
@@ -264,6 +276,7 @@ function renderCards() {
   filteredCards.forEach(card => {
     const item = document.createElement('article');
     item.className = 'vb-card-item';
+    item.draggable = true;
     item.dataset.size = card.size || 'M';
     item.dataset.id = card.id;
     const metaChips = [];
@@ -315,6 +328,76 @@ function renderCards() {
     fragment.appendChild(item);
   });
   grid.appendChild(fragment);
+}
+
+function clearDragState() {
+  const dragging = document.querySelector('.vb-card-item.is-dragging');
+  if (dragging) dragging.classList.remove('is-dragging');
+  const dropTarget = document.querySelector('.vb-card-item.is-drop-target');
+  if (dropTarget) dropTarget.classList.remove('is-drop-target');
+  const sectionDrop = document.querySelector('.vb-section-row.is-drop-target');
+  if (sectionDrop) sectionDrop.classList.remove('is-drop-target');
+  activeDragCardId = null;
+  activeDropTargetId = null;
+}
+
+function updateCardOrderLocal(nextCards) {
+  boardState.cards = nextCards.map((card, index) => ({
+    ...card,
+    sort_index: index
+  }));
+  renderCards();
+}
+
+async function persistCardOrder(nextCards) {
+  const updates = nextCards.map((card, index) => ({
+    id: card.id,
+    sort_index: index,
+    section_id: card.section_id || null
+  }));
+  const { error } = await supabase
+    .from('vb_cards')
+    .upsert(updates, { onConflict: 'id' });
+  if (error) {
+    setBoardStatus('Unable to save card order. Check Supabase connection.');
+  } else {
+    setBoardStatus('');
+  }
+}
+
+async function reorderCardsByDrop(dragId, targetId) {
+  if (!dragId || !targetId || dragId === targetId) return;
+  const cards = [...boardState.cards].sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+  const dragIndex = cards.findIndex(card => card.id === dragId);
+  const targetIndex = cards.findIndex(card => card.id === targetId);
+  if (dragIndex < 0 || targetIndex < 0) return;
+  const dragCard = { ...cards[dragIndex] };
+  const targetCard = cards[targetIndex];
+  dragCard.section_id = targetCard.section_id || null;
+  cards.splice(dragIndex, 1);
+  const insertIndex = dragIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  cards.splice(insertIndex, 0, dragCard);
+  updateCardOrderLocal(cards);
+  setBoardStatus('Saving new order...');
+  await persistCardOrder(cards);
+}
+
+async function moveCardToSection(dragId, sectionId) {
+  if (!dragId) return;
+  const cards = [...boardState.cards].sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+  const dragIndex = cards.findIndex(card => card.id === dragId);
+  if (dragIndex < 0) return;
+  const dragCard = { ...cards[dragIndex], section_id: sectionId || null };
+  cards.splice(dragIndex, 1);
+  const lastIndex = cards.reduce((last, card, index) => {
+    if ((card.section_id || '') === (sectionId || '')) return index;
+    return last;
+  }, -1);
+  const insertIndex = lastIndex >= 0 ? lastIndex + 1 : cards.length;
+  cards.splice(insertIndex, 0, dragCard);
+  updateCardOrderLocal(cards);
+  setBoardStatus('Saving new order...');
+  await persistCardOrder(cards);
 }
 
 function renderPromptChips() {
@@ -1181,6 +1264,50 @@ export async function mountVisionBoard() {
     if (!cardId) return;
     startEditingCard(cardId);
   });
+  grid?.addEventListener('dragstart', event => {
+    const cardEl = event.target.closest('.vb-card-item');
+    if (!cardEl) return;
+    if (isFilteringActive()) {
+      event.preventDefault();
+      setBoardStatus('Clear filters before reordering cards.');
+      return;
+    }
+    activeDragCardId = cardEl.dataset.id;
+    cardEl.classList.add('is-dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', activeDragCardId);
+  });
+  grid?.addEventListener('dragover', event => {
+    if (!activeDragCardId) return;
+    const cardEl = event.target.closest('.vb-card-item');
+    if (!cardEl || cardEl.dataset.id === activeDragCardId) return;
+    event.preventDefault();
+    if (activeDropTargetId && activeDropTargetId !== cardEl.dataset.id) {
+      const prev = grid.querySelector(`.vb-card-item[data-id="${activeDropTargetId}"]`);
+      prev?.classList.remove('is-drop-target');
+    }
+    activeDropTargetId = cardEl.dataset.id;
+    cardEl.classList.add('is-drop-target');
+    event.dataTransfer.dropEffect = 'move';
+  });
+  grid?.addEventListener('dragleave', event => {
+    const cardEl = event.target.closest('.vb-card-item');
+    if (!cardEl) return;
+    cardEl.classList.remove('is-drop-target');
+  });
+  grid?.addEventListener('drop', event => {
+    event.preventDefault();
+    const cardEl = event.target.closest('.vb-card-item');
+    const targetId = cardEl?.dataset?.id;
+    const dragId = activeDragCardId || event.dataTransfer.getData('text/plain');
+    clearDragState();
+    if (dragId && targetId) {
+      reorderCardsByDrop(dragId, targetId);
+    }
+  });
+  grid?.addEventListener('dragend', () => {
+    clearDragState();
+  });
   sectionList?.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (!button) return;
@@ -1192,6 +1319,30 @@ export async function mountVisionBoard() {
       handleRenameSection(sectionId);
     } else if (action === 'up' || action === 'down') {
       handleMoveSection(sectionId, action);
+    }
+  });
+  sectionList?.addEventListener('dragover', event => {
+    if (!activeDragCardId) return;
+    const row = event.target.closest('.vb-section-row');
+    if (!row) return;
+    event.preventDefault();
+    row.classList.add('is-drop-target');
+    event.dataTransfer.dropEffect = 'move';
+  });
+  sectionList?.addEventListener('dragleave', event => {
+    const row = event.target.closest('.vb-section-row');
+    if (!row) return;
+    row.classList.remove('is-drop-target');
+  });
+  sectionList?.addEventListener('drop', event => {
+    const row = event.target.closest('.vb-section-row');
+    if (!row) return;
+    event.preventDefault();
+    const sectionId = row.dataset.sectionId;
+    const dragId = activeDragCardId || event.dataTransfer.getData('text/plain');
+    clearDragState();
+    if (dragId) {
+      moveCardToSection(dragId, sectionId);
     }
   });
   await loadHabits();

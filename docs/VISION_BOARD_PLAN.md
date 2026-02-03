@@ -42,6 +42,11 @@ Although the master development plan lists this milestone as “not started,” 
 - **Prompt chips** load from the prompt packs JSON and insert prompts into new text cards.【F:app/vision/vision.js†L291-L801】
 - **Daily mantra highlight** now rotates a prompt each day for the active pack.【F:app/vision/vision.js†L365-L455】
 
+### Vision Board V2 canvas drag/drop (Phase 2)
+- **Drag-drop reorder** now lets creators rearrange cards directly on the canvas, persisting updated order to Supabase.【F:app/vision/vision.js†L333-L401】
+- **Move across sections** is supported by dropping cards onto section rows or onto cards in another section.【F:app/vision/vision.js†L333-L401】
+- **Size-based grid spans** already render S/M/L/XL card sizes in the masonry grid.【F:app/vision/vision.css†L55-L61】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -57,7 +62,7 @@ The following items are still marked as **todo** in the Vision Board build plan 
   - Helper: `scripts/vision-board-v2-migrations.sh` applies the three Vision Board V2 migrations in order.
 
 ### Phase 2 — Canvas
-- Drag-drop reorder; move across sections; sizes S/M/L/XL.
+All Phase 2 canvas items are shipped.
 
 ### Phase 3 — Prompts & Mantra
 All Phase 3 prompt items are shipped.
