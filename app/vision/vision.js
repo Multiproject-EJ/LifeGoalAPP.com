@@ -57,8 +57,20 @@ const boardState = {
 };
 
 const DAILY_MANTRA_KEY = 'vb-daily-mantra';
+const SLIDESHOW_INTERVALS = [
+  { label: '3s', value: 3000 },
+  { label: '5s', value: 5000 },
+  { label: '8s', value: 8000 }
+];
 let activeDragCardId = null;
 let activeDropTargetId = null;
+let slideshowTimer = null;
+const slideshowState = {
+  cards: [],
+  index: 0,
+  interval: 5000,
+  shuffle: false
+};
 
 function isFilteringActive() {
   return Boolean(
@@ -507,6 +519,113 @@ function applyPromptToCard(prompt) {
   if (titleInput && !titleInput.value) {
     titleInput.value = 'Prompted affirmation';
   }
+}
+
+function getStoryCards() {
+  return boardState.cards.filter(card => {
+    if (card.kind === 'image') {
+      return Boolean(card.img_path);
+    }
+    return Boolean(card.title || card.affirm);
+  });
+}
+
+function shuffleCards(cards) {
+  const next = [...cards];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
+function getSlideshowCards() {
+  const cards = getStoryCards();
+  return slideshowState.shuffle ? shuffleCards(cards) : cards;
+}
+
+function ensureSlideshowShell() {
+  let shell = document.querySelector('#vb-slideshow');
+  if (shell) return shell;
+  shell = document.createElement('div');
+  shell.className = 'vb-slideshow';
+  shell.id = 'vb-slideshow';
+  shell.setAttribute('role', 'dialog');
+  shell.setAttribute('aria-modal', 'true');
+  shell.innerHTML = `
+    <div class="slide" id="vb-slideshow-slide"></div>
+    <div class="vb-slideshow-caption" id="vb-slideshow-caption"></div>
+    <div class="controls">
+      <button class="vb-btn vb-btn--ghost" id="vb-slideshow-prev">Prev</button>
+      <button class="vb-btn vb-btn--ghost" id="vb-slideshow-next">Next</button>
+      <button class="vb-btn primary" id="vb-slideshow-close">Close</button>
+    </div>
+  `;
+  document.body.appendChild(shell);
+  return shell;
+}
+
+function renderSlideshowCard(card) {
+  const slide = document.querySelector('#vb-slideshow-slide');
+  const caption = document.querySelector('#vb-slideshow-caption');
+  if (!slide || !card) return;
+  if (card.kind === 'image' && card.img_path) {
+    slide.innerHTML = `<img src="${card.img_path}" alt="${card.title || 'Vision card'}" />`;
+  } else {
+    const text = card.title || card.affirm || 'Vision card';
+    slide.innerHTML = `<div class="slide-text">${text}</div>`;
+  }
+  if (caption) {
+    const detail = card.affirm && card.affirm !== card.title ? card.affirm : '';
+    caption.innerHTML = `
+      <div class="vb-slideshow-title">${card.title || 'Vision card'}</div>
+      ${detail ? `<div class="vb-slideshow-detail">${detail}</div>` : ''}
+    `;
+  }
+}
+
+function stopSlideshowTimer() {
+  if (slideshowTimer) {
+    clearInterval(slideshowTimer);
+    slideshowTimer = null;
+  }
+}
+
+function startSlideshowTimer() {
+  stopSlideshowTimer();
+  slideshowTimer = setInterval(() => {
+    goToSlideshowStep(1);
+  }, slideshowState.interval);
+}
+
+function goToSlideshowStep(step) {
+  if (!slideshowState.cards.length) return;
+  const length = slideshowState.cards.length;
+  slideshowState.index = (slideshowState.index + step + length) % length;
+  renderSlideshowCard(slideshowState.cards[slideshowState.index]);
+}
+
+function openSlideshow() {
+  const cards = getSlideshowCards();
+  if (!cards.length) {
+    setBoardStatus('Add cards with images or text to start the slideshow.');
+    return;
+  }
+  const shell = ensureSlideshowShell();
+  slideshowState.cards = cards;
+  slideshowState.index = 0;
+  renderSlideshowCard(slideshowState.cards[slideshowState.index]);
+  shell.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  startSlideshowTimer();
+}
+
+function closeSlideshow() {
+  const shell = document.querySelector('#vb-slideshow');
+  if (!shell) return;
+  shell.classList.remove('show');
+  document.body.style.overflow = '';
+  stopSlideshowTimer();
 }
 
 async function loadCards() {
@@ -1114,7 +1233,28 @@ export async function mountVisionBoard() {
     <div class="prompt-chips" id="vb-prompt-chips"></div>
     <div class="mantra" id="vb-mantra">Daily mantra will show here</div>
   `;
-  document.querySelector('#vision-story').innerHTML = `<button class="vb-btn" id="vb-play-slideshow">Play Slideshow</button>`;
+  document.querySelector('#vision-story').innerHTML = `
+    <div class="vb-card vb-story-card">
+      <div class="vb-story-header">
+        <div>
+          <div class="vb-board-label">Story mode</div>
+          <div class="vb-story-title">Fullscreen slideshow</div>
+        </div>
+        <div class="vb-story-actions">
+          <label class="vb-label" for="vb-story-interval">Interval</label>
+          <select class="vb-select" id="vb-story-interval"></select>
+        </div>
+      </div>
+      <div class="vb-story-controls">
+        <label class="vb-checkbox">
+          <input type="checkbox" id="vb-story-shuffle" />
+          Shuffle cards
+        </label>
+        <button class="vb-btn primary" id="vb-play-slideshow">Play Slideshow</button>
+      </div>
+      <div class="vb-story-hint">Slideshow uses every image or affirmation in the active board.</div>
+    </div>
+  `;
   document.querySelector('#vision-journal').innerHTML = `
     <div class="mood-row">
       <div class="mood-dot mood-1" data-mood="1"></div>
@@ -1165,6 +1305,9 @@ export async function mountVisionBoard() {
   const filterResetButton = document.querySelector('#vb-filter-reset');
   const promptPackSelect = document.querySelector('#vb-prompt-pack');
   const promptChips = document.querySelector('#vb-prompt-chips');
+  const storyIntervalSelect = document.querySelector('#vb-story-interval');
+  const storyShuffleInput = document.querySelector('#vb-story-shuffle');
+  const playSlideshowButton = document.querySelector('#vb-play-slideshow');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -1250,6 +1393,29 @@ export async function mountVisionBoard() {
     if (!button) return;
     const prompt = button.dataset.prompt;
     applyPromptToCard(prompt);
+  });
+  if (storyIntervalSelect) {
+    storyIntervalSelect.innerHTML = '';
+    SLIDESHOW_INTERVALS.forEach(({ label, value }) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      storyIntervalSelect.appendChild(option);
+    });
+    storyIntervalSelect.value = String(slideshowState.interval);
+  }
+  storyIntervalSelect?.addEventListener('change', event => {
+    slideshowState.interval = Number(event.target.value) || 5000;
+    if (document.querySelector('#vb-slideshow')?.classList.contains('show')) {
+      startSlideshowTimer();
+    }
+  });
+  storyShuffleInput?.addEventListener('change', event => {
+    slideshowState.shuffle = event.target.checked;
+  });
+  playSlideshowButton?.addEventListener('click', () => {
+    setBoardStatus('');
+    openSlideshow();
   });
   if (cardForm) {
     cardForm.id = 'vb-card-form';
@@ -1343,6 +1509,30 @@ export async function mountVisionBoard() {
     clearDragState();
     if (dragId) {
       moveCardToSection(dragId, sectionId);
+    }
+  });
+  document.addEventListener('click', event => {
+    if (!event.target) return;
+    if (event.target.id === 'vb-slideshow-close') {
+      closeSlideshow();
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (!document.querySelector('#vb-slideshow')?.classList.contains('show')) return;
+    if (event.key === 'Escape') {
+      closeSlideshow();
+    } else if (event.key === 'ArrowRight') {
+      goToSlideshowStep(1);
+    } else if (event.key === 'ArrowLeft') {
+      goToSlideshowStep(-1);
+    }
+  });
+  document.addEventListener('click', event => {
+    if (!event.target) return;
+    if (event.target.id === 'vb-slideshow-prev') {
+      goToSlideshowStep(-1);
+    } else if (event.target.id === 'vb-slideshow-next') {
+      goToSlideshowStep(1);
     }
   });
   await loadHabits();

@@ -71,12 +71,21 @@
 .vb-iconbtn{ width:34px; height:34px; border-radius:10px; background:rgba(10,12,18,.65); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.08); display:grid; place-items:center; cursor:pointer; transition:transform .05s ease, background .2s ease;}
 .vb-iconbtn:active{ transform:translateY(1px);}
 .vb-section{ display:block; margin:16px 2px 6px; color:var(--vb-muted); font-weight:700; font-size:.82rem; letter-spacing:.25px; }
-.vb-slideshow{ position:fixed; inset:0; background:radial-gradient(1200px 800px at 50% 10%,#0b0e15,#02040a); display:none; align-items:center; justify-content:center; z-index:9999; }
+.vb-slideshow{ position:fixed; inset:0; background:radial-gradient(1200px 800px at 50% 10%,#0b0e15,#02040a); display:none; align-items:center; justify-content:center; z-index:9999; flex-direction:column; gap:16px; }
 .vb-slideshow.show{ display:flex; }
-.vb-slideshow .slide{ max-width:92vw; max-height:86vh; border-radius:var(--vb-radius); overflow:hidden; box-shadow:0 30px 60px var(--vb-shadow); border:1px solid rgba(255,255,255,.08); }
+.vb-slideshow .slide{ max-width:92vw; max-height:70vh; border-radius:var(--vb-radius); overflow:hidden; box-shadow:0 30px 60px var(--vb-shadow); border:1px solid rgba(255,255,255,.08); background:#0c0f17; }
 .vb-slideshow .slide img{ width:100%; height:100%; object-fit:contain; }
 .vb-slideshow .slide-text{ padding:28px; font-size:clamp(1.2rem,3.5vw,2rem); color:var(--vb-text); }
 .vb-slideshow .controls{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; }
+.vb-slideshow-caption{ text-align:center; max-width:80vw; color:var(--vb-muted); }
+.vb-slideshow-title{ font-size:1.05rem; font-weight:700; color:var(--vb-text); }
+.vb-slideshow-detail{ font-size:.9rem; margin-top:6px; }
+#vision-story .vb-story-card{ display:flex; flex-direction:column; gap:14px; }
+#vision-story .vb-story-header{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+#vision-story .vb-story-title{ font-size:1.05rem; font-weight:700; margin-top:4px; }
+#vision-story .vb-story-actions{ display:flex; flex-direction:column; gap:6px; min-width:140px; }
+#vision-story .vb-story-controls{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; }
+#vision-story .vb-story-hint{ font-size:.86rem; color:var(--vb-muted); }
 #vision-prompts .prompt-chips{ display:flex; flex-wrap:wrap; gap:8px; }
 #vision-prompts .vb-chip{ cursor:pointer; }
 #vision-prompts .vb-prompt-toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
