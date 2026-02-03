@@ -46,6 +46,12 @@ const boardState = {
   cards: [],
   habits: [],
   editingCardId: null,
+  checkin: {
+    id: null,
+    mood: null,
+    gratitude: '',
+    date: ''
+  },
   filters: {
     sectionId: '',
     tag: '',
@@ -76,6 +82,7 @@ const SLIDESHOW_INTERVALS = [
 let activeDragCardId = null;
 let activeDropTargetId = null;
 let slideshowTimer = null;
+let checkinSaveTimer = null;
 const slideshowState = {
   cards: [],
   index: 0,
@@ -83,6 +90,15 @@ const slideshowState = {
   shuffle: false
 };
 let spotlightState = getStoredSpotlight();
+const CHECKIN_SAVE_DELAY = 500;
+
+function getLocalDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 function isFilteringActive() {
   return Boolean(
@@ -107,6 +123,15 @@ function applyTheme(theme = {}) {
 function setBoardStatus(message = '') {
   const statusEl = document.querySelector('#vb-board-status');
   if (statusEl) statusEl.textContent = message;
+}
+
+function resetCheckinState() {
+  boardState.checkin = {
+    id: null,
+    mood: null,
+    gratitude: '',
+    date: getLocalDateString()
+  };
 }
 
 function getThemeByName(name) {
@@ -198,6 +223,112 @@ async function loadSections() {
   renderSections();
   renderCardSectionOptions();
   renderFilterOptions();
+}
+
+function renderCheckin() {
+  const moodDots = document.querySelectorAll('.mood-dot');
+  moodDots.forEach(dot => {
+    const moodValue = Number(dot.dataset.mood);
+    dot.classList.toggle('is-active', boardState.checkin.mood === moodValue);
+  });
+  const gratitudeInput = document.querySelector('#vb-gratitude');
+  if (gratitudeInput && gratitudeInput.value !== boardState.checkin.gratitude) {
+    gratitudeInput.value = boardState.checkin.gratitude;
+  }
+}
+
+async function loadCheckin() {
+  if (!boardState.userId) return;
+  const date = getLocalDateString();
+  let query = supabase
+    .from('vb_checkins')
+    .select('id,mood,gratitude,the_date,board_id')
+    .eq('user_id', boardState.userId)
+    .eq('the_date', date);
+
+  if (boardState.activeBoardId) {
+    query = query.eq('board_id', boardState.activeBoardId);
+  } else {
+    query = query.is('board_id', null);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error) {
+    resetCheckinState();
+    renderCheckin();
+    setBoardStatus('Unable to load mood check-in. Check Supabase connection.');
+    return;
+  }
+
+  boardState.checkin = {
+    id: data?.id ?? null,
+    mood: data?.mood ?? null,
+    gratitude: data?.gratitude ?? '',
+    date
+  };
+  renderCheckin();
+}
+
+async function persistCheckin() {
+  if (!boardState.userId) return;
+  const payload = {
+    user_id: boardState.userId,
+    board_id: boardState.activeBoardId || null,
+    the_date: boardState.checkin.date || getLocalDateString(),
+    mood: boardState.checkin.mood ?? null,
+    gratitude: boardState.checkin.gratitude?.trim() || null
+  };
+
+  if (!payload.mood && !payload.gratitude) {
+    if (boardState.checkin.id) {
+      const { error } = await supabase
+        .from('vb_checkins')
+        .delete()
+        .eq('id', boardState.checkin.id);
+      if (error) {
+        setBoardStatus('Unable to clear mood check-in. Check Supabase connection.');
+        return;
+      }
+    }
+    resetCheckinState();
+    renderCheckin();
+    return;
+  }
+
+  const query = boardState.checkin.id
+    ? supabase
+      .from('vb_checkins')
+      .update(payload)
+      .eq('id', boardState.checkin.id)
+      .select('id,mood,gratitude,the_date,board_id')
+      .single()
+    : supabase
+      .from('vb_checkins')
+      .insert([payload])
+      .select('id,mood,gratitude,the_date,board_id')
+      .single();
+
+  const { data, error } = await query;
+  if (error) {
+    setBoardStatus('Unable to save mood check-in. Check Supabase connection.');
+    return;
+  }
+  boardState.checkin = {
+    id: data?.id ?? null,
+    mood: data?.mood ?? null,
+    gratitude: data?.gratitude ?? '',
+    date: data?.the_date || payload.the_date
+  };
+  renderCheckin();
+}
+
+function scheduleCheckinSave() {
+  if (checkinSaveTimer) {
+    clearTimeout(checkinSaveTimer);
+  }
+  checkinSaveTimer = setTimeout(() => {
+    persistCheckin();
+  }, CHECKIN_SAVE_DELAY);
 }
 
 function getNextSectionIndex() {
@@ -1070,6 +1201,7 @@ async function loadBoards() {
   updateBoardDetails();
   await loadSections();
   await loadCards();
+  await loadCheckin();
   setBoardStatus(boardState.boards.length ? '' : 'Create your first board to begin.');
 }
 
@@ -1439,6 +1571,8 @@ export async function mountVisionBoard() {
   const spotlightEnabledInput = document.querySelector('#vb-spotlight-enabled');
   const spotlightTimeSelect = document.querySelector('#vb-spotlight-time');
   const spotlightTestButton = document.querySelector('#vb-spotlight-test');
+  const moodRow = document.querySelector('#vision-journal .mood-row');
+  const gratitudeInput = document.querySelector('#vb-gratitude');
 
   newBoardButton?.addEventListener('click', () => {
     toggleBoardForm(true);
@@ -1456,6 +1590,7 @@ export async function mountVisionBoard() {
     updateBoardDetails();
     loadSections();
     loadCards();
+    loadCheckin();
   });
   themeSelect?.addEventListener('change', event => {
     const theme = getThemeByName(event.target.value);
@@ -1565,6 +1700,21 @@ export async function mountVisionBoard() {
   });
   spotlightTestButton?.addEventListener('click', () => {
     sendSpotlightTest();
+  });
+  moodRow?.addEventListener('click', event => {
+    const dot = event.target.closest('.mood-dot');
+    if (!dot) return;
+    const moodValue = Number(dot.dataset.mood);
+    boardState.checkin.mood = moodValue;
+    renderCheckin();
+    persistCheckin();
+  });
+  gratitudeInput?.addEventListener('input', event => {
+    boardState.checkin.gratitude = event.target.value;
+    scheduleCheckinSave();
+  });
+  gratitudeInput?.addEventListener('blur', () => {
+    persistCheckin();
   });
   syncSpotlightControls();
   renderSpotlightPreview();

@@ -25,7 +25,7 @@
       {"id":"4-push","label":"Daily Spotlight subscribe + test","status":"done"}
     ]},
     {"title":"Phase 5 — Gratitude & Mood","items":[
-      {"id":"5-checkin","label":"Daily mood (1–5) + gratitude note","status":"todo"},
+      {"id":"5-checkin","label":"Daily mood (1–5) + gratitude note","status":"done"},
       {"id":"5-streak","label":"Check-in streak & gentle nudges","status":"todo"}
     ]},
     {"title":"Phase 6 — Sharing","items":[

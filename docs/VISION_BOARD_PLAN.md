@@ -51,6 +51,10 @@ Although the master development plan lists this milestone as “not started,” 
 - **Fullscreen slideshow** now plays image + text cards with interval and shuffle controls in the Story section.【F:app/vision/vision.js†L454-L597】【F:app/vision/vision.css†L74-L86】
 - **Daily Spotlight** now includes subscribe controls plus a test send flow in the Story section.【F:app/vision/vision.js†L629-L736】
 
+### Vision Board V2 gratitude & mood (Phase 5)
+- **Daily mood (1–5) + gratitude note** now load and save per board in the Gratitude & Mood panel.【F:app/vision/vision.js†L1387-L1715】
+- **Build checklist** updated to reflect daily check-ins as shipped in Phase 5.【F:app/vision/buildplan.json†L24-L27】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -75,7 +79,6 @@ All Phase 3 prompt items are shipped.
 All Phase 4 story items are shipped.
 
 ### Phase 5 — Gratitude & Mood
-- Daily mood (1–5) + gratitude note.
 - Check-in streak & gentle nudges.
 
 ### Phase 6 — Sharing
