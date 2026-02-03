@@ -88,6 +88,12 @@ const SLIDESHOW_INTERVALS = [
   { label: '5s', value: 5000 },
   { label: '8s', value: 8000 }
 ];
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+const THUMBNAIL_TRANSFORM = {
+  width: 640,
+  height: 640,
+  resize: 'cover'
+};
 let activeDragCardId = null;
 let activeDropTargetId = null;
 let slideshowTimer = null;
@@ -170,6 +176,16 @@ function slugify(value = '') {
 function buildShareUrl(slug = '') {
   if (!slug) return '';
   return `${window.location.origin}/vision-share/${slug}`;
+}
+
+function isExternalUrl(path = '') {
+  return /^https?:\/\//i.test(path);
+}
+
+function getCardImageSource(card, { thumbnail = false } = {}) {
+  if (!card || card.kind !== 'image') return '';
+  if (thumbnail && card.thumb_url) return card.thumb_url;
+  return card.img_url || card.img_path || '';
 }
 
 function getThemeByName(name) {
@@ -700,7 +716,7 @@ function renderCards() {
         ${meta}
       `;
     } else {
-      const src = card.img_path || '';
+      const src = getCardImageSource(card, { thumbnail: true });
       item.innerHTML = src
         ? `
           <button class="vb-card-edit" data-action="edit">Edit</button>
@@ -993,7 +1009,7 @@ async function sendSpotlightTest() {
   }
   new Notification('Daily Spotlight', {
     body: message,
-    icon: card.img_path || undefined
+    icon: getCardImageSource(card) || undefined
   });
   updateSpotlightState({ lastTested: new Date().toISOString() });
   setBoardStatus('Daily Spotlight test sent.');
@@ -1039,7 +1055,8 @@ function renderSlideshowCard(card) {
   const caption = document.querySelector('#vb-slideshow-caption');
   if (!slide || !card) return;
   if (card.kind === 'image' && card.img_path) {
-    slide.innerHTML = `<img src="${card.img_path}" alt="${card.title || 'Vision card'}" />`;
+    const src = getCardImageSource(card);
+    slide.innerHTML = `<img src="${src}" alt="${card.title || 'Vision card'}" />`;
   } else {
     const text = card.title || card.affirm || 'Vision card';
     slide.innerHTML = `<div class="slide-text">${text}</div>`;
@@ -1114,7 +1131,7 @@ async function loadCards() {
     renderCards();
     return;
   }
-  boardState.cards = data || [];
+  boardState.cards = await hydrateCardImages(data || []);
   renderFilterOptions();
   renderCards();
 }
@@ -1413,15 +1430,51 @@ async function handleSaveCard() {
     setBoardStatus('Unable to save card. Check Supabase connection.');
     return;
   }
+  const enrichedCard = await enrichCardImage(data);
   if (isEditing) {
-    boardState.cards = boardState.cards.map(card => card.id === data.id ? data : card);
+    boardState.cards = boardState.cards.map(card => card.id === enrichedCard.id ? enrichedCard : card);
   } else {
-    boardState.cards = [...boardState.cards, data];
+    boardState.cards = [...boardState.cards, enrichedCard];
   }
   setBoardStatus('');
   resetCardForm();
   toggleCardForm(false);
   renderCards();
+}
+
+async function createSignedUrl(path, transform) {
+  if (!path) return null;
+  const options = transform ? { transform } : undefined;
+  const { data, error } = await supabase
+    .storage
+    .from('vision-board')
+    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS, options);
+  if (error) {
+    return null;
+  }
+  return data?.signedUrl || null;
+}
+
+async function enrichCardImage(card) {
+  if (!card || card.kind !== 'image' || !card.img_path) return card;
+  if (isExternalUrl(card.img_path)) {
+    return { ...card, img_url: card.img_path, thumb_url: card.img_path };
+  }
+  const [imgUrl, thumbUrl] = await Promise.all([
+    createSignedUrl(card.img_path),
+    createSignedUrl(card.img_path, THUMBNAIL_TRANSFORM)
+  ]);
+  return {
+    ...card,
+    img_url: imgUrl || card.img_path,
+    thumb_url: thumbUrl || imgUrl || card.img_path
+  };
+}
+
+async function hydrateCardImages(cards = []) {
+  if (!cards.length) return cards;
+  const enriched = await Promise.all(cards.map(card => enrichCardImage(card)));
+  return enriched;
 }
 
 async function loadBoards() {
