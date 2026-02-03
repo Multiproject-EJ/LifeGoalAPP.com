@@ -13,7 +13,7 @@
       {"id":"1-link","label":"Link to Habit now; Goal placeholder","status":"done"}
     ]},
     {"title":"Phase 2 — Canvas","items":[
-      {"id":"2-grid","label":"Drag-drop reorder; move across sections; sizes S/M/L/XL","status":"todo"},
+      {"id":"2-grid","label":"Drag-drop reorder; move across sections; sizes S/M/L/XL","status":"done"},
       {"id":"2-filter","label":"Filter by tag/color/section/favorites","status":"done"}
     ]},
     {"title":"Phase 3 — Prompts & Mantra","items":[
