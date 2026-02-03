@@ -10,6 +10,7 @@
     "build:preview": "vite build --config vite.preview.config.ts",
     "build:manual-sql": "node scripts/build-manual-sql.js",
     "generate:supabase-client": "node scripts/generate-supa-client.mjs",
+    "vision-board-v2:migrate": "bash scripts/vision-board-v2-migrations.sh",
     "predev": "npm run generate:supabase-client",
     "prebuild": "npm run generate:supabase-client"
   },

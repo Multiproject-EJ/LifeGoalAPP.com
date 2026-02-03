@@ -88,7 +88,7 @@ The following items are still marked as **todo** in the Vision Board build plan 
 
 ### Phase 0 — Bootstrap
 - Run 0101 + 0102 + 0103 migrations.
-  - Helper: `scripts/vision-board-v2-migrations.sh` applies the three Vision Board V2 migrations in order.
+  - Helper: `npm run vision-board-v2:migrate` runs `scripts/vision-board-v2-migrations.sh` to apply the three Vision Board V2 migrations in order.
 
 ### Phase 2 — Canvas
 All Phase 2 canvas items are shipped.
