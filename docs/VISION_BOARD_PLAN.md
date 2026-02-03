@@ -65,6 +65,10 @@ Although the master development plan lists this milestone as “not started,” 
 - **Signed + transformed URLs** now power Vision Board image thumbnails with fallback to original URLs.【F:app/vision/vision.js†L69-L122】【F:app/vision/vision.js†L674-L716】【F:app/vision/vision.js†L1428-L1519】
 - **Build checklist** updated to mark thumbnail signing as done.【F:app/vision/buildplan.json†L34-L37】
 
+### Vision Board V2 celebrate confetti (Phase 7)
+- **Celebrate hook confetti** now triggers a visual burst when a fresh check-in increases the streak, using the existing Vision Board confetti overlay styling.【F:app/vision/vision.js†L120-L523】【F:app/vision/vision.css†L115-L122】
+- **Build checklist** updated to mark celebrate confetti as done.【F:app/vision/buildplan.json†L34-L38】
+
 ### Scaffolded canvas + prompts + build checklist
 The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
 
@@ -93,7 +97,6 @@ All Phase 5 check-in items are shipped.
 
 ### Phase 7 — Polish
 - Offline queue for edits/uploads.
-- Confetti on celebrate hook.
 
 ---
 
