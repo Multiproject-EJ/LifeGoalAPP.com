@@ -33,6 +33,7 @@ The following items are still marked as **todo** in the Vision Board build plan 
 - Protect Vision Board tab with Supabase Auth.
 - Run 0101 + 0102 + 0103 migrations.
 - Create private Storage bucket `vision`.
+  - Helper: `scripts/vision-board-v2-migrations.sh` applies the three Vision Board V2 migrations in order.
 
 ### Phase 1 — Boards & Add Media
 - Board selector (create Vision/Focus) + theme.
