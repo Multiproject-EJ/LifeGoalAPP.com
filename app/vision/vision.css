@@ -27,6 +27,17 @@
 .vb-theme-preview{ width:46px; height:32px; border-radius:10px; border:1px solid rgba(255,255,255,.18); box-shadow:0 4px 12px var(--vb-shadow); }
 .vb-form-actions{ display:flex; gap:10px; justify-content:flex-end; }
 .vb-status{ margin-top:10px; font-size:.85rem; color:var(--vb-muted); }
+.vb-section-card{ margin-top:16px; display:flex; flex-direction:column; gap:12px; }
+.vb-section-header{ display:flex; flex-direction:column; gap:12px; }
+.vb-section-subtitle{ font-size:.86rem; color:var(--vb-muted); margin-top:4px; }
+.vb-section-form{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.vb-section-form .vb-input{ flex:1 1 220px; min-width:180px; }
+.vb-section-list{ display:flex; flex-direction:column; gap:8px; }
+.vb-section-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:12px; background:#0d111c; border:1px solid rgba(255,255,255,.08); }
+.vb-section-title{ font-weight:600; letter-spacing:.2px; }
+.vb-section-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+.vb-btn--ghost{ background:transparent; border-color:rgba(255,255,255,.12); height:34px; padding:0 10px; }
+.vb-empty{ font-size:.85rem; color:var(--vb-muted); margin:0; }
 #vision-canvas{ margin-top:8px; }
 .vb-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:var(--vb-gap); }
 @media(min-width:680px){ .vb-grid{ grid-template-columns:repeat(3,1fr);} }
