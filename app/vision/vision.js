@@ -44,6 +44,7 @@ const boardState = {
   userId: null,
   sections: [],
   cards: [],
+  habits: [],
   editingCardId: null
 };
 
@@ -258,6 +259,12 @@ function renderCards() {
     if (card.color) {
       metaChips.push(`<span class="vb-chip"><span class="dot" style="background:${card.color}"></span>${card.color}</span>`);
     }
+    if (card.link_type === 'habit') {
+      const habit = boardState.habits.find(item => item.id === card.link_id);
+      metaChips.push(`<span class="vb-chip">Habit · ${habit ? habit.title : 'Linked habit'}</span>`);
+    } else if (card.link_type === 'goal') {
+      metaChips.push('<span class="vb-chip">Goal · Linked</span>');
+    }
     const tagChips = (card.tags || []).map(tag => `<span class="vb-chip">${tag}</span>`).join('');
     const meta = `
       <div class="vb-card-meta">
@@ -299,7 +306,7 @@ async function loadCards() {
   }
   const { data, error } = await supabase
     .from('vb_cards')
-    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+    .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id')
     .eq('board_id', boardState.activeBoardId)
     .order('sort_index', { ascending: true });
   if (error) {
@@ -338,6 +345,8 @@ function resetCardForm() {
   const favoriteInput = document.querySelector('#vb-card-favorite');
   const colorInput = document.querySelector('#vb-card-color');
   const tagsInput = document.querySelector('#vb-card-tags');
+  const linkTypeSelect = document.querySelector('#vb-card-link-type');
+  const habitSelect = document.querySelector('#vb-card-habit');
   if (titleInput) titleInput.value = '';
   if (typeSelect) typeSelect.value = 'image';
   if (urlInput) urlInput.value = '';
@@ -346,8 +355,11 @@ function resetCardForm() {
   if (favoriteInput) favoriteInput.checked = false;
   if (colorInput) colorInput.value = '';
   if (tagsInput) tagsInput.value = '';
+  if (linkTypeSelect) linkTypeSelect.value = 'none';
+  if (habitSelect) habitSelect.value = '';
   boardState.editingCardId = null;
   setCardFormMode(false);
+  syncLinkFields();
 }
 
 function syncCardFormFields() {
@@ -370,6 +382,41 @@ function parseTags(value) {
   return value.split(',').map(tag => tag.trim()).filter(Boolean);
 }
 
+function renderHabitOptions() {
+  const select = document.querySelector('#vb-card-habit');
+  if (!select) return;
+  select.innerHTML = '';
+  if (!boardState.habits.length) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No habits yet';
+    select.appendChild(option);
+    select.disabled = true;
+    return;
+  }
+  select.disabled = false;
+  const empty = document.createElement('option');
+  empty.value = '';
+  empty.textContent = 'Select a habit';
+  select.appendChild(empty);
+  boardState.habits.forEach(habit => {
+    const option = document.createElement('option');
+    option.value = habit.id;
+    option.textContent = habit.emoji ? `${habit.emoji} ${habit.title}` : habit.title;
+    select.appendChild(option);
+  });
+}
+
+function syncLinkFields() {
+  const linkTypeSelect = document.querySelector('#vb-card-link-type');
+  const habitRow = document.querySelector('#vb-card-habit-row');
+  const goalRow = document.querySelector('#vb-card-goal-row');
+  if (!linkTypeSelect || !habitRow || !goalRow) return;
+  const linkType = linkTypeSelect.value;
+  habitRow.hidden = linkType !== 'habit';
+  goalRow.hidden = linkType !== 'goal';
+}
+
 function startEditingCard(cardId) {
   const card = boardState.cards.find(item => item.id === cardId);
   if (!card) return;
@@ -382,6 +429,8 @@ function startEditingCard(cardId) {
   const favoriteInput = document.querySelector('#vb-card-favorite');
   const colorInput = document.querySelector('#vb-card-color');
   const tagsInput = document.querySelector('#vb-card-tags');
+  const linkTypeSelect = document.querySelector('#vb-card-link-type');
+  const habitSelect = document.querySelector('#vb-card-habit');
   if (titleInput) titleInput.value = card.title || '';
   if (typeSelect) typeSelect.value = card.kind || 'image';
   if (urlInput) urlInput.value = card.img_path || '';
@@ -390,8 +439,11 @@ function startEditingCard(cardId) {
   if (favoriteInput) favoriteInput.checked = Boolean(card.favorite);
   if (colorInput) colorInput.value = card.color || '';
   if (tagsInput) tagsInput.value = (card.tags || []).join(', ');
+  if (linkTypeSelect) linkTypeSelect.value = card.link_type || 'none';
+  if (habitSelect) habitSelect.value = card.link_type === 'habit' ? (card.link_id || '') : '';
   toggleCardForm(true);
   syncCardFormFields();
+  syncLinkFields();
   setCardFormMode(true);
 }
 
@@ -404,6 +456,8 @@ async function handleSaveCard() {
   const favoriteInput = document.querySelector('#vb-card-favorite');
   const colorInput = document.querySelector('#vb-card-color');
   const tagsInput = document.querySelector('#vb-card-tags');
+  const linkTypeSelect = document.querySelector('#vb-card-link-type');
+  const habitSelect = document.querySelector('#vb-card-habit');
   if (!boardState.activeBoardId) {
     setBoardStatus('Create a board before adding cards.');
     return;
@@ -416,12 +470,18 @@ async function handleSaveCard() {
   const favorite = favoriteInput?.checked || false;
   const color = colorInput?.value?.trim() || null;
   const tags = parseTags(tagsInput?.value);
+  const linkType = linkTypeSelect?.value || 'none';
+  const habitId = habitSelect?.value || null;
   if (kind === 'image' && !imgPath) {
     setBoardStatus('Paste an image URL to continue.');
     return;
   }
   if (kind === 'text' && !title && !affirm) {
     setBoardStatus('Add a title or affirmation to continue.');
+    return;
+  }
+  if (linkType === 'habit' && !habitId) {
+    setBoardStatus('Select a habit to link, or choose "None".');
     return;
   }
   const isEditing = Boolean(boardState.editingCardId);
@@ -436,14 +496,16 @@ async function handleSaveCard() {
     size,
     favorite,
     color,
-    tags
+    tags,
+    link_type: linkType === 'none' ? null : linkType,
+    link_id: linkType === 'habit' ? habitId : null
   };
   const query = isEditing
     ? supabase
       .from('vb_cards')
       .update(payload)
       .eq('id', boardState.editingCardId)
-      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id')
       .single()
     : supabase
       .from('vb_cards')
@@ -451,7 +513,7 @@ async function handleSaveCard() {
         ...payload,
         sort_index: getNextCardIndex()
       }])
-      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite')
+      .select('id,title,affirm,kind,img_path,size,sort_index,color,tags,favorite,link_type,link_id')
       .single();
   const { data, error } = await query;
   if (error) {
@@ -486,6 +548,24 @@ async function loadBoards() {
   await loadSections();
   await loadCards();
   setBoardStatus(boardState.boards.length ? '' : 'Create your first board to begin.');
+}
+
+async function loadHabits() {
+  if (!boardState.userId) return;
+  const { data, error } = await supabase
+    .from('habits_v2')
+    .select('id,title,emoji,archived,created_at')
+    .eq('user_id', boardState.userId)
+    .eq('archived', false)
+    .order('created_at', { ascending: true });
+  if (error) {
+    boardState.habits = [];
+    renderHabitOptions();
+    setBoardStatus('Unable to load habits for linking. Check Supabase connection.');
+    return;
+  }
+  boardState.habits = data || [];
+  renderHabitOptions();
 }
 
 function toggleBoardForm(show) {
@@ -661,6 +741,22 @@ export async function mountVisionBoard() {
         <label class="vb-label" for="vb-card-tags">Tags</label>
         <input class="vb-input" id="vb-card-tags" placeholder="growth, career" />
       </div>
+      <div class="vb-form-row">
+        <label class="vb-label" for="vb-card-link-type">Link to</label>
+        <select class="vb-select" id="vb-card-link-type">
+          <option value="none">None</option>
+          <option value="habit">Habit</option>
+          <option value="goal" disabled>Goal (coming soon)</option>
+        </select>
+      </div>
+      <div class="vb-form-row" id="vb-card-habit-row" hidden>
+        <label class="vb-label" for="vb-card-habit">Habit</label>
+        <select class="vb-select" id="vb-card-habit"></select>
+      </div>
+      <div class="vb-form-row" id="vb-card-goal-row" hidden>
+        <label class="vb-label">Goal</label>
+        <div class="vb-help">Goal linking is coming soon.</div>
+      </div>
       <div class="vb-form-row vb-form-row--inline">
         <label class="vb-checkbox">
           <input type="checkbox" id="vb-card-favorite" />
@@ -733,6 +829,7 @@ export async function mountVisionBoard() {
   const cancelCardButton = document.querySelector('#vb-cancel-card');
   const saveCardButton = document.querySelector('#vb-save-card');
   const cardKindSelect = document.querySelector('#vb-card-kind');
+  const linkTypeSelect = document.querySelector('#vb-card-link-type');
   const grid = document.querySelector('#vb-grid');
 
   newBoardButton?.addEventListener('click', () => {
@@ -766,6 +863,7 @@ export async function mountVisionBoard() {
     boardState.editingCardId = null;
     setCardFormMode(false);
     syncCardFormFields();
+    syncLinkFields();
   });
   cancelCardButton?.addEventListener('click', () => {
     toggleCardForm(false);
@@ -776,6 +874,9 @@ export async function mountVisionBoard() {
   });
   cardKindSelect?.addEventListener('change', () => {
     syncCardFormFields();
+  });
+  linkTypeSelect?.addEventListener('change', () => {
+    syncLinkFields();
   });
   if (cardForm) {
     cardForm.id = 'vb-card-form';
@@ -803,6 +904,7 @@ export async function mountVisionBoard() {
       handleMoveSection(sectionId, action);
     }
   });
+  await loadHabits();
   await loadBoards();
 }
 
