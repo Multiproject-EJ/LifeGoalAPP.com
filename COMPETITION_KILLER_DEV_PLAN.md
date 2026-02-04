@@ -476,6 +476,66 @@ End with: “Want to keep this loop, or evolve it?”
 
 ---
 
+#### 7.2.c “First Miss” Flow + Power-Down Quest Definition
+
+**Purpose**: Normalize misses, preserve momentum, and teach a **recovery ritual** that feels compassionate and deliberate.
+
+**Trigger conditions (first week)**
+- First **missed habit** within Days 1–7 (no completion logged by end of day).
+- Or user taps “I can’t today” (manual miss).
+- **Do not** trigger if the user already completed any habit that day (avoid mixed signals).
+
+**Primary goals**
+- Reduce shame and prevent churn.
+- Convert “miss” into a **tiny recovery win**.
+- Teach the concept of **Resilience** (identity vector).
+
+**Flow (mobile-first)**
+1. **Miss detected (end-of-day or next open)**  
+   - Screen title: “Life happens.”  
+   - Subtext: “Want a 60‑second rescue win?”  
+   - Primary CTA: **“Do a Power-Down Quest”**  
+   - Secondary: “Skip for now” (no penalty, no guilt)
+2. **Power-Down Quest picker (1 card only)**  
+   - Auto-select based on context (time-of-day + last habit area).  
+   - Replace with “Pick another” link (opens 2–3 max).
+3. **Quest completion**  
+   - 1-tap confirm (“Done”)  
+   - Micro-reward: Resilience glow + small Gold (+1–3)  
+   - Copy: “You recovered. That’s real progress.”
+4. **Return to Today**  
+   - “Streak protected by recovery” (no numeric streak callout)
+
+**Power-Down Quest definition**
+- **Timebox**: 30–90 seconds max.  
+- **Effort**: ≤ 2/10.  
+- **No setup**: can be done in place, no equipment.  
+- **Category match**: aligned with the habit’s life area when possible.
+
+**Quest examples (MVP library)**
+- **Health**: “Drink 6 sips of water.”  
+- **Mind**: “Take 3 slow breaths.”  
+- **Relationships**: “Send a quick ‘thinking of you’ text.”  
+- **Work**: “Open the task list and star one item.”  
+- **Home**: “Put away one thing.”  
+- **Growth**: “Read one paragraph.”
+
+**Copy rules**
+- Never say “failure.”  
+- Use warmth + agency: “You protected momentum.”  
+- Avoid streak guilt language.  
+
+**Data + telemetry hooks**
+- Log event: `power_down_quest_completed`  
+  - `quest_id`, `quest_category`, `trigger_type` (auto/manual), `day_index`  
+- Apply identity delta: **Resilience +1**  
+- Optional: grant **+1 Gold** if no other completion that day.
+
+**Done when**
+- Trigger rules, flow steps, quest library, copy rules, and telemetry hooks are specified.
+
+---
+
 ### 7.3 North Star Mechanic: **The Identity Engine**
 
 **Core idea**: You are not completing habits. You are becoming someone — and the system remembers.
@@ -789,7 +849,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 ### Phase 2 — Retention Loop + Onboarding
 - [x] **P2.1** Create Day 0–1 onboarding script (copy + UX steps)
 - [x] **P2.2** Day 2–7 prompts + UI touchpoints
-- [ ] **P2.3** “First Miss” flow + Power-Down Quest definition
+- [x] **P2.3** “First Miss” flow + Power-Down Quest definition
 - [ ] **P2.4** Weekly closure ritual (copy + UX)
 
 ### Phase 3 — Social & Stakes
@@ -876,3 +936,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P2.2 Day 2–7 prompts + UI touchpoints  
   - **What changed**: Added detailed Day 2–7 prompts, UI touchpoints, and notification nudges with per-day goals and constraints to keep the loop light and progressive.  
   - **What’s next**: P2.3 “First Miss” flow + Power-Down Quest definition.
+
+- **2026-02-04**  
+  - **Step**: P2.3 “First Miss” flow + Power-Down Quest definition  
+  - **What changed**: Added trigger rules, mobile-first flow steps, Power-Down Quest definition + sample library, copy rules, and telemetry hooks for the first miss recovery experience.  
+  - **What’s next**: P2.4 Weekly closure ritual (copy + UX).
