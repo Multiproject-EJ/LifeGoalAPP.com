@@ -394,6 +394,86 @@ Weekly ceremony:
 - One thing released  
 End with: “Want to keep this loop, or evolve it?”
 
+#### 7.2.b Day 2–7 Prompts + UI Touchpoints (Detailed)
+
+**Purpose**: Keep Days 2–7 frictionless while expanding depth with **one** new element per day.  
+**Rule**: One primary CTA, max two secondary actions, all prompts < 2 lines.
+
+**Global UI touchpoints (appear Days 2–7)**
+- **Day chip**: “Day X of 7” (top-left, subtle)
+- **Primary CTA**: “Do my tiny habit”
+- **Secondary**: “Bank it” (post-completion) + “Make it smaller” (if needed)
+- **Completion micro-reward**: 150–250ms glow + haptic tick
+- **Microcopy slot**: 1–2 lines under CTA for daily prompt
+
+**Day 2 — Familiarity & Safety**
+- **Goal**: Reinforce trust + reduce anxiety.
+- **Prompt**: “Same tiny win today — keep it easy?”
+- **UI touchpoints**:
+  - **Today card**: habit + reward summary
+  - **Tiny visual growth**: 1 leaf/spark appears after completion
+  - **Optional**: “Change time” inline link (no modal)
+- **Post-completion**: “Nice. You’re building a streak.”
+
+**Day 3 — First Choice Moment**
+- **Goal**: Offer a single gentle expansion (user chooses one).
+- **Prompt**: “Want to grow this by one step?”
+- **Choice sheet (pick one)**:
+  1. **Add 2nd tiny habit** (same life area)
+  2. **Upgrade reward** (add 1 Token or +1 minute)
+  3. **Bank progress** (save reward for Day 5)
+- **UI touchpoints**:
+  - **Bottom sheet** with 3 tiles (no more)
+  - **Mini-preview** of what unlocks (1 line each)
+- **If skipped**: “Keep it simple — that counts.”
+
+**Day 4 — Reflection or Soft Social**
+- **Goal**: Add meaning without pressure.
+- **Prompt**: “What helped today?” (single tap)
+- **UI touchpoints**:
+  - **Reflection chip row** (choose 1): “Time,” “Mood,” “Place,” “People”
+  - **Optional**: “Invite a buddy” CTA (secondary, no guilt)
+  - **Zen Garden seed** appears after reflection
+- **If skipped**: “No reflection needed — just showing up matters.”
+
+**Day 5 — Identity Reveal**
+- **Goal**: Introduce identity arc in 1 line.
+- **Prompt**: “You’re becoming someone who ___.”
+- **UI touchpoints**:
+  - **Identity card** (single sentence + icon)
+  - **Stat hint**: “+Care” or “+Discipline” (no numbers)
+  - **Reward echo**: “Rewards after effort work best for you.”
+
+**Day 6 — Planned Miss + Recovery**
+- **Goal**: Normalize misses and model recovery.
+- **Prompt**: “Low-energy day? Take a tiny win.”
+- **UI touchpoints**:
+  - **Power-Down Quest card** (1-tap, 30–60s action)
+  - **Resilience glow** on completion
+  - **Copy**: “You protected the streak by recovering.”
+- **If user did complete yesterday**: show same card but framed as “bonus resilience.”
+
+**Day 7 — Weekly Closure Ritual**
+- **Goal**: Close the loop + invite evolution.
+- **Prompt**: “This week shaped you. Want to keep or evolve?”
+- **UI touchpoints**:
+  - **3-card ritual layout**:
+    1. **Growth**: “You grew in ___”
+    2. **Highlight**: top completion + reward
+    3. **Unlock**: 1 Key or upgraded reward
+  - **CTA**: “Keep this loop”
+  - **Secondary**: “Evolve it” (opens habit/reward adjuster)
+- **Exit note**: “Next week starts tomorrow with the same ease.”
+
+**Day 2–7 notification nudges (lightweight)**
+- Morning: “Tiny win today?”  
+- Afternoon: “Keep it easy — 2 minutes.”  
+- Evening: “Still counts if it’s small.”
+
+**Done when**
+- Prompts and touchpoints are specified for each day (2–7).
+- Each day introduces only one new element.
+
 ---
 
 ### 7.3 North Star Mechanic: **The Identity Engine**
@@ -708,7 +788,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 
 ### Phase 2 — Retention Loop + Onboarding
 - [x] **P2.1** Create Day 0–1 onboarding script (copy + UX steps)
-- [ ] **P2.2** Day 2–7 prompts + UI touchpoints
+- [x] **P2.2** Day 2–7 prompts + UI touchpoints
 - [ ] **P2.3** “First Miss” flow + Power-Down Quest definition
 - [ ] **P2.4** Weekly closure ritual (copy + UX)
 
@@ -791,3 +871,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P2.1 Create Day 0–1 onboarding script (copy + UX steps)  
   - **What changed**: Added a Day 0–1 onboarding script with screen-by-screen copy, CTAs, and UX flow to deliver a first habit completion and reward redemption in under three minutes.  
   - **What’s next**: P2.2 Day 2–7 prompts + UI touchpoints.
+
+- **2025-03-05**  
+  - **Step**: P2.2 Day 2–7 prompts + UI touchpoints  
+  - **What changed**: Added detailed Day 2–7 prompts, UI touchpoints, and notification nudges with per-day goals and constraints to keep the loop light and progressive.  
+  - **What’s next**: P2.3 “First Miss” flow + Power-Down Quest definition.
