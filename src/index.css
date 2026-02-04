@@ -4831,7 +4831,8 @@ body {
   border: none;
   border-radius: 18px;
   padding: 0;
-  width: min(100%, 360px);
+  width: 100%;
+  max-width: 360px;
   background: transparent;
   color: #0f172a;
   font-weight: 700;
@@ -4844,7 +4845,8 @@ body {
 
 .habit-day-nav--compact .habit-day-nav__vision-button {
   padding: 0;
-  width: min(100%, 320px);
+  width: 100%;
+  max-width: 320px;
 }
 
 .habit-day-nav__vision-button:disabled {
