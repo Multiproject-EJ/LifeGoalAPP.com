@@ -638,7 +638,13 @@ export default function PersonalityTest() {
       return;
     }
 
-    setAnswers(latestRecord.answers ?? {});
+    const restoredAnswers = Object.fromEntries(
+      Object.entries(latestRecord.answers ?? {}).map(([key, value]) => [
+        key,
+        Math.max(1, Math.min(5, Number(value))) as AnswerValue,
+      ]),
+    );
+    setAnswers(restoredAnswers);
     savedResultRef.current = latestRecord.id;
     setStep('results');
   };
