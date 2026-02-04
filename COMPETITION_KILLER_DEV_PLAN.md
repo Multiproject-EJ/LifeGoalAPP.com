@@ -201,11 +201,39 @@ Reward {
 > **Rule**: user-defined rewards **cannot** cost only Gold.  
 They must sometimes require Tokens or Keys.
 
-#### Reward Validation Rules (Anti–Self-Sabotage)
-Examples:
-- “You’ve taken this reward 3 times this week — want to raise its cost?”
-- “This reward seems to reduce long-term progress. Keep it, but add a cooldown?”
-- “This reward pairs well after focus sessions. Want to auto-suggest it then?”
+#### Reward Validation Heuristics (Anti–Self-Sabotage)
+**Goal**: Allow any reward, but gently guard against rewards that erase progress or become dopamine loopholes.
+
+**Heuristic Signals (risk +0 to +3 each)**
+- **Too cheap for impact**: cost < 1% of weekly earnings estimate for “Treat”/“Fun” rewards.  
+- **No friction loop**: reward can be redeemed without completing a habit in the last 12h.  
+- **High-frequency pattern**: redeemed >3 times in 7 days with no cost increase.  
+- **Energy drain mismatch**: reward costs only Gold but user’s Energy is <30% (soft exploit).  
+- **Time mismatch**: reward labeled “Growth” or “Meta” but is tagged as “Instant” and <10 minutes.  
+- **Negative adjacent**: reward frequently follows missed habits (possible avoidance loop).  
+- **Streak risk**: reward is used within 2 hours of breaking a streak (potential coping spiral).  
+
+**Risk Scoring**
+- **0–2 (Green)**: Allow silently.  
+- **3–5 (Yellow)**: Soft nudge (suggest cooldown or cost tweak).  
+- **6+ (Red)**: Require one guardrail (cooldown, token cost, or habit gate).  
+
+**Guardrail Options (never block outright)**
+- Add **cooldown** (e.g., 12–48h).  
+- Add **Token/Key cost** if Gold-only.  
+- Add **habit gate** (“Redeem after 1 completion”).  
+- Add **reflection tag** (“What made this feel good?”).  
+
+**Nudge Copy Library (warm tone)**
+- “You’ve enjoyed this a lot lately — want to raise the cost or add a cooldown so it stays special?”  
+- “This looks like a quick win. Want to pair it with a tiny completion first?”  
+- “Let’s keep this reward powerful. Add 1 Token to protect it?”  
+- “This reward shows up after misses. Want a gentler alternative for those days?”  
+
+**Developer Notes**
+- Heuristics are **suggestive**, not punitive.  
+- Store a `reward_risk_score` + `last_nudge_at` to avoid repeated nags.  
+- Allow manual override with “Keep as-is.”  
 
 #### Reward Evolution (New, Powerful)
 Rewards **level up** with the user.  
@@ -526,7 +554,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 ### Phase 1 — Foundations (Product & Systems)
 - [x] **P1.1** Validate reward object model (fields + constraints)
 - [x] **P1.2** Define currency earning rules (XP, Energy, Tokens, Keys, Gold)
-- [ ] **P1.3** Draft reward validation heuristics (anti-sabotage)
+- [x] **P1.3** Draft reward validation heuristics (anti-sabotage)
 - [ ] **P1.4** Define reward evolution states + triggers
 - [ ] **P1.5** Map Identity Engine vector logic (inputs → traits → outputs)
 
@@ -595,3 +623,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P1.2 Define currency earning rules (XP, Energy, Tokens, Keys, Gold)  
   - **What changed**: Added detailed earning/spending rules for XP, Gold, Energy, Tokens, and Keys, plus milestone triggers.  
   - **What’s next**: P1.3 Draft reward validation heuristics (anti-sabotage).
+
+- **2025-03-05**  
+  - **Step**: P1.3 Draft reward validation heuristics (anti-sabotage)  
+  - **What changed**: Added heuristic signals, risk scoring, guardrail options, and warm nudge copy for reward validation.  
+  - **What’s next**: P1.4 Define reward evolution states + triggers.
