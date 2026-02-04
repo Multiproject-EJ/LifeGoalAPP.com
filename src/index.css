@@ -4831,8 +4831,7 @@ body {
   border: none;
   border-radius: 18px;
   padding: 0;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: min(100%, 360px);
   background: transparent;
   color: #0f172a;
   font-weight: 700;
@@ -4845,6 +4844,7 @@ body {
 
 .habit-day-nav--compact .habit-day-nav__vision-button {
   padding: 0;
+  width: min(100%, 320px);
 }
 
 .habit-day-nav__vision-button:disabled {
@@ -4864,7 +4864,7 @@ body {
 
 .habit-day-nav__vision-button-image {
   width: 100%;
-  height: 100%;
+  height: auto;
   border-radius: 18px;
   display: block;
   object-fit: cover;
