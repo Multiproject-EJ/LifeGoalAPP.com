@@ -4870,6 +4870,10 @@ body {
   transition: transform 0.25s ease, filter 0.25s ease;
 }
 
+.habit-day-nav--compact .habit-day-nav__vision-button-image {
+  width: clamp(240px, 70vw, 320px);
+}
+
 .habit-day-nav__vision-button-image--burst {
   transform: translateY(-2px) scale(1.02);
   filter: drop-shadow(0 12px 22px rgba(245, 158, 11, 0.45));
@@ -4888,6 +4892,12 @@ body {
   padding-right: 1rem;
   pointer-events: none;
   z-index: 1;
+}
+
+.habit-day-nav--compact .habit-day-nav__vision-button-text {
+  align-items: center;
+  text-align: center;
+  padding: 0 1rem;
 }
 
 .habit-day-nav__vision-title {
