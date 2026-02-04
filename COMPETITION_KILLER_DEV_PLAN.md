@@ -242,6 +242,34 @@ Example:
 → “Intentional Watch (with reflection)”  
 → “Creative Input Session”
 
+**Evolution States (MVP)**
+- **State 0 — Seed (Base Reward)**: The user-defined reward as entered.  
+- **State 1 — Intentional**: Adds a micro-reflection or purpose tag (1–2 taps).  
+- **State 2 — Elevated**: Adds light structure (timebox, pairing, or mini ritual).  
+- **State 3 — Transformative**: Reframes the reward as growth-aligned (creative, social, or restorative).  
+
+**Evolution Triggers**
+- **Usage Count**: Redeemed `>= 3` times in 7 days → prompt to evolve.  
+- **Streak Alignment**: Redeem after a `Day 3` or `Day 7` streak → upgrade option unlocked.  
+- **Satisfaction Weight**: Self-reported `>= 4` twice → offer evolution to preserve impact.  
+- **Cooldown Pressure**: Repeated cooldown nudges → suggest evolution instead of tighter limits.  
+- **Identity Fit**: If recent vectors trend (e.g., Creativity + Discipline), suggest aligned evolution.  
+
+**Upgrade Rules**
+- Never force an upgrade. Offer “Keep as-is.”  
+- Evolution cannot reduce accessibility (no extra steps beyond 1 screen).  
+- Each evolution state can optionally add **Token** or **Key** cost (max +1).  
+
+**Example Mappings**
+- **Seed**: “Watch YouTube (10 min)”  
+  → **Intentional**: “Intentional Watch (pick 1 topic)”  
+  → **Elevated**: “10-min learning block + 1 note”  
+  → **Transformative**: “Creative input → draft 1 idea”  
+- **Seed**: “Coffee break”  
+  → **Intentional**: “Coffee break + 1 gratitude”  
+  → **Elevated**: “Coffee break + 5-min walk”  
+  → **Transformative**: “Coffee break + share 1 check-in”  
+
 ---
 
 ### 7.2 7-Day Retention Loop
@@ -555,7 +583,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 - [x] **P1.1** Validate reward object model (fields + constraints)
 - [x] **P1.2** Define currency earning rules (XP, Energy, Tokens, Keys, Gold)
 - [x] **P1.3** Draft reward validation heuristics (anti-sabotage)
-- [ ] **P1.4** Define reward evolution states + triggers
+- [x] **P1.4** Define reward evolution states + triggers
 - [ ] **P1.5** Map Identity Engine vector logic (inputs → traits → outputs)
 
 ### Phase 2 — Retention Loop + Onboarding
@@ -628,3 +656,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P1.3 Draft reward validation heuristics (anti-sabotage)  
   - **What changed**: Added heuristic signals, risk scoring, guardrail options, and warm nudge copy for reward validation.  
   - **What’s next**: P1.4 Define reward evolution states + triggers.
+
+- **2025-03-05**  
+  - **Step**: P1.4 Define reward evolution states + triggers  
+  - **What changed**: Added reward evolution states, triggers, upgrade rules, and example mappings for MVP.  
+  - **What’s next**: P1.5 Map Identity Engine vector logic (inputs → traits → outputs).
