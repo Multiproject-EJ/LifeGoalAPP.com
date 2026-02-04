@@ -64,6 +64,7 @@ import {
   loadProfileStrengthSignals,
   type ProfileStrengthSignalSnapshot,
 } from './features/profile-strength/profileStrengthData';
+import { loadPersonalityTestHistory } from './data/personalityTestRepo';
 import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
 import type { AreaKey, NextTask, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
 import {
@@ -72,6 +73,7 @@ import {
   loadProfileStrengthXpState,
   saveProfileStrengthXpState,
 } from './features/profile-strength/profileStrengthXp';
+import { buildTopTraitSummary } from './features/identity/personalitySummary';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -705,6 +707,7 @@ export default function App() {
   const [profileStrengthSignals, setProfileStrengthSignals] =
     useState<ProfileStrengthSignalSnapshot | null>(null);
   const [isProfileStrengthLoading, setIsProfileStrengthLoading] = useState(false);
+  const [personalitySummary, setPersonalitySummary] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isProfileStrengthDebugActive) {
@@ -724,6 +727,38 @@ export default function App() {
       isMounted = false;
     };
   }, [activeSession?.user?.id, isProfileStrengthDebugActive]);
+
+  useEffect(() => {
+    if (!activeSession?.user?.id) {
+      setPersonalitySummary(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    loadPersonalityTestHistory(activeSession.user.id)
+      .then((records) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (records.length === 0) {
+          setPersonalitySummary(null);
+          return;
+        }
+
+        setPersonalitySummary(buildTopTraitSummary(records[0].traits));
+      })
+      .catch(() => {
+        if (isMounted) {
+          setPersonalitySummary(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeSession?.user?.id, isMobileMenuOpen]);
 
   useEffect(() => {
     if (!isProfileStrengthDebugActive || !profileStrengthDebugSnapshot) {
@@ -2125,7 +2160,9 @@ export default function App() {
                 </div>
                 <div className="mobile-menu-overlay__meta-row">
                   <span className="mobile-menu-overlay__meta-label">Type</span>
-                  <span className="mobile-menu-overlay__meta-value">Personality test</span>
+                  <span className="mobile-menu-overlay__meta-value">
+                    {personalitySummary ?? 'Personality test'}
+                  </span>
                 </div>
               </div>
               <div className="mobile-menu-overlay__controls">
