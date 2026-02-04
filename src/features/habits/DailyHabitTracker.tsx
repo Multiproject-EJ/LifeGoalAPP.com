@@ -2237,31 +2237,33 @@ export function DailyHabitTracker({
         {showDetails ? (
           <div className="habit-day-nav__info">
             {isCompactVariant ? (
-              <div className="habit-day-nav__actions habit-day-nav__actions--compact">
-                <span className="sr-only">Tracking day {displayLabel}</span>
-                {isViewingToday ? (
-                  <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
-                ) : (
-                  <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
-                    Today
-                  </button>
-                )}
-                <label className="habit-day-nav__picker habit-day-nav__picker--icon-only" aria-label="Select a date to track">
-                  <span className="sr-only">Select a date to track</span>
-                  <span className="habit-day-nav__picker-pill habit-day-nav__picker-pill--icon-only">
-                    <span className="habit-day-nav__picker-icon" aria-hidden="true">
-                      📅
+              showNavigationControls ? (
+                <div className="habit-day-nav__actions habit-day-nav__actions--compact">
+                  <span className="sr-only">Tracking day {displayLabel}</span>
+                  {isViewingToday ? (
+                    <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
+                  ) : (
+                    <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
+                      Today
+                    </button>
+                  )}
+                  <label className="habit-day-nav__picker habit-day-nav__picker--icon-only" aria-label="Select a date to track">
+                    <span className="sr-only">Select a date to track</span>
+                    <span className="habit-day-nav__picker-pill habit-day-nav__picker-pill--icon-only">
+                      <span className="habit-day-nav__picker-icon" aria-hidden="true">
+                        📅
+                      </span>
+                      <input
+                        className="habit-day-nav__picker-input--icon-only"
+                        type="date"
+                        value={activeDate}
+                        max={today}
+                        onChange={(event) => handleDateInputChange(event.target.value)}
+                      />
                     </span>
-                    <input
-                      className="habit-day-nav__picker-input--icon-only"
-                      type="date"
-                      value={activeDate}
-                      max={today}
-                      onChange={(event) => handleDateInputChange(event.target.value)}
-                    />
-                  </span>
-                </label>
-              </div>
+                  </label>
+                </div>
+              ) : null
             ) : (
               <>
                 <p className={`habit-day-nav__label ${shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''}`}>
@@ -3260,7 +3262,7 @@ export function DailyHabitTracker({
           </div>
 
           <div className="habit-checklist-card__board-body">
-            {renderDayNavigation('compact', isCompactView, isCompactView)}
+            {renderDayNavigation('compact', true, isCompactView)}
             {!isCompactView ? (
               <div className="habit-checklist-card__title">
                 <h2>{titleText}</h2>
