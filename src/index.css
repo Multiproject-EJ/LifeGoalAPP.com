@@ -4654,8 +4654,8 @@ body {
 }
 
 .habit-day-nav--compact .habit-day-nav__info {
-  flex: 0;
-  min-width: auto;
+  flex: 1;
+  min-width: 0;
 }
 
 .habit-day-nav__label {
