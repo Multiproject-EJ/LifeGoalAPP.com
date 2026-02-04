@@ -355,6 +355,13 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 - Keys only at milestones (Day 7 ritual, events)
 - Energy resets daily (soft cap)
 
+**P1.2 Currency Earning Rules (Detailed)**
+- **XP**: Earned on any completion (habit, focus, reflection). Scales with difficulty: tiny habit = small XP, focus session = medium XP, milestone = large XP.
+- **Gold**: Primary spendable currency. Earned with each habit completion and small reflection actions. Bonus Gold on streak milestones and weekly ritual.
+- **Energy**: Daily action budget. Spent on completions (habit, focus), auto-resets daily; low-energy completions grant Resilience instead of more Energy.
+- **Tokens**: Consistency currency. Earned at most once per day, or on streak milestones (e.g., Day 3/7). Never granted by one-off actions.
+- **Keys**: Rare unlock currency. Earned only from weekly ritual, seasonal events, or major milestones (e.g., Day 7, Day 30).
+
 **Deliverable**
 - `src/lib/economy.ts` (or equivalent) with:
   - `applyEvent(userState, event) -> newState + ledgerEntries`
@@ -518,7 +525,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 
 ### Phase 1 — Foundations (Product & Systems)
 - [x] **P1.1** Validate reward object model (fields + constraints)
-- [ ] **P1.2** Define currency earning rules (XP, Energy, Tokens, Keys, Gold)
+- [x] **P1.2** Define currency earning rules (XP, Energy, Tokens, Keys, Gold)
 - [ ] **P1.3** Draft reward validation heuristics (anti-sabotage)
 - [ ] **P1.4** Define reward evolution states + triggers
 - [ ] **P1.5** Map Identity Engine vector logic (inputs → traits → outputs)
@@ -583,3 +590,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P1.1 Validate reward object model (fields + constraints)  
   - **What changed**: Added Reward object validation spec with field rules, constraints, and guardrails.  
   - **What’s next**: P1.2 Define currency earning rules (XP, Energy, Tokens, Keys, Gold).
+
+- **2025-02-14**  
+  - **Step**: P1.2 Define currency earning rules (XP, Energy, Tokens, Keys, Gold)  
+  - **What changed**: Added detailed earning/spending rules for XP, Gold, Energy, Tokens, and Keys, plus milestone triggers.  
+  - **What’s next**: P1.3 Draft reward validation heuristics (anti-sabotage).
