@@ -16,11 +16,17 @@
    - Step worked on
    - What changed
    - What’s next
+3. Confirm the session intent with a **short, generic prompt** like:
+   - “Work on the next step in the Competition Killer dev plan.”
+   - “Proceed with the next Competition Killer step.”
+   - “Continue to the next Competition Killer step.”
+   > **Expectation**: I will use a short prompt like this when I want you to move to the next step.
 
 **After finishing a step**
 1. Mark that step as ✅ **Done**.
 2. Add a summary in the **Progress Log**.
 3. Promote any new insights into **Open Questions** or **Decisions**.
+4. **Pause for approval** before starting any **larger build** (multi-file changes, new flows, or structural changes). Small fixes and tiny copy edits can proceed without approval.
 
 > **Rule**: One step per session. Keep changes atomic and documented.
 
