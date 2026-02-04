@@ -13,6 +13,11 @@ import {
   PersonalityQuestion,
 } from './personalityTestData';
 import { PersonalityScores, scorePersonality } from './personalityScoring';
+import {
+  buildTopTraitList,
+  buildTopTraitSummary,
+  TRAIT_LABELS,
+} from './personalitySummary';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { createDemoSession } from '../../services/demoSession';
 import {
@@ -45,14 +50,6 @@ const ANSWER_OPTIONS: AnswerOption[] = [
   { value: 4, label: 'Agree' },
   { value: 5, label: 'Strongly agree' },
 ];
-
-const TRAIT_LABELS: Record<keyof PersonalityScores['traits'], string> = {
-  openness: 'Openness',
-  conscientiousness: 'Conscientiousness',
-  extraversion: 'Extraversion',
-  agreeableness: 'Agreeableness',
-  emotional_stability: 'Emotional Stability',
-};
 
 const AXIS_LABELS: Record<keyof PersonalityScores['axes'], string> = {
   regulation_style: 'Regulation Style',
@@ -487,17 +484,6 @@ const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
   return Array.from(unique.values()).slice(0, 3);
 };
 
-const buildTopTraitSummary = (traits: Record<string, number>): string => {
-  const topTraits = buildTopTraitList(traits, 2);
-  return topTraits.length > 0 ? topTraits.join(' · ') : 'Trait snapshot';
-};
-
-const buildTopTraitList = (traits: Record<string, number>, limit: number): string[] =>
-  Object.entries(traits)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([key]) => TRAIT_LABELS[key as keyof PersonalityScores['traits']] ?? key);
-
 const formatHistoryDate = (value: string): string => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -547,6 +533,7 @@ export default function PersonalityTest() {
     () => (scores ? buildTopTraitList(scores.traits, 2) : []),
     [scores],
   );
+  const latestRecord = history[0] ?? null;
   const handSummary = useMemo(
     () => (traitCards.length > 0 ? buildHandSummary(traitCards) : null),
     [traitCards],
@@ -646,6 +633,16 @@ export default function PersonalityTest() {
     savedResultRef.current = null;
   };
 
+  const handleViewLatest = () => {
+    if (!latestRecord) {
+      return;
+    }
+
+    setAnswers(latestRecord.answers ?? {});
+    savedResultRef.current = latestRecord.id;
+    setStep('results');
+  };
+
   useEffect(() => {
     if (step !== 'results' || !scores || !activeUserId) {
       return;
@@ -677,6 +674,15 @@ export default function PersonalityTest() {
 
     void refreshHistory();
   }, [refreshHistory, step]);
+
+  useEffect(() => {
+    if (!activeUserId) {
+      setHistory([]);
+      return;
+    }
+
+    void refreshHistory();
+  }, [activeUserId, refreshHistory]);
 
   useEffect(() => {
     if (step !== 'results' || !scores) {
@@ -761,9 +767,20 @@ export default function PersonalityTest() {
             <span className="identity-hub__chip">🧠 29 questions</span>
             <span className="identity-hub__chip">🔒 Private</span>
           </div>
-          <button className="identity-hub__cta" type="button" onClick={handleStart}>
-            Start
-          </button>
+          <div className="identity-hub__actions">
+            <button className="identity-hub__cta" type="button" onClick={handleStart}>
+              Start
+            </button>
+            {latestRecord && (
+              <button
+                className="identity-hub__secondary"
+                type="button"
+                onClick={handleViewLatest}
+              >
+                View latest ({buildTopTraitSummary(latestRecord.traits)})
+              </button>
+            )}
+          </div>
         </div>
       )}
 
