@@ -517,7 +517,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 > **Rule**: Work one step at a time. Log it in Section 12.
 
 ### Phase 1 — Foundations (Product & Systems)
-- [ ] **P1.1** Validate reward object model (fields + constraints)
+- [x] **P1.1** Validate reward object model (fields + constraints)
 - [ ] **P1.2** Define currency earning rules (XP, Energy, Tokens, Keys, Gold)
 - [ ] **P1.3** Draft reward validation heuristics (anti-sabotage)
 - [ ] **P1.4** Define reward evolution states + triggers
@@ -578,3 +578,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: Document created (v1)  
   - **What changed**: Added full Competition Killer plan, phases, and logs.  
   - **What’s next**: Start P1.1 (reward object validation).
+
+- **2025-02-14**  
+  - **Step**: P1.1 Validate reward object model (fields + constraints)  
+  - **What changed**: Added Reward object validation spec with field rules, constraints, and guardrails.  
+  - **What’s next**: P1.2 Define currency earning rules (XP, Energy, Tokens, Keys, Gold).
