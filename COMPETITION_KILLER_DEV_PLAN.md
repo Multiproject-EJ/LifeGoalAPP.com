@@ -518,6 +518,65 @@ End with: “Want to keep this loop, or evolve it?”
 - **Relationships**: “Send a quick ‘thinking of you’ text.”  
 - **Work**: “Open the task list and star one item.”  
 - **Home**: “Put away one thing.”  
+
+---
+
+#### 7.2.d Weekly Closure Ritual (Copy + UX)
+
+**Purpose**: Close the weekly loop with meaning, reinforce identity growth, and invite a gentle evolution choice without pressure.
+
+**Trigger conditions**
+- End of Day 7 (local time) **or** first app open on Day 8 if Day 7 was missed.
+- Only shows if the user has **at least 2 completions** in the last 7 days (avoid shaming).
+
+**Primary goals**
+- Celebrate progress with concrete evidence.
+- Encourage reflection without journaling burden.
+- Offer a clear **Keep vs Evolve** decision.
+
+**Flow (mobile-first, 3 screens max)**
+1. **Ritual opener**  
+   - Title: “Weekly closure”  
+   - Subtext: “Small wins still shape you.”  
+   - Primary CTA: **“Review my week”**  
+2. **3-card ritual layout**  
+   - **Card 1 — Growth**  
+     - Header: “You grew in ___”  
+     - Auto-fill from top identity vector (e.g., Care, Discipline).  
+     - Microcopy: “Consistency builds this trait.”  
+   - **Card 2 — Highlight**  
+     - Header: “Best moment”  
+     - Body: “Top completion: ___” + “Reward: ___”  
+     - If no reward redeemed: “Best moment: showing up ___ times.”  
+   - **Card 3 — Unlock**  
+     - Header: “Weekly unlock”  
+     - Body: “+1 Key” **or** “Reward upgrade unlocked”  
+     - Microcopy: “Use it anytime next week.”  
+   - Primary CTA: **“Keep this loop”**  
+   - Secondary: “Evolve it” (opens habit/reward adjuster)
+3. **Closure confirm**  
+   - Title: “Loop locked”  
+   - Body: “Next week starts with the same ease.”  
+   - CTA: “See tomorrow”
+
+**Evolve it mini-flow (single screen)**
+- **Prompt**: “What should change next week?”  
+- **Options (choose one)**:
+  1. **Make habit 1% bigger** (adds 30–60s)  
+  2. **Change reward** (swap or add +1 Token cost)  
+  3. **Change time** (schedule tweak)  
+- **CTA**: “Save evolution”
+
+**Copy rules**
+- Avoid guilt. Never mention “missed” in this ritual.  
+- Keep body copy ≤ 2 lines per card.  
+- Always include a warmth line: “Small wins still shape you.”
+
+**Telemetry hooks**
+- `weekly_closure_viewed`  
+- `weekly_closure_kept_loop`  
+- `weekly_closure_evolved` (includes evolution type)  
+- `weekly_closure_unlock_redeemed`
 - **Growth**: “Read one paragraph.”
 
 **Copy rules**
@@ -850,7 +909,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 - [x] **P2.1** Create Day 0–1 onboarding script (copy + UX steps)
 - [x] **P2.2** Day 2–7 prompts + UI touchpoints
 - [x] **P2.3** “First Miss” flow + Power-Down Quest definition
-- [ ] **P2.4** Weekly closure ritual (copy + UX)
+- [x] **P2.4** Weekly closure ritual (copy + UX)
 
 ### Phase 3 — Social & Stakes
 - [ ] **P3.1** Party system MVP (shared stakes + shared reward)
@@ -941,3 +1000,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P2.3 “First Miss” flow + Power-Down Quest definition  
   - **What changed**: Added trigger rules, mobile-first flow steps, Power-Down Quest definition + sample library, copy rules, and telemetry hooks for the first miss recovery experience.  
   - **What’s next**: P2.4 Weekly closure ritual (copy + UX).
+
+- **2026-02-04**  
+  - **Step**: P2.4 Weekly closure ritual (copy + UX)  
+  - **What changed**: Added weekly closure ritual flow, 3-card layout, copy rules, evolve mini-flow, and telemetry hooks to close the weekly loop and invite gentle evolution.  
+  - **What’s next**: P3.1 Party system MVP (shared stakes + shared reward).
