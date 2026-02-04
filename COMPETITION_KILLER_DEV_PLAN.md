@@ -283,6 +283,80 @@ Example:
 **Goal feeling**: “Oh… this already works.”  
 No dashboards. No stats. No overwhelm.
 
+#### 7.2.a Day 0–1 Onboarding Script (Copy + UX Steps)
+
+**Objective**: Get the user to **complete 1 tiny habit + redeem 1 reward** in <3 minutes.  
+**Design constraints**: thumb-first, single-focus screens, max 1 primary CTA, 0 jargon.
+
+**Entry Points**
+- First launch (fresh account)
+- Returning user with no active habit (reset/offboard)
+
+**Step 1 — Welcome / Promise**
+- **Screen**: Full-bleed warm illustration + 1-line promise
+- **Header**: “Let’s make one tiny win.”
+- **Body**: “Pick a life area. Add a small habit. Claim a reward today.”
+- **Primary CTA**: “Start in 60 seconds”
+- **Secondary**: “See how it works” (optional bottom sheet with 3 bullets)
+
+**Step 2 — Choose Life Area**
+- **Prompt**: “Where do you want a tiny win?”
+- **Choices**: Health • Mind • Relationships • Work • Home • Growth (6 tiles)
+- **Microcopy**: “Just one. You can add more later.”
+- **CTA**: “Continue”
+
+**Step 3 — Name a Tiny Habit**
+- **Prompt**: “What’s the smallest version you can do today?”
+- **Input**: Text field with examples (tap to fill)
+  - “Drink water”
+  - “2-minute stretch”
+  - “Write 1 sentence”
+- **Helper**: “If it takes longer than 2 minutes, shrink it.”
+- **CTA**: “Looks good”
+
+**Step 4 — Choose When (Light Schedule)**
+- **Prompt**: “When should we remind you?”
+- **Options**: Morning • Afternoon • Evening • “No reminder”
+- **Microcopy**: “You can change this anytime.”
+- **CTA**: “Next”
+
+**Step 5 — Define a Reward**
+- **Prompt**: “Pick a reward you actually want.”
+- **Input**: Text field + quick chips
+  - “10 min YouTube”
+  - “Coffee break”
+  - “Walk outside”
+  - “Music + chill”
+- **Helper**: “Short rewards work best at first.”
+- **CTA**: “Set reward”
+
+**Step 6 — Mini Contract**
+- **Summary card**:  
+  - “Habit: ___”  
+  - “Reward: ___”  
+  - “Time: ___”
+- **Prompt**: “Ready for your first win?”
+- **Primary CTA**: “Do it now”
+- **Secondary**: “I’ll do it later”
+
+**Step 7 — Completion + Redemption**
+- **Completion toast**: “Nice. That’s a real win.”
+- **Reward prompt**: “Claim your reward?”
+- **CTA**: “Redeem now”
+- **Optional**: “Bank it” (stores reward credit)
+- **Micro-feedback**: haptic + confetti burst
+
+**Day 1 Re-entry (Tomorrow)**
+- **Header**: “Same tiny win today?”
+- **Primary CTA**: “Yes, keep it easy”
+- **Secondary**: “Make it smaller” (opens habit shrinker)
+- **Hint**: “Consistency unlocks better rewards.”
+
+**Notes**
+- No dashboards or stats shown until Day 2.
+- Only **one** field per screen; copy stays ≤ 2 lines.
+- Every screen ends with a single thumb-reachable CTA.
+
 #### Day 2: Familiarity & Safety
 - Same habit, same reward  
 - Add micro-visual growth (leaf, spark, tile)  
@@ -633,7 +707,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 - [x] **P1.5** Map Identity Engine vector logic (inputs → traits → outputs)
 
 ### Phase 2 — Retention Loop + Onboarding
-- [ ] **P2.1** Create Day 0–1 onboarding script (copy + UX steps)
+- [x] **P2.1** Create Day 0–1 onboarding script (copy + UX steps)
 - [ ] **P2.2** Day 2–7 prompts + UI touchpoints
 - [ ] **P2.3** “First Miss” flow + Power-Down Quest definition
 - [ ] **P2.4** Weekly closure ritual (copy + UX)
@@ -712,3 +786,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P1.5 Map Identity Engine vector logic (inputs → traits → outputs)  
   - **What changed**: Added Identity Engine vector logic map with input signals, trait mappings, user-facing reflections, unlocks, weights, and stability rules.  
   - **What’s next**: P2.1 Create Day 0–1 onboarding script (copy + UX steps).
+
+- **2025-03-05**  
+  - **Step**: P2.1 Create Day 0–1 onboarding script (copy + UX steps)  
+  - **What changed**: Added a Day 0–1 onboarding script with screen-by-screen copy, CTAs, and UX flow to deliver a first habit completion and reward redemption in under three minutes.  
+  - **What’s next**: P2.2 Day 2–7 prompts + UI touchpoints.
