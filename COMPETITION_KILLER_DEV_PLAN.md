@@ -529,6 +529,52 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 **User-facing output**
 - “You are becoming…” card, no raw stats initially
 
+#### 8.7.a Identity Vector Logic Map (Inputs → Traits → Outputs)
+**Purpose**: Turn real behavior into stable identity traits, then into friendly reflections + unlocks.
+
+**Inputs (event signals)**
+- **Completion quality**: on-time, late, low-energy, recovery after miss
+- **Consistency**: streak length, weekly completion ratio
+- **Scope**: new habit created, habit upgraded, habit retired
+- **Depth**: reflections logged, journaling length
+- **Focus**: timed sessions completed
+- **Care actions**: self-care check-ins, rest rewards redeemed
+
+**Trait mapping (vector deltas)**
+- **Discipline** → on-time completions, focus sessions, 3+ day streaks
+- **Resilience** → low-energy completion, recovery after miss, power-down quest
+- **Care** → reflections, self-care check-ins, gentle pacing
+- **Courage** → new habit creation, difficulty increases, first-time actions
+- **Creativity** → focus sessions + variety of habits, reflections with novelty tags
+- **Balance** → mixed habit categories in a week, rest rewards redeemed without guilt
+
+**Outputs (user-facing reflections + unlocks)**
+- **Reflection tone** (1–2 sentences):
+  - High **Discipline** → “You keep your promises to yourself.”
+  - High **Resilience** → “You bounce back with grace.”
+  - High **Care** → “You treat yourself with kindness, and it works.”
+  - High **Courage** → “You’re willing to begin even when it’s hard.”
+  - High **Creativity** → “You thrive when there’s variety and play.”
+  - High **Balance** → “You’re building a life that doesn’t tilt too far.”
+- **Micro-unlocks** (rules-based):
+  - **Discipline** ≥ threshold → unlock “Streak Focus” quest style
+  - **Resilience** ≥ threshold → unlock “Soft-Landing” ritual card
+  - **Care** ≥ threshold → unlock “Rest First” reward archetype
+  - **Courage** ≥ threshold → unlock “Start Something” challenge prompt
+  - **Creativity** ≥ threshold → unlock “Mix It Up” quest suggestions
+  - **Balance** ≥ threshold → unlock “Rhythm” UI mood
+
+**Vector weights (MVP defaults)**
+- Base delta per event: **+1**
+- Streak milestones (Day 3/7/14): **+2** to Discipline
+- Recovery after miss within 24h: **+2** to Resilience
+- Weekly reflection ritual completed: **+2** to Care + Balance
+
+**Stability rules**
+- Use a 7-day rolling window for dominant trait detection.
+- Cap any single trait gain to +4 per day to avoid spikes.
+- Never decrease traits in MVP (positive-only to build attachment).
+
 **Deliverables**
 - `src/lib/identity/engine.ts`:
   - `applyIdentityEvent(vectors, event)`
@@ -584,7 +630,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 - [x] **P1.2** Define currency earning rules (XP, Energy, Tokens, Keys, Gold)
 - [x] **P1.3** Draft reward validation heuristics (anti-sabotage)
 - [x] **P1.4** Define reward evolution states + triggers
-- [ ] **P1.5** Map Identity Engine vector logic (inputs → traits → outputs)
+- [x] **P1.5** Map Identity Engine vector logic (inputs → traits → outputs)
 
 ### Phase 2 — Retention Loop + Onboarding
 - [ ] **P2.1** Create Day 0–1 onboarding script (copy + UX steps)
@@ -661,3 +707,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P1.4 Define reward evolution states + triggers  
   - **What changed**: Added reward evolution states, triggers, upgrade rules, and example mappings for MVP.  
   - **What’s next**: P1.5 Map Identity Engine vector logic (inputs → traits → outputs).
+
+- **2025-03-05**  
+  - **Step**: P1.5 Map Identity Engine vector logic (inputs → traits → outputs)  
+  - **What changed**: Added Identity Engine vector logic map with input signals, trait mappings, user-facing reflections, unlocks, weights, and stability rules.  
+  - **What’s next**: P2.1 Create Day 0–1 onboarding script (copy + UX steps).
