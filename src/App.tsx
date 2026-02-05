@@ -2876,7 +2876,6 @@ export default function App() {
                 <img src={dailyTreatsSpinWheel} alt="" />
               </span>
               <span className="daily-treats-modal__card-title">Life Spin</span>
-              <span className="daily-treats-modal__card-subtitle">Spin the wheel for your daily boost.</span>
               {dailyTreatsInventory.spinsRemaining > 0 ? (
                 <span className="daily-treats-modal__card-indicator" aria-label="Available spins">
                   {dailyTreatsInventory.spinsRemaining}
@@ -2905,9 +2904,6 @@ export default function App() {
                 <img src={dailyTreatsHearts} alt="" />
               </span>
               <span className="daily-treats-modal__card-title">League Energy</span>
-              <span className="daily-treats-modal__card-subtitle">
-                Competitive daily matchups (coming soon).
-              </span>
               {dailyTreatsInventory.heartsRemaining > 0 ? (
                 <span className="daily-treats-modal__card-indicator" aria-label="Available hearts">
                   {dailyTreatsInventory.heartsRemaining}
@@ -2933,9 +2929,6 @@ export default function App() {
                 <img src={dailyTreatsCalendarOpen} alt="" />
               </span>
               <span className="daily-treats-modal__card-title">Daily Hatch</span>
-              <span className="daily-treats-modal__card-subtitle">
-                Open every hatch, including the days you missed.
-              </span>
               {dailyTreatsInventory.hatchesRemaining > 0 ? (
                 <span className="daily-treats-modal__card-indicator" aria-label="Daily hatch ready" />
               ) : null}
