@@ -4,6 +4,10 @@ import type { GamificationProfile, LevelInfo, XPTransaction } from '../../types/
 import { GamificationHeader } from '../../components/GamificationHeader';
 import { XP_TO_POINTS_RATIO } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
+import scoreAchievements from '../../assets/Score_achievements.webp';
+import scoreBank from '../../assets/score_Bank.webp';
+import scoreShop from '../../assets/Score_shop.webp';
+import scoreZenGarden from '../../assets/Score_zengarden.webp';
 
 interface ScoreTabProps {
   session: Session | null;
@@ -115,7 +119,7 @@ export function ScoreTab({
           <span className="score-tab__badge" aria-hidden="true">🏆</span>
           <div>
             <p className="score-tab__eyebrow">Score hub</p>
-            <h2 className="score-tab__headline">Track your daily economy</h2>
+            <h2 className="score-tab__headline">Score hub</h2>
           </div>
         </div>
         <div className="score-tab__tabs" aria-label="Score shortcuts">
@@ -164,15 +168,14 @@ export function ScoreTab({
             Zen Garden
           </button>
         </div>
-        <p className="score-tab__subtitle">
-          Review XP, points, and streak momentum before you spin or visit the player shop.
-        </p>
       </header>
 
       {activeTab === 'home' && (
         <div className="score-tab__hub">
           <button type="button" className="score-tab__hub-card" onClick={onNavigateToAchievements}>
-            <span className="score-tab__hub-icon" aria-hidden="true">🏆</span>
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src={scoreAchievements} alt="" />
+            </span>
             <span className="score-tab__hub-title">Achievements</span>
           </button>
           <button
@@ -183,7 +186,9 @@ export function ScoreTab({
               onNavigateToBank?.();
             }}
           >
-            <span className="score-tab__hub-icon" aria-hidden="true">🏦</span>
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src={scoreBank} alt="" />
+            </span>
             <span className="score-tab__hub-title">Bank</span>
           </button>
           <button
@@ -194,11 +199,15 @@ export function ScoreTab({
               onNavigateToShop?.();
             }}
           >
-            <span className="score-tab__hub-icon" aria-hidden="true">🛍️</span>
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src={scoreShop} alt="" />
+            </span>
             <span className="score-tab__hub-title">Player Shop</span>
           </button>
           <button type="button" className="score-tab__hub-card" onClick={() => setActiveTab('zen')}>
-            <span className="score-tab__hub-icon" aria-hidden="true">🪷</span>
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src={scoreZenGarden} alt="" />
+            </span>
             <span className="score-tab__hub-title">Zen Garden</span>
           </button>
         </div>
@@ -218,6 +227,12 @@ export function ScoreTab({
 
       {!loading && enabled && profile && levelInfo && activeTab === 'bank' && (
         <div className="score-tab__content">
+          <div className="score-tab__bank-intro">
+            <h2 className="score-tab__headline">Track your daily economy</h2>
+            <p className="score-tab__subtitle">
+              Review XP, points, and streak momentum before you spin or visit the player shop.
+            </p>
+          </div>
           <GamificationHeader profile={profile} levelInfo={levelInfo} session={session ?? undefined} />
 
           <div className="score-tab__grid">
