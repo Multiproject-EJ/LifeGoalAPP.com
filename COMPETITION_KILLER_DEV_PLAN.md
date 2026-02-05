@@ -1496,6 +1496,44 @@ WisdomTreeState {
 - Migration path for `total_points` → `gold_balance` is documented.
 - UI language swap from Points → Gold is specified.
 
+---
+
+### 8.14 Phase 6 Decision: Identity Vector Visibility + Naming (P6.3)
+
+**Decision**: Keep raw identity vectors **hidden by default**, and surface them as **friendly, user-facing “Identity Signals”** in lightweight places (identity card + optional detail sheet).
+
+#### Rationale
+- **Avoids cognitive load** early in onboarding; keeps Day 0–7 flow simple.
+- **Preserves magic**: users feel “seen” without being asked to interpret stats.
+- **Keeps room for evolution**: vectors can later become visible if/when users opt in.
+
+#### Visibility Rules (MVP)
+- **Default**: show only a 1–2 sentence **identity reflection** after completion or weekly ritual.
+- **Optional detail**: a small “Why this?” link on the Identity card opens a sheet with up to **3 identity signals**.
+- **No raw scores** in MVP; show **signal names + short descriptions** only.
+- **Unlock timing**: identity signals detail sheet appears **after Day 3** or after the first weekly ritual, whichever comes first.
+
+#### Naming Rules (User-Facing)
+- Use **Identity Signals** as the umbrella term (avoid “stats” or “vectors”).
+- Signal labels are friendly nouns:
+  - **Discipline** → “Follow-Through”
+  - **Resilience** → “Bounce-Back”
+  - **Care** → “Kindness”
+  - **Courage** → “Bravery”
+  - **Creativity** → “Curiosity”
+  - **Balance** → “Harmony”
+- Each signal has a **1-line explanation** (e.g., “You keep promises to yourself.”).
+
+#### UX Touchpoints
+- **Completion**: “You’re becoming someone who keeps promises to yourself.”
+- **Weekly ritual**: show the top 1 signal and a “Why this?” link.
+- **Settings (optional)**: “Identity Signals” explanation card with opt-in to show signals earlier.
+
+**Done when**
+- Default visibility and unlock timing are defined.
+- User-facing naming for all signals is finalized.
+- UX touchpoints for reflection + optional details are specified.
+
 ## 9) Roadmap (Step-by-Step, AI-Friendly)
 
 > **Rule**: Work one step at a time. Log it in Section 12.
@@ -1531,7 +1569,7 @@ WisdomTreeState {
 ### Phase 6 — Roadmap Iteration (Decisions + Sequencing)
 - [x] **P6.1** Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)
 - [x] **P6.2** Map existing XP/level system to the multi-currency economy
-- [ ] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
+- [x] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
 - [ ] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
 - [ ] **P6.5** Pick first reward evolution example to ship
 
@@ -1539,7 +1577,6 @@ WisdomTreeState {
 
 ## 10) Open Questions (Keep Current)
 
-- Should identity vectors be visible in any form early on?  
 - What is the first **real-world meaning** feature (e.g., trees planted)?  
 - Which “reward evolution” example should ship first?  
 - How should users **name** their Identity Engine? (e.g., Arc, Path, Soulprint)
@@ -1553,6 +1590,7 @@ WisdomTreeState {
 
 - **2026-02-05 — MVP currency set = XP + Gold —** Aligns with existing gamification, keeps rewards simple, and defers Energy/Tokens/Keys until post-MVP.
 - **2026-02-05 — Map Points to Gold; keep XP/levels unchanged —** Maintains existing XP behavior while re-framing Points as the MVP spendable currency.
+- **2026-02-07 — Hide raw identity vectors; surface “Identity Signals” —** Keeps onboarding light while still giving users a readable identity reflection without stat overload.
 
 ---
 
@@ -1673,3 +1711,8 @@ WisdomTreeState {
   - **Step**: P6.2 Map existing XP/level system to the multi-currency economy  
   - **What changed**: Documented XP/level continuity, Points → Gold mapping, migration notes, UI copy changes, and telemetry updates for the MVP economy.  
   - **What’s next**: P6.3 Decide identity vector visibility + naming (user-facing vs. hidden).
+
+- **2026-02-07**  
+  - **Step**: P6.3 Decide identity vector visibility + naming (user-facing vs. hidden)  
+  - **What changed**: Chose to keep raw vectors hidden, defined “Identity Signals” naming, set visibility/unlock rules, and specified UX touchpoints for reflections and optional details.  
+  - **What’s next**: P6.4 Select first real-world meaning feature (e.g., trees planted vs. donations).
