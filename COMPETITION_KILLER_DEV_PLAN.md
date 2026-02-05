@@ -1132,6 +1132,76 @@ MotivationPersona {
 **Done when**
 - Personas, signals, scoring, adaptation rules, and safeguards are specified.
 
+### 7.8 AI Layer: **Reward Pacing Optimizer (Avoid Burnout + Boredom)**
+
+**Purpose**: Keep rewards meaningful by balancing frequency and intensity based on engagement signals. Avoid over-rewarding (burnout) and under-rewarding (boredom) while staying warm and non-judgmental.
+
+#### Inputs (Signals)
+**Behavioral**
+- **Completion cadence**: completions per week, streak length, time-of-day consistency
+- **Redemption rhythm**: redeem frequency, average cost per redemption, hoarding behavior
+- **Reward impact**: satisfaction weight trend (1–5) and optional “Did this feel good?” tap
+- **Drop-off risk**: missed days count in last 7, time since last completion
+- **Effort drift**: habit difficulty increases or decreases over last 14 days
+
+**Self-reported (lightweight, optional)**
+- “Do rewards feel too easy, too frequent, or just right?” (3-option pulse)
+- “Do you want fewer bigger rewards or more small ones?” (2-option toggle)
+
+#### Pacing States (MVP)
+1. **Underfed** (boredom risk)
+2. **Balanced**
+3. **Overfed** (burnout risk)
+
+#### Detection Rules (MVP, rules-based)
+- **Underfed** if 2+ of:
+  - No redemption in **7 days** despite 3+ completions
+  - Satisfaction weight average ≤ 2.5
+  - Declining completions (down ≥ 40% vs. prior week)
+- **Overfed** if 2+ of:
+  - Redeeming **daily** for 5+ days
+  - Reward cost trending downward (avg cost -30% vs. prior week)
+  - Energy ≤ 30% on 3+ days in a week
+- Else **Balanced**
+
+#### Optimizer Actions (MVP)
+**When Underfed**
+- Suggest **one** of:
+  1. **Upgrade reward** (+1 Token or +1 minute)
+  2. **Add a mini-ritual** (1 tap reflection)
+  3. **Introduce a new reward** (pre-filled suggestion)
+- Optional micro-copy: “Want a slightly bigger win for this?”
+
+**When Overfed**
+- Suggest **one** of:
+  1. **Soft cooldown** (12–24h) on the most-used reward
+  2. **Bank it** default (store reward credit)
+  3. **Swap reward** (lower frequency, higher meaning)
+- Optional micro-copy: “Let’s make this feel special again.”
+
+**When Balanced**
+- Stay silent (no extra prompts)
+
+#### Guardrails
+- Never block redemption outright.
+- No prompts more than **1x per 3 days**.
+- Only suggest changes on **completion** or **weekly ritual** screens.
+- Always allow “Not now” with no penalty.
+
+#### UX Touchpoints
+- **Post-completion chip**: “Make this reward feel bigger?” (1-tap sheet)
+- **Weekly closure**: “Keep it, evolve it, or bank it?” (3 options)
+- **Reward detail**: “Pacing tip” hint (single line, dismissible)
+
+#### Telemetry Hooks
+- `reward_pacing_state_assigned`
+- `reward_pacing_prompt_shown`
+- `reward_pacing_action_taken`
+- `reward_pacing_prompt_dismissed`
+
+**Done when**
+- Inputs, detection rules, pacing states, actions, guardrails, and telemetry are specified.
+
 ### 8.8 Instrumentation & Metrics (Minimum)
 **Track events**
 - onboarding_started
@@ -1193,7 +1263,7 @@ MotivationPersona {
 
 ### Phase 4 — AI Layer
 - [x] **P4.1** Motivation style matching (inputs → personas)
-- [ ] **P4.2** Reward pacing optimizer (avoid burnout + boredom)
+- [x] **P4.2** Reward pacing optimizer (avoid burnout + boredom)
 - [ ] **P4.3** “Bad week” detection & soft-landing mode
 
 ### Phase 5 — MVP Build Plan
@@ -1300,3 +1370,8 @@ MotivationPersona {
   - **Step**: P4.1 Motivation style matching (inputs → personas)  
   - **What changed**: Added motivation persona model, signals, scoring, adaptation rules, safeguards, and telemetry hooks for AI-driven tone matching.  
   - **What’s next**: P4.2 Reward pacing optimizer (avoid burnout + boredom).
+
+- **2026-02-07**  
+  - **Step**: P4.2 Reward pacing optimizer (avoid burnout + boredom)  
+  - **What changed**: Added reward pacing optimizer spec with pacing states, detection rules, optimizer actions, guardrails, UX touchpoints, and telemetry hooks to balance burnout vs. boredom.  
+  - **What’s next**: P4.3 “Bad week” detection & soft-landing mode.
