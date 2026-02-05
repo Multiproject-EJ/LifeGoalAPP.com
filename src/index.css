@@ -12406,6 +12406,12 @@ body {
   line-height: 1.4;
 }
 
+.mobile-habit-home .habit-day-nav--compact {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 :is(
   [data-theme='dark-glass'],
   [data-theme='midnight-purple'],
