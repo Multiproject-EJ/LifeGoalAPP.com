@@ -857,6 +857,67 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 **Done when**
 - Identity message changes as behavior changes (deterministic, testable)
 
+---
+
+### 7.4 Social & Stakes: **Party System MVP**
+
+**Purpose**: Create a lightweight, opt-in party mechanic where small groups share stakes and unlock a shared reward through synchronized wins.
+
+#### Party Object (MVP)
+```
+Party {
+  id
+  name
+  owner_id
+  members[]          // user ids
+  goal_id?           // optional shared habit/goal
+  stake_type         // SharedReward | SharedStreak | SupportOnly
+  stake_amount?      // tokens/keys if SharedReward
+  reward_id?         // shared reward definition
+  cadence            // Daily | Weekly
+  status             // Active | Paused | Ended
+  created_at
+  updated_at
+}
+```
+
+#### Shared Stake Rules (MVP)
+- **Opt-in only**: user must accept party invite before any stake applies.
+- **Small groups**: 2–5 members max for MVP.
+- **Two modes**:
+  1. **Shared Reward**: all members complete today → unlock shared reward (token/key payout).
+  2. **Shared Streak**: streak grows only when all members complete within the cadence window.
+- **Support-Only**: no stakes; just shared check-ins + encouragement.
+- **No punishment** in MVP: if not all complete, reward doesn’t unlock (no loss).
+
+#### Daily Loop (Mobile-First)
+1. **Party check-in chip** on Today screen (one line): “2/4 ready — join?”
+2. **Tap to view party card**:
+   - Members + status (Ready / Pending / Completed)
+   - Shared goal summary (1 line)
+   - Primary CTA: “Mark my completion”
+3. **After completion**:
+   - If party complete: “Shared reward unlocked 🎉”
+   - If not complete: “Thanks — waiting on 2 friends”
+
+#### Fail & Recovery (Warm Tone)
+- If cadence window ends with incomplete party:
+  - Copy: “Life happens. We’ll try again tomorrow.”
+  - Optional CTA: “Send encouragement”
+- If user misses repeatedly (3 misses in 7 days):
+  - Suggest switching to **Support-Only** mode.
+
+#### Telemetry Hooks
+- `party_created`
+- `party_invite_sent`
+- `party_invite_accepted`
+- `party_daily_completed`
+- `party_reward_unlocked`
+- `party_mode_changed`
+
+**Done when**
+- Party object, stake rules, daily flow, fail handling, and telemetry hooks are specified.
+
 ### 8.8 Instrumentation & Metrics (Minimum)
 **Track events**
 - onboarding_started
@@ -912,7 +973,7 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
 - [x] **P2.4** Weekly closure ritual (copy + UX)
 
 ### Phase 3 — Social & Stakes
-- [ ] **P3.1** Party system MVP (shared stakes + shared reward)
+- [x] **P3.1** Party system MVP (shared stakes + shared reward)
 - [ ] **P3.2** Optional commitment contracts (Beeminder-style)
 - [ ] **P3.3** Seasonal events / community arcs
 
@@ -1005,3 +1066,8 @@ Implement a player-defined reward engine with a multi-currency economy, tied to 
   - **Step**: P2.4 Weekly closure ritual (copy + UX)  
   - **What changed**: Added weekly closure ritual flow, 3-card layout, copy rules, evolve mini-flow, and telemetry hooks to close the weekly loop and invite gentle evolution.  
   - **What’s next**: P3.1 Party system MVP (shared stakes + shared reward).
+
+- **2026-02-05**  
+  - **Step**: P3.1 Party system MVP (shared stakes + shared reward)  
+  - **What changed**: Added party system MVP spec covering party object, stake rules, daily loop, fail handling, and telemetry hooks.  
+  - **What’s next**: P3.2 Optional commitment contracts (Beeminder-style).
