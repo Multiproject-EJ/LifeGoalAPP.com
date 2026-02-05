@@ -21,7 +21,10 @@ import {
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { createDemoSession } from '../../services/demoSession';
 import { queuePersonalityTestResult, type PersonalityTestRecord } from '../../data/personalityTestRepo';
-import { loadPersonalityTestHistoryWithSupabase } from '../../services/personalityTest';
+import {
+  loadPersonalityTestHistoryWithSupabase,
+  syncPersonalityTestsWithSupabase,
+} from '../../services/personalityTest';
 import {
   fetchPersonalityRecommendations,
   type PersonalityRecommendationRow,
@@ -663,6 +666,9 @@ export default function PersonalityTest() {
     })
       .then((record) => {
         savedResultRef.current = record.id;
+        return syncPersonalityTestsWithSupabase(activeUserId);
+      })
+      .then(() => {
         void refreshHistory();
       })
       .catch(() => {
@@ -684,7 +690,21 @@ export default function PersonalityTest() {
       return;
     }
 
-    void refreshHistory();
+    let cancelled = false;
+
+    syncPersonalityTestsWithSupabase(activeUserId)
+      .catch(() => {
+        // Ignore sync failures; we'll still fall back to local history.
+      })
+      .finally(() => {
+        if (!cancelled) {
+          void refreshHistory();
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeUserId, refreshHistory]);
 
   useEffect(() => {
