@@ -4839,7 +4839,7 @@ body {
   cursor: pointer;
   box-shadow: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   transition: transform 0.2s ease, filter 0.2s ease;
 }
 
@@ -4871,6 +4871,8 @@ body {
   display: block;
   object-fit: cover;
   filter: drop-shadow(0 8px 18px rgba(79, 70, 229, 0.35));
+  transform: scale(2);
+  transform-origin: center;
   transition: transform 0.25s ease, filter 0.25s ease;
 }
 
@@ -4879,7 +4881,7 @@ body {
 }
 
 .habit-day-nav__vision-button-image--burst {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-2px) scale(2.02);
   filter: drop-shadow(0 12px 22px rgba(245, 158, 11, 0.45));
 }
 
@@ -5000,7 +5002,7 @@ body {
 }
 
 .habit-day-nav__vision-button:not(:disabled):hover .habit-day-nav__vision-button-image {
-  transform: translateY(-1px) scale(1.02);
+  transform: translateY(-1px) scale(2.02);
   filter: drop-shadow(0 12px 22px rgba(245, 158, 11, 0.4));
 }
 
