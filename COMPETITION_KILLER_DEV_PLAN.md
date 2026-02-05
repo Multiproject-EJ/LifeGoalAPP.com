@@ -270,6 +270,13 @@ Example:
   → **Elevated**: “Coffee break + 5-min walk”  
   → **Transformative**: “Coffee break + share 1 check-in”  
 
+**First Ship Example (MVP)**
+- **Seed**: “Coffee break”  
+  → **Intentional**: “Coffee break + 1 gratitude”  
+  → **Elevated**: “Coffee break + 5-min walk”  
+  → **Transformative**: “Coffee break + share 1 check-in”  
+**Why this one first**: universal, low-friction, and emotionally warm; it turns an everyday treat into a gentle social/reflective loop without adding heavy structure.
+
 ---
 
 ### 7.2 7-Day Retention Loop
@@ -1606,13 +1613,12 @@ WisdomTreeState {
 - [x] **P6.2** Map existing XP/level system to the multi-currency economy
 - [x] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
 - [x] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
-- [ ] **P6.5** Pick first reward evolution example to ship
+- [x] **P6.5** Pick first reward evolution example to ship
 
 ---
 
 ## 10) Open Questions (Keep Current)
 
-- Which “reward evolution” example should ship first?  
 - How should users **name** their Identity Engine? (e.g., Arc, Path, Soulprint)
 
 ---
@@ -1626,6 +1632,7 @@ WisdomTreeState {
 - **2026-02-05 — Map Points to Gold; keep XP/levels unchanged —** Maintains existing XP behavior while re-framing Points as the MVP spendable currency.
 - **2026-02-07 — Hide raw identity vectors; surface “Identity Signals” —** Keeps onboarding light while still giving users a readable identity reflection without stat overload.
 - **2026-02-07 — Real-world meaning = Trees Planted —** Simple, high-emotion, brand-aligned impact unit with clear rules and visibility.
+- **2026-02-08 — First reward evolution example = “Coffee break” ladder —** Universal, low-friction ritual that naturally evolves into reflection + light movement + optional social warmth.
 
 ---
 
@@ -1756,3 +1763,8 @@ WisdomTreeState {
   - **Step**: P6.4 Select first real-world meaning feature (e.g., trees planted vs. donations)  
   - **What changed**: Selected Trees Planted as the first real-world meaning feature, defined MVP earning triggers, visibility, data notes, and telemetry hooks.  
   - **What’s next**: P6.5 Pick first reward evolution example to ship.
+
+- **2026-02-08**  
+  - **Step**: P6.5 Pick first reward evolution example to ship  
+  - **What changed**: Selected the “Coffee break” reward evolution ladder as the first MVP example and documented the rationale for its low-friction, warm progression.  
+  - **What’s next**: Review open questions and decide next roadmap iteration.
