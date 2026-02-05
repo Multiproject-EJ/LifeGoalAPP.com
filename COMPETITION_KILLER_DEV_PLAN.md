@@ -1534,6 +1534,41 @@ WisdomTreeState {
 - User-facing naming for all signals is finalized.
 - UX touchpoints for reflection + optional details are specified.
 
+### 8.15 Phase 6 Decision: First Real-World Meaning Feature (P6.4)
+
+**Decision**: Ship **Trees Planted** as the first real-world meaning feature, using a partner-backed planting API and a lightweight in-app ledger.
+
+#### Rationale
+- **Universal emotional resonance**: “I grew a tree” maps cleanly to progress and identity.
+- **Low cognitive load**: simple unit (1 tree) with clear mental model.
+- **Brand-aligned**: reinforces long-term growth and care themes already in the product.
+- **Scalable**: can later expand to other impact options (donations, clean water, etc.).
+
+#### MVP Rules (Trees Planted)
+- **Unit**: 1 Tree = 1 Impact Token (system-managed, not user-spendable).
+- **Earn triggers** (MVP):
+  - **Weekly closure** completed → +1 Tree.
+  - **30-day streak milestone** → +3 Trees.
+  - **Seasonal event completion** → +5 Trees (if seasonal events are active).
+- **Visibility**:
+  - Show a **“Trees Planted” counter** in the dashboard footer.
+  - Show a **celebration modal** when a tree is planted (1–2 lines of warm copy).
+  - Offer a “See impact” detail sheet (impact ledger + dates).
+- **Copy tone**: quiet pride, non-judgmental (“You helped a tree take root.”).
+
+#### Data Notes (MVP)
+- **Impact ledger** table or JSON log: `date`, `source`, `amount`, `notes`.
+- **Partner reference**: store `partner_batch_id` if available, otherwise `null`.
+
+#### Telemetry Hooks
+- `impact_tree_awarded` (source, amount, streak_length, season_id?)
+- `impact_tree_viewed` (surface: modal | detail_sheet)
+
+**Done when**
+- Feature selected and named.
+- MVP rules and triggers defined.
+- Visibility and telemetry defined.
+
 ## 9) Roadmap (Step-by-Step, AI-Friendly)
 
 > **Rule**: Work one step at a time. Log it in Section 12.
@@ -1570,14 +1605,13 @@ WisdomTreeState {
 - [x] **P6.1** Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)
 - [x] **P6.2** Map existing XP/level system to the multi-currency economy
 - [x] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
-- [ ] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
+- [x] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
 - [ ] **P6.5** Pick first reward evolution example to ship
 
 ---
 
 ## 10) Open Questions (Keep Current)
 
-- What is the first **real-world meaning** feature (e.g., trees planted)?  
 - Which “reward evolution” example should ship first?  
 - How should users **name** their Identity Engine? (e.g., Arc, Path, Soulprint)
 
@@ -1591,6 +1625,7 @@ WisdomTreeState {
 - **2026-02-05 — MVP currency set = XP + Gold —** Aligns with existing gamification, keeps rewards simple, and defers Energy/Tokens/Keys until post-MVP.
 - **2026-02-05 — Map Points to Gold; keep XP/levels unchanged —** Maintains existing XP behavior while re-framing Points as the MVP spendable currency.
 - **2026-02-07 — Hide raw identity vectors; surface “Identity Signals” —** Keeps onboarding light while still giving users a readable identity reflection without stat overload.
+- **2026-02-07 — Real-world meaning = Trees Planted —** Simple, high-emotion, brand-aligned impact unit with clear rules and visibility.
 
 ---
 
@@ -1716,3 +1751,8 @@ WisdomTreeState {
   - **Step**: P6.3 Decide identity vector visibility + naming (user-facing vs. hidden)  
   - **What changed**: Chose to keep raw vectors hidden, defined “Identity Signals” naming, set visibility/unlock rules, and specified UX touchpoints for reflections and optional details.  
   - **What’s next**: P6.4 Select first real-world meaning feature (e.g., trees planted vs. donations).
+
+- **2026-02-07**  
+  - **Step**: P6.4 Select first real-world meaning feature (e.g., trees planted vs. donations)  
+  - **What changed**: Selected Trees Planted as the first real-world meaning feature, defined MVP earning triggers, visibility, data notes, and telemetry hooks.  
+  - **What’s next**: P6.5 Pick first reward evolution example to ship.
