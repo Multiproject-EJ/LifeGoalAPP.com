@@ -42,7 +42,7 @@ import {
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
-import visionStarButton from '../../assets/Daily_visionstar.webp';
+import visionStarButtonLarge from '../../assets/VisionStarBig.webp';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
@@ -2313,7 +2313,7 @@ export function DailyHabitTracker({
                     className={`habit-day-nav__vision-button-image ${
                       isStarBursting || visionRewarding ? 'habit-day-nav__vision-button-image--burst' : ''
                     }`}
-                    src={visionStarButton}
+                    src={visionStarButtonLarge}
                     alt=""
                     aria-hidden="true"
                   />
