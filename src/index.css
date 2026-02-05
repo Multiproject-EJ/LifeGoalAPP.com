@@ -16022,11 +16022,6 @@ body {
   color: #f8fafc;
 }
 
-.daily-treats-modal__card-subtitle {
-  font-size: 0.7rem;
-  color: rgba(226, 232, 240, 0.75);
-}
-
 .daily-treats-modal__card-indicator {
   position: absolute;
   top: 0.4rem;
