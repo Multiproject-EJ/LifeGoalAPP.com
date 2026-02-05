@@ -987,6 +987,70 @@ CommitmentContract {
 **Done when**
 - Contract object, setup flow, evaluation rules, miss flow, safety caps, and telemetry hooks are specified.
 
+### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
+
+**Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.
+
+#### Event Object (MVP)
+```
+SeasonalEvent {
+  id
+  name
+  theme
+  start_at
+  end_at
+  cadence            // Daily | Weekly
+  status             // Upcoming | Active | Ended
+  reward_type        // Gold | Token | Key | Cosmetic | Title
+  reward_amount?
+  unlock_conditions? // min_level, min_days_active, opt_in_required
+  description
+}
+```
+
+#### Community Arc Rules (MVP)
+- **Opt-in by default** for new users; existing users get a soft invite.
+- **Low commitment**: 1–2 micro-actions per day (≤ 60s).
+- **No penalties** for missing days; progress is additive.
+- **One event at a time** max; avoid overlaps.
+- **Theme-driven**: 1-line narrative (e.g., “Spring Reset,” “Focus Week”).
+
+#### Daily Loop (Mobile-First)
+1. **Event chip** on Today screen: “Spring Reset — Day 2”
+2. **Single micro-action card**:
+   - Example: “Take a 30-second pause” or “Write 1 word of intention”
+3. **Completion**:
+   - Tiny celebration + event progress tick
+   - Reward drip (small Gold or Token)
+
+#### Weekly Arc Moments
+- **Midpoint check-in** (Day 3/4): “Still in?” with 1-tap continue
+- **Finale ritual** (last day): 3-card recap
+  1. **What you practiced**
+  2. **Your highlight**
+  3. **Your unlock** (Token/Key/cosmetic)
+
+#### Reward & Unlock Guidelines
+- **Daily drip**: small Gold or 1 Energy back
+- **Milestone**: 1 Token at midpoint
+- **Finale**: 1 Key or cosmetic/title
+- **Cosmetics**: badge, theme card, or “Arc” title (no gameplay advantage)
+
+#### Copy Examples (Warm Tone)
+- “Want to join this week’s arc? It’s just 60 seconds a day.”
+- “Missed a day? You can still finish strong.”
+- “Nice — you kept showing up. That’s the real win.”
+
+#### Telemetry Hooks
+- `seasonal_event_invite_shown`
+- `seasonal_event_opt_in`
+- `seasonal_event_daily_completed`
+- `seasonal_event_midpoint_seen`
+- `seasonal_event_completed`
+
+**Done when**
+- Event object, loop, rewards, and telemetry hooks are specified.
+
 ### 8.8 Instrumentation & Metrics (Minimum)
 **Track events**
 - onboarding_started
@@ -1044,7 +1108,7 @@ CommitmentContract {
 ### Phase 3 — Social & Stakes
 - [x] **P3.1** Party system MVP (shared stakes + shared reward)
 - [x] **P3.2** Optional commitment contracts (Beeminder-style)
-- [ ] **P3.3** Seasonal events / community arcs
+- [x] **P3.3** Seasonal events / community arcs
 
 ### Phase 4 — AI Layer
 - [ ] **P4.1** Motivation style matching (inputs → personas)
@@ -1145,3 +1209,8 @@ CommitmentContract {
   - **Step**: P3.2 Optional commitment contracts (Beeminder-style)  
   - **What changed**: Added commitment contract MVP spec with data model, setup flow, evaluation rules, miss recovery, safety caps, and telemetry hooks.  
   - **What’s next**: P3.3 Seasonal events / community arcs.
+
+- **2026-02-06**  
+  - **Step**: P3.3 Seasonal events / community arcs  
+  - **What changed**: Added seasonal event MVP spec with event object, community arc rules, daily loop, rewards, copy tone, and telemetry hooks.  
+  - **What’s next**: P4.1 Motivation style matching (inputs → personas).
