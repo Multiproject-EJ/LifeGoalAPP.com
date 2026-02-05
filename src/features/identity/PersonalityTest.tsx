@@ -20,11 +20,8 @@ import {
 } from './personalitySummary';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { createDemoSession } from '../../services/demoSession';
-import {
-  loadPersonalityTestHistory,
-  queuePersonalityTestResult,
-  type PersonalityTestRecord,
-} from '../../data/personalityTestRepo';
+import { queuePersonalityTestResult, type PersonalityTestRecord } from '../../data/personalityTestRepo';
+import { loadPersonalityTestHistoryWithSupabase } from '../../services/personalityTest';
 import {
   fetchPersonalityRecommendations,
   type PersonalityRecommendationRow,
@@ -573,7 +570,7 @@ export default function PersonalityTest() {
       return Promise.resolve();
     }
 
-    return loadPersonalityTestHistory(activeUserId)
+    return loadPersonalityTestHistoryWithSupabase(activeUserId)
       .then((records) => {
         setHistory(records);
       })
