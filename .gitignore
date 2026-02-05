@@ -16,4 +16,5 @@ pnpm-debug.log*
 screenshots
 index.html.backup
 public/assets/supaClient.js
+public/icons/V2_app_icon_large_dark.png
 .data
