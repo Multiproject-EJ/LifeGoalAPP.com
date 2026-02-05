@@ -32,7 +32,8 @@ type TableKey =
   | 'vb_shares'
   | 'vb_checkins'
   | 'push_subscriptions'
-  | 'journal_entries';
+  | 'journal_entries'
+  | 'personality_tests';
 
 type TableReadConfig = {
   key: TableKey;
@@ -104,6 +105,7 @@ const tableReadConfigs: TableReadConfig[] = [
   { key: 'vb_checkins', label: 'Vision check-ins', table: 'vb_checkins', column: 'id' },
   { key: 'push_subscriptions', label: 'Push subscriptions', table: 'push_subscriptions', column: 'endpoint' },
   { key: 'journal_entries', label: 'Journal entries', table: 'journal_entries', column: 'id' },
+  { key: 'personality_tests', label: 'Personality tests', table: 'personality_tests', column: 'user_id' },
 ];
 
 const tableConfigMap = new Map<TableKey, TableReadConfig>(tableReadConfigs.map((config) => [config.key, config]));

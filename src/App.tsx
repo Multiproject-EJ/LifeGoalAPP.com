@@ -64,7 +64,7 @@ import {
   loadProfileStrengthSignals,
   type ProfileStrengthSignalSnapshot,
 } from './features/profile-strength/profileStrengthData';
-import { loadPersonalityTestHistory } from './data/personalityTestRepo';
+import { loadPersonalityTestHistoryWithSupabase } from './services/personalityTest';
 import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
 import type { AreaKey, NextTask, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
 import {
@@ -736,7 +736,7 @@ export default function App() {
 
     let isMounted = true;
 
-    loadPersonalityTestHistory(activeSession.user.id)
+    loadPersonalityTestHistoryWithSupabase(activeSession.user.id)
       .then((records) => {
         if (!isMounted) {
           return;
