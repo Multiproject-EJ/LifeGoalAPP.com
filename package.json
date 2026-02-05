@@ -11,8 +11,8 @@
     "build:manual-sql": "node scripts/build-manual-sql.js",
     "generate:supabase-client": "node scripts/generate-supa-client.mjs",
     "vision-board-v2:migrate": "bash scripts/vision-board-v2-migrations.sh",
-    "predev": "npm run generate:supabase-client",
-    "prebuild": "npm run generate:supabase-client"
+    "predev": "npm run generate:supabase-client && node scripts/copy-app-icon.mjs",
+    "prebuild": "npm run generate:supabase-client && node scripts/copy-app-icon.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
