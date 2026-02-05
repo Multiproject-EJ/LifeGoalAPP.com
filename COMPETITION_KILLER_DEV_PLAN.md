@@ -1452,6 +1452,50 @@ WisdomTreeState {
 **Done when**
 - MVP currency set is explicitly chosen, with rationale and UX implications.
 
+---
+
+### 8.13 Phase 6 Decision: Map XP/Level to Multi-Currency (P6.2)
+
+**Goal**: Preserve the existing XP/level system as the **identity progression layer**, while converting the current **Points** currency into **Gold** for the MVP economy.
+
+#### Current System Snapshot (What Exists Today)
+- **XP + Levels**: `total_xp` and `current_level` drive identity progress and level-up notifications.
+- **Points**: Earned at **1 point per 10 XP**, displayed as a spendable currency in the gamification header.
+- **XP Transactions**: `xp_transactions` table logs XP earns for audit and UI history.
+
+#### Mapping Rules (MVP)
+1. **XP stays XP**  
+   - Keep all existing XP earning rules, sources, and level thresholds intact.  
+   - XP remains **non-spendable** and purely tied to identity/level progression.
+2. **Points become Gold**  
+   - Rename “Points” → **Gold** in UI copy and data semantics.  
+   - **Gold = Points balance** (1:1 on migration).
+3. **Gold earning mirrors existing Points logic**  
+   - Continue awarding **1 Gold per 10 XP** across all XP sources.  
+   - Result: no behavioral change for current users; just a naming and framing shift.
+4. **Gold is spendable; XP is not**  
+   - Rewards cost Gold; XP only affects levels and identity feedback.
+
+#### Data Model Migration (Conceptual)
+- `gamification_profiles.total_points` → **`gold_balance`** (new field)  
+- Keep `total_points` as **legacy** for migration safety, then deprecate.
+- No changes to XP tables needed for MVP.
+
+#### UI/UX Adjustments
+- Gamification header replaces **Points (💎)** with **Gold (🪙)**.
+- Reward creation and redemption use **Gold** only.
+- Level-up and XP progress visuals remain unchanged.
+
+#### Telemetry Additions
+- `currency_gold_earned` (mapped from XP → Gold conversion)
+- `currency_gold_spent`
+- `currency_xp_earned` (already used; confirm naming consistency)
+
+**Done when**
+- A clear mapping is defined between XP, levels, and Gold (formerly Points).
+- Migration path for `total_points` → `gold_balance` is documented.
+- UI language swap from Points → Gold is specified.
+
 ## 9) Roadmap (Step-by-Step, AI-Friendly)
 
 > **Rule**: Work one step at a time. Log it in Section 12.
@@ -1486,7 +1530,7 @@ WisdomTreeState {
 
 ### Phase 6 — Roadmap Iteration (Decisions + Sequencing)
 - [x] **P6.1** Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)
-- [ ] **P6.2** Map existing XP/level system to the multi-currency economy
+- [x] **P6.2** Map existing XP/level system to the multi-currency economy
 - [ ] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
 - [ ] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
 - [ ] **P6.5** Pick first reward evolution example to ship
@@ -1495,7 +1539,6 @@ WisdomTreeState {
 
 ## 10) Open Questions (Keep Current)
 
-- How do we map the **existing XP/level system** to the new multi-currency economy?  
 - Should identity vectors be visible in any form early on?  
 - What is the first **real-world meaning** feature (e.g., trees planted)?  
 - Which “reward evolution” example should ship first?  
@@ -1509,6 +1552,7 @@ WisdomTreeState {
 > Format: **Date — Decision — Rationale**
 
 - **2026-02-05 — MVP currency set = XP + Gold —** Aligns with existing gamification, keeps rewards simple, and defers Energy/Tokens/Keys until post-MVP.
+- **2026-02-05 — Map Points to Gold; keep XP/levels unchanged —** Maintains existing XP behavior while re-framing Points as the MVP spendable currency.
 
 ---
 
@@ -1624,3 +1668,8 @@ WisdomTreeState {
   - **Step**: P6.1 Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)  
   - **What changed**: Chose XP + Gold as the MVP currency set, documented rationale, UX implications, telemetry, and deferred Energy/Tokens/Keys.  
   - **What’s next**: P6.2 Map existing XP/level system to the multi-currency economy.
+
+- **2026-02-05**  
+  - **Step**: P6.2 Map existing XP/level system to the multi-currency economy  
+  - **What changed**: Documented XP/level continuity, Points → Gold mapping, migration notes, UI copy changes, and telemetry updates for the MVP economy.  
+  - **What’s next**: P6.3 Decide identity vector visibility + naming (user-facing vs. hidden).
