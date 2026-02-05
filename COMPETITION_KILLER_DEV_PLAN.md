@@ -1336,6 +1336,93 @@ MotivationPersona {
 
 ---
 
+### 8.11 Visual Growth Loop (P5.2): Zen Garden / Wisdom Tree
+
+**Goal**: Ship a lightweight, visual identity-progress loop that grows with consistent action—without adding complex gameplay or multi-screen overhead.
+
+#### Core Concept
+Each completion drops a **“Growth Seed”** into a **Zen Garden** (short-term) that slowly cultivates a **Wisdom Tree** (long-term identity arc).  
+This provides a **visual reward** that is calming, readable at a glance, and emotionally resonant.
+
+#### Visual Layers (MVP)
+1. **Zen Garden (Daily/Weekly)**
+   - A small tile/scene that grows **1–3 micro-elements** per week.
+   - Represents **recent consistency**.
+2. **Wisdom Tree (Monthly/Seasonal)**
+   - A single tree that grows **one stage** per 2–4 weeks of consistent action.
+   - Represents **long-term identity evolution**.
+
+#### Growth States (MVP)
+**Zen Garden (weekly loop)**
+- **State 0**: Empty sand + soft glow  
+- **State 1**: 1 seed sprout  
+- **State 2**: 2–3 sprouts + small stone  
+- **State 3**: 1 small plant + subtle light rays  
+- **State 4**: Garden in bloom (reset after weekly ritual)
+
+**Wisdom Tree (monthly loop)**
+- **Stage 1**: Sapling  
+- **Stage 2**: Young tree  
+- **Stage 3**: Strong tree  
+- **Stage 4**: Flourishing tree + small fruit  
+- **Stage 5**: Ancient tree (badge/title unlocked)
+
+#### Growth Rules (MVP)
+**Zen Garden**
+- **+1 growth** on each habit completion (max 4 per week).
+- **Day 7 ritual** finalizes the garden and **resets** to State 0 next week.
+- If a week has **0 completions**, garden shows **soft wind** animation (no penalty).
+
+**Wisdom Tree**
+- **+1 stage** after **3+ weeks with ≥4 completions**.
+- **Grace buffer**: a “bad week” doesn’t reduce stage, only pauses growth.
+- **Power-Down Quests** count as **0.5** completions toward weekly totals.
+
+#### UX Touchpoints
+- **Today screen**: mini garden thumbnail (top-right) with 1-line copy:
+  - “Your garden is growing.” / “A small seed today?”
+- **Completion toast**: micro-sparkle + “Seed planted.”
+- **Weekly ritual**: shows full Zen Garden state + “Carry a seed into your tree.”
+- **Monthly check-in**: “Your Wisdom Tree grew to ___.”
+
+#### Rewards & Identity Tie-In
+- Zen Garden growth boosts **identity reflection** copy:
+  - “You’re someone who shows up even in small ways.”
+- Wisdom Tree stage unlocks:
+  - **Stage 3**: 1 Key
+  - **Stage 5**: Cosmetic badge/title (e.g., “Rooted”)
+
+#### Data Model (Minimal)
+```
+GardenState {
+  user_id
+  week_start
+  garden_state      // 0-4
+  weekly_completions
+  last_growth_at
+}
+
+WisdomTreeState {
+  user_id
+  stage            // 1-5
+  streak_weeks     // count of qualifying weeks
+  last_growth_at
+}
+```
+
+#### Telemetry Hooks
+- `garden_growth_incremented`
+- `garden_week_finalized`
+- `tree_stage_upgraded`
+- `tree_stage_rewards_unlocked`
+
+**Done when**
+- Growth states and rules are defined.
+- UX touchpoints specified for Today, completion, weekly ritual, and monthly check-in.
+- Minimal data model + telemetry hooks documented.
+
+---
+
 ## 9) Roadmap (Step-by-Step, AI-Friendly)
 
 > **Rule**: Work one step at a time. Log it in Section 12.
@@ -1365,7 +1452,7 @@ MotivationPersona {
 
 ### Phase 5 — MVP Build Plan
 - [x] **P5.1** Feature slice: single habit + reward + identity feedback
-- [ ] **P5.2** Zen Garden/Wisdom Tree visual growth loop
+- [x] **P5.2** Zen Garden/Wisdom Tree visual growth loop
 - [ ] **P5.3** Analytics & retention instrumentation
 
 ---
@@ -1482,3 +1569,8 @@ MotivationPersona {
   - **Step**: P5.1 Feature slice: single habit + reward + identity feedback  
   - **What changed**: Added MVP slice scope, critical path flow, minimal data contracts, UX requirements, success criteria, and deliverables for the single-habit reward + identity loop.  
   - **What’s next**: P5.2 Zen Garden/Wisdom Tree visual growth loop.
+
+- **2026-02-05**  
+  - **Step**: P5.2 Zen Garden/Wisdom Tree visual growth loop  
+  - **What changed**: Added visual growth loop spec with Zen Garden and Wisdom Tree states, growth rules, UX touchpoints, identity rewards, minimal data model, and telemetry hooks.  
+  - **What’s next**: P5.3 Analytics & retention instrumentation.
