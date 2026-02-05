@@ -1202,6 +1202,63 @@ MotivationPersona {
 **Done when**
 - Inputs, detection rules, pacing states, actions, guardrails, and telemetry are specified.
 
+### 7.9 AI Layer: **“Bad Week” Detection & Soft-Landing Mode**
+
+**Purpose**: Detect short-term life turbulence (stress, illness, overload) and shift the system into a gentler mode that preserves identity progress, reduces pressure, and makes it easy to return without shame.
+
+#### Inputs (Signals)
+**Behavioral**
+- **Miss cluster**: 3+ misses in 5 days after a prior streak ≥ 5 days
+- **Skipped check-ins**: no Today screen open in 3 consecutive days
+- **Energy drain**: Energy ≤ 25% on 3+ days in a 7-day window
+- **Recovery pattern**: triggers “Power-Down Quest” twice in 7 days
+- **Session shortening**: average session time drops ≥ 50% vs. prior week
+
+**Self-reported (lightweight, optional)**
+- “Rough week?” prompt (Yes / Not really)
+- “Want a lighter mode for a few days?” (Yes / Not now)
+
+#### Detection Rules (MVP, rules-based)
+- Enter **Soft-Landing Mode** if **any** of:
+  - Miss cluster + skipped check-ins in same 7-day window
+  - Energy drain + recovery pattern
+  - Self-reported “Rough week” = Yes
+- Auto-exit if **2 consecutive completions** or **7 days elapsed**, whichever comes first.
+
+#### Soft-Landing Actions (MVP)
+1. **Reduce daily load**
+   - Default to **1 micro-action** (“Do the tiniest version”)
+   - Hide optional challenge prompts
+2. **Streak safety**
+   - Convert streak to **“Grace Buffer”** (hold streak visuals for up to 7 days)
+   - Prevent “streak loss” copy; use neutral language
+3. **Reward cushioning**
+   - Offer **Bank it** as default
+   - Allow **1 low-cost reward** per week even if completions are minimal
+4. **Identity continuity**
+   - Show “Still you” reflection chip: “Showing up counts, even small.”
+
+#### UX Touchpoints
+- **Soft landing banner** on Today: “Let’s go lighter this week.”
+- **Completion toast**: “Tiny win logged — that’s enough today.”
+- **Weekly ritual card**: “Want to keep it light for another week?” (Yes / Not now)
+
+#### Guardrails
+- Never call it “failure” or “slipping.”
+- Never force mode; always allow “Not now.”
+- Do not reduce rewards for completions; only soften pressure.
+- Limit prompts to **1 per 5 days**.
+
+#### Telemetry Hooks
+- `soft_landing_mode_entered`
+- `soft_landing_mode_exited`
+- `soft_landing_prompt_shown`
+- `soft_landing_prompt_accepted`
+- `soft_landing_grace_buffer_used`
+
+**Done when**
+- Signals, detection rules, soft-landing actions, UX touchpoints, guardrails, and telemetry are specified.
+
 ### 8.8 Instrumentation & Metrics (Minimum)
 **Track events**
 - onboarding_started
@@ -1264,7 +1321,7 @@ MotivationPersona {
 ### Phase 4 — AI Layer
 - [x] **P4.1** Motivation style matching (inputs → personas)
 - [x] **P4.2** Reward pacing optimizer (avoid burnout + boredom)
-- [ ] **P4.3** “Bad week” detection & soft-landing mode
+- [x] **P4.3** “Bad week” detection & soft-landing mode
 
 ### Phase 5 — MVP Build Plan
 - [ ] **P5.1** Feature slice: single habit + reward + identity feedback
@@ -1375,3 +1432,8 @@ MotivationPersona {
   - **Step**: P4.2 Reward pacing optimizer (avoid burnout + boredom)  
   - **What changed**: Added reward pacing optimizer spec with pacing states, detection rules, optimizer actions, guardrails, UX touchpoints, and telemetry hooks to balance burnout vs. boredom.  
   - **What’s next**: P4.3 “Bad week” detection & soft-landing mode.
+
+- **2025-03-09**  
+  - **Step**: P4.3 “Bad week” detection & soft-landing mode  
+  - **What changed**: Added bad-week detection signals, rules, soft-landing actions, UX touchpoints, guardrails, and telemetry hooks to soften pressure and preserve identity progress.  
+  - **What’s next**: P5.1 Feature slice: single habit + reward + identity feedback.
