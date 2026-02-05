@@ -1423,6 +1423,35 @@ WisdomTreeState {
 
 ---
 
+### 8.12 Phase 6 Decision: MVP Currency Set (P6.1)
+
+**Decision**: Ship **XP + Gold** as the MVP currency set.  
+**Not shipping yet**: Energy, Tokens, Keys.
+
+#### Rationale
+- **Aligns with current product**: XP/levels already exist in the gamification system, so XP is a natural carry-forward.
+- **Keeps the reward loop simple**: Gold is the single spendable currency for user-defined rewards.
+- **Reduces cognitive load**: two currencies are easy to explain on Day 0–1.
+- **Leaves room to expand**: Energy, Tokens, and Keys remain reserved for later progression layers.
+
+#### MVP Behavior (Rules Snapshot)
+- **XP**: Earned on habit completion and streak milestones; used for levels/identity feedback only.
+- **Gold**: Earned on habit completion; spent on rewards.
+- **No Energy/Token/Key balances** in the UI or data model during MVP.
+
+#### UI/UX Implications
+- Show **XP gain + Gold gain** together on completion.
+- Reward creation shows **Gold cost** only.
+- Identity feedback references XP/level progress (no multi-currency jargon).
+
+#### Telemetry (Additions)
+- `currency_xp_earned`
+- `currency_gold_earned`
+- `currency_gold_spent`
+
+**Done when**
+- MVP currency set is explicitly chosen, with rationale and UX implications.
+
 ## 9) Roadmap (Step-by-Step, AI-Friendly)
 
 > **Rule**: Work one step at a time. Log it in Section 12.
@@ -1456,7 +1485,7 @@ WisdomTreeState {
 - [x] **P5.3** Analytics & retention instrumentation
 
 ### Phase 6 — Roadmap Iteration (Decisions + Sequencing)
-- [ ] **P6.1** Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)
+- [x] **P6.1** Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)
 - [ ] **P6.2** Map existing XP/level system to the multi-currency economy
 - [ ] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
 - [ ] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
@@ -1466,7 +1495,6 @@ WisdomTreeState {
 
 ## 10) Open Questions (Keep Current)
 
-- What is the minimum viable set of currencies for MVP?  
 - How do we map the **existing XP/level system** to the new multi-currency economy?  
 - Should identity vectors be visible in any form early on?  
 - What is the first **real-world meaning** feature (e.g., trees planted)?  
@@ -1480,7 +1508,7 @@ WisdomTreeState {
 > Add decisions here when locked.  
 > Format: **Date — Decision — Rationale**
 
-- _None yet._
+- **2026-02-05 — MVP currency set = XP + Gold —** Aligns with existing gamification, keeps rewards simple, and defers Energy/Tokens/Keys until post-MVP.
 
 ---
 
@@ -1591,3 +1619,8 @@ WisdomTreeState {
   - **Step**: Roadmap iteration draft (Phase 6)  
   - **What changed**: Added Phase 6 decision-focused steps to sequence the next iteration around currencies, XP mapping, identity visibility, real-world meaning, and reward evolution examples.  
   - **What’s next**: Start P6.1 (decide MVP currency set).
+
+- **2026-02-05**  
+  - **Step**: P6.1 Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)  
+  - **What changed**: Chose XP + Gold as the MVP currency set, documented rationale, UX implications, telemetry, and deferred Energy/Tokens/Keys.  
+  - **What’s next**: P6.2 Map existing XP/level system to the multi-currency economy.
