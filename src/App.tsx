@@ -11,6 +11,10 @@ import {
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import lifespinIcon from './assets/Lifespinicon.webp';
+import dailyTreatsContainerMain from './assets/Daily_treat_containermain.webp';
+import dailyTreatsSpinWheel from './assets/Daily_treats_spinnwheel.webp';
+import dailyTreatsHearts from './assets/Daily_treats_hearts.webp';
+import dailyTreatsCalendarOpen from './assets/daily_treats_calendaropen.webp';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace, LifeGoalsSection } from './features/goals';
@@ -422,6 +426,16 @@ export default function App() {
     const maxPoints = Math.max(...pointValues);
     return formatPointsRange(minPoints, maxPoints);
   }, []);
+  const dailyTreatsInventory = useMemo(
+    () => ({
+      spinsRemaining: 2,
+      heartsRemaining: 5,
+      hatchesRemaining: 1,
+    }),
+    [],
+  );
+  const todayDailyTreatsKey = getTodayDateKey();
+  const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;
   const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
 
   const workspaceNavItems = useMemo(() => {
@@ -2822,7 +2836,10 @@ export default function App() {
         onClick={() => setShowDailyTreatsMenu(false)}
         role="presentation"
       />
-      <div className="daily-treats-modal__dialog">
+      <div
+        className="daily-treats-modal__dialog"
+        style={{ backgroundImage: `url(${dailyTreatsContainerMain})` }}
+      >
         <button
           type="button"
           className="daily-treats-modal__close"
@@ -2831,67 +2848,99 @@ export default function App() {
         >
           ×
         </button>
-        <header className="daily-treats-modal__header">
-          <p className="daily-treats-modal__eyebrow">Daily Treats</p>
-          <h3 className="daily-treats-modal__title">Choose your reward path</h3>
-          <p className="daily-treats-modal__subtitle">
-            Pick a treat to keep your streak and surprises rolling.
-          </p>
-        </header>
-        <div className="daily-treats-modal__actions">
-          <button
-            type="button"
-            className="daily-treats-modal__action"
-            onClick={() => {
-              setShowDailyTreatsMenu(false);
-              setShowDailySpinWheel(true);
-            }}
-          >
-            <span className="daily-treats-modal__action-icon" aria-hidden="true">
-              🎰
-            </span>
-            <span className="daily-treats-modal__action-text">
-              <span className="daily-treats-modal__action-title">
-                <strong>Life Spin</strong>
-                {shouldShowPointsBadges && spinPointsRange ? (
-                  <PointsBadge value={spinPointsRange} className="daily-treats-modal__points-badge" />
-                ) : null}
+        <div className="daily-treats-modal__content">
+          <header className="daily-treats-modal__header">
+            <p className="daily-treats-modal__eyebrow">Daily Treats</p>
+            <h3 className="daily-treats-modal__title">Choose your reward path</h3>
+            <p className="daily-treats-modal__subtitle">
+              Pick a treat to keep your streak and surprises rolling.
+            </p>
+          </header>
+          <div className="daily-treats-modal__cards">
+            <button
+              type="button"
+              className={`daily-treats-modal__card${
+                dailyTreatsInventory.spinsRemaining === 0
+                  ? ' daily-treats-modal__card--spent'
+                  : hasOpenedDailyTreatsToday
+                    ? ' daily-treats-modal__card--opened'
+                    : ' daily-treats-modal__card--active'
+              }`}
+              disabled={dailyTreatsInventory.spinsRemaining === 0}
+              onClick={() => {
+                setShowDailyTreatsMenu(false);
+                setShowDailySpinWheel(true);
+              }}
+            >
+              <span className="daily-treats-modal__card-image" aria-hidden="true">
+                <img src={dailyTreatsSpinWheel} alt="" />
               </span>
-              <span>Spin the wheel for your daily boost.</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            className="daily-treats-modal__action"
-            onClick={() => {
-              setShowDailyTreatsMenu(false);
-              setShowLeaguePlaceholder(true);
-            }}
-          >
-            <span className="daily-treats-modal__action-icon" aria-hidden="true">
-              🏆
-            </span>
-            <span className="daily-treats-modal__action-text">
-              <strong>League Game</strong>
-              <span>Competitive daily matchups (coming soon).</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            className="daily-treats-modal__action"
-            onClick={() => {
-              setShowDailyTreatsMenu(false);
-              setShowCalendarPlaceholder(true);
-            }}
-          >
-            <span className="daily-treats-modal__action-icon" aria-hidden="true">
-              📆
-            </span>
-            <span className="daily-treats-modal__action-text">
-              <strong>Daily Calendar Hatch</strong>
-              <span>Open every hatch, including the days you missed.</span>
-            </span>
-          </button>
+              <span className="daily-treats-modal__card-title">Life Spin</span>
+              <span className="daily-treats-modal__card-subtitle">Spin the wheel for your daily boost.</span>
+              {dailyTreatsInventory.spinsRemaining > 0 ? (
+                <span className="daily-treats-modal__card-indicator" aria-label="Available spins">
+                  {dailyTreatsInventory.spinsRemaining}
+                </span>
+              ) : null}
+              {shouldShowPointsBadges && spinPointsRange ? (
+                <PointsBadge value={spinPointsRange} className="daily-treats-modal__points-badge" />
+              ) : null}
+            </button>
+            <button
+              type="button"
+              className={`daily-treats-modal__card${
+                dailyTreatsInventory.heartsRemaining === 0
+                  ? ' daily-treats-modal__card--spent'
+                  : hasOpenedDailyTreatsToday
+                    ? ' daily-treats-modal__card--opened'
+                    : ' daily-treats-modal__card--active'
+              }`}
+              disabled={dailyTreatsInventory.heartsRemaining === 0}
+              onClick={() => {
+                setShowDailyTreatsMenu(false);
+                setShowLeaguePlaceholder(true);
+              }}
+            >
+              <span className="daily-treats-modal__card-image" aria-hidden="true">
+                <img src={dailyTreatsHearts} alt="" />
+              </span>
+              <span className="daily-treats-modal__card-title">League Energy</span>
+              <span className="daily-treats-modal__card-subtitle">
+                Competitive daily matchups (coming soon).
+              </span>
+              {dailyTreatsInventory.heartsRemaining > 0 ? (
+                <span className="daily-treats-modal__card-indicator" aria-label="Available hearts">
+                  {dailyTreatsInventory.heartsRemaining}
+                </span>
+              ) : null}
+            </button>
+            <button
+              type="button"
+              className={`daily-treats-modal__card${
+                dailyTreatsInventory.hatchesRemaining === 0
+                  ? ' daily-treats-modal__card--spent'
+                  : hasOpenedDailyTreatsToday
+                    ? ' daily-treats-modal__card--opened'
+                    : ' daily-treats-modal__card--active'
+              }`}
+              disabled={dailyTreatsInventory.hatchesRemaining === 0}
+              onClick={() => {
+                setShowDailyTreatsMenu(false);
+                setShowCalendarPlaceholder(true);
+              }}
+            >
+              <span className="daily-treats-modal__card-image" aria-hidden="true">
+                <img src={dailyTreatsCalendarOpen} alt="" />
+              </span>
+              <span className="daily-treats-modal__card-title">Daily Hatch</span>
+              <span className="daily-treats-modal__card-subtitle">
+                Open every hatch, including the days you missed.
+              </span>
+              {dailyTreatsInventory.hatchesRemaining > 0 ? (
+                <span className="daily-treats-modal__card-indicator" aria-label="Daily hatch ready" />
+              ) : null}
+            </button>
+          </div>
         </div>
       </div>
     </div>
