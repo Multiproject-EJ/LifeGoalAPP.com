@@ -42,7 +42,7 @@ import {
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
-import visionStarButton from '../../assets/VisionStarBig.webp';
+import visionStarButton from '../../assets/Daily_visionstar.webp';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
