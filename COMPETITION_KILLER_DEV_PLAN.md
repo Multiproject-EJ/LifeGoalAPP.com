@@ -1051,6 +1051,87 @@ SeasonalEvent {
 **Done when**
 - Event object, loop, rewards, and telemetry hooks are specified.
 
+### 7.7 AI Layer: **Motivation Style Matching (Inputs → Personas)**
+
+**Purpose**: Detect how a user responds to motivation and adapt copy, pacing, and reward framing to fit their dominant style—without boxing them in or shaming them.
+
+#### Motivation Persona (MVP)
+```
+MotivationPersona {
+  id
+  name               // Builder | Challenger | Nurturer | Explorer
+  description        // 1-line summary for internal use
+  triggers[]         // events that increase affinity
+  anti_triggers[]    // events that decrease affinity
+  tone_guidelines[]  // copy guidance
+  ui_emphasis[]      // what to show more/less
+}
+```
+
+#### Inputs (Signals)
+**Behavioral**
+- **Completion rhythm**: consistent daily vs. bursty streaks
+- **Streak response**: engages with streak visuals or ignores them
+- **Challenge uptake**: accepts “hard mode” or higher difficulty prompts
+- **Recovery usage**: uses Power-Down Quests after misses
+- **Reward redemption**: prefers frequent small rewards vs. saving for bigger ones
+- **Reflection behavior**: taps reflection chips or skips
+- **Optional social**: joins parties or stays solo
+
+**Self-reported (lightweight, optional)**
+- “Do you prefer gentle encouragement or clear challenges?” (2-option toggle)
+- “Do rewards help you most when they’re frequent or meaningful?” (2-option toggle)
+
+#### Personas (MVP Set)
+1. **Builder** (Progress-first)
+   - **Signals**: consistent daily completions, likes streaks, prefers small frequent rewards.
+   - **Tone**: steady, affirming, “you’re building momentum.”
+   - **UI emphasis**: streak progress, daily cadence, small reward boosts.
+2. **Challenger** (Intensity-first)
+   - **Signals**: accepts harder prompts, increases difficulty, prefers bigger rewards later.
+   - **Tone**: direct, empowering, “take on the next level.”
+   - **UI emphasis**: challenge cards, milestones, upgrade paths.
+3. **Nurturer** (Care-first)
+   - **Signals**: uses Power-Down Quests, engages with reflections, prefers gentle pacing.
+   - **Tone**: warm, compassionate, “it’s okay to go small.”
+   - **UI emphasis**: recovery flows, reflection chips, self-care rewards.
+4. **Explorer** (Variety-first)
+   - **Signals**: rotates habits, tries new rewards, engages with novelty.
+   - **Tone**: playful, curious, “try a new path today?”
+   - **UI emphasis**: variety suggestions, new reward ideas, light experiments.
+
+#### Scoring Rules (MVP)
+- Maintain a **persona affinity score** per user (0–100).
+- Each signal event adds **+5 to +15** to one persona, **-5** to an opposing persona.
+- Use a **7-day rolling window** to smooth spikes.
+- Dominant persona = highest affinity **≥ 60**; if none, use “Balanced” fallback.
+
+#### Adaptation Rules (MVP)
+- **Copy tone**: swap 1–2 lines based on persona (Today screen + completion toast).
+- **Reward framing**:
+  - Builder → “Keep it steady — small wins.”
+  - Challenger → “Hold for a bigger unlock.”
+  - Nurturer → “Reward yourself for showing up.”
+  - Explorer → “Try a new reward today.”
+- **Prompt choice**:
+  - Builder → streak & consistency prompts
+  - Challenger → challenge/upgrade prompts
+  - Nurturer → recovery/soft-landing prompts
+  - Explorer → novelty prompts
+
+#### Safeguards
+- Never show negative or judgmental copy.
+- Allow manual “Prefer gentle tone” toggle to override persona.
+- Do not change core UX flow; only adjust microcopy and optional cards.
+
+#### Telemetry Hooks
+- `persona_signal_logged`
+- `persona_assigned`
+- `persona_copy_variant_shown`
+
+**Done when**
+- Personas, signals, scoring, adaptation rules, and safeguards are specified.
+
 ### 8.8 Instrumentation & Metrics (Minimum)
 **Track events**
 - onboarding_started
@@ -1111,7 +1192,7 @@ SeasonalEvent {
 - [x] **P3.3** Seasonal events / community arcs
 
 ### Phase 4 — AI Layer
-- [ ] **P4.1** Motivation style matching (inputs → personas)
+- [x] **P4.1** Motivation style matching (inputs → personas)
 - [ ] **P4.2** Reward pacing optimizer (avoid burnout + boredom)
 - [ ] **P4.3** “Bad week” detection & soft-landing mode
 
@@ -1214,3 +1295,8 @@ SeasonalEvent {
   - **Step**: P3.3 Seasonal events / community arcs  
   - **What changed**: Added seasonal event MVP spec with event object, community arc rules, daily loop, rewards, copy tone, and telemetry hooks.  
   - **What’s next**: P4.1 Motivation style matching (inputs → personas).
+
+- **2026-02-06**  
+  - **Step**: P4.1 Motivation style matching (inputs → personas)  
+  - **What changed**: Added motivation persona model, signals, scoring, adaptation rules, safeguards, and telemetry hooks for AI-driven tone matching.  
+  - **What’s next**: P4.2 Reward pacing optimizer (avoid burnout + boredom).
