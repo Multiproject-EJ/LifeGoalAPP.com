@@ -1455,6 +1455,13 @@ WisdomTreeState {
 - [x] **P5.2** Zen Garden/Wisdom Tree visual growth loop
 - [x] **P5.3** Analytics & retention instrumentation
 
+### Phase 6 — Roadmap Iteration (Decisions + Sequencing)
+- [ ] **P6.1** Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)
+- [ ] **P6.2** Map existing XP/level system to the multi-currency economy
+- [ ] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
+- [ ] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
+- [ ] **P6.5** Pick first reward evolution example to ship
+
 ---
 
 ## 10) Open Questions (Keep Current)
@@ -1579,3 +1586,8 @@ WisdomTreeState {
   - **Step**: P5.3 Analytics & retention instrumentation  
   - **What changed**: Added MVP analytics events catalog with base event contract, required properties, retention calculation guidance, and a suggested Supabase event table schema.  
   - **What’s next**: Review open questions and decide next roadmap iteration.
+
+- **2026-02-05**  
+  - **Step**: Roadmap iteration draft (Phase 6)  
+  - **What changed**: Added Phase 6 decision-focused steps to sequence the next iteration around currencies, XP mapping, identity visibility, real-world meaning, and reward evolution examples.  
+  - **What’s next**: Start P6.1 (decide MVP currency set).
