@@ -1296,6 +1296,46 @@ MotivationPersona {
 
 ---
 
+### 8.10 Feature Slice (P5.1): Single Habit + Reward + Identity Feedback
+**Goal**: Ship one tight, end-to-end loop that proves the core system works with minimal surface area.
+
+**Scope (MVP slice)**
+- **One habit** per user (no multi-habit UI yet).
+- **One reward** required at setup (simple create + redeem).
+- **Identity feedback** after completion (single card, no deep stats).
+- **Local-first** with sync; offline completions queue.
+
+**Critical path (screen flow)**
+1. **Setup**: choose life area → name tiny habit → pick time → create reward.
+2. **Today**: 1 primary CTA (“Do my tiny habit”).
+3. **Complete**: earn currency + redeem prompt.
+4. **Identity**: show 1-sentence reflection + “keep going” CTA.
+
+**Minimal data contracts**
+- Habit: `id`, `title`, `schedule`, `created_at`.
+- Reward: `id`, `title`, `category`, `cost`, `cooldown`.
+- Economy: `balances` (Gold + Tokens).
+- Identity: `vectors`, `last_message`, `updated_at`.
+- Event log: `habit_completed`, `reward_redeemed`, `identity_message_shown`.
+
+**UX requirements**
+- Single-focus screens, 1 CTA per screen.
+- Completion feedback within 500ms (optimistic UI).
+- Reward redemption sheet includes cooldown + balance preview.
+
+**Success criteria (done when)**
+- User can complete the habit and redeem a reward in under 60 seconds.
+- Identity message appears after completion (deterministic, rules-based).
+- Offline completion queues and syncs without losing reward or identity updates.
+
+**Deliverables**
+- Basic habit setup flow (single habit enforced).
+- Reward create + redeem flow wired to balances.
+- Identity card rendering after completion.
+- Telemetry events for completion, redemption, identity message.
+
+---
+
 ## 9) Roadmap (Step-by-Step, AI-Friendly)
 
 > **Rule**: Work one step at a time. Log it in Section 12.
@@ -1324,7 +1364,7 @@ MotivationPersona {
 - [x] **P4.3** “Bad week” detection & soft-landing mode
 
 ### Phase 5 — MVP Build Plan
-- [ ] **P5.1** Feature slice: single habit + reward + identity feedback
+- [x] **P5.1** Feature slice: single habit + reward + identity feedback
 - [ ] **P5.2** Zen Garden/Wisdom Tree visual growth loop
 - [ ] **P5.3** Analytics & retention instrumentation
 
@@ -1437,3 +1477,8 @@ MotivationPersona {
   - **Step**: P4.3 “Bad week” detection & soft-landing mode  
   - **What changed**: Added bad-week detection signals, rules, soft-landing actions, UX touchpoints, guardrails, and telemetry hooks to soften pressure and preserve identity progress.  
   - **What’s next**: P5.1 Feature slice: single habit + reward + identity feedback.
+
+- **2026-02-05**  
+  - **Step**: P5.1 Feature slice: single habit + reward + identity feedback  
+  - **What changed**: Added MVP slice scope, critical path flow, minimal data contracts, UX requirements, success criteria, and deliverables for the single-habit reward + identity loop.  
+  - **What’s next**: P5.2 Zen Garden/Wisdom Tree visual growth loop.
