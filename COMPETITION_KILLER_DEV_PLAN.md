@@ -1453,7 +1453,7 @@ WisdomTreeState {
 ### Phase 5 — MVP Build Plan
 - [x] **P5.1** Feature slice: single habit + reward + identity feedback
 - [x] **P5.2** Zen Garden/Wisdom Tree visual growth loop
-- [ ] **P5.3** Analytics & retention instrumentation
+- [x] **P5.3** Analytics & retention instrumentation
 
 ---
 
@@ -1574,3 +1574,8 @@ WisdomTreeState {
   - **Step**: P5.2 Zen Garden/Wisdom Tree visual growth loop  
   - **What changed**: Added visual growth loop spec with Zen Garden and Wisdom Tree states, growth rules, UX touchpoints, identity rewards, minimal data model, and telemetry hooks.  
   - **What’s next**: P5.3 Analytics & retention instrumentation.
+
+- **2026-02-05**  
+  - **Step**: P5.3 Analytics & retention instrumentation  
+  - **What changed**: Added MVP analytics events catalog with base event contract, required properties, retention calculation guidance, and a suggested Supabase event table schema.  
+  - **What’s next**: Review open questions and decide next roadmap iteration.
