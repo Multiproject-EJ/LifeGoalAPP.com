@@ -918,6 +918,75 @@ Party {
 **Done when**
 - Party object, stake rules, daily flow, fail handling, and telemetry hooks are specified.
 
+### 7.5 Social & Stakes: **Optional Commitment Contracts (Beeminder-Style)**
+
+**Purpose**: Offer an opt-in commitment contract that increases follow-through with clear stakes, while preserving a warm, non-judgmental tone and safety exits.
+
+#### Contract Object (MVP)
+```
+CommitmentContract {
+  id
+  user_id
+  title
+  target_type        // Habit | Goal | FocusSession
+  target_id
+  cadence            // Daily | Weekly
+  target_count       // number of required completions in cadence window
+  stake_type         // Gold | Tokens | Keys | RealMoney(optional)
+  stake_amount
+  grace_days         // 0..2 per cadence window
+  cooling_off_hours  // 24 by default
+  status             // Draft | Active | Paused | Completed | Cancelled
+  start_at
+  end_at?
+  created_at
+  updated_at
+}
+```
+
+#### Core Rules (MVP)
+- **Opt-in only** with explicit confirmation; never default-on.
+- **Cooling-off window**: user can cancel within 24 hours without penalty.
+- **Grace days**: up to 2 per cadence window (default = 1) to protect from burnout.
+- **No shame tone**: missed contract triggers a gentle review + reset option.
+- **Caps**: stake amount must be ≤ 20% of current Gold balance (or fixed cap for Tokens/Keys).
+- **Real money**: disabled by default; only available with extra confirmation + parental gate (future).
+
+#### Setup Flow (Mobile-First)
+1. **Select target** (habit/goal/focus session) + cadence.
+2. **Set target count** (default 1 per day).
+3. **Choose stake** (Gold/Token/Key) + amount.
+4. **Pick grace days** (0–2).
+5. **Review + confirm** (clear consequences, cooling-off note).
+
+#### Daily/Weekly Evaluation
+- At cadence end:
+  - If target met → **reward**: small bonus Gold + “Contract kept” badge.
+  - If target missed → **forfeit stake** to a “Commitment Pool” (virtual sink), then offer reset.
+
+#### Miss Flow (Warm Recovery)
+- Copy: “You didn’t meet this one. That doesn’t erase your progress.”
+- Options:
+  - **Reset contract** (same settings)
+  - **Reduce stake** (one-time, if 2 misses in 30 days)
+  - **Pause for a week** (requires reason selection)
+
+#### Safety & Anti-Overload
+- Require **one** active contract max in MVP.
+- Block contracts during **Power-Down Quest** (soft-landing week).
+- Suggest “Support-Only” party mode instead if user misses 2+ contracts.
+
+#### Telemetry Hooks
+- `contract_created`
+- `contract_activated`
+- `contract_cancelled`
+- `contract_completed`
+- `contract_missed`
+- `contract_stake_forfeited`
+
+**Done when**
+- Contract object, setup flow, evaluation rules, miss flow, safety caps, and telemetry hooks are specified.
+
 ### 8.8 Instrumentation & Metrics (Minimum)
 **Track events**
 - onboarding_started
@@ -974,7 +1043,7 @@ Party {
 
 ### Phase 3 — Social & Stakes
 - [x] **P3.1** Party system MVP (shared stakes + shared reward)
-- [ ] **P3.2** Optional commitment contracts (Beeminder-style)
+- [x] **P3.2** Optional commitment contracts (Beeminder-style)
 - [ ] **P3.3** Seasonal events / community arcs
 
 ### Phase 4 — AI Layer
@@ -1071,3 +1140,8 @@ Party {
   - **Step**: P3.1 Party system MVP (shared stakes + shared reward)  
   - **What changed**: Added party system MVP spec covering party object, stake rules, daily loop, fail handling, and telemetry hooks.  
   - **What’s next**: P3.2 Optional commitment contracts (Beeminder-style).
+
+- **2026-02-06**  
+  - **Step**: P3.2 Optional commitment contracts (Beeminder-style)  
+  - **What changed**: Added commitment contract MVP spec with data model, setup flow, evaluation rules, miss recovery, safety caps, and telemetry hooks.  
+  - **What’s next**: P3.3 Seasonal events / community arcs.
