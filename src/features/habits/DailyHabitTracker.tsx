@@ -2270,7 +2270,7 @@ export function DailyHabitTracker({
     const shouldGlowBonus = Boolean(
       visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
     );
-    const shouldHideBonus = shouldFadeTrackingMeta && hasClaimedVisionStar && !visionRewardForDay;
+    const shouldHideBonus = shouldFadeTrackingMeta && hasClaimedVisionStar && !shouldShowOfferBonus;
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
