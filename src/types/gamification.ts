@@ -100,6 +100,24 @@ export interface UserTrophy {
   trophy: TrophyItem;
 }
 
+export interface RewardItem {
+  id: string;
+  title: string;
+  description: string;
+  costGold: number;
+  createdAt: string;
+  redemptionCount: number;
+  lastRedeemedAt: string | null;
+}
+
+export interface RewardRedemption {
+  id: string;
+  rewardId: string;
+  rewardTitle: string;
+  costGold: number;
+  redeemedAt: string;
+}
+
 // =====================================================
 // XP REWARDS CONSTANTS
 // =====================================================
