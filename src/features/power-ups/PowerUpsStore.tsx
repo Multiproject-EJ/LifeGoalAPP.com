@@ -7,6 +7,7 @@ import { PowerUpCard } from './PowerUpCard';
 import { PowerUpPurchaseModal } from './PowerUpPurchaseModal';
 import { ActivePowerUps } from './ActivePowerUps';
 import './PowerUpsStore.css';
+import { splitGoldBalance } from '../../constants/economy';
 
 interface PowerUpsStoreProps {
   session: Session | null;
@@ -24,6 +25,11 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const userId = session?.user?.id || 'demo_user';
+  const goldBreakdown = splitGoldBalance(currentGold);
+  const goldValueLabel =
+    goldBreakdown.diamonds > 0
+      ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
+      : `🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`;
 
   const loadData = async () => {
     setLoading(true);
@@ -146,7 +152,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
         <h1 className="power-ups-store__title">🪙 Power-ups Store</h1>
         <div className="power-ups-store__balance">
           <span className="power-ups-store__balance-label">Your Gold:</span>
-          <span className="power-ups-store__balance-value">🪙 {currentGold}</span>
+          <span className="power-ups-store__balance-value">{goldValueLabel}</span>
         </div>
       </div>
 

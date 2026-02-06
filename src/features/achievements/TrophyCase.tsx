@@ -1,4 +1,5 @@
 import type { TrophyItem, UserTrophy } from '../../types/gamification';
+import { splitGoldBalance } from '../../constants/economy';
 
 const DEFAULT_LOCKED_LABEL = 'Unlock with gold in the shop.';
 
@@ -24,6 +25,11 @@ export function TrophyCase({
   onPurchase,
 }: Props) {
   const ownedIds = new Set(ownedTrophies.map(item => item.trophyId));
+  const goldBreakdown = splitGoldBalance(currentGold);
+  const goldValueLabel =
+    goldBreakdown.diamonds > 0
+      ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
+      : `🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`;
 
   return (
     <section className="trophy-case">
@@ -37,7 +43,7 @@ export function TrophyCase({
         </div>
         <div className="trophy-case__balance">
           <span className="trophy-case__balance-label">Gold</span>
-          <span className="trophy-case__balance-value">🪙 {currentGold}</span>
+          <span className="trophy-case__balance-value">{goldValueLabel}</span>
         </div>
       </div>
 

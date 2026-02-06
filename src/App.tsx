@@ -49,6 +49,7 @@ import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { SPIN_PRIZES } from './types/gamification';
+import { splitGoldBalance } from './constants/economy';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -405,6 +406,11 @@ export default function App() {
   } = useGamification(supabaseSession);
 
   const goldBalance = gamificationProfile?.total_points ?? 0;
+  const goldBreakdown = splitGoldBalance(goldBalance);
+  const goldValueLabel =
+    goldBreakdown.diamonds > 0
+      ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
+      : `🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`;
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
@@ -2733,7 +2739,7 @@ export default function App() {
               <div className="mobile-gamification-overlay__mini-grid">
                 <div className="mobile-gamification-overlay__mini-card">
                   <p className="mobile-gamification-overlay__mini-label">Gold wallet</p>
-                  <p className="mobile-gamification-overlay__mini-value">🪙 {goldBalance.toLocaleString()}</p>
+                  <p className="mobile-gamification-overlay__mini-value">{goldValueLabel}</p>
                 </div>
                 <div className="mobile-gamification-overlay__mini-card">
                   <p className="mobile-gamification-overlay__mini-label">Zen Tokens</p>

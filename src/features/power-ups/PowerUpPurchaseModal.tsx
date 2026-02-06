@@ -1,4 +1,5 @@
 import { PowerUp } from '../../types/gamification';
+import { splitGoldBalance } from '../../constants/economy';
 
 interface PowerUpPurchaseModalProps {
   powerUp: PowerUp;
@@ -16,6 +17,16 @@ export function PowerUpPurchaseModal({
   isProcessing,
 }: PowerUpPurchaseModalProps) {
   const newBalance = currentGold - powerUp.costGold;
+  const currentGoldBreakdown = splitGoldBalance(currentGold);
+  const newGoldBreakdown = splitGoldBalance(newBalance);
+  const currentGoldLabel =
+    currentGoldBreakdown.diamonds > 0
+      ? `💎 ${currentGoldBreakdown.diamonds.toLocaleString()} · 🪙 ${currentGoldBreakdown.goldRemainder.toLocaleString()}`
+      : `🪙 ${currentGoldBreakdown.goldRemainder.toLocaleString()}`;
+  const newGoldLabel =
+    newGoldBreakdown.diamonds > 0
+      ? `💎 ${newGoldBreakdown.diamonds.toLocaleString()} · 🪙 ${newGoldBreakdown.goldRemainder.toLocaleString()}`
+      : `🪙 ${newGoldBreakdown.goldRemainder.toLocaleString()}`;
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -41,12 +52,12 @@ export function PowerUpPurchaseModal({
             </div>
             <div className="power-up-modal__cost-item">
               <span>Current Balance:</span>
-              <span>🪙 {currentGold}</span>
+              <span>{currentGoldLabel}</span>
             </div>
             <div className="power-up-modal__cost-item power-up-modal__cost-item--new-balance">
               <span>New Balance:</span>
               <span className={newBalance < 0 ? 'power-up-modal__cost-negative' : ''}>
-                🪙 {newBalance}
+                {newGoldLabel}
               </span>
             </div>
           </div>

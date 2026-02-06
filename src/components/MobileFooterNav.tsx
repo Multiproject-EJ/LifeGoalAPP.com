@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { PointsBadge } from './PointsBadge';
+import { splitGoldBalance } from '../constants/economy';
 
 type MobileFooterNavItem = {
   id: string;
@@ -97,9 +98,13 @@ export function MobileFooterNav({
 
   const totalColumns = listItems.length || items.length;
   const listStyle = { '--mobile-footer-columns': totalColumns } as CSSProperties;
-  const formattedPointsBalance =
-    typeof displayPointsBalance === 'number' ? Math.max(0, displayPointsBalance).toLocaleString() : null;
-  const shouldShowDiamondCounter = Boolean(isDiodeActive && formattedPointsBalance);
+  const goldBreakdown =
+    typeof displayPointsBalance === 'number' ? splitGoldBalance(displayPointsBalance) : null;
+  const formattedDiamonds =
+    goldBreakdown ? goldBreakdown.diamonds.toLocaleString() : null;
+  const formattedGoldRemainder =
+    goldBreakdown ? goldBreakdown.goldRemainder.toLocaleString() : null;
+  const shouldShowDiamondCounter = Boolean(isDiodeActive && goldBreakdown);
   const isCompactGameStatus = isDiodeOff;
   const compactGameIcon = isDiodeOff ? getDailyGameIcon() : null;
   const handlePointerDown = () => {
@@ -383,14 +388,16 @@ export function MobileFooterNav({
             aria-live="polite"
           >
             <span className="mobile-footer-nav__diamond-icon" aria-hidden="true">
-              💎
+              {goldBreakdown && goldBreakdown.diamonds > 0 ? '💎' : '🪙'}
             </span>
             <span
               className={`mobile-footer-nav__diamond-value${
                 isPointsAnimating ? ' mobile-footer-nav__diamond-value--active' : ''
               }`}
             >
-              {formattedPointsBalance}
+              {goldBreakdown && goldBreakdown.diamonds > 0
+                ? `${formattedDiamonds} · 🪙 ${formattedGoldRemainder}`
+                : formattedGoldRemainder}
             </span>
           </div>
         ) : null}

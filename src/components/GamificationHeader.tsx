@@ -7,6 +7,7 @@ import { XPBar } from './XPBar';
 import { NotificationBadge } from './NotificationBadge';
 import { useDailySpinStatus } from '../hooks/useDailySpinStatus';
 import { getActivePowerUps } from '../services/powerUps';
+import { splitGoldBalance } from '../constants/economy';
 
 interface GamificationHeaderProps {
   profile: GamificationProfile;
@@ -19,6 +20,9 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
   const { spinAvailable, loading } = useDailySpinStatus(session?.user?.id);
   const [activePowerUps, setActivePowerUps] = useState<ActiveBoost[]>([]);
   const zenTokens = profile.zen_tokens ?? 0;
+  const { diamonds, goldRemainder } = splitGoldBalance(profile.total_points);
+  const goldValueLabel =
+    diamonds > 0 ? `💎 ${diamonds.toLocaleString()} · 🪙 ${goldRemainder.toLocaleString()}` : goldRemainder.toLocaleString();
 
   useEffect(() => {
     const userId = session?.user?.id || 'demo_user';
@@ -107,7 +111,7 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
           {/* Gold */}
           <div className="gamification-stat">
             <span className="gamification-stat__icon">🪙</span>
-            <span className="gamification-stat__value">{profile.total_points}</span>
+            <span className="gamification-stat__value">{goldValueLabel}</span>
             <span className="gamification-stat__label">Gold</span>
           </div>
 

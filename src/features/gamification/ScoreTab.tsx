@@ -8,7 +8,7 @@ import type {
   XPTransaction,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
-import { XP_TO_GOLD_RATIO } from '../../constants/economy';
+import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
 import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward } from '../../services/rewards';
 import scoreAchievements from '../../assets/Score_achievements.webp';
@@ -140,6 +140,11 @@ export function ScoreTab({
     if (!profile) return null;
     return { ...profile, total_points: goldBalance };
   }, [profile, goldBalance]);
+  const goldBreakdown = useMemo(() => splitGoldBalance(goldBalance), [goldBalance]);
+  const goldValueLabel =
+    goldBreakdown.diamonds > 0
+      ? `💎 ${formatter.format(goldBreakdown.diamonds)} · 🪙 ${formatter.format(goldBreakdown.goldRemainder)}`
+      : `🪙 ${formatter.format(goldBreakdown.goldRemainder)}`;
 
   useEffect(() => {
     if (activeTab !== 'shop' || !enabled || !userId) {
@@ -363,7 +368,7 @@ export function ScoreTab({
                 <h3 className="score-tab__card-title">Gold wallet</h3>
                 <span className="score-tab__pill">Spendable</span>
               </div>
-              <p className="score-tab__value">🪙 {formatter.format(profileWithGold.total_points)}</p>
+              <p className="score-tab__value">{goldValueLabel}</p>
               <p className="score-tab__meta">Use gold for shop upgrades and trophies.</p>
             </article>
 
@@ -475,7 +480,7 @@ export function ScoreTab({
             </div>
             <div className="score-tab__shop-balance">
               <span className="score-tab__shop-balance-label">Gold balance</span>
-              <strong className="score-tab__shop-balance-value">🪙 {formatter.format(goldBalance)}</strong>
+              <strong className="score-tab__shop-balance-value">{goldValueLabel}</strong>
             </div>
           </div>
 
