@@ -1619,7 +1619,7 @@ WisdomTreeState {
 ### Phase 7 — MVP Build Execution (Product + Engineering)
 - [x] **P7.1** Rename Points → Gold in UI + data model (migration + copy)
 - [x] **P7.2** Implement reward creation + redemption flow with Gold spend
-- [ ] **P7.3** Ship Day 0–1 onboarding flow (single habit + reward loop)
+- [x] **P7.3** Ship Day 0–1 onboarding flow (single habit + reward loop)
 - [ ] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
 - [ ] **P7.5** Add Trees Planted ledger + weekly award trigger
 
@@ -1792,3 +1792,8 @@ WisdomTreeState {
   - **Step**: P7.2 Implement reward creation + redemption flow with Gold spend  
   - **What changed**: Added the Player Shop reward builder and redemption UI, plus local reward storage and Gold spend handling for custom rewards.  
   - **What’s next**: P7.3 Ship Day 0–1 onboarding flow (single habit + reward loop).
+
+- **2026-02-11**  
+  - **Step**: P7.3 Ship Day 0–1 onboarding flow (single habit + reward loop)  
+  - **What changed**: Added a new Day 0–1 onboarding flow with a single-habit setup, reward definition, and quick completion loop, plus updated quick-start nudges and copy.  
+  - **What’s next**: P7.4 Add Identity Signals card + “Why this?” detail sheet (post-Day 3).
