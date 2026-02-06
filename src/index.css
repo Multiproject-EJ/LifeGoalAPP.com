@@ -13477,8 +13477,8 @@ body {
 }
 
 .mobile-footer-nav__energy-button {
-  width: 56px;
-  height: 56px;
+  width: 168px;
+  height: 168px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(255, 255, 255, 0.92);
@@ -13488,8 +13488,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  font-size: 1.3rem;
+  gap: 0.35rem;
+  font-size: 2.8rem;
   font-weight: 700;
   transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.2s ease;
   opacity: 0;
@@ -13517,7 +13517,7 @@ body {
 }
 
 .mobile-footer-nav__energy-label {
-  font-size: 0.55rem;
+  font-size: 0.9rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
