@@ -35,7 +35,17 @@ import {
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
-import { updateHabitFullV2 } from '../../services/habitsV2';
+import { updateHabitFullV2, type HabitV2Row } from '../../services/habitsV2';
+import {
+  AUTO_PROGRESS_TIERS,
+  AUTO_PROGRESS_UPGRADE_RULES,
+  buildAutoProgressPlan,
+  getAutoProgressState,
+  getNextDownshiftTier,
+  getNextUpgradeTier,
+  type AutoProgressShift,
+  type AutoProgressTier,
+} from './autoProgression';
 import {
   getYesterdayRecapEnabled,
   getYesterdayRecapLastCollected,
@@ -136,6 +146,11 @@ type VisionReward = {
 };
 
 const STREAK_LOOKBACK_DAYS = 60;
+const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
+  seed: 'Easy',
+  minimum: 'Medium',
+  standard: 'Hard',
+};
 
 const LIFE_WHEEL_COLORS: Record<string, string> = {
   health: '#22c55e',
@@ -227,6 +242,7 @@ export function DailyHabitTracker({
   >({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [monthlySaving, setMonthlySaving] = useState<Record<string, boolean>>({});
+  const [autoProgressHabitIds, setAutoProgressHabitIds] = useState<Set<string>>(new Set());
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
   const [completedActionsCount, setCompletedActionsCount] = useState(0);
@@ -367,6 +383,10 @@ export function DailyHabitTracker({
     });
     return map;
   }, [visionImages]);
+  const adherenceByHabit = useMemo(
+    () => calculateAdherenceSnapshots(habits, historicalLogs, today),
+    [habits, historicalLogs, today],
+  );
 
   const isBadHabit = useCallback((habit: HabitWithGoal) => {
     const name = habit.name.toLowerCase();
@@ -2457,6 +2477,103 @@ export function DailyHabitTracker({
     }
   };
 
+  const buildAutoProgressHabit = useCallback(
+    (habit: HabitWithGoal): HabitV2Row => ({
+      id: habit.id,
+      user_id: session.user.id,
+      title: habit.name,
+      emoji: habit.emoji ?? null,
+      type: habit.type ?? 'boolean',
+      target_num: habit.target_num ?? null,
+      target_unit: habit.target_unit ?? null,
+      schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
+      allow_skip: null,
+      start_date: null,
+      archived: null,
+      created_at: null,
+      autoprog: habit.autoprog ?? null,
+      domain_key: null,
+      goal_id: habit.goal?.id ?? null,
+    }),
+    [session.user.id],
+  );
+
+  const handleAutoProgressShift = async (
+    habit: HabitWithGoal,
+    targetTier: AutoProgressTier,
+    shiftType: AutoProgressShift,
+  ) => {
+    if (!isConfigured || isDemoExperience) {
+      setErrorMessage('Connect Supabase to update habit difficulty.');
+      return;
+    }
+    if (autoProgressHabitIds.has(habit.id)) {
+      return;
+    }
+
+    const habitSnapshot = buildAutoProgressHabit(habit);
+    const currentState = getAutoProgressState(habitSnapshot);
+    if (currentState.tier === targetTier) {
+      setErrorMessage(`"${habit.name}" is already on the ${AUTO_PROGRESS_STAGE_LABELS[targetTier]} stage.`);
+      return;
+    }
+
+    setAutoProgressHabitIds((prev) => new Set(prev).add(habit.id));
+    setErrorMessage(null);
+
+    try {
+      const plan = buildAutoProgressPlan({ habit: habitSnapshot, targetTier, shiftType });
+      const scheduleChanged = JSON.stringify(plan.schedule) !== JSON.stringify(habitSnapshot.schedule);
+      const targetChanged = plan.target !== habitSnapshot.target_num;
+
+      if (!scheduleChanged && !targetChanged) {
+        throw new Error('This stage matches your current habit settings.');
+      }
+
+      const { data: updatedHabit, error: updateError } = await updateHabitFullV2(habit.id, {
+        schedule: plan.schedule ?? habitSnapshot.schedule,
+        target_num: plan.target,
+        autoprog: plan.state as Database['public']['Tables']['habits_v2']['Row']['autoprog'],
+      });
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      if (!updatedHabit) {
+        throw new Error('Unable to update the habit stage.');
+      }
+
+      setHabits((prev) => {
+        const next = prev.map((entry) =>
+          entry.id === habit.id
+            ? {
+                ...entry,
+                name: updatedHabit.title,
+                emoji: updatedHabit.emoji ?? entry.emoji,
+                type: updatedHabit.type,
+                schedule: updatedHabit.schedule as Json,
+                frequency: deriveFrequencyFromSchedule(updatedHabit.schedule as Json),
+                target_num: updatedHabit.target_num ?? null,
+                target_unit: updatedHabit.target_unit ?? null,
+                autoprog: updatedHabit.autoprog ?? null,
+              }
+            : entry,
+        );
+        setHabitInsights(calculateHabitInsights(next, historicalLogs, activeDate));
+        return next;
+      });
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to update the habit stage.');
+    } finally {
+      setAutoProgressHabitIds((prev) => {
+        const next = new Set(prev);
+        next.delete(habit.id);
+        return next;
+      });
+    }
+  };
+
   const renderCompactList = () => {
     const baseHabits = isTimeLimitedOfferActive ? timeLimitedOrderedHabits : sortedHabits;
     const completedHabits = baseHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
@@ -2503,6 +2620,18 @@ export function DailyHabitTracker({
             const isOfferHabit = isTimeLimitedOfferActive && offerHabitIds.has(habit.id);
             const offerPrice = offerPriceByHabitId(habit.id);
             const isSkipDisabled = isOfferHabit;
+            const autoProgressHabit = buildAutoProgressHabit(habit);
+            const autoProgressState = getAutoProgressState(autoProgressHabit);
+            const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
+            const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
+            const adherenceSnapshot = adherenceByHabit[habit.id];
+            const streakDays = habitInsights[habit.id]?.currentStreak ?? 0;
+            const adherencePercent = adherenceSnapshot?.percentage ?? 0;
+            const canUpgrade =
+              Boolean(upgradeTier) &&
+              streakDays >= AUTO_PROGRESS_UPGRADE_RULES.minStreakDays &&
+              adherencePercent >= AUTO_PROGRESS_UPGRADE_RULES.minAdherence30;
+            const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
 
             return (
               <li
@@ -2599,9 +2728,73 @@ export function DailyHabitTracker({
                       <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
                     </button>
                   ) : null}
+                  <div className="habit-checklist__autoprog">
+                    <div className="habit-checklist__autoprog-header">
+                      <div>
+                        <p className="habit-checklist__autoprog-label">Difficulty stage</p>
+                        <p className="habit-checklist__autoprog-tier">
+                          {AUTO_PROGRESS_STAGE_LABELS[autoProgressState.tier]}
+                        </p>
+                        <p className="habit-checklist__autoprog-description">
+                          {AUTO_PROGRESS_TIERS[autoProgressState.tier].description}
+                        </p>
+                      </div>
+                      {autoProgressState.lastShiftAt ? (
+                        <span className="habit-checklist__autoprog-meta">
+                          Last shift: {new Date(autoProgressState.lastShiftAt).toLocaleDateString()}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="habit-checklist__autoprog-stats">
+                      <span>Streak: {formatStreakValue(streakDays)}</span>
+                      <span>
+                        30-day adherence: {adherenceSnapshot ? `${adherencePercent}%` : '—'}
+                      </span>
+                    </div>
+                    <div className="habit-checklist__autoprog-actions">
+                      <button
+                        type="button"
+                        className="habit-checklist__autoprog-button"
+                        disabled={!downshiftTier || isUpdatingAutoProgress}
+                        onClick={() => {
+                          if (!downshiftTier) return;
+                          void handleAutoProgressShift(habit, downshiftTier, 'downshift');
+                        }}
+                      >
+                        {downshiftTier
+                          ? `Reset to ${AUTO_PROGRESS_STAGE_LABELS[downshiftTier]}`
+                          : 'At easiest stage'}
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-checklist__autoprog-button habit-checklist__autoprog-button--primary"
+                        disabled={!upgradeTier || !canUpgrade || isUpdatingAutoProgress}
+                        onClick={() => {
+                          if (!upgradeTier) return;
+                          void handleAutoProgressShift(habit, upgradeTier, 'upgrade');
+                        }}
+                      >
+                        {upgradeTier
+                          ? `Progress to ${AUTO_PROGRESS_STAGE_LABELS[upgradeTier]}`
+                          : 'At hardest stage'}
+                      </button>
+                    </div>
+                    <p className="habit-checklist__autoprog-rules">
+                      Upgrade rule: {AUTO_PROGRESS_UPGRADE_RULES.minStreakDays}-day streak and{' '}
+                      {AUTO_PROGRESS_UPGRADE_RULES.minAdherence30}% 30-day adherence.
+                    </p>
+                    {upgradeTier && !canUpgrade ? (
+                      <p className="habit-checklist__autoprog-locked">
+                        Keep logging to unlock the next stage.
+                      </p>
+                    ) : null}
+                  </div>
                   <div className="habit-checklist__detail-actions">
                     {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
                     {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+                    {isUpdatingAutoProgress ? (
+                      <span className="habit-checklist__saving">Updating stage…</span>
+                    ) : null}
                     <button
                       type="button"
                       className="habit-checklist__alert-btn"
@@ -4759,6 +4952,22 @@ const WEEKDAY_TO_INDEX: Record<string, number> = {
   saturday: 6,
 };
 
+function deriveFrequencyFromSchedule(schedule: Json | null): string {
+  if (!schedule || typeof schedule !== 'object') {
+    return 'daily';
+  }
+
+  const scheduleObj = schedule as Record<string, Json>;
+  const mode = scheduleObj.mode;
+
+  if (mode === 'daily') return 'daily';
+  if (mode === 'specific_days') return 'weekly';
+  if (mode === 'times_per_week') return 'weekly';
+  if (mode === 'every_n_days') return 'custom';
+
+  return 'daily';
+}
+
 function createScheduleChecker(frequency: string, schedule: Json | null): ScheduleChecker {
   if (schedule && Array.isArray(schedule)) {
     const indexes = schedule
@@ -4807,6 +5016,67 @@ function isHabitScheduledOnDate(habit: HabitWithGoal, dateISO: string): boolean 
   const date = parseISODate(dateISO);
   const scheduleChecker = createScheduleChecker(habit.frequency, habit.schedule);
   return scheduleChecker(date);
+}
+
+type HabitAdherenceSnapshot = {
+  scheduledCount: number;
+  completedCount: number;
+  percentage: number;
+};
+
+function calculateAdherenceSnapshots(
+  habits: HabitWithGoal[],
+  logs: HabitLogRow[],
+  endDateISO: string,
+  windowDays = 30,
+): Record<string, HabitAdherenceSnapshot> {
+  if (!habits.length || !endDateISO) {
+    return {};
+  }
+
+  const endDate = parseISODate(endDateISO);
+  const startDate = subtractDays(endDate, windowDays - 1);
+  const startISO = formatISODate(startDate);
+
+  const completionSets = new Map<string, Set<string>>();
+  for (const log of logs) {
+    if (!log.completed) continue;
+    if (log.date < startISO || log.date > endDateISO) continue;
+    let set = completionSets.get(log.habit_id);
+    if (!set) {
+      set = new Set<string>();
+      completionSets.set(log.habit_id, set);
+    }
+    set.add(log.date);
+  }
+
+  const snapshots: Record<string, HabitAdherenceSnapshot> = {};
+  for (const habit of habits) {
+    const scheduleChecker = createScheduleChecker(habit.frequency, habit.schedule);
+    let scheduledCount = 0;
+    let completedCount = 0;
+    for (let offset = 0; offset < windowDays; offset += 1) {
+      const day = addDays(startDate, offset);
+      if (day > endDate) {
+        break;
+      }
+      if (!scheduleChecker(day)) {
+        continue;
+      }
+      scheduledCount += 1;
+      const isoDate = formatISODate(day);
+      if (completionSets.get(habit.id)?.has(isoDate)) {
+        completedCount += 1;
+      }
+    }
+
+    const percentage = scheduledCount
+      ? Math.round((completedCount / scheduledCount) * 100)
+      : 0;
+    snapshots[habit.id] = { scheduledCount, completedCount, percentage };
+  }
+
+  return snapshots;
 }
 
 function calculateHabitInsights(
