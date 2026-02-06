@@ -352,7 +352,7 @@ export function ScoreTab({
           <div className="score-tab__grid">
             <article className="score-tab__card score-tab__card--xp">
               <h3 className="score-tab__card-title">XP bank</h3>
-              <p className="score-tab__value">{formatter.format(profile.total_xp)} XP</p>
+              <p className="score-tab__value">{formatter.format(profileWithGold.total_xp)} XP</p>
               <p className="score-tab__meta">
                 {formatter.format(xpToNextLevel)} XP to level {levelInfo.currentLevel + 1}
               </p>
@@ -369,9 +369,9 @@ export function ScoreTab({
 
             <article className="score-tab__card">
               <h3 className="score-tab__card-title">Streak momentum</h3>
-              <p className="score-tab__value">🔥 {formatter.format(profile.current_streak)} days</p>
+              <p className="score-tab__value">🔥 {formatter.format(profileWithGold.current_streak)} days</p>
               <p className="score-tab__meta">
-                Longest streak: {formatter.format(profile.longest_streak)} days
+                Longest streak: {formatter.format(profileWithGold.longest_streak)} days
               </p>
             </article>
 
