@@ -6057,11 +6057,12 @@ body {
 }
 
 .habit-checklist__details-panel--open {
-  max-height: 320px;
+  max-height: 1000px;
   opacity: 1;
   padding-top: 0.5rem;
   border-top: 1px dashed rgba(15, 23, 42, 0.1);
   margin-top: 0.35rem;
+  overflow: visible;
 }
 
 .habit-checklist__meta {
@@ -6248,11 +6249,57 @@ body {
   font-size: 0.7rem;
 }
 
+.mobile-habit-home .habit-checklist__detail-actions {
+  gap: 0.25rem;
+}
+
+.mobile-habit-home .habit-checklist__alert-btn,
+.mobile-habit-home .habit-checklist__edit-btn,
+.mobile-habit-home .habit-checklist__skip-btn {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.7rem;
+}
+
+.mobile-habit-home .habit-checklist__autoprog-toggle {
+  width: 22px;
+  height: 22px;
+}
+
 .habit-checklist__detail-actions {
   display: flex;
   gap: 0.35rem;
   flex-wrap: nowrap;
   align-items: center;
+}
+
+.habit-checklist__autoprog-toggle {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: #ffffff;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.habit-checklist__autoprog-toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.habit-checklist__autoprog-toggle--active {
+  border-color: rgba(102, 126, 234, 0.6);
+  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.25);
+}
+
+.habit-checklist__autoprog-toggle--active .habit-checklist__autoprog-toggle-dot {
+  background: #667eea;
 }
 
 .habit-checklist__skip-wrap {
