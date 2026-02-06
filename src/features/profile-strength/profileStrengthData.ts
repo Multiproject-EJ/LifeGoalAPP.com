@@ -4,7 +4,7 @@ import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
 import { listJournalEntries } from '../../services/journal';
 import { fetchVisionImages } from '../../services/visionBoard';
-import { loadPersonalityTestHistory } from '../../data/personalityTestRepo';
+import { loadPersonalityTestHistoryWithSupabase } from '../../services/personalityTest';
 import { normalizeGoalStatus } from '../goals/goalStatus';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import type { AreaSignalInput, ProfileStrengthInput } from './profileStrengthTypes';
@@ -243,7 +243,9 @@ const buildLifeWheelSignal = (checkins: CheckinRow[]): AreaSignalInput => {
   };
 };
 
-const buildIdentitySignal = (tests: Awaited<ReturnType<typeof loadPersonalityTestHistory>>): AreaSignalInput => {
+const buildIdentitySignal = (
+  tests: Awaited<ReturnType<typeof loadPersonalityTestHistoryWithSupabase>>,
+): AreaSignalInput => {
   if (tests.length === 0) {
     return buildNoDataSignal();
   }
@@ -282,7 +284,7 @@ export const loadProfileStrengthSignals = async (
     ? fetchCheckinsForUser(userId, 12).catch(() => ({ data: null, error: new Error('checkins') }))
     : Promise.resolve({ data: null, error: new Error('checkins') });
   const identityPromise = userId
-    ? loadPersonalityTestHistory(userId).catch(() => null)
+    ? loadPersonalityTestHistoryWithSupabase(userId).catch(() => null)
     : Promise.resolve(null);
 
   const [

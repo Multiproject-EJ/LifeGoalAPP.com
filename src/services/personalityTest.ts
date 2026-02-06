@@ -83,6 +83,23 @@ export async function upsertPersonalityProfile(
   return { data, error };
 }
 
+export async function fetchPersonalityProfile(
+  userId: string,
+): Promise<PersonalityProfileResponse> {
+  if (!canUseSupabaseData()) {
+    return { data: null, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle<PersonalityProfileRow>();
+
+  return { data, error };
+}
+
 export async function fetchPersonalityTestsFromSupabase(
   userId: string,
 ): Promise<PersonalityTestValue[]> {

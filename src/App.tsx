@@ -69,7 +69,10 @@ import {
   loadProfileStrengthSignals,
   type ProfileStrengthSignalSnapshot,
 } from './features/profile-strength/profileStrengthData';
-import { loadPersonalityTestHistoryWithSupabase } from './services/personalityTest';
+import {
+  fetchPersonalityProfile,
+  loadPersonalityTestHistoryWithSupabase,
+} from './services/personalityTest';
 import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
 import type { AreaKey, NextTask, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
 import {
@@ -756,9 +759,21 @@ export default function App() {
 
     let isMounted = true;
 
-    loadPersonalityTestHistoryWithSupabase(activeSession.user.id)
-      .then((records) => {
+    const loadSummary = async () => {
+      try {
+        const userId = activeSession.user.id;
+        const [{ data: profile }, records] = await Promise.all([
+          fetchPersonalityProfile(userId),
+          loadPersonalityTestHistoryWithSupabase(userId),
+        ]);
+
         if (!isMounted) {
+          return;
+        }
+
+        const traits = profile?.personality_traits as Record<string, number> | null;
+        if (traits && Object.keys(traits).length > 0) {
+          setPersonalitySummary(buildTopTraitSummary(traits));
           return;
         }
 
@@ -768,12 +783,14 @@ export default function App() {
         }
 
         setPersonalitySummary(buildTopTraitSummary(records[0].traits));
-      })
-      .catch(() => {
+      } catch {
         if (isMounted) {
           setPersonalitySummary(null);
         }
-      });
+      }
+    };
+
+    void loadSummary();
 
     return () => {
       isMounted = false;
