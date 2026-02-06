@@ -215,8 +215,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
   const rewardSubtitle = wonPrize
     ? wonPrize.type === 'treasure_chest'
-      ? `Chest opened! +${wonPrize.value} points added.`
-      : 'Points added to your account!'
+      ? `Chest opened! +${wonPrize.value} gold added.`
+      : 'Gold added to your account!'
     : '';
   const isChestPrize = wonPrize?.type === 'treasure_chest';
 

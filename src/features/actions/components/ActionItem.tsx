@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import type React from 'react';
 import type { Action } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG, ACTIONS_XP_REWARDS, calculateTimeRemaining } from '../../../types/actions';
-import { convertXpToPoints } from '../../../constants/economy';
+import { convertXpToGold } from '../../../constants/economy';
 import { PointsBadge } from '../../../components/PointsBadge';
 import { ActionTimer } from './ActionTimer';
 
@@ -149,7 +149,7 @@ export function ActionItem({
       : action.category === 'nice_to_do'
         ? ACTIONS_XP_REWARDS.COMPLETE_NICE_TO_DO
         : ACTIONS_XP_REWARDS.COMPLETE_PROJECT_ACTION;
-    return convertXpToPoints(xpReward).toString();
+    return convertXpToGold(xpReward).toString();
   })();
 
   return (

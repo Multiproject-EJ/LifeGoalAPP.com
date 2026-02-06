@@ -11,7 +11,7 @@ import {
 } from '../../compat/legacyHabitsAdapter';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
-import { XP_TO_POINTS_RATIO, convertXpToPoints } from '../../constants/economy';
+import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
   getHabitCompletionsByMonth,
@@ -337,12 +337,12 @@ export function DailyHabitTracker({
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
   const visionClaimButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
-  const habitPointsLabel = useMemo(() => {
-    const basePoints = convertXpToPoints(XP_REWARDS.HABIT_COMPLETE);
-    const earlyPoints = convertXpToPoints(XP_REWARDS.HABIT_COMPLETE_EARLY);
-    const minPoints = Math.min(basePoints, earlyPoints);
-    const maxPoints = Math.max(basePoints, earlyPoints);
-    return minPoints === maxPoints ? `${minPoints}` : `${minPoints}-${maxPoints}`;
+  const habitGoldLabel = useMemo(() => {
+    const baseGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE);
+    const earlyGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE_EARLY);
+    const minGold = Math.min(baseGold, earlyGold);
+    const maxGold = Math.max(baseGold, earlyGold);
+    return minGold === maxGold ? `${minGold}` : `${minGold}-${maxGold}`;
   }, []);
   const shouldShowHabitPoints = showPointsBadges && gamificationEnabled;
   const visionImagesByHabit = useMemo(() => {
@@ -1887,8 +1887,8 @@ export function DailyHabitTracker({
             : XP_REWARDS.HABIT_COMPLETE;
           const offerPrice = offerPriceByHabitId(habit.id);
           const offerXpAmount =
-            offerPrice && XP_TO_POINTS_RATIO > 0
-              ? Math.round(offerPrice / XP_TO_POINTS_RATIO)
+            offerPrice && XP_TO_GOLD_RATIO > 0
+              ? Math.round(offerPrice / XP_TO_GOLD_RATIO)
               : null;
 
           // 1. Immediately add instant feedback (pop/glow)
@@ -2485,7 +2485,7 @@ export function DailyHabitTracker({
               >
                 {(shouldShowHabitPoints || isOfferHabit) ? (
                   <PointsBadge
-                    value={isOfferHabit && offerPrice !== null ? offerPrice : habitPointsLabel}
+                    value={isOfferHabit && offerPrice !== null ? offerPrice : habitGoldLabel}
                     className={`points-badge--corner habit-points-badge${
                       isOfferHabit ? ' habit-points-badge--offer' : ''
                     }`}
@@ -4008,7 +4008,7 @@ export function DailyHabitTracker({
                 <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? 'habit-item--just-completed' : ''}`}>
                   {shouldShowHabitPoints ? (
                     <PointsBadge
-                      value={habitPointsLabel}
+                      value={habitGoldLabel}
                       className="points-badge--corner habit-points-badge"
                       size="mini"
                     />

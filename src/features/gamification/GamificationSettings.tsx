@@ -106,7 +106,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
             <li>🔥 Daily streak counter</li>
             <li>❤️ Lives and streak freezes</li>
             <li>🏆 Achievement notifications</li>
-            <li>💎 Points and rewards</li>
+            <li>🪙 Gold and rewards</li>
           </ul>
         </div>
       )}

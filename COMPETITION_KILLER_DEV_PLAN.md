@@ -1617,7 +1617,7 @@ WisdomTreeState {
 - [x] **P6.6** Review open questions and draft the next roadmap iteration
 
 ### Phase 7 — MVP Build Execution (Product + Engineering)
-- [ ] **P7.1** Rename Points → Gold in UI + data model (migration + copy)
+- [x] **P7.1** Rename Points → Gold in UI + data model (migration + copy)
 - [ ] **P7.2** Implement reward creation + redemption flow with Gold spend
 - [ ] **P7.3** Ship Day 0–1 onboarding flow (single habit + reward loop)
 - [ ] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
@@ -1782,3 +1782,8 @@ WisdomTreeState {
   - **Step**: P6.6 Review open questions and draft the next roadmap iteration  
   - **What changed**: Resolved the Identity Engine naming decision (“Path”), cleared the open question list, and added Phase 7 MVP build execution steps for implementation sequencing.  
   - **What’s next**: P7.1 Rename Points → Gold in UI + data model (migration + copy).
+
+- **2026-02-09**  
+  - **Step**: P7.1 Rename Points → Gold in UI + data model (migration + copy)  
+  - **What changed**: Updated the economy naming to Gold across UI labels, spin rewards, power-ups, and trophies, plus refreshed the XP conversion helpers and telemetry metadata to use Gold terminology.  
+  - **What’s next**: P7.2 Implement reward creation + redemption flow with Gold spend.

@@ -16,7 +16,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
   const [catalog, setCatalog] = useState<PowerUp[]>([]);
   const [userPowerUps, setUserPowerUps] = useState<UserPowerUp[]>([]);
   const [activeBoosts, setActiveBoosts] = useState<ActiveBoost[]>([]);
-  const [currentPoints, setCurrentPoints] = useState(0);
+  const [currentGold, setCurrentGold] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUp | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -39,10 +39,10 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
         setCatalog(catalogData || []);
       }
 
-      // Load user's profile for points balance
+      // Load user's profile for gold balance
       const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
       if (profileError) throw profileError;
-      setCurrentPoints(profile?.total_points || 0);
+      setCurrentGold(profile?.total_points || 0);
 
       // Load user's power-ups
       const { data: userPowerUpsData, error: userPowerUpsError } = await fetchUserPowerUps(userId);
@@ -83,7 +83,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
       }
 
       if (data?.success) {
-        setCurrentPoints(data.newPointsBalance);
+        setCurrentGold(data.newGoldBalance);
         setSuccessMessage(
           data.effectApplied 
             ? `${selectedPowerUp.name} purchased! ${data.effectApplied}`
@@ -143,10 +143,10 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
   return (
     <div className="power-ups-store">
       <div className="power-ups-store__header">
-        <h1 className="power-ups-store__title">💎 Power-ups Store</h1>
+        <h1 className="power-ups-store__title">🪙 Power-ups Store</h1>
         <div className="power-ups-store__balance">
-          <span className="power-ups-store__balance-label">Your Points:</span>
-          <span className="power-ups-store__balance-value">💎 {currentPoints}</span>
+          <span className="power-ups-store__balance-label">Your Gold:</span>
+          <span className="power-ups-store__balance-value">🪙 {currentGold}</span>
         </div>
       </div>
 
@@ -181,7 +181,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
                 <PowerUpCard
                   key={powerUp.id}
                   powerUp={powerUp}
-                  currentPoints={currentPoints}
+                  currentGold={currentGold}
                   onPurchase={handlePurchase}
                 />
               ))}
@@ -201,7 +201,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
                 <PowerUpCard
                   key={powerUp.id}
                   powerUp={powerUp}
-                  currentPoints={currentPoints}
+                  currentGold={currentGold}
                   onPurchase={handlePurchase}
                 />
               ))}
@@ -212,7 +212,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
         {/* Permanent Upgrades */}
         {categorizedPowerUps.upgrades.length > 0 && (
           <section className="power-ups-store__category">
-            <h2 className="power-ups-store__category-title">💎 Permanent Upgrades</h2>
+            <h2 className="power-ups-store__category-title">🪙 Permanent Upgrades</h2>
             <p className="power-ups-store__category-description">
               Unlock lasting improvements to your account
             </p>
@@ -221,7 +221,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
                 <PowerUpCard
                   key={powerUp.id}
                   powerUp={powerUp}
-                  currentPoints={currentPoints}
+                  currentGold={currentGold}
                   onPurchase={handlePurchase}
                 />
               ))}
@@ -233,7 +233,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
       {selectedPowerUp && (
         <PowerUpPurchaseModal
           powerUp={selectedPowerUp}
-          currentPoints={currentPoints}
+          currentGold={currentGold}
           onConfirm={confirmPurchase}
           onCancel={() => setSelectedPowerUp(null)}
           isProcessing={isPurchasing}

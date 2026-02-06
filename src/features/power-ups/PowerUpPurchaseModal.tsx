@@ -2,7 +2,7 @@ import { PowerUp } from '../../types/gamification';
 
 interface PowerUpPurchaseModalProps {
   powerUp: PowerUp;
-  currentPoints: number;
+  currentGold: number;
   onConfirm: () => void;
   onCancel: () => void;
   isProcessing: boolean;
@@ -10,12 +10,12 @@ interface PowerUpPurchaseModalProps {
 
 export function PowerUpPurchaseModal({
   powerUp,
-  currentPoints,
+  currentGold,
   onConfirm,
   onCancel,
   isProcessing,
 }: PowerUpPurchaseModalProps) {
-  const newBalance = currentPoints - powerUp.costPoints;
+  const newBalance = currentGold - powerUp.costGold;
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -36,17 +36,17 @@ export function PowerUpPurchaseModal({
             <div className="power-up-modal__cost-item">
               <span>Cost:</span>
               <span className="power-up-modal__cost-value">
-                💎 {powerUp.costPoints}
+                🪙 {powerUp.costGold}
               </span>
             </div>
             <div className="power-up-modal__cost-item">
               <span>Current Balance:</span>
-              <span>💎 {currentPoints}</span>
+              <span>🪙 {currentGold}</span>
             </div>
             <div className="power-up-modal__cost-item power-up-modal__cost-item--new-balance">
               <span>New Balance:</span>
               <span className={newBalance < 0 ? 'power-up-modal__cost-negative' : ''}>
-                💎 {newBalance}
+                🪙 {newBalance}
               </span>
             </div>
           </div>

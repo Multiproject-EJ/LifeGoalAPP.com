@@ -14,7 +14,7 @@ export function PointsBadge({
   size = 'mini',
 }: PointsBadgeProps) {
   const formattedValue = typeof value === 'number' ? value.toString() : value;
-  const label = ariaLabel ?? `Worth ${formattedValue} points`;
+  const label = ariaLabel ?? `Worth ${formattedValue} gold`;
 
   return (
     <span
@@ -23,7 +23,7 @@ export function PointsBadge({
       role="status"
     >
       <span className="points-badge__icon" aria-hidden="true">
-        💎
+        🪙
       </span>
       <span className="points-badge__value">{formattedValue}</span>
     </span>

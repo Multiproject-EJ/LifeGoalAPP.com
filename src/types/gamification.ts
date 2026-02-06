@@ -89,7 +89,7 @@ export interface TrophyItem {
   description: string;
   icon: string;
   category: 'trophy' | 'plaque' | 'medal';
-  costPoints: number;
+  costGold: number;
 }
 
 export interface UserTrophy {
@@ -305,7 +305,7 @@ export const DEMO_ACHIEVEMENTS_KEY = 'lifegoal_demo_user_achievements';
 // =====================================================
 
 // Daily Spin types
-export type PrizeType = 'points' | 'treasure_chest';
+export type PrizeType = 'gold' | 'treasure_chest';
 
 export interface DailySpinState {
   userId: string;
@@ -342,14 +342,14 @@ export interface SpinResult {
 
 // Prize configuration
 export const SPIN_PRIZES: SpinPrize[] = [
-  { type: 'points', value: 10, label: '10 Points', icon: '💎', wheelSize: 'small', wheelWeight: 1 },
-  { type: 'points', value: 20, label: '20 Points', icon: '💎', wheelSize: 'small', wheelWeight: 1 },
-  { type: 'points', value: 30, label: '30 Points', icon: '💎', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'points', value: 40, label: '40 Points', icon: '💎', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'points', value: 50, label: '50 Points', icon: '💎', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'points', value: 60, label: '60 Points', icon: '💎', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'points', value: 75, label: '75 Points', icon: '💎', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'points', value: 90, label: '90 Points', icon: '💎', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'gold', value: 10, label: '10 Gold', icon: '🪙', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'gold', value: 20, label: '20 Gold', icon: '🪙', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'gold', value: 30, label: '30 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'gold', value: 40, label: '40 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'gold', value: 50, label: '50 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'gold', value: 60, label: '60 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'gold', value: 75, label: '75 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'gold', value: 90, label: '90 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
   { type: 'treasure_chest', value: 50, label: 'Small Treasury Chest (50)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
   { type: 'treasure_chest', value: 80, label: 'Small Treasury Chest (80)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
   { type: 'treasure_chest', value: 120, label: 'Medium Treasury Chest (120)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
@@ -362,14 +362,14 @@ export const SPIN_PRIZES: SpinPrize[] = [
 
 // Weighted prize probabilities (must sum to 100)
 export const PRIZE_WEIGHTS: Record<number, number> = {
-  0: 6,  // 10 Points
-  1: 6,  // 20 Points
-  2: 8,  // 30 Points
-  3: 8,  // 40 Points
-  4: 8,  // 50 Points
-  5: 9,  // 60 Points
-  6: 9,  // 75 Points
-  7: 9,  // 90 Points
+  0: 6,  // 10 Gold
+  1: 6,  // 20 Gold
+  2: 8,  // 30 Gold
+  3: 8,  // 40 Gold
+  4: 8,  // 50 Gold
+  5: 9,  // 60 Gold
+  6: 9,  // 75 Gold
+  7: 9,  // 90 Gold
   8: 6,  // Small Chest (50)
   9: 6,  // Small Chest (80)
   10: 8, // Medium Chest (120)
@@ -406,7 +406,7 @@ export interface PowerUp {
   description: string;
   icon: string;
   type: PowerUpType;
-  costPoints: number;
+  costGold: number;
   effectType: PowerUpEffectType;
   effectValue: number;
   durationMinutes: number | null;
@@ -434,14 +434,14 @@ export interface PowerUpTransaction {
   userId: string;
   powerUpId: string;
   action: 'purchase' | 'activate' | 'expire' | 'consume';
-  pointsSpent: number;
+  goldSpent: number;
   createdAt: string;
 }
 
 export interface PurchaseResult {
   success: boolean;
   userPowerUp?: UserPowerUp;
-  newPointsBalance: number;
+  newGoldBalance: number;
   effectApplied?: string; // Description of what happened
 }
 

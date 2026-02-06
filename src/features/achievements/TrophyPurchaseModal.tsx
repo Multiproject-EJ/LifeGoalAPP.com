@@ -3,13 +3,13 @@ import type { TrophyItem } from '../../types/gamification';
 
 type Props = {
   trophy: TrophyItem;
-  currentPoints: number;
+  currentGold: number;
   isProcessing: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 };
 
-export function TrophyPurchaseModal({ trophy, currentPoints, isProcessing, onConfirm, onCancel }: Props) {
+export function TrophyPurchaseModal({ trophy, currentGold, isProcessing, onConfirm, onCancel }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export function TrophyPurchaseModal({ trophy, currentPoints, isProcessing, onCon
     };
   }, [onCancel]);
 
-  const remainingPoints = currentPoints - trophy.costPoints;
+  const remainingGold = currentGold - trophy.costGold;
 
   return (
     <dialog ref={dialogRef} className="trophy-purchase-modal">
@@ -47,11 +47,11 @@ export function TrophyPurchaseModal({ trophy, currentPoints, isProcessing, onCon
         <div className="trophy-purchase-modal__summary">
           <div>
             <span>Cost</span>
-            <strong>💎 {trophy.costPoints}</strong>
+            <strong>🪙 {trophy.costGold}</strong>
           </div>
           <div>
             <span>After unlock</span>
-            <strong>💎 {remainingPoints}</strong>
+            <strong>🪙 {remainingGold}</strong>
           </div>
         </div>
       </div>
