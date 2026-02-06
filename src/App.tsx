@@ -58,7 +58,7 @@ import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceSt
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { generateInitials } from './utils/initials';
-import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
+import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
 import {
   getProfileStrengthDebugSnapshot,
   isProfileStrengthDebugEnabled,
@@ -1028,6 +1028,7 @@ export default function App() {
     (options?: { reset?: boolean }) => {
       if (options?.reset) {
         window.localStorage.removeItem(`gol_onboarding_${activeSession.user.id}`);
+        window.localStorage.removeItem(`day_zero_onboarding_${activeSession.user.id}`);
       }
       setIsOnboardingDismissed(false);
       setIsOnboardingOverride(true);
@@ -1875,18 +1876,14 @@ export default function App() {
       return (
         <>
           {shouldShowOnboarding ? (
-            <GameOfLifeOnboarding
+            <DayZeroOnboarding
               session={activeSession}
-              displayName={displayName}
-              setDisplayName={setDisplayName}
               profileSaving={profileSaving}
               setProfileSaving={setManualProfileSaving}
               setAuthMessage={setAuthMessage}
               setAuthError={setAuthError}
               isDemoExperience={isDemoExperience}
               onSaveDemoProfile={handleDemoProfileSave}
-              onNavigateDashboard={() => setActiveWorkspaceNav('goals')}
-              onOpenCoach={() => setShowAiCoachModal(true)}
               onClose={() => {
                 setIsOnboardingDismissed(true);
                 setIsOnboardingOverride(false);
@@ -1898,8 +1895,8 @@ export default function App() {
             <div className="onboarding-start-card">
               <div>
                 <p className="onboarding-start-card__eyebrow">Onboarding</p>
-                <h3>Continue your mini loops</h3>
-                <p>Resume the 20-step onboarding to keep your momentum and rewards flowing.</p>
+                <h3>Finish your quick-start loop</h3>
+                <p>Complete the tiny habit + reward loop to unlock the full workspace.</p>
               </div>
               <div className="onboarding-start-card__actions">
                 <button
@@ -1917,7 +1914,7 @@ export default function App() {
             <div className="onboarding-nudge">
               <div>
                 <strong>Ready for your next loop?</strong>
-                <p>Take the next 60-second nudge to unlock another reward.</p>
+                <p>Finish the quick-start loop to unlock your full workspace.</p>
               </div>
               <div className="onboarding-nudge__actions">
                 <button
