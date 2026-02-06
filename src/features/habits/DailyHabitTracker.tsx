@@ -264,6 +264,7 @@ export function DailyHabitTracker({
   >({});
   // State for alert configuration modal
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
+  const [autoProgressPanels, setAutoProgressPanels] = useState<Record<string, boolean>>({});
   const [editHabit, setEditHabit] = useState<HabitEditDraft | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editNotes, setEditNotes] = useState('');
@@ -2728,67 +2729,69 @@ export function DailyHabitTracker({
                       <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
                     </button>
                   ) : null}
-                  <div className="habit-checklist__autoprog">
-                    <div className="habit-checklist__autoprog-header">
-                      <div>
-                        <p className="habit-checklist__autoprog-label">Difficulty stage</p>
-                        <p className="habit-checklist__autoprog-tier">
-                          {AUTO_PROGRESS_STAGE_LABELS[autoProgressState.tier]}
-                        </p>
-                        <p className="habit-checklist__autoprog-description">
-                          {AUTO_PROGRESS_TIERS[autoProgressState.tier].description}
-                        </p>
+                  {autoProgressPanels[habit.id] ? (
+                    <div className="habit-checklist__autoprog">
+                      <div className="habit-checklist__autoprog-header">
+                        <div>
+                          <p className="habit-checklist__autoprog-label">Difficulty stage</p>
+                          <p className="habit-checklist__autoprog-tier">
+                            {AUTO_PROGRESS_STAGE_LABELS[autoProgressState.tier]}
+                          </p>
+                          <p className="habit-checklist__autoprog-description">
+                            {AUTO_PROGRESS_TIERS[autoProgressState.tier].description}
+                          </p>
+                        </div>
+                        {autoProgressState.lastShiftAt ? (
+                          <span className="habit-checklist__autoprog-meta">
+                            Last shift: {new Date(autoProgressState.lastShiftAt).toLocaleDateString()}
+                          </span>
+                        ) : null}
                       </div>
-                      {autoProgressState.lastShiftAt ? (
-                        <span className="habit-checklist__autoprog-meta">
-                          Last shift: {new Date(autoProgressState.lastShiftAt).toLocaleDateString()}
+                      <div className="habit-checklist__autoprog-stats">
+                        <span>Streak: {formatStreakValue(streakDays)}</span>
+                        <span>
+                          30-day adherence: {adherenceSnapshot ? `${adherencePercent}%` : '—'}
                         </span>
+                      </div>
+                      <div className="habit-checklist__autoprog-actions">
+                        <button
+                          type="button"
+                          className="habit-checklist__autoprog-button"
+                          disabled={!downshiftTier || isUpdatingAutoProgress}
+                          onClick={() => {
+                            if (!downshiftTier) return;
+                            void handleAutoProgressShift(habit, downshiftTier, 'downshift');
+                          }}
+                        >
+                          {downshiftTier
+                            ? `Reset to ${AUTO_PROGRESS_STAGE_LABELS[downshiftTier]}`
+                            : 'At easiest stage'}
+                        </button>
+                        <button
+                          type="button"
+                          className="habit-checklist__autoprog-button habit-checklist__autoprog-button--primary"
+                          disabled={!upgradeTier || !canUpgrade || isUpdatingAutoProgress}
+                          onClick={() => {
+                            if (!upgradeTier) return;
+                            void handleAutoProgressShift(habit, upgradeTier, 'upgrade');
+                          }}
+                        >
+                          {upgradeTier
+                            ? `Progress to ${AUTO_PROGRESS_STAGE_LABELS[upgradeTier]}`
+                            : 'At hardest stage'}
+                        </button>
+                      </div>
+                      <p className="habit-checklist__autoprog-rules">
+                        Upgrade rule: {AUTO_PROGRESS_UPGRADE_RULES.minStreakDays}-day streak and{' '}
+                        {AUTO_PROGRESS_UPGRADE_RULES.minAdherence30}% 30-day adherence.
+                      </p>
+                      {upgradeTier && !canUpgrade ? (
+                        <p className="habit-checklist__autoprog-locked">
+                          Keep logging to unlock the next stage.
+                        </p>
                       ) : null}
                     </div>
-                    <div className="habit-checklist__autoprog-stats">
-                      <span>Streak: {formatStreakValue(streakDays)}</span>
-                      <span>
-                        30-day adherence: {adherenceSnapshot ? `${adherencePercent}%` : '—'}
-                      </span>
-                    </div>
-                    <div className="habit-checklist__autoprog-actions">
-                      <button
-                        type="button"
-                        className="habit-checklist__autoprog-button"
-                        disabled={!downshiftTier || isUpdatingAutoProgress}
-                        onClick={() => {
-                          if (!downshiftTier) return;
-                          void handleAutoProgressShift(habit, downshiftTier, 'downshift');
-                        }}
-                      >
-                        {downshiftTier
-                          ? `Reset to ${AUTO_PROGRESS_STAGE_LABELS[downshiftTier]}`
-                          : 'At easiest stage'}
-                      </button>
-                      <button
-                        type="button"
-                        className="habit-checklist__autoprog-button habit-checklist__autoprog-button--primary"
-                        disabled={!upgradeTier || !canUpgrade || isUpdatingAutoProgress}
-                        onClick={() => {
-                          if (!upgradeTier) return;
-                          void handleAutoProgressShift(habit, upgradeTier, 'upgrade');
-                        }}
-                      >
-                        {upgradeTier
-                          ? `Progress to ${AUTO_PROGRESS_STAGE_LABELS[upgradeTier]}`
-                          : 'At hardest stage'}
-                      </button>
-                    </div>
-                    <p className="habit-checklist__autoprog-rules">
-                      Upgrade rule: {AUTO_PROGRESS_UPGRADE_RULES.minStreakDays}-day streak and{' '}
-                      {AUTO_PROGRESS_UPGRADE_RULES.minAdherence30}% 30-day adherence.
-                    </p>
-                    {upgradeTier && !canUpgrade ? (
-                      <p className="habit-checklist__autoprog-locked">
-                        Keep logging to unlock the next stage.
-                      </p>
-                    ) : null}
-                  </div>
+                  ) : null}
                   <div className="habit-checklist__detail-actions">
                     {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
                     {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
@@ -2814,6 +2817,23 @@ export function DailyHabitTracker({
                       }}
                     >
                       ✏️ Edit
+                    </button>
+                    <button
+                      type="button"
+                      className={`habit-checklist__autoprog-toggle ${
+                        autoProgressPanels[habit.id] ? 'habit-checklist__autoprog-toggle--active' : ''
+                      }`}
+                      aria-pressed={autoProgressPanels[habit.id] ?? false}
+                      aria-label="Toggle difficulty stage card"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setAutoProgressPanels((prev) => ({
+                          ...prev,
+                          [habit.id]: !prev[habit.id],
+                        }));
+                      }}
+                    >
+                      <span className="habit-checklist__autoprog-toggle-dot" aria-hidden="true" />
                     </button>
                     <div className="habit-checklist__skip-wrap">
                       <button
