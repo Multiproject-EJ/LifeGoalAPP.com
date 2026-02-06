@@ -13120,10 +13120,13 @@ body {
   background: url('./assets/Blue_darkcontroller.webp') center bottom / 100% auto no-repeat;
 }
 
+[data-theme='flow-night'] .mobile-footer-nav__surface--image::before {
+  background: url('./assets/HalloweenNight.webp') center bottom / 100% auto no-repeat;
+}
+
 :is(
   [data-theme='dark-glass'],
   [data-theme='midnight-purple'],
-  [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .mobile-footer-nav__surface--image::before {
   background: url('./assets/Dark_controller.webp') center bottom / 100% auto no-repeat;
