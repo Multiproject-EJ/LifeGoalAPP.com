@@ -138,6 +138,7 @@ export const XP_REWARDS = {
   // Journal rewards
   JOURNAL_ENTRY: 15,
   JOURNAL_LONG_ENTRY: 10, // Bonus for 500+ words
+  INTENTIONS_MET: 5, // Completing today's intention from yesterday's note
   
   // Check-in rewards
   CHECKIN: 20,
