@@ -1614,12 +1614,20 @@ WisdomTreeState {
 - [x] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
 - [x] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
 - [x] **P6.5** Pick first reward evolution example to ship
+- [x] **P6.6** Review open questions and draft the next roadmap iteration
+
+### Phase 7 — MVP Build Execution (Product + Engineering)
+- [ ] **P7.1** Rename Points → Gold in UI + data model (migration + copy)
+- [ ] **P7.2** Implement reward creation + redemption flow with Gold spend
+- [ ] **P7.3** Ship Day 0–1 onboarding flow (single habit + reward loop)
+- [ ] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
+- [ ] **P7.5** Add Trees Planted ledger + weekly award trigger
 
 ---
 
 ## 10) Open Questions (Keep Current)
 
-- How should users **name** their Identity Engine? (e.g., Arc, Path, Soulprint)
+- None currently.
 
 ---
 
@@ -1633,6 +1641,7 @@ WisdomTreeState {
 - **2026-02-07 — Hide raw identity vectors; surface “Identity Signals” —** Keeps onboarding light while still giving users a readable identity reflection without stat overload.
 - **2026-02-07 — Real-world meaning = Trees Planted —** Simple, high-emotion, brand-aligned impact unit with clear rules and visibility.
 - **2026-02-08 — First reward evolution example = “Coffee break” ladder —** Universal, low-friction ritual that naturally evolves into reflection + light movement + optional social warmth.
+- **2026-02-08 — Identity Engine name = “Path” (user-facing) —** Short, warm, and action-oriented (“You’re on a Path”), fits daily progress language without mysticism overload.
 
 ---
 
@@ -1768,3 +1777,8 @@ WisdomTreeState {
   - **Step**: P6.5 Pick first reward evolution example to ship  
   - **What changed**: Selected the “Coffee break” reward evolution ladder as the first MVP example and documented the rationale for its low-friction, warm progression.  
   - **What’s next**: Review open questions and decide next roadmap iteration.
+
+- **2026-02-08**  
+  - **Step**: P6.6 Review open questions and draft the next roadmap iteration  
+  - **What changed**: Resolved the Identity Engine naming decision (“Path”), cleared the open question list, and added Phase 7 MVP build execution steps for implementation sequencing.  
+  - **What’s next**: P7.1 Rename Points → Gold in UI + data model (migration + copy).
