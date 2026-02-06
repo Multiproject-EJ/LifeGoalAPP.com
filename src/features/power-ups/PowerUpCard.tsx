@@ -2,15 +2,15 @@ import { PowerUp } from '../../types/gamification';
 
 interface PowerUpCardProps {
   powerUp: PowerUp;
-  currentPoints: number;
+  currentGold: number;
   onPurchase: (powerUp: PowerUp) => void;
   disabled?: boolean;
 }
 
-export function PowerUpCard({ powerUp, currentPoints, onPurchase, disabled }: PowerUpCardProps) {
-  const canAfford = currentPoints >= powerUp.costPoints;
+export function PowerUpCard({ powerUp, currentGold, onPurchase, disabled }: PowerUpCardProps) {
+  const canAfford = currentGold >= powerUp.costGold;
   const isDisabled = disabled || !canAfford;
-  const missingPoints = Math.max(powerUp.costPoints - currentPoints, 0);
+  const missingGold = Math.max(powerUp.costGold - currentGold, 0);
 
   const getDurationText = () => {
     if (!powerUp.durationMinutes) return null;
@@ -68,20 +68,20 @@ export function PowerUpCard({ powerUp, currentPoints, onPurchase, disabled }: Po
 
         <div className="power-up-card__footer">
           <div className="power-up-card__cost">
-            <span className="power-up-card__cost-icon">💎</span>
-            <span className="power-up-card__cost-value">{powerUp.costPoints}</span>
+            <span className="power-up-card__cost-icon">🪙</span>
+            <span className="power-up-card__cost-value">{powerUp.costGold}</span>
           </div>
           <button
             className="power-up-card__button"
             onClick={() => onPurchase(powerUp)}
             disabled={isDisabled}
           >
-            {!canAfford ? 'Not Enough Points' : 'Buy Now'}
+            {!canAfford ? 'Not Enough Gold' : 'Buy Now'}
           </button>
         </div>
         {!canAfford && (
           <p className="power-up-card__unlock-hint">
-            Need {missingPoints} more {missingPoints === 1 ? 'point' : 'points'} to unlock.
+            Need {missingGold} more {missingGold === 1 ? 'gold' : 'gold'} to unlock.
           </p>
         )}
       </div>

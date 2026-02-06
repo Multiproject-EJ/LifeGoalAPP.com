@@ -776,13 +776,13 @@ export function QuickActionsFAB({
 
                     <div className="gamification-scorecard__tile gamification-scorecard__tile--points">
                       <div className="gamification-scorecard__tile-header">
-                        <p className="gamification-scorecard__label">Points bank</p>
+                        <p className="gamification-scorecard__label">Gold bank</p>
                         <span className="gamification-scorecard__pill">Bonus ready</span>
                       </div>
                       <p className="gamification-scorecard__value gamification-scorecard__value--glow">
-                        💎 {gamificationProfile.total_points}
+                        🪙 {gamificationProfile.total_points}
                       </p>
-                      <p className="gamification-scorecard__hint">Spend points on boosters in the store.</p>
+                      <p className="gamification-scorecard__hint">Spend gold on boosters in the store.</p>
                     </div>
                   </div>
 

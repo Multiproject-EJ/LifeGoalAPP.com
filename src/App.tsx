@@ -151,7 +151,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'score',
     label: 'Score',
-    summary: 'Track your points, rewards, and upcoming boosts.',
+    summary: 'Track your gold, rewards, and upcoming boosts.',
     icon: '🏆',
     shortLabel: 'SCORE',
   },
@@ -269,7 +269,7 @@ const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 const ONBOARDING_NUDGE_KEY = 'gol_onboarding_nudge_at';
 const ONBOARDING_NUDGE_INTERVAL_MS = 1000 * 60 * 60 * 6;
 
-const formatPointsRange = (min: number, max: number) => {
+const formatGoldRange = (min: number, max: number) => {
   const normalizedMin = Math.min(min, max);
   const normalizedMax = Math.max(min, max);
   return normalizedMin === normalizedMax ? `${normalizedMin}` : `${normalizedMin}-${normalizedMax}`;
@@ -404,7 +404,7 @@ export default function App() {
     loading: gamificationLoading,
   } = useGamification(supabaseSession);
 
-  const pointsBalance = gamificationProfile?.total_points ?? 0;
+  const goldBalance = gamificationProfile?.total_points ?? 0;
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
@@ -412,19 +412,19 @@ export default function App() {
   const shouldShowPointsBadges = isGameModeActive && isMobileViewport;
   const mobileMenuPointsBadges = useMemo(() => {
     const badges: Record<string, string> = {};
-    if (pointsBalance > 0) {
-      badges.score = pointsBalance.toLocaleString();
+    if (goldBalance > 0) {
+      badges.score = goldBalance.toLocaleString();
     }
     return badges;
-  }, [pointsBalance]);
-  const spinPointsRange = useMemo(() => {
-    const pointValues = SPIN_PRIZES.filter((prize) => prize.type === 'points').map((prize) => prize.value);
-    if (pointValues.length === 0) {
+  }, [goldBalance]);
+  const spinGoldRange = useMemo(() => {
+    const goldValues = SPIN_PRIZES.filter((prize) => prize.type === 'gold').map((prize) => prize.value);
+    if (goldValues.length === 0) {
       return null;
     }
-    const minPoints = Math.min(...pointValues);
-    const maxPoints = Math.max(...pointValues);
-    return formatPointsRange(minPoints, maxPoints);
+    const minGold = Math.min(...goldValues);
+    const maxGold = Math.max(...goldValues);
+    return formatGoldRange(minGold, maxGold);
   }, []);
   const dailyTreatsInventory = useMemo(
     () => ({
@@ -2732,8 +2732,8 @@ export default function App() {
             <div className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--mini-grid" role="listitem">
               <div className="mobile-gamification-overlay__mini-grid">
                 <div className="mobile-gamification-overlay__mini-card">
-                  <p className="mobile-gamification-overlay__mini-label">Points wallet</p>
-                  <p className="mobile-gamification-overlay__mini-value">💎 {pointsBalance.toLocaleString()}</p>
+                  <p className="mobile-gamification-overlay__mini-label">Gold wallet</p>
+                  <p className="mobile-gamification-overlay__mini-value">🪙 {goldBalance.toLocaleString()}</p>
                 </div>
                 <div className="mobile-gamification-overlay__mini-card">
                   <p className="mobile-gamification-overlay__mini-label">Zen Tokens</p>
@@ -2881,8 +2881,8 @@ export default function App() {
                   {dailyTreatsInventory.spinsRemaining}
                 </span>
               ) : null}
-              {shouldShowPointsBadges && spinPointsRange ? (
-                <PointsBadge value={spinPointsRange} className="daily-treats-modal__points-badge" />
+              {shouldShowPointsBadges && spinGoldRange ? (
+                <PointsBadge value={spinGoldRange} className="daily-treats-modal__points-badge" />
               ) : null}
             </button>
             <button
@@ -3098,7 +3098,7 @@ export default function App() {
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
-          pointsBalance={pointsBalance}
+          pointsBalance={goldBalance}
         />
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -3311,7 +3311,7 @@ export default function App() {
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
-          pointsBalance={pointsBalance}
+          pointsBalance={goldBalance}
         />
       ) : null}
 

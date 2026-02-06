@@ -27,7 +27,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Double all XP gains for 1 hour',
         icon: '⚡',
         type: 'temporary',
-        costPoints: 50,
+        costGold: 50,
         effectType: 'xp_multiplier',
         effectValue: 2,
         durationMinutes: 60,
@@ -43,7 +43,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Quintuple all XP gains for 1 hour',
         icon: '🚀',
         type: 'temporary',
-        costPoints: 200,
+        costGold: 200,
         effectType: 'xp_multiplier',
         effectValue: 5,
         durationMinutes: 60,
@@ -59,7 +59,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Ensures all habits count as completed today',
         icon: '✨',
         type: 'temporary',
-        costPoints: 300,
+        costGold: 300,
         effectType: 'instant_xp',
         effectValue: 100,
         durationMinutes: null,
@@ -76,7 +76,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Protects your streak for one missed day',
         icon: '🛡️',
         type: 'temporary',
-        costPoints: 100,
+        costGold: 100,
         effectType: 'streak_freeze',
         effectValue: 1,
         durationMinutes: null,
@@ -92,7 +92,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Adds one life to your total',
         icon: '❤️',
         type: 'temporary',
-        costPoints: 75,
+        costGold: 75,
         effectType: 'extra_life',
         effectValue: 1,
         durationMinutes: null,
@@ -109,7 +109,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Permanently increase maximum lives by 1',
         icon: '💪',
         type: 'permanent',
-        costPoints: 500,
+        costGold: 500,
         effectType: 'max_lives_increase',
         effectValue: 1,
         durationMinutes: null,
@@ -125,7 +125,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Permanently increase freeze capacity by 1',
         icon: '🏦',
         type: 'permanent',
-        costPoints: 750,
+        costGold: 750,
         effectType: 'freeze_bank_increase',
         effectValue: 1,
         durationMinutes: null,
@@ -141,7 +141,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
         description: 'Add one extra daily spin permanently',
         icon: '🎰',
         type: 'permanent',
-        costPoints: 1000,
+        costGold: 1000,
         effectType: 'daily_spin_increase',
         effectValue: 1,
         durationMinutes: null,
@@ -298,9 +298,9 @@ export async function purchasePowerUp(
     return { data: null, error: new Error('Power-up not found') };
   }
 
-  // Check if user has enough points
-  if (profile.total_points < powerUp.costPoints) {
-    return { data: null, error: new Error('Not enough points') };
+  // Check if user has enough gold
+  if (profile.total_points < powerUp.costGold) {
+    return { data: null, error: new Error('Not enough gold') };
   }
 
   // Handle instant effects vs activatable items
@@ -346,8 +346,8 @@ export async function purchasePowerUp(
     existing.push(userPowerUp);
     localStorage.setItem(`${DEMO_POWERUPS_KEY}_${userId}`, JSON.stringify(existing));
 
-    // Deduct points
-    const newBalance = profile.total_points - powerUp.costPoints;
+    // Deduct gold
+    const newBalance = profile.total_points - powerUp.costGold;
     saveDemoProfile({ ...profile, total_points: newBalance });
 
     // Apply instant effect
@@ -360,8 +360,8 @@ export async function purchasePowerUp(
       userId,
       eventType: 'economy_spend',
       metadata: {
-        currency: 'points',
-        amount: powerUp.costPoints,
+        currency: 'gold',
+        amount: powerUp.costGold,
         balance: newBalance,
         sourceType: 'power_up',
         sourceId: powerUp.id,
@@ -374,7 +374,7 @@ export async function purchasePowerUp(
       data: {
         success: true,
         userPowerUp,
-        newPointsBalance: newBalance,
+        newGoldBalance: newBalance,
         effectApplied,
       },
       error: null,
@@ -401,10 +401,10 @@ export async function purchasePowerUp(
     return { data: null, error: insertError };
   }
 
-  // Deduct points
+  // Deduct gold
   const { error: updateError } = await supabase
     .from('gamification_profiles')
-    .update({ total_points: profile.total_points - powerUp.costPoints })
+    .update({ total_points: profile.total_points - powerUp.costGold })
     .eq('user_id', userId);
 
   if (updateError) {
@@ -416,16 +416,16 @@ export async function purchasePowerUp(
     user_id: userId,
     power_up_id: powerUpId,
     action: 'purchase',
-    points_spent: powerUp.costPoints,
+    points_spent: powerUp.costGold,
   });
 
   void recordTelemetryEvent({
     userId,
     eventType: 'economy_spend',
     metadata: {
-      currency: 'points',
-      amount: powerUp.costPoints,
-      balance: profile.total_points - powerUp.costPoints,
+      currency: 'gold',
+      amount: powerUp.costGold,
+      balance: profile.total_points - powerUp.costGold,
       sourceType: 'power_up',
       sourceId: powerUp.id,
       itemName: powerUp.name,
@@ -443,7 +443,7 @@ export async function purchasePowerUp(
     data: {
       success: true,
       userPowerUp: mapRowToUserPowerUp({ ...(newUserPowerUp as any), power_up: powerUp }),
-      newPointsBalance: profile.total_points - powerUp.costPoints,
+      newGoldBalance: profile.total_points - powerUp.costGold,
       effectApplied,
     },
     error: null,
@@ -506,15 +506,15 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
         { type: 'xp', value: 200, label: '200 XP' },
         { type: 'xp', value: 500, label: '500 XP' },
         { type: 'xp', value: 1000, label: '1000 XP (JACKPOT!)' },
-        { type: 'points', value: 100, label: '100 Points' },
-        { type: 'points', value: 300, label: '300 Points' },
+        { type: 'gold', value: 100, label: '100 Gold' },
+        { type: 'gold', value: 300, label: '300 Gold' },
         { type: 'freeze', value: 5, label: '5 Streak Freezes' },
       ];
       const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
 
       if (randomReward.type === 'xp') {
         await awardXP(userId, randomReward.value, 'daily_login', undefined, 'Mystery Chest');
-      } else if (randomReward.type === 'points') {
+      } else if (randomReward.type === 'gold') {
         if (!canUseSupabaseData()) {
           saveDemoProfile({ ...profile, total_points: profile.total_points + randomReward.value });
         } else {
@@ -778,7 +778,7 @@ function mapRowToPowerUp(row: any): PowerUp {
     description: row.description,
     icon: row.icon,
     type: row.type || 'temporary',
-    costPoints: row.cost_points,
+    costGold: row.cost_points,
     effectType: row.effect_type,
     effectValue: row.effect_value,
     durationMinutes: row.duration_minutes,

@@ -179,7 +179,7 @@ export async function getSpinHistory(userId: string, limit: number = 10): Promis
  */
 export function getRandomPrize(): SpinPrize {
   if (SPIN_PRIZES.length === 0) {
-    return { type: 'points', value: 0, label: '0 Points', icon: '💎' };
+    return { type: 'gold', value: 0, label: '0 Gold', icon: '🪙' };
   }
 
   const totalWeight = SPIN_PRIZES.reduce((sum, prize) => sum + (prize.wheelWeight ?? 1), 0);
@@ -340,7 +340,7 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
   const supabase = getSupabaseClient();
 
   switch (prize.type) {
-    case 'points':
+    case 'gold':
     case 'treasure_chest':
       {
         const { data: profile } = await fetchGamificationProfile(userId);
@@ -362,7 +362,7 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
           userId,
           eventType: 'economy_earn',
           metadata: {
-            currency: 'points',
+            currency: 'gold',
             amount: prize.value,
             balance: nextBalance,
             sourceType: 'daily_spin',

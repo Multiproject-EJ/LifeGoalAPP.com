@@ -35,7 +35,7 @@ export function AchievementsPage({ session }: Props) {
   const [ownedTrophies, setOwnedTrophies] = useState<UserTrophy[]>([]);
   const [trophyLoading, setTrophyLoading] = useState(true);
   const [trophyError, setTrophyError] = useState<string | null>(null);
-  const [pointsBalance, setPointsBalance] = useState(0);
+  const [goldBalance, setGoldBalance] = useState(0);
   const [selectedTrophy, setSelectedTrophy] = useState<TrophyItem | null>(null);
   const [trophyMessage, setTrophyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -89,7 +89,7 @@ export function AchievementsPage({ session }: Props) {
 
       setTrophies(catalogData || []);
       setOwnedTrophies(userTrophiesData || []);
-      setPointsBalance(profile?.total_points || 0);
+      setGoldBalance(profile?.total_points || 0);
     } catch (err) {
       setTrophyError(err instanceof Error ? err.message : 'Failed to load trophy case');
     } finally {
@@ -116,7 +116,7 @@ export function AchievementsPage({ session }: Props) {
         type: 'success',
         text: `${selectedTrophy.name} unlocked and added to your trophy case!`,
       });
-      setPointsBalance(data?.newPointsBalance ?? pointsBalance);
+      setGoldBalance(data?.newGoldBalance ?? goldBalance);
       setSelectedTrophy(null);
       await loadTrophyCase();
     } catch (err) {
@@ -261,7 +261,7 @@ export function AchievementsPage({ session }: Props) {
       <TrophyCase
         trophies={trophies}
         ownedTrophies={ownedTrophies}
-        currentPoints={pointsBalance}
+        currentGold={goldBalance}
         isLoading={trophyLoading}
         error={trophyError}
         message={trophyMessage}
@@ -286,7 +286,7 @@ export function AchievementsPage({ session }: Props) {
       {selectedTrophy && (
         <TrophyPurchaseModal
           trophy={selectedTrophy}
-          currentPoints={pointsBalance}
+          currentGold={goldBalance}
           isProcessing={isPurchasing}
           onConfirm={confirmTrophyPurchase}
           onCancel={() => setSelectedTrophy(null)}

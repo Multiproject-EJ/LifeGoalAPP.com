@@ -17,7 +17,7 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'Honor your earliest wins with a classic bronze trophy.',
     icon: '🏆',
     category: 'trophy',
-    costPoints: 120,
+    costGold: 120,
   },
   {
     id: 'medal-focus-streak',
@@ -25,7 +25,7 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'A medal for staying locked in on the daily grind.',
     icon: '🥇',
     category: 'medal',
-    costPoints: 220,
+    costGold: 220,
   },
   {
     id: 'plaque-momentum',
@@ -33,7 +33,7 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'Showcase the habits that are building unstoppable momentum.',
     icon: '🪪',
     category: 'plaque',
-    costPoints: 300,
+    costGold: 300,
   },
   {
     id: 'trophy-golden-leap',
@@ -41,7 +41,7 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'Celebrate a bold breakthrough with a gleaming gold trophy.',
     icon: '🏅',
     category: 'trophy',
-    costPoints: 480,
+    costGold: 480,
   },
   {
     id: 'medal-resilience',
@@ -49,7 +49,7 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'For bouncing back stronger after every challenge.',
     icon: '🎖️',
     category: 'medal',
-    costPoints: 360,
+    costGold: 360,
   },
   {
     id: 'plaque-legend',
@@ -57,7 +57,7 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'A premium plaque for the LifeGoal legends in the making.',
     icon: '💠',
     category: 'plaque',
-    costPoints: 900,
+    costGold: 900,
   },
 ];
 
@@ -81,7 +81,7 @@ export async function fetchUserTrophies(userId: string): Promise<ServiceResponse
 export async function purchaseTrophy(
   userId: string,
   trophyId: string
-): Promise<ServiceResponse<{ newPointsBalance: number; userTrophy: UserTrophy }>> {
+): Promise<ServiceResponse<{ newGoldBalance: number; userTrophy: UserTrophy }>> {
   const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
 
   if (profileError || !profile) {
@@ -101,12 +101,12 @@ export async function purchaseTrophy(
     return { data: null, error: new Error('You already own this accolade') };
   }
 
-  if (profile.total_points < trophy.costPoints) {
-    return { data: null, error: new Error('Not enough points to unlock this accolade') };
+  if (profile.total_points < trophy.costGold) {
+    return { data: null, error: new Error('Not enough gold to unlock this accolade') };
   }
 
   const now = new Date().toISOString();
-  const newBalance = profile.total_points - trophy.costPoints;
+  const newBalance = profile.total_points - trophy.costGold;
 
   if (!canUseSupabaseData()) {
     saveDemoProfile({ ...profile, total_points: newBalance });
@@ -126,8 +126,8 @@ export async function purchaseTrophy(
     userId,
     eventType: 'economy_spend',
     metadata: {
-      currency: 'points',
-      amount: trophy.costPoints,
+      currency: 'gold',
+      amount: trophy.costGold,
       balance: newBalance,
       sourceType: 'trophy',
       sourceId: trophy.id,
@@ -147,5 +147,5 @@ export async function purchaseTrophy(
   const updated = [...(existing || []), userTrophy];
   localStorage.setItem(`${TROPHY_STORAGE_KEY}_${userId}`, JSON.stringify(updated));
 
-  return { data: { newPointsBalance: newBalance, userTrophy }, error: null };
+  return { data: { newGoldBalance: newBalance, userTrophy }, error: null };
 }

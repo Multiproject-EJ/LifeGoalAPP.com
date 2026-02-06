@@ -1,11 +1,11 @@
 import type { TrophyItem, UserTrophy } from '../../types/gamification';
 
-const DEFAULT_LOCKED_LABEL = 'Unlock with points in the shop.';
+const DEFAULT_LOCKED_LABEL = 'Unlock with gold in the shop.';
 
 type Props = {
   trophies: TrophyItem[];
   ownedTrophies: UserTrophy[];
-  currentPoints: number;
+  currentGold: number;
   isLoading: boolean;
   error: string | null;
   message: { type: 'success' | 'error'; text: string } | null;
@@ -16,7 +16,7 @@ type Props = {
 export function TrophyCase({
   trophies,
   ownedTrophies,
-  currentPoints,
+  currentGold,
   isLoading,
   error,
   message,
@@ -32,12 +32,12 @@ export function TrophyCase({
           <p className="trophy-case__eyebrow">Trophy Case</p>
           <h2 className="trophy-case__title">🏅 Trophies & Plaques</h2>
           <p className="trophy-case__subtitle">
-            Spend points to unlock cosmetic accolades and show off your progress.
+            Spend gold to unlock cosmetic accolades and show off your progress.
           </p>
         </div>
         <div className="trophy-case__balance">
-          <span className="trophy-case__balance-label">Points</span>
-          <span className="trophy-case__balance-value">💎 {currentPoints}</span>
+          <span className="trophy-case__balance-label">Gold</span>
+          <span className="trophy-case__balance-value">🪙 {currentGold}</span>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export function TrophyCase({
         <div className="trophy-case__grid four-by-three-grid">
           {trophies.map(trophy => {
             const owned = ownedIds.has(trophy.id);
-            const canAfford = currentPoints >= trophy.costPoints;
+            const canAfford = currentGold >= trophy.costGold;
 
             return (
               <article
@@ -73,7 +73,7 @@ export function TrophyCase({
                 <h3 className="trophy-card__name">{trophy.name}</h3>
                 <p className="trophy-card__description">{trophy.description}</p>
                 <div className="trophy-card__meta">
-                  <span className="trophy-card__cost">💎 {trophy.costPoints}</span>
+                  <span className="trophy-card__cost">🪙 {trophy.costGold}</span>
                   <span className="trophy-card__type">{trophy.category}</span>
                 </div>
                 <div className="trophy-card__footer">
@@ -88,7 +88,7 @@ export function TrophyCase({
                         onClick={() => onPurchase(trophy)}
                         disabled={!canAfford}
                       >
-                        {canAfford ? 'Unlock' : 'Need more points'}
+                        {canAfford ? 'Unlock' : 'Need more gold'}
                       </button>
                     </>
                   )}

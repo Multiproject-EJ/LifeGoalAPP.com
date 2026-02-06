@@ -1,4 +1,4 @@
-export type CurrencyKey = 'xp' | 'points' | 'zen_tokens';
+export type CurrencyKey = 'xp' | 'gold' | 'zen_tokens';
 
 export type EconomySourceKey =
   | 'habits'
@@ -14,10 +14,10 @@ export type EconomySinkKey =
   | 'trophies'
   | 'zen_garden';
 
-export const XP_TO_POINTS_RATIO = 0.1;
+export const XP_TO_GOLD_RATIO = 0.1;
 
-export function convertXpToPoints(xpAmount: number): number {
-  return Math.floor(xpAmount * XP_TO_POINTS_RATIO);
+export function convertXpToGold(xpAmount: number): number {
+  return Math.floor(xpAmount * XP_TO_GOLD_RATIO);
 }
 
 export const ZEN_TOKEN_REWARDS = {
@@ -41,9 +41,9 @@ export const ECONOMY_MATRIX = {
       description: 'Progression currency that powers levels.',
       earnedFrom: ['habits', 'goals', 'meditation', 'spin_wheel', 'achievements', 'power_ups'],
     },
-    points: {
-      label: 'Points',
-      description: 'Spendable currency derived from XP (1 point per 10 XP).',
+    gold: {
+      label: 'Gold',
+      description: 'Spendable currency derived from XP (1 gold per 10 XP).',
       earnedFrom: ['xp', 'spin_wheel', 'achievements'],
     },
     zen_tokens: {

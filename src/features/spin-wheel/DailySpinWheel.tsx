@@ -86,7 +86,7 @@ export function DailySpinWheel({ session }: Props) {
         setResult(spinResult);
         setSpinning(false);
 
-        // Refresh gamification profile to update points/lives/freezes
+        // Refresh gamification profile to update gold/lives/freezes
         refreshProfile();
 
         // Emit event for other components

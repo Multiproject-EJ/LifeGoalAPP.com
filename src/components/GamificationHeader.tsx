@@ -1,4 +1,4 @@
-// Gamification Header - Displays level, XP, streak, lives, and points
+// Gamification Header - Displays level, XP, streak, lives, and gold
 
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
@@ -104,11 +104,11 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
             <span className="gamification-stat__label">Lives</span>
           </div>
 
-          {/* Points */}
+          {/* Gold */}
           <div className="gamification-stat">
-            <span className="gamification-stat__icon">💎</span>
+            <span className="gamification-stat__icon">🪙</span>
             <span className="gamification-stat__value">{profile.total_points}</span>
-            <span className="gamification-stat__label">Points</span>
+            <span className="gamification-stat__label">Gold</span>
           </div>
 
           {/* Zen Tokens */}

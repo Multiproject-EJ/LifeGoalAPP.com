@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { GamificationProfile, LevelInfo, XPTransaction } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
-import { XP_TO_POINTS_RATIO } from '../../constants/economy';
+import { XP_TO_GOLD_RATIO } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
@@ -38,7 +38,7 @@ export function ScoreTab({
   const xpToNextLevel = levelInfo
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
-  const pointsRatioLabel = `1 point per ${Math.round(1 / XP_TO_POINTS_RATIO)} XP`;
+  const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
   const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen'>('home');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
@@ -221,7 +221,7 @@ export function ScoreTab({
 
       {!loading && !enabled && (
         <div className="score-tab__status">
-          Gamification is currently disabled. Enable it in settings to track XP and points.
+          Gamification is currently disabled. Enable it in settings to track XP and gold.
         </div>
       )}
 
@@ -230,7 +230,7 @@ export function ScoreTab({
           <div className="score-tab__bank-intro">
             <h2 className="score-tab__headline">Track your daily economy</h2>
             <p className="score-tab__subtitle">
-              Review XP, points, and streak momentum before you spin or visit the player shop.
+              Review XP, gold, and streak momentum before you spin or visit the player shop.
             </p>
           </div>
           <GamificationHeader profile={profile} levelInfo={levelInfo} session={session ?? undefined} />
@@ -246,11 +246,11 @@ export function ScoreTab({
 
             <article className="score-tab__card score-tab__card--points">
               <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">Points wallet</h3>
+                <h3 className="score-tab__card-title">Gold wallet</h3>
                 <span className="score-tab__pill">Spendable</span>
               </div>
-              <p className="score-tab__value">💎 {formatter.format(profile.total_points)}</p>
-              <p className="score-tab__meta">Use points for shop upgrades and trophies.</p>
+              <p className="score-tab__value">🪙 {formatter.format(profile.total_points)}</p>
+              <p className="score-tab__meta">Use gold for shop upgrades and trophies.</p>
             </article>
 
             <article className="score-tab__card">
@@ -273,8 +273,8 @@ export function ScoreTab({
 
           <div className="score-tab__note">
             <p>
-              Points are derived from XP ({pointsRatioLabel}). Spin rewards and achievements
-              add bonus points on top.
+              Gold is derived from XP ({goldRatioLabel}). Spin rewards and achievements
+              add bonus gold on top.
             </p>
             <button
               type="button"
