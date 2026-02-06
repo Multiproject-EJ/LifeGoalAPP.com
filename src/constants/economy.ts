@@ -15,9 +15,17 @@ export type EconomySinkKey =
   | 'zen_garden';
 
 export const XP_TO_GOLD_RATIO = 0.1;
+export const GOLD_PER_DIAMOND = 1000;
 
 export function convertXpToGold(xpAmount: number): number {
   return Math.floor(xpAmount * XP_TO_GOLD_RATIO);
+}
+
+export function splitGoldBalance(balance: number): { diamonds: number; goldRemainder: number } {
+  const safeBalance = Math.max(0, Math.floor(balance));
+  const diamonds = Math.floor(safeBalance / GOLD_PER_DIAMOND);
+  const goldRemainder = safeBalance % GOLD_PER_DIAMOND;
+  return { diamonds, goldRemainder };
 }
 
 export const ZEN_TOKEN_REWARDS = {
