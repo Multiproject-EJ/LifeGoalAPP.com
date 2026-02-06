@@ -1995,6 +1995,9 @@ export default function App() {
               session={activeSession}
               showPointsBadges={shouldShowPointsBadges}
               onVisionRewardOpenChange={setIsVisionRewardOpen}
+              profileStrengthSnapshot={profileStrengthSnapshot}
+              profileStrengthSignals={profileStrengthSignals}
+              personalitySummary={personalitySummary}
             />
             <HabitsModule session={activeSession} />
           </div>
@@ -3069,6 +3072,9 @@ export default function App() {
           session={activeSession}
           showPointsBadges={shouldShowPointsBadges}
           onVisionRewardOpenChange={setIsVisionRewardOpen}
+          profileStrengthSnapshot={profileStrengthSnapshot}
+          profileStrengthSignals={profileStrengthSignals}
+          personalitySummary={personalitySummary}
         />
         <MobileFooterNav
           items={mobileFooterNavItems}

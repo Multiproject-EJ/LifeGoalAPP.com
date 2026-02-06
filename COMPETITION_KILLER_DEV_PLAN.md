@@ -1620,7 +1620,7 @@ WisdomTreeState {
 - [x] **P7.1** Rename Points → Gold in UI + data model (migration + copy)
 - [x] **P7.2** Implement reward creation + redemption flow with Gold spend
 - [x] **P7.3** Ship Day 0–1 onboarding flow (single habit + reward loop)
-- [ ] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
+- [x] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
 - [ ] **P7.5** Add Trees Planted ledger + weekly award trigger
 
 ---
@@ -1797,3 +1797,8 @@ WisdomTreeState {
   - **Step**: P7.3 Ship Day 0–1 onboarding flow (single habit + reward loop)  
   - **What changed**: Added a new Day 0–1 onboarding flow with a single-habit setup, reward definition, and quick completion loop, plus updated quick-start nudges and copy.  
   - **What’s next**: P7.4 Add Identity Signals card + “Why this?” detail sheet (post-Day 3).
+
+- **2026-02-06**  
+  - **Step**: P7.4 Add Identity Signals card + “Why this?” detail sheet (post-Day 3)  
+  - **What changed**: Added the post-Day 3 Identity Signals card to the mobile Today view plus a “Why this?” detail sheet.  
+  - **What’s next**: Confirm the next MVP execution step.
