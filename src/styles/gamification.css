@@ -1317,6 +1317,220 @@
   font-size: 0.85rem;
 }
 
+.score-tab__content--shop {
+  gap: 1.25rem;
+}
+
+.score-tab__shop-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.score-tab__shop-balance {
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(253, 230, 138, 0.9), rgba(250, 204, 21, 0.65));
+  color: #78350f;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 160px;
+}
+
+.score-tab__shop-balance-label {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.score-tab__shop-balance-value {
+  font-size: 1.1rem;
+}
+
+.score-tab__shop-message {
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.score-tab__shop-message--success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.score-tab__shop-message--error {
+  background: rgba(248, 113, 113, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.score-tab__reward-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+}
+
+.score-tab__reward-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.score-tab__reward-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.score-tab__reward-field input {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.score-tab__reward-field input:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+.score-tab__reward-field--cost input {
+  max-width: 120px;
+}
+
+.score-tab__reward-submit {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: linear-gradient(135deg, #facc15, #f97316);
+  box-shadow: 0 10px 20px rgba(250, 204, 21, 0.35);
+  cursor: pointer;
+}
+
+.score-tab__reward-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.score-tab__shop-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.score-tab__reward-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.score-tab__reward-card {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(248, 250, 252, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.score-tab__reward-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.score-tab__reward-card-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.score-tab__reward-cost {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.score-tab__reward-description {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.score-tab__reward-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.score-tab__reward-redeem {
+  border: none;
+  border-radius: 12px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: rgba(191, 219, 254, 0.9);
+  cursor: pointer;
+}
+
+.score-tab__reward-redeem:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.score-tab__reward-history {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  background: rgba(241, 245, 249, 0.8);
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.score-tab__reward-history h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.score-tab__reward-history ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.score-tab__reward-history li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #64748b);
+}
+
 @media (max-width: 768px) {
   .gamification-scorecard {
     padding: 1.1rem;

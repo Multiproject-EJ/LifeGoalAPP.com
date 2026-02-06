@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { GamificationProfile, LevelInfo, XPTransaction } from '../../types/gamification';
+import type {
+  GamificationProfile,
+  LevelInfo,
+  RewardItem,
+  RewardRedemption,
+  XPTransaction,
+} from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
 import { XP_TO_GOLD_RATIO } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
+import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward } from '../../services/rewards';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
 import scoreShop from '../../assets/Score_shop.webp';
@@ -43,8 +50,25 @@ export function ScoreTab({
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
+  const [rewards, setRewards] = useState<RewardItem[]>([]);
+  const [redemptions, setRedemptions] = useState<RewardRedemption[]>([]);
+  const [rewardLoading, setRewardLoading] = useState(false);
+  const [rewardError, setRewardError] = useState<string | null>(null);
+  const [rewardMessage, setRewardMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(
+    null
+  );
+  const [rewardTitle, setRewardTitle] = useState('');
+  const [rewardDescription, setRewardDescription] = useState('');
+  const [rewardCost, setRewardCost] = useState('');
+  const [rewardSubmitting, setRewardSubmitting] = useState(false);
+  const [redemptionSubmitting, setRedemptionSubmitting] = useState<string | null>(null);
   const userId = session?.user?.id ?? profile?.user_id ?? '';
   const zenTokens = profile?.zen_tokens ?? 0;
+  const [goldBalance, setGoldBalance] = useState(profile?.total_points ?? 0);
+
+  useEffect(() => {
+    setGoldBalance(profile?.total_points ?? 0);
+  }, [profile?.total_points]);
 
   useEffect(() => {
     let isMounted = true;
@@ -111,6 +135,92 @@ export function ScoreTab({
 
     return Object.values(tally).sort((a, b) => b.xp - a.xp);
   }, [transactions]);
+
+  const profileWithGold = useMemo(() => {
+    if (!profile) return null;
+    return { ...profile, total_points: goldBalance };
+  }, [profile, goldBalance]);
+
+  useEffect(() => {
+    if (activeTab !== 'shop' || !enabled || !userId) {
+      return;
+    }
+
+    let isMounted = true;
+    const loadRewards = async () => {
+      setRewardLoading(true);
+      const [{ data: rewardData, error: rewardCatalogError }, { data: redemptionData, error: redemptionError }] =
+        await Promise.all([fetchRewardCatalog(userId), fetchRewardRedemptions(userId)]);
+
+      if (!isMounted) return;
+
+      setRewards(rewardData ?? []);
+      setRedemptions(redemptionData ?? []);
+      setRewardError(rewardCatalogError?.message || redemptionError?.message || null);
+      setRewardLoading(false);
+    };
+
+    loadRewards();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, enabled, userId]);
+
+  const handleCreateReward = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!userId) return;
+
+    const cost = Number(rewardCost);
+    if (!rewardTitle.trim() || !cost || cost < 1) {
+      setRewardMessage({
+        type: 'error',
+        text: 'Add a reward title and a gold cost of at least 1.',
+      });
+      return;
+    }
+
+    setRewardSubmitting(true);
+    const { data, error } = await createReward(userId, {
+      title: rewardTitle.trim(),
+      description: rewardDescription.trim(),
+      costGold: cost,
+    });
+
+    if (error || !data) {
+      setRewardMessage({ type: 'error', text: error?.message ?? 'Unable to create reward.' });
+    } else {
+      setRewards((current) => [...current, data]);
+      setRewardTitle('');
+      setRewardDescription('');
+      setRewardCost('');
+      setRewardMessage({ type: 'success', text: `"${data.title}" is ready to redeem.` });
+    }
+
+    setRewardSubmitting(false);
+  };
+
+  const handleRedeemReward = async (rewardId: string) => {
+    if (!userId) return;
+    setRedemptionSubmitting(rewardId);
+    const { data, error } = await redeemReward(userId, rewardId);
+
+    if (error || !data) {
+      setRewardMessage({ type: 'error', text: error?.message ?? 'Unable to redeem reward.' });
+    } else {
+      setGoldBalance(data.newGoldBalance);
+      setRewards((current) =>
+        current.map((reward) => (reward.id === rewardId ? data.reward : reward))
+      );
+      setRedemptions((current) => [data.redemption, ...current].slice(0, 12));
+      setRewardMessage({
+        type: 'success',
+        text: `Redeemed "${data.reward.title}". Enjoy your reward!`,
+      });
+    }
+
+    setRedemptionSubmitting(null);
+  };
 
   return (
     <section className="score-tab">
@@ -225,7 +335,7 @@ export function ScoreTab({
         </div>
       )}
 
-      {!loading && enabled && profile && levelInfo && activeTab === 'bank' && (
+      {!loading && enabled && profileWithGold && levelInfo && activeTab === 'bank' && (
         <div className="score-tab__content">
           <div className="score-tab__bank-intro">
             <h2 className="score-tab__headline">Track your daily economy</h2>
@@ -233,7 +343,11 @@ export function ScoreTab({
               Review XP, gold, and streak momentum before you spin or visit the player shop.
             </p>
           </div>
-          <GamificationHeader profile={profile} levelInfo={levelInfo} session={session ?? undefined} />
+          <GamificationHeader
+            profile={profileWithGold}
+            levelInfo={levelInfo}
+            session={session ?? undefined}
+          />
 
           <div className="score-tab__grid">
             <article className="score-tab__card score-tab__card--xp">
@@ -249,7 +363,7 @@ export function ScoreTab({
                 <h3 className="score-tab__card-title">Gold wallet</h3>
                 <span className="score-tab__pill">Spendable</span>
               </div>
-              <p className="score-tab__value">🪙 {formatter.format(profile.total_points)}</p>
+              <p className="score-tab__value">🪙 {formatter.format(profileWithGold.total_points)}</p>
               <p className="score-tab__meta">Use gold for shop upgrades and trophies.</p>
             </article>
 
@@ -351,8 +465,129 @@ export function ScoreTab({
       )}
 
       {!loading && enabled && activeTab === 'shop' && (
-        <div className="score-tab__status">
-          The shop is getting stocked. Check back soon for upgrades and rewards.
+        <div className="score-tab__content score-tab__content--shop">
+          <div className="score-tab__shop-header">
+            <div>
+              <h2 className="score-tab__headline">Player Shop</h2>
+              <p className="score-tab__subtitle">
+                Create rewards you actually want, then redeem them with your gold.
+              </p>
+            </div>
+            <div className="score-tab__shop-balance">
+              <span className="score-tab__shop-balance-label">Gold balance</span>
+              <strong className="score-tab__shop-balance-value">🪙 {formatter.format(goldBalance)}</strong>
+            </div>
+          </div>
+
+          {rewardMessage && (
+            <div className={`score-tab__shop-message score-tab__shop-message--${rewardMessage.type}`}>
+              {rewardMessage.text}
+            </div>
+          )}
+
+          <form className="score-tab__reward-form" onSubmit={handleCreateReward}>
+            <div className="score-tab__reward-form-grid">
+              <label className="score-tab__reward-field">
+                <span>Reward name</span>
+                <input
+                  type="text"
+                  value={rewardTitle}
+                  onChange={(event) => setRewardTitle(event.target.value)}
+                  placeholder="Coffee break, game session, chill playlist..."
+                  maxLength={40}
+                  required
+                />
+              </label>
+              <label className="score-tab__reward-field">
+                <span>Description (optional)</span>
+                <input
+                  type="text"
+                  value={rewardDescription}
+                  onChange={(event) => setRewardDescription(event.target.value)}
+                  placeholder="Keep it short and motivating."
+                  maxLength={80}
+                />
+              </label>
+              <label className="score-tab__reward-field score-tab__reward-field--cost">
+                <span>Gold cost</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={rewardCost}
+                  onChange={(event) => setRewardCost(event.target.value)}
+                  placeholder="50"
+                  required
+                />
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="score-tab__reward-submit"
+              disabled={rewardSubmitting}
+            >
+              {rewardSubmitting ? 'Saving...' : 'Add reward'}
+            </button>
+          </form>
+
+          {rewardLoading && <p className="score-tab__shop-status">Loading your rewards...</p>}
+          {!rewardLoading && rewardError && <p className="score-tab__shop-status">{rewardError}</p>}
+
+          {!rewardLoading && !rewardError && rewards.length === 0 && (
+            <p className="score-tab__shop-status">
+              No custom rewards yet. Add your first treat to start redeeming.
+            </p>
+          )}
+
+          {!rewardLoading && rewards.length > 0 && (
+            <div className="score-tab__reward-grid">
+              {rewards.map((reward) => {
+                const canAfford = goldBalance >= reward.costGold;
+                const isRedeeming = redemptionSubmitting === reward.id;
+                return (
+                  <div key={reward.id} className="score-tab__reward-card">
+                    <div className="score-tab__reward-card-header">
+                      <h3>{reward.title}</h3>
+                      <span className="score-tab__reward-cost">🪙 {formatter.format(reward.costGold)}</span>
+                    </div>
+                    {reward.description && <p className="score-tab__reward-description">{reward.description}</p>}
+                    <div className="score-tab__reward-meta">
+                      <span>Redeemed {reward.redemptionCount}x</span>
+                      {reward.lastRedeemedAt && (
+                        <span>Last: {dateFormatter.format(new Date(reward.lastRedeemedAt))}</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="score-tab__reward-redeem"
+                      onClick={() => handleRedeemReward(reward.id)}
+                      disabled={!canAfford || isRedeeming}
+                    >
+                      {isRedeeming ? 'Redeeming...' : canAfford ? 'Redeem' : 'Need more gold'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="score-tab__reward-history">
+            <h3>Recent redemptions</h3>
+            {redemptions.length === 0 ? (
+              <p>Redeem a reward to see your latest wins here.</p>
+            ) : (
+              <ul>
+                {redemptions.slice(0, 4).map((entry) => (
+                  <li key={entry.id}>
+                    <span>{entry.rewardTitle}</span>
+                    <span>
+                      -{formatter.format(entry.costGold)} gold ·{' '}
+                      {dateFormatter.format(new Date(entry.redeemedAt))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
 
