@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react'
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import type { ProfileStrengthSignalSnapshot } from '../profile-strength/profileStrengthData';
+import type { ProfileStrengthResult } from '../profile-strength/profileStrengthTypes';
 import {
   clearHabitCompletion,
   fetchHabitLogsForRange,
@@ -53,6 +55,9 @@ type DailyHabitTrackerProps = {
   variant?: DailyHabitTrackerVariant;
   showPointsBadges?: boolean;
   onVisionRewardOpenChange?: (isOpen: boolean) => void;
+  profileStrengthSnapshot?: ProfileStrengthResult | null;
+  profileStrengthSignals?: ProfileStrengthSignalSnapshot | null;
+  personalitySummary?: string | null;
 };
 
 type HabitCompletionState = {
@@ -204,6 +209,9 @@ export function DailyHabitTracker({
   variant = 'full',
   showPointsBadges = false,
   onVisionRewardOpenChange,
+  profileStrengthSnapshot,
+  profileStrengthSignals,
+  personalitySummary,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
@@ -269,6 +277,7 @@ export function DailyHabitTracker({
   const [isCompactView, setIsCompactView] = useState(false);
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
+  const [isIdentitySignalsOpen, setIsIdentitySignalsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => new Date());
   // State for intentions journal
   const [isIntentionsJournalOpen, setIsIntentionsJournalOpen] = useState(false);
@@ -2089,6 +2098,18 @@ export function DailyHabitTracker({
     return { total: habits.length, scheduled, completed } as const;
   }, [habits, completions, habitInsights, activeDate]);
 
+  const identitySignalDayCount = useMemo(() => {
+    const completionDates = new Set<string>();
+    Object.values(monthlyCompletionsV2).forEach((grid) => {
+      Object.entries(grid).forEach(([date, completed]) => {
+        if (completed && date <= activeDate) {
+          completionDates.add(date);
+        }
+      });
+    });
+    return completionDates.size;
+  }, [monthlyCompletionsV2, activeDate]);
+
   const yesterdaySelectedCount = useMemo(
     () => yesterdayHabits.filter((habit) => Boolean(yesterdaySelections[habit.id])).length,
     [yesterdayHabits, yesterdaySelections],
@@ -2744,6 +2765,20 @@ export function DailyHabitTracker({
     const circadianLabel = isViewingToday ? getCircadianLabel(currentTime) : null;
     const clockEmoji = isViewingToday ? getClockEmoji(currentTime) : null;
     const timeLabel = isViewingToday ? formatTimeLabel(currentTime) : null;
+    const identitySignalsUnlocked = identitySignalDayCount >= 3 && isViewingToday;
+    const identitySignalStatus = profileStrengthSignals?.areas?.identity?.status ?? 'unavailable';
+    const identitySignalScore = profileStrengthSnapshot?.areaScores.identity;
+    const identitySignalScoreLabel =
+      identitySignalScore === null || identitySignalScore === undefined ? '—' : `${identitySignalScore}/10`;
+    const identitySignalSummary =
+      personalitySummary ??
+      (identitySignalStatus === 'no_data'
+        ? 'Complete your identity snapshot to personalize these signals.'
+        : 'Signals refresh as you log habits and reflections.');
+    const identitySignalSupport =
+      identitySignalStatus === 'ok'
+        ? 'We wait until you have a few days logged so signals reflect real momentum.'
+        : 'Signals unlock after a few days of check-ins and stay private by default.';
 
     const statusText = errorMessage
       ? errorMessage
@@ -3279,6 +3314,31 @@ export function DailyHabitTracker({
               renderCompactList()
             )}
 
+            {identitySignalsUnlocked ? (
+              <div className="identity-signals-card" aria-live="polite">
+                <div className="identity-signals-card__header">
+                  <div>
+                    <p className="identity-signals-card__eyebrow">Identity Signals</p>
+                    <h3 className="identity-signals-card__title">Your identity is taking shape</h3>
+                  </div>
+                  <span className="identity-signals-card__score" aria-label={`Identity signal score ${identitySignalScoreLabel}`}>
+                    {identitySignalScoreLabel}
+                  </span>
+                </div>
+                <p className="identity-signals-card__summary">{identitySignalSummary}</p>
+                <p className="identity-signals-card__support">{identitySignalSupport}</p>
+                <div className="identity-signals-card__actions">
+                  <button
+                    type="button"
+                    className="identity-signals-card__button"
+                    onClick={() => setIsIdentitySignalsOpen(true)}
+                  >
+                    Why this?
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="habit-quick-journal" aria-live="polite">
               <div className="habit-quick-journal__header">
                 <div>
@@ -3567,6 +3627,50 @@ export function DailyHabitTracker({
             {loading ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
+        {identitySignalsUnlocked && isIdentitySignalsOpen ? (
+          <div className="identity-signals-sheet" role="dialog" aria-modal="true" aria-label="Identity signals details">
+            <div
+              className="identity-signals-sheet__backdrop"
+              role="presentation"
+              onClick={() => setIsIdentitySignalsOpen(false)}
+            />
+            <div className="identity-signals-sheet__card" role="document">
+              <div className="identity-signals-sheet__header">
+                <div>
+                  <p className="identity-signals-sheet__eyebrow">Why these signals?</p>
+                  <h3 className="identity-signals-sheet__title">Identity Signals keep your growth warm</h3>
+                </div>
+                <button
+                  type="button"
+                  className="identity-signals-sheet__close"
+                  onClick={() => setIsIdentitySignalsOpen(false)}
+                  aria-label="Close identity signals details"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="identity-signals-sheet__body">
+                <p>
+                  We wait until you log at least three days so the signals reflect real behavior, not a single burst.
+                </p>
+                <ul>
+                  <li>Signals are built from habit completions, reflections, and quick check-ins.</li>
+                  <li>They stay private unless you choose to share them.</li>
+                  <li>We highlight only the most consistent patterns, not every blip.</li>
+                </ul>
+              </div>
+              <div className="identity-signals-sheet__footer">
+                <button
+                  type="button"
+                  className="identity-signals-sheet__button"
+                  onClick={() => setIsIdentitySignalsOpen(false)}
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   };
