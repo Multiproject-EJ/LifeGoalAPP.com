@@ -4021,6 +4021,144 @@ export function DailyHabitTracker({
     );
   };
 
+  const alertConfigModal = alertConfigHabit ? (
+    <div className="habit-alert-modal-overlay" onClick={() => setAlertConfigHabit(null)}>
+      <div className="habit-alert-modal-content" onClick={(e) => e.stopPropagation()}>
+        <HabitAlertConfig
+          habitId={alertConfigHabit.id}
+          habitName={alertConfigHabit.name}
+          onClose={() => setAlertConfigHabit(null)}
+        />
+      </div>
+    </div>
+  ) : null;
+
+  const editHabitModal =
+    editHabit && modalRoot
+      ? createPortal(
+          <div className="habit-edit-modal-overlay" onClick={handleCloseEdit}>
+            <div className="habit-edit-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="habit-edit-modal__header">
+                <div>
+                  <p className="habit-edit-modal__eyebrow">Edit habit focus</p>
+                  <h3>{editTitle.trim() || editHabit.name}</h3>
+                </div>
+                <button
+                  type="button"
+                  className="habit-edit-modal__close"
+                  onClick={handleCloseEdit}
+                  aria-label="Close habit edit"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="habit-edit-modal__body">
+                <label className="habit-edit-modal__label" htmlFor="habit-title-input">
+                  Habit title
+                </label>
+                <input
+                  id="habit-title-input"
+                  className="habit-edit-modal__input"
+                  type="text"
+                  value={editTitle}
+                  onChange={(event) => setEditTitle(event.target.value)}
+                  placeholder="Name your habit"
+                />
+
+                <label className="habit-edit-modal__label" htmlFor="habit-notes-input">
+                  Notes
+                </label>
+                <textarea
+                  id="habit-notes-input"
+                  className="habit-edit-modal__textarea"
+                  value={editNotes}
+                  onChange={(event) => setEditNotes(event.target.value)}
+                  placeholder="Add details, motivation, or reminders"
+                  rows={4}
+                />
+
+                <label className="habit-edit-modal__label" htmlFor="habit-life-wheel-select">
+                  Life wheel area
+                </label>
+                <select
+                  id="habit-life-wheel-select"
+                  className="habit-edit-modal__select"
+                  value={editLifeWheelKey}
+                  onChange={(event) => setEditLifeWheelKey(event.target.value)}
+                >
+                  <option value={LIFE_WHEEL_UNASSIGNED}>Unassigned</option>
+                  {LIFE_WHEEL_CATEGORIES.map((category) => (
+                    <option key={category.key} value={category.key}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="habit-edit-modal__section">
+                  <label className="habit-edit-modal__label" htmlFor="habit-goal-select">
+                    Attach to a goal
+                  </label>
+                  {goalsLoading ? (
+                    <p className="habit-edit-modal__hint">Loading goals…</p>
+                  ) : (
+                    <>
+                      <select
+                        id="habit-goal-select"
+                        className="habit-edit-modal__select"
+                        value={editGoalId}
+                        onChange={(event) => setEditGoalId(event.target.value)}
+                      >
+                        <option value={GOAL_UNASSIGNED}>No goal</option>
+                        {goals.map((goal) => (
+                          <option key={goal.id} value={goal.id}>
+                            {goal.title || 'Untitled goal'}
+                          </option>
+                        ))}
+                      </select>
+                      {goals.length === 0 ? (
+                        <p className="habit-edit-modal__hint">
+                          No goals yet. Create one to link this habit.
+                        </p>
+                      ) : null}
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
+                    onClick={handleCreateGoalFromHabit}
+                    disabled={creatingGoal}
+                  >
+                    {creatingGoal ? 'Creating…' : '➕ Start a new goal from this habit'}
+                  </button>
+                </div>
+
+                {editError ? <p className="habit-edit-modal__error">{editError}</p> : null}
+              </div>
+
+              <div className="habit-edit-modal__footer">
+                <button
+                  type="button"
+                  className="habit-edit-modal__btn habit-edit-modal__btn--ghost"
+                  onClick={handleCloseEdit}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="habit-edit-modal__btn habit-edit-modal__btn--primary"
+                  onClick={() => void handleSaveEdit()}
+                  disabled={editSaving}
+                >
+                  {editSaving ? 'Saving…' : 'Save changes'}
+                </button>
+              </div>
+            </div>
+          </div>,
+          modalRoot,
+        )
+      : null;
+
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
@@ -4028,6 +4166,8 @@ export function DailyHabitTracker({
         {visionRewardModal}
         {visionVisualizationModal}
         {habitVisionPreviewModal}
+        {alertConfigModal}
+        {editHabitModal}
         {/* Celebration animation for habit completion */}
         {showCelebration && (
           <CelebrationAnimation
@@ -4275,143 +4415,8 @@ export function DailyHabitTracker({
         </div>
       )}
 
-      {/* Alert Configuration Modal */}
-      {alertConfigHabit && (
-        <div className="habit-alert-modal-overlay" onClick={() => setAlertConfigHabit(null)}>
-          <div className="habit-alert-modal-content" onClick={(e) => e.stopPropagation()}>
-            <HabitAlertConfig
-              habitId={alertConfigHabit.id}
-              habitName={alertConfigHabit.name}
-              onClose={() => setAlertConfigHabit(null)}
-            />
-          </div>
-        </div>
-      )}
-
-      {editHabit && modalRoot
-        ? createPortal(
-            <div className="habit-edit-modal-overlay" onClick={handleCloseEdit}>
-              <div className="habit-edit-modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="habit-edit-modal__header">
-                  <div>
-                    <p className="habit-edit-modal__eyebrow">Edit habit focus</p>
-                    <h3>{editTitle.trim() || editHabit.name}</h3>
-                  </div>
-                  <button
-                    type="button"
-                    className="habit-edit-modal__close"
-                    onClick={handleCloseEdit}
-                    aria-label="Close habit edit"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div className="habit-edit-modal__body">
-                  <label className="habit-edit-modal__label" htmlFor="habit-title-input">
-                    Habit title
-                  </label>
-                  <input
-                    id="habit-title-input"
-                    className="habit-edit-modal__input"
-                    type="text"
-                    value={editTitle}
-                    onChange={(event) => setEditTitle(event.target.value)}
-                    placeholder="Name your habit"
-                  />
-
-                  <label className="habit-edit-modal__label" htmlFor="habit-notes-input">
-                    Notes
-                  </label>
-                  <textarea
-                    id="habit-notes-input"
-                    className="habit-edit-modal__textarea"
-                    value={editNotes}
-                    onChange={(event) => setEditNotes(event.target.value)}
-                    placeholder="Add details, motivation, or reminders"
-                    rows={4}
-                  />
-
-                  <label className="habit-edit-modal__label" htmlFor="habit-life-wheel-select">
-                    Life wheel area
-                  </label>
-                  <select
-                    id="habit-life-wheel-select"
-                    className="habit-edit-modal__select"
-                    value={editLifeWheelKey}
-                    onChange={(event) => setEditLifeWheelKey(event.target.value)}
-                  >
-                    <option value={LIFE_WHEEL_UNASSIGNED}>Unassigned</option>
-                    {LIFE_WHEEL_CATEGORIES.map((category) => (
-                      <option key={category.key} value={category.key}>
-                        {category.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="habit-edit-modal__section">
-                    <label className="habit-edit-modal__label" htmlFor="habit-goal-select">
-                      Attach to a goal
-                    </label>
-                    {goalsLoading ? (
-                      <p className="habit-edit-modal__hint">Loading goals…</p>
-                    ) : (
-                      <>
-                        <select
-                          id="habit-goal-select"
-                          className="habit-edit-modal__select"
-                          value={editGoalId}
-                          onChange={(event) => setEditGoalId(event.target.value)}
-                        >
-                          <option value={GOAL_UNASSIGNED}>No goal</option>
-                          {goals.map((goal) => (
-                            <option key={goal.id} value={goal.id}>
-                              {goal.title || 'Untitled goal'}
-                            </option>
-                          ))}
-                        </select>
-                        {goals.length === 0 ? (
-                          <p className="habit-edit-modal__hint">
-                            No goals yet. Create one to link this habit.
-                          </p>
-                        ) : null}
-                      </>
-                    )}
-                    <button
-                      type="button"
-                      className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
-                      onClick={handleCreateGoalFromHabit}
-                      disabled={creatingGoal}
-                    >
-                      {creatingGoal ? 'Creating…' : '➕ Start a new goal from this habit'}
-                    </button>
-                  </div>
-
-                  {editError ? <p className="habit-edit-modal__error">{editError}</p> : null}
-                </div>
-
-                <div className="habit-edit-modal__footer">
-                  <button
-                    type="button"
-                    className="habit-edit-modal__btn habit-edit-modal__btn--ghost"
-                    onClick={handleCloseEdit}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="habit-edit-modal__btn habit-edit-modal__btn--primary"
-                    onClick={() => void handleSaveEdit()}
-                    disabled={editSaving}
-                  >
-                    {editSaving ? 'Saving…' : 'Save changes'}
-                  </button>
-                </div>
-              </div>
-            </div>,
-            modalRoot,
-          )
-        : null}
+      {alertConfigModal}
+      {editHabitModal}
 
       {showLegacyHabitAssets && (
         <div className="habit-legacy-modal-overlay" onClick={() => setShowLegacyHabitAssets(false)}>
