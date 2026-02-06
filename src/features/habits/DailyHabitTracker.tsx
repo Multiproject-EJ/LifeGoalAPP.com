@@ -182,6 +182,8 @@ const intentionsJournalDraftKey = (userId: string, dateISO: string, type: 'today
   `lifegoal.intentions-journal:${userId}:${dateISO}:${type}`;
 const intentionsNoticeStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.intentions-notice:${userId}:${dateISO}`;
+const intentionsMeetStorageKey = (userId: string, dateISO: string) =>
+  `lifegoal.intentions-meet:${userId}:${dateISO}`;
 const dayStatusStorageKey = (userId: string) => `lifegoal.day-status:${userId}`;
 const visionStarStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star:${userId}:${dateISO}`;
@@ -310,6 +312,9 @@ export function DailyHabitTracker({
   const [yesterdayIntentionsEntry, setYesterdayIntentionsEntry] = useState<JournalEntry | null>(null);
   const [isIntentionsNoticeOpen, setIsIntentionsNoticeOpen] = useState(false);
   const [isIntentionsNoticeViewed, setIsIntentionsNoticeViewed] = useState(false);
+  const [isIntentionsMet, setIsIntentionsMet] = useState(false);
+  const [intentionsMeetSaving, setIntentionsMeetSaving] = useState(false);
+  const [intentionsMeetError, setIntentionsMeetError] = useState<string | null>(null);
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
   const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
   const [visionRewardDate, setVisionRewardDate] = useState<string | null>(null);
@@ -1435,6 +1440,7 @@ export function DailyHabitTracker({
     if (activeDate !== today) {
       setYesterdayIntentionsEntry(null);
       setIsIntentionsNoticeViewed(false);
+      setIsIntentionsMet(false);
       return () => {
         isActive = false;
       };
@@ -1461,8 +1467,11 @@ export function DailyHabitTracker({
       if (match) {
         const viewed = loadDraft<boolean>(intentionsNoticeStorageKey(session.user.id, today));
         setIsIntentionsNoticeViewed(Boolean(viewed));
+        const met = loadDraft<boolean>(intentionsMeetStorageKey(session.user.id, today));
+        setIsIntentionsMet(Boolean(met));
       } else {
         setIsIntentionsNoticeViewed(false);
+        setIsIntentionsMet(false);
       }
     };
 
@@ -3261,15 +3270,44 @@ export function DailyHabitTracker({
     };
 
     const checklistCardClassName = `habit-checklist-card${isCompactView ? '' : ' habit-checklist-card--glass'}`;
-    const intentionsNoticeKey = intentionsNoticeStorageKey(session.user.id, today);
-    const handleOpenIntentionsNotice = () => {
-      setIsIntentionsNoticeOpen(true);
-      setIsIntentionsNoticeViewed(true);
-      saveDraft(intentionsNoticeKey, true);
-    };
-    const handleCloseIntentionsNotice = () => {
-      setIsIntentionsNoticeOpen(false);
-    };
+  const intentionsNoticeKey = intentionsNoticeStorageKey(session.user.id, today);
+  const handleOpenIntentionsNotice = () => {
+    setIsIntentionsNoticeOpen(true);
+    setIsIntentionsNoticeViewed(true);
+    setIntentionsMeetError(null);
+    saveDraft(intentionsNoticeKey, true);
+  };
+  const handleCloseIntentionsNotice = () => {
+    setIsIntentionsNoticeOpen(false);
+  };
+  const intentionsMeetKey = intentionsMeetStorageKey(session.user.id, today);
+  const handleMeetIntentions = async () => {
+    if (intentionsMeetSaving || isIntentionsMet) return;
+    if (!isConfigured && !isDemoExperience) {
+      setIntentionsMeetError('Connect Supabase to earn XP.');
+      return;
+    }
+
+    setIntentionsMeetSaving(true);
+    setIntentionsMeetError(null);
+
+    try {
+      await earnXP(
+        XP_REWARDS.INTENTIONS_MET,
+        'intentions_met',
+        today,
+        "Met today's intention",
+      );
+      setIsIntentionsMet(true);
+      saveDraft(intentionsMeetKey, true);
+    } catch (error) {
+      setIntentionsMeetError(
+        error instanceof Error ? error.message : 'Unable to record intention progress right now.',
+      );
+    } finally {
+      setIntentionsMeetSaving(false);
+    }
+  };
     const handleDayStatusUpdate = async (status: DayStatus) => {
       const isCurrentlySet = dayStatusMap[activeDate] === status;
       
@@ -3386,6 +3424,12 @@ export function DailyHabitTracker({
       }, 2200);
     };
 
+    const showIntentionsOnlyRow = Boolean(yesterdayIntentionsEntry && !isIntentionsNoticeViewed && !isCompactView);
+    const showIntentionsButton = Boolean(yesterdayIntentionsEntry);
+    const intentionsButtonClassName = `habit-checklist-card__intentions-button ${
+      isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen habit-checklist-card__intentions-button--compact' : ''
+    }`;
+
     return (
       <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
         {yesterdayIntentionsEntry && isIntentionsNoticeOpen ? (
@@ -3412,6 +3456,32 @@ export function DailyHabitTracker({
               </div>
               <div className="habit-intentions-modal__body">
                 <p>{yesterdayIntentionsEntry.content}</p>
+              </div>
+              <div className="habit-intentions-modal__action">
+                <button
+                  type="button"
+                  className="habit-intentions-modal__action-button"
+                  onClick={() => void handleMeetIntentions()}
+                  disabled={intentionsMeetSaving || isIntentionsMet}
+                >
+                  <span
+                    className={`habit-intentions-modal__action-check ${isIntentionsMet ? 'is-complete' : ''}`}
+                    aria-hidden="true"
+                  >
+                    {isIntentionsMet ? '✓' : ''}
+                  </span>
+                  <span className="habit-intentions-modal__action-label">
+                    {isIntentionsMet ? "Today's intention met" : "Meet today's intention"}
+                  </span>
+                  <span className="habit-intentions-modal__action-reward">
+                    +{XP_REWARDS.INTENTIONS_MET} XP
+                  </span>
+                </button>
+                {intentionsMeetError ? (
+                  <p className="habit-intentions-modal__error" role="status">
+                    {intentionsMeetError}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -3444,76 +3514,95 @@ export function DailyHabitTracker({
             </div>
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">
-                <div className="habit-checklist-card__nav-row">
-                  <button
-                    type="button"
-                    className="habit-day-nav__button habit-day-nav__button--prev"
-                    onClick={() => changeActiveDateBy(-1)}
-                    aria-label="Previous day"
-                  >
-                    ←
-                  </button>
-                  <div className="habit-checklist-card__nav-center">
-                    <div className="habit-checklist-card__nav-pills" role="group" aria-label="Today and calendar controls">
-                      {isViewingToday ? (
-                        <span className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--current">
-                          Today
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="habit-checklist-card__nav-pill"
-                          onClick={resetToToday}
-                        >
-                          Today
-                        </button>
-                      )}
-                      <label
-                        className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--calendar"
-                        aria-label="Select a date to track"
-                      >
-                        <span className="habit-checklist-card__nav-pill-icon" aria-hidden="true">
-                          📅
-                        </span>
-                        <input
-                          className="habit-checklist-card__nav-pill-input"
-                          type="date"
-                          value={activeDate}
-                          max={today}
-                          onChange={(event) => handleDateInputChange(event.target.value)}
-                        />
-                      </label>
-                    </div>
-                    <div className="habit-checklist-card__nav-meta">
-                      {showActionsBadge ? (
-                        <span className="habit-checklist-card__actions-badge" aria-label={actionsBadgeAria}>
-                          <span className="habit-checklist-card__actions-label">Actions</span>
-                          <span className="habit-checklist-card__actions-count">{completedActionsCount}</span>
-                        </span>
-                      ) : null}
-                      {yesterdayIntentionsEntry ? (
-                        <button
-                          type="button"
-                          className={`habit-checklist-card__intentions-button ${
-                            isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen' : ''
-                          }`}
-                          onClick={handleOpenIntentionsNotice}
-                        >
-                          Intentions
-                        </button>
-                      ) : null}
-                    </div>
+                {showIntentionsOnlyRow ? (
+                  <div className="habit-checklist-card__nav-row habit-checklist-card__nav-row--intentions-only">
+                    <button
+                      type="button"
+                      className={intentionsButtonClassName}
+                      onClick={handleOpenIntentionsNotice}
+                    >
+                      Intentions
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="habit-day-nav__button habit-day-nav__button--next"
-                    onClick={() => changeActiveDateBy(1)}
-                    disabled={!canGoForward}
-                    aria-label="Next day"
-                  >
-                    →
-                  </button>
-                </div>
+                ) : (
+                  <div className="habit-checklist-card__nav-row">
+                    <button
+                      type="button"
+                      className="habit-day-nav__button habit-day-nav__button--prev"
+                      onClick={() => changeActiveDateBy(-1)}
+                      aria-label="Previous day"
+                    >
+                      ←
+                    </button>
+                    <div className="habit-checklist-card__nav-center">
+                      <div className="habit-checklist-card__nav-pills" role="group" aria-label="Today and calendar controls">
+                        {isViewingToday ? (
+                          <span className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--current">
+                            Today
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="habit-checklist-card__nav-pill"
+                            onClick={resetToToday}
+                          >
+                            Today
+                          </button>
+                        )}
+                        <label
+                          className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--calendar"
+                          aria-label="Select a date to track"
+                        >
+                          <span className="habit-checklist-card__nav-pill-icon" aria-hidden="true">
+                            📅
+                          </span>
+                          <input
+                            className="habit-checklist-card__nav-pill-input"
+                            type="date"
+                            value={activeDate}
+                            max={today}
+                            onChange={(event) => handleDateInputChange(event.target.value)}
+                          />
+                        </label>
+                      </div>
+                      <div className="habit-checklist-card__nav-meta">
+                        {showActionsBadge ? (
+                          <span className="habit-checklist-card__actions-badge" aria-label={actionsBadgeAria}>
+                            <span className="habit-checklist-card__actions-label">Actions</span>
+                            <span className="habit-checklist-card__actions-count">{completedActionsCount}</span>
+                          </span>
+                        ) : null}
+                        {showIntentionsButton ? (
+                          <button
+                            type="button"
+                            className={intentionsButtonClassName}
+                            onClick={handleOpenIntentionsNotice}
+                          >
+                            {isIntentionsNoticeViewed ? (
+                              <>
+                                <span className="habit-checklist-card__intentions-icon" aria-hidden="true">
+                                  🎯
+                                </span>
+                                <span className="sr-only">Intentions</span>
+                              </>
+                            ) : (
+                              'Intentions'
+                            )}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="habit-day-nav__button habit-day-nav__button--next"
+                      onClick={() => changeActiveDateBy(1)}
+                      disabled={!canGoForward}
+                      aria-label="Next day"
+                    >
+                      →
+                    </button>
+                  </div>
+                )}
               </div>
             ) : null}
           </div>
