@@ -123,12 +123,39 @@ This plan lays out the milestone skeleton required for Game of Life 2.0 delivery
 - Tiers defined (Seed, Minimum, Standard).
 - Downshift UX preserves streaks and updates difficulty.
 - Re-upgrade rules documented and enforced.
+- “Done-ish” progress support for habits with partial completion thresholds (e.g., 80% of target still counts as meaningful progress).
+- Habit creation/editing requires a **Habit Environment** field (mandatory comment) to capture the context/conditions needed for success.
+- Habit environment and “done-ish” settings are surfaced in habit detail views and reporting.
+- Habit success metrics distinguish **done**, **done-ish**, **skipped**, and **missed** so analytics and streaks remain honest.
+- Auto-progression uses “done-ish” as partial credit with configurable weighting (e.g., 0.5–0.8) and logs adjustments.
+- Completion rules handle each habit type (boolean/quantity/duration) with clear thresholds and edge-case behavior.
+- Users can tune “done-ish” boundaries but are guided by smart defaults and coach tips.
+
+**Todos to add for this milestone**
+- [ ] Define a **progress grading model** (done / done-ish / skipped / missed) and how each state affects streaks, XP, and auto-progression.
+- [ ] Add per-habit “done-ish” threshold schema (percentage or rule) with defaults by habit type:
+  - Boolean: allow a “partial” toggle (e.g., *did some*).
+  - Quantity: percent of target (e.g., 80%).
+  - Duration: minimum minutes or percent of target.
+- [ ] Update habit completion logic to record progress state plus numeric completion percentage.
+- [ ] Update streak and success-rate calculations to include partial credit while avoiding inflated streaks.
+- [ ] Add UI copy and visual affordances for “done-ish” (progressful) completion in daily check-ins.
+- [ ] Add mandatory “Habit Environment” textarea to habit setup/edit flows with validation and helper prompts.
+- [ ] Add “Habit Environment” summary in habit detail + coach context panels.
+- [ ] Store environment notes and “done-ish” settings in the habit schema and include them in demo-mode data fixtures.
+- [ ] Add telemetry events for “done-ish” usage and coach adjustments (for later tuning).
 
 **Demo-mode parity requirement**
 - Tier state and transitions stored in demo data with Supabase mirror.
+- Done-ish thresholds and Habit Environment notes mirrored in demo data and Supabase schema.
+- Demo data includes at least one habit with partial completion logs and one with environment coaching feedback.
 
 **Test notes**
 - Manual test downshift then re-upgrade with demo habits.
+- Manual test partial completion (e.g., 80% target) appears as “done-ish” and is reflected in streak/progress math.
+- Manual validation that Habit Environment is required in the creation flow and persists on edit.
+- Manual test for each habit type (boolean/quantity/duration) to confirm “done-ish” logic and visuals.
+- Manual check: success-rate analytics include partial credit but do not claim full completion.
 
 ---
 
@@ -185,6 +212,8 @@ This plan lays out the milestone skeleton required for Game of Life 2.0 delivery
 - Intervention triggers for imbalance, fixation, overconfidence, and habit struggle.
 - Templates aligned with AI coach personality spec.
 - Interventions appear in coach UI and optionally dashboard.
+- Coach suggests “done-ish” adjustments when habit goals are unrealistic (e.g., recommend 80% targets) and references Habit Environment context in guidance.
+- Coach can propose environment tweaks (time, place, tools, social support, obstacles) and updates Habit Environment notes when user agrees.
 
 **Demo-mode parity requirement**
 - Demo data can trigger each intervention type.
