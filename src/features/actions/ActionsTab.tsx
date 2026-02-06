@@ -17,6 +17,9 @@ import { ActionDetailModal } from './components/ActionDetailModal';
 import { ActionFilters, type FilterOption } from './components/ActionFilters';
 import { DEMO_USER_ID } from '../../services/demoData';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import projectsIcon from '../../assets/Projects.webp';
+import timerIcon from '../../assets/Timer.webp';
+import taskIcon from '../../assets/Task.webp';
 import './ActionsTab.css';
 
 // Constants
@@ -421,7 +424,9 @@ export function ActionsTab({
                 onClick={onNavigateToProjects}
                 aria-label="Open projects"
               >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">📦</span>
+                <span className="actions-tab__launcher-icon" aria-hidden="true">
+                  <img className="actions-tab__launcher-icon-image" src={projectsIcon} alt="" />
+                </span>
                 <span className="actions-tab__launcher-label">Projects</span>
               </button>
             )}
@@ -432,7 +437,9 @@ export function ActionsTab({
                 onClick={onNavigateToTimer}
                 aria-label="Open timer"
               >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">⏱️</span>
+                <span className="actions-tab__launcher-icon" aria-hidden="true">
+                  <img className="actions-tab__launcher-icon-image" src={timerIcon} alt="" />
+                </span>
                 <span className="actions-tab__launcher-label">Timer</span>
               </button>
             )}
@@ -442,7 +449,9 @@ export function ActionsTab({
               onClick={() => setActiveView('tasks')}
               aria-label="Open tasks list"
             >
-              <span className="actions-tab__launcher-icon" aria-hidden="true">🗂️</span>
+              <span className="actions-tab__launcher-icon" aria-hidden="true">
+                <img className="actions-tab__launcher-icon-image" src={taskIcon} alt="" />
+              </span>
               <span className="actions-tab__launcher-label">Tasks</span>
             </button>
           </div>
