@@ -2872,13 +2872,6 @@ export default function App() {
           ×
         </button>
         <div className="daily-treats-modal__content">
-          <header className="daily-treats-modal__header">
-            <p className="daily-treats-modal__eyebrow">Daily Treats</p>
-            <h3 className="daily-treats-modal__title">Choose your reward path</h3>
-            <p className="daily-treats-modal__subtitle">
-              Pick a treat to keep your streak and surprises rolling.
-            </p>
-          </header>
           <div className="daily-treats-modal__cards">
             <button
               type="button"
