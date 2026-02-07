@@ -17,6 +17,65 @@
 - Ensure **all interactions** (spin, claim, purchase) are **optimized for mobile** first.
 - Only after mobile is correct, scale up to tablet/desktop breakpoints.
 
+## AI Vibecoding Ready Execution Plan
+Designed for AI vibecoding sessions that need repo-aware context, granular tasks, and session-to-session continuity.
+
+### Pre-flight Repo Scan (Every Session)
+**Objective:** Rebuild context so the AI can integrate changes safely.
+
+**Mandatory scan steps:**
+1. Confirm current branch + clean working tree.
+2. Read **this plan**, the **status doc**, and the **QA checklist**.
+3. Scan for relevant files with `rg`:
+   - `rg -n "spin wheel|daily spin|spin" docs src`
+   - `rg -n "economy|points|zen tokens" src docs`
+4. Identify feature entry points (likely candidates):
+   - UI: `src/features/spin-wheel/*`
+   - Hooks/services: `src/services/dailySpin.ts`, `src/hooks/useDailySpinStatus.ts`
+   - Economy rules: `src/constants/economy.ts`
+5. Record scan results in the session log (see template below).
+
+**If scan reveals conflicts (duplicate docs, out-of-date specs):**
+- Mark the conflict in the session log.
+- Propose which doc becomes the source of truth before implementation begins.
+
+### Granular Build Plan (Per Session)
+Every session must execute **one or more** atomic tasks that can be completed and verified in <60 minutes.
+
+**Atomic task template:**
+1. **Intent:** One sentence (e.g., “Add mystery-slot reveal UI state.”)
+2. **Scope:** Files to touch.
+3. **Implementation steps:** 3–7 bullets, each verifiable.
+4. **Validation:** How to confirm (unit test, manual UI, or console checks).
+5. **Risk notes:** Any dependency or follow-up required.
+
+### Session Output Requirements
+At the end of each session, update:
+- `docs/DAILY_SPIN_WHEEL_ECONOMY_STATUS.md` (status + evidence).
+- The **Session Log** section below (one new entry, append-only).
+
+### Session Log (Append Only)
+**Template:**
+```
+#### YYYY-MM-DD — <session title>
+- Intent:
+- Repo scan summary:
+- Files touched:
+- Key decisions:
+- Status changes:
+- Validation done:
+- Follow-ups:
+```
+
+#### 2025-09-29 — Expand plan for AI vibecoding sessions
+- Intent: Add repo-scan workflow, session logging, and a daily delight Step 0.
+- Repo scan summary: Not executed (documentation-only update).
+- Files touched: `docs/DAILY_SPIN_WHEEL_ECONOMY_PLAN.md`, `docs/DAILY_SPIN_WHEEL_ECONOMY_STATUS.md`.
+- Key decisions: Added AI vibecoding pre-flight scan + atomic task template; added Step 0 checklist.
+- Status changes: Step 0 added as Not Started.
+- Validation done: Docs-only update.
+- Follow-ups: Execute repo scan at the start of next implementation session.
+
 ## System Brain (Economy Matrix)
 A single, explicit source of truth for how points are earned/spent.
 
@@ -35,6 +94,20 @@ A single, explicit source of truth for how points are earned/spent.
 **Code source of truth:** `src/constants/economy.ts` (mirrors the matrix below).
 
 ## Step-by-step Plan with Prerequisite Checks
+
+### Step 0 — Daily Delight Strategy (Spin Wheel Refresh)
+**Objective:** Make the spin wheel feel creative and entertaining every day.
+
+**Checklist:**
+- [ ] Add daily **theme variants** (visual + audio mood).
+- [ ] Introduce **mystery slot** reveal (hidden reward until landing).
+- [ ] Add **bonus wheel** for streak milestones (3, 7, 14+).
+- [ ] Add **interactive stop** (tap-to-stop for bonus multiplier).
+- [ ] Add **daily modifier** (double-or-nothing, lucky number, etc.).
+- [ ] Add **micro-story/fortune** line tied to the reward.
+
+**Prerequisite check rule:**
+- Any visual or UX changes must keep the mobile-first constraints and not block core spin flow.
 
 ### Step 1 — Validate Existing Systems (Prereqs)
 **Objective:** Ensure the current gamification and spin wheel systems are actually present and working.
