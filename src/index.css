@@ -16326,8 +16326,13 @@ body {
 }
 
 @media (max-width: 640px) {
+  .daily-treats-modal,
+  .daily-treats-placeholder {
+    padding: 1rem;
+  }
+
   .daily-treats-modal__dialog {
-    width: 98vw;
+    width: 100vw;
   }
 
   .daily-treats-modal__content {
@@ -16562,7 +16567,7 @@ body {
 }
 
 .daily-treats-modal__content {
-  background: rgba(11, 18, 32, 0.78);
+  background: rgba(11, 18, 32, 0.45);
   border-radius: 20px;
   padding: 1.55rem 1.35rem 1.5rem;
   color: #f8fafc;
@@ -16589,6 +16594,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+  margin-top: 2rem;
 }
 
 .daily-treats-modal__card {
@@ -16599,7 +16605,7 @@ body {
   padding: 0.86rem 0.8rem;
   border-radius: 19px;
   border: 1px solid rgba(250, 204, 21, 0.35);
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.4);
   text-align: left;
   cursor: pointer;
   color: inherit;
