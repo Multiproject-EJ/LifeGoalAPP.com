@@ -425,7 +425,11 @@ export function ActionsTab({
                 aria-label="Open projects"
               >
                 <span className="actions-tab__launcher-icon" aria-hidden="true">
-                  <img className="actions-tab__launcher-icon-image" src={projectsIcon} alt="" />
+                  <img
+                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                    src={projectsIcon}
+                    alt=""
+                  />
                 </span>
                 <span className="actions-tab__launcher-label">Projects</span>
               </button>
@@ -438,7 +442,11 @@ export function ActionsTab({
                 aria-label="Open timer"
               >
                 <span className="actions-tab__launcher-icon" aria-hidden="true">
-                  <img className="actions-tab__launcher-icon-image" src={timerIcon} alt="" />
+                  <img
+                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                    src={timerIcon}
+                    alt=""
+                  />
                 </span>
                 <span className="actions-tab__launcher-label">Timer</span>
               </button>
@@ -450,7 +458,11 @@ export function ActionsTab({
               aria-label="Open tasks list"
             >
               <span className="actions-tab__launcher-icon" aria-hidden="true">
-                <img className="actions-tab__launcher-icon-image" src={taskIcon} alt="" />
+                <img
+                  className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                  src={taskIcon}
+                  alt=""
+                />
               </span>
               <span className="actions-tab__launcher-label">Tasks</span>
             </button>

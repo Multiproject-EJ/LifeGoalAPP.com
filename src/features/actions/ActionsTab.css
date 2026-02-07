@@ -243,6 +243,11 @@
   object-fit: contain;
 }
 
+.actions-tab__launcher-icon-image--large {
+  width: min(15.6rem, 110%);
+  height: min(15.6rem, 110%);
+}
+
 .actions-tab__launcher-label {
   font-size: 1rem;
 }
