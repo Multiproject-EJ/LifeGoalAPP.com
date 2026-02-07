@@ -238,8 +238,8 @@
 }
 
 .actions-tab__launcher-icon-image {
-  width: min(6.5rem, 92%);
-  height: min(6.5rem, 92%);
+  width: min(13rem, 92%);
+  height: min(13rem, 92%);
   object-fit: contain;
 }
 
