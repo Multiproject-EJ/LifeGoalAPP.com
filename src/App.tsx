@@ -2873,82 +2873,115 @@ export default function App() {
         </button>
         <div className="daily-treats-modal__content">
           <div className="daily-treats-modal__cards">
-            <button
-              type="button"
-              className={`daily-treats-modal__card${
-                dailyTreatsInventory.spinsRemaining === 0
-                  ? ' daily-treats-modal__card--spent'
-                  : hasOpenedDailyTreatsToday
-                    ? ' daily-treats-modal__card--opened'
-                    : ' daily-treats-modal__card--active'
-              }`}
-              disabled={dailyTreatsInventory.spinsRemaining === 0}
-              onClick={() => {
-                setShowDailyTreatsMenu(false);
-                setShowDailySpinWheel(true);
-              }}
-            >
-              <span className="daily-treats-modal__card-image" aria-hidden="true">
-                <img src={dailyTreatsSpinWheel} alt="" />
-              </span>
-              <span className="daily-treats-modal__card-title">Life Spin</span>
-              {dailyTreatsInventory.spinsRemaining > 0 ? (
-                <span className="daily-treats-modal__card-indicator" aria-label="Available spins">
-                  {dailyTreatsInventory.spinsRemaining}
+            <div className="daily-treats-modal__card-stack">
+              <button
+                type="button"
+                className={`daily-treats-modal__card${
+                  dailyTreatsInventory.spinsRemaining === 0
+                    ? ' daily-treats-modal__card--spent'
+                    : hasOpenedDailyTreatsToday
+                      ? ' daily-treats-modal__card--opened'
+                      : ' daily-treats-modal__card--active'
+                }`}
+                disabled={dailyTreatsInventory.spinsRemaining === 0}
+                onClick={() => {
+                  setShowDailyTreatsMenu(false);
+                  setShowDailySpinWheel(true);
+                }}
+              >
+                <span className="daily-treats-modal__card-image" aria-hidden="true">
+                  <img src={dailyTreatsSpinWheel} alt="" />
                 </span>
-              ) : null}
-              {shouldShowPointsBadges && spinGoldRange ? (
-                <PointsBadge value={spinGoldRange} className="daily-treats-modal__points-badge" />
-              ) : null}
-            </button>
-            <button
-              type="button"
-              className={`daily-treats-modal__card${
-                dailyTreatsInventory.heartsRemaining === 0
-                  ? ' daily-treats-modal__card--spent'
-                  : hasOpenedDailyTreatsToday
-                    ? ' daily-treats-modal__card--opened'
-                    : ' daily-treats-modal__card--active'
-              }`}
-              disabled={dailyTreatsInventory.heartsRemaining === 0}
-              onClick={() => {
-                setShowDailyTreatsMenu(false);
-                setShowLeaguePlaceholder(true);
-              }}
-            >
-              <span className="daily-treats-modal__card-image" aria-hidden="true">
-                <img src={dailyTreatsHearts} alt="" />
-              </span>
-              <span className="daily-treats-modal__card-title">League Energy</span>
-              {dailyTreatsInventory.heartsRemaining > 0 ? (
-                <span className="daily-treats-modal__card-indicator" aria-label="Available hearts">
-                  {dailyTreatsInventory.heartsRemaining}
+                {dailyTreatsInventory.spinsRemaining > 0 ? (
+                  <span className="daily-treats-modal__card-indicator" aria-label="Available spins">
+                    {dailyTreatsInventory.spinsRemaining}
+                  </span>
+                ) : null}
+              </button>
+              <button
+                type="button"
+                className="daily-treats-modal__card-action daily-treats-modal__card-action--spin"
+                disabled={dailyTreatsInventory.spinsRemaining === 0}
+                onClick={() => {
+                  setShowDailyTreatsMenu(false);
+                  setShowDailySpinWheel(true);
+                }}
+              >
+                SPIN
+              </button>
+            </div>
+            <div className="daily-treats-modal__card-stack">
+              <button
+                type="button"
+                className={`daily-treats-modal__card${
+                  dailyTreatsInventory.heartsRemaining === 0
+                    ? ' daily-treats-modal__card--spent'
+                    : hasOpenedDailyTreatsToday
+                      ? ' daily-treats-modal__card--opened'
+                      : ' daily-treats-modal__card--active'
+                }`}
+                disabled={dailyTreatsInventory.heartsRemaining === 0}
+                onClick={() => {
+                  setShowDailyTreatsMenu(false);
+                  setShowLeaguePlaceholder(true);
+                }}
+              >
+                <span className="daily-treats-modal__card-image" aria-hidden="true">
+                  <img src={dailyTreatsHearts} alt="" />
                 </span>
-              ) : null}
-            </button>
-            <button
-              type="button"
-              className={`daily-treats-modal__card${
-                dailyTreatsInventory.hatchesRemaining === 0
-                  ? ' daily-treats-modal__card--spent'
-                  : hasOpenedDailyTreatsToday
-                    ? ' daily-treats-modal__card--opened'
-                    : ' daily-treats-modal__card--active'
-              }`}
-              disabled={dailyTreatsInventory.hatchesRemaining === 0}
-              onClick={() => {
-                setShowDailyTreatsMenu(false);
-                setShowCalendarPlaceholder(true);
-              }}
-            >
-              <span className="daily-treats-modal__card-image" aria-hidden="true">
-                <img src={dailyTreatsCalendarOpen} alt="" />
-              </span>
-              <span className="daily-treats-modal__card-title">Daily Hatch</span>
-              {dailyTreatsInventory.hatchesRemaining > 0 ? (
-                <span className="daily-treats-modal__card-indicator" aria-label="Daily hatch ready" />
-              ) : null}
-            </button>
+                {dailyTreatsInventory.heartsRemaining > 0 ? (
+                  <span className="daily-treats-modal__card-indicator" aria-label="Available hearts">
+                    {dailyTreatsInventory.heartsRemaining}
+                  </span>
+                ) : null}
+              </button>
+              <button
+                type="button"
+                className="daily-treats-modal__card-action"
+                disabled={dailyTreatsInventory.heartsRemaining === 0}
+                onClick={() => {
+                  setShowDailyTreatsMenu(false);
+                  setShowLeaguePlaceholder(true);
+                }}
+              >
+                PLAY
+              </button>
+            </div>
+            <div className="daily-treats-modal__card-stack">
+              <button
+                type="button"
+                className={`daily-treats-modal__card${
+                  dailyTreatsInventory.hatchesRemaining === 0
+                    ? ' daily-treats-modal__card--spent'
+                    : hasOpenedDailyTreatsToday
+                      ? ' daily-treats-modal__card--opened'
+                      : ' daily-treats-modal__card--active'
+                }`}
+                disabled={dailyTreatsInventory.hatchesRemaining === 0}
+                onClick={() => {
+                  setShowDailyTreatsMenu(false);
+                  setShowCalendarPlaceholder(true);
+                }}
+              >
+                <span className="daily-treats-modal__card-image" aria-hidden="true">
+                  <img src={dailyTreatsCalendarOpen} alt="" />
+                </span>
+                {dailyTreatsInventory.hatchesRemaining > 0 ? (
+                  <span className="daily-treats-modal__card-indicator" aria-label="Daily hatch ready" />
+                ) : null}
+              </button>
+              <button
+                type="button"
+                className="daily-treats-modal__card-action"
+                disabled={dailyTreatsInventory.hatchesRemaining === 0}
+                onClick={() => {
+                  setShowDailyTreatsMenu(false);
+                  setShowCalendarPlaceholder(true);
+                }}
+              >
+                OPEN
+              </button>
+            </div>
           </div>
         </div>
       </div>
