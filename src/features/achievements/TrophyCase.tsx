@@ -1,12 +1,13 @@
 import type { TrophyItem, UserTrophy } from '../../types/gamification';
 import { splitGoldBalance } from '../../constants/economy';
 
-const DEFAULT_LOCKED_LABEL = 'Unlock with gold in the shop.';
+const DEFAULT_LOCKED_LABEL = 'Unlock with diamonds in the shop.';
 
 type Props = {
   trophies: TrophyItem[];
   ownedTrophies: UserTrophy[];
   currentGold: number;
+  unlockedTiers: Array<'bronze' | 'silver' | 'gold' | 'diamond'>;
   isLoading: boolean;
   error: string | null;
   message: { type: 'success' | 'error'; text: string } | null;
@@ -18,6 +19,7 @@ export function TrophyCase({
   trophies,
   ownedTrophies,
   currentGold,
+  unlockedTiers,
   isLoading,
   error,
   message,
@@ -26,10 +28,10 @@ export function TrophyCase({
 }: Props) {
   const ownedIds = new Set(ownedTrophies.map(item => item.trophyId));
   const goldBreakdown = splitGoldBalance(currentGold);
-  const goldValueLabel =
-    goldBreakdown.diamonds > 0
-      ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
-      : `🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`;
+  const diamondBalance = goldBreakdown.diamonds;
+  const diamondValueLabel = `💎 ${diamondBalance.toLocaleString()}`;
+  const qualifiesForTier = (tier?: 'bronze' | 'silver' | 'gold' | 'diamond') =>
+    !tier || unlockedTiers.includes(tier);
 
   return (
     <section className="trophy-case">
@@ -38,12 +40,12 @@ export function TrophyCase({
           <p className="trophy-case__eyebrow">Trophy Case</p>
           <h2 className="trophy-case__title">🏅 Trophies & Plaques</h2>
           <p className="trophy-case__subtitle">
-            Spend gold to unlock cosmetic accolades and show off your progress.
+            Unlock achievements to earn the right to buy collectible plaques and jewelry with diamonds.
           </p>
         </div>
         <div className="trophy-case__balance">
-          <span className="trophy-case__balance-label">Gold</span>
-          <span className="trophy-case__balance-value">{goldValueLabel}</span>
+          <span className="trophy-case__balance-label">Diamonds</span>
+          <span className="trophy-case__balance-value">{diamondValueLabel}</span>
         </div>
       </div>
 
@@ -66,7 +68,11 @@ export function TrophyCase({
         <div className="trophy-case__grid four-by-three-grid">
           {trophies.map(trophy => {
             const owned = ownedIds.has(trophy.id);
-            const canAfford = currentGold >= trophy.costGold;
+            const canAfford = diamondBalance >= trophy.costDiamonds;
+            const isQualified = qualifiesForTier(trophy.requiredTier);
+            const lockedLabel = trophy.requiredTier
+              ? `Unlock a ${trophy.requiredTier} achievement to purchase.`
+              : DEFAULT_LOCKED_LABEL;
 
             return (
               <article
@@ -79,7 +85,7 @@ export function TrophyCase({
                 <h3 className="trophy-card__name">{trophy.name}</h3>
                 <p className="trophy-card__description">{trophy.description}</p>
                 <div className="trophy-card__meta">
-                  <span className="trophy-card__cost">🪙 {trophy.costGold}</span>
+                  <span className="trophy-card__cost">💎 {trophy.costDiamonds}</span>
                   <span className="trophy-card__type">{trophy.category}</span>
                 </div>
                 <div className="trophy-card__footer">
@@ -87,14 +93,16 @@ export function TrophyCase({
                     <span className="trophy-card__status">Unlocked</span>
                   ) : (
                     <>
-                      <span className="trophy-card__lock">{DEFAULT_LOCKED_LABEL}</span>
+                      <span className="trophy-card__lock">
+                        {isQualified ? DEFAULT_LOCKED_LABEL : lockedLabel}
+                      </span>
                       <button
                         type="button"
                         className="trophy-card__button"
                         onClick={() => onPurchase(trophy)}
-                        disabled={!canAfford}
+                        disabled={!canAfford || !isQualified}
                       >
-                        {canAfford ? 'Unlock' : 'Need more gold'}
+                        {!isQualified ? 'Earn the achievement' : canAfford ? 'Unlock' : 'Need more diamonds'}
                       </button>
                     </>
                   )}

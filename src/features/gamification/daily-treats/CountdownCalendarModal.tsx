@@ -8,6 +8,7 @@ import {
   type ScratchCardState,
 } from './scratchCard';
 import { ScratchCardReveal } from './ScratchCardReveal';
+import { awardDailyTreatGold } from '../../../services/dailyTreats';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
@@ -38,6 +39,12 @@ export const CountdownCalendarModal = ({
     setScratchState(loadScratchCardState(userId));
     setRevealResult(null);
   }, [isOpen, userId]);
+
+  useEffect(() => {
+    if (!revealResult || !userId) return;
+    if (revealResult.goldReward <= 0) return;
+    void awardDailyTreatGold(userId, revealResult.goldReward, `Cycle ${revealResult.cycle} Day ${revealResult.day}`);
+  }, [revealResult, userId]);
 
   if (!isOpen) return null;
 

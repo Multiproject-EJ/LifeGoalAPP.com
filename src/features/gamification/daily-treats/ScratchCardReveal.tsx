@@ -34,8 +34,9 @@ export const ScratchCardReveal = ({ result, onComplete }: ScratchCardRevealProps
   const hatchLabel = isToday ? "Today's hatch" : `Day ${result.day} hatch`;
   const hasReward = Boolean(result.numberReward || result.symbolReward);
   const rewardHeadline = hasReward ? 'Treat unlocked!' : 'No match today';
+  const goldReward = result.goldReward ?? 0;
   const rewardDetail = hasReward
-    ? 'Your streaks and number matches are updated in the tracker.'
+    ? `You earned 🪙 ${goldReward} gold from today’s treats.`
     : 'Keep collecting symbols to unlock the next bonus.';
 
   useEffect(() => {
@@ -141,6 +142,11 @@ export const ScratchCardReveal = ({ result, onComplete }: ScratchCardRevealProps
                 Collect more {result.symbol.name} symbols to earn a streak bonus.
               </p>
             )}
+            {goldReward > 0 ? (
+              <p>
+                Daily treat payout: <strong>🪙 {goldReward}</strong>
+              </p>
+            ) : null}
           </div>
         </div>
         <canvas

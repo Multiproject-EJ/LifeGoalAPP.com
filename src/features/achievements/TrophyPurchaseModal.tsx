@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { TrophyItem } from '../../types/gamification';
-import { splitGoldBalance } from '../../constants/economy';
+import { GOLD_PER_DIAMOND, splitGoldBalance } from '../../constants/economy';
 
 type Props = {
   trophy: TrophyItem;
@@ -32,17 +32,12 @@ export function TrophyPurchaseModal({ trophy, currentGold, isProcessing, onConfi
     };
   }, [onCancel]);
 
-  const remainingGold = currentGold - trophy.costGold;
+  const costInGold = trophy.costDiamonds * GOLD_PER_DIAMOND;
+  const remainingGold = currentGold - costInGold;
   const currentGoldBreakdown = splitGoldBalance(currentGold);
   const remainingGoldBreakdown = splitGoldBalance(remainingGold);
-  const currentGoldLabel =
-    currentGoldBreakdown.diamonds > 0
-      ? `💎 ${currentGoldBreakdown.diamonds.toLocaleString()} · 🪙 ${currentGoldBreakdown.goldRemainder.toLocaleString()}`
-      : `🪙 ${currentGoldBreakdown.goldRemainder.toLocaleString()}`;
-  const remainingGoldLabel =
-    remainingGoldBreakdown.diamonds > 0
-      ? `💎 ${remainingGoldBreakdown.diamonds.toLocaleString()} · 🪙 ${remainingGoldBreakdown.goldRemainder.toLocaleString()}`
-      : `🪙 ${remainingGoldBreakdown.goldRemainder.toLocaleString()}`;
+  const currentGoldLabel = `💎 ${currentGoldBreakdown.diamonds.toLocaleString()}`;
+  const remainingGoldLabel = `💎 ${remainingGoldBreakdown.diamonds.toLocaleString()}`;
 
   return (
     <dialog ref={dialogRef} className="trophy-purchase-modal">
@@ -58,7 +53,7 @@ export function TrophyPurchaseModal({ trophy, currentGold, isProcessing, onConfi
         <div className="trophy-purchase-modal__summary">
           <div>
             <span>Cost</span>
-            <strong>🪙 {trophy.costGold}</strong>
+            <strong>💎 {trophy.costDiamonds}</strong>
           </div>
           <div>
             <span>After unlock</span>

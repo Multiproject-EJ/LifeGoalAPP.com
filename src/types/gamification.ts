@@ -89,7 +89,8 @@ export interface TrophyItem {
   description: string;
   icon: string;
   category: 'trophy' | 'plaque' | 'medal';
-  costGold: number;
+  costDiamonds: number;
+  requiredTier?: 'bronze' | 'silver' | 'gold' | 'diamond';
 }
 
 export interface UserTrophy {
