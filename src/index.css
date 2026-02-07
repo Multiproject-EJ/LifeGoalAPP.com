@@ -4951,7 +4951,8 @@ body {
   border-radius: 18px;
   display: block;
   object-fit: cover;
-  box-shadow: 0 0 0 6px rgba(248, 250, 252, 0.75);
+  outline: 2px solid rgba(248, 250, 252, 0.7);
+  outline-offset: 2px;
   filter: drop-shadow(0 8px 18px rgba(79, 70, 229, 0.35));
   transform: scale(2);
   transform-origin: center;
