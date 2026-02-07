@@ -5,6 +5,7 @@ export type EconomySourceKey =
   | 'goals'
   | 'meditation'
   | 'spin_wheel'
+  | 'daily_treats'
   | 'achievements'
   | 'power_ups';
 
@@ -40,6 +41,7 @@ export const ECONOMY_MATRIX = {
     goals: 'Goal progress & milestones',
     meditation: 'Meditation, breathing, and mindfulness',
     spin_wheel: 'Daily spin wheel rewards',
+    daily_treats: 'Daily treats scratch card rewards',
     achievements: 'Achievements & streak milestones',
     power_ups: 'Power-up bonuses (XP multipliers, boosts)',
   } satisfies Record<EconomySourceKey, string>,
@@ -52,7 +54,7 @@ export const ECONOMY_MATRIX = {
     gold: {
       label: 'Gold',
       description: 'Spendable currency derived from XP (1 gold per 10 XP).',
-      earnedFrom: ['xp', 'spin_wheel', 'achievements'],
+      earnedFrom: ['xp', 'spin_wheel', 'achievements', 'daily_treats'],
     },
     zen_tokens: {
       label: 'Zen Tokens',

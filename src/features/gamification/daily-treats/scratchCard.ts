@@ -23,6 +23,7 @@ export type ScratchCardResult = {
   numbers: number[];
   numberReward: number | null;
   symbolReward: string | null;
+  goldReward: number;
 };
 
 export type RevealCardResult = ScratchCardResult;
@@ -51,6 +52,8 @@ export const DEFAULT_SYMBOLS: ScratchSymbol[] = [
 const RANDOM_BUFFER = new Uint32Array(1);
 const STORAGE_VERSION = 2;
 const STORAGE_KEY = 'lifegoal:daily-treats:scratch-card';
+const NUMBER_MATCH_GOLD_MULTIPLIER = 10;
+const SYMBOL_STREAK_GOLD_REWARD = 150;
 
 const safeLocalStorage = (() => {
   try {
@@ -266,6 +269,7 @@ export const revealScratchCard = (
       numbers: [],
       numberReward: null,
       symbolReward: null,
+      goldReward: 0,
     }
   );
 };
@@ -301,6 +305,7 @@ export const revealScratchCardForDay = (
       numbers: [],
       numberReward: null,
       symbolReward: null,
+      goldReward: 0,
     };
   }
 
@@ -320,6 +325,10 @@ export const revealScratchCardForDay = (
     state.symbolCounts[symbol.name] = 0;
   }
 
+  const goldReward =
+    (reward ? reward * NUMBER_MATCH_GOLD_MULTIPLIER : 0) +
+    (symbolReward ? SYMBOL_STREAK_GOLD_REWARD : 0);
+
   return {
     cycle: state.cycleIndex,
     day: targetDay,
@@ -327,5 +336,6 @@ export const revealScratchCardForDay = (
     numbers,
     numberReward: reward,
     symbolReward,
+    goldReward,
   };
 };

@@ -40,6 +40,12 @@ export function AchievementsPage({ session }: Props) {
   const [trophyMessage, setTrophyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
 
+  const unlockedTiers = achievements
+    .filter((achievement) => achievement.unlocked)
+    .map((achievement) => achievement.tier);
+  const qualifiesForTier = (tier?: TrophyItem['requiredTier']) =>
+    !tier || unlockedTiers.includes(tier);
+
   useEffect(() => {
     loadAchievements();
     loadTrophyCase();
@@ -98,6 +104,13 @@ export function AchievementsPage({ session }: Props) {
   };
 
   const handleTrophyPurchase = (trophy: TrophyItem) => {
+    if (!qualifiesForTier(trophy.requiredTier)) {
+      setTrophyMessage({
+        type: 'error',
+        text: `Unlock a ${trophy.requiredTier ?? 'new'} achievement to buy this reward.`,
+      });
+      return;
+    }
     setSelectedTrophy(trophy);
   };
 
@@ -108,7 +121,11 @@ export function AchievementsPage({ session }: Props) {
     setTrophyMessage(null);
 
     try {
-      const { data, error } = await purchaseTrophy(session.user.id, selectedTrophy.id);
+      const { data, error } = await purchaseTrophy(
+        session.user.id,
+        selectedTrophy.id,
+        qualifiesForTier(selectedTrophy.requiredTier)
+      );
 
       if (error) throw error;
 
@@ -262,6 +279,7 @@ export function AchievementsPage({ session }: Props) {
         trophies={trophies}
         ownedTrophies={ownedTrophies}
         currentGold={goldBalance}
+        unlockedTiers={unlockedTiers}
         isLoading={trophyLoading}
         error={trophyError}
         message={trophyMessage}

@@ -2,6 +2,7 @@ import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import type { TrophyItem, UserTrophy } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
+import { GOLD_PER_DIAMOND } from '../constants/economy';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -17,7 +18,8 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'Honor your earliest wins with a classic bronze trophy.',
     icon: '🏆',
     category: 'trophy',
-    costGold: 120,
+    costDiamonds: 1,
+    requiredTier: 'bronze',
   },
   {
     id: 'medal-focus-streak',
@@ -25,7 +27,8 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'A medal for staying locked in on the daily grind.',
     icon: '🥇',
     category: 'medal',
-    costGold: 220,
+    costDiamonds: 1,
+    requiredTier: 'bronze',
   },
   {
     id: 'plaque-momentum',
@@ -33,7 +36,8 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'Showcase the habits that are building unstoppable momentum.',
     icon: '🪪',
     category: 'plaque',
-    costGold: 300,
+    costDiamonds: 2,
+    requiredTier: 'silver',
   },
   {
     id: 'trophy-golden-leap',
@@ -41,7 +45,8 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'Celebrate a bold breakthrough with a gleaming gold trophy.',
     icon: '🏅',
     category: 'trophy',
-    costGold: 480,
+    costDiamonds: 3,
+    requiredTier: 'gold',
   },
   {
     id: 'medal-resilience',
@@ -49,7 +54,8 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'For bouncing back stronger after every challenge.',
     icon: '🎖️',
     category: 'medal',
-    costGold: 360,
+    costDiamonds: 2,
+    requiredTier: 'silver',
   },
   {
     id: 'plaque-legend',
@@ -57,7 +63,8 @@ const TROPHY_CATALOG: TrophyItem[] = [
     description: 'A premium plaque for the LifeGoal legends in the making.',
     icon: '💠',
     category: 'plaque',
-    costGold: 900,
+    costDiamonds: 5,
+    requiredTier: 'diamond',
   },
 ];
 
@@ -80,7 +87,8 @@ export async function fetchUserTrophies(userId: string): Promise<ServiceResponse
 
 export async function purchaseTrophy(
   userId: string,
-  trophyId: string
+  trophyId: string,
+  isQualified = true
 ): Promise<ServiceResponse<{ newGoldBalance: number; userTrophy: UserTrophy }>> {
   const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
 
@@ -101,12 +109,18 @@ export async function purchaseTrophy(
     return { data: null, error: new Error('You already own this accolade') };
   }
 
-  if (profile.total_points < trophy.costGold) {
-    return { data: null, error: new Error('Not enough gold to unlock this accolade') };
+  if (!isQualified) {
+    return { data: null, error: new Error('Unlock the required achievement tier to purchase this item') };
+  }
+
+  const costInGold = trophy.costDiamonds * GOLD_PER_DIAMOND;
+
+  if (profile.total_points < costInGold) {
+    return { data: null, error: new Error('Not enough diamonds to unlock this accolade') };
   }
 
   const now = new Date().toISOString();
-  const newBalance = profile.total_points - trophy.costGold;
+  const newBalance = profile.total_points - costInGold;
 
   if (!canUseSupabaseData()) {
     saveDemoProfile({ ...profile, total_points: newBalance });
@@ -126,8 +140,8 @@ export async function purchaseTrophy(
     userId,
     eventType: 'economy_spend',
     metadata: {
-      currency: 'gold',
-      amount: trophy.costGold,
+      currency: 'diamonds',
+      amount: trophy.costDiamonds,
       balance: newBalance,
       sourceType: 'trophy',
       sourceId: trophy.id,
