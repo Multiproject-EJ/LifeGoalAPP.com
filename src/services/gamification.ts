@@ -15,6 +15,7 @@ import type {
 } from '../types/gamification';
 import { XP_REWARDS, DEMO_PROFILE_KEY, DEMO_TRANSACTIONS_KEY, DEMO_ACHIEVEMENTS_KEY } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
+import { awardLevelUpTreeMilestones } from './impactTrees';
 
 // =====================================================
 // LEVEL CALCULATION FUNCTIONS
@@ -206,6 +207,12 @@ export async function awardXP(
         icon: '🆙',
         xp_reward: 0,
       });
+
+      awardLevelUpTreeMilestones(
+        userId,
+        Array.from({ length: newLevel - oldLevel }, (_, index) => oldLevel + index + 1),
+        new Date(),
+      );
     }
 
     // Check for achievement unlocks
@@ -292,6 +299,14 @@ async function awardXPDemo(
     created_at: new Date().toISOString(),
   });
   localStorage.setItem(DEMO_TRANSACTIONS_KEY, JSON.stringify(transactions));
+
+  if (leveledUp) {
+    awardLevelUpTreeMilestones(
+      userId,
+      Array.from({ length: newLevel - oldLevel }, (_, index) => oldLevel + index + 1),
+      new Date(),
+    );
+  }
 
   return {
     success: true,
