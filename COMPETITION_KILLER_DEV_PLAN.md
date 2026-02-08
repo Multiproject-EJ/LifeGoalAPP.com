@@ -1626,7 +1626,8 @@ WisdomTreeState {
 - [x] **P7.7** Log level-up milestones into the Tree of Life ledger
 - [x] **P7.8** Surface Tree of Life level-up milestone details in the impact ledger sheet (copy + metadata)
 - [x] **P7.9** Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks)
-- [ ] **P7.10** Define streak-based Tree of Life award rules (30-day streak trigger + copy)
+- [x] **P7.10** Define streak-based Tree of Life award rules (30-day streak trigger + copy)
+- [ ] **P7.11** Add Tree of Life streak award telemetry + surface streak growth moment in UI
 
 ---
 
@@ -1682,6 +1683,11 @@ WisdomTreeState {
   - **Step**: P1.4 Define reward evolution states + triggers  
   - **What changed**: Added reward evolution states, triggers, upgrade rules, and example mappings for MVP.  
   - **What’s next**: P1.5 Map Identity Engine vector logic (inputs → traits → outputs).
+
+- **2025-03-10**  
+  - **Step**: P7.10 Define streak-based Tree of Life award rules (30-day streak trigger + copy)  
+  - **What changed**: Added Tree of Life 30-day streak award logic and ledger entry copy, with a safeguarded milestone log.  
+  - **What’s next**: P7.11 Add Tree of Life streak award telemetry + surface streak growth moment in UI.
 
 - **2025-03-05**  
   - **Step**: P1.5 Map Identity Engine vector logic (inputs → traits → outputs)  

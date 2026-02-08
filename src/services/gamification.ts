@@ -15,7 +15,7 @@ import type {
 } from '../types/gamification';
 import { XP_REWARDS, DEMO_PROFILE_KEY, DEMO_TRANSACTIONS_KEY, DEMO_ACHIEVEMENTS_KEY } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
-import { awardLevelUpTreeMilestones } from './impactTrees';
+import { awardLevelUpTreeMilestones, awardStreakTreeMilestone } from './impactTrees';
 
 // =====================================================
 // LEVEL CALCULATION FUNCTIONS
@@ -406,6 +406,8 @@ export async function updateStreak(userId: string): Promise<UpdateStreakResult> 
       });
     }
 
+    awardStreakTreeMilestone(userId, newStreak, new Date());
+
     // Update profile
     await supabase
       .from('gamification_profiles')
@@ -477,6 +479,8 @@ async function updateStreakDemo(userId: string): Promise<UpdateStreakResult> {
   profile.longest_streak = newLongest;
   profile.last_activity_date = today;
   localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(profile));
+
+  awardStreakTreeMilestone(userId, newStreak, new Date());
 
   return {
     success: true,
