@@ -11,7 +11,7 @@ Use this section first when returning to the plan.
 | Milestone | Status | Next Task |
 |-----------|--------|-----------|
 | M0. Repo audit + integration map | ✅ Complete | Move to M1 onboarding discovery (inventory existing onboarding/intro flows). |
-| M1. Onboarding | 🟡 In progress | Validate onboarding routing and demo parity updates after flow map draft. |
+| M1. Onboarding | ✅ Complete | Move to M2 balance/harmony scoring discovery (define axes + thresholds). |
 | M2. Balance / Harmony scoring v1 | ☐ Not started | |
 | M3. Rationality micro-system v1 | ☐ Not started | |
 | M4. Auto-progress ladder v1 | ☐ Not started | |
@@ -89,7 +89,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 ### Slice checklist
 - [x] Slice 1: Audit onboarding entry points and add a local progress snapshot in account onboarding tools.
 - [x] Slice 2: Draft onboarding flow map (entry points + routing) with demo parity notes.
-- [ ] Slice 3: Validate onboarding routing, demo parity storage, and any missing entry points.
+- [x] Slice 3: Validate onboarding routing, demo parity storage, and any missing entry points.
 
 ### Draft onboarding flow map (entry points + routing)
 
@@ -375,3 +375,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M1 Slice 2 — Draft onboarding flow map + demo parity notes.  
   - **What changed**: Documented onboarding entry points, routing outcomes, and demo parity notes; captured the flow map in config for future reference.  
   - **What’s next**: Validate routing + demo parity storage and confirm any missing entry points.
+- **2026-02-09**  
+  - **Slice**: M1 Slice 3 — Validate onboarding routing, demo parity storage, and missing entry points.  
+  - **What changed**: Wired up the Day Zero quick start entry point, confirmed onboarding gating behavior, and aligned flow map notes with the updated launch options.  
+  - **What’s next**: Begin M2 balance/harmony scoring discovery (define axes + thresholds and draft dashboard panel requirements).

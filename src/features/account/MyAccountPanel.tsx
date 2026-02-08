@@ -23,6 +23,7 @@ type MyAccountPanelProps = {
   onSignOut: () => void | Promise<void>;
   onEditProfile: () => void;
   onLaunchOnboarding?: (options?: { reset?: boolean }) => void;
+  onLaunchDayZeroOnboarding?: (options?: { reset?: boolean }) => void;
   profile: WorkspaceProfileRow | null;
   stats: WorkspaceStats | null;
   profileLoading: boolean;
@@ -45,6 +46,7 @@ export function MyAccountPanel({
   onSignOut,
   onEditProfile,
   onLaunchOnboarding,
+  onLaunchDayZeroOnboarding,
   profile,
   stats,
   profileLoading,
@@ -95,7 +97,7 @@ export function MyAccountPanel({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!onLaunchOnboarding) return;
+    if (!onLaunchOnboarding && !onLaunchDayZeroOnboarding) return;
     const storageKey = `gol_onboarding_${session.user.id}`;
     const dayZeroKey = `day_zero_onboarding_${session.user.id}`;
     const storedValue = window.localStorage.getItem(storageKey);
@@ -125,7 +127,7 @@ export function MyAccountPanel({
     } catch {
       setOnboardingSnapshot('Stored onboarding progress is unreadable.');
     }
-  }, [onLaunchOnboarding, session.user.id]);
+  }, [onLaunchOnboarding, onLaunchDayZeroOnboarding, session.user.id]);
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -265,7 +267,7 @@ export function MyAccountPanel({
             <p className="account-panel__eyebrow">Onboarding</p>
             <h3 id="account-onboarding">Onboarding tools</h3>
             <p className="account-panel__hint">
-              Launch or restart the 20-step onboarding to preview every loop.
+              Launch the 20-step Game of Life onboarding or the Day Zero quick start.
             </p>
             <dl className="account-panel__details">
               <div>
@@ -282,6 +284,12 @@ export function MyAccountPanel({
                   <code>{`gol_onboarding_${session.user.id}`}</code>
                 </dd>
               </div>
+              <div>
+                <dt>Day 0 key</dt>
+                <dd>
+                  <code>{`day_zero_onboarding_${session.user.id}`}</code>
+                </dd>
+              </div>
             </dl>
             <div className="account-panel__actions-row">
               <button
@@ -291,6 +299,15 @@ export function MyAccountPanel({
               >
                 Launch onboarding
               </button>
+              {onLaunchDayZeroOnboarding ? (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => onLaunchDayZeroOnboarding()}
+                >
+                  Launch Day Zero quick start
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="btn btn--secondary"
@@ -298,6 +315,15 @@ export function MyAccountPanel({
               >
                 Restart 20-step onboarding
               </button>
+              {onLaunchDayZeroOnboarding ? (
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => onLaunchDayZeroOnboarding({ reset: true })}
+                >
+                  Restart Day Zero
+                </button>
+              ) : null}
             </div>
           </section>
         ) : null}
