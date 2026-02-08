@@ -1,0 +1,745 @@
+/* Lucky Roll Board - Visual Bible Color Palette */
+:root {
+  --lucky-roll-bg: #2c1810;
+  --lucky-roll-surface: #f5e6d3;
+  --lucky-roll-accent: #d4a574;
+  --lucky-roll-highlight: #ffd700;
+  --lucky-roll-danger: #c0392b;
+  --lucky-roll-token: #e67e22;
+  --lucky-roll-dice: #faf3e0;
+  --lucky-roll-text: #3d2b1f;
+  --lucky-roll-text-light: #f5e6d3;
+}
+
+/* Lucky Roll Board Container */
+.lucky-roll-board {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.lucky-roll-board__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.lucky-roll-board__container {
+  position: relative;
+  background: var(--lucky-roll-bg);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(212, 165, 116, 0.2);
+}
+
+/* Header */
+.lucky-roll-board__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.lucky-roll-board__title {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--lucky-roll-text-light);
+  margin: 0;
+  flex: 1;
+}
+
+.lucky-roll-board__lap {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--lucky-roll-accent);
+  background: rgba(212, 165, 116, 0.15);
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.lucky-roll-board__close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--lucky-roll-text-light);
+  font-size: 28px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease-out;
+}
+
+.lucky-roll-board__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lucky-roll-board__close:active {
+  transform: scale(0.95);
+}
+
+/* Status Bar */
+.lucky-roll-board__status {
+  display: flex;
+  justify-content: space-around;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(245, 230, 211, 0.1);
+  border-radius: 12px;
+}
+
+.lucky-roll-board__stat {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--lucky-roll-text-light);
+}
+
+/* Board Grid */
+.lucky-roll-board__grid {
+  margin-bottom: 20px;
+  background: rgba(245, 230, 211, 0.05);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.lucky-roll-board__row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.lucky-roll-board__row:last-child {
+  margin-bottom: 0;
+}
+
+/* Tiles */
+.lucky-roll-tile {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 1;
+  background: var(--lucky-roll-surface);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.lucky-roll-tile__emoji {
+  font-size: 20px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.lucky-roll-tile__index {
+  font-size: 10px;
+  color: var(--lucky-roll-text);
+  opacity: 0.5;
+  font-weight: 600;
+}
+
+/* Tile types */
+.lucky-roll-tile--neutral {
+  background: #e8dcc8;
+}
+
+.lucky-roll-tile--gain_coins {
+  background: #fff9e6;
+}
+
+.lucky-roll-tile--lose_coins {
+  background: #ffe6e6;
+}
+
+.lucky-roll-tile--bonus_dice {
+  background: #e6f3ff;
+}
+
+.lucky-roll-tile--game_token {
+  background: #f0e6ff;
+}
+
+.lucky-roll-tile--mini_game {
+  background: linear-gradient(135deg, #ffd89b 0%, #ffb347 100%);
+}
+
+.lucky-roll-tile--mystery {
+  background: linear-gradient(135deg, #dac8ff 0%, #b8a3ff 100%);
+}
+
+.lucky-roll-tile--jackpot {
+  background: linear-gradient(135deg, #fff9c4 0%, #ffd700 100%);
+}
+
+/* Tile states */
+.lucky-roll-tile--visited {
+  opacity: 0.6;
+  filter: saturate(0.7);
+}
+
+.lucky-roll-tile--current {
+  box-shadow: 0 0 0 3px var(--lucky-roll-token), 0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.lucky-roll-tile--landing {
+  animation: tile-land 0.3s ease-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 3px var(--lucky-roll-token), 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 3px var(--lucky-roll-token), 0 0 20px rgba(230, 126, 34, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes tile-land {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Token */
+.lucky-roll-token {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: token-hop 0.2s ease-out;
+}
+
+@keyframes token-hop {
+  0% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-4px);
+  }
+  100% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+}
+
+/* Dice Area */
+.lucky-roll-board__dice-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.lucky-roll-dice {
+  font-size: 48px;
+  font-weight: bold;
+  color: var(--lucky-roll-text-light);
+  padding: 16px 32px;
+  background: rgba(245, 230, 211, 0.15);
+  border-radius: 16px;
+  min-width: 140px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease-out;
+}
+
+.lucky-roll-dice--rolling {
+  animation: dice-tumble 0.8s ease-in-out;
+}
+
+.lucky-roll-dice--settled {
+  animation: dice-settle 0.4s ease-out;
+}
+
+@keyframes dice-tumble {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg) scale(1.1); }
+  50% { transform: rotate(180deg) scale(0.9); }
+  75% { transform: rotate(270deg) scale(1.1); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes dice-settle {
+  0% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Landed Effect */
+.lucky-roll-landed-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--lucky-roll-surface);
+  padding: 20px 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  z-index: 10;
+  animation: effect-reveal 1.5s ease-out forwards;
+}
+
+.lucky-roll-landed-effect__emoji {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.lucky-roll-landed-effect__label {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--lucky-roll-text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.lucky-roll-landed-effect__subtitle {
+  font-size: 14px;
+  color: var(--lucky-roll-accent);
+  display: block;
+}
+
+@keyframes effect-reveal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+/* Actions */
+.lucky-roll-board__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lucky-roll-board__roll-button {
+  background: linear-gradient(135deg, var(--lucky-roll-accent) 0%, #c89960 100%);
+  color: var(--lucky-roll-text);
+  border: none;
+  padding: 16px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease-out;
+  text-transform: uppercase;
+}
+
+.lucky-roll-board__roll-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e0b888 0%, #d4a574 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.lucky-roll-board__roll-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.lucky-roll-board__roll-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lucky-roll-board__shop-button {
+  background: rgba(245, 230, 211, 0.15);
+  color: var(--lucky-roll-text-light);
+  border: 2px solid var(--lucky-roll-accent);
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.lucky-roll-board__shop-button:hover {
+  background: rgba(245, 230, 211, 0.25);
+}
+
+.lucky-roll-board__shop-button:active {
+  transform: scale(0.95);
+}
+
+/* Lap Celebration */
+.lucky-roll-lap-celebration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  animation: lap-fade-in-out 2.3s ease-in-out forwards;
+}
+
+.lucky-roll-lap-celebration__content {
+  background: linear-gradient(135deg, var(--lucky-roll-accent) 0%, #c89960 100%);
+  padding: 32px 48px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lucky-roll-lap-celebration__icon {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.lucky-roll-lap-celebration__title {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--lucky-roll-text);
+  margin: 0 0 8px 0;
+}
+
+.lucky-roll-lap-celebration__subtitle {
+  font-size: 16px;
+  color: var(--lucky-roll-text);
+  opacity: 0.8;
+  margin: 0;
+}
+
+@keyframes lap-fade-in-out {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  17% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  83% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+/* Dice Shop */
+.lucky-roll-dice-shop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.lucky-roll-dice-shop__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.lucky-roll-dice-shop__container {
+  position: relative;
+  background: var(--lucky-roll-bg);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(212, 165, 116, 0.2);
+}
+
+/* Shop Header */
+.lucky-roll-dice-shop__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.lucky-roll-dice-shop__title {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--lucky-roll-text-light);
+  margin: 0;
+  flex: 1;
+}
+
+.lucky-roll-dice-shop__hearts {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--lucky-roll-highlight);
+  background: rgba(255, 215, 0, 0.15);
+  padding: 6px 16px;
+  border-radius: 12px;
+}
+
+.lucky-roll-dice-shop__close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--lucky-roll-text-light);
+  font-size: 28px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease-out;
+}
+
+.lucky-roll-dice-shop__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lucky-roll-dice-shop__close:active {
+  transform: scale(0.95);
+}
+
+/* Pack Cards */
+.lucky-roll-dice-shop__packs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.lucky-roll-pack-card {
+  position: relative;
+  background: var(--lucky-roll-surface);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.lucky-roll-pack-card--mystery {
+  background: linear-gradient(135deg, #f5e6d3 0%, #e8d9c7 100%);
+  border: 2px solid var(--lucky-roll-accent);
+}
+
+.lucky-roll-pack-card__title {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--lucky-roll-text);
+  margin: 0 0 12px 0;
+}
+
+.lucky-roll-pack-card__contents {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.lucky-roll-pack-card__item {
+  font-size: 14px;
+  color: var(--lucky-roll-text);
+  background: rgba(61, 43, 31, 0.08);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.lucky-roll-pack-card__item--mystery {
+  font-weight: 600;
+  color: var(--lucky-roll-accent);
+}
+
+.lucky-roll-pack-card__cost {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--lucky-roll-danger);
+  margin-bottom: 12px;
+}
+
+.lucky-roll-pack-card__button {
+  width: 100%;
+  background: linear-gradient(135deg, var(--lucky-roll-accent) 0%, #c89960 100%);
+  color: var(--lucky-roll-text);
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  text-transform: uppercase;
+}
+
+.lucky-roll-pack-card__button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e0b888 0%, #d4a574 100%);
+  transform: translateY(-2px);
+}
+
+.lucky-roll-pack-card__button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.lucky-roll-pack-card__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lucky-roll-pack-card__badge {
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  background: var(--lucky-roll-highlight);
+  color: var(--lucky-roll-text);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Mystery Reveal */
+.lucky-roll-mystery-reveal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  animation: mystery-reveal 3s ease-out forwards;
+}
+
+.lucky-roll-mystery-reveal__content {
+  background: linear-gradient(135deg, var(--lucky-roll-highlight) 0%, #ffc700 100%);
+  padding: 32px 48px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lucky-roll-mystery-reveal__title {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--lucky-roll-text);
+  margin: 0 0 16px 0;
+}
+
+.lucky-roll-mystery-reveal__prizes {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.lucky-roll-mystery-reveal__prize {
+  font-size: 32px;
+  font-weight: bold;
+  color: var(--lucky-roll-text);
+}
+
+@keyframes mystery-reveal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(-10deg);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1) rotate(5deg);
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+  }
+}
+
+/* Shop Actions */
+.lucky-roll-dice-shop__actions {
+  display: flex;
+  justify-content: center;
+}
+
+.lucky-roll-dice-shop__back-button {
+  background: rgba(245, 230, 211, 0.15);
+  color: var(--lucky-roll-text-light);
+  border: 2px solid var(--lucky-roll-accent);
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.lucky-roll-dice-shop__back-button:hover {
+  background: rgba(245, 230, 211, 0.25);
+}
+
+.lucky-roll-dice-shop__back-button:active {
+  transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 400px) {
+  .lucky-roll-tile__emoji {
+    font-size: 16px;
+  }
+  
+  .lucky-roll-token {
+    font-size: 24px;
+  }
+  
+  .lucky-roll-dice {
+    font-size: 40px;
+    padding: 12px 24px;
+  }
+}

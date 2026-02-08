@@ -273,8 +273,8 @@ export function purchaseDicePack(
   // Deduct hearts
   balance.hearts -= pack.heartCost;
 
-  let diceAwarded = pack.diceCount;
-  let tokensAwarded = pack.tokenCount;
+  let diceAwarded: number = pack.diceCount;
+  let tokensAwarded: number = pack.tokenCount;
   let tier: string | undefined;
 
   // Handle mystery box with smart distribution
@@ -297,8 +297,8 @@ export function purchaseDicePack(
       tokenTier = selectWeightedTier(decentOrBetterTokens);
     }
 
-    diceAwarded = getRandomIntInclusive(diceTier.min, diceTier.max);
-    tokensAwarded = getRandomIntInclusive(tokenTier.min, tokenTier.max);
+    diceAwarded = getRandomIntInclusive(diceTier.min, diceTier.max) as number;
+    tokensAwarded = getRandomIntInclusive(tokenTier.min, tokenTier.max) as number;
     tier = `${diceTier.label} (${diceAwarded} dice, ${tokensAwarded} tokens)`;
   }
 

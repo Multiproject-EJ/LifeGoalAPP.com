@@ -48,6 +48,7 @@ import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
+import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
 import {
@@ -335,7 +336,7 @@ export default function App() {
   const [showQuickGainsMenu, setShowQuickGainsMenu] = useState(false);
   const [quickGainsHabitText, setQuickGainsHabitText] = useState('');
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
-  const [showLeaguePlaceholder, setShowLeaguePlaceholder] = useState(false);
+  const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
@@ -2968,7 +2969,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.heartsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
-                  setShowLeaguePlaceholder(true);
+                  setShowLuckyRoll(true);
                 }}
               >
                 <span className="daily-treats-modal__card-image" aria-hidden="true">
@@ -2986,7 +2987,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.heartsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
-                  setShowLeaguePlaceholder(true);
+                  setShowLuckyRoll(true);
                 }}
               >
                 PLAY
@@ -3117,38 +3118,11 @@ export default function App() {
     </div>
   ) : null;
 
-  const leaguePlaceholderModal = showLeaguePlaceholder ? (
-    <div className="daily-treats-placeholder" role="dialog" aria-modal="true" aria-label="League game">
-      <div
-        className="daily-treats-placeholder__backdrop"
-        onClick={() => setShowLeaguePlaceholder(false)}
-        role="presentation"
-      />
-      <div className="daily-treats-placeholder__dialog">
-        <button
-          type="button"
-          className="daily-treats-placeholder__close"
-          aria-label="Close league game placeholder"
-          onClick={() => setShowLeaguePlaceholder(false)}
-        >
-          ×
-        </button>
-        <div className="daily-treats-placeholder__content">
-          <p className="daily-treats-placeholder__eyebrow">League Game</p>
-          <h3 className="daily-treats-placeholder__title">Challenge mode is loading</h3>
-          <p className="daily-treats-placeholder__text">
-            We’re prepping team matchups, daily leaderboards, and friendly rival rewards.
-          </p>
-          <button
-            type="button"
-            className="daily-treats-placeholder__button"
-            onClick={() => setShowLeaguePlaceholder(false)}
-          >
-            Got it
-          </button>
-        </div>
-      </div>
-    </div>
+  const luckyRollModal = showLuckyRoll && activeSession ? (
+    <LuckyRollBoard
+      session={activeSession}
+      onClose={() => setShowLuckyRoll(false)}
+    />
   ) : null;
 
   const countdownCalendarModal = (
@@ -3208,7 +3182,7 @@ export default function App() {
         {quickGainsModal}
         {dailyTreatsCongratsModal}
         {dailyTreatsModal}
-        {leaguePlaceholderModal}
+        {luckyRollModal}
         {countdownCalendarModal}
       </>
     );
@@ -3458,7 +3432,7 @@ export default function App() {
       )}
       {quickGainsModal}
       {dailyTreatsModal}
-      {leaguePlaceholderModal}
+      {luckyRollModal}
       {countdownCalendarModal}
 
       {/* Quick Actions FAB - visible app-wide */}
