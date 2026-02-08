@@ -1750,11 +1750,17 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
                   const sourceConfig = IMPACT_TREE_SOURCE_CONFIG[entry.source];
                   const title = sourceConfig?.label ?? 'Growth milestone';
                   const detail = entry.notes ?? sourceConfig?.fallbackDetail ?? null;
+                  const isStreakMilestone = entry.source === 'streak_30';
 
                   return (
                     <li key={entry.id} className="progress-dashboard__impact-sheet-row">
                       <div>
-                        <p className="progress-dashboard__impact-sheet-title">{title}</p>
+                        <div className="progress-dashboard__impact-sheet-title-row">
+                          <p className="progress-dashboard__impact-sheet-title">{title}</p>
+                          {isStreakMilestone ? (
+                            <span className="progress-dashboard__impact-sheet-tag">Streak milestone</span>
+                          ) : null}
+                        </div>
                         {detail ? (
                           <p className="progress-dashboard__impact-sheet-detail">{detail}</p>
                         ) : null}

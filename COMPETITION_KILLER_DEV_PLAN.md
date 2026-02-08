@@ -1628,6 +1628,7 @@ WisdomTreeState {
 - [x] **P7.9** Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks)
 - [x] **P7.10** Define streak-based Tree of Life award rules (30-day streak trigger + copy)
 - [x] **P7.11** Add Tree of Life streak award telemetry + surface streak growth moment in UI
+- [x] **P7.12** Add streak milestone tagging in the Tree of Life ledger UI
 
 ---
 
@@ -1702,7 +1703,12 @@ WisdomTreeState {
 - **2025-03-11**  
   - **Step**: P7.11 Add Tree of Life streak award telemetry + surface streak growth moment in UI  
   - **What changed**: Added streak award telemetry and a UI celebration that surfaces Tree of Life streak growth moments from the impact ledger.  
-  - **What’s next**: Choose the next roadmap slice and define the next build step.
+  - **What’s next**: P7.12 Add streak milestone tagging in the Tree of Life ledger UI.
+
+- **2025-03-11**  
+  - **Step**: P7.12 Add streak milestone tagging in the Tree of Life ledger UI  
+  - **What changed**: Added a streak milestone tag in the Tree of Life ledger list to highlight streak-based growth moments.  
+  - **What’s next**: Define the next roadmap slice for post-MVP polish (small, config-first).
 
 - **2025-03-05**  
   - **Step**: P2.2 Day 2–7 prompts + UI touchpoints  

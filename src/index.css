@@ -9195,10 +9195,29 @@ body {
   background: rgba(148, 163, 184, 0.12);
 }
 
+.progress-dashboard__impact-sheet-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .progress-dashboard__impact-sheet-title {
   margin: 0;
   font-weight: 600;
   color: #0f172a;
+}
+
+.progress-dashboard__impact-sheet-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(14, 116, 144, 0.12);
+  color: #0f766e;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .progress-dashboard__impact-sheet-detail {
