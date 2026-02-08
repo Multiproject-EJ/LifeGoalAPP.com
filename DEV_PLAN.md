@@ -11,7 +11,7 @@ Use this section first when returning to the plan.
 | Milestone | Status | Next Task |
 |-----------|--------|-----------|
 | M0. Repo audit + integration map | ✅ Complete | Move to M1 onboarding discovery (inventory existing onboarding/intro flows). |
-| M1. Onboarding | ☐ Not started | Audit current onboarding/intro routes and demo state handling. |
+| M1. Onboarding | 🟡 In progress | Draft onboarding flow map + demo parity notes for Game of Life 2.0 onboarding. |
 | M2. Balance / Harmony scoring v1 | ☐ Not started | |
 | M3. Rationality micro-system v1 | ☐ Not started | |
 | M4. Auto-progress ladder v1 | ☐ Not started | |
@@ -85,6 +85,10 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 
 **Test notes**
 - Manual walkthrough for new routes; verify no console errors.
+
+### Slice checklist
+- [x] Slice 1: Audit onboarding entry points and add a local progress snapshot in account onboarding tools.
+- [ ] Slice 2: Draft onboarding flow map (entry points + routing) with demo parity notes.
 
 ---
 
@@ -333,3 +337,18 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 
 **Test notes**
 - Documentation review only.
+
+---
+
+## Progress Log (Living Changelog)
+
+> **Format**  
+> - **Date**:  
+> - **Slice**:  
+> - **What changed**:  
+> - **What’s next**:  
+
+- **2026-02-08**  
+  - **Slice**: M1 Slice 1 — Audit onboarding entry points + local progress snapshot.  
+  - **What changed**: Added an onboarding progress snapshot to the account onboarding tools and documented the completed slice in M1.  
+  - **What’s next**: Draft the onboarding flow map and demo parity notes for Game of Life 2.0 onboarding.
