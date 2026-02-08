@@ -48,6 +48,7 @@ import type { JournalEntry } from '../../services/journal';
 import { recordBalanceShiftEvent, recordTelemetryEvent } from '../../services/telemetry';
 import {
   awardWeeklyClosureTree,
+  consumeImpactTreeCelebration,
   getImpactTreeLedger,
   hasWeeklyTreeAward,
   type ImpactTreeEntry,
@@ -240,6 +241,10 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     setImpactLedger(summary.entries);
     setImpactTotal(summary.total);
     setImpactWeeklyAwarded(hasWeeklyTreeAward(session.user.id, today));
+    const celebration = consumeImpactTreeCelebration(session.user.id);
+    if (celebration) {
+      setImpactCelebration(celebration);
+    }
   }, [session?.user?.id, today]);
 
   const refreshDashboard = useCallback(async () => {
@@ -1587,6 +1592,15 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     setTouchStartX(null);
   };
 
+  const impactCelebrationConfig = impactCelebration
+    ? IMPACT_TREE_SOURCE_CONFIG[impactCelebration.source]
+    : null;
+  const impactCelebrationTitle = impactCelebrationConfig?.label ?? 'Tree of Life grows';
+  const impactCelebrationDetail =
+    impactCelebration?.notes ??
+    impactCelebrationConfig?.fallbackDetail ??
+    'Your Tree of Life grew stronger.';
+
   return (
     <section className="progress-dashboard">
       {showIdeasPage ? <DeveloperIdeasPage onClose={() => setShowIdeasPage(false)} /> : null}
@@ -1687,8 +1701,8 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             <span className="progress-dashboard__impact-modal-emoji" aria-hidden="true">
               🌲
             </span>
-            <h3>Tree of Life grows</h3>
-            <p>You watered the Tree of Life this week. Keep nurturing your path.</p>
+            <h3>{impactCelebrationTitle}</h3>
+            <p>{impactCelebrationDetail}</p>
             <button
               type="button"
               className="progress-dashboard__impact-modal-button"

@@ -18,7 +18,8 @@ export type TelemetryEventType =
   | 'intervention_accepted'
   | 'micro_quest_completed'
   | 'economy_earn'
-  | 'economy_spend';
+  | 'economy_spend'
+  | 'tree_streak_award';
 
 export type TelemetryEventMetadata = Json;
 
