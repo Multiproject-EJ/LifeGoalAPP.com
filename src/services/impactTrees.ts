@@ -14,6 +14,15 @@ export type ImpactTreeEntry = {
 const LEDGER_STORAGE_KEY = 'lifegoal_tree_of_life_ledger';
 const WEEKLY_AWARD_KEY = 'lifegoal_impact_trees_weekly_awards';
 const LEVEL_AWARD_KEY = 'lifegoal_impact_trees_level_awards';
+const STREAK_AWARD_KEY = 'lifegoal_impact_trees_streak_awards';
+
+const STREAK_TREE_MILESTONES: Record<number, { source: ImpactTreeSource; notes: string; amount: number }> = {
+  30: {
+    source: 'streak_30',
+    amount: 1,
+    notes: '30-day streak honored. Your Tree of Life grew stronger.',
+  },
+};
 
 function getStorageKey(base: string, userId: string): string {
   return `${base}:${userId}`;
@@ -96,6 +105,33 @@ function writeLevelAwards(userId: string, levels: number[]): void {
     );
   } catch (error) {
     console.warn('Unable to persist Tree of Life level awards.', error);
+  }
+}
+
+function readStreakAwards(userId: string): number[] {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const raw = window.localStorage.getItem(getStorageKey(STREAK_AWARD_KEY, userId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as number[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Unable to read Tree of Life streak awards.', error);
+    return [];
+  }
+}
+
+function writeStreakAwards(userId: string, streaks: number[]): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(
+      getStorageKey(STREAK_AWARD_KEY, userId),
+      JSON.stringify(streaks),
+    );
+  } catch (error) {
+    console.warn('Unable to persist Tree of Life streak awards.', error);
   }
 }
 
@@ -194,4 +230,44 @@ export function awardLevelUpTreeMilestones(
 
   const summary = getImpactTreeLedger(userId);
   return { awarded: true, entries: summary.entries, total: summary.total };
+}
+
+export function awardStreakTreeMilestone(
+  userId: string,
+  streakDays: number,
+  referenceDate: Date,
+): {
+  awarded: boolean;
+  entry: ImpactTreeEntry | null;
+  entries: ImpactTreeEntry[];
+  total: number;
+} {
+  const milestone = STREAK_TREE_MILESTONES[streakDays];
+  if (!milestone) {
+    const summary = getImpactTreeLedger(userId);
+    return { awarded: false, entry: null, entries: summary.entries, total: summary.total };
+  }
+
+  const awardedStreaks = readStreakAwards(userId);
+  if (awardedStreaks.includes(streakDays)) {
+    const summary = getImpactTreeLedger(userId);
+    return { awarded: false, entry: null, entries: summary.entries, total: summary.total };
+  }
+
+  const ledger = readLedger(userId);
+  const entry: ImpactTreeEntry = {
+    id: createId(),
+    date: referenceDate.toISOString(),
+    source: milestone.source,
+    amount: milestone.amount,
+    notes: milestone.notes,
+    partnerBatchId: `streak-${streakDays}`,
+  };
+
+  const nextEntries = [entry, ...ledger];
+  writeLedger(userId, nextEntries);
+  writeStreakAwards(userId, [...awardedStreaks, streakDays].sort((a, b) => a - b));
+
+  const summary = getImpactTreeLedger(userId);
+  return { awarded: true, entry, entries: summary.entries, total: summary.total };
 }
