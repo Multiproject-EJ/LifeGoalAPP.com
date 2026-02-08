@@ -9901,6 +9901,14 @@ body {
   font-size: 1.35rem;
 }
 
+.gol-onboarding__eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(148, 197, 248, 0.85);
+  margin: 0 0 0.35rem;
+}
+
 .gol-onboarding__header p {
   margin: 0;
   color: rgba(248, 250, 252, 0.8);

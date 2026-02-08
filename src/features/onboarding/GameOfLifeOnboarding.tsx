@@ -86,7 +86,7 @@ const ONBOARDING_LOOPS: OnboardingLoop[] = [
   {
     id: 'display-name',
     title: 'Claim your player name',
-    prompt: 'Pick a display name so your wins feel personal.',
+    prompt: 'Step into Game of Life 2.0 with a display name that makes every win feel personal.',
     actionLabel: 'Save name & continue',
     rewardLabel: 'Starter badge +10 tokens',
     rewardTokens: 10,
@@ -95,7 +95,7 @@ const ONBOARDING_LOOPS: OnboardingLoop[] = [
   {
     id: 'axis',
     title: 'Choose your first axis',
-    prompt: 'Select the life axis you want to rebalance first.',
+    prompt: 'Select the axis you want to rebalance first: Agency, Awareness, Rationality, or Vitality.',
     actionLabel: 'Lock in my axis',
     rewardLabel: 'Axis badge +10 tokens',
     rewardTokens: 10,
@@ -572,6 +572,7 @@ export function GameOfLifeOnboarding({
             Close
           </button>
         </div>
+        <p className="gol-onboarding__eyebrow">Game of Life 2.0 onboarding</p>
         <h3>{step.title}</h3>
         <p>{step.prompt}</p>
         <div className="gol-onboarding__progress">

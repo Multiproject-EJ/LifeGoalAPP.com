@@ -59,7 +59,7 @@ import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceSt
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { generateInitials } from './utils/initials';
-import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
+import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
 import {
   getProfileStrengthDebugSnapshot,
   isProfileStrengthDebugEnabled,
@@ -1899,14 +1899,23 @@ export default function App() {
       return (
         <>
           {shouldShowOnboarding ? (
-            <DayZeroOnboarding
+            <GameOfLifeOnboarding
               session={activeSession}
+              displayName={displayName}
+              setDisplayName={setDisplayName}
               profileSaving={profileSaving}
               setProfileSaving={setManualProfileSaving}
               setAuthMessage={setAuthMessage}
               setAuthError={setAuthError}
               isDemoExperience={isDemoExperience}
               onSaveDemoProfile={handleDemoProfileSave}
+              onNavigateDashboard={() => {
+                setActiveWorkspaceNav('goals');
+                setShowMobileHome(false);
+              }}
+              onOpenCoach={() => {
+                setShowAiCoachModal(true);
+              }}
               onClose={() => {
                 setIsOnboardingDismissed(true);
                 setIsOnboardingOverride(false);
@@ -1918,8 +1927,11 @@ export default function App() {
             <div className="onboarding-start-card">
               <div>
                 <p className="onboarding-start-card__eyebrow">Onboarding</p>
-                <h3>Finish your quick-start loop</h3>
-                <p>Complete the tiny habit + reward loop to unlock the full workspace.</p>
+                <h3>Launch your Game of Life 2.0 setup</h3>
+                <p>
+                  Walk through the Agency, Awareness, Rationality, and Vitality loops to unlock the full
+                  workspace.
+                </p>
               </div>
               <div className="onboarding-start-card__actions">
                 <button
@@ -1927,7 +1939,7 @@ export default function App() {
                   className="supabase-auth__action"
                   onClick={() => handleLaunchOnboarding()}
                 >
-                  Visual-start onboarding
+                  Start Game of Life onboarding
                 </button>
               </div>
             </div>
@@ -1936,8 +1948,8 @@ export default function App() {
           {showOnboardingNudge && !shouldShowOnboarding && !isOnboardingComplete ? (
             <div className="onboarding-nudge">
               <div>
-                <strong>Ready for your next loop?</strong>
-                <p>Finish the quick-start loop to unlock your full workspace.</p>
+                <strong>Ready to rebalance your four axes?</strong>
+                <p>Continue the Game of Life 2.0 onboarding to unlock your full workspace.</p>
               </div>
               <div className="onboarding-nudge__actions">
                 <button
@@ -1945,7 +1957,7 @@ export default function App() {
                   className="supabase-auth__action"
                   onClick={() => handleLaunchOnboarding()}
                 >
-                  Continue onboarding
+                  Continue Game of Life onboarding
                 </button>
                 <button
                   type="button"
