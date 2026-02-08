@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { fetchGamificationProfile } from '../../services/gamificationPrefs';
+import { getImpactTreeLedger } from '../../services/impactTrees';
 import type { ZenTokenTransaction } from '../../types/gamification';
 import { fetchZenGardenInventory, fetchZenTokenTransactions, purchaseZenGardenItem } from '../../services/zenGarden';
 import './ZenGarden.css';
@@ -15,6 +16,13 @@ type ZenGardenItem = {
   description: string;
   cost: number;
   emoji: string;
+};
+
+type TreeMilestone = {
+  minScore: number;
+  label: string;
+  emoji: string;
+  description: string;
 };
 
 const ZEN_GARDEN_ITEMS: ZenGardenItem[] = [
@@ -62,8 +70,42 @@ const ZEN_GARDEN_ITEMS: ZenGardenItem[] = [
   },
 ];
 
+const TREE_MILESTONES: TreeMilestone[] = [
+  {
+    minScore: 0,
+    label: 'Seedling',
+    emoji: '🌱',
+    description: 'Your Tree of Life is just sprouting. Level-ups and weekly waterings help it grow.',
+  },
+  {
+    minScore: 4,
+    label: 'Sapling',
+    emoji: '🌿',
+    description: 'Roots are forming. Keep stacking level-ups and weekly closures.',
+  },
+  {
+    minScore: 9,
+    label: 'Young Tree',
+    emoji: '🌳',
+    description: 'Steady rituals are shaping a sturdier path.',
+  },
+  {
+    minScore: 15,
+    label: 'Flourishing',
+    emoji: '🌲',
+    description: 'Your Tree of Life is thriving with consistent wins.',
+  },
+  {
+    minScore: 22,
+    label: 'Ancient',
+    emoji: '🌲✨',
+    description: 'A legacy of steady growth and mindful waterings.',
+  },
+];
+
 export function ZenGarden({ session }: ZenGardenProps) {
   const [balance, setBalance] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(1);
   const [inventory, setInventory] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
@@ -71,6 +113,7 @@ export function ZenGarden({ session }: ZenGardenProps) {
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<ZenTokenTransaction[]>([]);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
+  const [impactTotal, setImpactTotal] = useState(0);
 
   const userId = session?.user?.id ?? 'demo_user';
 
@@ -90,6 +133,7 @@ export function ZenGarden({ session }: ZenGardenProps) {
       throw error ?? new Error('Missing profile');
     }
     setBalance(profile.zen_tokens ?? 0);
+    setCurrentLevel(profile.current_level ?? 1);
   };
 
   const loadInventory = async () => {
@@ -111,6 +155,11 @@ export function ZenGarden({ session }: ZenGardenProps) {
     setTransactions(data);
   };
 
+  const loadImpactLedger = () => {
+    const { total } = getImpactTreeLedger(userId);
+    setImpactTotal(total);
+  };
+
   const refresh = async () => {
     setLoading(true);
     setPurchaseError(null);
@@ -118,6 +167,7 @@ export function ZenGarden({ session }: ZenGardenProps) {
     try {
       await Promise.all([loadBalance(), loadInventory()]);
       await loadTransactions();
+      loadImpactLedger();
     } catch (error) {
       setPurchaseError(error instanceof Error ? error.message : 'Failed to load Zen Garden.');
     } finally {
@@ -148,6 +198,22 @@ export function ZenGarden({ session }: ZenGardenProps) {
     setPurchasingId(null);
   };
 
+  const treeScore = currentLevel + impactTotal;
+  const treeStage = useMemo(() => {
+    return [...TREE_MILESTONES]
+      .sort((a, b) => a.minScore - b.minScore)
+      .reduce((current, milestone) => (treeScore >= milestone.minScore ? milestone : current));
+  }, [treeScore]);
+  const nextMilestone = useMemo(() => {
+    return TREE_MILESTONES.find((milestone) => milestone.minScore > treeScore) ?? null;
+  }, [treeScore]);
+  const treeProgress = useMemo(() => {
+    if (!nextMilestone) return 100;
+    const span = nextMilestone.minScore - treeStage.minScore;
+    if (span <= 0) return 100;
+    return Math.min(100, Math.round(((treeScore - treeStage.minScore) / span) * 100));
+  }, [nextMilestone, treeScore, treeStage.minScore]);
+
   return (
     <section className="zen-garden">
       <header className="zen-garden__header">
@@ -174,6 +240,42 @@ export function ZenGarden({ session }: ZenGardenProps) {
           {purchaseSuccess && (
             <div className="zen-garden__message zen-garden__message--success">{purchaseSuccess}</div>
           )}
+
+          <section className="zen-garden__tree">
+            <div className="zen-garden__tree-card">
+              <div className="zen-garden__tree-header">
+                <div>
+                  <p className="zen-garden__eyebrow">Tree of Life</p>
+                  <h3 className="zen-garden__tree-title">{treeStage.label}</h3>
+                </div>
+                <span className="zen-garden__tree-emoji" aria-hidden="true">
+                  {treeStage.emoji}
+                </span>
+              </div>
+              <p className="zen-garden__tree-description">{treeStage.description}</p>
+              <div className="zen-garden__tree-progress">
+                <div className="zen-garden__tree-progress-bar">
+                  <span
+                    className="zen-garden__tree-progress-fill"
+                    style={{ width: `${treeProgress}%` }}
+                  />
+                </div>
+                <div className="zen-garden__tree-meta">
+                  <span>Level {currentLevel}</span>
+                  <span>{impactTotal} waterings</span>
+                  <span>{treeScore} growth points</span>
+                </div>
+              </div>
+              {nextMilestone ? (
+                <p className="zen-garden__tree-next">
+                  {nextMilestone.minScore - treeScore} growth points to reach{' '}
+                  {nextMilestone.label.toLowerCase()}.
+                </p>
+              ) : (
+                <p className="zen-garden__tree-next">Your Tree of Life is fully grown.</p>
+              )}
+            </div>
+          </section>
 
           <div className="zen-garden__grid four-by-three-grid">
             {ZEN_GARDEN_ITEMS.map((item) => {

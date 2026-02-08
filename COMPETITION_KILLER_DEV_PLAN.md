@@ -1622,6 +1622,8 @@ WisdomTreeState {
 - [x] **P7.3** Ship Day 0–1 onboarding flow (single habit + reward loop)
 - [x] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
 - [x] **P7.5** Add Tree of Life ledger + weekly watering trigger
+- [x] **P7.6** Align Zen Garden visuals with Tree of Life growth milestones (level-ups + waterings)
+- [ ] **P7.7** Log level-up milestones into the Tree of Life ledger
 
 ---
 
@@ -1807,3 +1809,8 @@ WisdomTreeState {
   - **Step**: P7.5 Add Tree of Life ledger + weekly watering trigger  
   - **What changed**: Implemented the Tree of Life ledger, weekly closure watering trigger, celebration modal, and growth detail sheet in the dashboard footer.  
   - **What’s next**: Align Zen Garden visuals so the master tree grows on level-up + watering milestones.
+
+- **2026-02-12**  
+  - **Step**: P7.6 Align Zen Garden visuals with Tree of Life growth milestones (level-ups + waterings)  
+  - **What changed**: Added a Tree of Life growth card inside the Zen Garden that reflects level-ups plus weekly waterings, with progress toward the next growth milestone.  
+  - **What’s next**: P7.7 Log level-up milestones into the Tree of Life ledger.
