@@ -1661,7 +1661,7 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             <span className="progress-dashboard__impact-footer-count">{impactTotal}</span>
           </div>
           <p className="progress-dashboard__impact-footer-note">
-            Weekly closure waterings that grow your Tree of Life.
+            Weekly waterings and level-up milestones that grow your Tree of Life.
           </p>
         </div>
         <div className="progress-dashboard__impact-footer-actions">
@@ -1710,8 +1710,11 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             <div className="progress-dashboard__impact-sheet-header">
               <div>
                 <p className="progress-dashboard__impact-sheet-eyebrow">Tree of Life ledger</p>
-                <h3>Weekly waterings</h3>
-                <p>{impactTotal} total waterings so far.</p>
+                <h3>Growth moments</h3>
+                <p>{impactTotal} total growth moments so far.</p>
+                <p className="progress-dashboard__impact-sheet-meta">
+                  Weekly waterings and level-up milestones that grow your Tree of Life.
+                </p>
               </div>
               <button
                 type="button"
@@ -1728,23 +1731,37 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
               </p>
             ) : (
               <ul className="progress-dashboard__impact-sheet-list">
-                {impactLedger.map((entry) => (
-                  <li key={entry.id} className="progress-dashboard__impact-sheet-row">
-                    <div>
-                      <p className="progress-dashboard__impact-sheet-title">
-                        {entry.source === 'weekly_closure' ? 'Weekly closure watering' : 'Growth milestone'}
-                      </p>
-                      <p className="progress-dashboard__impact-sheet-meta">
-                        {new Date(entry.date).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                    <span className="progress-dashboard__impact-sheet-value">+{entry.amount}</span>
-                  </li>
-                ))}
+                {impactLedger.map((entry) => {
+                  const title =
+                    entry.source === 'weekly_closure'
+                      ? 'Weekly closure watering'
+                      : entry.source === 'level_up'
+                        ? 'Level-up milestone'
+                        : 'Growth milestone';
+                  const detail =
+                    entry.source === 'level_up'
+                      ? entry.notes ?? 'New level reached.'
+                      : entry.notes ?? null;
+
+                  return (
+                    <li key={entry.id} className="progress-dashboard__impact-sheet-row">
+                      <div>
+                        <p className="progress-dashboard__impact-sheet-title">{title}</p>
+                        {detail ? (
+                          <p className="progress-dashboard__impact-sheet-detail">{detail}</p>
+                        ) : null}
+                        <p className="progress-dashboard__impact-sheet-meta">
+                          {new Date(entry.date).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                      <span className="progress-dashboard__impact-sheet-value">+{entry.amount}</span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
