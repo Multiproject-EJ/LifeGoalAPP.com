@@ -9201,6 +9201,12 @@ body {
   color: #0f172a;
 }
 
+.progress-dashboard__impact-sheet-detail {
+  margin: 0.25rem 0 0;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
 .progress-dashboard__impact-sheet-meta {
   margin: 0.2rem 0 0;
   color: #64748b;
