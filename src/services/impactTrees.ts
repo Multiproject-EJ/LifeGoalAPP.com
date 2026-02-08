@@ -1,4 +1,5 @@
 import { getBalanceWeekId } from './balanceScore';
+import { recordTelemetryEvent } from './telemetry';
 
 export type ImpactTreeSource = 'weekly_closure' | 'level_up' | 'streak_30' | 'seasonal_event' | 'manual';
 
@@ -15,6 +16,7 @@ const LEDGER_STORAGE_KEY = 'lifegoal_tree_of_life_ledger';
 const WEEKLY_AWARD_KEY = 'lifegoal_impact_trees_weekly_awards';
 const LEVEL_AWARD_KEY = 'lifegoal_impact_trees_level_awards';
 const STREAK_AWARD_KEY = 'lifegoal_impact_trees_streak_awards';
+const CELEBRATION_KEY = 'lifegoal_impact_trees_celebration';
 
 const STREAK_TREE_MILESTONES: Record<number, { source: ImpactTreeSource; notes: string; amount: number }> = {
   30: {
@@ -26,6 +28,49 @@ const STREAK_TREE_MILESTONES: Record<number, { source: ImpactTreeSource; notes: 
 
 function getStorageKey(base: string, userId: string): string {
   return `${base}:${userId}`;
+}
+
+function isImpactTreeEntry(entry: unknown): entry is ImpactTreeEntry {
+  if (!entry || typeof entry !== 'object') return false;
+  const value = entry as ImpactTreeEntry;
+  return (
+    typeof value.id === 'string' &&
+    typeof value.date === 'string' &&
+    typeof value.source === 'string' &&
+    typeof value.amount === 'number'
+  );
+}
+
+function readCelebration(userId: string): ImpactTreeEntry | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(getStorageKey(CELEBRATION_KEY, userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ImpactTreeEntry;
+    return isImpactTreeEntry(parsed) ? parsed : null;
+  } catch (error) {
+    console.warn('Unable to read Tree of Life celebration.', error);
+    return null;
+  }
+}
+
+function writeCelebration(userId: string, entry: ImpactTreeEntry): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(getStorageKey(CELEBRATION_KEY, userId), JSON.stringify(entry));
+  } catch (error) {
+    console.warn('Unable to persist Tree of Life celebration.', error);
+  }
+}
+
+function clearCelebration(userId: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(getStorageKey(CELEBRATION_KEY, userId));
+  } catch (error) {
+    console.warn('Unable to clear Tree of Life celebration.', error);
+  }
 }
 
 function readLedger(userId: string): ImpactTreeEntry[] {
@@ -150,6 +195,14 @@ export function getImpactTreeLedger(userId: string): { entries: ImpactTreeEntry[
   return { entries, total };
 }
 
+export function consumeImpactTreeCelebration(userId: string): ImpactTreeEntry | null {
+  const entry = readCelebration(userId);
+  if (entry) {
+    clearCelebration(userId);
+  }
+  return entry;
+}
+
 export function hasWeeklyTreeAward(userId: string, referenceDate: Date): boolean {
   const weekId = getBalanceWeekId(referenceDate);
   const weeks = readWeeklyAwards(userId);
@@ -267,6 +320,16 @@ export function awardStreakTreeMilestone(
   const nextEntries = [entry, ...ledger];
   writeLedger(userId, nextEntries);
   writeStreakAwards(userId, [...awardedStreaks, streakDays].sort((a, b) => a - b));
+  writeCelebration(userId, entry);
+  void recordTelemetryEvent({
+    userId,
+    eventType: 'tree_streak_award',
+    metadata: {
+      streakDays,
+      source: milestone.source,
+      entryId: entry.id,
+    },
+  });
 
   const summary = getImpactTreeLedger(userId);
   return { awarded: true, entry, entries: summary.entries, total: summary.total };
