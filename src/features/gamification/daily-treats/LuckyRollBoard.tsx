@@ -36,6 +36,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
   const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
+  const [mysteryRevealed, setMysteryRevealed] = useState(false);
   
   const boardRef = useRef<HTMLDivElement>(null);
   
@@ -73,6 +74,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     setLandedTile(null);
     setTileEffect(null);
     setNearMissTiles([]);
+    setMysteryRevealed(false);
     
     // Deduct a die
     deductDice(userId, 1, 'Lucky Roll: dice roll');
@@ -206,29 +208,43 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     scrollToToken();
     setIsMoving(false);
     
+    // Handle mystery tile reveal delay
+    if (finalTile.type === 'mystery') {
+      sounds.playMysteryReveal();
+      
+      // Show mystery emoji first for 400ms
+      setTimeout(() => {
+        setMysteryRevealed(true);
+      }, 400);
+    }
+    
     // Show celebration if appropriate
     if (effect.celebrationType !== 'none') {
-      // Check for streak milestone (5+ consecutive positives)
-      if (consecutivePositives >= 4 && isPositive) {
-        // Show streak badge
-        setShowCelebration(true);
-        sounds.playStreakActive();
-        
-        setTimeout(() => {
-          setShowCelebration(false);
-        }, 1200);
-      } else {
-        // Show regular celebration
-        setShowCelebration(true);
-        
-        if (effect.celebrationType === 'small') {
-          sounds.playCelebrationSmall();
-        } else if (effect.celebrationType === 'medium') {
-          sounds.playCelebrationMedium();
-        } else if (effect.celebrationType === 'big') {
-          sounds.playCelebrationBig();
+      const celebrationDelay = finalTile.type === 'mystery' ? 400 : 0; // Delay for mystery tiles
+      
+      setTimeout(() => {
+        // Check for streak milestone (5+ consecutive positives)
+        if (consecutivePositives >= 4 && isPositive) {
+          // Show streak badge
+          setShowCelebration(true);
+          sounds.playStreakActive();
+          
+          setTimeout(() => {
+            setShowCelebration(false);
+          }, 1200);
+        } else {
+          // Show regular celebration
+          setShowCelebration(true);
+          
+          if (effect.celebrationType === 'small') {
+            sounds.playCelebrationSmall();
+          } else if (effect.celebrationType === 'medium') {
+            sounds.playCelebrationMedium();
+          } else if (effect.celebrationType === 'big') {
+            sounds.playCelebrationBig();
+          }
         }
-      }
+      }, celebrationDelay);
     }
     
     // Handle mini-game trigger
@@ -365,7 +381,9 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
         {landedTile && tileEffect && (
           <div className="lucky-roll-landed-effect">
             <span className="lucky-roll-landed-effect__emoji">{landedTile.emoji}</span>
-            <span className="lucky-roll-landed-effect__label">{tileEffect.message}</span>
+            <span className="lucky-roll-landed-effect__label">
+              {landedTile.type === 'mystery' && !mysteryRevealed ? '❓ Mystery...' : tileEffect.message}
+            </span>
             {landedTile.type === 'mini_game' && (
               <span className="lucky-roll-landed-effect__subtitle">Coming Soon</span>
             )}
