@@ -1627,7 +1627,8 @@ WisdomTreeState {
 - [x] **P7.8** Surface Tree of Life level-up milestone details in the impact ledger sheet (copy + metadata)
 - [x] **P7.9** Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks)
 - [x] **P7.10** Define streak-based Tree of Life award rules (30-day streak trigger + copy)
-- [ ] **P7.11** Add Tree of Life streak award telemetry + surface streak growth moment in UI
+- [x] **P7.11** Add Tree of Life streak award telemetry + surface streak growth moment in UI
+- [x] **P7.12** Add streak milestone tagging in the Tree of Life ledger UI
 
 ---
 
@@ -1698,6 +1699,16 @@ WisdomTreeState {
   - **Step**: P2.1 Create Day 0–1 onboarding script (copy + UX steps)  
   - **What changed**: Added a Day 0–1 onboarding script with screen-by-screen copy, CTAs, and UX flow to deliver a first habit completion and reward redemption in under three minutes.  
   - **What’s next**: P2.2 Day 2–7 prompts + UI touchpoints.
+
+- **2025-03-11**  
+  - **Step**: P7.11 Add Tree of Life streak award telemetry + surface streak growth moment in UI  
+  - **What changed**: Added streak award telemetry and a UI celebration that surfaces Tree of Life streak growth moments from the impact ledger.  
+  - **What’s next**: P7.12 Add streak milestone tagging in the Tree of Life ledger UI.
+
+- **2025-03-11**  
+  - **Step**: P7.12 Add streak milestone tagging in the Tree of Life ledger UI  
+  - **What changed**: Added a streak milestone tag in the Tree of Life ledger list to highlight streak-based growth moments.  
+  - **What’s next**: Define the next roadmap slice for post-MVP polish (small, config-first).
 
 - **2025-03-05**  
   - **Step**: P2.2 Day 2–7 prompts + UI touchpoints  
