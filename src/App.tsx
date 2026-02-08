@@ -59,6 +59,7 @@ import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceSt
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { generateInitials } from './utils/initials';
+import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
 import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
 import {
   getProfileStrengthDebugSnapshot,
@@ -355,6 +356,7 @@ export default function App() {
   const [isOnboardingDismissed, setIsOnboardingDismissed] = useState(false);
   const [isOnboardingOverride, setIsOnboardingOverride] = useState(false);
   const [showOnboardingNudge, setShowOnboardingNudge] = useState(false);
+  const [showDayZeroOnboarding, setShowDayZeroOnboarding] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
   const [isMobileMenuFlashActive, setIsMobileMenuFlashActive] = useState(false);
   const mobileMenuFlashTimeoutRef = useRef<number | null>(null);
@@ -1032,6 +1034,7 @@ export default function App() {
     setIsOnboardingDismissed(false);
     setIsOnboardingOverride(false);
     setShowOnboardingNudge(false);
+    setShowDayZeroOnboarding(false);
   }, [isOnboardingComplete]);
 
   useEffect(() => {
@@ -1053,8 +1056,23 @@ export default function App() {
         window.localStorage.removeItem(`gol_onboarding_${activeSession.user.id}`);
         window.localStorage.removeItem(`day_zero_onboarding_${activeSession.user.id}`);
       }
+      setShowDayZeroOnboarding(false);
       setIsOnboardingDismissed(false);
       setIsOnboardingOverride(true);
+      setShowOnboardingNudge(false);
+      setActiveWorkspaceNav('goals');
+    },
+    [activeSession.user.id],
+  );
+
+  const handleLaunchDayZeroOnboarding = useCallback(
+    (options?: { reset?: boolean }) => {
+      if (options?.reset) {
+        window.localStorage.removeItem(`day_zero_onboarding_${activeSession.user.id}`);
+      }
+      setShowDayZeroOnboarding(true);
+      setIsOnboardingDismissed(true);
+      setIsOnboardingOverride(false);
       setShowOnboardingNudge(false);
       setActiveWorkspaceNav('goals');
     },
@@ -1857,6 +1875,7 @@ export default function App() {
   const isOnboardingGateActive = true;
   const shouldShowOnboarding =
     isOnboardingGateActive &&
+    !showDayZeroOnboarding &&
     (isOnboardingOverride || (!isOnboardingComplete && !isOnboardingDismissed));
   const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete || isOnboardingOverride;
 
@@ -1923,7 +1942,20 @@ export default function App() {
             />
           ) : null}
 
-          {!shouldShowOnboarding && !isOnboardingComplete ? (
+          {showDayZeroOnboarding ? (
+            <DayZeroOnboarding
+              session={activeSession}
+              profileSaving={profileSaving}
+              setProfileSaving={setManualProfileSaving}
+              setAuthMessage={setAuthMessage}
+              setAuthError={setAuthError}
+              isDemoExperience={isDemoExperience}
+              onSaveDemoProfile={handleDemoProfileSave}
+              onClose={() => setShowDayZeroOnboarding(false)}
+            />
+          ) : null}
+
+          {!shouldShowOnboarding && !isOnboardingComplete && !showDayZeroOnboarding ? (
             <div className="onboarding-start-card">
               <div>
                 <p className="onboarding-start-card__eyebrow">Onboarding</p>
@@ -1945,7 +1977,7 @@ export default function App() {
             </div>
           ) : null}
 
-          {showOnboardingNudge && !shouldShowOnboarding && !isOnboardingComplete ? (
+          {showOnboardingNudge && !shouldShowOnboarding && !isOnboardingComplete && !showDayZeroOnboarding ? (
             <div className="onboarding-nudge">
               <div>
                 <strong>Ready to rebalance your four axes?</strong>
@@ -1993,6 +2025,7 @@ export default function App() {
             onSignOut={handleSignOut}
             onEditProfile={handleEditAccountDetails}
             onLaunchOnboarding={handleLaunchOnboarding}
+            onLaunchDayZeroOnboarding={handleLaunchDayZeroOnboarding}
             profile={workspaceProfile}
             stats={workspaceStats}
             profileLoading={workspaceProfileLoading}

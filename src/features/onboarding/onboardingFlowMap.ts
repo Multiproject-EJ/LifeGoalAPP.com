@@ -41,15 +41,15 @@ export const ONBOARDING_ENTRY_POINTS: OnboardingEntryPoint[] = [
     id: 'account-tools',
     label: 'Account onboarding tools',
     location: 'My Account → Onboarding tools',
-    trigger: 'Launch or restart onboarding.',
+    trigger: 'Launch or restart onboarding, or open the Day Zero quick start.',
     storageKeys: ['gol_onboarding_{userId}', 'day_zero_onboarding_{userId}'],
     notes: 'Restart clears local progress before relaunching the modal.',
   },
   {
     id: 'day-zero-quick-start',
     label: 'Day zero quick start',
-    location: 'Day Zero onboarding modal',
-    trigger: 'Completes quick-start steps, then closes or continues.',
+    location: 'My Account → Onboarding tools',
+    trigger: 'Selects “Launch Day Zero quick start.”',
     storageKeys: ['day_zero_onboarding_{userId}'],
   },
 ];
