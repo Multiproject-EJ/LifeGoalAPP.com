@@ -728,6 +728,402 @@
   transform: scale(0.95);
 }
 
+/* Near-Miss System */
+.lucky-roll-tile--near-miss {
+  animation: nearMissGlow 600ms ease-out;
+}
+
+@keyframes nearMissGlow {
+  0% { 
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6); 
+  }
+  50% { 
+    box-shadow: 0 0 12px 4px rgba(255, 215, 0, 0.4); 
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); 
+  }
+}
+
+/* Near-miss for mini-games (using game accent colors) */
+.lucky-roll-tile--near-miss-mini {
+  animation: nearMissGlowMini 600ms ease-out;
+}
+
+@keyframes nearMissGlowMini {
+  0% { 
+    box-shadow: 0 0 0 0 rgba(212, 165, 116, 0.6); 
+  }
+  50% { 
+    box-shadow: 0 0 12px 4px rgba(212, 165, 116, 0.4); 
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(212, 165, 116, 0); 
+  }
+}
+
+/* Celebration Overlays */
+.lucky-roll-celebration {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  pointer-events: none;
+  text-align: center;
+}
+
+.lucky-roll-celebration__emoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.lucky-roll-celebration__message {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--lucky-roll-text-light);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  display: block;
+}
+
+/* Small celebration - float up */
+.lucky-roll-celebration--small {
+  animation: celebrationSmall 800ms ease-out forwards;
+}
+
+@keyframes celebrationSmall {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-40px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-60px);
+  }
+}
+
+/* Medium celebration - reveal with glow */
+.lucky-roll-celebration--medium {
+  animation: celebrationMedium 1000ms ease-out forwards;
+}
+
+.lucky-roll-celebration--medium::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0) 70%);
+  z-index: -1;
+  animation: glowPulse 1000ms ease-out;
+}
+
+@keyframes celebrationMedium {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+/* Big celebration - full impact with particle burst */
+.lucky-roll-celebration--big {
+  animation: celebrationBig 1500ms ease-out forwards;
+}
+
+.lucky-roll-celebration--big .lucky-roll-celebration__emoji {
+  font-size: 48px;
+  animation: emojiBounce 600ms ease-out;
+}
+
+.lucky-roll-celebration--big .lucky-roll-celebration__message {
+  font-size: 32px;
+}
+
+/* CSS-only particle burst using pseudo-elements */
+.lucky-roll-celebration--big::before,
+.lucky-roll-celebration--big::after {
+  content: '✨';
+  position: absolute;
+  font-size: 20px;
+  color: #ffd700;
+  animation: particleBurst1 800ms ease-out forwards;
+}
+
+.lucky-roll-celebration--big::before {
+  animation: particleBurst2 800ms ease-out forwards;
+}
+
+@keyframes celebrationBig {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+@keyframes emojiBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes particleBurst1 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(60px, -60px) scale(0.3);
+  }
+}
+
+@keyframes particleBurst2 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-60px, -60px) scale(0.3);
+  }
+}
+
+/* Streak celebration - hot streak badge */
+.lucky-roll-celebration--streak {
+  animation: celebrationStreak 1200ms ease-out forwards;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  padding: 12px 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(238, 90, 36, 0.4);
+}
+
+@keyframes celebrationStreak {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8) rotate(-5deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1) rotate(2deg);
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+/* Mini-Game Stub Modal */
+.lucky-roll-mini-game-stub {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 300ms ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lucky-roll-mini-game-stub__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.lucky-roll-mini-game-stub__container {
+  position: relative;
+  background: var(--lucky-roll-bg);
+  border-radius: 20px;
+  padding: 32px 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  animation: slideUp 300ms ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lucky-roll-mini-game-stub__header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.lucky-roll-mini-game-stub__emoji {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.lucky-roll-mini-game-stub__title {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--lucky-roll-text-light);
+  margin: 0;
+}
+
+.lucky-roll-mini-game-stub__content {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.lucky-roll-mini-game-stub__tagline {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--lucky-roll-accent);
+  margin: 0 0 20px 0;
+}
+
+.lucky-roll-mini-game-stub__message {
+  font-size: 16px;
+  color: var(--lucky-roll-text-light);
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.lucky-roll-mini-game-stub__emotion {
+  font-size: 14px;
+  color: var(--lucky-roll-text-light);
+  margin-bottom: 20px;
+}
+
+.lucky-roll-mini-game-stub__emotion-label {
+  opacity: 0.7;
+  margin-right: 8px;
+}
+
+.lucky-roll-mini-game-stub__emotion-value {
+  font-weight: 600;
+}
+
+.lucky-roll-mini-game-stub__consolation {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--lucky-roll-text-light);
+  margin-bottom: 4px;
+}
+
+.lucky-roll-mini-game-stub__consolation-text {
+  display: block;
+}
+
+.lucky-roll-mini-game-stub__button {
+  width: 100%;
+  padding: 16px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.lucky-roll-mini-game-stub__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.lucky-roll-mini-game-stub__button:active {
+  transform: scale(0.95);
+}
+
 /* Responsive adjustments */
 @media (max-width: 400px) {
   .lucky-roll-tile__emoji {
@@ -741,5 +1137,21 @@
   .lucky-roll-dice {
     font-size: 40px;
     padding: 12px 24px;
+  }
+  
+  .lucky-roll-celebration__message {
+    font-size: 20px;
+  }
+  
+  .lucky-roll-mini-game-stub__container {
+    padding: 24px 20px;
+  }
+  
+  .lucky-roll-mini-game-stub__emoji {
+    font-size: 48px;
+  }
+  
+  .lucky-roll-mini-game-stub__title {
+    font-size: 24px;
   }
 }
