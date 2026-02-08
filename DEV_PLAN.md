@@ -43,6 +43,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 - [COMPETITION_KILLER_DEV_PLAN.md](./COMPETITION_KILLER_DEV_PLAN.md) — Strategic roadmap (tie steps to milestones when actioned).
 - [GUIDED_MEDITATION_FEATURE.md](./GUIDED_MEDITATION_FEATURE.md) — Guided meditation feature scope.
 - [AI_LIFE_COACH_FEATURE.md](./AI_LIFE_COACH_FEATURE.md) — AI life coach feature scope.
+- [HABITGAME_CORE_GAMES_DEV_PLAN.md](./HABITGAME_CORE_GAMES_DEV_PLAN.md) — Master plan for the 5 core games system (Lucky Roll, Task Tower, Pomodoro Sprint, Vision Quest, Wheel of Wins). Replaces the Daily Treats middle card league placeholder.
 
 ---
 
