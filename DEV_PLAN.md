@@ -28,6 +28,22 @@ Use this section first when returning to the plan.
 
 This plan lays out the milestone skeleton required for Game of Life 2.0 delivery. Each milestone includes reuse targets, acceptance criteria, demo-mode parity requirements, and test notes. Order is fixed as requested.
 
+## Linked Feature Plans (standalone docs to fold into this master plan)
+
+Use this section to ensure standalone feature plans are tracked and eventually scheduled into the milestones above. When a standalone plan ships or is superseded, mark it complete here and reference the milestone where it landed.
+
+**Maintenance step (recurring):** At the start of any milestone work or once per sprint, review this list to (1) add new standalone plans, (2) add a one-line summary of scope if missing, and (3) note which milestone will absorb it (or mark ✅ complete with the milestone link).
+
+- [ACTIONS_FEATURE_DEV_PLAN.md](./ACTIONS_FEATURE_DEV_PLAN.md) — Actions system planning.
+- [GOALS_TAB_REDESIGN_PLAN.md](./GOALS_TAB_REDESIGN_PLAN.md) — Goals tab UX overhaul.
+- [MONTHLY_TREAT_CALENDAR_DEV_PLAN.md](./MONTHLY_TREAT_CALENDAR_DEV_PLAN.md) — Monthly treats calendar feature.
+- [DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md](./DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md) — Daily treats countdown calendar.
+- [TRAINING_EXERCISE_DEV_PLAN.md](./TRAINING_EXERCISE_DEV_PLAN.md) — Training exercise feature plan.
+- [NEW_YEARS_MANIFEST_DEV_PLAN.md](./NEW_YEARS_MANIFEST_DEV_PLAN.md) — New Year’s manifest feature plan.
+- [COMPETITION_KILLER_DEV_PLAN.md](./COMPETITION_KILLER_DEV_PLAN.md) — Strategic roadmap (tie steps to milestones when actioned).
+- [GUIDED_MEDITATION_FEATURE.md](./GUIDED_MEDITATION_FEATURE.md) — Guided meditation feature scope.
+- [AI_LIFE_COACH_FEATURE.md](./AI_LIFE_COACH_FEATURE.md) — AI life coach feature scope.
+
 ---
 
 ## M0. Repo audit + integration map (where features live, patterns, data flows)
