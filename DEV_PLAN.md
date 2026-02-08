@@ -10,8 +10,8 @@ Use this section first when returning to the plan.
 
 | Milestone | Status | Next Task |
 |-----------|--------|-----------|
-| M0. Repo audit + integration map | ☐ Not started | |
-| M1. Onboarding | ☐ Not started | |
+| M0. Repo audit + integration map | ✅ Complete | Move to M1 onboarding discovery (inventory existing onboarding/intro flows). |
+| M1. Onboarding | ☐ Not started | Audit current onboarding/intro routes and demo state handling. |
 | M2. Balance / Harmony scoring v1 | ☐ Not started | |
 | M3. Rationality micro-system v1 | ☐ Not started | |
 | M4. Auto-progress ladder v1 | ☐ Not started | |
