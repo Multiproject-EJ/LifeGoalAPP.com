@@ -11,7 +11,7 @@ Use this section first when returning to the plan.
 | Milestone | Status | Next Task |
 |-----------|--------|-----------|
 | M0. Repo audit + integration map | ✅ Complete | Move to M1 onboarding discovery (inventory existing onboarding/intro flows). |
-| M1. Onboarding | 🟡 In progress | Draft onboarding flow map + demo parity notes for Game of Life 2.0 onboarding. |
+| M1. Onboarding | 🟡 In progress | Validate onboarding routing and demo parity updates after flow map draft. |
 | M2. Balance / Harmony scoring v1 | ☐ Not started | |
 | M3. Rationality micro-system v1 | ☐ Not started | |
 | M4. Auto-progress ladder v1 | ☐ Not started | |
@@ -88,7 +88,26 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 
 ### Slice checklist
 - [x] Slice 1: Audit onboarding entry points and add a local progress snapshot in account onboarding tools.
-- [ ] Slice 2: Draft onboarding flow map (entry points + routing) with demo parity notes.
+- [x] Slice 2: Draft onboarding flow map (entry points + routing) with demo parity notes.
+- [ ] Slice 3: Validate onboarding routing, demo parity storage, and any missing entry points.
+
+### Draft onboarding flow map (entry points + routing)
+
+**Entry points**
+1. **Dashboard start card** → `GameOfLifeOnboarding` modal (button: “Start Game of Life onboarding”).  
+2. **Dashboard nudge** → `GameOfLifeOnboarding` modal (button: “Continue Game of Life onboarding”).  
+3. **My Account → Onboarding tools** → launch or restart `GameOfLifeOnboarding` (reset optional).  
+4. **Day Zero quick start** → `DayZeroOnboarding` modal (quick start) then return to dashboard.  
+
+**Routing outcomes**
+- Close `GameOfLifeOnboarding` → return to dashboard, keep local loop progress.  
+- Finish `GameOfLifeOnboarding` → choose **Dashboard** or **AI Coach** destination; set `onboarding_complete` and clear local loop storage.  
+- Finish/close `DayZeroOnboarding` → return to dashboard; set `onboarding_complete` and clear quick-start storage.  
+
+**Demo parity notes**
+- Demo mode stores profile + `onboardingComplete` in demo data while Supabase writes `full_name` + `onboarding_complete` metadata.  
+- Local loop progress is tracked in `localStorage` (`gol_onboarding_{userId}` / `day_zero_onboarding_{userId}`) for both demo + Supabase paths.  
+- Telemetry uses `onboarding_completed` for both demo + Supabase sessions.  
 
 ---
 
@@ -352,3 +371,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M1 Slice 1 — Audit onboarding entry points + local progress snapshot.  
   - **What changed**: Added an onboarding progress snapshot to the account onboarding tools and documented the completed slice in M1.  
   - **What’s next**: Draft the onboarding flow map and demo parity notes for Game of Life 2.0 onboarding.
+- **2026-02-08**  
+  - **Slice**: M1 Slice 2 — Draft onboarding flow map + demo parity notes.  
+  - **What changed**: Documented onboarding entry points, routing outcomes, and demo parity notes; captured the flow map in config for future reference.  
+  - **What’s next**: Validate routing + demo parity storage and confirm any missing entry points.
