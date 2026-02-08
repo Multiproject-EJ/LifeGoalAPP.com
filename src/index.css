@@ -8981,6 +8981,237 @@ body {
   min-width: 0;
 }
 
+.progress-dashboard__impact-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(14, 116, 144, 0.08);
+  border: 1px solid rgba(14, 116, 144, 0.2);
+}
+
+.progress-dashboard__impact-label {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.progress-dashboard__impact-note {
+  margin: 0.25rem 0 0;
+  color: #475569;
+}
+
+.progress-dashboard__impact-button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  background: #0f766e;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.progress-dashboard__impact-button:disabled {
+  cursor: not-allowed;
+  background: rgba(15, 118, 110, 0.4);
+  box-shadow: none;
+}
+
+.progress-dashboard__impact-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.25);
+}
+
+.progress-dashboard__impact-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.3);
+}
+
+.progress-dashboard__impact-status {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.progress-dashboard__impact-status--success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+}
+
+.progress-dashboard__impact-status--error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+}
+
+.progress-dashboard__impact-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.progress-dashboard__impact-footer-label {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.progress-dashboard__impact-footer-total {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.progress-dashboard__impact-footer-note {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+}
+
+.progress-dashboard__impact-footer-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.progress-dashboard__impact-footer-button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.progress-dashboard__impact-footer-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+}
+
+.progress-dashboard__impact-footer-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+}
+
+.progress-dashboard__impact-modal,
+.progress-dashboard__impact-sheet {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  padding: 1rem;
+}
+
+.progress-dashboard__impact-modal-card,
+.progress-dashboard__impact-sheet-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 1.5rem;
+  width: min(92vw, 520px);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+}
+
+.progress-dashboard__impact-modal-card {
+  text-align: center;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.progress-dashboard__impact-modal-emoji {
+  font-size: 2.25rem;
+}
+
+.progress-dashboard__impact-modal-button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.3rem;
+  background: #0f766e;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.progress-dashboard__impact-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.progress-dashboard__impact-sheet-eyebrow {
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.progress-dashboard__impact-sheet-close {
+  border: none;
+  background: rgba(148, 163, 184, 0.2);
+  color: #0f172a;
+  border-radius: 999px;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.progress-dashboard__impact-sheet-empty {
+  margin: 0;
+  color: #475569;
+}
+
+.progress-dashboard__impact-sheet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.progress-dashboard__impact-sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.progress-dashboard__impact-sheet-title {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.progress-dashboard__impact-sheet-meta {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.progress-dashboard__impact-sheet-value {
+  font-weight: 700;
+  color: #0f766e;
+}
+
 .progress-card {
   background: #ffffff;
   border-radius: 18px;
@@ -9523,6 +9754,22 @@ body {
 
   .progress-dashboard__actions button {
     width: 100%;
+  }
+
+  .progress-dashboard__impact-card,
+  .progress-dashboard__impact-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .progress-dashboard__impact-footer-actions,
+  .progress-dashboard__impact-footer-button {
+    width: 100%;
+  }
+
+  .progress-dashboard__impact-button {
+    width: 100%;
+    text-align: center;
   }
 }
 
