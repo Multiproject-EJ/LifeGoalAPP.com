@@ -3,6 +3,9 @@ Version: 1.0 (Final)
 Status: Living Document
 Parent System: HabitGame Daily Treats → Middle Card Slot
 
+**Related Documentation:**
+- [HABITGAME_ACCESS_FLOW.md](./HABITGAME_ACCESS_FLOW.md) — User access patterns and navigation hierarchy
+
 ---
 
 ## HOW TO USE THIS DOCUMENT
