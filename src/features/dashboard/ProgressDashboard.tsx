@@ -46,6 +46,12 @@ import {
 } from '../../services/rationality';
 import type { JournalEntry } from '../../services/journal';
 import { recordBalanceShiftEvent, recordTelemetryEvent } from '../../services/telemetry';
+import {
+  awardWeeklyClosureTree,
+  getImpactTreeLedger,
+  hasWeeklyTreeAward,
+  type ImpactTreeEntry,
+} from '../../services/impactTrees';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habit types
@@ -207,6 +213,12 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const [microQuestState, setMicroQuestState] = useState<MicroQuestState | null>(null);
   const [microQuestStatus, setMicroQuestStatus] = useState<StatusMessage>(null);
   const [microQuestLoading, setMicroQuestLoading] = useState(false);
+  const [impactLedger, setImpactLedger] = useState<ImpactTreeEntry[]>([]);
+  const [impactTotal, setImpactTotal] = useState(0);
+  const [impactWeeklyAwarded, setImpactWeeklyAwarded] = useState(false);
+  const [impactStatus, setImpactStatus] = useState<StatusMessage>(null);
+  const [impactCelebration, setImpactCelebration] = useState<ImpactTreeEntry | null>(null);
+  const [impactSheetOpen, setImpactSheetOpen] = useState(false);
 
   const today = useMemo(() => new Date(), []);
   const todayISO = useMemo(() => formatISODate(today), [today]);
@@ -220,6 +232,14 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   const rationalityHintId = useId();
   const canCreateHabits = isConfigured || isDemoExperience;
   const hasGoals = goals.length > 0;
+
+  const refreshImpactLedger = useCallback(() => {
+    if (!session?.user?.id) return;
+    const summary = getImpactTreeLedger(session.user.id);
+    setImpactLedger(summary.entries);
+    setImpactTotal(summary.total);
+    setImpactWeeklyAwarded(hasWeeklyTreeAward(session.user.id, today));
+  }, [session?.user?.id, today]);
 
   const refreshDashboard = useCallback(async () => {
     if (!session || (!isConfigured && !isDemoExperience)) {
@@ -288,6 +308,10 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   }, [session?.user?.id, isConfigured, isDemoExperience, refreshDashboard]);
 
   useEffect(() => {
+    refreshImpactLedger();
+  }, [refreshImpactLedger]);
+
+  useEffect(() => {
     if (!isConfigured && !isDemoExperience) {
       setGoals([]);
       setHabits([]);
@@ -313,6 +337,12 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
     const timer = window.setTimeout(() => setMicroQuestStatus(null), 4000);
     return () => window.clearTimeout(timer);
   }, [microQuestStatus]);
+
+  useEffect(() => {
+    if (!impactStatus) return;
+    const timer = window.setTimeout(() => setImpactStatus(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [impactStatus]);
 
   const loadRationalityEntries = useCallback(async () => {
     if (!session || (!isConfigured && !isDemoExperience)) {
@@ -346,6 +376,29 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
   useEffect(() => {
     void loadRationalityEntries();
   }, [loadRationalityEntries]);
+
+  const handleWeeklyClosureComplete = useCallback(() => {
+    if (!session?.user?.id) return;
+    const result = awardWeeklyClosureTree(session.user.id, new Date());
+
+    if (!result.awarded) {
+      setImpactStatus({
+        kind: 'error',
+        message: 'Your weekly closure has already been counted for this week.',
+      });
+      setImpactWeeklyAwarded(true);
+      return;
+    }
+
+    setImpactLedger(result.entries);
+    setImpactTotal(result.total);
+    setImpactWeeklyAwarded(true);
+    setImpactStatus({
+      kind: 'success',
+      message: 'Weekly closure complete. Your Tree of Life grew stronger.',
+    });
+    setImpactCelebration(result.entry);
+  }, [session?.user?.id]);
 
   const handleHabitCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -991,6 +1044,29 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
                 ))}
               </ul>
             )}
+            <div className="progress-dashboard__impact-card">
+              <div>
+              <p className="progress-dashboard__impact-label">Water the Tree of Life</p>
+              <p className="progress-dashboard__impact-note">
+                  Close the week with a quiet reflection to water your Tree of Life.
+              </p>
+              </div>
+              <button
+                type="button"
+                className="progress-dashboard__impact-button"
+                onClick={handleWeeklyClosureComplete}
+                disabled={impactWeeklyAwarded}
+              >
+                {impactWeeklyAwarded ? 'Watered this week' : 'Complete weekly closure'}
+              </button>
+            </div>
+            {impactStatus ? (
+              <p
+                className={`progress-dashboard__impact-status progress-dashboard__impact-status--${impactStatus.kind}`}
+              >
+                {impactStatus.message}
+              </p>
+            ) : null}
           </article>
 
           <article className="progress-card progress-card--summary">
@@ -1574,6 +1650,106 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
           →
         </button>
       </div>
+
+      <footer className="progress-dashboard__impact-footer" aria-label="Tree of Life growth summary">
+        <div>
+          <p className="progress-dashboard__impact-footer-label">Tree of Life growth</p>
+          <div className="progress-dashboard__impact-footer-total">
+            <span className="progress-dashboard__impact-footer-emoji" aria-hidden="true">
+              🌲
+            </span>
+            <span className="progress-dashboard__impact-footer-count">{impactTotal}</span>
+          </div>
+          <p className="progress-dashboard__impact-footer-note">
+            Weekly closure waterings that grow your Tree of Life.
+          </p>
+        </div>
+        <div className="progress-dashboard__impact-footer-actions">
+          <button
+            type="button"
+            className="progress-dashboard__impact-footer-button"
+            onClick={() => setImpactSheetOpen(true)}
+          >
+            See impact
+          </button>
+        </div>
+      </footer>
+
+      {impactCelebration ? (
+        <div
+          className="progress-dashboard__impact-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Tree of Life growth"
+        >
+          <div className="progress-dashboard__impact-modal-card">
+            <span className="progress-dashboard__impact-modal-emoji" aria-hidden="true">
+              🌲
+            </span>
+            <h3>Tree of Life grows</h3>
+            <p>You watered the Tree of Life this week. Keep nurturing your path.</p>
+            <button
+              type="button"
+              className="progress-dashboard__impact-modal-button"
+              onClick={() => setImpactCelebration(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {impactSheetOpen ? (
+        <div
+          className="progress-dashboard__impact-sheet"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Tree of Life ledger"
+        >
+          <div className="progress-dashboard__impact-sheet-card">
+            <div className="progress-dashboard__impact-sheet-header">
+              <div>
+                <p className="progress-dashboard__impact-sheet-eyebrow">Tree of Life ledger</p>
+                <h3>Weekly waterings</h3>
+                <p>{impactTotal} total waterings so far.</p>
+              </div>
+              <button
+                type="button"
+                className="progress-dashboard__impact-sheet-close"
+                onClick={() => setImpactSheetOpen(false)}
+                aria-label="Close impact ledger"
+              >
+                ✕
+              </button>
+            </div>
+            {impactLedger.length === 0 ? (
+              <p className="progress-dashboard__impact-sheet-empty">
+                Complete a weekly closure ritual to water the Tree of Life.
+              </p>
+            ) : (
+              <ul className="progress-dashboard__impact-sheet-list">
+                {impactLedger.map((entry) => (
+                  <li key={entry.id} className="progress-dashboard__impact-sheet-row">
+                    <div>
+                      <p className="progress-dashboard__impact-sheet-title">
+                        {entry.source === 'weekly_closure' ? 'Weekly closure watering' : 'Growth milestone'}
+                      </p>
+                      <p className="progress-dashboard__impact-sheet-meta">
+                        {new Date(entry.date).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <span className="progress-dashboard__impact-sheet-value">+{entry.amount}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -1541,35 +1541,35 @@ WisdomTreeState {
 - User-facing naming for all signals is finalized.
 - UX touchpoints for reflection + optional details are specified.
 
-### 8.15 Phase 6 Decision: First Real-World Meaning Feature (P6.4)
+### 8.15 Phase 6 Decision: Tree of Life Growth Loop (P6.4)
 
-**Decision**: Ship **Trees Planted** as the first real-world meaning feature, using a partner-backed planting API and a lightweight in-app ledger.
+**Decision**: Anchor real-world meaning inside the **Zen Garden** as a **Tree of Life & Wisdom** that grows with weekly closure rituals, level-ups, and long-term consistency.
 
 #### Rationale
-- **Universal emotional resonance**: “I grew a tree” maps cleanly to progress and identity.
-- **Low cognitive load**: simple unit (1 tree) with clear mental model.
-- **Brand-aligned**: reinforces long-term growth and care themes already in the product.
-- **Scalable**: can later expand to other impact options (donations, clean water, etc.).
+- **Unified growth loop**: the Tree of Life becomes the long-term anchor, while the Zen Garden remains the short-term playground.
+- **Clear identity arc**: one master tree ties progression to wisdom rather than external impact tally.
+- **Scalable**: can still connect to real-world impact later without changing the core growth loop.
 
-#### MVP Rules (Trees Planted)
-- **Unit**: 1 Tree = 1 Impact Token (system-managed, not user-spendable).
+#### MVP Rules (Tree of Life & Wisdom)
+- **Unit**: 1 watering = 1 growth credit (system-managed, not user-spendable).
 - **Earn triggers** (MVP):
-  - **Weekly closure** completed → +1 Tree.
-  - **30-day streak milestone** → +3 Trees.
-  - **Seasonal event completion** → +5 Trees (if seasonal events are active).
+  - **Weekly closure** completed → +1 watering.
+  - **30-day streak milestone** → +3 waterings.
+  - **Seasonal event completion** → +5 waterings (if seasonal events are active).
+  - **Level-up** → +1 watering (reinforces long-term progression).
 - **Visibility**:
-  - Show a **“Trees Planted” counter** in the dashboard footer.
-  - Show a **celebration modal** when a tree is planted (1–2 lines of warm copy).
-  - Offer a “See impact” detail sheet (impact ledger + dates).
-- **Copy tone**: quiet pride, non-judgmental (“You helped a tree take root.”).
+  - Show a **Tree of Life growth counter** in the dashboard footer and Zen Garden.
+  - Show a **celebration modal** when the tree grows (1–2 lines of warm copy).
+  - Offer a “See growth” detail sheet (ledger + dates).
+- **Copy tone**: quiet pride, non-judgmental (“Your Tree of Life grew stronger.”).
 
 #### Data Notes (MVP)
-- **Impact ledger** table or JSON log: `date`, `source`, `amount`, `notes`.
-- **Partner reference**: store `partner_batch_id` if available, otherwise `null`.
+- **Tree ledger** table or JSON log: `date`, `source`, `amount`, `notes`.
+- **Growth stages**: store `stage` or `level` when ready (optional in MVP).
 
 #### Telemetry Hooks
-- `impact_tree_awarded` (source, amount, streak_length, season_id?)
-- `impact_tree_viewed` (surface: modal | detail_sheet)
+- `tree_of_life_awarded` (source, amount, streak_length, season_id?, level?)
+- `tree_of_life_viewed` (surface: modal | detail_sheet)
 
 **Done when**
 - Feature selected and named.
@@ -1612,7 +1612,7 @@ WisdomTreeState {
 - [x] **P6.1** Decide MVP currency set (which of XP/Energy/Tokens/Keys/Gold ship first)
 - [x] **P6.2** Map existing XP/level system to the multi-currency economy
 - [x] **P6.3** Decide identity vector visibility + naming (user-facing vs. hidden)
-- [x] **P6.4** Select first real-world meaning feature (e.g., trees planted vs. donations)
+- [x] **P6.4** Define Tree of Life growth loop (Zen Garden master tree)
 - [x] **P6.5** Pick first reward evolution example to ship
 - [x] **P6.6** Review open questions and draft the next roadmap iteration
 
@@ -1621,7 +1621,7 @@ WisdomTreeState {
 - [x] **P7.2** Implement reward creation + redemption flow with Gold spend
 - [x] **P7.3** Ship Day 0–1 onboarding flow (single habit + reward loop)
 - [x] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
-- [ ] **P7.5** Add Trees Planted ledger + weekly award trigger
+- [x] **P7.5** Add Tree of Life ledger + weekly watering trigger
 
 ---
 
@@ -1639,7 +1639,7 @@ WisdomTreeState {
 - **2026-02-05 — MVP currency set = XP + Gold —** Aligns with existing gamification, keeps rewards simple, and defers Energy/Tokens/Keys until post-MVP.
 - **2026-02-05 — Map Points to Gold; keep XP/levels unchanged —** Maintains existing XP behavior while re-framing Points as the MVP spendable currency.
 - **2026-02-07 — Hide raw identity vectors; surface “Identity Signals” —** Keeps onboarding light while still giving users a readable identity reflection without stat overload.
-- **2026-02-07 — Real-world meaning = Trees Planted —** Simple, high-emotion, brand-aligned impact unit with clear rules and visibility.
+- **2026-02-07 — Tree of Life growth loop —** Anchor long-term meaning in the Zen Garden master tree, with weekly closure waterings and growth stages.
 - **2026-02-08 — First reward evolution example = “Coffee break” ladder —** Universal, low-friction ritual that naturally evolves into reflection + light movement + optional social warmth.
 - **2026-02-08 — Identity Engine name = “Path” (user-facing) —** Short, warm, and action-oriented (“You’re on a Path”), fits daily progress language without mysticism overload.
 
@@ -1766,11 +1766,11 @@ WisdomTreeState {
 - **2026-02-07**  
   - **Step**: P6.3 Decide identity vector visibility + naming (user-facing vs. hidden)  
   - **What changed**: Chose to keep raw vectors hidden, defined “Identity Signals” naming, set visibility/unlock rules, and specified UX touchpoints for reflections and optional details.  
-  - **What’s next**: P6.4 Select first real-world meaning feature (e.g., trees planted vs. donations).
+  - **What’s next**: P6.4 Define Tree of Life growth loop (Zen Garden master tree).
 
 - **2026-02-07**  
-  - **Step**: P6.4 Select first real-world meaning feature (e.g., trees planted vs. donations)  
-  - **What changed**: Selected Trees Planted as the first real-world meaning feature, defined MVP earning triggers, visibility, data notes, and telemetry hooks.  
+  - **Step**: P6.4 Define Tree of Life growth loop (Zen Garden master tree)  
+  - **What changed**: Scoped the Tree of Life & Wisdom as the long-term growth anchor inside the Zen Garden, with weekly closure waterings and visibility rules.  
   - **What’s next**: P6.5 Pick first reward evolution example to ship.
 
 - **2026-02-08**  
@@ -1802,3 +1802,8 @@ WisdomTreeState {
   - **Step**: P7.4 Add Identity Signals card + “Why this?” detail sheet (post-Day 3)  
   - **What changed**: Added the post-Day 3 Identity Signals card to the mobile Today view plus a “Why this?” detail sheet.  
   - **What’s next**: Confirm the next MVP execution step.
+
+- **2026-02-08**  
+  - **Step**: P7.5 Add Tree of Life ledger + weekly watering trigger  
+  - **What changed**: Implemented the Tree of Life ledger, weekly closure watering trigger, celebration modal, and growth detail sheet in the dashboard footer.  
+  - **What’s next**: Align Zen Garden visuals so the master tree grows on level-up + watering milestones.
