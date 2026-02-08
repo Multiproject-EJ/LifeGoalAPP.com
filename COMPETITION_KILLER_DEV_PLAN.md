@@ -1625,7 +1625,8 @@ WisdomTreeState {
 - [x] **P7.6** Align Zen Garden visuals with Tree of Life growth milestones (level-ups + waterings)
 - [x] **P7.7** Log level-up milestones into the Tree of Life ledger
 - [x] **P7.8** Surface Tree of Life level-up milestone details in the impact ledger sheet (copy + metadata)
-- [ ] **P7.9** Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks)
+- [x] **P7.9** Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks)
+- [ ] **P7.10** Define streak-based Tree of Life award rules (30-day streak trigger + copy)
 
 ---
 
@@ -1826,3 +1827,8 @@ WisdomTreeState {
   - **Step**: P7.8 Surface Tree of Life level-up milestone details in the impact ledger sheet (copy + metadata)  
   - **What changed**: Updated the Tree of Life impact ledger copy to include level-up milestone details and clarified growth moment messaging alongside weekly waterings.  
   - **What’s next**: P7.9 Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks).
+
+- **2026-02-08**  
+  - **Step**: P7.9 Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks)  
+  - **What changed**: Centralized Tree of Life impact source labels in a shared config and wired the ledger UI to read labels and fallback details from it.  
+  - **What’s next**: P7.10 Define streak-based Tree of Life award rules (30-day streak trigger + copy).

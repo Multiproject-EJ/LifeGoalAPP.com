@@ -52,6 +52,7 @@ import {
   hasWeeklyTreeAward,
   type ImpactTreeEntry,
 } from '../../services/impactTrees';
+import { IMPACT_TREE_SOURCE_CONFIG } from '../../constants/impactTrees';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habit types
@@ -1732,16 +1733,9 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
             ) : (
               <ul className="progress-dashboard__impact-sheet-list">
                 {impactLedger.map((entry) => {
-                  const title =
-                    entry.source === 'weekly_closure'
-                      ? 'Weekly closure watering'
-                      : entry.source === 'level_up'
-                        ? 'Level-up milestone'
-                        : 'Growth milestone';
-                  const detail =
-                    entry.source === 'level_up'
-                      ? entry.notes ?? 'New level reached.'
-                      : entry.notes ?? null;
+                  const sourceConfig = IMPACT_TREE_SOURCE_CONFIG[entry.source];
+                  const title = sourceConfig?.label ?? 'Growth milestone';
+                  const detail = entry.notes ?? sourceConfig?.fallbackDetail ?? null;
 
                   return (
                     <li key={entry.id} className="progress-dashboard__impact-sheet-row">
