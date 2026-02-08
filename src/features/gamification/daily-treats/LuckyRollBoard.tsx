@@ -3,7 +3,11 @@ import type { Session } from '@supabase/supabase-js';
 import { generateDefaultBoard, loadState, saveState, rollDice, moveToken, resetDailyCounters } from './luckyRollState';
 import { LuckyRollDiceShop } from './LuckyRollDiceShop';
 import { loadCurrencyBalance, deductDice } from '../../../services/gameRewards';
+import { resolveTileEffect, getGoldBalance, type TileEffectResult } from './luckyRollTileEffects';
+import { LuckyRollMiniGameStub } from './LuckyRollMiniGameStub';
+import { LuckyRollCelebration } from './LuckyRollCelebration';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
+import * as sounds from './luckyRollSounds';
 import './luckyRollBoard.css';
 
 interface LuckyRollBoardProps {
@@ -24,6 +28,15 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [landedTile, setLandedTile] = useState<BoardTile | null>(null);
   const [showLapCelebration, setShowLapCelebration] = useState(false);
   const [celebrationLap, setCelebrationLap] = useState(0);
+  
+  // Phase 2 additions
+  const [tileEffect, setTileEffect] = useState<TileEffectResult | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showMiniGameStub, setShowMiniGameStub] = useState<string | null>(null);
+  const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
+  const [consecutivePositives, setConsecutivePositives] = useState(0);
+  const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
+  
   const boardRef = useRef<HTMLDivElement>(null);
   
   // Load currency balance from gameRewards
@@ -58,9 +71,14 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     
     setIsRolling(true);
     setLandedTile(null);
+    setTileEffect(null);
+    setNearMissTiles([]);
     
     // Deduct a die
     deductDice(userId, 1, 'Lucky Roll: dice roll');
+    
+    // Play dice roll sound
+    sounds.playDiceRoll();
     
     // Simulate dice tumble animation
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -68,6 +86,8 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     // Roll the dice
     const roll = rollDice();
     const now = new Date().toISOString();
+    
+    sounds.playDiceSettle();
     
     setGameState(prev => ({
       ...prev,
@@ -87,15 +107,48 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     
     const oldLap = gameState.currentLap;
     const newState = moveToken(gameState, roll, board.length);
+    const detectedNearMisses: number[] = [];
     
-    // Animate movement tile by tile
+    // Animate movement tile by tile with near-miss detection
     for (let step = 1; step <= roll; step++) {
       await new Promise(resolve => setTimeout(resolve, 200));
       
+      sounds.playTokenMove();
+      
       setGameState(prev => {
         const intermediatePosition = (prev.currentPosition + 1) % board.length;
+        
+        // Near-miss detection: check tiles adjacent to current position
+        const adjacentIndices = [
+          (intermediatePosition - 1 + board.length) % board.length,
+          (intermediatePosition + 1) % board.length,
+        ];
+        
+        for (const adjacentIdx of adjacentIndices) {
+          const adjacentTile = board[adjacentIdx];
+          // Only trigger near-miss if we're NOT landing on it and it's a jackpot or mini-game
+          if (
+            adjacentIdx !== newState.currentPosition &&
+            (adjacentTile.type === 'jackpot' || adjacentTile.type === 'mini_game') &&
+            !detectedNearMisses.includes(adjacentIdx)
+          ) {
+            detectedNearMisses.push(adjacentIdx);
+            sounds.playNearMiss();
+          }
+        }
+        
         return { ...prev, currentPosition: intermediatePosition };
       });
+    }
+    
+    // Update near-miss tiles for visual effect
+    if (detectedNearMisses.length > 0) {
+      setNearMissTiles(detectedNearMisses);
+      
+      // Clear near-miss glow after animation
+      setTimeout(() => {
+        setNearMissTiles([]);
+      }, 600);
     }
     
     // Update final state
@@ -112,13 +165,38 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     const finalTile = board[newState.currentPosition];
     setLandedTile(finalTile);
     
+    // Resolve tile effect
+    const effect = resolveTileEffect(finalTile, userId);
+    setTileEffect(effect);
+    
+    // Update gold balance display
+    setGoldBalance(getGoldBalance(userId));
+    
+    // Update streak tracking
+    const isPositive = ['gain_coins', 'bonus_dice', 'game_token', 'jackpot'].includes(effect.type);
+    const isNegativeOrNeutral = ['lose_coins', 'neutral'].includes(effect.type);
+    
+    if (isPositive) {
+      setConsecutivePositives(prev => prev + 1);
+    } else if (isNegativeOrNeutral) {
+      setConsecutivePositives(0);
+    }
+    
+    // Play tile landing sound
+    if (isPositive) {
+      sounds.playTileLandPositive();
+    } else if (effect.type === 'lose_coins') {
+      sounds.playTileLandNegative();
+    } else {
+      sounds.playTileLandNeutral();
+    }
+    
     // Check for lap completion
     if (newState.currentLap > oldLap) {
       setCelebrationLap(newState.currentLap);
       setShowLapCelebration(true);
       
-      // Play lap celebration sound (placeholder)
-      // playLapCelebration();
+      sounds.playLapCelebration();
       
       setTimeout(() => {
         setShowLapCelebration(false);
@@ -128,12 +206,45 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     scrollToToken();
     setIsMoving(false);
     
+    // Show celebration if appropriate
+    if (effect.celebrationType !== 'none') {
+      // Check for streak milestone (5+ consecutive positives)
+      if (consecutivePositives >= 4 && isPositive) {
+        // Show streak badge
+        setShowCelebration(true);
+        sounds.playStreakActive();
+        
+        setTimeout(() => {
+          setShowCelebration(false);
+        }, 1200);
+      } else {
+        // Show regular celebration
+        setShowCelebration(true);
+        
+        if (effect.celebrationType === 'small') {
+          sounds.playCelebrationSmall();
+        } else if (effect.celebrationType === 'medium') {
+          sounds.playCelebrationMedium();
+        } else if (effect.celebrationType === 'big') {
+          sounds.playCelebrationBig();
+        }
+      }
+    }
+    
+    // Handle mini-game trigger
+    if (effect.type === 'mini_game' && effect.miniGame) {
+      sounds.playMiniGameTrigger();
+      setTimeout(() => {
+        setShowMiniGameStub(effect.miniGame!);
+      }, 1200); // Show after landing effect
+    }
+    
     // Hide landed tile effect after delay
     setTimeout(() => {
       setLandedTile(null);
     }, 1500);
     
-  }, [isRolling, isMoving, gameState, userId, board, scrollToToken]);
+  }, [isRolling, isMoving, gameState, userId, board, scrollToToken, consecutivePositives]);
   
   const getTileClassName = (tile: BoardTile): string => {
     const classes = ['lucky-roll-tile'];
@@ -150,6 +261,15 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     
     if (landedTile && tile.index === landedTile.index) {
       classes.push('lucky-roll-tile--landing');
+    }
+    
+    // Near-miss glow effect
+    if (nearMissTiles.includes(tile.index)) {
+      if (tile.type === 'mini_game') {
+        classes.push('lucky-roll-tile--near-miss-mini');
+      } else {
+        classes.push('lucky-roll-tile--near-miss');
+      }
     }
     
     return classes.join(' ');
@@ -222,7 +342,10 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             Dice: {gameState.availableDice} 🎲
           </div>
           <div className="lucky-roll-board__stat">
-            Coins: {currencyBalance.gameTokens} 🪙
+            Coins: {goldBalance} 🪙
+          </div>
+          <div className="lucky-roll-board__stat">
+            Tokens: {currencyBalance.gameTokens} 🎟️
           </div>
         </div>
         
@@ -239,14 +362,32 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
         </div>
         
         {/* Landed tile effect */}
-        {landedTile && (
+        {landedTile && tileEffect && (
           <div className="lucky-roll-landed-effect">
             <span className="lucky-roll-landed-effect__emoji">{landedTile.emoji}</span>
-            <span className="lucky-roll-landed-effect__label">{landedTile.label}</span>
+            <span className="lucky-roll-landed-effect__label">{tileEffect.message}</span>
             {landedTile.type === 'mini_game' && (
               <span className="lucky-roll-landed-effect__subtitle">Coming Soon</span>
             )}
           </div>
+        )}
+        
+        {/* Celebration overlay */}
+        {showCelebration && tileEffect && (
+          <LuckyRollCelebration
+            type={
+              consecutivePositives >= 5 && ['gain_coins', 'bonus_dice', 'game_token', 'jackpot'].includes(tileEffect.type)
+                ? 'streak'
+                : tileEffect.celebrationType
+            }
+            message={
+              consecutivePositives >= 5 && ['gain_coins', 'bonus_dice', 'game_token', 'jackpot'].includes(tileEffect.type)
+                ? `🔥 Hot Streak! ${consecutivePositives} wins!`
+                : tileEffect.message
+            }
+            emoji={landedTile?.emoji}
+            onComplete={() => setShowCelebration(false)}
+          />
         )}
         
         {/* Actions */}
@@ -286,6 +427,15 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           </div>
         )}
       </div>
+      
+      {/* Mini-game stub modal */}
+      {showMiniGameStub && (
+        <LuckyRollMiniGameStub
+          gameId={showMiniGameStub as any}
+          userId={userId}
+          onClose={() => setShowMiniGameStub(null)}
+        />
+      )}
     </div>
   );
 }
