@@ -1623,7 +1623,8 @@ WisdomTreeState {
 - [x] **P7.4** Add Identity Signals card + “Why this?” detail sheet (post-Day 3)
 - [x] **P7.5** Add Tree of Life ledger + weekly watering trigger
 - [x] **P7.6** Align Zen Garden visuals with Tree of Life growth milestones (level-ups + waterings)
-- [ ] **P7.7** Log level-up milestones into the Tree of Life ledger
+- [x] **P7.7** Log level-up milestones into the Tree of Life ledger
+- [ ] **P7.8** Surface Tree of Life level-up milestone details in the impact ledger sheet (copy + metadata)
 
 ---
 
@@ -1814,3 +1815,8 @@ WisdomTreeState {
   - **Step**: P7.6 Align Zen Garden visuals with Tree of Life growth milestones (level-ups + waterings)  
   - **What changed**: Added a Tree of Life growth card inside the Zen Garden that reflects level-ups plus weekly waterings, with progress toward the next growth milestone.  
   - **What’s next**: P7.7 Log level-up milestones into the Tree of Life ledger.
+
+- **2026-02-08**  
+  - **Step**: P7.7 Log level-up milestones into the Tree of Life ledger  
+  - **What changed**: Added Tree of Life ledger entries when users level up so growth milestones are recorded alongside weekly waterings.  
+  - **What’s next**: P7.8 Surface Tree of Life level-up milestone details in the impact ledger sheet (copy + metadata).
