@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
@@ -57,6 +57,8 @@ export function MyAccountPanel({
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
+  const [onboardingSnapshot, setOnboardingSnapshot] = useState<string | null>(null);
+  const [dayZeroStored, setDayZeroStored] = useState(false);
   
   const user = session.user;
   const displayName =
@@ -90,6 +92,40 @@ export function MyAccountPanel({
   const profileCardClassName = `account-panel__card account-panel__profile ${
     profileExpanded ? 'account-panel__profile--expanded' : ''
   }`;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!onLaunchOnboarding) return;
+    const storageKey = `gol_onboarding_${session.user.id}`;
+    const dayZeroKey = `day_zero_onboarding_${session.user.id}`;
+    const storedValue = window.localStorage.getItem(storageKey);
+    const dayZeroValue = window.localStorage.getItem(dayZeroKey);
+
+    setDayZeroStored(Boolean(dayZeroValue));
+
+    if (!storedValue) {
+      setOnboardingSnapshot(null);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(storedValue) as {
+        stepIndex?: number;
+        tokens?: number;
+        unlockedItemIds?: string[];
+      };
+      const stepIndex =
+        typeof parsed.stepIndex === 'number' ? Math.min(parsed.stepIndex + 1, 20) : null;
+      const tokens = typeof parsed.tokens === 'number' ? parsed.tokens : null;
+      const unlockedCount = parsed.unlockedItemIds?.length ?? 0;
+      const stepLabel = stepIndex ? `Loop ${stepIndex} of 20` : 'Loop progress unavailable';
+      const tokenLabel = tokens !== null ? `${tokens} tokens banked` : 'Token balance unavailable';
+      const unlockLabel = `${unlockedCount} shop unlock${unlockedCount === 1 ? '' : 's'}`;
+      setOnboardingSnapshot(`${stepLabel} • ${tokenLabel} • ${unlockLabel}`);
+    } catch {
+      setOnboardingSnapshot('Stored onboarding progress is unreadable.');
+    }
+  }, [onLaunchOnboarding, session.user.id]);
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -231,6 +267,22 @@ export function MyAccountPanel({
             <p className="account-panel__hint">
               Launch or restart the 20-step onboarding to preview every loop.
             </p>
+            <dl className="account-panel__details">
+              <div>
+                <dt>Local progress</dt>
+                <dd>{onboardingSnapshot ?? 'No local progress saved yet.'}</dd>
+              </div>
+              <div>
+                <dt>Day 0 storage</dt>
+                <dd>{dayZeroStored ? 'Saved' : 'Not saved'}</dd>
+              </div>
+              <div>
+                <dt>Storage key</dt>
+                <dd>
+                  <code>{`gol_onboarding_${session.user.id}`}</code>
+                </dd>
+              </div>
+            </dl>
             <div className="account-panel__actions-row">
               <button
                 type="button"
