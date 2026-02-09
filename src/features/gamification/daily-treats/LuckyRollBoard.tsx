@@ -4,7 +4,7 @@ import { generateDefaultBoard, loadState, saveState, rollDice, moveToken, resetD
 import { LuckyRollDiceShop } from './LuckyRollDiceShop';
 import { loadCurrencyBalance, deductDice } from '../../../services/gameRewards';
 import { resolveTileEffect, getGoldBalance, type TileEffectResult } from './luckyRollTileEffects';
-import { LuckyRollMiniGameStub } from './LuckyRollMiniGameStub';
+
 import { TaskTower } from '../games/task-tower/TaskTower';
 import { PomodoroSprint } from '../games/pomodoro-sprint/PomodoroSprint';
 import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
@@ -36,7 +36,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   // Phase 2 additions
   const [tileEffect, setTileEffect] = useState<TileEffectResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [showMiniGameStub, setShowMiniGameStub] = useState<string | null>(null);
+
   const [showTaskTower, setShowTaskTower] = useState(false);
   const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
@@ -264,16 +264,19 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     if (effect.type === 'mini_game' && effect.miniGame) {
       sounds.playMiniGameTrigger();
       setTimeout(() => {
-        if (effect.miniGame === 'task_tower') {
-          setShowTaskTower(true);
-        } else if (effect.miniGame === 'pomodoro_sprint') {
-          setShowPomodoroSprint(true);
-        } else if (effect.miniGame === 'wheel_of_wins') {
-          setShowWheelOfWins(true);
-        } else if (effect.miniGame === 'vision_quest') {
-          setShowVisionQuest(true);
-        } else if (effect.miniGame) {
-          setShowMiniGameStub(effect.miniGame ?? null);
+        switch (effect.miniGame) {
+          case 'task_tower':
+            setShowTaskTower(true);
+            break;
+          case 'pomodoro_sprint':
+            setShowPomodoroSprint(true);
+            break;
+          case 'vision_quest':
+            setShowVisionQuest(true);
+            break;
+          case 'wheel_of_wins':
+            setShowWheelOfWins(true);
+            break;
         }
       }, 1200); // Show after landing effect
     }
@@ -468,16 +471,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           </div>
         )}
       </div>
-      
-      {/* Mini-game stub modal */}
-      {showMiniGameStub && (
-        <LuckyRollMiniGameStub
-          gameId={showMiniGameStub as any}
-          userId={userId}
-          onClose={() => setShowMiniGameStub(null)}
-        />
-      )}
-      
+
       {/* Task Tower mini-game */}
       {showTaskTower && (
         <TaskTower
