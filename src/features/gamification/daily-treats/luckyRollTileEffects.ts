@@ -78,8 +78,9 @@ function saveGoldBalance(userId: string, amount: number): void {
 
 /**
  * Award gold coins
+ * Exported for use by Task Tower and other games
  */
-function awardGold(userId: string, amount: number, context: string): number {
+export function awardGold(userId: string, amount: number, context: string): number {
   const currentGold = loadGoldBalance(userId);
   const newGold = currentGold + amount;
   saveGoldBalance(userId, newGold);
@@ -87,7 +88,7 @@ function awardGold(userId: string, amount: number, context: string): number {
   logRewardEvent({
     id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     userId,
-    source: 'lucky_roll',
+    source: 'task_tower',
     currency: 'gold',
     amount,
     context,

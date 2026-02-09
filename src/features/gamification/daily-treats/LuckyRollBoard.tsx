@@ -5,6 +5,7 @@ import { LuckyRollDiceShop } from './LuckyRollDiceShop';
 import { loadCurrencyBalance, deductDice } from '../../../services/gameRewards';
 import { resolveTileEffect, getGoldBalance, type TileEffectResult } from './luckyRollTileEffects';
 import { LuckyRollMiniGameStub } from './LuckyRollMiniGameStub';
+import { TaskTower } from '../games/task-tower/TaskTower';
 import { LuckyRollCelebration } from './LuckyRollCelebration';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
@@ -33,6 +34,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [tileEffect, setTileEffect] = useState<TileEffectResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showMiniGameStub, setShowMiniGameStub] = useState<string | null>(null);
+  const [showTaskTower, setShowTaskTower] = useState(false);
   const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
   const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
@@ -41,7 +43,12 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   
   // Load currency balance from gameRewards
-  const currencyBalance = useMemo(() => loadCurrencyBalance(userId), [userId]);
+  const [currencyBalance, setCurrencyBalance] = useState(() => loadCurrencyBalance(userId));
+  
+  // Function to refresh currency balance
+  const refreshCurrencyBalance = useCallback(() => {
+    setCurrencyBalance(loadCurrencyBalance(userId));
+  }, [userId]);
   
   // Sync available dice with currency balance
   useEffect(() => {
@@ -251,7 +258,11 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     if (effect.type === 'mini_game' && effect.miniGame) {
       sounds.playMiniGameTrigger();
       setTimeout(() => {
-        setShowMiniGameStub(effect.miniGame!);
+        if (effect.miniGame === 'task_tower') {
+          setShowTaskTower(true);
+        } else if (effect.miniGame) {
+          setShowMiniGameStub(effect.miniGame);
+        }
       }, 1200); // Show after landing effect
     }
     
@@ -452,6 +463,26 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           gameId={showMiniGameStub as any}
           userId={userId}
           onClose={() => setShowMiniGameStub(null)}
+        />
+      )}
+      
+      {/* Task Tower mini-game */}
+      {showTaskTower && (
+        <TaskTower
+          session={session}
+          onClose={() => {
+            setShowTaskTower(false);
+            // Refresh currency balance
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
+          onComplete={(rewards) => {
+            setShowTaskTower(false);
+            // Rewards are already delivered by TaskTower
+            // Just refresh currency balance display
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
         />
       )}
     </div>
