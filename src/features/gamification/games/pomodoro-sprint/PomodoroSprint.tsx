@@ -45,7 +45,7 @@ export function PomodoroSprint({ session, onClose, onComplete }: PomodoroSprintP
 
   const [selectedDuration, setSelectedDuration] = useState<PomodoroSprintDuration>(25);
   const [showCelebration, setShowCelebration] = useState(false);
-  const timerIntervalRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Log game session entry
   useEffect(() => {
@@ -67,7 +67,7 @@ export function PomodoroSprint({ session, onClose, onComplete }: PomodoroSprintP
   // Timer logic
   useEffect(() => {
     if (gameSession.isRunning && !gameSession.isComplete) {
-      timerIntervalRef.current = window.setInterval(() => {
+      timerIntervalRef.current = setInterval(() => {
         setGameSession((prev) => {
           const newElapsedSeconds = prev.elapsedSeconds + 1;
           const totalSeconds = getTotalSeconds(prev.duration);
@@ -237,7 +237,18 @@ export function PomodoroSprint({ session, onClose, onComplete }: PomodoroSprintP
 
   return (
     <div className="pomodoro-sprint">
-      <div className="pomodoro-sprint__backdrop" onClick={handleCancel} />
+      <div 
+        className="pomodoro-sprint__backdrop" 
+        onClick={handleCancel}
+        role="button"
+        tabIndex={0}
+        aria-label="Close Pomodoro Sprint"
+        onKeyDown={(e) => {
+          if (e.key === 'Escape' || e.key === 'Enter') {
+            handleCancel();
+          }
+        }}
+      />
       <div className="pomodoro-sprint__container">
         <button className="pomodoro-sprint__close" onClick={handleCancel}>
           ×
@@ -270,7 +281,13 @@ export function PomodoroSprint({ session, onClose, onComplete }: PomodoroSprintP
                   >
                     <p className="pomodoro-sprint__duration-time">{duration} min</p>
                     <p className="pomodoro-sprint__duration-label">
-                      {duration === 25 ? 'Full Pomodoro' : 'Quick Sprint'}
+                      {duration === 25 
+                        ? 'Full Pomodoro' 
+                        : duration === 15 
+                        ? 'Standard Sprint' 
+                        : duration === 10 
+                        ? 'Short Sprint' 
+                        : 'Mini Sprint'}
                     </p>
                     <p className="pomodoro-sprint__duration-rewards">
                       🪙 {rewards.coins}
