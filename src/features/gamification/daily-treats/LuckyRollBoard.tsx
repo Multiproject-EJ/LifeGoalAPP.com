@@ -8,6 +8,7 @@ import { LuckyRollMiniGameStub } from './LuckyRollMiniGameStub';
 import { TaskTower } from '../games/task-tower/TaskTower';
 import { PomodoroSprint } from '../games/pomodoro-sprint/PomodoroSprint';
 import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
+import { VisionQuest } from '../games/vision-quest/VisionQuest';
 import { LuckyRollCelebration } from './LuckyRollCelebration';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
@@ -39,6 +40,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [showTaskTower, setShowTaskTower] = useState(false);
   const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
+  const [showVisionQuest, setShowVisionQuest] = useState(false);
   const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
   const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
@@ -268,6 +270,8 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           setShowPomodoroSprint(true);
         } else if (effect.miniGame === 'wheel_of_wins') {
           setShowWheelOfWins(true);
+        } else if (effect.miniGame === 'vision_quest') {
+          setShowVisionQuest(true);
         } else if (effect.miniGame) {
           setShowMiniGameStub(effect.miniGame ?? null);
         }
@@ -525,6 +529,23 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           }}
           onComplete={(rewards) => {
             setShowWheelOfWins(false);
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
+        />
+      )}
+      
+      {/* Vision Quest mini-game */}
+      {showVisionQuest && (
+        <VisionQuest
+          session={session}
+          onClose={() => {
+            setShowVisionQuest(false);
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
+          onComplete={(rewards) => {
+            setShowVisionQuest(false);
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
