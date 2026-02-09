@@ -1,0 +1,316 @@
+/* Wheel of Wins Styles */
+
+/* Container and Backdrop */
+.wheel-of-wins {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.wheel-of-wins__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 20, 30, 0.9) 100%);
+  backdrop-filter: blur(8px);
+}
+
+.wheel-of-wins__container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  background: linear-gradient(135deg, #2a1a2e 0%, #3a2a3e 100%);
+  border-radius: 16px;
+  border: 2px solid #e879f9;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(232, 121, 249, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+.wheel-of-wins__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(232, 121, 249, 0.15) 0%, rgba(232, 121, 249, 0.05) 100%);
+  border-bottom: 1px solid rgba(232, 121, 249, 0.3);
+}
+
+.wheel-of-wins__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f5e6f3;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.wheel-of-wins__close {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.wheel-of-wins__close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: scale(1.05);
+}
+
+/* Game Area */
+.wheel-of-wins__game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  min-height: 400px;
+}
+
+/* Pointer */
+.wheel-of-wins__pointer {
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 25px solid #fbbf24;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  z-index: 10;
+}
+
+/* Wheel */
+.wheel-of-wins__wheel {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(232, 121, 249, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.2);
+  margin-top: 3rem;
+}
+
+.wheel-of-wins__wheel--spinning {
+  /* Animation is handled via inline style with transition */
+}
+
+/* Segment labels */
+.wheel-of-wins__segment-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: center center;
+}
+
+.wheel-of-wins__segment-content {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+
+.wheel-of-wins__segment-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.wheel-of-wins__segment-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
+
+/* Center circle */
+.wheel-of-wins__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e879f9 0%, #c026d3 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  border: 3px solid #ffffff;
+}
+
+/* Result display */
+.wheel-of-wins__result {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, rgba(232, 121, 249, 0.2) 0%, rgba(192, 38, 211, 0.2) 100%);
+  border: 2px solid rgba(232, 121, 249, 0.4);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  animation: wheelResultFadeIn 0.3s ease-out;
+}
+
+@keyframes wheelResultFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.wheel-of-wins__result-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.wheel-of-wins__result-text {
+  text-align: center;
+  color: #f5e6f3;
+}
+
+.wheel-of-wins__result-jackpot {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fbbf24;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: wheelJackpotPulse 1s ease-in-out infinite;
+}
+
+@keyframes wheelJackpotPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.wheel-of-wins__result-rewards {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e879f9;
+  margin-top: 0.25rem;
+}
+
+/* Actions */
+.wheel-of-wins__actions {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(232, 121, 249, 0.05) 0%, rgba(232, 121, 249, 0.02) 100%);
+  border-top: 1px solid rgba(232, 121, 249, 0.2);
+  display: flex;
+  justify-content: center;
+}
+
+.wheel-of-wins__button {
+  padding: 0.875rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wheel-of-wins__button--primary {
+  background: linear-gradient(135deg, #e879f9 0%, #c026d3 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(232, 121, 249, 0.4);
+}
+
+.wheel-of-wins__button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(232, 121, 249, 0.5);
+}
+
+.wheel-of-wins__button--primary:active {
+  transform: translateY(0);
+}
+
+.wheel-of-wins__spinning-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #e879f9;
+  animation: wheelSpinningPulse 1s ease-in-out infinite;
+}
+
+@keyframes wheelSpinningPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .wheel-of-wins__wheel {
+    width: 240px;
+    height: 240px;
+  }
+
+  .wheel-of-wins__segment-label {
+    font-size: 0.875rem;
+  }
+
+  .wheel-of-wins__segment-emoji {
+    font-size: 1.25rem;
+  }
+
+  .wheel-of-wins__segment-text {
+    font-size: 0.625rem;
+  }
+
+  .wheel-of-wins__result {
+    padding: 0.75rem 1.5rem;
+  }
+
+  .wheel-of-wins__result-emoji {
+    font-size: 1.5rem;
+  }
+
+  .wheel-of-wins__result-rewards {
+    font-size: 0.875rem;
+  }
+}

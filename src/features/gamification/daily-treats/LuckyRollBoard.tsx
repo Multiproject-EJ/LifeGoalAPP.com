@@ -7,6 +7,7 @@ import { resolveTileEffect, getGoldBalance, type TileEffectResult } from './luck
 import { LuckyRollMiniGameStub } from './LuckyRollMiniGameStub';
 import { TaskTower } from '../games/task-tower/TaskTower';
 import { PomodoroSprint } from '../games/pomodoro-sprint/PomodoroSprint';
+import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
 import { LuckyRollCelebration } from './LuckyRollCelebration';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
@@ -37,6 +38,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [showMiniGameStub, setShowMiniGameStub] = useState<string | null>(null);
   const [showTaskTower, setShowTaskTower] = useState(false);
   const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
+  const [showWheelOfWins, setShowWheelOfWins] = useState(false);
   const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
   const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
@@ -264,6 +266,8 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           setShowTaskTower(true);
         } else if (effect.miniGame === 'pomodoro_sprint') {
           setShowPomodoroSprint(true);
+        } else if (effect.miniGame === 'wheel_of_wins') {
+          setShowWheelOfWins(true);
         } else if (effect.miniGame) {
           setShowMiniGameStub(effect.miniGame ?? null);
         }
@@ -504,6 +508,23 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             setShowPomodoroSprint(false);
             // Rewards are already delivered by PomodoroSprint
             // Just refresh currency balance display
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
+        />
+      )}
+      
+      {/* Wheel of Wins mini-game */}
+      {showWheelOfWins && (
+        <WheelOfWins
+          session={session}
+          onClose={() => {
+            setShowWheelOfWins(false);
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
+          onComplete={(rewards) => {
+            setShowWheelOfWins(false);
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
