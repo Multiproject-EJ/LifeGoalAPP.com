@@ -385,7 +385,11 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
       </div>
       
       {showCelebration && (
-        <LuckyRollCelebration type="big" message="🗼 TOWER CLEARED!" />
+        <LuckyRollCelebration 
+          type="big" 
+          message="🗼 TOWER CLEARED!" 
+          onComplete={() => setShowCelebration(false)}
+        />
       )}
       
       {showRewards && (

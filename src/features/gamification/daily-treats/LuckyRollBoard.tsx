@@ -255,7 +255,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
       setTimeout(() => {
         if (effect.miniGame === 'task_tower') {
           setShowTaskTower(true);
-        } else {
+        } else if (effect.miniGame) {
           setShowMiniGameStub(effect.miniGame);
         }
       }, 1200); // Show after landing effect
