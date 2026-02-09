@@ -259,7 +259,7 @@ export function WheelOfWins({ session, onClose, onComplete }: WheelOfWinsProps) 
               className="wheel-of-wins__button wheel-of-wins__button--primary"
               onClick={handleCollect}
             >
-              Collect &amp; Return
+              Collect & Return
             </button>
           )}
 

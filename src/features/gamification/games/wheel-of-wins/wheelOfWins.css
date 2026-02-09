@@ -114,10 +114,6 @@
   margin-top: 3rem;
 }
 
-.wheel-of-wins__wheel--spinning {
-  /* Animation is handled via inline style with transition */
-}
-
 /* Segment labels */
 .wheel-of-wins__segment-label {
   position: absolute;
