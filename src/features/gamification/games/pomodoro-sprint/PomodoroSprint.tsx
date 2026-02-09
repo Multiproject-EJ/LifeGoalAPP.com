@@ -87,6 +87,7 @@ export function PomodoroSprint({ session, onClose, onComplete }: PomodoroSprintP
               awardGold(
                 userId,
                 rewards.coins,
+                'pomodoro_sprint',
                 `Pomodoro Sprint: Completed ${prev.duration}-minute session`
               );
             }
@@ -174,6 +175,7 @@ export function PomodoroSprint({ session, onClose, onComplete }: PomodoroSprintP
       awardGold(
         userId,
         rewards.coins,
+        'pomodoro_sprint',
         `Pomodoro Sprint: Early exit from ${gameSession.duration}-minute session`
       );
     }

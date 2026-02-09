@@ -99,6 +99,7 @@ export function VisionQuest({ session, onClose, onComplete }: VisionQuestProps) 
       awardGold(
         userId,
         rewards.coins,
+        'vision_quest',
         `Vision Quest: Reflection on ${gameSession.selectedPrompt.zone}`
       );
     }
