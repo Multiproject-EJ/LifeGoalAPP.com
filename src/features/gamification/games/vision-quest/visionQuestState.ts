@@ -10,6 +10,7 @@ import {
   type ReflectionPrompt,
   type VisionQuestState,
   type JournalEntry,
+  type LifeWheelZone,
 } from './visionQuestTypes';
 
 /**
@@ -146,7 +147,7 @@ export function saveJournalEntry(
   userId: string,
   prompt: string,
   response: string,
-  zone: string,
+  zone: LifeWheelZone,
   state: VisionQuestState
 ): VisionQuestState {
   const timestamp = new Date().toISOString();
@@ -154,7 +155,7 @@ export function saveJournalEntry(
   const entry: JournalEntry = {
     prompt,
     response,
-    zone: zone as any,
+    zone,
     timestamp,
   };
   

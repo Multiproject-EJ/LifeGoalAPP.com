@@ -17,7 +17,8 @@ import { awardDice, awardGameTokens, logGameSession } from '../../../../services
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
 import './visionQuest.css';
 
-// Sound stubs (no-op implementations)
+// Sound stubs (placeholders for future sound integration)
+// These match the pattern used in other mini-games (PomodoroSprint, TaskTower, WheelOfWins)
 const playButtonClick = () => {}; // Sound when clicking buttons
 const playReflectionComplete = () => {}; // Sound when reflection is saved
 
