@@ -410,9 +410,6 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             <span className="lucky-roll-landed-effect__label">
               {landedTile.type === 'mystery' && !mysteryRevealed ? '❓ Mystery...' : tileEffect.message}
             </span>
-            {landedTile.type === 'mini_game' && (
-              <span className="lucky-roll-landed-effect__subtitle">Coming Soon</span>
-            )}
           </div>
         )}
         
