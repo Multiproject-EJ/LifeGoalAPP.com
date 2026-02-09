@@ -43,7 +43,12 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   
   // Load currency balance from gameRewards
-  const currencyBalance = useMemo(() => loadCurrencyBalance(userId), [userId]);
+  const [currencyBalance, setCurrencyBalance] = useState(() => loadCurrencyBalance(userId));
+  
+  // Function to refresh currency balance
+  const refreshCurrencyBalance = useCallback(() => {
+    setCurrencyBalance(loadCurrencyBalance(userId));
+  }, [userId]);
   
   // Sync available dice with currency balance
   useEffect(() => {
@@ -468,12 +473,14 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           onClose={() => {
             setShowTaskTower(false);
             // Refresh currency balance
+            refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
           onComplete={(rewards) => {
             setShowTaskTower(false);
             // Rewards are already delivered by TaskTower
             // Just refresh currency balance display
+            refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
         />
