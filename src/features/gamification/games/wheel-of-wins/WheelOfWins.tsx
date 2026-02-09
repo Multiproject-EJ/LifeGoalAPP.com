@@ -94,6 +94,7 @@ export function WheelOfWins({ session, onClose, onComplete }: WheelOfWinsProps) 
         awardGold(
           userId,
           winningSegment.rewards.coins,
+          'wheel_of_wins',
           `Wheel of Wins: ${winningSegment.label}`
         );
       }

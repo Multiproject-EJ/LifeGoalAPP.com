@@ -8,7 +8,7 @@
  */
 
 import type { BoardTile } from './luckyRollTypes';
-import { awardDice, awardGameTokens, logRewardEvent, loadCurrencyBalance } from '../../../services/gameRewards';
+import { awardDice, awardGameTokens, logRewardEvent, loadCurrencyBalance, type GameSource } from '../../../services/gameRewards';
 
 // For gold/coins, we need to manage it through localStorage similar to gameRewards
 // The existing system doesn't have gold management, so we'll add it here
@@ -80,7 +80,7 @@ function saveGoldBalance(userId: string, amount: number): void {
  * Award gold coins
  * Exported for use by Task Tower and other games
  */
-export function awardGold(userId: string, amount: number, context: string): number {
+export function awardGold(userId: string, amount: number, source: GameSource, context: string): number {
   const currentGold = loadGoldBalance(userId);
   const newGold = currentGold + amount;
   saveGoldBalance(userId, newGold);
@@ -88,7 +88,7 @@ export function awardGold(userId: string, amount: number, context: string): numb
   logRewardEvent({
     id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     userId,
-    source: 'task_tower',
+    source,
     currency: 'gold',
     amount,
     context,
@@ -101,7 +101,7 @@ export function awardGold(userId: string, amount: number, context: string): numb
 /**
  * Deduct gold coins (never goes below 0)
  */
-function deductGold(userId: string, amount: number, context: string): number {
+function deductGold(userId: string, amount: number, source: GameSource = 'lucky_roll', context: string): number {
   const currentGold = loadGoldBalance(userId);
   const deductAmount = Math.min(currentGold, amount); // Can't deduct more than available
   const newGold = currentGold - deductAmount;
@@ -110,7 +110,7 @@ function deductGold(userId: string, amount: number, context: string): number {
   logRewardEvent({
     id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     userId,
-    source: 'lucky_roll',
+    source,
     currency: 'gold',
     amount: -deductAmount,
     context,
@@ -129,7 +129,7 @@ function resolveMysteryOutcome(userId: string): TileEffectResult {
   // 40% gain coins (20-80)
   if (roll < 0.40) {
     const amount = getRandomIntInclusive(20, 80);
-    awardGold(userId, amount, 'Lucky Roll: Mystery tile - coins');
+    awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Mystery tile - coins');
     
     return {
       type: 'mystery',
@@ -181,7 +181,7 @@ function resolveMysteryOutcome(userId: string): TileEffectResult {
   
   // 5% jackpot-level (100+ coins)
   const amount = getRandomIntInclusive(100, 200);
-  awardGold(userId, amount, 'Lucky Roll: Mystery tile - jackpot');
+  awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Mystery tile - jackpot');
   
   return {
     type: 'mystery',
@@ -211,7 +211,7 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
       const min = tile.effect?.min || 10;
       const max = tile.effect?.max || 50;
       const amount = getRandomIntInclusive(min, max);
-      awardGold(userId, amount, 'Lucky Roll: Gain coins tile');
+      awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Gain coins tile');
       
       let celebrationType: 'small' | 'medium' | 'big' = 'small';
       if (amount >= 76) celebrationType = 'big';
@@ -230,7 +230,7 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
       const min = Math.abs(tile.effect?.min || -25);
       const max = Math.abs(tile.effect?.max || -5);
       const amount = getRandomIntInclusive(Math.min(min, max), Math.max(min, max));
-      deductGold(userId, amount, 'Lucky Roll: Lose coins tile');
+      deductGold(userId, amount, 'lucky_roll', 'Lucky Roll: Lose coins tile');
       
       return {
         type: 'lose_coins',
@@ -278,7 +278,7 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
       const min = tile.effect?.min || 100;
       const max = tile.effect?.max || 500;
       const amount = getRandomIntInclusive(min, max);
-      awardGold(userId, amount, 'Lucky Roll: Jackpot tile');
+      awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Jackpot tile');
       
       return {
         type: 'jackpot',

@@ -89,7 +89,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
       
       // Award rewards immediately
       if (blockRewards.coins > 0) {
-        awardGold(userId, blockRewards.coins, `Task Tower: Completed ${selectedBlock.category} block`);
+        awardGold(userId, blockRewards.coins, 'task_tower', `Task Tower: Completed ${selectedBlock.category} block`);
       }
       if (blockRewards.dice > 0) {
         awardDice(userId, blockRewards.dice, 'task_tower', `Task Tower: Completed ${selectedBlock.category} block`);
@@ -149,7 +149,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
           
           // Award line clear rewards immediately
           if (lineClearRewards.coins > 0) {
-            awardGold(userId, lineClearRewards.coins, `Task Tower: Cleared ${clearedRows.length} line(s)`);
+            awardGold(userId, lineClearRewards.coins, 'task_tower', `Task Tower: Cleared ${clearedRows.length} line(s)`);
           }
           if (lineClearRewards.dice > 0) {
             awardDice(userId, lineClearRewards.dice, 'task_tower', `Task Tower: Cleared ${clearedRows.length} line(s)`);
@@ -190,7 +190,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
           
           // Award all clear rewards immediately
           if (allClearRewards.coins > 0) {
-            awardGold(userId, allClearRewards.coins, 'Task Tower: All Clear Bonus');
+            awardGold(userId, allClearRewards.coins, 'task_tower', 'Task Tower: All Clear Bonus');
           }
           if (allClearRewards.dice > 0) {
             awardDice(userId, allClearRewards.dice, 'task_tower', 'Task Tower: All Clear Bonus');
