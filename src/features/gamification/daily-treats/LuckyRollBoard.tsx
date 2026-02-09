@@ -6,6 +6,7 @@ import { loadCurrencyBalance, deductDice } from '../../../services/gameRewards';
 import { resolveTileEffect, getGoldBalance, type TileEffectResult } from './luckyRollTileEffects';
 import { LuckyRollMiniGameStub } from './LuckyRollMiniGameStub';
 import { TaskTower } from '../games/task-tower/TaskTower';
+import { PomodoroSprint } from '../games/pomodoro-sprint/PomodoroSprint';
 import { LuckyRollCelebration } from './LuckyRollCelebration';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
@@ -35,6 +36,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showMiniGameStub, setShowMiniGameStub] = useState<string | null>(null);
   const [showTaskTower, setShowTaskTower] = useState(false);
+  const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
   const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
   const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
@@ -260,8 +262,10 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
       setTimeout(() => {
         if (effect.miniGame === 'task_tower') {
           setShowTaskTower(true);
+        } else if (effect.miniGame === 'pomodoro_sprint') {
+          setShowPomodoroSprint(true);
         } else if (effect.miniGame) {
-          setShowMiniGameStub(effect.miniGame);
+          setShowMiniGameStub(effect.miniGame ?? null);
         }
       }, 1200); // Show after landing effect
     }
@@ -479,6 +483,26 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           onComplete={(rewards) => {
             setShowTaskTower(false);
             // Rewards are already delivered by TaskTower
+            // Just refresh currency balance display
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
+        />
+      )}
+      
+      {/* Pomodoro Sprint mini-game */}
+      {showPomodoroSprint && (
+        <PomodoroSprint
+          session={session}
+          onClose={() => {
+            setShowPomodoroSprint(false);
+            // Refresh currency balance
+            refreshCurrencyBalance();
+            setGoldBalance(getGoldBalance(userId));
+          }}
+          onComplete={(rewards) => {
+            setShowPomodoroSprint(false);
+            // Rewards are already delivered by PomodoroSprint
             // Just refresh currency balance display
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
