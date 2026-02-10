@@ -39,11 +39,52 @@ export function getEvolutionSuggestion(reward: RewardItem): {
     }
   }
 
-  // State 1 → State 2 (Elevated) - for future phases
+  // State 1 → State 2 (Elevated) — Add structure
   if (evolutionState === 1) {
+    switch (category) {
+      case 'Rest':
+        return {
+          title: `${title} + 5-min walk`,
+          description: 'Pair your rest with a short walk to boost energy.',
+        };
+      case 'Fun':
+        return {
+          title: `${title} (15-min timebox)`,
+          description: 'Set a timer to stay present and intentional.',
+        };
+      case 'Social':
+        return {
+          title: `${title} + 1 shared win`,
+          description: 'Share one recent win or positive moment.',
+        };
+      case 'Growth':
+        return {
+          title: `${title} + 1 action`,
+          description: 'Turn your insight into one small action step.',
+        };
+      case 'Treat':
+        return {
+          title: `${title} + savor ritual`,
+          description: 'Take 30 seconds to fully appreciate this treat.',
+        };
+      case 'Meta':
+        return {
+          title: `${title} + review 1 goal`,
+          description: 'Pair this reward with a quick goal check-in.',
+        };
+      default:
+        return {
+          title: `${title} + structure`,
+          description: 'Add light structure or pairing.',
+        };
+    }
+  }
+
+  // State 2 → State 3 (Transformative) — PLACEHOLDER for P8.5
+  if (evolutionState === 2) {
     return {
-      title: `${title} + structure`,
-      description: 'Add light structure or pairing.',
+      title: `${title} + growth element`,
+      description: 'Transform this into a growth-aligned practice.',
     };
   }
 

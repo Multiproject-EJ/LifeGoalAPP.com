@@ -14,6 +14,7 @@ import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
 import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward, shouldPromptEvolution, evolveReward } from '../../services/rewards';
 import { recordTelemetryEvent } from '../../services/telemetry';
+import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
@@ -271,15 +272,16 @@ export function ScoreTab({
 
   const handleAcceptEvolution = async () => {
     if (!evolutionPrompt || !userId) return;
-    const { data: updatedReward } = await evolveReward(userId, evolutionPrompt.reward.id, true);
+    await evolveReward(userId, evolutionPrompt.reward.id, true);
     
     // Reload rewards
     const { data: rewardData } = await fetchRewardCatalog(userId);
     setRewards(rewardData ?? []);
     
+    const newState = evolutionPrompt.reward.evolutionState + 1;
     setRewardMessage({
       type: 'success',
-      text: `✨ "${evolutionPrompt.reward.title}" evolved!`,
+      text: `✨ "${evolutionPrompt.reward.title}" evolved to State ${newState}!`,
     });
     
     void recordTelemetryEvent({
@@ -288,7 +290,8 @@ export function ScoreTab({
       metadata: {
         rewardId: evolutionPrompt.reward.id,
         category: evolutionPrompt.reward.category,
-        evolutionState: updatedReward?.evolutionState ?? 1,
+        fromState: evolutionPrompt.reward.evolutionState,
+        toState: newState,
       },
     });
     
@@ -694,7 +697,14 @@ export function ScoreTab({
                 return (
                   <div key={reward.id} className="score-tab__reward-card">
                     <div className="score-tab__reward-card-header">
-                      <h3>{reward.title}</h3>
+                      <h3>
+                        {reward.title}
+                        {reward.evolutionState > 0 && (
+                          <span className="score-tab__reward-badge" data-state={reward.evolutionState}>
+                            {getEvolutionStateLabel(reward.evolutionState)}
+                          </span>
+                        )}
+                      </h3>
                       <span className="score-tab__reward-cost">🪙 {formatter.format(reward.costGold)}</span>
                     </div>
                     {reward.category && (

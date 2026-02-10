@@ -1493,6 +1493,32 @@
 .score-tab__reward-card-header h3 {
   margin: 0;
   font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.score-tab__reward-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.score-tab__reward-badge[data-state="1"] {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.score-tab__reward-badge[data-state="2"] {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.score-tab__reward-badge[data-state="3"] {
+  background: #fff3e0;
+  color: #e65100;
 }
 
 .score-tab__reward-cost {
