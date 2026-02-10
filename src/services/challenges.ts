@@ -5,7 +5,6 @@ import type {
   ChallengeDefinition,
   ChallengeInstance,
   ChallengeState,
-  ChallengePeriod,
   ChallengeStatus,
 } from '../types/gamification';
 import { DEMO_CHALLENGES_KEY, XP_REWARDS } from '../types/gamification';

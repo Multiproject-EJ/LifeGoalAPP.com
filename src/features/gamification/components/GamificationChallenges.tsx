@@ -40,7 +40,7 @@ function ChallengeCard({ challenge }: { challenge: ChallengeInstance }) {
   );
 }
 
-export function GamificationChallenges({ userId, onChallengeComplete }: GamificationChallengesProps) {
+export function GamificationChallenges({ userId }: GamificationChallengesProps) {
   const [state, setState] = useState<ChallengeState | null>(null);
 
   const refresh = useCallback(() => {
@@ -62,16 +62,6 @@ export function GamificationChallenges({ userId, onChallengeComplete }: Gamifica
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
   }, [refresh]);
-
-  // Expose onChallengeComplete for parent use  
-  useEffect(() => {
-    if (!state || !onChallengeComplete) return;
-    // Check for newly completed challenges
-    const allChallenges = [...state.dailyChallenges, ...state.weeklyChallenges];
-    const completed = allChallenges.filter((c) => c.status === 'completed' && c.completedAt);
-    // This is a passive check — actual completion is triggered by recordChallengeActivity
-    void completed;
-  }, [state, onChallengeComplete]);
 
   if (!state) return null;
 
