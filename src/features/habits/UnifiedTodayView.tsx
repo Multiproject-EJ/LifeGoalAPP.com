@@ -22,6 +22,7 @@ import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress } from '.
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { recordChallengeActivity } from '../../services/challenges';
 
 type ViewVariant = 'full' | 'compact' | 'minimal';
 
@@ -185,6 +186,7 @@ export function UnifiedTodayView({
         : XP_REWARDS.HABIT_COMPLETE;
       await earnXP(xpAmount, 'habit_complete', habitId);
       await recordActivity();
+      recordChallengeActivity(session.user.id, 'habit_complete');
 
       // Callback
       onHabitComplete?.(habitId);
@@ -236,6 +238,7 @@ export function UnifiedTodayView({
         : XP_REWARDS.HABIT_COMPLETE;
       await earnXP(xpAmount, 'habit_complete', habit.id);
       await recordActivity();
+      recordChallengeActivity(session.user.id, 'habit_complete');
 
       onHabitComplete?.(habit.id);
     } catch (err) {

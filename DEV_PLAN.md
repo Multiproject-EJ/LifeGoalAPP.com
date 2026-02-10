@@ -385,3 +385,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: Gamification Phase 2 — Challenge System implementation.  
   - **What changed**: Added daily and weekly challenge system with types (`ChallengeInstance`, `ChallengeState`), localStorage-backed service (`challenges.ts`), UI component (`GamificationChallenges.tsx` with CSS), and dashboard panel integration. Marked M2, M3, and M8 as complete in status snapshot (code already existed). Added `CHALLENGE_DAILY` (100 XP) and `CHALLENGE_WEEKLY` (250 XP) reward constants.  
   - **What’s next**: Wire `recordChallengeActivity()` into habit completion, journal entry, and check-in flows for automatic progress tracking. Begin M4 auto-progress ladder or continue with Phase 2 leaderboards.
+- **2026-02-10**  
+  - **Slice**: Gamification Phase 2 — Wire challenge activity tracking into completion flows.  
+  - **What changed**: Imported `recordChallengeActivity` and wired it into all completion flows: `DailyHabitTracker.tsx` (habit completion, quick journal, intentions journal), `UnifiedTodayView.tsx` (two habit completion handlers), `LifeWheelCheckins.tsx` (form submit and questionnaire check-in), and `Journal.tsx` (journal entry creation). Challenges now automatically track progress when users complete habits, write journal entries, or submit check-ins.  
+  - **What's next**: Begin M4 auto-progress ladder (tiers, downshift UX, done-ish support, habit environment) or continue with Phase 2 leaderboards.

@@ -6,6 +6,7 @@ import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { recordChallengeActivity } from '../../services/challenges';
 import { ReviewWizard } from '../annual-review';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
@@ -507,6 +508,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
           await earnXP(totalXP, 'checkin_complete', data.id);
           await recordActivity();
+          recordChallengeActivity(session.user.id, 'checkin_complete');
         }
         setSuccessMessage('Check-in saved! Revisit the history to spot your trends.');
       }
@@ -648,6 +650,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         // So we just award the base XP
         await earnXP(XP_REWARDS.CHECKIN, 'checkin_complete', data.id);
         await recordActivity();
+        recordChallengeActivity(session.user.id, 'checkin_complete');
       }
       
       setSuccessMessage(`${questionnaireLabel} completed! Your life wheel has been updated.`);
