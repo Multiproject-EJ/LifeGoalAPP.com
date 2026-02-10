@@ -2,6 +2,7 @@ import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import type { RewardItem, RewardRedemption, RewardCooldownType, RewardCategory } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
+import { getEvolutionSuggestion } from '../lib/rewardEvolution';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -81,6 +82,10 @@ export async function createReward(
     createdAt: new Date().toISOString(),
     redemptionCount: 0,
     lastRedeemedAt: null,
+    // Evolution defaults
+    evolutionState: 0,
+    evolutionPromptedAt: null,
+    evolutionDeclinedAt: null,
   };
 
   const updated = [...(rewards ?? []), newReward];
@@ -189,3 +194,77 @@ export async function redeemReward(
     error: null,
   };
 }
+
+export async function shouldPromptEvolution(
+  userId: string,
+  rewardId: string
+): Promise<boolean> {
+  const { data: rewards } = await fetchRewardCatalog(userId);
+  const { data: redemptions } = await fetchRewardRedemptions(userId);
+  
+  if (!rewards || !redemptions) return false;
+
+  const reward = rewards.find((r) => r.id === rewardId);
+  if (!reward) return false;
+
+  // Don't prompt if already evolved past State 0
+  if (reward.evolutionState !== 0) return false;
+
+  // Don't nag: if user declined, wait 14 days
+  if (reward.evolutionDeclinedAt) {
+    const declinedDate = new Date(reward.evolutionDeclinedAt);
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    if (declinedDate > fourteenDaysAgo) return false;
+  }
+
+  // Count redemptions in last 7 days
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const recentRedemptions = redemptions.filter(
+    (r) =>
+      r.rewardId === rewardId &&
+      new Date(r.redeemedAt) >= sevenDaysAgo
+  );
+
+  return recentRedemptions.length >= 3;
+}
+
+export async function evolveReward(
+  userId: string,
+  rewardId: string,
+  accept: boolean
+): Promise<ServiceResponse<RewardItem>> {
+  const { data: rewards, error } = await fetchRewardCatalog(userId);
+  if (error || !rewards) {
+    return { data: null, error: error || new Error('Failed to load rewards') };
+  }
+
+  const reward = rewards.find((r) => r.id === rewardId);
+  if (!reward) {
+    return { data: null, error: new Error('Reward not found') };
+  }
+
+  let updated: RewardItem;
+
+  if (accept) {
+    const evolved = getEvolutionSuggestion(reward);
+    updated = {
+      ...reward,
+      title: evolved.title,
+      description: evolved.description,
+      evolutionState: Math.min(3, reward.evolutionState + 1) as 0 | 1 | 2 | 3,
+      evolutionPromptedAt: new Date().toISOString(),
+    };
+  } else {
+    updated = {
+      ...reward,
+      evolutionDeclinedAt: new Date().toISOString(),
+      evolutionPromptedAt: new Date().toISOString(),
+    };
+  }
+
+  const allRewards = rewards.map((r) => (r.id === rewardId ? updated : r));
+  localStorage.setItem(getRewardKey(userId), JSON.stringify(allRewards));
+
+  return { data: updated, error: null };
+}
+

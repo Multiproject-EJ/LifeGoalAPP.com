@@ -22,7 +22,10 @@ export type TelemetryEventType =
   | 'tree_streak_award'
   | 'habit_done_ish_completed'
   | 'habit_tier_changed'
-  | 'habit_environment_set';
+  | 'habit_environment_set'
+  | 'reward_evolution_prompted'
+  | 'reward_evolution_accepted'
+  | 'reward_evolution_declined';
 
 export type TelemetryEventMetadata = Json;
 

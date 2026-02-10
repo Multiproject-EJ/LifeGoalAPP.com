@@ -1,0 +1,93 @@
+.reward-evolution-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-evolution-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.reward-evolution-modal__content {
+  position: relative;
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.reward-evolution-modal__title {
+  font-size: 1.25rem;
+  margin: 0 0 12px;
+}
+
+.reward-evolution-modal__prompt {
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+
+.reward-evolution-modal__preview {
+  background: var(--background-secondary);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.reward-evolution-modal__current,
+.reward-evolution-modal__evolved {
+  margin-bottom: 8px;
+}
+
+.reward-evolution-modal__arrow {
+  margin: 8px 0;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.reward-evolution-modal__description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 4px 0 0;
+}
+
+.reward-evolution-modal__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.reward-evolution-modal__accept,
+.reward-evolution-modal__decline {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reward-evolution-modal__accept {
+  background: var(--primary-color);
+  color: white;
+}
+
+.reward-evolution-modal__accept:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.reward-evolution-modal__decline {
+  background: var(--background-secondary);
+  color: var(--text-primary);
+}
+
+.reward-evolution-modal__decline:hover {
+  background: var(--background-tertiary);
+}
