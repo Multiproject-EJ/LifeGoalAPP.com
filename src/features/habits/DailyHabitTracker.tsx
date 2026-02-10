@@ -52,6 +52,7 @@ import {
   getProgressStateIcon,
   getProgressStateLabel,
   getProgressStateColorClass,
+  PROGRESS_STATE_EFFECTS,
   type ProgressState,
 } from './progressGrading';
 import './progressGrading.css';
@@ -107,6 +108,8 @@ type HabitLogInsert = {
   habit_id: string;
   date: string;
   completed: boolean;
+  progress_state?: string;
+  completion_percentage?: number;
   id?: string;
 };
 
@@ -115,6 +118,8 @@ type HabitLogRow = {
   habit_id: string;
   date: string;
   completed: boolean;
+  progress_state?: string | null;
+  completion_percentage?: number | null;
 };
 
 type HabitInsights = {
@@ -5542,22 +5547,29 @@ function calculateHabitInsights(
   const lookbackStartDate = subtractDays(todayDate, STREAK_LOOKBACK_DAYS - 1);
   const lookbackStartISO = formatISODate(lookbackStartDate);
 
-  const completionSets = new Map<string, Set<string>>();
+  const completionMaps = new Map<string, Map<string, ProgressState>>();
   const lastCompletedMap = new Map<string, string>();
 
   for (const log of logs) {
-    if (!log.completed) continue;
     if (log.date < lookbackStartISO || log.date > trackingDateISO) continue;
-    let set = completionSets.get(log.habit_id);
-    if (!set) {
-      set = new Set<string>();
-      completionSets.set(log.habit_id, set);
-    }
-    set.add(log.date);
 
-    const currentLast = lastCompletedMap.get(log.habit_id);
-    if (!currentLast || log.date > currentLast) {
-      lastCompletedMap.set(log.habit_id, log.date);
+    const progressState = (log.progress_state as ProgressState | null) ?? (log.completed ? 'done' : 'missed');
+    let dayMap = completionMaps.get(log.habit_id);
+    if (!dayMap) {
+      dayMap = new Map<string, ProgressState>();
+      completionMaps.set(log.habit_id, dayMap);
+    }
+
+    const existing = dayMap.get(log.date);
+    if (!existing || PROGRESS_STATE_EFFECTS[progressState].streakCredit > PROGRESS_STATE_EFFECTS[existing].streakCredit) {
+      dayMap.set(log.date, progressState);
+    }
+
+    if (progressState === 'done' || progressState === 'doneIsh') {
+      const currentLast = lastCompletedMap.get(log.habit_id);
+      if (!currentLast || log.date > currentLast) {
+        lastCompletedMap.set(log.habit_id, log.date);
+      }
     }
   }
 
@@ -5566,7 +5578,7 @@ function calculateHabitInsights(
   for (const habit of habits) {
     const scheduleChecker = createScheduleChecker(habit.frequency, habit.schedule);
     const scheduledToday = scheduleChecker(todayDate);
-    const completionDates = completionSets.get(habit.id) ?? new Set<string>();
+    const completionDates = completionMaps.get(habit.id) ?? new Map<string, ProgressState>();
     let currentStreak = 0;
     let longestStreak = 0;
     let runningStreak = 0;
@@ -5582,27 +5594,28 @@ function calculateHabitInsights(
       }
 
       const isoDate = formatISODate(checkDate);
-      const completed = completionDates.has(isoDate);
-      if (completed) {
-        runningStreak += 1;
-        if (withinCurrent) {
-          currentStreak += 1;
-        }
-        if (runningStreak > longestStreak) {
-          longestStreak = runningStreak;
-        }
-      } else {
+      const progressState = completionDates.get(isoDate);
+      if (!progressState || PROGRESS_STATE_EFFECTS[progressState].breaksStreak) {
         if (withinCurrent) {
           withinCurrent = false;
         }
         runningStreak = 0;
+        continue;
+      }
+
+      runningStreak += PROGRESS_STATE_EFFECTS[progressState].streakCredit;
+      if (withinCurrent) {
+        currentStreak += PROGRESS_STATE_EFFECTS[progressState].streakCredit;
+      }
+      if (runningStreak > longestStreak) {
+        longestStreak = runningStreak;
       }
     }
 
     insights[habit.id] = {
       scheduledToday,
-      currentStreak,
-      longestStreak: Math.max(longestStreak, currentStreak),
+      currentStreak: Math.floor(currentStreak),
+      longestStreak: Math.floor(Math.max(longestStreak, currentStreak)),
       lastCompletedOn: lastCompletedMap.get(habit.id) ?? null,
     } satisfies HabitInsights;
   }

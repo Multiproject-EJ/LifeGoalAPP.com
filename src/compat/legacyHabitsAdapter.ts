@@ -28,7 +28,10 @@ import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 type LegacyHabitRow = Database['public']['Tables']['habits']['Row'];
 type LegacyHabitInsert = Database['public']['Tables']['habits']['Insert'];
 type LegacyHabitUpdate = Database['public']['Tables']['habits']['Update'];
-type LegacyHabitLogRow = Database['public']['Tables']['habit_logs']['Row'];
+type LegacyHabitLogRow = Database['public']['Tables']['habit_logs']['Row'] & {
+  progress_state?: string | null;
+  completion_percentage?: number | null;
+};
 type LegacyHabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
 
 export type LegacyHabitWithGoal = LegacyHabitRow & {
@@ -102,6 +105,8 @@ function toLegacyLog(v2Log: HabitLogV2Row): LegacyHabitLogRow {
     habit_id: v2Log.habit_id,
     date: v2Log.date,
     completed: v2Log.done,
+    progress_state: v2Log.progress_state,
+    completion_percentage: v2Log.completion_percentage,
   };
 }
 

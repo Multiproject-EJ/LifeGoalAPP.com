@@ -14,7 +14,7 @@ Use this section first when returning to the plan.
 | M1. Onboarding | ✅ Complete | Move to M2 balance/harmony scoring discovery (define axes + thresholds). |
 | M2. Balance / Harmony scoring v1 | ✅ Complete | Balance axes, thresholds, dashboard panel, and gamification bonus XP implemented. |
 | M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
-| M4. Auto-progress ladder v1 | 🟡 In Progress | Core implementation complete: types, schema, habit environment, done-ish thresholds, completion logic, UI affordances, telemetry events. Remaining: analytics/streaks integration. |
+| M4. Auto-progress ladder v1 | 🟡 In Progress | Done-ish weighted streak integration shipped in habit insights + quick actions sorting. Next: add weighted success-rate surfacing to habit analytics cards. |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
 | M6. AI Coach instruction system | ☐ Not started | |
 | M7. AI Coach interventions v1 | ☐ Not started | |
@@ -179,7 +179,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - Quantity: percent of target (e.g., 80%).
   - Duration: minimum minutes or percent of target.
 - [ ] Update habit completion logic to record progress state plus numeric completion percentage.
-- [ ] Update streak and success-rate calculations to include partial credit while avoiding inflated streaks.
+- [x] Update streak calculations to include partial credit while avoiding inflated streaks.
 - [ ] Add UI copy and visual affordances for “done-ish” (progressful) completion in daily check-ins.
 - [ ] Add mandatory “Habit Environment” textarea to habit setup/edit flows with validation and helper prompts.
 - [ ] Add “Habit Environment” summary in habit detail + coach context panels.
@@ -389,3 +389,8 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: Gamification Phase 2 — Wire challenge activity tracking into completion flows.  
   - **What changed**: Imported `recordChallengeActivity` and wired it into all completion flows: `DailyHabitTracker.tsx` (habit completion, quick journal, intentions journal), `UnifiedTodayView.tsx` (two habit completion handlers), `LifeWheelCheckins.tsx` (form submit and questionnaire check-in), and `Journal.tsx` (journal entry creation). Challenges now automatically track progress when users complete habits, write journal entries, or submit check-ins.  
   - **What's next**: Begin M4 auto-progress ladder (tiers, downshift UX, done-ish support, habit environment) or continue with Phase 2 leaderboards.
+- **2026-02-10**  
+  - **Slice**: M4 Slice — Done-ish weighted streak analytics integration.  
+  - **What changed**: Updated habit log compatibility mapping to preserve `progress_state` and `completion_percentage`, then integrated done-ish weighting into streak calculations used by `DailyHabitTracker` insights and `QuickActionsFAB` sorting. Streaks now count done-ish as partial credit and still break on missed days to avoid inflated streaks.  
+  - **What's next**: Add weighted success-rate metrics to habit analytics cards so done-ish contribution is visible alongside streaks.
+
