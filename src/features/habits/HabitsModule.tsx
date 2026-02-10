@@ -23,6 +23,11 @@ import {
   getNextUpgradeTier,
   type AutoProgressTier,
 } from './autoProgression';
+import {
+  buildHabitLogPayload,
+  type DoneIshConfig,
+  DEFAULT_DONEISH_CONFIG,
+} from './progressGrading';
 
 // Check if habit suggestions feature is enabled via environment variable
 const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
@@ -363,12 +368,25 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     setError(null);
 
     try {
+      // Get habit to read done-ish config
+      const habit = habits.find(h => h.id === habitId);
+      const doneIshConfig = (habit?.done_ish_config as DoneIshConfig) ?? DEFAULT_DONEISH_CONFIG;
+
+      // Build log payload with progress grading
+      const logPayload = buildHabitLogPayload({
+        habitType: 'boolean',
+        target: null,
+        value: null,
+        done: true,
+        wasSkipped: false,
+        doneIshConfig,
+      });
+
       // Create log entry for boolean habit
       const { data: newLog, error: logError } = await logHabitCompletionV2(
         {
           habit_id: habitId,
-          done: true,
-          value: null, // For boolean habits, value is null
+          ...logPayload,
         },
         session.user.id
       );
@@ -409,12 +427,24 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     setError(null);
 
     try {
+      // Get done-ish config
+      const doneIshConfig = (habit.done_ish_config as DoneIshConfig) ?? DEFAULT_DONEISH_CONFIG;
+
+      // Build log payload with progress grading
+      const logPayload = buildHabitLogPayload({
+        habitType: habit.type,
+        target: habit.target_num,
+        value: value,
+        done: false, // Will be calculated based on value vs target
+        wasSkipped: false,
+        doneIshConfig,
+      });
+
       // Create log entry with the value
       const { data: newLog, error: logError } = await logHabitCompletionV2(
         {
           habit_id: habit.id,
-          done: true,
-          value: value,
+          ...logPayload,
         },
         session.user.id
       );
@@ -611,6 +641,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     try {
       if (isEditMode && draft.habitId) {
         // Update existing habit
+        const doneIshConfig = {
+          booleanPartialEnabled: draft.booleanPartialEnabled ?? true,
+          quantityThresholdPercent: draft.type === 'quantity' ? draft.doneIshThreshold : 80,
+          durationThresholdPercent: draft.type === 'duration' ? draft.doneIshThreshold : 80,
+        };
+
         const updatePayload = {
           title: draft.title,
           emoji: draft.emoji,
@@ -618,6 +654,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+          habit_environment: draft.habitEnvironment ?? null,
+          done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
         };
         
         const { data: updatedHabit, error: updateError } = await updateHabitFullV2(draft.habitId, updatePayload);
@@ -641,6 +679,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         
       } else {
         // Create new habit
+        const doneIshConfig = {
+          booleanPartialEnabled: draft.booleanPartialEnabled ?? true,
+          quantityThresholdPercent: draft.type === 'quantity' ? draft.doneIshThreshold : 80,
+          durationThresholdPercent: draft.type === 'duration' ? draft.doneIshThreshold : 80,
+        };
+
         const insertPayload: Omit<Database['public']['Tables']['habits_v2']['Insert'], 'user_id'> = {
           title: draft.title,
           emoji: draft.emoji,
@@ -648,6 +692,8 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+          habit_environment: draft.habitEnvironment ?? null,
+          done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Insert']['done_ish_config'],
           autoprog: buildDefaultAutoProgressState({
             schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
             target: draft.targetValue ?? null,
