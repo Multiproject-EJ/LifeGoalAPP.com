@@ -611,6 +611,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
     try {
       if (isEditMode && draft.habitId) {
         // Update existing habit
+        const doneIshConfig = {
+          booleanPartialEnabled: draft.booleanPartialEnabled ?? true,
+          quantityThresholdPercent: draft.type === 'quantity' ? draft.doneIshThreshold : 80,
+          durationThresholdPercent: draft.type === 'duration' ? draft.doneIshThreshold : 80,
+        };
+
         const updatePayload = {
           title: draft.title,
           emoji: draft.emoji,
@@ -619,6 +625,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
+          done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
         };
         
         const { data: updatedHabit, error: updateError } = await updateHabitFullV2(draft.habitId, updatePayload);
@@ -642,6 +649,12 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         
       } else {
         // Create new habit
+        const doneIshConfig = {
+          booleanPartialEnabled: draft.booleanPartialEnabled ?? true,
+          quantityThresholdPercent: draft.type === 'quantity' ? draft.doneIshThreshold : 80,
+          durationThresholdPercent: draft.type === 'duration' ? draft.doneIshThreshold : 80,
+        };
+
         const insertPayload: Omit<Database['public']['Tables']['habits_v2']['Insert'], 'user_id'> = {
           title: draft.title,
           emoji: draft.emoji,
@@ -650,6 +663,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
+          done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Insert']['done_ish_config'],
           autoprog: buildDefaultAutoProgressState({
             schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
             target: draft.targetValue ?? null,

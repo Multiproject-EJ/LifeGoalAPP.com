@@ -18,6 +18,8 @@ export interface HabitWizardDraft {
   remindersEnabled?: boolean;
   reminderTimes?: string[];
   habitEnvironment?: string;
+  doneIshThreshold?: number; // Percentage threshold for quantity/duration (0-100)
+  booleanPartialEnabled?: boolean; // For boolean habits
   /** If present, indicates we're editing an existing habit */
   habitId?: string;
 }
@@ -50,6 +52,9 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
   const [reminderTime, setReminderTime] = useState<string>('08:00');
   const [habitEnvironment, setHabitEnvironment] = useState<string>('');
+  const [doneIshThreshold, setDoneIshThreshold] = useState<number>(80);
+  const [booleanPartialEnabled, setBooleanPartialEnabled] = useState<boolean>(true);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiApplied, setAiApplied] = useState(false);
@@ -67,6 +72,8 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       setRemindersEnabled(initialDraft.remindersEnabled ?? false);
       setReminderTime(initialDraft.reminderTimes?.[0] || '08:00');
       setHabitEnvironment(initialDraft.habitEnvironment || '');
+      setDoneIshThreshold(initialDraft.doneIshThreshold ?? 80);
+      setBooleanPartialEnabled(initialDraft.booleanPartialEnabled ?? true);
       setStep(1); // Reset to first step
       setAiError(null);
       setAiApplied(false);
@@ -129,6 +136,8 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       remindersEnabled,
       reminderTimes: remindersEnabled && reminderTime ? [reminderTime] : [],
       habitEnvironment: habitEnvironment.trim() || undefined,
+      doneIshThreshold,
+      booleanPartialEnabled,
       // Preserve habitId if editing
       habitId: initialDraft?.habitId,
     };
@@ -462,6 +471,87 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
               Describe the context and conditions needed for success. This helps you prepare and makes the habit more achievable.
             </p>
           </div>
+
+          {/* Advanced options toggle */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              type="button"
+              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#667eea',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              {showAdvancedOptions ? '▼' : '▶'} Advanced: Done-ish Settings
+            </button>
+          </div>
+
+          {/* Advanced done-ish configuration */}
+          {showAdvancedOptions && (
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '1rem',
+              marginBottom: '1.5rem',
+            }}>
+              <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                Partial Completion ("Done-ish") Settings
+              </h4>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                Set thresholds for when partial progress still counts as meaningful.
+              </p>
+
+              {type === 'boolean' && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={booleanPartialEnabled}
+                    onChange={(e) => setBooleanPartialEnabled(e.target.checked)}
+                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.875rem', color: '#334155' }}>
+                    Allow "did some" partial credit
+                  </span>
+                </label>
+              )}
+
+              {(type === 'quantity' || type === 'duration') && (
+                <div>
+                  <label
+                    htmlFor="doneish-threshold"
+                    style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
+                  >
+                    Partial completion threshold: {doneIshThreshold}%
+                  </label>
+                  <input
+                    id="doneish-threshold"
+                    type="range"
+                    min="50"
+                    max="99"
+                    step="5"
+                    value={doneIshThreshold}
+                    onChange={(e) => setDoneIshThreshold(parseInt(e.target.value, 10))}
+                    style={{
+                      width: '100%',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0 0' }}>
+                    Reaching {doneIshThreshold}% of your target will count as "done-ish" — partial credit with honest tracking.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Reminders */}
           <div style={{ marginBottom: '1.5rem' }}>

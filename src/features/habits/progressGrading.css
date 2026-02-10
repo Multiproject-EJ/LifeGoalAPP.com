@@ -1,0 +1,103 @@
+/* Progress Grading Styles for M4 */
+
+/* Progress state badges */
+.progress-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.progress-done {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.progress-doneish {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.progress-skipped {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.progress-missed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Progress bar for done-ish partial completion */
+.progress-bar-container {
+  width: 100%;
+  height: 0.5rem;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-bar-fill.done {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.progress-bar-fill.doneish {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+/* Done-ish config section */
+.doneish-config-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.doneish-config-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+
+.doneish-config-help {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+/* Habit environment display */
+.habit-environment-card {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.habit-environment-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0369a1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.habit-environment-text {
+  font-size: 0.875rem;
+  color: #0c4a6e;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
