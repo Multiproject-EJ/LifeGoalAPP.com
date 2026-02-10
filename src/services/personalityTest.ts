@@ -3,6 +3,7 @@ import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { loadDirtyPersonalityTests, loadPersonalityTestHistory } from '../data/personalityTestRepo';
 import { putPersonalityTest, type PersonalityTestValue } from '../data/localDb';
+import { buildTopTraitSummary } from '../features/identity/personalitySummary';
 
 export type PersonalityTestRow = Database['public']['Tables']['personality_tests']['Row'];
 export type PersonalityTestInsert = Database['public']['Tables']['personality_tests']['Insert'];
@@ -185,10 +186,12 @@ export async function syncPersonalityTestsWithSupabase(userId: string): Promise<
   }
 
   if (latestSynced) {
+    const personalitySummary = buildTopTraitSummary(latestSynced.traits);
     await upsertPersonalityProfile({
       user_id: userId,
       personality_traits: latestSynced.traits,
       personality_axes: latestSynced.axes,
+      personality_summary: personalitySummary,
       personality_last_tested_at: latestSynced.taken_at,
     });
   }
