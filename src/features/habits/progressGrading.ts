@@ -113,7 +113,7 @@ export function calculateProgressState(
   }
 
   // If below threshold and not completed, it's missed
-  return completionPercent > 0 ? 'missed' : 'missed';
+  return 'missed';
 }
 
 /**

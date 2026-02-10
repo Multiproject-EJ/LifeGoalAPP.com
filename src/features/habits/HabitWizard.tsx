@@ -32,6 +32,9 @@ export type HabitWizardProps = {
 
 type ScheduleChoice = 'every_day' | 'specific_days' | 'x_per_week';
 
+// Validation constants
+const MIN_ENVIRONMENT_LENGTH = 10;
+
 export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   
@@ -468,7 +471,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
               }}
             />
             <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0 0' }}>
-              Describe the context and conditions needed for success. This helps you prepare and makes the habit more achievable.
+              Describe the context and conditions needed for success. This helps you prepare and makes the habit more achievable. Minimum {MIN_ENVIRONMENT_LENGTH} characters required.
             </p>
           </div>
 
@@ -615,21 +618,21 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
           onClick={step === 3 ? handleCreateDraft : handleNext}
           disabled={
             (step === 1 && !title) ||
-            (step === 3 && habitEnvironment.trim().length < 10)
+            (step === 3 && habitEnvironment.trim().length < MIN_ENVIRONMENT_LENGTH)
           }
           style={{
             padding: '0.75rem 1.5rem',
             border: 'none',
             borderRadius: '8px',
             background: 
-              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < 10))
+              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < MIN_ENVIRONMENT_LENGTH))
                 ? '#e2e8f0'
                 : '#667eea',
             color: 'white',
             fontSize: '1rem',
             fontWeight: 500,
             cursor: 
-              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < 10))
+              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < MIN_ENVIRONMENT_LENGTH))
                 ? 'not-allowed'
                 : 'pointer',
           }}

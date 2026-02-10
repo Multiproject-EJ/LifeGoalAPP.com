@@ -49,6 +49,8 @@ export const DEMO_USER_ID = 'demo-user-0001';
 export const DEMO_USER_EMAIL = 'demo@lifegoalapp.com';
 export const DEMO_USER_NAME = 'Demo Creator';
 
+const DEFAULT_HABIT_ENVIRONMENT = 'In my workspace, with my laptop and a clear mind. No distractions, no interruptions.';
+
 export type DemoProfile = {
   displayName: string;
   onboardingComplete: boolean;
@@ -140,7 +142,7 @@ function createDemoHabit(seed: DemoHabitSeed): HabitRow {
     },
     domain_key: seed.domainKey ?? null,
     goal_id: seed.goalId,
-    habit_environment: seed.habitEnvironment ?? 'In my workspace, with my laptop and a clear mind. No distractions, no interruptions.',
+    habit_environment: seed.habitEnvironment ?? DEFAULT_HABIT_ENVIRONMENT,
     done_ish_config: {
       booleanPartialEnabled: true,
       quantityThresholdPercent: type === 'quantity' ? doneIshThreshold : 80,
@@ -1231,7 +1233,7 @@ export function upsertDemoHabit(payload: HabitInsert | HabitUpdate): HabitRow {
       autoprog: payload.autoprog ?? (payload as HabitInsert).autoprog ?? null,
       domain_key: payload.domain_key ?? (payload as HabitInsert).domain_key ?? null,
       goal_id: payload.goal_id ?? (payload as HabitInsert).goal_id ?? null,
-      habit_environment: payload.habit_environment ?? (payload as HabitInsert).habit_environment ?? 'In my workspace, ready to build good habits.',
+      habit_environment: payload.habit_environment ?? (payload as HabitInsert).habit_environment ?? DEFAULT_HABIT_ENVIRONMENT,
       done_ish_config: payload.done_ish_config ?? (payload as HabitInsert).done_ish_config ?? { booleanPartialEnabled: true, quantityThresholdPercent: 80, durationThresholdPercent: 80 },
     };
     habits.push(nextRecord);
