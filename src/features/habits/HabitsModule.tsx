@@ -672,7 +672,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         if (draft.habitEnvironment && session?.user?.id) {
           void recordTelemetryEvent({
             userId: session.user.id,
-            eventType: 'habit_environment_set' as any,
+            eventType: 'habit_environment_set',
             metadata: {
               habitId: draft.habitId,
               environment: draft.habitEnvironment,
@@ -727,7 +727,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         if (draft.habitEnvironment && session?.user?.id) {
           void recordTelemetryEvent({
             userId: session.user.id,
-            eventType: 'habit_environment_set' as any,
+            eventType: 'habit_environment_set',
             metadata: {
               habitId: newHabit.id,
               environment: draft.habitEnvironment,

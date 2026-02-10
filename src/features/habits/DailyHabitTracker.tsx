@@ -68,6 +68,9 @@ import visionStarButtonLarge from '../../assets/VisionStarBig.webp';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
+// Constants
+const DONE_ISH_DEFAULT_PERCENTAGE = 85;
+
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
 type DailyHabitTrackerProps = {
@@ -2053,7 +2056,7 @@ export function DailyHabitTracker({
 
     try {
       // For boolean habits with done-ish enabled, mark as 85% complete
-      const completionPercentage = 85;
+      const completionPercentage = DONE_ISH_DEFAULT_PERCENTAGE;
       const payload: HabitLogInsert = {
         habit_id: habit.id,
         date: dateISO,
@@ -2109,7 +2112,7 @@ export function DailyHabitTracker({
       if (session?.user?.id) {
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'habit_done_ish_completed' as any,
+          eventType: 'habit_done_ish_completed',
           metadata: {
             habitId: habit.id,
             habitName: habit.name,
@@ -2733,7 +2736,7 @@ export function DailyHabitTracker({
       if (session?.user?.id) {
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'habit_tier_changed' as any,
+          eventType: 'habit_tier_changed',
           metadata: {
             habitId: habit.id,
             fromTier: currentState.tier,
