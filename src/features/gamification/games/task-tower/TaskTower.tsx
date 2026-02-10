@@ -9,14 +9,32 @@ import { logGameSession, awardDice, awardGameTokens } from '../../../../services
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import type { TowerBlock, TaskTowerSession } from './taskTowerTypes';
 import { TOWER_GRID } from './taskTowerTypes';
+import { playTone, playChime, playCelebrationCascade } from '../../../../utils/audioUtils';
 import './taskTower.css';
 
-// Sound stubs (no-op implementations)
-const playBlockRemove = () => {}; // Sound when block is removed
-const playBlockSettle = () => {}; // Sound when blocks settle after gravity
-const playLineClear = () => {}; // Sound when a line clears
-const playAllClear = () => {}; // Sound when all blocks cleared
-const playBlockTap = () => {}; // Sound when tapping a block
+// Sound implementations
+const playBlockRemove = () => {
+  playTone(600, 0.15, 'square', 0.2);
+};
+
+const playBlockSettle = () => {
+  playTone(300, 0.1, 'triangle', 0.15);
+};
+
+const playLineClear = () => {
+  // Golden flash sound
+  playChime([800, 1000, 1200], 50, 0.2, 0.3);
+};
+
+const playAllClear = () => {
+  // Big celebration
+  playCelebrationCascade('big');
+  playChime([523, 659, 784, 1047], 100, 0.3, 0.35); // Plays simultaneously with cascade
+};
+
+const playBlockTap = () => {
+  playTone(500, 0.05, 'sine', 0.15);
+};
 
 interface TaskTowerProps {
   session: Session;

@@ -1,105 +1,128 @@
-/**
- * Lucky Roll Sound Hooks
- * 
- * All sound function calls are no-op stubs for now.
- * Actual audio files will be added in the polish pass.
- * This establishes the correct architecture for sound integration.
- */
+import { playTone, playChime, playCoinJingle, playSweep, playClick, playCelebrationCascade } from '../../../utils/audioUtils';
 
 // Dice rolling sounds
 export function playDiceRoll(): void {
-  // TODO: Play dice rolling sound (800ms)
+  // Tumbling dice - multiple quick taps
+  for (let i = 0; i < 8; i++) {
+    const delay = (i * 100) / 1000; // Convert ms to seconds
+    playTone(200 + Math.random() * 100, 0.05, 'square', 0.15, delay);
+  }
 }
 
 export function playDiceSettle(): void {
-  // TODO: Play dice settle sound (400ms)
+  // Final thud as dice settles
+  playTone(150, 0.2, 'triangle', 0.2);
 }
 
 // Movement sounds
 export function playTokenMove(): void {
-  // TODO: Play token movement sound (subtle hop, 200ms)
+  // Subtle hop
+  playTone(400, 0.1, 'sine', 0.15);
 }
 
 // Tile landing sounds
 export function playTileLandNeutral(): void {
-  // TODO: Play neutral tile landing sound (soft thud)
+  // Soft thud
+  playTone(200, 0.15, 'triangle', 0.2);
 }
 
 export function playTileLandPositive(): void {
-  // TODO: Play positive tile landing sound (warm chime)
+  // Warm chime
+  playChime([523, 659], 60, 0.15, 0.25);
 }
 
 export function playTileLandNegative(): void {
-  // TODO: Play negative tile landing sound (apologetic tone)
+  // Apologetic tone (descending)
+  playChime([400, 350], 80, 0.15, 0.2);
 }
 
 // Reward sounds
 export function playRewardCoins(amount: number): void {
-  // TODO: Play coin reward sound based on amount
-  // Small amounts: single coin jingle
-  // Medium amounts: coin cascade
-  // Large amounts: jackpot sound
+  if (amount < 30) {
+    // Single coin jingle
+    playCoinJingle(2, 0.25);
+  } else if (amount < 100) {
+    // Coin cascade
+    playCoinJingle(5, 0.3);
+  } else {
+    // Jackpot sound
+    playCoinJingle(8, 0.35);
+  }
 }
 
 export function playRewardDice(): void {
-  // TODO: Play dice reward sound (crisp dice roll)
+  // Crisp dice roll
+  playTone(800, 0.15, 'square', 0.25);
+  playTone(1000, 0.1, 'square', 0.2, 0.1);
 }
 
 export function playRewardTokens(): void {
-  // TODO: Play token reward sound (ticket dispense)
+  // Ticket dispense
+  playTone(700, 0.2, 'sawtooth', 0.2);
 }
 
 // Near-miss sound
 export function playNearMiss(): void {
-  // TODO: Play near-miss sound (anticipatory whoosh)
+  // Anticipatory whoosh
+  playSweep(400, 800, 0.3, 0.2);
 }
 
 // Celebration sounds
 export function playCelebrationSmall(): void {
-  // TODO: Play small celebration sound (subtle coin jingle, 800ms)
+  playCelebrationCascade('small');
 }
 
 export function playCelebrationMedium(): void {
-  // TODO: Play medium celebration sound (warm ascending chime, 1000ms)
+  playCelebrationCascade('medium');
 }
 
 export function playCelebrationBig(): void {
-  // TODO: Play big celebration sound (full warm celebration tone, 1200ms)
+  playCelebrationCascade('big');
 }
 
 export function playStreakActive(): void {
-  // TODO: Play streak active sound (fire crackle or warm tone)
+  // Fire crackle effect
+  for (let i = 0; i < 5; i++) {
+    const delay = (i * 100) / 1000; // Convert ms to seconds
+    playTone(300 + Math.random() * 200, 0.1, 'sawtooth', 0.2, delay);
+  }
 }
 
 // Lap celebration sound
 export function playLapCelebration(): void {
-  // TODO: Play lap celebration sound (triumphant but respectful)
+  // Triumphant fanfare
+  playChime([523, 659, 784, 1047], 100, 0.3, 0.3);
 }
 
 // Mystery reveal sound
 export function playMysteryReveal(): void {
-  // TODO: Play mystery reveal sound (magical unwrap)
+  // Magical unwrap - ascending sweep
+  playSweep(200, 1200, 0.4, 0.25);
 }
 
 // Jackpot sound
 export function playJackpot(): void {
-  // TODO: Play jackpot sound (big win, warm and luxurious)
+  // Big win - warm and luxurious
+  playChime([523, 659, 784, 1047, 1319], 80, 0.4, 0.35);
+  playCoinJingle(10, 0.3); // Will start after chime with proper delay
 }
 
 // Mini-game trigger sound
 export function playMiniGameTrigger(): void {
-  // TODO: Play mini-game trigger sound (anticipatory)
+  // Anticipatory rising tone
+  playSweep(400, 1200, 0.5, 0.25);
 }
 
 // Shop sounds
 export function playShopOpen(): void {
-  // TODO: Play shop open sound
+  playChime([400, 500, 600], 60, 0.15, 0.25);
 }
 
 export function playShopClose(): void {
-  // TODO: Play shop close sound
+  playChime([600, 500, 400], 60, 0.15, 0.25);
 }
 
 export function playPackPurchase(): void {
-  // TODO: Play pack purchase sound
+  playChime([523, 659, 784], 80, 0.2, 0.3);
+  playCoinJingle(3, 0.25); // Will start after chime with proper delay
 }

@@ -15,12 +15,17 @@ import {
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
+import { playTone, playChime } from '../../../../utils/audioUtils';
 import './visionQuest.css';
 
-// Sound stubs (placeholders for future sound integration)
-// These match the pattern used in other mini-games (PomodoroSprint, TaskTower, WheelOfWins)
-const playButtonClick = () => {}; // Sound when clicking buttons
-const playReflectionComplete = () => {}; // Sound when reflection is saved
+const playButtonClick = () => {
+  playTone(600, 0.05, 'square', 0.2);
+};
+
+const playReflectionComplete = () => {
+  // Warm, contemplative chime
+  playChime([440, 523, 659], 120, 0.3, 0.3);
+};
 
 interface VisionQuestProps {
   session: Session;

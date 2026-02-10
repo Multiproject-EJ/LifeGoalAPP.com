@@ -14,12 +14,22 @@ import {
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
+import { playTone, playChime } from '../../../../utils/audioUtils';
 import './pomodoroSprint.css';
 
-// Sound stubs (no-op implementations)
-const playTimerStart = () => {}; // Sound when timer starts
-const playTimerComplete = () => {}; // Sound when timer completes
-const playButtonClick = () => {}; // Sound when clicking buttons
+// Sound implementations
+const playTimerStart = () => {
+  playChime([400, 500, 600], 80, 0.15, 0.25);
+};
+
+const playTimerComplete = () => {
+  // Satisfying completion chime
+  playChime([523, 659, 784, 1047], 100, 0.3, 0.3);
+};
+
+const playButtonClick = () => {
+  playTone(600, 0.05, 'square', 0.2);
+};
 
 interface PomodoroSprintProps {
   session: Session;

@@ -15,13 +15,28 @@ import {
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
+import { playTone, playSweep, playChime } from '../../../../utils/audioUtils';
 import './wheelOfWins.css';
 
-// Sound stubs (no-op implementations)
-const playWheelSpin = () => {};
-const playWheelTick = () => {};
-const playWheelStop = () => {};
-const playWinReveal = () => {};
+const playWheelSpin = () => {
+  // Starting spin sound
+  playSweep(200, 800, 0.5, 0.25);
+};
+
+const playWheelTick = () => {
+  // Quick tick as wheel spins
+  playTone(400, 0.03, 'square', 0.1);
+};
+
+const playWheelStop = () => {
+  // Decelerating stop
+  playSweep(600, 200, 0.3, 0.2);
+};
+
+const playWinReveal = () => {
+  // Celebration reveal
+  playChime([523, 659, 784], 80, 0.25, 0.3);
+};
 
 interface WheelOfWinsProps {
   session: Session;
