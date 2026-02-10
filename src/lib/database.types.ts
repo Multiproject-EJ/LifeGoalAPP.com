@@ -388,6 +388,8 @@ export interface Database {
           autoprog: Json | null;
           domain_key: string | null;
           goal_id: string | null;
+          habit_environment: string | null;
+          done_ish_config: Json | null;
         };
         Insert: {
           id?: string;
@@ -405,6 +407,8 @@ export interface Database {
           autoprog?: Json | null;
           domain_key?: string | null;
           goal_id?: string | null;
+          habit_environment?: string | null;
+          done_ish_config?: Json | null;
         };
         Update: {
           id?: string;
@@ -422,6 +426,8 @@ export interface Database {
           autoprog?: Json | null;
           domain_key?: string | null;
           goal_id?: string | null;
+          habit_environment?: string | null;
+          done_ish_config?: Json | null;
         };
         Relationships: [];
       };
@@ -436,6 +442,8 @@ export interface Database {
           done: boolean;
           note: string | null;
           mood: number | null;
+          progress_state: string | null;
+          completion_percentage: number | null;
         };
         Insert: {
           id?: string;
@@ -447,6 +455,8 @@ export interface Database {
           done?: boolean;
           note?: string | null;
           mood?: number | null;
+          progress_state?: string | null;
+          completion_percentage?: number | null;
         };
         Update: {
           id?: string;
@@ -458,6 +468,8 @@ export interface Database {
           done?: boolean;
           note?: string | null;
           mood?: number | null;
+          progress_state?: string | null;
+          completion_percentage?: number | null;
         };
         Relationships: [];
       };
