@@ -101,11 +101,15 @@ export interface UserTrophy {
   trophy: TrophyItem;
 }
 
+export type RewardCooldownType = 'none' | 'daily' | 'custom';
+
 export interface RewardItem {
   id: string;
   title: string;
   description: string;
   costGold: number;
+  cooldownType: RewardCooldownType;
+  cooldownHours: number;
   createdAt: string;
   redemptionCount: number;
   lastRedeemedAt: string | null;

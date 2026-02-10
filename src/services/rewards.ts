@@ -1,6 +1,6 @@
 import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
-import type { RewardItem, RewardRedemption } from '../types/gamification';
+import type { RewardItem, RewardRedemption, RewardCooldownType } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
 
 type ServiceResponse<T> = {
@@ -12,6 +12,8 @@ type RewardInput = {
   title: string;
   description: string;
   costGold: number;
+  cooldownType?: RewardCooldownType;
+  cooldownHours?: number;
 };
 
 const REWARD_STORAGE_KEY = 'lifegoal_rewards';
@@ -62,11 +64,17 @@ export async function createReward(
     return { data: null, error };
   }
 
+  const cooldownType = input.cooldownType ?? 'none';
+  const cooldownHours =
+    cooldownType === 'daily' ? 24 : cooldownType === 'custom' ? Math.max(0, input.cooldownHours ?? 0) : 0;
+
   const newReward: RewardItem = {
     id: `reward-${Date.now()}`,
     title: input.title,
     description: input.description,
     costGold: input.costGold,
+    cooldownType,
+    cooldownHours,
     createdAt: new Date().toISOString(),
     redemptionCount: 0,
     lastRedeemedAt: null,
@@ -102,6 +110,19 @@ export async function redeemReward(
   const reward = rewards[rewardIndex];
   if (profile.total_points < reward.costGold) {
     return { data: null, error: new Error('Not enough gold to redeem this reward') };
+  }
+
+  const cooldownHours = reward.cooldownHours ?? 0;
+  if (cooldownHours > 0 && reward.lastRedeemedAt) {
+    const cooldownEnd = new Date(reward.lastRedeemedAt).getTime() + cooldownHours * 60 * 60 * 1000;
+    if (Date.now() < cooldownEnd) {
+      const remainMs = cooldownEnd - Date.now();
+      const remainH = Math.ceil(remainMs / (60 * 60 * 1000));
+      return {
+        data: null,
+        error: new Error(`Cooldown active — available again in ${remainH}h.`),
+      };
+    }
   }
 
   const now = new Date().toISOString();
