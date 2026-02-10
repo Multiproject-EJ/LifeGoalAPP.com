@@ -1630,6 +1630,14 @@ WisdomTreeState {
 - [x] **P7.11** Add Tree of Life streak award telemetry + surface streak growth moment in UI
 - [x] **P7.12** Add streak milestone tagging in the Tree of Life ledger UI
 
+### Phase 8 — Post-MVP Polish (Config-First, Small Steps)
+- [x] **P8.1** Add reward cooldown support (config + enforcement in redemption flow)
+- [ ] **P8.2** Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display
+- [ ] **P8.3** Add reward evolution seed state (State 0 → 1 prompt after 3 redemptions in 7 days)
+- [ ] **P8.4** Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)
+- [ ] **P8.5** Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)
+- [ ] **P8.6** Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)
+
 ---
 
 ## 10) Open Questions (Keep Current)
@@ -1849,3 +1857,13 @@ WisdomTreeState {
   - **Step**: P7.9 Add config-driven labels for Tree of Life impact sources (weekly closure, level-ups, streaks)  
   - **What changed**: Centralized Tree of Life impact source labels in a shared config and wired the ledger UI to read labels and fallback details from it.  
   - **What’s next**: P7.10 Define streak-based Tree of Life award rules (30-day streak trigger + copy).
+
+- **2026-02-10**  
+  - **Step**: Phase 8 roadmap definition (post-MVP polish slice)  
+  - **What changed**: Added Phase 8 — Post-MVP Polish to the roadmap with six config-first steps: reward cooldowns (P8.1), reward categories (P8.2), reward evolution seed state (P8.3), extended streak milestones (P8.4), reward pacing detection (P8.5), and centralized Identity Signal copy (P8.6). All steps are small, additive, and config-driven.  
+  - **What’s next**: P8.1 Add reward cooldown support (config + enforcement in redemption flow).
+
+- **2026-02-10**  
+  - **Step**: P8.1 Add reward cooldown support (config + enforcement in redemption flow)  
+  - **What changed**: Added cooldownType (none/daily/custom) and cooldownHours fields to RewardItem, enforced cooldown in the redemption service, and surfaced cooldown selection in the Player Shop creation form plus cooldown status on reward cards.  
+  - **What’s next**: P8.2 Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display.

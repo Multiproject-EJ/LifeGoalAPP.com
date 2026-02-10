@@ -5,6 +5,7 @@ import type {
   LevelInfo,
   RewardItem,
   RewardRedemption,
+  RewardCooldownType,
   XPTransaction,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
@@ -60,6 +61,8 @@ export function ScoreTab({
   const [rewardTitle, setRewardTitle] = useState('');
   const [rewardDescription, setRewardDescription] = useState('');
   const [rewardCost, setRewardCost] = useState('');
+  const [rewardCooldown, setRewardCooldown] = useState<RewardCooldownType>('none');
+  const [rewardCooldownHours, setRewardCooldownHours] = useState('');
   const [rewardSubmitting, setRewardSubmitting] = useState(false);
   const [redemptionSubmitting, setRedemptionSubmitting] = useState<string | null>(null);
   const userId = session?.user?.id ?? profile?.user_id ?? '';
@@ -190,6 +193,8 @@ export function ScoreTab({
       title: rewardTitle.trim(),
       description: rewardDescription.trim(),
       costGold: cost,
+      cooldownType: rewardCooldown,
+      cooldownHours: rewardCooldown === 'custom' ? Number(rewardCooldownHours) || 0 : undefined,
     });
 
     if (error || !data) {
@@ -199,6 +204,8 @@ export function ScoreTab({
       setRewardTitle('');
       setRewardDescription('');
       setRewardCost('');
+      setRewardCooldown('none');
+      setRewardCooldownHours('');
       setRewardMessage({ type: 'success', text: `"${data.title}" is ready to redeem.` });
     }
 
@@ -524,6 +531,31 @@ export function ScoreTab({
                   required
                 />
               </label>
+              <label className="score-tab__reward-field">
+                <span>Cooldown</span>
+                <select
+                  value={rewardCooldown}
+                  onChange={(event) => setRewardCooldown(event.target.value as RewardCooldownType)}
+                >
+                  <option value="none">None</option>
+                  <option value="daily">Daily (24h)</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </label>
+              {rewardCooldown === 'custom' && (
+                <label className="score-tab__reward-field score-tab__reward-field--cost">
+                  <span>Hours</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={168}
+                    value={rewardCooldownHours}
+                    onChange={(event) => setRewardCooldownHours(event.target.value)}
+                    placeholder="12"
+                    required
+                  />
+                </label>
+              )}
             </div>
             <button
               type="submit"
@@ -548,6 +580,23 @@ export function ScoreTab({
               {rewards.map((reward) => {
                 const canAfford = goldBalance >= reward.costGold;
                 const isRedeeming = redemptionSubmitting === reward.id;
+                const cooldownHours = reward.cooldownHours ?? 0;
+                const onCooldown =
+                  cooldownHours > 0 &&
+                  reward.lastRedeemedAt != null &&
+                  Date.now() < new Date(reward.lastRedeemedAt).getTime() + cooldownHours * 60 * 60 * 1000;
+                const cooldownRemainH = onCooldown && reward.lastRedeemedAt
+                  ? Math.ceil(
+                      (new Date(reward.lastRedeemedAt).getTime() + cooldownHours * 60 * 60 * 1000 - Date.now()) /
+                        (60 * 60 * 1000)
+                    )
+                  : 0;
+                const cooldownLabel =
+                  (reward.cooldownType ?? 'none') === 'daily'
+                    ? 'Daily'
+                    : (reward.cooldownType ?? 'none') === 'custom'
+                      ? `${cooldownHours}h`
+                      : null;
                 return (
                   <div key={reward.id} className="score-tab__reward-card">
                     <div className="score-tab__reward-card-header">
@@ -560,14 +609,21 @@ export function ScoreTab({
                       {reward.lastRedeemedAt && (
                         <span>Last: {dateFormatter.format(new Date(reward.lastRedeemedAt))}</span>
                       )}
+                      {cooldownLabel && <span>⏳ {cooldownLabel} cooldown</span>}
                     </div>
                     <button
                       type="button"
                       className="score-tab__reward-redeem"
                       onClick={() => handleRedeemReward(reward.id)}
-                      disabled={!canAfford || isRedeeming}
+                      disabled={!canAfford || isRedeeming || onCooldown}
                     >
-                      {isRedeeming ? 'Redeeming...' : canAfford ? 'Redeem' : 'Need more gold'}
+                      {isRedeeming
+                        ? 'Redeeming...'
+                        : onCooldown
+                          ? `Cooldown (${cooldownRemainH}h)`
+                          : canAfford
+                            ? 'Redeem'
+                            : 'Need more gold'}
                     </button>
                   </div>
                 );
