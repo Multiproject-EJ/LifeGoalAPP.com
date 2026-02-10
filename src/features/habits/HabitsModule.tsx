@@ -618,6 +618,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+          habit_environment: draft.habitEnvironment ?? null,
         };
         
         const { data: updatedHabit, error: updateError } = await updateHabitFullV2(draft.habitId, updatePayload);
@@ -648,6 +649,7 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+          habit_environment: draft.habitEnvironment ?? null,
           autoprog: buildDefaultAutoProgressState({
             schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
             target: draft.targetValue ?? null,

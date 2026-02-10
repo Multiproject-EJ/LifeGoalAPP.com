@@ -17,6 +17,7 @@ export interface HabitWizardDraft {
   schedule: ScheduleDraft;
   remindersEnabled?: boolean;
   reminderTimes?: string[];
+  habitEnvironment?: string;
   /** If present, indicates we're editing an existing habit */
   habitId?: string;
 }
@@ -48,6 +49,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   const [targetUnit, setTargetUnit] = useState<string>('');
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
   const [reminderTime, setReminderTime] = useState<string>('08:00');
+  const [habitEnvironment, setHabitEnvironment] = useState<string>('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiApplied, setAiApplied] = useState(false);
@@ -64,6 +66,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       setTargetUnit(initialDraft.targetUnit || '');
       setRemindersEnabled(initialDraft.remindersEnabled ?? false);
       setReminderTime(initialDraft.reminderTimes?.[0] || '08:00');
+      setHabitEnvironment(initialDraft.habitEnvironment || '');
       setStep(1); // Reset to first step
       setAiError(null);
       setAiApplied(false);
@@ -125,6 +128,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       schedule: { choice: scheduleChoice },
       remindersEnabled,
       reminderTimes: remindersEnabled && reminderTime ? [reminderTime] : [],
+      habitEnvironment: habitEnvironment.trim() || undefined,
       // Preserve habitId if editing
       habitId: initialDraft?.habitId,
     };
@@ -429,6 +433,36 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
             </>
           )}
 
+          {/* Habit Environment - Mandatory field */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label
+              htmlFor="habit-environment"
+              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
+            >
+              Habit Environment *
+            </label>
+            <textarea
+              id="habit-environment"
+              value={habitEnvironment}
+              onChange={(e) => setHabitEnvironment(e.target.value)}
+              placeholder="Where will you do this? What tools do you need? Who can support you?"
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                boxSizing: 'border-box',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+              }}
+            />
+            <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0 0' }}>
+              Describe the context and conditions needed for success. This helps you prepare and makes the habit more achievable.
+            </p>
+          </div>
+
           {/* Reminders */}
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -489,16 +523,25 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
 
         <button
           onClick={step === 3 ? handleCreateDraft : handleNext}
-          disabled={step === 1 && !title}
+          disabled={
+            (step === 1 && !title) ||
+            (step === 3 && habitEnvironment.trim().length < 10)
+          }
           style={{
             padding: '0.75rem 1.5rem',
             border: 'none',
             borderRadius: '8px',
-            background: (step === 1 && !title) ? '#e2e8f0' : '#667eea',
+            background: 
+              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < 10))
+                ? '#e2e8f0'
+                : '#667eea',
             color: 'white',
             fontSize: '1rem',
             fontWeight: 500,
-            cursor: (step === 1 && !title) ? 'not-allowed' : 'pointer',
+            cursor: 
+              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < 10))
+                ? 'not-allowed'
+                : 'pointer',
           }}
         >
           {step === 3 ? (isEditMode ? 'Save changes' : 'Create draft') : 'Next'}
