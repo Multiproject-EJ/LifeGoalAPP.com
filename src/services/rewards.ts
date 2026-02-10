@@ -234,8 +234,8 @@ export async function shouldPromptEvolution(
   const reward = rewards.find((r) => r.id === rewardId);
   if (!reward) return false;
 
-  // Don't prompt if already evolved past State 0
-  if (reward.evolutionState !== 0) return false;
+  // Allow evolution from State 0 and State 1 only (stop at State 2)
+  if (reward.evolutionState >= 2) return false;
 
   // Don't nag: if user declined, wait 14 days
   if (reward.evolutionDeclinedAt) {
@@ -280,6 +280,8 @@ export async function evolveReward(
       description: evolved.description,
       evolutionState: Math.min(3, reward.evolutionState + 1) as 0 | 1 | 2 | 3,
       evolutionPromptedAt: new Date().toISOString(),
+      // Reset decline timestamp so next evolution can prompt
+      evolutionDeclinedAt: null,
     };
   } else {
     updated = {

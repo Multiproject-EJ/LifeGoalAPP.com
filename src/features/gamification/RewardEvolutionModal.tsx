@@ -12,15 +12,37 @@ type Props = {
 export function RewardEvolutionModal({ reward, onAccept, onDecline, onClose }: Props) {
   const evolved = getEvolutionSuggestion(reward);
 
+  // Dynamic copy based on evolution state
+  const getModalCopy = () => {
+    if (reward.evolutionState === 0) {
+      return {
+        title: `💫 Want to level up "${reward.title}"?`,
+        prompt: "You've enjoyed this reward 3+ times this week. Want to make it even more meaningful?",
+      };
+    }
+    if (reward.evolutionState === 1) {
+      return {
+        title: `🌟 Ready to elevate "${reward.title}"?`,
+        prompt: "You're getting value from this reward! Want to add some light structure to make it even better?",
+      };
+    }
+    return {
+      title: `✨ Want to evolve "${reward.title}"?`,
+      prompt: "You've been enjoying this reward. Ready for the next level?",
+    };
+  };
+
+  const copy = getModalCopy();
+
   return (
     <div className="reward-evolution-modal" role="dialog" aria-modal="true">
       <div className="reward-evolution-modal__backdrop" onClick={onClose} />
       <div className="reward-evolution-modal__content">
         <h3 className="reward-evolution-modal__title">
-          💫 Want to level up "{reward.title}"?
+          {copy.title}
         </h3>
         <p className="reward-evolution-modal__prompt">
-          You've enjoyed this reward 3+ times this week. Want to make it even more meaningful?
+          {copy.prompt}
         </p>
 
         <div className="reward-evolution-modal__preview">
