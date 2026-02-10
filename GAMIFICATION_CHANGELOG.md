@@ -359,28 +359,46 @@ Spend accumulated points on temporary boosts and permanent upgrades:
 
 ---
 
-### 🎯 Challenge System
-- **Daily challenges**: Complete 3 specific tasks for bonus XP
-- **Weekly challenges**: Harder goals for bigger rewards
-- **Community challenges**: Server-wide cooperative goals
-- **Friend challenges**: Compete 1v1 or in teams
+### 🎯 Challenge System ✅
+**Status:** Implemented (February 2026)
 
-**Example Challenges:**
-- "Complete 10 habits before noon" (+100 XP)
-- "Write 3 journal entries this week" (+150 XP)
-- "Achieve a 3-day perfect streak" (+200 XP)
-- "Help 5 friends complete goals" (+500 XP)
+- **3 daily challenges** rotated each day from a pool of 6 definitions
+- **2 weekly challenges** rotated each Monday from a pool of 6 definitions
+- **Challenge categories**: Habit, Journal, Check-in, Streak, Mixed
+- **Deterministic rotation**: Challenges are seeded by user ID + date for consistent selection
+- **Progress tracking**: Each challenge tracks `currentProgress` toward `targetValue`
+- **XP rewards**: 100 XP per daily challenge, 250 XP per weekly challenge
+- **Demo mode support**: Fully functional with localStorage
+
+**Daily Challenge Examples:**
+- "Complete 3 habits today" (+100 XP)
+- "Reflect and write — write at least one journal entry" (+100 XP)
+- "Early bird — complete 2 habits before 9 AM" (+100 XP)
+- "Keep the fire burning — continue your streak" (+100 XP)
+
+**Weekly Challenge Examples:**
+- "Habit marathon — complete 15 habits this week" (+250 XP)
+- "Thoughtful week — write 3 journal entries" (+250 XP)
+- "Five-day streak — maintain a 5-day activity streak" (+250 XP)
+- "Consistency champion — complete 25 habits this week" (+250 XP)
+
+**Technical Implementation:**
+- Service: `src/services/challenges.ts`
+- Component: `src/features/gamification/components/GamificationChallenges.tsx`
+- Types: `ChallengeInstance`, `ChallengeState` in `src/types/gamification.ts`
+- Dashboard: Integrated as "Challenges" panel in `ProgressDashboard.tsx`
 
 ---
 
-### 📊 Achievements Page
+### 📊 Achievements Page ✅
+**Status:** Implemented
+
 Dedicated UI for achievement browsing:
 - **Grid view** of all achievements
 - **Progress bars** for locked achievements
 - **Filter by**: Category, Tier, Status
 - **Sort by**: XP reward, Difficulty, Date unlocked
 - **Achievement details** modal with tips
-- **Share achievements** on social media
 - **Trophy case** display for unlocked badges
 
 ---

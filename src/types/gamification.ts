@@ -173,11 +173,11 @@ export const XP_REWARDS = {
   BODY_SESSION: 10, // Per body practice session
   MEDITATION_GOAL_DAY: 20, // Per day completed towards goal
   MEDITATION_GOAL_COMPLETE: 100, // Completing a meditation goal
-  DAILY_CHALLENGE_COMPLETE: 50, // Completing daily challenge
+  DAILY_CHALLENGE_COMPLETE: 50, // Completing meditation daily challenge
 
-  // Challenge system rewards
-  CHALLENGE_DAILY: 100, // Completing a daily challenge
-  CHALLENGE_WEEKLY: 250, // Completing a weekly challenge
+  // Challenge system rewards (gamification daily/weekly challenges)
+  CHALLENGE_DAILY: 100, // Completing a gamification daily challenge
+  CHALLENGE_WEEKLY: 250, // Completing a gamification weekly challenge
 } as const;
 
 // =====================================================
