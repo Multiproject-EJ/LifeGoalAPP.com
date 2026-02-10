@@ -15,6 +15,7 @@ import { GamificationHeader } from './GamificationHeader';
 import { NewDailySpinWheel } from '../features/spin-wheel/NewDailySpinWheel';
 import { AI_FEATURE_ICON } from '../constants/ai';
 import { splitGoldBalance } from '../constants/economy';
+import { PROGRESS_STATE_EFFECTS, type ProgressState } from '../features/habits/progressGrading';
 
 type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule';
 
@@ -189,31 +190,34 @@ export function QuickActionsFAB({
 
   const calculateHabitStreaks = (
     habitsList: HabitWithGoal[],
-    logs: { habit_id: string; date: string; completed: boolean }[],
+    logs: { habit_id: string; date: string; completed: boolean; progress_state?: string | null }[],
     trackingDateISO: string,
   ) => {
     const todayDate = parseISODate(trackingDateISO);
     const lookbackStartDate = subtractDays(todayDate, STREAK_LOOKBACK_DAYS - 1);
     const lookbackStartISO = formatISODate(lookbackStartDate);
 
-    const completionSets = new Map<string, Set<string>>();
+    const completionMaps = new Map<string, Map<string, ProgressState>>();
 
     for (const log of logs) {
-      if (!log.completed) continue;
       if (log.date < lookbackStartISO || log.date > trackingDateISO) continue;
-      let set = completionSets.get(log.habit_id);
-      if (!set) {
-        set = new Set<string>();
-        completionSets.set(log.habit_id, set);
+      const progressState = (log.progress_state as ProgressState | null) ?? (log.completed ? 'done' : 'missed');
+      let habitMap = completionMaps.get(log.habit_id);
+      if (!habitMap) {
+        habitMap = new Map<string, ProgressState>();
+        completionMaps.set(log.habit_id, habitMap);
       }
-      set.add(log.date);
+      const existing = habitMap.get(log.date);
+      if (!existing || PROGRESS_STATE_EFFECTS[progressState].streakCredit > PROGRESS_STATE_EFFECTS[existing].streakCredit) {
+        habitMap.set(log.date, progressState);
+      }
     }
 
     const insights = new Map<string, { currentStreak: number; longestStreak: number }>();
 
     for (const habit of habitsList) {
       const scheduleChecker = createScheduleChecker(habit.frequency, habit.schedule);
-      const completionDates = completionSets.get(habit.id) ?? new Set<string>();
+      const completionDates = completionMaps.get(habit.id) ?? new Map<string, ProgressState>();
       let currentStreak = 0;
       let longestStreak = 0;
       let runningStreak = 0;
@@ -229,26 +233,27 @@ export function QuickActionsFAB({
         }
 
         const isoDate = formatISODate(checkDate);
-        const completed = completionDates.has(isoDate);
-        if (completed) {
-          runningStreak += 1;
-          if (withinCurrent) {
-            currentStreak += 1;
-          }
-          if (runningStreak > longestStreak) {
-            longestStreak = runningStreak;
-          }
-        } else {
+        const progressState = completionDates.get(isoDate);
+        if (!progressState || PROGRESS_STATE_EFFECTS[progressState].breaksStreak) {
           if (withinCurrent) {
             withinCurrent = false;
           }
           runningStreak = 0;
+          continue;
+        }
+
+        runningStreak += PROGRESS_STATE_EFFECTS[progressState].streakCredit;
+        if (withinCurrent) {
+          currentStreak += PROGRESS_STATE_EFFECTS[progressState].streakCredit;
+        }
+        if (runningStreak > longestStreak) {
+          longestStreak = runningStreak;
         }
       }
 
       insights.set(habit.id, {
-        currentStreak,
-        longestStreak: Math.max(longestStreak, currentStreak),
+        currentStreak: Math.floor(currentStreak),
+        longestStreak: Math.floor(Math.max(longestStreak, currentStreak)),
       });
     }
 
