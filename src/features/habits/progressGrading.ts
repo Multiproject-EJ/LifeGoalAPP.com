@@ -190,3 +190,40 @@ export function getProgressStateIcon(state: ProgressState): string {
       return '❌';
   }
 }
+
+/**
+ * Helper to build habit log payload with progress state and completion percentage
+ * 
+ * @param habitType - Type of habit
+ * @param target - Target value for quantity/duration habits
+ * @param value - Actual value logged
+ * @param done - Boolean flag for boolean habits
+ * @param wasSkipped - Whether the user marked it as skipped
+ * @param doneIshConfig - Done-ish configuration for the habit
+ * @returns Payload with progress_state and completion_percentage
+ */
+export function buildHabitLogPayload(params: {
+  habitType: 'boolean' | 'quantity' | 'duration';
+  target: number | null;
+  value: number | null;
+  done: boolean;
+  wasSkipped: boolean;
+  doneIshConfig?: DoneIshConfig;
+}): {
+  done: boolean;
+  value: number | null;
+  progress_state: string;
+  completion_percentage: number;
+} {
+  const { habitType, target, value, done, wasSkipped, doneIshConfig } = params;
+  
+  const completionPercent = calculateCompletionPercentage(habitType, value, target, done);
+  const progressState = calculateProgressState(habitType, completionPercent, wasSkipped, doneIshConfig);
+  
+  return {
+    done: progressState === 'done',
+    value: value,
+    progress_state: progressState,
+    completion_percentage: Math.round(completionPercent),
+  };
+}

@@ -107,17 +107,25 @@ type DemoHabitSeed = {
   schedule: Json;
   domainKey?: string | null;
   createdAt?: string | null;
+  habitEnvironment?: string | null;
+  type?: 'boolean' | 'quantity' | 'duration';
+  targetNum?: number | null;
+  targetUnit?: string | null;
+  doneIshThreshold?: number;
 };
 
 function createDemoHabit(seed: DemoHabitSeed): HabitRow {
+  const type = seed.type ?? 'boolean';
+  const doneIshThreshold = seed.doneIshThreshold ?? 80;
+  
   return {
     id: seed.id,
     user_id: DEMO_USER_ID,
     title: seed.title,
     emoji: null,
-    type: 'boolean',
-    target_num: null,
-    target_unit: null,
+    type: type,
+    target_num: seed.targetNum ?? null,
+    target_unit: seed.targetUnit ?? null,
     schedule: seed.schedule,
     allow_skip: null,
     start_date: null,
@@ -126,12 +134,18 @@ function createDemoHabit(seed: DemoHabitSeed): HabitRow {
     autoprog: {
       tier: 'standard',
       baseSchedule: seed.schedule,
-      baseTarget: null,
+      baseTarget: seed.targetNum ?? null,
       lastShiftAt: null,
       lastShiftType: null,
     },
     domain_key: seed.domainKey ?? null,
     goal_id: seed.goalId,
+    habit_environment: seed.habitEnvironment ?? 'In my workspace, with my laptop and a clear mind. No distractions, no interruptions.',
+    done_ish_config: {
+      booleanPartialEnabled: true,
+      quantityThresholdPercent: type === 'quantity' ? doneIshThreshold : 80,
+      durationThresholdPercent: type === 'duration' ? doneIshThreshold : 80,
+    },
   };
 }
 
@@ -224,6 +238,7 @@ const defaultState: DemoState = {
       title: 'Morning focus ritual',
       schedule: { mode: 'daily' } as Json,
       domainKey: 'career',
+      habitEnvironment: 'At my desk with coffee, before checking email. Quiet space with morning light and my journal ready.',
     }),
     createDemoHabit({
       id: outreachHabitId,
@@ -231,6 +246,7 @@ const defaultState: DemoState = {
       title: 'Reach out to a beta tester',
       schedule: { mode: 'specific_days', days: ['mon', 'wed', 'fri'] } as Json,
       domainKey: 'relationships',
+      habitEnvironment: 'Using Slack or email after morning standup. Have my list of potential testers ready and template message prepared.',
     }),
     createDemoHabit({
       id: visionBoardId,
@@ -238,13 +254,19 @@ const defaultState: DemoState = {
       title: 'Source a new inspiration image',
       schedule: { mode: 'specific_days', days: ['sat'] } as Json,
       domainKey: 'creativity',
+      habitEnvironment: 'Saturday morning with tea, browsing Pinterest or Unsplash. Looking for images that resonate with my goals.',
     }),
     createDemoHabit({
       id: createId('habit'),
       goalId: goalLaunch.id,
-      title: 'Hydrate with 80 oz of water',
+      title: 'Hydrate with water',
       schedule: { mode: 'daily' } as Json,
       domainKey: 'health',
+      type: 'quantity',
+      targetNum: 80,
+      targetUnit: 'oz',
+      doneIshThreshold: 75,
+      habitEnvironment: 'Keep water bottle on my desk at all times. Track with marks on the bottle. Refill during breaks.',
     }),
     createDemoHabit({
       id: createId('habit'),
@@ -252,6 +274,11 @@ const defaultState: DemoState = {
       title: 'Midday stretch walk',
       schedule: { mode: 'specific_days', days: ['mon', 'tue', 'wed', 'thu', 'fri'] } as Json,
       domainKey: 'health',
+      type: 'duration',
+      targetNum: 15,
+      targetUnit: 'minutes',
+      doneIshThreshold: 80,
+      habitEnvironment: 'Outside loop around the block at 2pm. Fresh air, no phone, just movement and thinking.',
     }),
     createDemoHabit({
       id: createId('habit'),
