@@ -22,6 +22,7 @@ import { DEFAULT_JOURNAL_TYPE } from './constants';
 import { isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { recordChallengeActivity } from '../../services/challenges';
 import { GoalReflectionJournal } from '../goals/GoalReflectionJournal';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 
@@ -335,6 +336,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
 
           await earnXP(xpAmount, 'journal_entry', saved.id);
           await recordActivity(); // Update daily streak
+          recordChallengeActivity(session.user.id, 'journal_entry');
 
           // 1. Immediately add instant feedback (pop/glow)
           setJustSavedEntryId(saved.id);

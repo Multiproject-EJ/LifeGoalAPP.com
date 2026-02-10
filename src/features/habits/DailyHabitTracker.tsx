@@ -14,6 +14,7 @@ import {
 } from '../../compat/legacyHabitsAdapter';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
+import { recordChallengeActivity } from '../../services/challenges';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -2002,6 +2003,7 @@ export function DailyHabitTracker({
             await earnXP(offerXpAmount, 'habit_offer', habit.id, 'Time-limited habit offer');
           }
           await recordActivity();
+          recordChallengeActivity(session.user.id, 'habit_complete');
         }
       }
     } catch (error) {
@@ -3214,6 +3216,7 @@ export function DailyHabitTracker({
         if (data) {
           await earnXP(XP_REWARDS.JOURNAL_ENTRY, 'journal_entry', data.id);
           await recordActivity();
+          recordChallengeActivity(session.user.id, 'journal_entry');
         }
 
         removeDraft(quickJournalDraftKey(session.user.id, activeDate));
@@ -3309,6 +3312,7 @@ export function DailyHabitTracker({
         if (data) {
           await earnXP(XP_REWARDS.JOURNAL_ENTRY, 'journal_entry', data.id);
           await recordActivity();
+          recordChallengeActivity(session.user.id, 'journal_entry');
         }
 
         if (data) {
