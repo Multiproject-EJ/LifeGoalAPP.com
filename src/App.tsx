@@ -74,6 +74,7 @@ import {
 import {
   fetchPersonalityProfile,
   loadPersonalityTestHistoryWithSupabase,
+  upsertPersonalityProfile,
 } from './services/personalityTest';
 import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
 import type { AreaKey, NextTask, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
@@ -774,9 +775,23 @@ export default function App() {
           return;
         }
 
+        // If personality_summary exists in profile, use it directly
+        if (profile?.personality_summary) {
+          setPersonalitySummary(profile.personality_summary);
+          return;
+        }
+
+        // Backward compatibility: regenerate summary if traits exist but summary doesn't
         const traits = profile?.personality_traits as Record<string, number> | null;
         if (traits && Object.keys(traits).length > 0) {
-          setPersonalitySummary(buildTopTraitSummary(traits));
+          const regeneratedSummary = buildTopTraitSummary(traits);
+          setPersonalitySummary(regeneratedSummary);
+          
+          // Persist the regenerated summary to Supabase
+          await upsertPersonalityProfile({
+            user_id: userId,
+            personality_summary: regeneratedSummary,
+          });
           return;
         }
 
