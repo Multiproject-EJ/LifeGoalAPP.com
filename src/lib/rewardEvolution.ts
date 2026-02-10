@@ -22,7 +22,7 @@ export function getEvolutionSuggestion(reward: RewardItem): {
       case 'Social':
         return {
           title: `${title} + share 1 check-in`,
-          description: description || 'Share how you\'re feeling with someone.',
+          description: description || "Share how you're feeling with someone.",
         };
       case 'Growth':
         return {

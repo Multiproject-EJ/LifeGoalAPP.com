@@ -33,7 +33,33 @@ export async function fetchRewardCatalog(userId: string): Promise<ServiceRespons
   try {
     const stored = localStorage.getItem(getRewardKey(userId));
     const parsed: RewardItem[] = stored ? JSON.parse(stored) : [];
-    return { data: parsed, error: null };
+    
+    // Migrate existing rewards to include evolution fields
+    let needsMigration = false;
+    const migrated = parsed.map((reward) => {
+      const hasEvolutionFields = 
+        'evolutionState' in reward &&
+        'evolutionPromptedAt' in reward &&
+        'evolutionDeclinedAt' in reward;
+      
+      if (!hasEvolutionFields) {
+        needsMigration = true;
+        return {
+          ...reward,
+          evolutionState: 0 as const,
+          evolutionPromptedAt: null,
+          evolutionDeclinedAt: null,
+        };
+      }
+      return reward;
+    });
+    
+    // Save migrated data back only if migration occurred
+    if (needsMigration && migrated.length > 0) {
+      localStorage.setItem(getRewardKey(userId), JSON.stringify(migrated));
+    }
+    
+    return { data: migrated, error: null };
   } catch (error) {
     return {
       data: null,

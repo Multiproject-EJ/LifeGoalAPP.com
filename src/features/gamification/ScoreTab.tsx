@@ -271,7 +271,7 @@ export function ScoreTab({
 
   const handleAcceptEvolution = async () => {
     if (!evolutionPrompt || !userId) return;
-    await evolveReward(userId, evolutionPrompt.reward.id, true);
+    const { data: updatedReward } = await evolveReward(userId, evolutionPrompt.reward.id, true);
     
     // Reload rewards
     const { data: rewardData } = await fetchRewardCatalog(userId);
@@ -288,7 +288,7 @@ export function ScoreTab({
       metadata: {
         rewardId: evolutionPrompt.reward.id,
         category: evolutionPrompt.reward.category,
-        evolutionState: evolutionPrompt.reward.evolutionState + 1,
+        evolutionState: updatedReward?.evolutionState ?? 1,
       },
     });
     
