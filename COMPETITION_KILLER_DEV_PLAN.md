@@ -1632,7 +1632,7 @@ WisdomTreeState {
 
 ### Phase 8 — Post-MVP Polish (Config-First, Small Steps)
 - [x] **P8.1** Add reward cooldown support (config + enforcement in redemption flow)
-- [ ] **P8.2** Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display
+- [x] **P8.2** Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display
 - [ ] **P8.3** Add reward evolution seed state (State 0 → 1 prompt after 3 redemptions in 7 days)
 - [ ] **P8.4** Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)
 - [ ] **P8.5** Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)
@@ -1867,3 +1867,9 @@ WisdomTreeState {
   - **Step**: P8.1 Add reward cooldown support (config + enforcement in redemption flow)  
   - **What changed**: Added cooldownType (none/daily/custom) and cooldownHours fields to RewardItem, enforced cooldown in the redemption service, and surfaced cooldown selection in the Player Shop creation form plus cooldown status on reward cards.  
   - **What’s next**: P8.2 Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display.
+
+
+- **2026-02-10**  
+  - **Step**: P8.2 Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display  
+  - **What changed**: Added RewardCategory type ('Rest', 'Fun', 'Growth', 'Treat', 'Social', 'Meta') to types, category field to RewardItem interface with default 'Treat', category picker UI in ScoreTab with 6 pill buttons showing emoji+label, category badge display on reward cards, and CSS styling for category UI components.  
+  - **What's next**: P8.3 Add reward evolution seed state (tracks reward maturity/unlock time).
