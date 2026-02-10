@@ -12,7 +12,9 @@ import type {
 import { GamificationHeader } from '../../components/GamificationHeader';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
-import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward } from '../../services/rewards';
+import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward, shouldPromptEvolution, evolveReward } from '../../services/rewards';
+import { recordTelemetryEvent } from '../../services/telemetry';
+import { RewardEvolutionModal } from './RewardEvolutionModal';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
 import scoreShop from '../../assets/Score_shop.webp';
@@ -76,6 +78,10 @@ export function ScoreTab({
   const [rewardCooldownHours, setRewardCooldownHours] = useState('');
   const [rewardSubmitting, setRewardSubmitting] = useState(false);
   const [redemptionSubmitting, setRedemptionSubmitting] = useState<string | null>(null);
+  const [evolutionPrompt, setEvolutionPrompt] = useState<{
+    reward: RewardItem;
+    show: boolean;
+  } | null>(null);
   const userId = session?.user?.id ?? profile?.user_id ?? '';
   const zenTokens = profile?.zen_tokens ?? 0;
   const [goldBalance, setGoldBalance] = useState(profile?.total_points ?? 0);
@@ -242,9 +248,67 @@ export function ScoreTab({
         type: 'success',
         text: `Redeemed "${data.reward.title}". Enjoy your reward!`,
       });
+
+      // ✨ NEW: Check if evolution prompt should appear
+      const shouldEvolve = await shouldPromptEvolution(userId, rewardId);
+      if (shouldEvolve) {
+        setEvolutionPrompt({ reward: data.reward, show: true });
+        
+        void recordTelemetryEvent({
+          userId,
+          eventType: 'reward_evolution_prompted',
+          metadata: {
+            rewardId: data.reward.id,
+            category: data.reward.category,
+            redemptionCount: data.reward.redemptionCount,
+          },
+        });
+      }
     }
 
     setRedemptionSubmitting(null);
+  };
+
+  const handleAcceptEvolution = async () => {
+    if (!evolutionPrompt || !userId) return;
+    const { data: updatedReward } = await evolveReward(userId, evolutionPrompt.reward.id, true);
+    
+    // Reload rewards
+    const { data: rewardData } = await fetchRewardCatalog(userId);
+    setRewards(rewardData ?? []);
+    
+    setRewardMessage({
+      type: 'success',
+      text: `✨ "${evolutionPrompt.reward.title}" evolved!`,
+    });
+    
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'reward_evolution_accepted',
+      metadata: {
+        rewardId: evolutionPrompt.reward.id,
+        category: evolutionPrompt.reward.category,
+        evolutionState: updatedReward?.evolutionState ?? 1,
+      },
+    });
+    
+    setEvolutionPrompt(null);
+  };
+
+  const handleDeclineEvolution = async () => {
+    if (!evolutionPrompt || !userId) return;
+    await evolveReward(userId, evolutionPrompt.reward.id, false);
+    
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'reward_evolution_declined',
+      metadata: {
+        rewardId: evolutionPrompt.reward.id,
+        category: evolutionPrompt.reward.category,
+      },
+    });
+    
+    setEvolutionPrompt(null);
   };
 
   return (
@@ -692,6 +756,14 @@ export function ScoreTab({
         <div className="score-tab__status">
           Zen Garden is ready for calm upgrades. This space is open for your future build.
         </div>
+      )}
+      {evolutionPrompt?.show && (
+        <RewardEvolutionModal
+          reward={evolutionPrompt.reward}
+          onAccept={handleAcceptEvolution}
+          onDecline={handleDeclineEvolution}
+          onClose={() => setEvolutionPrompt(null)}
+        />
       )}
     </section>
   );

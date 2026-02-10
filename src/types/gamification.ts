@@ -116,6 +116,10 @@ export interface RewardItem {
   createdAt: string;
   redemptionCount: number;
   lastRedeemedAt: string | null;
+  // Evolution tracking
+  evolutionState: 0 | 1 | 2 | 3; // 0 = Seed, 1 = Intentional, 2 = Elevated, 3 = Transformative
+  evolutionPromptedAt: string | null; // Last time evolution prompt was shown
+  evolutionDeclinedAt: string | null; // User clicked "Keep as-is"
 }
 
 export interface RewardRedemption {
