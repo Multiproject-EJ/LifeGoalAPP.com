@@ -32,11 +32,12 @@ function getRedemptionKey(userId: string) {
 export async function fetchRewardCatalog(userId: string): Promise<ServiceResponse<RewardItem[]>> {
   try {
     const stored = localStorage.getItem(getRewardKey(userId));
-    const parsed: RewardItem[] = stored ? JSON.parse(stored) : [];
+    // Use Record type since old stored data may not have evolution fields
+    const parsed: Record<string, unknown>[] = stored ? JSON.parse(stored) : [];
     
     // Migrate existing rewards to include evolution fields
     let needsMigration = false;
-    const migrated = parsed.map((reward) => {
+    const migrated: RewardItem[] = parsed.map((reward) => {
       const hasEvolutionFields = 
         'evolutionState' in reward &&
         'evolutionPromptedAt' in reward &&
@@ -49,9 +50,9 @@ export async function fetchRewardCatalog(userId: string): Promise<ServiceRespons
           evolutionState: 0 as const,
           evolutionPromptedAt: null,
           evolutionDeclinedAt: null,
-        };
+        } as unknown as RewardItem;
       }
-      return reward;
+      return reward as unknown as RewardItem;
     });
     
     // Save migrated data back only if migration occurred
