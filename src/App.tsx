@@ -783,7 +783,7 @@ export default function App() {
 
         // Backward compatibility: regenerate summary if traits exist but summary doesn't
         const traits = profile?.personality_traits as Record<string, number> | null;
-        if (traits && Object.keys(traits).length > 0) {
+        if (profile && traits && Object.keys(traits).length > 0) {
           const regeneratedSummary = buildTopTraitSummary(traits);
           setPersonalitySummary(regeneratedSummary);
           
@@ -792,10 +792,10 @@ export default function App() {
           try {
             await upsertPersonalityProfile({
               user_id: userId,
-              personality_traits: profile?.personality_traits,
-              personality_axes: profile?.personality_axes,
+              personality_traits: profile.personality_traits,
+              personality_axes: profile.personality_axes,
               personality_summary: regeneratedSummary,
-              personality_last_tested_at: profile?.personality_last_tested_at,
+              personality_last_tested_at: profile.personality_last_tested_at,
             });
           } catch (error) {
             // Log error but don't fail - summary is already set in local state
