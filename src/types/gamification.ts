@@ -174,6 +174,10 @@ export const XP_REWARDS = {
   MEDITATION_GOAL_DAY: 20, // Per day completed towards goal
   MEDITATION_GOAL_COMPLETE: 100, // Completing a meditation goal
   DAILY_CHALLENGE_COMPLETE: 50, // Completing daily challenge
+
+  // Challenge system rewards
+  CHALLENGE_DAILY: 100, // Completing a daily challenge
+  CHALLENGE_WEEKLY: 250, // Completing a weekly challenge
 } as const;
 
 // =====================================================
@@ -474,3 +478,50 @@ export interface ActiveBoost {
   expiresAt: string | null;
   minutesRemaining: number | null;
 }
+
+// =====================================================
+// CHALLENGE SYSTEM TYPES
+// =====================================================
+
+export type ChallengePeriod = 'daily' | 'weekly';
+export type ChallengeCategory = 'habit' | 'journal' | 'checkin' | 'streak' | 'mixed';
+export type ChallengeStatus = 'active' | 'completed' | 'expired';
+
+export interface ChallengeDefinition {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  period: ChallengePeriod;
+  category: ChallengeCategory;
+  targetValue: number;
+  xpReward: number;
+}
+
+export interface ChallengeInstance {
+  id: string;
+  definitionId: string;
+  title: string;
+  description: string;
+  icon: string;
+  period: ChallengePeriod;
+  category: ChallengeCategory;
+  targetValue: number;
+  currentProgress: number;
+  xpReward: number;
+  status: ChallengeStatus;
+  startDate: string;
+  endDate: string;
+  completedAt?: string;
+}
+
+export interface ChallengeState {
+  userId: string;
+  dailyChallenges: ChallengeInstance[];
+  weeklyChallenges: ChallengeInstance[];
+  lastDailyReset: string;
+  lastWeeklyReset: string;
+  totalChallengesCompleted: number;
+}
+
+export const DEMO_CHALLENGES_KEY = 'lifegoal_demo_challenges';
