@@ -4,7 +4,8 @@ import { playTone, playChime, playCoinJingle, playSweep, playClick, playCelebrat
 export function playDiceRoll(): void {
   // Tumbling dice - multiple quick taps
   for (let i = 0; i < 8; i++) {
-    setTimeout(() => playTone(200 + Math.random() * 100, 0.05, 'square', 0.15), i * 100);
+    const delay = (i * 100) / 1000; // Convert ms to seconds
+    playTone(200 + Math.random() * 100, 0.05, 'square', 0.15, delay);
   }
 }
 
@@ -52,7 +53,7 @@ export function playRewardCoins(amount: number): void {
 export function playRewardDice(): void {
   // Crisp dice roll
   playTone(800, 0.15, 'square', 0.25);
-  setTimeout(() => playTone(1000, 0.1, 'square', 0.2), 100);
+  playTone(1000, 0.1, 'square', 0.2, 0.1);
 }
 
 export function playRewardTokens(): void {
@@ -82,7 +83,8 @@ export function playCelebrationBig(): void {
 export function playStreakActive(): void {
   // Fire crackle effect
   for (let i = 0; i < 5; i++) {
-    setTimeout(() => playTone(300 + Math.random() * 200, 0.1, 'sawtooth', 0.2), i * 100);
+    const delay = (i * 100) / 1000; // Convert ms to seconds
+    playTone(300 + Math.random() * 200, 0.1, 'sawtooth', 0.2, delay);
   }
 }
 
@@ -102,7 +104,7 @@ export function playMysteryReveal(): void {
 export function playJackpot(): void {
   // Big win - warm and luxurious
   playChime([523, 659, 784, 1047, 1319], 80, 0.4, 0.35);
-  setTimeout(() => playCoinJingle(10, 0.3), 400);
+  playCoinJingle(10, 0.3); // Will start after chime with proper delay
 }
 
 // Mini-game trigger sound
@@ -122,5 +124,5 @@ export function playShopClose(): void {
 
 export function playPackPurchase(): void {
   playChime([523, 659, 784], 80, 0.2, 0.3);
-  setTimeout(() => playCoinJingle(3, 0.25), 250);
+  playCoinJingle(3, 0.25); // Will start after chime with proper delay
 }

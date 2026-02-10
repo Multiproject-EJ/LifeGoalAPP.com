@@ -29,9 +29,7 @@ const playLineClear = () => {
 const playAllClear = () => {
   // Big celebration
   playCelebrationCascade('big');
-  setTimeout(() => {
-    playChime([523, 659, 784, 1047], 100, 0.3, 0.35);
-  }, 400);
+  playChime([523, 659, 784, 1047], 100, 0.3, 0.35); // Plays simultaneously with cascade
 };
 
 const playBlockTap = () => {
