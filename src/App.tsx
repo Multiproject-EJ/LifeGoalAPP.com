@@ -789,13 +789,18 @@ export default function App() {
           
           // Persist the regenerated summary to Supabase
           // Include existing personality data to avoid overwriting
-          await upsertPersonalityProfile({
-            user_id: userId,
-            personality_traits: profile?.personality_traits,
-            personality_axes: profile?.personality_axes,
-            personality_summary: regeneratedSummary,
-            personality_last_tested_at: profile?.personality_last_tested_at,
-          });
+          try {
+            await upsertPersonalityProfile({
+              user_id: userId,
+              personality_traits: profile?.personality_traits,
+              personality_axes: profile?.personality_axes,
+              personality_summary: regeneratedSummary,
+              personality_last_tested_at: profile?.personality_last_tested_at,
+            });
+          } catch (error) {
+            // Log error but don't fail - summary is already set in local state
+            console.error('Failed to persist regenerated personality summary:', error);
+          }
           return;
         }
 
