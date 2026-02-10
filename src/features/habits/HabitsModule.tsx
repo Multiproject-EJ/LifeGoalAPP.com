@@ -8,7 +8,7 @@ import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEveryNDaysNextDue } from './scheduleInterpreter';
 import { classifyHabit } from './performanceClassifier';
-import { getTelemetryDifficultyAdjustment } from '../../services/telemetry';
+import { getTelemetryDifficultyAdjustment, recordTelemetryEvent } from '../../services/telemetry';
 import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
@@ -668,6 +668,18 @@ export function HabitsModule({ session }: HabitsModuleProps) {
           throw new Error('Failed to update habit - no data returned');
         }
         
+        // Fire telemetry event if habit environment was set
+        if (draft.habitEnvironment && session?.user?.id) {
+          void recordTelemetryEvent({
+            userId: session.user.id,
+            eventType: 'habit_environment_set',
+            metadata: {
+              habitId: draft.habitId,
+              environment: draft.habitEnvironment,
+            },
+          });
+        }
+        
         // Success: hide wizard, clear draft, update list
         setShowWizard(false);
         setPendingHabitDraft(null);
@@ -709,6 +721,18 @@ export function HabitsModule({ session }: HabitsModuleProps) {
         
         if (!newHabit) {
           throw new Error('Failed to create habit - no data returned');
+        }
+        
+        // Fire telemetry event if habit environment was set
+        if (draft.habitEnvironment && session?.user?.id) {
+          void recordTelemetryEvent({
+            userId: session.user.id,
+            eventType: 'habit_environment_set',
+            metadata: {
+              habitId: newHabit.id,
+              environment: draft.habitEnvironment,
+            },
+          });
         }
         
         // Success: hide wizard, clear draft, refresh list

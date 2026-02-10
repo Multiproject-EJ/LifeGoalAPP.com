@@ -15,6 +15,7 @@ import {
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
+import { recordTelemetryEvent } from '../../services/telemetry';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -48,6 +49,13 @@ import {
   type AutoProgressTier,
 } from './autoProgression';
 import {
+  getProgressStateIcon,
+  getProgressStateLabel,
+  getProgressStateColorClass,
+  type ProgressState,
+} from './progressGrading';
+import './progressGrading.css';
+import {
   getYesterdayRecapEnabled,
   getYesterdayRecapLastCollected,
   getYesterdayRecapLastShown,
@@ -59,6 +67,9 @@ import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import visionStarButtonLarge from '../../assets/VisionStarBig.webp';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
+
+// Constants
+const DONE_ISH_DEFAULT_PERCENTAGE = 85;
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
@@ -75,6 +86,8 @@ type DailyHabitTrackerProps = {
 type HabitCompletionState = {
   logId: string | null;
   completed: boolean;
+  progressState?: ProgressState;
+  completionPercentage?: number;
 };
 
 /**
@@ -1680,6 +1693,8 @@ export function DailyHabitTracker({
         const completedState: HabitCompletionState = {
           logId: log.id,
           completed: Boolean(log.completed),
+          progressState: (log.progress_state as ProgressState) ?? 'done',
+          completionPercentage: log.completion_percentage ?? 100,
         };
 
         if (log.date === trackingDateISO) {
@@ -2017,6 +2032,122 @@ export function DailyHabitTracker({
         delete next[cellKey];
         return next;
       });
+    }
+  };
+
+  const handleDoneIshCompletion = async (habit: HabitWithGoal, originElement?: HTMLElement | null) => {
+    if (!isConfigured && !isDemoExperience) {
+      setErrorMessage('Supabase credentials are not configured yet.');
+      return;
+    }
+
+    const dateISO = activeDate;
+    const isToday = dateISO === today;
+
+    if (originElement) {
+      const rect = originElement.getBoundingClientRect();
+      setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    } else {
+      setCelebrationOrigin(null);
+    }
+
+    setSaving((current) => ({ ...current, [habit.id]: true }));
+    setErrorMessage(null);
+
+    try {
+      // For boolean habits with done-ish enabled, mark as 85% complete
+      const completionPercentage = DONE_ISH_DEFAULT_PERCENTAGE;
+      const payload: HabitLogInsert = {
+        habit_id: habit.id,
+        date: dateISO,
+        completed: false, // done-ish means not fully done
+        progress_state: 'doneIsh',
+        completion_percentage: completionPercentage,
+      };
+
+      const { data, error } = await logHabitCompletion(payload);
+      if (error) throw error;
+
+      const logRow: HabitLogRow =
+        data ?? ({
+          id: `temp-${habit.id}-${dateISO}`,
+          habit_id: habit.id,
+          date: dateISO,
+          completed: false,
+          progress_state: 'doneIsh',
+          completion_percentage: completionPercentage,
+        } satisfies HabitLogRow);
+
+      setCompletions((current) => ({
+        ...current,
+        [habit.id]: {
+          logId: logRow.id,
+          completed: false,
+          progressState: 'doneIsh',
+          completionPercentage,
+        },
+      }));
+
+      setMonthlyCompletions((current) => {
+        const next = { ...current };
+        const habitMatrix = { ...(next[habit.id] ?? {}) };
+        habitMatrix[dateISO] = {
+          logId: logRow.id,
+          completed: false,
+          progressState: 'doneIsh',
+          completionPercentage,
+        };
+        next[habit.id] = habitMatrix;
+        return next;
+      });
+
+      setHistoricalLogs((current) => {
+        const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
+        nextLogs.push(logRow);
+        setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
+        return nextLogs;
+      });
+
+      // Fire telemetry event for done-ish completion
+      if (session?.user?.id) {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'habit_done_ish_completed',
+          metadata: {
+            habitId: habit.id,
+            habitName: habit.name,
+            completionPercentage,
+            progressState: 'doneIsh',
+          },
+        });
+      }
+
+      // Award reduced XP for done-ish completion (70% of full XP)
+      if (isToday) {
+        const now = new Date();
+        const baseXP = now.getHours() < 9 ? XP_REWARDS.HABIT_COMPLETE_EARLY : XP_REWARDS.HABIT_COMPLETE;
+        const xpAmount = Math.round(baseXP * 0.7);
+
+        setJustCompletedHabitId(habit.id);
+
+        setTimeout(() => {
+          setCelebrationType('habit');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
+        }, 300);
+
+        setTimeout(() => {
+          setJustCompletedHabitId(null);
+        }, 320);
+
+        await earnXP(xpAmount, 'habit_complete', habit.id);
+        await recordActivity();
+        recordChallengeActivity(session.user.id, 'habit_complete');
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to mark habit as done-ish.');
+    } finally {
+      setSaving((current) => ({ ...current, [habit.id]: false }));
     }
   };
 
@@ -2601,6 +2732,20 @@ export function DailyHabitTracker({
         throw new Error('Unable to update the habit stage.');
       }
 
+      // Fire telemetry event for tier change
+      if (session?.user?.id) {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'habit_tier_changed',
+          metadata: {
+            habitId: habit.id,
+            fromTier: currentState.tier,
+            toTier: targetTier,
+            shiftType,
+          },
+        });
+      }
+
       setHabits((prev) => {
         const next = prev.map((entry) =>
           entry.id === habit.id
@@ -2743,6 +2888,30 @@ export function DailyHabitTracker({
                     }}
                     disabled={isSaving || (!scheduledToday && !isCompleted)}
                   />
+                  {/* Done-ish button for boolean habits */}
+                  {!isCompleted && scheduledToday && habit.type === 'boolean' && (
+                    <button
+                      type="button"
+                      className="habit-checklist__doneish-button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleDoneIshCompletion(habit, null);
+                      }}
+                      disabled={isSaving}
+                      aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
+                    >
+                      ✨
+                    </button>
+                  )}
+                  {/* Progress state badge */}
+                  {isCompleted && state?.progressState && (
+                    <span
+                      className={`progress-state-badge ${getProgressStateColorClass(state.progressState)}`}
+                      aria-label={getProgressStateLabel(state.progressState)}
+                    >
+                      {getProgressStateIcon(state.progressState)} {getProgressStateLabel(state.progressState)}
+                    </span>
+                  )}
                   <span className="habit-checklist__name">
                     {!isCompactView && habit.emoji ? (
                       <span className="habit-checklist__icon" aria-hidden="true">
@@ -2785,6 +2954,20 @@ export function DailyHabitTracker({
                       <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
                     </button>
                   ) : null}
+                  {/* Progress bar for done-ish completions */}
+                  {isCompleted && state?.progressState === 'doneIsh' && state?.completionPercentage && (
+                    <div className="habit-checklist__progress">
+                      <div className="progress-bar-container">
+                        <div
+                          className="progress-bar-fill doneish"
+                          style={{ width: `${state.completionPercentage}%` }}
+                        />
+                      </div>
+                      <p className="habit-checklist__progress-text">
+                        {state.completionPercentage}% complete
+                      </p>
+                    </div>
+                  )}
                   {autoProgressPanels[habit.id] ? (
                     <div className="habit-checklist__autoprog">
                       <div className="habit-checklist__autoprog-header">
