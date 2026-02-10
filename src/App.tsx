@@ -791,10 +791,10 @@ export default function App() {
           // Include existing personality data to avoid overwriting
           await upsertPersonalityProfile({
             user_id: userId,
-            personality_traits: profile?.personality_traits ?? undefined,
-            personality_axes: profile?.personality_axes ?? undefined,
+            personality_traits: profile?.personality_traits,
+            personality_axes: profile?.personality_axes,
             personality_summary: regeneratedSummary,
-            personality_last_tested_at: profile?.personality_last_tested_at ?? undefined,
+            personality_last_tested_at: profile?.personality_last_tested_at,
           });
           return;
         }
