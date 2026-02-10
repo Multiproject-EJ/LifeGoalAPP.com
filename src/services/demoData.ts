@@ -474,6 +474,8 @@ const defaultState: DemoState = {
         done: i % 7 !== 2,
         note: null,
         mood: null,
+        progress_state: i % 7 !== 2 ? 'done' : 'missed',
+        completion_percentage: i % 7 !== 2 ? 100 : 0,
       },
       {
         id: createId('habit-log'),
@@ -485,6 +487,8 @@ const defaultState: DemoState = {
         done: i % 3 === 0,
         note: null,
         mood: null,
+        progress_state: i % 3 === 0 ? 'done' : 'missed',
+        completion_percentage: i % 3 === 0 ? 100 : 0,
       },
     );
   }
@@ -1227,6 +1231,8 @@ export function upsertDemoHabit(payload: HabitInsert | HabitUpdate): HabitRow {
       autoprog: payload.autoprog ?? (payload as HabitInsert).autoprog ?? null,
       domain_key: payload.domain_key ?? (payload as HabitInsert).domain_key ?? null,
       goal_id: payload.goal_id ?? (payload as HabitInsert).goal_id ?? null,
+      habit_environment: payload.habit_environment ?? (payload as HabitInsert).habit_environment ?? 'In my workspace, ready to build good habits.',
+      done_ish_config: payload.done_ish_config ?? (payload as HabitInsert).done_ish_config ?? { booleanPartialEnabled: true, quantityThresholdPercent: 80, durationThresholdPercent: 80 },
     };
     habits.push(nextRecord);
     habits.sort((a, b) => a.title.localeCompare(b.title));
@@ -1267,6 +1273,8 @@ export function logDemoHabitCompletion(payload: HabitLogInsert): HabitLogRow {
     done: payload.done ?? true,
     note: payload.note ?? null,
     mood: payload.mood ?? null,
+    progress_state: payload.progress_state ?? 'done',
+    completion_percentage: payload.completion_percentage ?? 100,
   };
   updateState((current) => ({ ...current, habitLogs: [...current.habitLogs, record] }));
   return clone(record);

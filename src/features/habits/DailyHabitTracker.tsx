@@ -2549,6 +2549,8 @@ export function DailyHabitTracker({
       autoprog: habit.autoprog ?? null,
       domain_key: null,
       goal_id: habit.goal?.id ?? null,
+      habit_environment: null,
+      done_ish_config: { booleanPartialEnabled: true, quantityThresholdPercent: 80, durationThresholdPercent: 80 },
     }),
     [session.user.id],
   );
