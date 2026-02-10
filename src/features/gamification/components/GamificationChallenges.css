@@ -1,0 +1,219 @@
+.gamification-challenges {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.gamification-challenges__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gamification-challenges__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gamification-challenges__section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color, #1a1a1a);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gamification-challenges__section-progress {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary, #666666);
+  padding: 2px 8px;
+  background: var(--surface-variant, #f0f0f0);
+  border-radius: 12px;
+}
+
+.gamification-challenges__card {
+  background: var(--surface-color, #ffffff);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1.5px solid var(--border-color, #e5e7eb);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.gamification-challenges__card--completed {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(5, 150, 105, 0.04) 100%);
+}
+
+.gamification-challenges__card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.gamification-challenges__card-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.gamification-challenges__card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.gamification-challenges__card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color, #1a1a1a);
+  margin: 0 0 2px 0;
+}
+
+.gamification-challenges__card--completed .gamification-challenges__card-title {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.gamification-challenges__card-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #666666);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.gamification-challenges__badge {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.gamification-challenges__progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gamification-challenges__progress-bar {
+  flex: 1;
+  height: 7px;
+  background: var(--surface-variant, #e5e7eb);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gamification-challenges__progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+}
+
+.gamification-challenges__card--completed .gamification-challenges__progress-fill {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.gamification-challenges__progress-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary, #666666);
+  flex-shrink: 0;
+  min-width: 44px;
+  text-align: right;
+}
+
+.gamification-challenges__reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-color, #6366f1);
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 10px;
+}
+
+.gamification-challenges__card--completed .gamification-challenges__reward {
+  color: var(--success-color, #10b981);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.gamification-challenges__empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-secondary, #666666);
+  font-size: 0.9rem;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .gamification-challenges__section-title {
+    color: var(--text-color, #f0f0f0);
+  }
+
+  .gamification-challenges__section-progress {
+    background: var(--surface-variant, #333);
+    color: var(--text-secondary, #aaa);
+  }
+
+  .gamification-challenges__card {
+    background: var(--surface-color, #1e1e1e);
+    border-color: var(--border-color, #333);
+  }
+
+  .gamification-challenges__card--completed {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.08) 100%);
+  }
+
+  .gamification-challenges__card-title {
+    color: var(--text-color, #f0f0f0);
+  }
+
+  .gamification-challenges__card-desc {
+    color: var(--text-secondary, #999);
+  }
+
+  .gamification-challenges__progress-bar {
+    background: var(--surface-variant, #333);
+  }
+
+  .gamification-challenges__progress-label {
+    color: var(--text-secondary, #999);
+  }
+
+  .gamification-challenges__reward {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary-color, #818cf8);
+  }
+
+  .gamification-challenges__card--completed .gamification-challenges__reward {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success-color, #10b981);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .gamification-challenges__card {
+    padding: 14px;
+  }
+
+  .gamification-challenges__card-icon {
+    font-size: 1.25rem;
+  }
+}

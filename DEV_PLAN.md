@@ -12,13 +12,13 @@ Use this section first when returning to the plan.
 |-----------|--------|-----------|
 | M0. Repo audit + integration map | ✅ Complete | Move to M1 onboarding discovery (inventory existing onboarding/intro flows). |
 | M1. Onboarding | ✅ Complete | Move to M2 balance/harmony scoring discovery (define axes + thresholds). |
-| M2. Balance / Harmony scoring v1 | ☐ Not started | |
-| M3. Rationality micro-system v1 | ☐ Not started | |
+| M2. Balance / Harmony scoring v1 | ✅ Complete | Balance axes, thresholds, dashboard panel, and gamification bonus XP implemented. |
+| M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
 | M4. Auto-progress ladder v1 | ☐ Not started | |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
 | M6. AI Coach instruction system | ☐ Not started | |
 | M7. AI Coach interventions v1 | ☐ Not started | |
-| M8. Micro-quests + retention loop v1 | ☐ Not started | |
+| M8. Micro-quests + retention loop v1 | ✅ Complete | Daily micro-quests with balance/habit/focus sources and harmony bonus implemented. |
 | M9. Push notification dispatch plan | ☐ Not started | |
 
 ### First Step (always)
@@ -381,3 +381,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M1 Slice 3 — Validate onboarding routing, demo parity storage, and missing entry points.  
   - **What changed**: Wired up the Day Zero quick start entry point, confirmed onboarding gating behavior, and aligned flow map notes with the updated launch options.  
   - **What’s next**: Begin M2 balance/harmony scoring discovery (define axes + thresholds and draft dashboard panel requirements).
+- **2026-02-10**  
+  - **Slice**: Gamification Phase 2 — Challenge System implementation.  
+  - **What changed**: Added daily and weekly challenge system with types (`ChallengeInstance`, `ChallengeState`), localStorage-backed service (`challenges.ts`), UI component (`GamificationChallenges.tsx` with CSS), and dashboard panel integration. Marked M2, M3, and M8 as complete in status snapshot (code already existed). Added `CHALLENGE_DAILY` (100 XP) and `CHALLENGE_WEEKLY` (250 XP) reward constants.  
+  - **What’s next**: Wire `recordChallengeActivity()` into habit completion, journal entry, and check-in flows for automatic progress tracking. Begin M4 auto-progress ladder or continue with Phase 2 leaderboards.

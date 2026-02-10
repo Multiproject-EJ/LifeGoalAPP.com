@@ -54,6 +54,7 @@ import {
   type ImpactTreeEntry,
 } from '../../services/impactTrees';
 import { IMPACT_TREE_SOURCE_CONFIG } from '../../constants/impactTrees';
+import { GamificationChallenges } from '../gamification/components/GamificationChallenges';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habit types
@@ -1419,6 +1420,36 @@ export function ProgressDashboard({ session, stats }: ProgressDashboardProps) {
                 </div>
               </div>
             </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 'challenges',
+      title: 'Challenges',
+      content: (
+        <div className="progress-dashboard__panel-content progress-dashboard__panel-content--challenges">
+          <header className="progress-dashboard__panel-header">
+            <h2>Daily &amp; weekly challenges</h2>
+            <p>Push yourself with rotating challenges to earn bonus XP every day and week.</p>
+          </header>
+          {!gamificationEnabled ? (
+            <div className="progress-dashboard__empty">
+              <h3>Enable Game of Life XP to unlock challenges</h3>
+              <p>Turn on Game of Life in your account settings to see your daily and weekly challenges.</p>
+            </div>
+          ) : (
+            <GamificationChallenges
+              userId={session.user.id}
+              onChallengeComplete={(challenge) => {
+                void earnXP(
+                  challenge.xpReward,
+                  'challenge_complete',
+                  challenge.id,
+                  `Challenge completed: ${challenge.title}`,
+                );
+              }}
+            />
           )}
         </div>
       ),
