@@ -103,11 +103,14 @@ export interface UserTrophy {
 
 export type RewardCooldownType = 'none' | 'daily' | 'custom';
 
+export type RewardCategory = 'Rest' | 'Fun' | 'Growth' | 'Treat' | 'Social' | 'Meta';
+
 export interface RewardItem {
   id: string;
   title: string;
   description: string;
   costGold: number;
+  category: RewardCategory;
   cooldownType: RewardCooldownType;
   cooldownHours: number;
   createdAt: string;

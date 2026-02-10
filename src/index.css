@@ -6101,6 +6101,69 @@ body {
   accent-color: #38bdf8;
 }
 
+/* Done-ish button */
+.habit-checklist__doneish-button {
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  margin-left: 0.5rem;
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.habit-checklist__doneish-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+  border-color: #d97706;
+  transform: scale(1.05);
+}
+
+.habit-checklist__doneish-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.habit-checklist__doneish-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-theme='dark-glass'] .habit-checklist__doneish-button {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.2) 0%, rgba(253, 230, 138, 0.2) 100%);
+  border-color: rgba(245, 158, 11, 0.6);
+}
+
+/* Progress bar for habits */
+.habit-checklist__progress {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 6px;
+}
+
+.habit-checklist__progress-text {
+  margin: 0;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+  font-weight: 500;
+}
+
+[data-theme='dark-glass'] .habit-checklist__progress {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+[data-theme='dark-glass'] .habit-checklist__progress-text {
+  color: rgba(226, 232, 240, 0.8);
+}
+
 .habit-checklist__name {
   font-weight: 700;
   font-size: 1rem;

@@ -1,6 +1,6 @@
 import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
-import type { RewardItem, RewardRedemption, RewardCooldownType } from '../types/gamification';
+import type { RewardItem, RewardRedemption, RewardCooldownType, RewardCategory } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
 
 type ServiceResponse<T> = {
@@ -12,6 +12,7 @@ type RewardInput = {
   title: string;
   description: string;
   costGold: number;
+  category?: RewardCategory;
   cooldownType?: RewardCooldownType;
   cooldownHours?: number;
 };
@@ -67,12 +68,14 @@ export async function createReward(
   const cooldownType = input.cooldownType ?? 'none';
   const cooldownHours =
     cooldownType === 'daily' ? 24 : cooldownType === 'custom' ? Math.max(0, input.cooldownHours ?? 0) : 0;
+  const category = input.category ?? 'Treat';
 
   const newReward: RewardItem = {
     id: `reward-${Date.now()}`,
     title: input.title,
     description: input.description,
     costGold: input.costGold,
+    category,
     cooldownType,
     cooldownHours,
     createdAt: new Date().toISOString(),

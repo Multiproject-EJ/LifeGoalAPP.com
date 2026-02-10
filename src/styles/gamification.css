@@ -1413,6 +1413,35 @@
   max-width: 120px;
 }
 
+.score-tab__category-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.score-tab__category-pill {
+  border: 2px solid rgba(148, 163, 184, 0.35);
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.score-tab__category-pill:hover {
+  background: rgba(226, 232, 240, 0.9);
+  border-color: rgba(100, 116, 139, 0.5);
+}
+
+.score-tab__category-pill--active {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
 .score-tab__reward-submit {
   align-self: flex-start;
   border: none;
@@ -1469,6 +1498,19 @@
 .score-tab__reward-cost {
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+.score-tab__reward-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(226, 232, 240, 0.5);
+  color: #475569;
+  width: fit-content;
 }
 
 .score-tab__reward-description {

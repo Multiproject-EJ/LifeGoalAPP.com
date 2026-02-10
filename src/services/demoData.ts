@@ -460,11 +460,58 @@ const defaultState: DemoState = {
   ];
 
   const start = new Date(today);
-  start.setDate(start.getDate() - 6);
-  for (let i = 0; i < 7; i += 1) {
+  start.setDate(start.getDate() - 27); // 28 days of demo data
+  for (let i = 0; i < 28; i += 1) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
     const dateIso = date.toISOString().slice(0, 10);
+    
+    // Determine progress states for morning ritual (mix of done, done-ish, and missed)
+    let morningState: 'done' | 'doneIsh' | 'missed';
+    let morningDone: boolean;
+    let morningPercentage: number;
+    
+    if (i % 7 === 2) {
+      // Missed day
+      morningState = 'missed';
+      morningDone = false;
+      morningPercentage = 0;
+    } else if (i % 5 === 1) {
+      // Done-ish day (roughly 20% of completed days)
+      morningState = 'doneIsh';
+      morningDone = false;
+      morningPercentage = 80 + Math.floor(Math.random() * 15); // 80-94%
+    } else {
+      // Fully done day
+      morningState = 'done';
+      morningDone = true;
+      morningPercentage = 100;
+    }
+    
+    // Determine progress states for outreach habit
+    let outreachState: 'done' | 'doneIsh' | 'missed';
+    let outreachDone: boolean;
+    let outreachPercentage: number;
+    
+    if (i % 3 === 0) {
+      if (i % 9 === 0) {
+        // Done-ish day (roughly 15% of completed days)
+        outreachState = 'doneIsh';
+        outreachDone = false;
+        outreachPercentage = 85 + Math.floor(Math.random() * 10); // 85-94%
+      } else {
+        // Fully done day
+        outreachState = 'done';
+        outreachDone = true;
+        outreachPercentage = 100;
+      }
+    } else {
+      // Missed day
+      outreachState = 'missed';
+      outreachDone = false;
+      outreachPercentage = 0;
+    }
+    
     defaultState.habitLogs.push(
       {
         id: createId('habit-log'),
@@ -473,11 +520,11 @@ const defaultState: DemoState = {
         ts: iso(date),
         date: dateIso,
         value: null,
-        done: i % 7 !== 2,
+        done: morningDone,
         note: null,
         mood: null,
-        progress_state: i % 7 !== 2 ? 'done' : 'missed',
-        completion_percentage: i % 7 !== 2 ? 100 : 0,
+        progress_state: morningState,
+        completion_percentage: morningPercentage,
       },
       {
         id: createId('habit-log'),
@@ -486,11 +533,11 @@ const defaultState: DemoState = {
         ts: iso(date),
         date: dateIso,
         value: null,
-        done: i % 3 === 0,
+        done: outreachDone,
         note: null,
         mood: null,
-        progress_state: i % 3 === 0 ? 'done' : 'missed',
-        completion_percentage: i % 3 === 0 ? 100 : 0,
+        progress_state: outreachState,
+        completion_percentage: outreachPercentage,
       },
     );
   }

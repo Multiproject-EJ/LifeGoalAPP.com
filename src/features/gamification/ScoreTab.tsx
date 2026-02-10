@@ -6,6 +6,7 @@ import type {
   RewardItem,
   RewardRedemption,
   RewardCooldownType,
+  RewardCategory,
   XPTransaction,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
@@ -27,6 +28,15 @@ interface ScoreTabProps {
   onNavigateToBank?: () => void;
   onNavigateToShop?: () => void;
 }
+
+const REWARD_CATEGORIES: Array<{ value: RewardCategory; emoji: string; label: string }> = [
+  { value: 'Rest', emoji: '😴', label: 'Rest' },
+  { value: 'Fun', emoji: '🎮', label: 'Fun' },
+  { value: 'Growth', emoji: '📚', label: 'Growth' },
+  { value: 'Treat', emoji: '🍫', label: 'Treat' },
+  { value: 'Social', emoji: '👥', label: 'Social' },
+  { value: 'Meta', emoji: '🧠', label: 'Meta' },
+];
 
 export function ScoreTab({
   session,
@@ -61,6 +71,7 @@ export function ScoreTab({
   const [rewardTitle, setRewardTitle] = useState('');
   const [rewardDescription, setRewardDescription] = useState('');
   const [rewardCost, setRewardCost] = useState('');
+  const [rewardCategory, setRewardCategory] = useState<RewardCategory>('Treat');
   const [rewardCooldown, setRewardCooldown] = useState<RewardCooldownType>('none');
   const [rewardCooldownHours, setRewardCooldownHours] = useState('');
   const [rewardSubmitting, setRewardSubmitting] = useState(false);
@@ -193,6 +204,7 @@ export function ScoreTab({
       title: rewardTitle.trim(),
       description: rewardDescription.trim(),
       costGold: cost,
+      category: rewardCategory,
       cooldownType: rewardCooldown,
       cooldownHours: rewardCooldown === 'custom' ? Number(rewardCooldownHours) || 0 : undefined,
     });
@@ -204,6 +216,7 @@ export function ScoreTab({
       setRewardTitle('');
       setRewardDescription('');
       setRewardCost('');
+      setRewardCategory('Treat');
       setRewardCooldown('none');
       setRewardCooldownHours('');
       setRewardMessage({ type: 'success', text: `"${data.title}" is ready to redeem.` });
@@ -520,6 +533,23 @@ export function ScoreTab({
                   maxLength={80}
                 />
               </label>
+              <div className="score-tab__reward-field">
+                <span>Category</span>
+                <div className="score-tab__category-picker">
+                  {REWARD_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      className={`score-tab__category-pill ${
+                        rewardCategory === cat.value ? 'score-tab__category-pill--active' : ''
+                      }`}
+                      onClick={() => setRewardCategory(cat.value)}
+                    >
+                      {cat.emoji} {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <label className="score-tab__reward-field score-tab__reward-field--cost">
                 <span>Gold cost</span>
                 <input
@@ -603,6 +633,12 @@ export function ScoreTab({
                       <h3>{reward.title}</h3>
                       <span className="score-tab__reward-cost">🪙 {formatter.format(reward.costGold)}</span>
                     </div>
+                    {reward.category && (
+                      <span className="score-tab__reward-category">
+                        {REWARD_CATEGORIES.find((c) => c.value === reward.category)?.emoji}{' '}
+                        {reward.category}
+                      </span>
+                    )}
                     {reward.description && <p className="score-tab__reward-description">{reward.description}</p>}
                     <div className="score-tab__reward-meta">
                       <span>Redeemed {reward.redemptionCount}x</span>
