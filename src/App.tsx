@@ -788,9 +788,13 @@ export default function App() {
           setPersonalitySummary(regeneratedSummary);
           
           // Persist the regenerated summary to Supabase
+          // Include existing personality data to avoid overwriting
           await upsertPersonalityProfile({
             user_id: userId,
+            personality_traits: profile?.personality_traits ?? undefined,
+            personality_axes: profile?.personality_axes ?? undefined,
             personality_summary: regeneratedSummary,
+            personality_last_tested_at: profile?.personality_last_tested_at ?? undefined,
           });
           return;
         }
