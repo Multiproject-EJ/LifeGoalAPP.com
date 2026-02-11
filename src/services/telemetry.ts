@@ -25,7 +25,11 @@ export type TelemetryEventType =
   | 'habit_environment_set'
   | 'reward_evolution_prompted'
   | 'reward_evolution_accepted'
-  | 'reward_evolution_declined';
+  | 'reward_evolution_declined'
+  | 'reward_pacing_state_assigned'
+  | 'reward_pacing_prompt_shown'
+  | 'reward_pacing_action_taken'
+  | 'reward_pacing_prompt_dismissed';
 
 export type TelemetryEventMetadata = Json;
 

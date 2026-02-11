@@ -131,6 +131,31 @@ export interface RewardRedemption {
 }
 
 // =====================================================
+// REWARD PACING TYPES
+// =====================================================
+
+export type PacingState = 'underfed' | 'balanced' | 'overfed';
+
+export interface PacingAnalysis {
+  state: PacingState;
+  signals: string[];
+  suggestion: PacingSuggestion | null;
+}
+
+export interface PacingSuggestion {
+  type: 'upgrade_reward' | 'add_cooldown' | 'bank_it' | 'swap_reward' | 'new_reward' | 'add_ritual';
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface PacingStorageData {
+  state: PacingState;
+  lastAnalyzedAt: string;
+  lastPromptedAt: string | null;
+}
+
+// =====================================================
 // XP REWARDS CONSTANTS
 // =====================================================
 

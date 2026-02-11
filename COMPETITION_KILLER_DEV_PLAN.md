@@ -1635,7 +1635,7 @@ WisdomTreeState {
 - [x] **P8.2** Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display
 - [ ] **P8.3** Add reward evolution seed state (State 0 → 1 prompt after 3 redemptions in 7 days)
 - [x] **P8.4** Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)
-- [ ] **P8.5** Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)
+- [x] **P8.5** Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)
 - [ ] **P8.6** Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)
 
 ---
@@ -1878,3 +1878,8 @@ WisdomTreeState {
   - **Step**: P8.4 Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)  
   - **What changed**: Added Day 7 (+1 watering) and Day 14 (+2 waterings) Tree of Life awards alongside existing Day 30 (+3 waterings, updated from +1) and Day 100 (+5 waterings) milestones. Created centralized STREAK_TREE_MILESTONES config. Added STREAK_14_DAYS: 250 XP reward constant. Updated ImpactTreeSource type from 'streak_30' to 'streak_milestone' for generalized streak handling. Updated telemetry event from 'tree_streak_award' to 'tree_of_life_awarded' with streak_milestone source and amount metadata.  
   - **What's next**: P8.5 Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine).
+
+- **2026-02-11**  
+  - **Step**: P8.5 Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)  
+  - **What changed**: Added rules-based reward pacing engine with Underfed/Balanced/Overfed detection, suggestion generation (upgrade/ritual/new for Underfed; cooldown/bank/swap for Overfed), guardrails (1x per 3 days prompt limit), localStorage persistence (lifegoal_reward_pacing_{userId}), and telemetry hooks (reward_pacing_state_assigned, reward_pacing_prompt_shown, reward_pacing_action_taken, reward_pacing_prompt_dismissed). Created src/lib/rewardPacing.ts with analyzeRewardPacing(), canShowPrompt(), and markPromptShown() functions. Added PacingState, PacingAnalysis, PacingSuggestion types to src/types/gamification.ts. Integrated pacing chip into ScoreTab with visual prompt banner (purple gradient) showing suggestion icon, title, description, and "Not now"/"Got it" action buttons. Detection rules: Underfed if 2+ signals (no redemption 7d + 3+ completions, declining completions ≥40%), Overfed if 2+ signals (daily redemptions 5+ days, cost trending down ≥30%, low variety >80%).  
+  - **What's next**: P8.6 Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config).
