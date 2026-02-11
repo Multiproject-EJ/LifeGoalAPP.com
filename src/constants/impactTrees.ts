@@ -12,9 +12,9 @@ export const IMPACT_TREE_SOURCE_CONFIG: Record<
     label: 'Level-up milestone',
     fallbackDetail: 'New level reached.',
   },
-  streak_30: {
-    label: '30-day streak celebration',
-    fallbackDetail: 'A month of steady momentum.',
+  streak_milestone: {
+    label: 'Streak milestone celebration',
+    fallbackDetail: 'Consistent momentum honored.',
   },
   seasonal_event: {
     label: 'Seasonal event boost',

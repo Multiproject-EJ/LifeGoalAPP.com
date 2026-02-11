@@ -19,7 +19,7 @@ export type TelemetryEventType =
   | 'micro_quest_completed'
   | 'economy_earn'
   | 'economy_spend'
-  | 'tree_streak_award'
+  | 'tree_of_life_awarded'
   | 'habit_done_ish_completed'
   | 'habit_tier_changed'
   | 'habit_environment_set'

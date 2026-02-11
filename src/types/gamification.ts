@@ -163,6 +163,7 @@ export const XP_REWARDS = {
   
   // Streak milestone rewards
   STREAK_7_DAYS: 100,
+  STREAK_14_DAYS: 250,
   STREAK_30_DAYS: 500,
   STREAK_100_DAYS: 1500,
 
