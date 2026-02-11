@@ -568,3 +568,54 @@ export interface ChallengeState {
 }
 
 export const DEMO_CHALLENGES_KEY = 'lifegoal_demo_challenges';
+
+// =====================================================
+// COMMITMENT CONTRACTS TYPES (Beeminder-Style Stakes)
+// =====================================================
+
+export type ContractStatus = 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+export type ContractTargetType = 'Habit' | 'Goal' | 'FocusSession';
+export type ContractCadence = 'daily' | 'weekly';
+export type ContractStakeType = 'gold' | 'tokens';
+export type ContractResult = 'success' | 'miss';
+
+export interface CommitmentContract {
+  id: string;
+  userId: string;
+  title: string;
+  targetType: ContractTargetType;
+  targetId: string;           // ID of the linked habit/goal
+  cadence: ContractCadence;
+  targetCount: number;         // required completions per cadence window
+  stakeType: ContractStakeType;
+  stakeAmount: number;
+  graceDays: number;           // 0-2 per cadence window
+  coolingOffHours: number;     // 24 by default
+  status: ContractStatus;
+  currentProgress: number;     // completions in current window
+  missCount: number;           // total misses
+  successCount: number;        // total successes
+  startAt: string;             // ISO date
+  endAt: string | null;        // ISO date, null = ongoing
+  currentWindowStart: string;  // start of current cadence window
+  lastEvaluatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContractEvaluation {
+  id: string;
+  contractId: string;
+  windowStart: string;
+  windowEnd: string;
+  targetCount: number;
+  actualCount: number;
+  graceDaysUsed: number;
+  result: ContractResult;
+  stakeForfeited: number;
+  bonusAwarded: number;
+  evaluatedAt: string;
+}
+
+export const DEMO_CONTRACTS_KEY = 'lifegoal_demo_contracts';
+export const DEMO_CONTRACT_EVALUATIONS_KEY = 'lifegoal_demo_contract_evaluations';
