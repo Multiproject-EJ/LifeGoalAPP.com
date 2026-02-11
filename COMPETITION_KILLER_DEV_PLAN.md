@@ -1634,7 +1634,7 @@ WisdomTreeState {
 - [x] **P8.1** Add reward cooldown support (config + enforcement in redemption flow)
 - [x] **P8.2** Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display
 - [ ] **P8.3** Add reward evolution seed state (State 0 → 1 prompt after 3 redemptions in 7 days)
-- [ ] **P8.4** Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)
+- [x] **P8.4** Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)
 - [ ] **P8.5** Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)
 - [ ] **P8.6** Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)
 
@@ -1873,3 +1873,8 @@ WisdomTreeState {
   - **Step**: P8.2 Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display  
   - **What changed**: Added RewardCategory type ('Rest', 'Fun', 'Growth', 'Treat', 'Social', 'Meta') to types, category field to RewardItem interface with default 'Treat', category picker UI in ScoreTab with 6 pill buttons showing emoji+label, category badge display on reward cards, and CSS styling for category UI components.  
   - **What's next**: P8.3 Add reward evolution seed state (tracks reward maturity/unlock time).
+
+- **2026-02-11**  
+  - **Step**: P8.4 Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)  
+  - **What changed**: Added Day 7 (+1 watering) and Day 14 (+2 waterings) Tree of Life awards alongside existing Day 30 (+3 waterings, updated from +1) and Day 100 (+5 waterings) milestones. Created centralized STREAK_TREE_MILESTONES config. Added STREAK_14_DAYS: 250 XP reward constant. Updated ImpactTreeSource type from 'streak_30' to 'streak_milestone' for generalized streak handling. Updated telemetry event from 'tree_streak_award' to 'tree_of_life_awarded' with streak_milestone source and amount metadata.  
+  - **What's next**: P8.5 Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine).

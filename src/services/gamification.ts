@@ -384,6 +384,7 @@ export async function updateStreak(userId: string): Promise<UpdateStreakResult> 
     // Check for streak milestones using object mapping
     const STREAK_MILESTONES: Record<number, number> = {
       7: XP_REWARDS.STREAK_7_DAYS,
+      14: XP_REWARDS.STREAK_14_DAYS,
       30: XP_REWARDS.STREAK_30_DAYS,
       100: XP_REWARDS.STREAK_100_DAYS,
     };

@@ -1,7 +1,7 @@
 import { getBalanceWeekId } from './balanceScore';
 import { recordTelemetryEvent } from './telemetry';
 
-export type ImpactTreeSource = 'weekly_closure' | 'level_up' | 'streak_30' | 'seasonal_event' | 'manual';
+export type ImpactTreeSource = 'weekly_closure' | 'level_up' | 'streak_milestone' | 'seasonal_event' | 'manual';
 
 export type ImpactTreeEntry = {
   id: string;
@@ -19,10 +19,25 @@ const STREAK_AWARD_KEY = 'lifegoal_impact_trees_streak_awards';
 const CELEBRATION_KEY = 'lifegoal_impact_trees_celebration';
 
 const STREAK_TREE_MILESTONES: Record<number, { source: ImpactTreeSource; notes: string; amount: number }> = {
-  30: {
-    source: 'streak_30',
+  7: {
+    source: 'streak_milestone',
     amount: 1,
-    notes: '30-day streak honored. Your Tree of Life grew stronger.',
+    notes: '7-day streak honored. Your Tree of Life grew stronger. 🌱',
+  },
+  14: {
+    source: 'streak_milestone',
+    amount: 2,
+    notes: '14-day streak honored. Your Tree of Life flourished. 🌿',
+  },
+  30: {
+    source: 'streak_milestone',
+    amount: 3,
+    notes: '30-day streak honored. Your Tree of Life grew mightier. 🌳',
+  },
+  100: {
+    source: 'streak_milestone',
+    amount: 5,
+    notes: '100-day streak honored. Your Tree of Life became legendary. 🏆',
   },
 };
 
@@ -323,11 +338,12 @@ export function awardStreakTreeMilestone(
   writeCelebration(userId, entry);
   void recordTelemetryEvent({
     userId,
-    eventType: 'tree_streak_award',
+    eventType: 'tree_of_life_awarded',
     metadata: {
       streakDays,
-      source: milestone.source,
+      source: 'streak_milestone',
       entryId: entry.id,
+      amount: milestone.amount,
     },
   });
 
