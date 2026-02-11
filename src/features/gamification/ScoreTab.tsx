@@ -8,6 +8,7 @@ import type {
   RewardCooldownType,
   RewardCategory,
   XPTransaction,
+  PacingAnalysis,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
@@ -15,6 +16,7 @@ import { fetchXPTransactions } from '../../services/gamification';
 import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward, shouldPromptEvolution, evolveReward } from '../../services/rewards';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
+import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
@@ -83,6 +85,8 @@ export function ScoreTab({
     reward: RewardItem;
     show: boolean;
   } | null>(null);
+  const [pacingAnalysis, setPacingAnalysis] = useState<PacingAnalysis | null>(null);
+  const [showPacingPrompt, setShowPacingPrompt] = useState(false);
   const userId = session?.user?.id ?? profile?.user_id ?? '';
   const zenTokens = profile?.zen_tokens ?? 0;
   const [goldBalance, setGoldBalance] = useState(profile?.total_points ?? 0);
@@ -184,6 +188,37 @@ export function ScoreTab({
       setRedemptions(redemptionData ?? []);
       setRewardError(rewardCatalogError?.message || redemptionError?.message || null);
       setRewardLoading(false);
+
+      // Run pacing analysis
+      if (rewardData && redemptionData) {
+        const analysis = analyzeRewardPacing(userId, rewardData, redemptionData);
+        setPacingAnalysis(analysis);
+        
+        // Record telemetry for state assignment
+        await recordTelemetryEvent({
+          userId,
+          eventType: 'reward_pacing_state_assigned',
+          metadata: {
+            state: analysis.state,
+            signals: analysis.signals,
+          },
+        });
+        
+        // Determine if we should show prompt (only for underfed/overfed states)
+        if (analysis.state !== 'balanced' && analysis.suggestion && canShowPrompt(userId)) {
+          setShowPacingPrompt(true);
+          
+          // Record telemetry for prompt shown
+          await recordTelemetryEvent({
+            userId,
+            eventType: 'reward_pacing_prompt_shown',
+            metadata: {
+              state: analysis.state,
+              suggestionType: analysis.suggestion.type,
+            },
+          });
+        }
+      }
     };
 
     loadRewards();
@@ -312,6 +347,40 @@ export function ScoreTab({
     });
     
     setEvolutionPrompt(null);
+  };
+
+  const handleDismissPacingPrompt = async () => {
+    if (!pacingAnalysis || !userId) return;
+    
+    await recordTelemetryEvent({
+      userId,
+      eventType: 'reward_pacing_prompt_dismissed',
+      metadata: {
+        state: pacingAnalysis.state,
+        suggestionType: pacingAnalysis.suggestion?.type,
+      },
+    });
+    
+    setShowPacingPrompt(false);
+  };
+
+  const handleAcceptPacingSuggestion = async () => {
+    if (!pacingAnalysis || !userId) return;
+    
+    await recordTelemetryEvent({
+      userId,
+      eventType: 'reward_pacing_action_taken',
+      metadata: {
+        state: pacingAnalysis.state,
+        suggestionType: pacingAnalysis.suggestion?.type,
+        action: 'accepted',
+      },
+    });
+    
+    markPromptShown(userId);
+    setShowPacingPrompt(false);
+    
+    // Optional: Add actual action implementation later (e.g., navigate to create reward, etc.)
   };
 
   return (
@@ -574,6 +643,34 @@ export function ScoreTab({
           {rewardMessage && (
             <div className={`score-tab__shop-message score-tab__shop-message--${rewardMessage.type}`}>
               {rewardMessage.text}
+            </div>
+          )}
+
+          {showPacingPrompt && pacingAnalysis?.suggestion && (
+            <div className="score-tab__pacing-prompt">
+              <div className="score-tab__pacing-prompt-header">
+                <span className="score-tab__pacing-prompt-icon">{pacingAnalysis.suggestion.icon}</span>
+                <div className="score-tab__pacing-prompt-content">
+                  <h4 className="score-tab__pacing-prompt-title">{pacingAnalysis.suggestion.title}</h4>
+                  <p className="score-tab__pacing-prompt-description">{pacingAnalysis.suggestion.description}</p>
+                </div>
+              </div>
+              <div className="score-tab__pacing-prompt-actions">
+                <button
+                  type="button"
+                  className="score-tab__pacing-prompt-button score-tab__pacing-prompt-button--dismiss"
+                  onClick={handleDismissPacingPrompt}
+                >
+                  Not now
+                </button>
+                <button
+                  type="button"
+                  className="score-tab__pacing-prompt-button score-tab__pacing-prompt-button--accept"
+                  onClick={handleAcceptPacingSuggestion}
+                >
+                  Got it
+                </button>
+              </div>
             </div>
           )}
 
