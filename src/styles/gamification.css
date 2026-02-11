@@ -1521,6 +1521,19 @@
   color: #e65100;
 }
 
+.reward-card__evolved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.12);
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+}
+
 .score-tab__reward-cost {
   font-size: 0.85rem;
   font-weight: 700;

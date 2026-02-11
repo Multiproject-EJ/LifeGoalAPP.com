@@ -801,6 +801,11 @@ export function ScoreTab({
                             {getEvolutionStateLabel(reward.evolutionState)}
                           </span>
                         )}
+                        {reward.evolutionState === 3 && (
+                          <span className="reward-card__evolved-badge" title="Fully evolved — Transformative">
+                            🌳 Evolved
+                          </span>
+                        )}
                       </h3>
                       <span className="score-tab__reward-cost">🪙 {formatter.format(reward.costGold)}</span>
                     </div>
