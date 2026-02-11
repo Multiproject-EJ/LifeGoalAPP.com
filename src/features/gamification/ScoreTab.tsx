@@ -465,19 +465,38 @@ export function ScoreTab({
     setContractResult(null);
   };
 
-  const handleResetContract = () => {
-    // TODO: Implement reset contract logic
+  const handleResetContract = async () => {
+    if (!activeContract || !userId) return;
+    
+    // TODO: Implement reset contract with same settings
+    // This should create a new contract with identical parameters
+    console.log('Reset contract with same settings');
     setContractResult(null);
   };
 
-  const handleReduceStake = () => {
-    // TODO: Implement reduce stake logic
+  const handleReduceStake = async () => {
+    if (!activeContract || !userId) return;
+    
+    // TODO: Implement reduce stake (one-time option for users with 2+ misses)
+    // This should allow the user to modify the stake amount downward
+    console.log('Reduce stake amount');
     setContractResult(null);
   };
 
-  const handlePauseWeek = () => {
-    // TODO: Implement pause for week logic
+  const handlePauseWeek = async () => {
+    if (!activeContract || !userId) return;
+    
+    // Pause contract for a week
+    const { error } = await pauseContract(userId, activeContract.id);
+    if (error) {
+      console.error('Failed to pause contract:', error);
+      return;
+    }
+    
     setContractResult(null);
+    // Reload to reflect paused state
+    const { data } = await fetchActiveContract(userId);
+    setActiveContract(data);
   };
 
   return (
