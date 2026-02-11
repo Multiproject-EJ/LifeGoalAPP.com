@@ -234,8 +234,8 @@ export async function shouldPromptEvolution(
   const reward = rewards.find((r) => r.id === rewardId);
   if (!reward) return false;
 
-  // Allow evolution from State 0 and State 1 only (stop at State 2)
-  if (reward.evolutionState >= 2) return false;
+  // Allow evolution from State 0, 1, and 2 (stop at State 3 — fully evolved)
+  if (reward.evolutionState >= 3) return false;
 
   // Don't nag: if user declined, wait 14 days
   if (reward.evolutionDeclinedAt) {

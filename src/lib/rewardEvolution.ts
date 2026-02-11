@@ -80,12 +80,45 @@ export function getEvolutionSuggestion(reward: RewardItem): {
     }
   }
 
-  // State 2 → State 3 (Transformative) — PLACEHOLDER for P8.5
+  // State 2 → State 3 (Transformative) — Reframe as growth-aligned
   if (evolutionState === 2) {
-    return {
-      title: `${title} + growth element`,
-      description: 'Transform this into a growth-aligned practice.',
-    };
+    switch (category) {
+      case 'Rest':
+        return {
+          title: `${title} + share 1 check-in`,
+          description: 'Turn your rest into a moment of connection — share how you\'re feeling.',
+        };
+      case 'Fun':
+        return {
+          title: `Creative ${title}`,
+          description: 'Channel your fun into a creative spark — draft 1 idea or sketch.',
+        };
+      case 'Social':
+        return {
+          title: `${title} + plan 1 shared goal`,
+          description: 'Transform your social time into shared growth — plan something together.',
+        };
+      case 'Growth':
+        return {
+          title: `${title} + teach 1 thing`,
+          description: 'Deepen your learning by sharing it — teach or write about 1 insight.',
+        };
+      case 'Treat':
+        return {
+          title: `${title} + mindful moment`,
+          description: 'Turn your treat into a mindfulness practice — fully savor every second.',
+        };
+      case 'Meta':
+        return {
+          title: `${title} + 1 identity reflection`,
+          description: 'Connect this to who you\'re becoming — write 1 sentence about your growth.',
+        };
+      default:
+        return {
+          title: `${title} + growth practice`,
+          description: 'Transform this into a growth-aligned ritual.',
+        };
+    }
   }
 
   // No evolution available

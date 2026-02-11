@@ -26,6 +26,12 @@ export function RewardEvolutionModal({ reward, onAccept, onDecline, onClose }: P
         prompt: "You're getting value from this reward! Want to add some light structure to make it even better?",
       };
     }
+    if (reward.evolutionState === 2) {
+      return {
+        title: `🌳 Transform "${reward.title}"?`,
+        prompt: "This reward has been a steady companion. Ready to make it part of your growth story?",
+      };
+    }
     return {
       title: `✨ Want to evolve "${reward.title}"?`,
       prompt: "You've been enjoying this reward. Ready for the next level?",
