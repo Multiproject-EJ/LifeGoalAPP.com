@@ -7969,6 +7969,16 @@ body {
   color: #0369a1;
 }
 
+.habit-card__success-rate {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #334155;
+}
+
+.habit-card__success-rate strong {
+  color: #0f172a;
+}
+
 .habit-card__autoprog {
   margin-top: 0.85rem;
   padding: 0.75rem;
