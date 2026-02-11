@@ -41,7 +41,7 @@ function getEvaluationsKey(userId: string) {
 
 function createId(prefix: string): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
+    return `${prefix}-${crypto.randomUUID()}`;
   }
   const random = Math.random().toString(16).slice(2, 10);
   return `${prefix}-${random}`;
@@ -517,7 +517,10 @@ export async function evaluateContract(
     const actualCount = contract.currentProgress;
     const targetWithGrace = contract.targetCount - contract.graceDays;
     const result = actualCount >= targetWithGrace ? 'success' : 'miss';
-    const graceDaysUsed = Math.max(0, contract.targetCount - actualCount);
+    const graceDaysUsed = Math.min(
+      contract.graceDays,
+      Math.max(0, contract.targetCount - actualCount)
+    );
 
     // Prepare evaluation record
     const evaluation: ContractEvaluation = {
@@ -562,7 +565,7 @@ export async function evaluateContract(
         // Forfeit stake to commitment pool (virtual sink)
         const newBalance =
           contract.stakeType === 'gold'
-            ? profile.total_points - evaluation.stakeForfeited
+            ? Math.max(0, profile.total_points - evaluation.stakeForfeited)
             : profile.total_points;
         const newTokens =
           contract.stakeType === 'tokens'
