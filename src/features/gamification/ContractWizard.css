@@ -1,0 +1,318 @@
+/* =====================================================
+   CONTRACT WIZARD - MOBILE-FIRST
+   ===================================================== */
+
+.contract-wizard {
+  position: relative;
+  background: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+.contract-wizard__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.contract-wizard__step-indicator {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+  font-weight: 500;
+}
+
+.contract-wizard__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.contract-wizard__close:hover {
+  color: var(--text-primary, #333);
+}
+
+/* Error message */
+.contract-wizard__error {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+/* Step container */
+.contract-wizard__step {
+  min-height: 300px;
+}
+
+.contract-wizard__prompt {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin-bottom: 1.5rem;
+}
+
+.contract-wizard__loading {
+  text-align: center;
+  color: var(--text-secondary, #666);
+  padding: 2rem 0;
+}
+
+.contract-wizard__fallback {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.contract-wizard__fallback p {
+  color: var(--text-secondary, #666);
+  margin-bottom: 1rem;
+}
+
+/* Target list (Step 1) */
+.contract-wizard__target-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.contract-wizard__target-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--card-background, #f9f9f9);
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  text-align: left;
+  width: 100%;
+}
+
+.contract-wizard__target-option:hover {
+  border-color: var(--primary-color, #667eea);
+  background: var(--hover-background, #f0f0ff);
+}
+
+.contract-wizard__target-option--selected {
+  border-color: var(--primary-color, #667eea);
+  background: var(--selected-background, #e8ebff);
+}
+
+.contract-wizard__target-type {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.contract-wizard__target-title {
+  font-weight: 500;
+  color: var(--text-primary, #333);
+}
+
+/* Form fields */
+.contract-wizard__field-group {
+  margin-bottom: 1.5rem;
+}
+
+.contract-wizard__label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.contract-wizard__chip-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.contract-wizard__chip {
+  padding: 0.75rem 1.5rem;
+  background: var(--card-background, #f9f9f9);
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: var(--text-primary, #333);
+}
+
+.contract-wizard__chip:hover {
+  border-color: var(--primary-color, #667eea);
+  background: var(--hover-background, #f0f0ff);
+}
+
+.contract-wizard__chip--selected {
+  border-color: var(--primary-color, #667eea);
+  background: var(--primary-color, #667eea);
+  color: white;
+}
+
+.contract-wizard__input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  background: var(--input-background, #ffffff);
+  color: var(--text-primary, #333);
+}
+
+.contract-wizard__input:focus {
+  outline: none;
+  border-color: var(--primary-color, #667eea);
+}
+
+.contract-wizard__helper-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+  margin-top: 0.5rem;
+}
+
+/* Summary (Step 4) */
+.contract-wizard__summary {
+  background: var(--card-background, #f9f9f9);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.contract-wizard__summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.contract-wizard__summary-row:last-child {
+  border-bottom: none;
+}
+
+.contract-wizard__summary-row strong {
+  color: var(--text-primary, #333);
+  font-weight: 600;
+}
+
+.contract-wizard__summary-row span {
+  color: var(--text-secondary, #666);
+  text-align: right;
+}
+
+.contract-wizard__warning {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.contract-wizard__warning strong {
+  flex-shrink: 0;
+}
+
+/* Actions */
+.contract-wizard__actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.contract-wizard__button {
+  flex: 1;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px; /* Thumb-safe */
+}
+
+.contract-wizard__button--primary {
+  background: var(--primary-color, #667eea);
+  color: white;
+}
+
+.contract-wizard__button--primary:hover:not(:disabled) {
+  background: var(--primary-color-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.contract-wizard__button--primary:disabled {
+  background: var(--disabled-background, #ccc);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.contract-wizard__button--secondary {
+  background: var(--card-background, #f9f9f9);
+  color: var(--text-primary, #333);
+  border: 2px solid var(--border-color, #e0e0e0);
+}
+
+.contract-wizard__button--secondary:hover {
+  background: var(--hover-background, #f0f0f0);
+}
+
+/* Cancel button (always visible) */
+.contract-wizard__cancel {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+}
+
+.contract-wizard__cancel-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #999);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  text-decoration: underline;
+}
+
+.contract-wizard__cancel-button:hover {
+  color: var(--text-primary, #333);
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  .contract-wizard {
+    padding: 1rem;
+  }
+
+  .contract-wizard__prompt {
+    font-size: 1.125rem;
+  }
+
+  .contract-wizard__actions {
+    flex-direction: column;
+  }
+
+  .contract-wizard__button {
+    width: 100%;
+  }
+}
