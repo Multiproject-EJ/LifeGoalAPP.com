@@ -429,6 +429,10 @@ export function DailyHabitTracker({
     () => calculateAdherenceSnapshots(habits, historicalLogs, today),
     [habits, historicalLogs, today],
   );
+  const weightedSuccessByHabit = useMemo(
+    () => calculateWeightedSuccessSnapshots(habits, historicalLogs, today),
+    [habits, historicalLogs, today],
+  );
 
   const isBadHabit = useCallback((habit: HabitWithGoal) => {
     const name = habit.name.toLowerCase();
@@ -4906,6 +4910,10 @@ export function DailyHabitTracker({
                 : 'This is a rest day for this habit.';
               const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
               const streakSquares = Array.from({ length: 8 }, (_, index) => index < currentStreak);
+              const successSnapshot = weightedSuccessByHabit[habit.id];
+              const weightedSuccessPercent = successSnapshot?.weightedPercentage ?? 0;
+              const doneIshDays = successSnapshot?.doneIshCount ?? 0;
+              const scheduledDays = successSnapshot?.scheduledCount ?? 0;
               const isJustCompleted = justCompletedHabitId === habit.id;
               return (
                 <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? 'habit-item--just-completed' : ''}`}>
@@ -4966,6 +4974,13 @@ export function DailyHabitTracker({
                     <p className={`habit-card__status ${scheduledToday ? '' : 'habit-card__status--rest'}`}>
                       {statusText}
                       {lastCompletedText ? ` ${lastCompletedText}` : ''}
+                    </p>
+                    <p className="habit-card__success-rate">
+                      30-day weighted success: <strong>{weightedSuccessPercent}%</strong>
+                      {' '}
+                      <span>
+                        ({successSnapshot ? `${doneIshDays} done-ish day${doneIshDays === 1 ? '' : 's'} out of ${scheduledDays} scheduled` : 'no schedule data'})
+                      </span>
                     </p>
                   </footer>
                 </li>
@@ -5479,6 +5494,16 @@ type HabitAdherenceSnapshot = {
   percentage: number;
 };
 
+type HabitSuccessSnapshot = {
+  scheduledCount: number;
+  weightedCredit: number;
+  weightedPercentage: number;
+  doneCount: number;
+  doneIshCount: number;
+  skippedCount: number;
+  missedCount: number;
+};
+
 function calculateAdherenceSnapshots(
   habits: HabitWithGoal[],
   logs: HabitLogRow[],
@@ -5529,6 +5554,88 @@ function calculateAdherenceSnapshots(
       ? Math.round((completedCount / scheduledCount) * 100)
       : 0;
     snapshots[habit.id] = { scheduledCount, completedCount, percentage };
+  }
+
+  return snapshots;
+}
+
+function calculateWeightedSuccessSnapshots(
+  habits: HabitWithGoal[],
+  logs: HabitLogRow[],
+  endDateISO: string,
+  windowDays = 30,
+): Record<string, HabitSuccessSnapshot> {
+  if (!habits.length || !endDateISO) {
+    return {};
+  }
+
+  const endDate = parseISODate(endDateISO);
+  const startDate = subtractDays(endDate, windowDays - 1);
+  const startISO = formatISODate(startDate);
+
+  const stateByHabitDate = new Map<string, Map<string, ProgressState>>();
+  for (const log of logs) {
+    if (log.date < startISO || log.date > endDateISO) continue;
+
+    const progressState = (log.progress_state as ProgressState | null) ?? (log.completed ? 'done' : 'missed');
+    let dayMap = stateByHabitDate.get(log.habit_id);
+    if (!dayMap) {
+      dayMap = new Map<string, ProgressState>();
+      stateByHabitDate.set(log.habit_id, dayMap);
+    }
+
+    const existing = dayMap.get(log.date);
+    if (!existing || PROGRESS_STATE_EFFECTS[progressState].streakCredit > PROGRESS_STATE_EFFECTS[existing].streakCredit) {
+      dayMap.set(log.date, progressState);
+    }
+  }
+
+  const snapshots: Record<string, HabitSuccessSnapshot> = {};
+
+  for (const habit of habits) {
+    const scheduleChecker = createScheduleChecker(habit.frequency, habit.schedule);
+    const dayMap = stateByHabitDate.get(habit.id) ?? new Map<string, ProgressState>();
+    let scheduledCount = 0;
+    let weightedCredit = 0;
+    let doneCount = 0;
+    let doneIshCount = 0;
+    let skippedCount = 0;
+    let missedCount = 0;
+
+    for (let offset = 0; offset < windowDays; offset += 1) {
+      const day = addDays(startDate, offset);
+      if (day > endDate) {
+        break;
+      }
+      if (!scheduleChecker(day)) {
+        continue;
+      }
+
+      scheduledCount += 1;
+      const isoDate = formatISODate(day);
+      const state = dayMap.get(isoDate) ?? 'missed';
+
+      if (state === 'done') doneCount += 1;
+      if (state === 'doneIsh') doneIshCount += 1;
+      if (state === 'skipped') skippedCount += 1;
+      if (state === 'missed') missedCount += 1;
+
+      weightedCredit += PROGRESS_STATE_EFFECTS[state].streakCredit;
+    }
+
+    const weightedPercentage = scheduledCount
+      ? Math.round((weightedCredit / scheduledCount) * 100)
+      : 0;
+
+    snapshots[habit.id] = {
+      scheduledCount,
+      weightedCredit,
+      weightedPercentage,
+      doneCount,
+      doneIshCount,
+      skippedCount,
+      missedCount,
+    };
   }
 
   return snapshots;

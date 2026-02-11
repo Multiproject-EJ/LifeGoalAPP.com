@@ -14,7 +14,7 @@ Use this section first when returning to the plan.
 | M1. Onboarding | ✅ Complete | Move to M2 balance/harmony scoring discovery (define axes + thresholds). |
 | M2. Balance / Harmony scoring v1 | ✅ Complete | Balance axes, thresholds, dashboard panel, and gamification bonus XP implemented. |
 | M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
-| M4. Auto-progress ladder v1 | 🟡 In Progress | Done-ish weighted streak integration shipped in habit insights + quick actions sorting. Next: add weighted success-rate surfacing to habit analytics cards. |
+| M4. Auto-progress ladder v1 | 🟡 In Progress | Done-ish weighted streak + weighted success-rate analytics are now surfaced in habit cards. Next: add UI affordances to classify skipped vs missed directly in daily check-ins. |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
 | M6. AI Coach instruction system | ☐ Not started | |
 | M7. AI Coach interventions v1 | ☐ Not started | |
@@ -180,6 +180,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - Duration: minimum minutes or percent of target.
 - [ ] Update habit completion logic to record progress state plus numeric completion percentage.
 - [x] Update streak calculations to include partial credit while avoiding inflated streaks.
+- [x] Add weighted success-rate metrics to habit analytics cards so done-ish contribution is visible alongside streaks.
 - [ ] Add UI copy and visual affordances for “done-ish” (progressful) completion in daily check-ins.
 - [ ] Add mandatory “Habit Environment” textarea to habit setup/edit flows with validation and helper prompts.
 - [ ] Add “Habit Environment” summary in habit detail + coach context panels.
@@ -393,4 +394,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M4 Slice — Done-ish weighted streak analytics integration.  
   - **What changed**: Updated habit log compatibility mapping to preserve `progress_state` and `completion_percentage`, then integrated done-ish weighting into streak calculations used by `DailyHabitTracker` insights and `QuickActionsFAB` sorting. Streaks now count done-ish as partial credit and still break on missed days to avoid inflated streaks.  
   - **What's next**: Add weighted success-rate metrics to habit analytics cards so done-ish contribution is visible alongside streaks.
-
+- **2026-02-11**  
+  - **Slice**: M4 Slice — Weighted success-rate metrics on habit analytics cards.  
+  - **What changed**: Added 30-day weighted success snapshots (done, done-ish, skipped, missed with partial-credit scoring) and surfaced weighted success directly in each habit card under streak stats, including done-ish day counts for transparency. Updated milestone status + checklist to reflect completion.  
+  - **What's next**: Add daily check-in controls and copy that let users explicitly classify skipped vs missed days so grading stays accurate.
