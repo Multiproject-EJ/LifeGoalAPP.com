@@ -195,9 +195,13 @@ export function ScoreTab({
         setPacingAnalysis(analysis);
         
         // Record telemetry for state assignment
-        await recordTelemetryEvent(userId, 'reward_pacing_state_assigned', {
-          state: analysis.state,
-          signals: analysis.signals,
+        await recordTelemetryEvent({
+          userId,
+          eventType: 'reward_pacing_state_assigned',
+          metadata: {
+            state: analysis.state,
+            signals: analysis.signals,
+          },
         });
         
         // Determine if we should show prompt (only for underfed/overfed states)
@@ -205,9 +209,13 @@ export function ScoreTab({
           setShowPacingPrompt(true);
           
           // Record telemetry for prompt shown
-          await recordTelemetryEvent(userId, 'reward_pacing_prompt_shown', {
-            state: analysis.state,
-            suggestionType: analysis.suggestion.type,
+          await recordTelemetryEvent({
+            userId,
+            eventType: 'reward_pacing_prompt_shown',
+            metadata: {
+              state: analysis.state,
+              suggestionType: analysis.suggestion.type,
+            },
           });
         }
       }
@@ -344,9 +352,13 @@ export function ScoreTab({
   const handleDismissPacingPrompt = async () => {
     if (!pacingAnalysis || !userId) return;
     
-    await recordTelemetryEvent(userId, 'reward_pacing_prompt_dismissed', {
-      state: pacingAnalysis.state,
-      suggestionType: pacingAnalysis.suggestion?.type,
+    await recordTelemetryEvent({
+      userId,
+      eventType: 'reward_pacing_prompt_dismissed',
+      metadata: {
+        state: pacingAnalysis.state,
+        suggestionType: pacingAnalysis.suggestion?.type,
+      },
     });
     
     setShowPacingPrompt(false);
@@ -355,10 +367,14 @@ export function ScoreTab({
   const handleAcceptPacingSuggestion = async () => {
     if (!pacingAnalysis || !userId) return;
     
-    await recordTelemetryEvent(userId, 'reward_pacing_action_taken', {
-      state: pacingAnalysis.state,
-      suggestionType: pacingAnalysis.suggestion?.type,
-      action: 'accepted',
+    await recordTelemetryEvent({
+      userId,
+      eventType: 'reward_pacing_action_taken',
+      metadata: {
+        state: pacingAnalysis.state,
+        suggestionType: pacingAnalysis.suggestion?.type,
+        action: 'accepted',
+      },
     });
     
     markPromptShown(userId);

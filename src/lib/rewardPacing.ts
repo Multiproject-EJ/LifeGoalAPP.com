@@ -330,8 +330,8 @@ function generateSuggestion(
       },
       {
         type: 'bank_it',
-        title: 'Save this for when it'll feel great.',
-        description: 'Store reward credits for when they'll have more impact.',
+        title: "Save this for when it'll feel great.",
+        description: "Store reward credits for when they'll have more impact.",
         icon: '🏦',
       },
       {
