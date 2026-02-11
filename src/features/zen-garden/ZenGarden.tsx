@@ -125,6 +125,17 @@ export function ZenGarden({ session }: ZenGardenProps) {
   const { effectiveCategory } = useTheme();
   const gardenPlotImage = effectiveCategory === 'dark' ? zenGardenPlotDark : zenGardenPlotLight;
 
+  // Handle escape key to close overlay
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showGardenPlot) {
+        setShowGardenPlot(false);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [showGardenPlot]);
+
   const ownedItems = useMemo(
     () => new Set(inventory),
     [inventory]
@@ -393,11 +404,15 @@ export function ZenGarden({ session }: ZenGardenProps) {
 
     {/* Garden Plot Overlay */}
     {showGardenPlot && (
-      <div className="zen-garden__plot-overlay" role="dialog" aria-modal="true">
+      <div 
+        className="zen-garden__plot-overlay" 
+        role="dialog" 
+        aria-modal="true"
+        aria-label="Garden plot view"
+      >
         <div 
           className="zen-garden__plot-overlay-backdrop" 
           onClick={() => setShowGardenPlot(false)}
-          aria-label="Close garden plot"
         />
         <div className="zen-garden__plot-overlay-content">
           <button
