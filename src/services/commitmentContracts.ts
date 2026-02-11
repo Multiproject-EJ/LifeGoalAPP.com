@@ -7,7 +7,7 @@ import type {
   ContractCadence,
   ContractStakeType,
 } from '../types/gamification';
-import { recordTelemetryEvent } from './telemetry';
+import { recordTelemetryEvent, type TelemetryEventMetadata } from './telemetry';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -176,7 +176,7 @@ export async function createContract(
         cadence: newContract.cadence,
         stakeType: newContract.stakeType,
         stakeAmount: newContract.stakeAmount,
-      },
+      } as TelemetryEventMetadata,
     });
 
     return { data: newContract, error: null };
@@ -264,7 +264,7 @@ export async function cancelContract(
       metadata: {
         contractId: updatedContract.id,
         withinCoolingOff,
-      },
+      } as TelemetryEventMetadata,
     });
 
     return { data: updatedContract, error: null };
@@ -416,7 +416,7 @@ export async function activateContract(
       eventType: 'contract_activated',
       metadata: {
         contractId: updatedContract.id,
-      },
+      } as TelemetryEventMetadata,
     });
 
     return { data: updatedContract, error: null };
@@ -620,7 +620,7 @@ export async function evaluateContract(
         result,
         stakeForfeited: evaluation.stakeForfeited,
         bonusAwarded: evaluation.bonusAwarded,
-      },
+      } as TelemetryEventMetadata,
     });
 
     if (result === 'miss') {
@@ -631,7 +631,7 @@ export async function evaluateContract(
           contractId: contract.id,
           stakeAmount: evaluation.stakeForfeited,
           stakeType: contract.stakeType,
-        },
+        } as TelemetryEventMetadata,
       });
     }
 
