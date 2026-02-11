@@ -1636,7 +1636,7 @@ WisdomTreeState {
 - [ ] **P8.3** Add reward evolution seed state (State 0 → 1 prompt after 3 redemptions in 7 days)
 - [x] **P8.4** Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)
 - [x] **P8.5** Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)
-- [ ] **P8.6** Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)
+- [x] **P8.6** Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)
 
 ---
 
@@ -1883,3 +1883,8 @@ WisdomTreeState {
   - **Step**: P8.5 Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)  
   - **What changed**: Added rules-based reward pacing engine with Underfed/Balanced/Overfed detection, suggestion generation (upgrade/ritual/new for Underfed; cooldown/bank/swap for Overfed), guardrails (1x per 3 days prompt limit), localStorage persistence (lifegoal_reward_pacing_{userId}), and telemetry hooks (reward_pacing_state_assigned, reward_pacing_prompt_shown, reward_pacing_action_taken, reward_pacing_prompt_dismissed). Created src/lib/rewardPacing.ts with analyzeRewardPacing(), canShowPrompt(), and markPromptShown() functions. Added PacingState, PacingAnalysis, PacingSuggestion types to src/types/gamification.ts. Integrated pacing chip into ScoreTab with visual prompt banner (purple gradient) showing suggestion icon, title, description, and "Not now"/"Got it" action buttons. Detection rules: Underfed if 2+ signals (no redemption 7d + 3+ completions, declining completions ≥40%), Overfed if 2+ signals (daily redemptions 5+ days, cost trending down ≥30%, low variety >80%).  
   - **What's next**: P8.6 Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config).
+
+- **2026-02-11**  
+  - **Step**: P8.6 Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)  
+  - **What changed**: Created centralized identity signal config (src/lib/identitySignalConfig.ts) with IdentitySignalConfig interface and IDENTITY_SIGNALS array containing all 6 identity vectors with friendly user-facing labels (Discipline→Follow-Through, Resilience→Bounce-Back, Care→Kindness, Courage→Bravery, Creativity→Curiosity, Balance→Harmony), 1-line descriptions, reflection messages (high/growing), icons (🎯🛡️💛🦁🎨⚖️), and accent colors. Added helper functions: getSignalConfig(key), getSignalLabel(key), getSignalReflection(key, strength), getTopSignals(vectors, count). Added IdentityVectorKey type to src/types/gamification.ts. No existing hardcoded identity vector copy found in components (current Identity Signals card uses personality test data, not vector-specific labels). Build passes successfully.  
+  - **What's next**: Phase 8 complete! Review Phase 9 options or address open polish items.

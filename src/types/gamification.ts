@@ -1,6 +1,12 @@
 // TypeScript types for the gamification system
 
 // =====================================================
+// IDENTITY VECTOR TYPES
+// =====================================================
+
+export type IdentityVectorKey = 'discipline' | 'resilience' | 'care' | 'courage' | 'creativity' | 'balance';
+
+// =====================================================
 // DATABASE ROW TYPES
 // =====================================================
 
