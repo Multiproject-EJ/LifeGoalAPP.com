@@ -56,12 +56,15 @@ function mergePersonalityTests(
 ): PersonalityTestValue[] {
   const merged = new Map<string, PersonalityTestValue>();
 
-  for (const record of remoteRecords) {
+  for (const record of localRecords) {
     merged.set(record.id, record);
   }
 
-  for (const record of localRecords) {
-    merged.set(record.id, record);
+  for (const record of remoteRecords) {
+    const existing = merged.get(record.id);
+    if (!existing || !existing._dirty) {
+      merged.set(record.id, record);
+    }
   }
 
   return Array.from(merged.values()).sort((a, b) => b.taken_at.localeCompare(a.taken_at));
@@ -162,14 +165,15 @@ export async function syncPersonalityTestsWithSupabase(userId: string): Promise<
   let latestSynced: PersonalityTestValue | null = null;
 
   for (const test of dirtyTests) {
-    const { error } = await supabase.from('personality_tests').insert({
+    const { error } = await supabase.from('personality_tests').upsert({
+      id: test.id,
       user_id: test.user_id,
       taken_at: test.taken_at,
       traits: test.traits,
       axes: test.axes,
       answers: test.answers ?? null,
       version: test.version,
-    });
+    }, { onConflict: 'id' });
 
     if (error) {
       continue;
