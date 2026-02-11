@@ -29,7 +29,13 @@ export type TelemetryEventType =
   | 'reward_pacing_state_assigned'
   | 'reward_pacing_prompt_shown'
   | 'reward_pacing_action_taken'
-  | 'reward_pacing_prompt_dismissed';
+  | 'reward_pacing_prompt_dismissed'
+  | 'contract_created'
+  | 'contract_activated'
+  | 'contract_cancelled'
+  | 'contract_completed'
+  | 'contract_missed'
+  | 'contract_stake_forfeited';
 
 export type TelemetryEventMetadata = Json;
 

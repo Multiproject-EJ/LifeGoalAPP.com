@@ -167,12 +167,16 @@ export async function createContract(
     const updated = [...(contracts ?? []), newContract];
     localStorage.setItem(getContractsKey(userId), JSON.stringify(updated));
 
-    recordTelemetryEvent('contract_created', {
-      contractId: newContract.id,
-      targetType: newContract.targetType,
-      cadence: newContract.cadence,
-      stakeType: newContract.stakeType,
-      stakeAmount: newContract.stakeAmount,
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'contract_created',
+      metadata: {
+        contractId: newContract.id,
+        targetType: newContract.targetType,
+        cadence: newContract.cadence,
+        stakeType: newContract.stakeType,
+        stakeAmount: newContract.stakeAmount,
+      },
     });
 
     return { data: newContract, error: null };
@@ -254,9 +258,13 @@ export async function cancelContract(
     updatedContracts[contractIndex] = updatedContract;
     localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
 
-    recordTelemetryEvent('contract_cancelled', {
-      contractId: updatedContract.id,
-      withinCoolingOff,
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'contract_cancelled',
+      metadata: {
+        contractId: updatedContract.id,
+        withinCoolingOff,
+      },
     });
 
     return { data: updatedContract, error: null };
@@ -403,8 +411,12 @@ export async function activateContract(
     updatedContracts[contractIndex] = updatedContract;
     localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
 
-    recordTelemetryEvent('contract_activated', {
-      contractId: updatedContract.id,
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'contract_activated',
+      metadata: {
+        contractId: updatedContract.id,
+      },
     });
 
     return { data: updatedContract, error: null };
@@ -600,18 +612,26 @@ export async function evaluateContract(
     updatedContracts[contractIndex] = updatedContract;
     localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
 
-    recordTelemetryEvent(result === 'success' ? 'contract_completed' : 'contract_missed', {
-      contractId: contract.id,
-      result,
-      stakeForfeited: evaluation.stakeForfeited,
-      bonusAwarded: evaluation.bonusAwarded,
+    void recordTelemetryEvent({
+      userId,
+      eventType: result === 'success' ? 'contract_completed' : 'contract_missed',
+      metadata: {
+        contractId: contract.id,
+        result,
+        stakeForfeited: evaluation.stakeForfeited,
+        bonusAwarded: evaluation.bonusAwarded,
+      },
     });
 
     if (result === 'miss') {
-      recordTelemetryEvent('contract_stake_forfeited', {
-        contractId: contract.id,
-        stakeAmount: evaluation.stakeForfeited,
-        stakeType: contract.stakeType,
+      void recordTelemetryEvent({
+        userId,
+        eventType: 'contract_stake_forfeited',
+        metadata: {
+          contractId: contract.id,
+          stakeAmount: evaluation.stakeForfeited,
+          stakeType: contract.stakeType,
+        },
       });
     }
 
