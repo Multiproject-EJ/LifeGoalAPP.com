@@ -1633,10 +1633,19 @@ WisdomTreeState {
 ### Phase 8 — Post-MVP Polish (Config-First, Small Steps)
 - [x] **P8.1** Add reward cooldown support (config + enforcement in redemption flow)
 - [x] **P8.2** Add reward category tagging (Rest, Fun, Growth, Treat, Social, Meta) to creation + display
-- [ ] **P8.3** Add reward evolution seed state (State 0 → 1 prompt after 3 redemptions in 7 days)
+- [x] **P8.3** Add reward evolution seed state (State 0 → 1 prompt after 3 redemptions in 7 days)
 - [x] **P8.4** Extend streak milestones config (add Day 7 + Day 14 Tree of Life awards alongside Day 30)
 - [x] **P8.5** Add reward pacing state detection (Underfed / Balanced / Overfed rules-based engine)
 - [x] **P8.6** Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)
+
+### Phase 9 — UX & Engagement Layers (Spec → Build)
+- [ ] **P9.1** Build reward validation heuristics UI (risk scoring nudges + guardrail options from §7.1)
+- [ ] **P9.2** Build Party system UI (shared stakes, party check-in chip, shared reward flow from §7.4)
+- [ ] **P9.3** Build Seasonal events UI (event chip, micro-action cards, finale ritual from §7.6)
+- [ ] **P9.4** Build Motivation style matching engine (persona detection, copy adaptation, scoring rules from §7.7)
+- [ ] **P9.5** Build Reward pacing optimizer UI (Underfed/Overfed nudges, post-completion chips from §7.8 — engine in P8.5, now add UI)
+- [ ] **P9.6** Build "Bad week" detection + soft-landing mode UI (miss cluster detection, grace buffer, soft banner from §7.9)
+- [ ] **P9.7** Build Zen Garden visual growth loop (garden states, Wisdom Tree stages, growth rules, Today thumbnail from §8.11)
 
 ---
 
@@ -1893,3 +1902,8 @@ WisdomTreeState {
   - **Step**: Reward evolution State 2→3 (Transformative) polish  
   - **What changed**: Replaced State 2→3 placeholder with full category-specific Transformative templates (Rest→connection, Fun→creative, Social→shared goals, Growth→teaching, Treat→mindfulness, Meta→identity reflection). Updated shouldPromptEvolution to allow State 2→3 transitions (changed evolutionState >= 2 to >= 3). Added State 2 modal copy ("🌳 Transform..." with growth story prompt). Added "🌳 Evolved" badge on fully evolved State 3 rewards with green styling. All changes in src/lib/rewardEvolution.ts, src/services/rewards.ts, src/features/gamification/RewardEvolutionModal.tsx, src/features/gamification/ScoreTab.tsx, and src/styles/gamification.css. Build passes successfully. Telemetry events already support State 2→3 transitions via fromState/toState metadata.  
   - **What's next**: Evaluate Phase 9 roadmap or additional polish items.
+
+- **2026-02-11**  
+  - **Step**: P8.3 marked as Done + Phase 9 roadmap defined  
+  - **What changed**: Confirmed P8.3 reward evolution (State 0→1→2→3) is fully implemented with modal UI, service functions, evolution templates, ScoreTab integration, and telemetry. Marked P8.3 checkbox as done. Added Phase 9 roadmap with 7 steps covering reward validation UI, party system, seasonal events, motivation matching, pacing optimizer UI, soft-landing mode, and Zen Garden visual loop — all based on existing specs from §7 and §8.  
+  - **What's next**: Begin P9.1 (reward validation heuristics UI) or prioritize based on user impact.
