@@ -1777,3 +1777,378 @@
     background: rgba(255, 255, 255, 0.1);
   }
 }
+
+/* =====================================================
+   COMMITMENT CONTRACTS STYLES
+   ===================================================== */
+
+/* Contract tab empty state */
+.score-tab__contracts-header {
+  margin-bottom: 1.5rem;
+}
+
+.score-tab__contracts-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--card-background, #f9f9f9);
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.score-tab__contracts-empty-text {
+  color: var(--text-secondary, #666);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.score-tab__contracts-create-button {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--primary-color, #667eea);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.score-tab__contracts-create-button:hover {
+  background: var(--primary-color-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Contract Status Card */
+.contract-status-card {
+  background: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.contract-status-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.contract-status-card__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin: 0;
+  flex: 1;
+}
+
+.contract-status-card__stake-badge {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.contract-status-card__progress-section {
+  margin-bottom: 1.5rem;
+}
+
+.contract-status-card__progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--progress-bg, #e0e0e0);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.contract-status-card__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
+}
+
+.contract-status-card__progress-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}
+
+.contract-status-card__info {
+  background: var(--info-bg, #f9f9f9);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.contract-status-card__info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.contract-status-card__info-row--highlight {
+  background: #fff3cd;
+  margin: 0 -1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+.contract-status-card__info-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+}
+
+.contract-status-card__info-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.contract-status-card__message {
+  font-size: 1rem;
+  color: var(--text-primary, #333);
+  margin: 1rem 0 1.5rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.contract-status-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contract-status-card__primary-button {
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--primary-color, #667eea);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  width: 100%;
+}
+
+.contract-status-card__primary-button:hover {
+  background: var(--primary-color-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.contract-status-card__secondary-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.contract-status-card__secondary-button {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: var(--card-background, #f9f9f9);
+  color: var(--text-secondary, #666);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contract-status-card__secondary-button:hover {
+  background: var(--hover-background, #f0f0f0);
+  color: var(--text-primary, #333);
+}
+
+/* Contract Result Modal */
+.contract-result-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.contract-result-modal__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.contract-result-modal__content {
+  position: relative;
+  background: var(--card-background, #ffffff);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.contract-result-modal__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.contract-result-modal__title--success {
+  color: #10b981;
+}
+
+.contract-result-modal__title--miss {
+  color: #f59e0b;
+}
+
+.contract-result-modal__body {
+  font-size: 1rem;
+  color: var(--text-secondary, #666);
+  text-align: center;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.contract-result-modal__bonus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.contract-result-modal__bonus-icon {
+  font-size: 1.5rem;
+}
+
+.contract-result-modal__bonus-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #155724;
+}
+
+.contract-result-modal__stake-forfeited {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.contract-result-modal__stake-icon {
+  font-size: 1.5rem;
+}
+
+.contract-result-modal__stake-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+.contract-result-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contract-result-modal__button {
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.contract-result-modal__button--primary {
+  background: var(--primary-color, #667eea);
+  color: white;
+}
+
+.contract-result-modal__button--primary:hover {
+  background: var(--primary-color-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.contract-result-modal__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.contract-result-modal__option-button {
+  padding: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: var(--card-background, #f9f9f9);
+  color: var(--text-primary, #333);
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.contract-result-modal__option-button:hover {
+  border-color: var(--primary-color, #667eea);
+  background: var(--hover-background, #f0f0ff);
+}
+
+.contract-result-modal__cancel-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  background: none;
+  color: var(--text-secondary, #999);
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.contract-result-modal__cancel-button:hover {
+  color: var(--text-primary, #333);
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  .contract-status-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .contract-result-modal__content {
+    padding: 1.5rem;
+  }
+
+  .contract-result-modal__title {
+    font-size: 1.25rem;
+  }
+}
