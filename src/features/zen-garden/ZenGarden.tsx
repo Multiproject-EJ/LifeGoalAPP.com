@@ -4,6 +4,11 @@ import { fetchGamificationProfile } from '../../services/gamificationPrefs';
 import { getImpactTreeLedger } from '../../services/impactTrees';
 import type { ZenTokenTransaction } from '../../types/gamification';
 import { fetchZenGardenInventory, fetchZenTokenTransactions, purchaseZenGardenItem } from '../../services/zenGarden';
+import { useTheme } from '../../contexts/ThemeContext';
+import zenShopBg from '../../assets/zenshopmain.webp';
+import toZenGardenImg from '../../assets/tozengarden.webp';
+import zenGardenPlotLight from '../../assets/zengardenplotlight.webp';
+import zenGardenPlotDark from '../../assets/zengardenplotdark.webp';
 import './ZenGarden.css';
 
 type ZenGardenProps = {
@@ -114,8 +119,11 @@ export function ZenGarden({ session }: ZenGardenProps) {
   const [transactions, setTransactions] = useState<ZenTokenTransaction[]>([]);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
   const [impactTotal, setImpactTotal] = useState(0);
+  const [showGardenPlot, setShowGardenPlot] = useState(false);
 
   const userId = session?.user?.id ?? 'demo_user';
+  const { effectiveCategory } = useTheme();
+  const gardenPlotImage = effectiveCategory === 'dark' ? zenGardenPlotDark : zenGardenPlotLight;
 
   const ownedItems = useMemo(
     () => new Set(inventory),
@@ -215,20 +223,29 @@ export function ZenGarden({ session }: ZenGardenProps) {
   }, [nextMilestone, treeScore, treeStage.minScore]);
 
   return (
-    <section className="zen-garden">
-      <header className="zen-garden__header">
-        <div>
-          <p className="zen-garden__eyebrow">Zen Garden</p>
-          <h2 className="zen-garden__title">Meditation-only rewards</h2>
-          <p className="zen-garden__subtitle">
-            Spend Zen Tokens earned from meditation to grow a peaceful garden.
-          </p>
-        </div>
-        <div className="zen-garden__balance">
-          <span className="zen-garden__balance-label">Zen Tokens</span>
-          <span className="zen-garden__balance-value">🪷 {balance}</span>
-        </div>
-      </header>
+    <>
+      <section 
+        className="zen-garden" 
+        style={{ 
+          backgroundImage: `url(${zenShopBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <header className="zen-garden__header">
+          <div>
+            <p className="zen-garden__eyebrow">Zen Garden</p>
+            <h2 className="zen-garden__title">Meditation-only rewards</h2>
+            <p className="zen-garden__subtitle">
+              Spend Zen Tokens earned from meditation to grow a peaceful garden.
+            </p>
+          </div>
+          <div className="zen-garden__balance">
+            <span className="zen-garden__balance-label">Zen Tokens</span>
+            <span className="zen-garden__balance-value">🪷 {balance}</span>
+          </div>
+        </header>
 
       {loading && (
         <div className="zen-garden__status">Loading Zen Garden...</div>
@@ -362,6 +379,43 @@ export function ZenGarden({ session }: ZenGardenProps) {
           </section>
         </>
       )}
+
+      {/* To The Garden Button */}
+      <button
+        type="button"
+        className="zen-garden__to-garden-btn"
+        onClick={() => setShowGardenPlot(true)}
+        aria-label="Open garden plot view"
+      >
+        <img src={toZenGardenImg} alt="To the garden" />
+      </button>
     </section>
+
+    {/* Garden Plot Overlay */}
+    {showGardenPlot && (
+      <div className="zen-garden__plot-overlay" role="dialog" aria-modal="true">
+        <div 
+          className="zen-garden__plot-overlay-backdrop" 
+          onClick={() => setShowGardenPlot(false)}
+          aria-label="Close garden plot"
+        />
+        <div className="zen-garden__plot-overlay-content">
+          <button
+            type="button"
+            className="zen-garden__plot-close"
+            onClick={() => setShowGardenPlot(false)}
+            aria-label="Close garden plot"
+          >
+            ✕
+          </button>
+          <img 
+            src={gardenPlotImage} 
+            alt="Garden plot view" 
+            className="zen-garden__plot-image"
+          />
+        </div>
+      </div>
+    )}
+  </>
   );
 }
