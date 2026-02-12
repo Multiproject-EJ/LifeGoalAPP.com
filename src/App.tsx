@@ -327,6 +327,7 @@ export default function App() {
     'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
+  const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'contracts'>('home');
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
@@ -496,11 +497,11 @@ export default function App() {
 
       if (navId === 'identity') {
         return {
-          id: navId,
-          label: 'ID',
-          ariaLabel: 'Your identity and preferences',
-          icon: '🪪',
-          summary: 'Explore your personality and preferences.',
+          id: 'contracts',
+          label: 'Contracts',
+          ariaLabel: 'View and manage your contracts',
+          icon: '🤝',
+          summary: 'Create and track commitment contracts.',
         } satisfies MobileMenuNavItem;
       }
 
@@ -1303,6 +1304,13 @@ export default function App() {
 
     if (navId === 'breathing-space' && !preserveBreatheTab) {
       setBreathingSpaceMobileTab(null);
+    }
+
+    if (navId === 'contracts') {
+      setScoreTabActiveTab('contracts');
+      setActiveWorkspaceNav('score');
+      setShowMobileHome(false);
+      return;
     }
 
     if (navId === 'game' && isMobileViewport) {
@@ -2130,6 +2138,8 @@ export default function App() {
               onNavigateToZenGarden={() => {
                 setShowZenGardenFullScreen(true);
               }}
+              initialActiveTab={scoreTabActiveTab}
+              onActiveTabChange={(tab) => setScoreTabActiveTab(tab)}
             />
           </div>
         );

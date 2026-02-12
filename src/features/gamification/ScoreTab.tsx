@@ -44,6 +44,8 @@ interface ScoreTabProps {
   onNavigateToBank?: () => void;
   onNavigateToShop?: () => void;
   onNavigateToZenGarden?: () => void;
+  initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen' | 'contracts';
+  onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen' | 'contracts') => void;
 }
 
 const REWARD_CATEGORIES: Array<{ value: RewardCategory; emoji: string; label: string }> = [
@@ -65,6 +67,8 @@ export function ScoreTab({
   onNavigateToBank,
   onNavigateToShop,
   onNavigateToZenGarden,
+  initialActiveTab,
+  onActiveTabChange,
 }: ScoreTabProps) {
   const formatter = useMemo(() => new Intl.NumberFormat(), []);
   const dateFormatter = useMemo(
@@ -75,7 +79,7 @@ export function ScoreTab({
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
   const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
-  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'contracts'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'contracts'>(initialActiveTab ?? 'home');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -106,6 +110,11 @@ export function ScoreTab({
   const [activeContract, setActiveContract] = useState<CommitmentContract | null>(null);
   const [showContractWizard, setShowContractWizard] = useState(false);
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
+
+  const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'contracts') => {
+    setActiveTab(tab);
+    onActiveTabChange?.(tab);
+  };
 
   useEffect(() => {
     setGoldBalance(profile?.total_points ?? 0);
@@ -515,7 +524,7 @@ export function ScoreTab({
           <button
             type="button"
             className={`score-tab__tab${activeTab === 'home' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => setActiveTab('home')}
+            onClick={() => handleTabChange('home')}
           >
             Hub
           </button>
@@ -530,7 +539,7 @@ export function ScoreTab({
             type="button"
             className={`score-tab__tab${activeTab === 'bank' ? ' score-tab__tab--active' : ''}`}
             onClick={() => {
-              setActiveTab('bank');
+              handleTabChange('bank');
               onNavigateToBank?.();
             }}
           >
@@ -541,7 +550,7 @@ export function ScoreTab({
             type="button"
             className={`score-tab__tab${activeTab === 'shop' ? ' score-tab__tab--active' : ''}`}
             onClick={() => {
-              setActiveTab('shop');
+              handleTabChange('shop');
               onNavigateToShop?.();
             }}
           >
@@ -561,7 +570,7 @@ export function ScoreTab({
           <button
             type="button"
             className={`score-tab__tab${activeTab === 'contracts' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => setActiveTab('contracts')}
+            onClick={() => handleTabChange('contracts')}
           >
             <span className="score-tab__tab-icon" aria-hidden="true">🤝</span>
             Contracts
@@ -581,7 +590,7 @@ export function ScoreTab({
             type="button"
             className="score-tab__hub-card"
             onClick={() => {
-              setActiveTab('bank');
+              handleTabChange('bank');
               onNavigateToBank?.();
             }}
           >
@@ -594,7 +603,7 @@ export function ScoreTab({
             type="button"
             className="score-tab__hub-card"
             onClick={() => {
-              setActiveTab('shop');
+              handleTabChange('shop');
               onNavigateToShop?.();
             }}
           >
@@ -609,7 +618,7 @@ export function ScoreTab({
             </span>
             <span className="score-tab__hub-title">Zen Garden</span>
           </button>
-          <button type="button" className="score-tab__hub-card" onClick={() => setActiveTab('contracts')}>
+          <button type="button" className="score-tab__hub-card" onClick={() => handleTabChange('contracts')}>
             <span className="score-tab__hub-visual" aria-hidden="true">
               <span style={{ fontSize: '4rem' }}>🤝</span>
             </span>
