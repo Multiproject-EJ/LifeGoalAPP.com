@@ -477,7 +477,7 @@ export default function App() {
     const findWorkspaceItem = (navId: string) =>
       workspaceNavItems.find((item) => item.id === navId);
 
-    return MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
+    return (MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
       const item = findWorkspaceItem(navId);
       const shortLabel = item?.shortLabel ?? item?.label ?? navId;
       const formattedLabel =
@@ -542,14 +542,14 @@ export default function App() {
         icon: item?.icon ?? '•',
         summary: item?.summary ?? 'Open this section.',
       } satisfies MobileMenuNavItem;
-    }).concat([
+    }) as MobileMenuNavItem[]).concat([
       {
         id: 'coach',
         label: 'Coach',
         ariaLabel: 'AI Coach - Get a guided next step',
         icon: '🪈',
         summary: 'Get a guided next step from your AI coach.',
-      } satisfies MobileMenuNavItem,
+      },
     ]);
   }, [workspaceNavItems]);
 
