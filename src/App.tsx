@@ -370,6 +370,7 @@ export default function App() {
   const menuHelperHoldStartRef = useRef<{ x: number; y: number } | null>(null);
   const profileStrengthSnapshotRef = useRef<ProfileStrengthResult | null>(null);
   const profileStrengthSignalsRef = useRef<ProfileStrengthSignalSnapshot | null>(null);
+  const [showZenGardenFullScreen, setShowZenGardenFullScreen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -2126,6 +2127,9 @@ export default function App() {
                 setActiveWorkspaceNav('game');
                 setShowMobileHome(false);
               }}
+              onNavigateToZenGarden={() => {
+                setShowZenGardenFullScreen(true);
+              }}
             />
           </div>
         );
@@ -3168,8 +3172,9 @@ export default function App() {
           profileStrengthSignals={profileStrengthSignals}
           personalitySummary={personalitySummary}
         />
-        <MobileFooterNav
-          items={mobileFooterNavItems}
+        {!showZenGardenFullScreen && (
+          <MobileFooterNav
+            items={mobileFooterNavItems}
           status={mobileFooterStatus}
           activeId={null}
           onSelect={handleMobileNavSelect}
@@ -3195,6 +3200,7 @@ export default function App() {
           onSnapExpand={() => handleMobileFooterExpand(true)}
           pointsBalance={goldBalance}
         />
+        )}
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
         {showAiCoachModal && (
@@ -3380,7 +3386,7 @@ export default function App() {
           </section>
         </main>
       </div>
-      {isMobileViewport ? (
+      {isMobileViewport && !showZenGardenFullScreen ? (
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
@@ -3479,6 +3485,14 @@ export default function App() {
           onComplete={() => dismissXPToast(toast.id)}
         />
       ))}
+
+      {/* Zen Garden Full-Screen Overlay */}
+      {showZenGardenFullScreen && (
+        <ZenGarden
+          session={activeSession}
+          onBack={() => setShowZenGardenFullScreen(false)}
+        />
+      )}
     </div>
   );
 }
