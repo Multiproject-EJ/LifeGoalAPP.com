@@ -146,7 +146,7 @@ export function ContractsTab({
         <div className="score-tab__title">
           <span className="score-tab__badge" aria-hidden="true">🤝</span>
           <div>
-            <p className="score-tab__eyebrow">Commitment contracts</p>
+            <p className="score-tab__eyebrow">Accountability</p>
             <h2 className="score-tab__headline">Commitment Contracts</h2>
           </div>
         </div>
@@ -167,7 +167,6 @@ export function ContractsTab({
       {!loading && enabled && (
         <div className="score-tab__content">
           <div className="score-tab__contracts-header">
-            <h2 className="score-tab__headline">Commitment Contracts</h2>
             <p className="score-tab__subtitle">
               Stake Gold or Tokens to stay accountable to your goals.
             </p>
