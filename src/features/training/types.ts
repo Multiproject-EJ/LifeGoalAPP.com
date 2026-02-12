@@ -38,21 +38,21 @@ export interface ExerciseLog {
   duration_minutes?: number | null;
   notes?: string | null;
   logged_at: string;
-  created_at?: string;
+  created_at?: string | null;
 }
 
 export interface TrainingStrategy {
   id: string;
   user_id: string;
   name: string;
-  strategy_type: StrategyType;
+  strategy_type: StrategyType | string;
   exercise_name?: string | null;
   target_value: number;
   target_unit: string;
   time_window_days: number;
   focus_muscles: string[];
   is_active: boolean;
-  created_at?: string;
+  created_at?: string | null;
 }
 
 export interface StrategyProgress {
