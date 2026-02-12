@@ -1,0 +1,461 @@
+/* Training / Exercise Feature - Mobile-First CSS */
+
+/* =====================================================
+   PROGRESS BAR
+   ===================================================== */
+
+.training-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--surface);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin: var(--space-2) 0;
+}
+
+.training-progress__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transition: width var(--normal) ease;
+}
+
+.training-progress__fill--success {
+  background: var(--success);
+}
+
+.training-progress__fill--warn {
+  background: var(--warn);
+}
+
+.training-progress__fill--error {
+  background: var(--error);
+}
+
+/* =====================================================
+   STRATEGY CARD
+   ===================================================== */
+
+.strategy-card {
+  cursor: pointer;
+  transition: transform var(--fast) ease;
+}
+
+.strategy-card:hover {
+  transform: translateY(-2px);
+}
+
+.strategy-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.strategy-card__icon {
+  font-size: var(--fs-xl);
+}
+
+.strategy-card__title {
+  flex: 1;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.strategy-card__stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.strategy-card__current {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.strategy-card__target {
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+}
+
+.strategy-card__forecast {
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+/* =====================================================
+   QUICK LOG FORM
+   ===================================================== */
+
+.quick-log-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-group label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-family: var(--font-ui);
+  transition: border-color var(--fast) ease;
+  min-height: 44px; /* Minimum touch target */
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+/* =====================================================
+   MUSCLE GROUP PILLS
+   ===================================================== */
+
+.muscle-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.muscle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--fast) ease;
+  min-height: 36px;
+  user-select: none;
+}
+
+.muscle-pill:hover {
+  background: var(--surface-strong);
+}
+
+.muscle-pill--selected {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.muscle-pill__emoji {
+  font-size: var(--fs-md);
+}
+
+/* =====================================================
+   TODAY'S SUMMARY
+   ===================================================== */
+
+.today-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.summary-stat {
+  text-align: center;
+}
+
+.summary-stat__value {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--accent);
+  display: block;
+}
+
+.summary-stat__label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: var(--space-1);
+}
+
+/* =====================================================
+   STRATEGY GRID
+   ===================================================== */
+
+.strategy-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .strategy-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =====================================================
+   EMPTY STATE
+   ===================================================== */
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-6);
+  color: var(--text-muted);
+}
+
+.empty-state__icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-3);
+  opacity: 0.5;
+}
+
+.empty-state__title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state__description {
+  font-size: var(--fs-md);
+  margin-bottom: var(--space-4);
+}
+
+/* =====================================================
+   STRATEGY SETUP WIZARD
+   ===================================================== */
+
+.wizard-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  padding: 0 var(--space-2);
+}
+
+.wizard-step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.wizard-step::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: -1;
+}
+
+.wizard-step:last-child::after {
+  display: none;
+}
+
+.wizard-step__number {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.wizard-step--active .wizard-step__number {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.wizard-step--complete .wizard-step__number {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.wizard-step__label {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.wizard-content {
+  min-height: 300px;
+}
+
+.strategy-type-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 480px) {
+  .strategy-type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.strategy-type-card {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--fast) ease;
+  text-align: center;
+  min-height: 44px;
+}
+
+.strategy-type-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-strong);
+}
+
+.strategy-type-card--selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.strategy-type-card__icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-2);
+}
+
+.strategy-type-card__label {
+  font-weight: 600;
+  font-size: var(--fs-md);
+  margin-bottom: var(--space-1);
+}
+
+.strategy-type-card__description {
+  font-size: var(--fs-sm);
+  opacity: 0.8;
+}
+
+/* =====================================================
+   EXERCISE AUTOCOMPLETE
+   ===================================================== */
+
+.autocomplete-container {
+  position: relative;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-1);
+  z-index: 100;
+  box-shadow: var(--shadow-2);
+}
+
+.autocomplete-item {
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: background var(--fast) ease;
+  border-bottom: 1px solid var(--border);
+  min-height: 44px;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item--selected {
+  background: var(--accent);
+  color: white;
+}
+
+/* =====================================================
+   MODAL OVERRIDES
+   ===================================================== */
+
+.modal__panel {
+  max-width: 600px;
+  width: 90vw;
+}
+
+.modal__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+
+/* =====================================================
+   QUICK ACTION BUTTON
+   ===================================================== */
+
+.quick-action-btn {
+  position: sticky;
+  top: var(--space-4);
+  width: 100%;
+  margin-bottom: var(--space-4);
+  z-index: 10;
+}
+
+/* =====================================================
+   RESPONSIVE UTILITIES
+   ===================================================== */
+
+@media (max-width: 767px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
