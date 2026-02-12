@@ -64,8 +64,8 @@ export function useTraining(): UseTrainingReturn {
     const progress = new Map<string, StrategyProgress>();
     strategies.forEach((strategy) => {
       if (strategy.is_active) {
-        const strategyProgress = calculateProgress(strategy, logs);
-        progress.set(strategy.id, strategyProgress);
+        const currentProgress = calculateProgress(strategy, logs);
+        progress.set(strategy.id, currentProgress);
       }
     });
     return progress;

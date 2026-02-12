@@ -5,8 +5,22 @@ import { QuickLogModal } from './QuickLogModal';
 import { StrategyCard } from './StrategyCard';
 import { StrategySetupWizard } from './StrategySetupWizard';
 import { StrategyDetail } from './StrategyDetail';
-import type { TrainingStrategy } from './types';
+import type { TrainingStrategy, ExerciseLog } from './types';
 import './training.css';
+
+// Helper function to map log data to initial form data
+function mapLogToInitialData(log: ExerciseLog | null) {
+  if (!log) return null;
+  return {
+    exercise_name: log.exercise_name,
+    muscle_groups: log.muscle_groups,
+    reps: log.reps,
+    sets: log.sets,
+    weight_kg: log.weight_kg,
+    duration_minutes: log.duration_minutes,
+    notes: log.notes,
+  };
+}
 
 export function TrainingTab() {
   const {
@@ -219,15 +233,7 @@ export function TrainingTab() {
             setShowQuickLog(false);
             setRepeatLastWorkout(false);
           }}
-          initialData={repeatLastWorkout && lastLog ? {
-            exercise_name: lastLog.exercise_name,
-            muscle_groups: lastLog.muscle_groups,
-            reps: lastLog.reps,
-            sets: lastLog.sets,
-            weight_kg: lastLog.weight_kg,
-            duration_minutes: lastLog.duration_minutes,
-            notes: lastLog.notes,
-          } : null}
+          initialData={repeatLastWorkout ? mapLogToInitialData(lastLog) : null}
         />
       )}
 
