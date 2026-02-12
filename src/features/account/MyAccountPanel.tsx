@@ -217,7 +217,7 @@ export function MyAccountPanel({
               {avatarInitial}
             </div>
             <div className="account-panel__profile-text">
-              <p className="account-panel__eyebrow">Profile</p>
+              <p className="account-panel__eyebrow">Player Profile</p>
               <h2 id="account-profile">My account</h2>
               <p className="account-panel__lead">Review your identity details and workspace access.</p>
             </div>

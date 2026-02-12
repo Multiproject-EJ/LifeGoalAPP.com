@@ -2897,21 +2897,6 @@ export function DailyHabitTracker({
                     }}
                     disabled={isSaving || (!scheduledToday && !isCompleted)}
                   />
-                  {/* Done-ish button for boolean habits */}
-                  {!isCompleted && scheduledToday && habit.type === 'boolean' && (
-                    <button
-                      type="button"
-                      className="habit-checklist__doneish-button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void handleDoneIshCompletion(habit, null);
-                      }}
-                      disabled={isSaving}
-                      aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
-                    >
-                      ✨
-                    </button>
-                  )}
                   {/* Progress state badge */}
                   {isCompleted && state?.progressState && (
                     <span
@@ -3066,6 +3051,24 @@ export function DailyHabitTracker({
                     >
                       ✏️ Edit
                     </button>
+                    {/* Done-ish button for boolean habits */}
+                    {!isCompleted && scheduledToday && habit.type === 'boolean' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Done-ish</span>
+                        <button
+                          type="button"
+                          className="habit-checklist__doneish-button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleDoneIshCompletion(habit, null);
+                          }}
+                          disabled={isSaving}
+                          aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
+                        >
+                          ✨
+                        </button>
+                      </div>
+                    )}
                     <button
                       type="button"
                       className={`habit-checklist__autoprog-toggle ${

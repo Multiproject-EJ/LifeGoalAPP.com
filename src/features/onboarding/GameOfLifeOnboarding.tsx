@@ -120,6 +120,15 @@ const ONBOARDING_LOOPS: OnboardingLoop[] = [
     actionType: 'habit',
   },
   {
+    id: 'done-ish',
+    title: 'Partial wins still count',
+    prompt: 'Didn\'t fully complete a habit? Use the "Done-ish" button in the expanded habit card to log partial credit. You\'ll earn 70% XP and keep your streak alive — honest tracking beats all-or-nothing thinking.',
+    actionLabel: 'Got it',
+    rewardLabel: 'Honesty badge +10 tokens',
+    rewardTokens: 10,
+    actionType: 'confirm',
+  },
+  {
     id: 'checkin',
     title: 'Quick check-in',
     prompt: 'How balanced do you feel today? Tap a number.',

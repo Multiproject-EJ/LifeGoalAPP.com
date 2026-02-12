@@ -35,6 +35,7 @@ import { ActionsTab } from './features/actions';
 import { TimerTab } from './features/timer';
 import { ProjectsManager } from './features/projects';
 import { ScoreTab } from './features/gamification/ScoreTab';
+import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
 import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
 import { createDemoSession, isDemoSession } from './services/demoSession';
@@ -1318,8 +1319,7 @@ export default function App() {
     }
 
     if (navId === 'contracts') {
-      setScoreTabActiveTab('contracts');
-      setActiveWorkspaceNav('score');
+      setActiveWorkspaceNav('contracts');
       setShowMobileHome(false);
       return;
     }
@@ -2159,6 +2159,17 @@ export default function App() {
             />
           </div>
         );
+      case 'contracts':
+        return (
+          <div className="workspace-content">
+            <ContractsTab
+              session={activeSession}
+              profile={gamificationProfile}
+              enabled={gamificationEnabled}
+              loading={gamificationLoading}
+            />
+          </div>
+        );
       case 'projects':
         return (
           <div className="workspace-content">
@@ -2353,7 +2364,7 @@ export default function App() {
                   aria-label="Profile picture and appearance"
                 >
                   <span className="mobile-menu-overlay__quick-action-icon">👤</span>
-                  <span className="mobile-menu-overlay__quick-action-label">Look</span>
+                  <span className="mobile-menu-overlay__quick-action-label">Player Profile</span>
                 </button>
               </div>
             </div>
