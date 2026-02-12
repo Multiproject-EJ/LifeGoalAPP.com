@@ -39,6 +39,7 @@ export interface ExerciseLog {
   notes?: string | null;
   logged_at: string;
   created_at?: string | null;
+  session_id?: string | null;
 }
 
 export interface TrainingStrategy {
@@ -65,6 +66,28 @@ export interface StrategyProgress {
 
 export interface TodaySummary {
   totalExercises: number;
+  totalSets: number;
   totalReps: number;
   totalDuration: number;
+  totalVolume: number;
+}
+
+export interface PersonalRecord {
+  exercise_name: string;
+  record_type: 'max_weight' | 'max_reps' | 'max_volume';
+  value: number;
+  previous_value: number | null;
+  achieved_at: string;
+}
+
+export interface WorkoutSession {
+  id: string;
+  user_id: string;
+  started_at: string;
+  ended_at?: string | null;
+  title?: string | null;
+  notes?: string | null;
+  mood_rating?: number | null;
+  energy_rating?: number | null;
+  created_at?: string | null;
 }

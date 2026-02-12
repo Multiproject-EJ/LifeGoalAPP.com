@@ -29,6 +29,7 @@
   --fs-md: 16px;
   --fs-lg: 20px;
   --fs-xl: 24px;
+  --fs-2xl: 32px;
 
   /* Bright Sky theme - reference existing color variables from themes.css */
   /* These tokens provide simpler names for components while maintaining theme consistency */

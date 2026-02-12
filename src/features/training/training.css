@@ -192,7 +192,7 @@
 
 .today-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-3);
   padding: var(--space-4);
   background: var(--surface);
@@ -200,12 +200,18 @@
   margin-bottom: var(--space-4);
 }
 
+@media (min-width: 768px) {
+  .today-summary {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .summary-stat {
   text-align: center;
 }
 
 .summary-stat__value {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
   font-weight: 700;
   color: var(--accent);
   display: block;
@@ -507,4 +513,289 @@
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* =====================================================
+   WEEKLY CALENDAR
+   ===================================================== */
+
+.weekly-calendar {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.weekly-calendar__day {
+  flex: 1;
+  min-width: 44px;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--fast) ease;
+  position: relative;
+}
+
+.weekly-calendar__day:hover {
+  background: var(--surface-strong);
+}
+
+.weekly-calendar__day--today {
+  border: 2px solid var(--accent);
+  background: var(--surface-strong);
+}
+
+.weekly-calendar__day--has-activity {
+  /* subtle accent tint */
+}
+
+.weekly-calendar__day-name {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.weekly-calendar__day-number {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.weekly-calendar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.weekly-calendar__dot--active {
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--accent);
+}
+
+.weekly-calendar__count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  background: var(--accent);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* =====================================================
+   PERSONAL RECORD BANNER
+   ===================================================== */
+
+.pr-banner {
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  right: var(--space-4);
+  z-index: 1000;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.15));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #ffd700, #ffa500) 1;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+  animation: prSlideIn 0.4s ease-out;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .pr-banner {
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 500px;
+  }
+}
+
+.pr-banner__close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: var(--fs-xl);
+  cursor: pointer;
+  padding: var(--space-1);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--fast) ease;
+}
+
+.pr-banner__close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.pr-banner__content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.pr-banner__icon {
+  font-size: 3rem;
+  animation: prBounce 0.6s ease-in-out infinite;
+}
+
+.pr-banner__text {
+  flex: 1;
+}
+
+.pr-banner__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-1);
+}
+
+.pr-banner__exercise {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--space-2);
+}
+
+.pr-banner__stats {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.pr-banner__value {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pr-banner__improvement {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--success);
+}
+
+.pr-banner__progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ffd700, #ffa500);
+  transition: width 0.1s linear;
+}
+
+@keyframes prSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes prBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* =====================================================
+   SWIPEABLE CARDS
+   ===================================================== */
+
+.swipeable-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.swipeable-card__content {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease;
+  background: var(--surface);
+}
+
+.swipeable-card__action {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--error);
+  color: white;
+  font-weight: 700;
+  font-size: var(--fs-md);
+  z-index: 0;
+}
+
+@media (min-width: 768px) {
+  .swipeable-card__action {
+    display: none; /* Desktop uses button instead */
+  }
+}
+
+/* =====================================================
+   BOTTOM-SHEET MODAL (MOBILE)
+   ===================================================== */
+
+@media (max-width: 767px) {
+  .modal__panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    animation: slideUpModal 0.3s ease-out;
+    margin: 0;
+  }
+  
+  .modal__panel::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: var(--radius-pill);
+    margin: var(--space-2) auto var(--space-3);
+  }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
