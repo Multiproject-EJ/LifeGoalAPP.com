@@ -177,6 +177,11 @@ const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
   standard: 'Hard',
 };
 
+// Vision star slot machine animation constants
+const SLOT_MACHINE_ANIMATION_DURATION_MS = 2500;
+const SLOT_MACHINE_TOTAL_ITEMS = 15;
+const SLOT_MACHINE_SELECTED_INDEX = 12;
+
 const LIFE_WHEEL_COLORS: Record<string, string> = {
   health: '#22c55e',
   relationships: '#fb7185',
@@ -811,8 +816,8 @@ export function DailyHabitTracker({
     const isSuperBoost = nextCount % 20 === 0;
     const xpAmount = isSuperBoost ? 250 : XP_REWARDS.VISION_BOARD_STAR;
 
-    // Wait for slot machine animation to complete (2.5 seconds)
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    // Wait for slot machine animation to complete
+    await new Promise(resolve => setTimeout(resolve, SLOT_MACHINE_ANIMATION_DURATION_MS));
 
     setVisionRewarding(true);
     try {
@@ -1066,9 +1071,9 @@ export function DailyHabitTracker({
               <div className="habit-day-nav__vision-modal-slot-container" aria-hidden="true">
                 <div className="habit-day-nav__vision-modal-slot-reel">
                   {/* Create a repeating list of images for the slot machine effect */}
-                  {Array.from({ length: 15 }).map((_, idx) => {
+                  {Array.from({ length: SLOT_MACHINE_TOTAL_ITEMS }).map((_, idx) => {
                     const image = visionImages[idx % visionImages.length];
-                    const isSelectedPosition = idx === 12; // This will be the final visible position
+                    const isSelectedPosition = idx === SLOT_MACHINE_SELECTED_INDEX;
                     return (
                       <img
                         key={`slot-${idx}`}
