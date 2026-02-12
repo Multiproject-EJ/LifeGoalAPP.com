@@ -9,6 +9,7 @@ import {
 } from '../../services/achievements';
 import { fetchGamificationProfile } from '../../services/gamificationPrefs';
 import { fetchTrophyCatalog, fetchUserTrophies, purchaseTrophy } from '../../services/trophies';
+import { fetchZenGardenInventory, purchaseZenGardenItem } from '../../services/zenGarden';
 import { AchievementGrid } from './AchievementGrid';
 import { AchievementFilters } from './AchievementFilters';
 import { AchievementDetailModal } from './AchievementDetailModal';
@@ -20,6 +21,59 @@ import './AchievementsPage.css';
 type Props = {
   session: Session;
 };
+
+type ZenGardenItem = {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  emoji: string;
+};
+
+const ZEN_GARDEN_ITEMS: ZenGardenItem[] = [
+  {
+    id: 'zen_ripple_pool',
+    name: 'Ripple Pool',
+    description: 'A calm water feature for post-meditation flow.',
+    cost: 12,
+    emoji: '💧',
+  },
+  {
+    id: 'zen_bamboo',
+    name: 'Bamboo Grove',
+    description: 'Symbolic growth that rewards daily breathwork.',
+    cost: 18,
+    emoji: '🎋',
+  },
+  {
+    id: 'zen_lotus_lamp',
+    name: 'Lotus Lamp',
+    description: 'Gentle light that inspires clarity and focus.',
+    cost: 25,
+    emoji: '🪔',
+  },
+  {
+    id: 'zen_stone_path',
+    name: 'Stone Path',
+    description: 'A winding journey of steady practice.',
+    cost: 30,
+    emoji: '🪨',
+  },
+  {
+    id: 'zen_wind_chime',
+    name: 'Wind Chime',
+    description: 'Soft tones that echo mindful moments.',
+    cost: 40,
+    emoji: '🎐',
+  },
+  {
+    id: 'zen_sakura_bloom',
+    name: 'Sakura Bloom',
+    description: 'A rare tree for the most dedicated meditators.',
+    cost: 60,
+    emoji: '🌸',
+  },
+];
 
 export function AchievementsPage({ session }: Props) {
   const { enabled: gamificationEnabled } = useGamification(session);
@@ -39,6 +93,11 @@ export function AchievementsPage({ session }: Props) {
   const [selectedTrophy, setSelectedTrophy] = useState<TrophyItem | null>(null);
   const [trophyMessage, setTrophyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [zenBalance, setZenBalance] = useState(0);
+  const [zenInventory, setZenInventory] = useState<string[]>([]);
+  const [zenPurchaseError, setZenPurchaseError] = useState<string | null>(null);
+  const [zenPurchaseSuccess, setZenPurchaseSuccess] = useState<string | null>(null);
+  const [zenPurchasingId, setZenPurchasingId] = useState<string | null>(null);
 
   const unlockedTiers = achievements
     .filter((achievement) => achievement.unlocked)
@@ -49,7 +108,24 @@ export function AchievementsPage({ session }: Props) {
   useEffect(() => {
     loadAchievements();
     loadTrophyCase();
+    loadZenGardenData();
   }, [session.user.id]);
+
+  const loadZenGardenData = async () => {
+    try {
+      const profileResult = await fetchGamificationProfile(session.user.id);
+      if (profileResult.data) {
+        setZenBalance(profileResult.data.zen_tokens ?? 0);
+      }
+
+      const inventoryResult = await fetchZenGardenInventory(session.user.id);
+      if (inventoryResult.data) {
+        setZenInventory(inventoryResult.data);
+      }
+    } catch (err) {
+      console.error('Failed to load zen garden data:', err);
+    }
+  };
 
   const loadAchievements = async () => {
     setLoading(true);
@@ -144,6 +220,38 @@ export function AchievementsPage({ session }: Props) {
       setSelectedTrophy(null);
     } finally {
       setIsPurchasing(false);
+    }
+  };
+
+  const handleZenItemPurchase = async (item: ZenGardenItem) => {
+    if (zenBalance < item.cost) {
+      return;
+    }
+
+    setZenPurchasingId(item.id);
+    setZenPurchaseError(null);
+    setZenPurchaseSuccess(null);
+
+    try {
+      const { data, error } = await purchaseZenGardenItem(
+        session.user.id,
+        item.id,
+        item.name,
+        item.cost
+      );
+
+      if (error) throw error;
+
+      setZenBalance(data?.balance ?? 0);
+      setZenInventory(data?.inventory ?? []);
+      setZenPurchaseSuccess(`${item.name} unlocked!`);
+      
+      setTimeout(() => setZenPurchaseSuccess(null), 3000);
+    } catch (err) {
+      setZenPurchaseError(err instanceof Error ? err.message : 'Purchase failed');
+      setTimeout(() => setZenPurchaseError(null), 3000);
+    } finally {
+      setZenPurchasingId(null);
     }
   };
 
@@ -286,6 +394,65 @@ export function AchievementsPage({ session }: Props) {
         onRetry={loadTrophyCase}
         onPurchase={handleTrophyPurchase}
       />
+
+      <section className="achievements-page__zen-garden">
+        <div className="achievements-page__zen-header">
+          <div>
+            <h2 className="achievements-page__zen-title">🪷 Zen Garden Unlocks</h2>
+            <p className="achievements-page__zen-subtitle">
+              Meditation-only rewards • Use Zen Tokens to unlock peaceful garden elements
+            </p>
+          </div>
+          <div className="achievements-page__zen-balance">
+            <span className="achievements-page__zen-balance-value">🪷 {zenBalance}</span>
+            <span className="achievements-page__zen-balance-label">Zen Tokens</span>
+          </div>
+        </div>
+
+        {zenPurchaseError && (
+          <div className="achievements-page__message achievements-page__message--error">
+            {zenPurchaseError}
+          </div>
+        )}
+        {zenPurchaseSuccess && (
+          <div className="achievements-page__message achievements-page__message--success">
+            {zenPurchaseSuccess}
+          </div>
+        )}
+
+        <div className="achievements-page__zen-grid">
+          {ZEN_GARDEN_ITEMS.map((item) => {
+            const owned = zenInventory.includes(item.id);
+            const canAfford = zenBalance >= item.cost;
+            const isPurchasing = zenPurchasingId === item.id;
+
+            return (
+              <article
+                key={item.id}
+                className={`achievements-page__zen-card${owned ? ' achievements-page__zen-card--owned' : ''}`}
+              >
+                <div className="achievements-page__zen-card-icon">{item.emoji}</div>
+                <h3 className="achievements-page__zen-card-title">{item.name}</h3>
+                <p className="achievements-page__zen-card-description">{item.description}</p>
+                <div className="achievements-page__zen-card-footer">
+                  <span className="achievements-page__zen-card-cost">🪷 {item.cost}</span>
+                  <button
+                    type="button"
+                    className="achievements-page__zen-card-button"
+                    disabled={owned || !canAfford || isPurchasing}
+                    onClick={() => handleZenItemPurchase(item)}
+                  >
+                    {owned ? 'Unlocked' : isPurchasing ? 'Purchasing...' : 'Unlock'}
+                  </button>
+                </div>
+                {!owned && !canAfford && (
+                  <span className="achievements-page__zen-card-lock">Earn more Zen Tokens</span>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       <AchievementFilters
         filterStatus={filterStatus}
