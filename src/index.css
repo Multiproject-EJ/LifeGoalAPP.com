@@ -5112,8 +5112,9 @@ body {
   justify-content: center;
   gap: 0.6rem;
   flex-wrap: wrap;
-  max-height: 6rem;
+  max-height: 3rem;
   overflow: hidden;
+  pointer-events: none;
   transition: opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease, transform 0.4s ease;
 }
 
