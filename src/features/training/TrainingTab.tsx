@@ -5,8 +5,22 @@ import { QuickLogModal } from './QuickLogModal';
 import { StrategyCard } from './StrategyCard';
 import { StrategySetupWizard } from './StrategySetupWizard';
 import { StrategyDetail } from './StrategyDetail';
-import type { TrainingStrategy } from './types';
+import type { TrainingStrategy, ExerciseLog } from './types';
 import './training.css';
+
+// Helper function to map log data to initial form data
+function mapLogToInitialData(log: ExerciseLog | null) {
+  if (!log) return null;
+  return {
+    exercise_name: log.exercise_name,
+    muscle_groups: log.muscle_groups,
+    reps: log.reps,
+    sets: log.sets,
+    weight_kg: log.weight_kg,
+    duration_minutes: log.duration_minutes,
+    notes: log.notes,
+  };
+}
 
 export function TrainingTab() {
   const {
@@ -26,14 +40,46 @@ export function TrainingTab() {
   const [showQuickLog, setShowQuickLog] = useState(false);
   const [showStrategyWizard, setShowStrategyWizard] = useState(false);
   const [selectedStrategy, setSelectedStrategy] = useState<TrainingStrategy | null>(null);
+  const [repeatLastWorkout, setRepeatLastWorkout] = useState(false);
 
   const activeStrategies = strategies.filter((s) => s.is_active);
+  const lastLog = logs.length > 0 ? logs[0] : null;
 
   if (loading) {
     return (
       <div className="container">
-        <div className="center" style={{ padding: '3rem' }}>
-          <p className="muted">Loading training data...</p>
+        {/* Skeleton for Quick Action Button */}
+        <div className="quick-action-btn">
+          <div className="training-skeleton" style={{ height: '56px', width: '100%' }} />
+        </div>
+
+        {/* Skeleton for Today's Summary */}
+        <div className="today-summary">
+          <div className="summary-stat">
+            <div className="training-skeleton" style={{ height: '32px', width: '60px', margin: '0 auto' }} />
+            <div className="training-skeleton" style={{ height: '14px', width: '80px', margin: '8px auto 0' }} />
+          </div>
+          <div className="summary-stat">
+            <div className="training-skeleton" style={{ height: '32px', width: '60px', margin: '0 auto' }} />
+            <div className="training-skeleton" style={{ height: '14px', width: '80px', margin: '8px auto 0' }} />
+          </div>
+          <div className="summary-stat">
+            <div className="training-skeleton" style={{ height: '32px', width: '60px', margin: '0 auto' }} />
+            <div className="training-skeleton" style={{ height: '14px', width: '80px', margin: '8px auto 0' }} />
+          </div>
+        </div>
+
+        {/* Skeleton for Strategy Cards */}
+        <div style={{ marginBottom: 'var(--space-3)' }}>
+          <div className="training-skeleton" style={{ height: '32px', width: '200px', marginBottom: 'var(--space-3)' }} />
+        </div>
+        <div className="strategy-grid">
+          <div className="card glass">
+            <div className="training-skeleton" style={{ height: '120px', width: '100%' }} />
+          </div>
+          <div className="card glass">
+            <div className="training-skeleton" style={{ height: '120px', width: '100%' }} />
+          </div>
         </div>
       </div>
     );
@@ -41,15 +87,33 @@ export function TrainingTab() {
 
   return (
     <div className="container">
-      {/* Quick Action Button */}
+      {/* Quick Action Buttons */}
       <div className="quick-action-btn">
-        <button
-          className="btn btn--primary w-full"
-          onClick={() => setShowQuickLog(true)}
-          style={{ fontSize: 'var(--fs-lg)', padding: 'var(--space-4)' }}
-        >
-          ⚡ Quick Log Workout
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <button
+            className="btn btn--primary"
+            onClick={() => {
+              setRepeatLastWorkout(false);
+              setShowQuickLog(true);
+            }}
+            style={{ flex: 1, fontSize: 'var(--fs-lg)', padding: 'var(--space-4)' }}
+          >
+            ⚡ Quick Log
+          </button>
+          {lastLog && (
+            <button
+              className="btn btn--secondary"
+              onClick={() => {
+                setRepeatLastWorkout(true);
+                setShowQuickLog(true);
+              }}
+              style={{ fontSize: 'var(--fs-lg)', padding: 'var(--space-4)' }}
+              title="Repeat last workout"
+            >
+              🔄
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Today's Summary */}
@@ -160,11 +224,16 @@ export function TrainingTab() {
       {/* Modals */}
       {showQuickLog && (
         <QuickLogModal
-          onClose={() => setShowQuickLog(false)}
+          onClose={() => {
+            setShowQuickLog(false);
+            setRepeatLastWorkout(false);
+          }}
           onSave={async (logData) => {
             await addLog(logData);
             setShowQuickLog(false);
+            setRepeatLastWorkout(false);
           }}
+          initialData={repeatLastWorkout ? mapLogToInitialData(lastLog) : null}
         />
       )}
 

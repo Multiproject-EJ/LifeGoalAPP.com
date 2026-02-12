@@ -1,23 +1,35 @@
 // Quick Log Modal - Fast exercise logging interface
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { COMMON_EXERCISES, MUSCLE_GROUPS } from './constants';
 import type { ExerciseLog, MuscleGroup } from './types';
 
 interface QuickLogModalProps {
   onClose: () => void;
   onSave: (log: Omit<ExerciseLog, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  initialData?: Partial<Omit<ExerciseLog, 'id' | 'user_id' | 'created_at'>> | null;
 }
 
-export function QuickLogModal({ onClose, onSave }: QuickLogModalProps) {
-  const [exerciseName, setExerciseName] = useState('');
-  const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
-  const [reps, setReps] = useState('');
-  const [sets, setSets] = useState('');
-  const [weightKg, setWeightKg] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState('');
-  const [notes, setNotes] = useState('');
+export function QuickLogModal({ onClose, onSave, initialData }: QuickLogModalProps) {
+  const [exerciseName, setExerciseName] = useState(initialData?.exercise_name || '');
+  const [muscleGroups, setMuscleGroups] = useState<string[]>(initialData?.muscle_groups || []);
+  const [reps, setReps] = useState(initialData?.reps?.toString() || '');
+  const [sets, setSets] = useState(initialData?.sets?.toString() || '');
+  const [weightKg, setWeightKg] = useState(initialData?.weight_kg?.toString() || '');
+  const [durationMinutes, setDurationMinutes] = useState(initialData?.duration_minutes?.toString() || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Filter autocomplete suggestions
   const suggestions = exerciseName
@@ -45,7 +57,7 @@ export function QuickLogModal({ onClose, onSave }: QuickLogModalProps) {
   // Handle save
   const handleSave = async () => {
     if (!exerciseName.trim()) {
-      alert('Please enter an exercise name');
+      setToast({ type: 'warning', message: 'Please enter an exercise name' });
       return;
     }
 
@@ -63,7 +75,7 @@ export function QuickLogModal({ onClose, onSave }: QuickLogModalProps) {
       });
     } catch (error) {
       console.error('Error saving log:', error);
-      alert('Failed to save workout. Please try again.');
+      setToast({ type: 'error', message: 'Failed to save workout. Please try again.' });
     } finally {
       setSaving(false);
     }
@@ -74,8 +86,15 @@ export function QuickLogModal({ onClose, onSave }: QuickLogModalProps) {
       <div className="modal-backdrop" onClick={onClose} />
       <section className="modal__panel card glass">
         <h2 className="card__title" style={{ marginBottom: 'var(--space-4)' }}>
-          ⚡ Quick Log
+          {initialData ? '🔄 Repeat Workout' : '⚡ Quick Log'}
         </h2>
+
+        {/* Toast Notification */}
+        {toast && (
+          <div className={`training-toast training-toast--${toast.type}`}>
+            {toast.message}
+          </div>
+        )}
 
         <div className="quick-log-form">
           {/* Exercise Name with Autocomplete */}
