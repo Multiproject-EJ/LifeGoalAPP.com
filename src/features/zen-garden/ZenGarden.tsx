@@ -240,8 +240,8 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
         className="zen-garden" 
         style={{ 
           backgroundImage: `url(${zenShopBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundSize: '100% auto',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat'
         }}
       >
@@ -256,13 +256,6 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
           </button>
         )}
         <header className="zen-garden__header">
-          <div>
-            <p className="zen-garden__eyebrow">Zen Garden</p>
-            <h2 className="zen-garden__title">Meditation-only rewards</h2>
-            <p className="zen-garden__subtitle">
-              Spend Zen Tokens earned from meditation to grow a peaceful garden.
-            </p>
-          </div>
           <div className="zen-garden__balance">
             <span className="zen-garden__balance-label">Zen Tokens</span>
             <span className="zen-garden__balance-value">🪷 {balance}</span>
@@ -314,90 +307,6 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
                 <p className="zen-garden__tree-next">Your Tree of Life is fully grown.</p>
               )}
             </div>
-          </section>
-
-          <div className="zen-garden__grid four-by-three-grid">
-            {ZEN_GARDEN_ITEMS.map((item) => {
-              const owned = ownedItems.has(item.id);
-              const canAfford = balance >= item.cost;
-              const isPurchasing = purchasingId === item.id;
-
-              return (
-                <article
-                  key={item.id}
-                  className={`zen-garden__card${owned ? ' zen-garden__card--owned' : ''}`}
-                >
-                  <div className="zen-garden__card-icon">{item.emoji}</div>
-                  <h3 className="zen-garden__card-title">{item.name}</h3>
-                  <p className="zen-garden__card-description">{item.description}</p>
-                  <div className="zen-garden__card-footer">
-                    <span className="zen-garden__card-cost">🪷 {item.cost}</span>
-                    <button
-                      type="button"
-                      className="zen-garden__card-button"
-                      disabled={owned || !canAfford || isPurchasing}
-                      onClick={() => handlePurchase(item)}
-                    >
-                      {owned ? 'Unlocked' : isPurchasing ? 'Purchasing...' : 'Unlock'}
-                    </button>
-                  </div>
-                  {!owned && !canAfford && (
-                    <span className="zen-garden__card-lock">Earn more Zen Tokens</span>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-          <section className="zen-garden__ledger">
-            <div className="zen-garden__ledger-header">
-              <div>
-                <p className="zen-garden__eyebrow">Zen Token activity</p>
-                <h3 className="zen-garden__ledger-title">Recent Zen Token activity</h3>
-              </div>
-              <span className="zen-garden__ledger-pill">Ledger</span>
-            </div>
-
-            {transactionsError && (
-              <p className="zen-garden__ledger-status">{transactionsError}</p>
-            )}
-
-            {!transactionsError && transactions.length === 0 && (
-              <p className="zen-garden__ledger-status">
-                Unlock your first Zen reward to start building your meditation ledger.
-              </p>
-            )}
-
-            {!transactionsError && transactions.length > 0 && (
-              <div className="zen-garden__ledger-list">
-                {transactions.map((transaction) => {
-                  const isSpend = transaction.action === 'spend';
-                  const fallbackLabel = isSpend ? 'Zen Garden unlock' : 'Meditation reward';
-                  const amountLabel = `${isSpend ? '-' : '+'}${transaction.token_amount} 🪷`;
-
-                  return (
-                    <div key={transaction.id} className="zen-garden__ledger-row">
-                      <div>
-                        <p className="zen-garden__ledger-row-title">
-                          {transaction.description ?? fallbackLabel}
-                        </p>
-                        <p className="zen-garden__ledger-row-meta">
-                          {dateFormatter.format(new Date(transaction.created_at))}
-                        </p>
-                      </div>
-                      <span
-                        className={`zen-garden__ledger-row-value ${
-                          isSpend
-                            ? 'zen-garden__ledger-row-value--spend'
-                            : 'zen-garden__ledger-row-value--earn'
-                        }`}
-                      >
-                        {amountLabel}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </section>
         </>
       )}
