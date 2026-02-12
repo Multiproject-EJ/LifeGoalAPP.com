@@ -799,3 +799,17 @@
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* =====================================================
+   DELETE BUTTON VISIBILITY
+   ===================================================== */
+
+.delete-btn-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .delete-btn-desktop {
+    display: block;
+  }
+}

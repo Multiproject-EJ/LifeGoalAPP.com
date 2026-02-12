@@ -339,9 +339,9 @@ export function TrainingTab() {
                       )}
                     </div>
                     <button
-                      className="btn btn--ghost"
+                      className="btn btn--ghost delete-btn-desktop"
                       onClick={() => removeLog(log.id)}
-                      style={{ padding: 'var(--space-2)', display: window.innerWidth >= 768 ? 'block' : 'none' }}
+                      style={{ padding: 'var(--space-2)' }}
                     >
                       🗑️
                     </button>
