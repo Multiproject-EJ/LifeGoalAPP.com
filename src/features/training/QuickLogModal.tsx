@@ -6,16 +6,17 @@ import type { ExerciseLog, MuscleGroup } from './types';
 interface QuickLogModalProps {
   onClose: () => void;
   onSave: (log: Omit<ExerciseLog, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  initialData?: Partial<Omit<ExerciseLog, 'id' | 'user_id' | 'created_at'>> | null;
 }
 
-export function QuickLogModal({ onClose, onSave }: QuickLogModalProps) {
-  const [exerciseName, setExerciseName] = useState('');
-  const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
-  const [reps, setReps] = useState('');
-  const [sets, setSets] = useState('');
-  const [weightKg, setWeightKg] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState('');
-  const [notes, setNotes] = useState('');
+export function QuickLogModal({ onClose, onSave, initialData }: QuickLogModalProps) {
+  const [exerciseName, setExerciseName] = useState(initialData?.exercise_name || '');
+  const [muscleGroups, setMuscleGroups] = useState<string[]>(initialData?.muscle_groups || []);
+  const [reps, setReps] = useState(initialData?.reps?.toString() || '');
+  const [sets, setSets] = useState(initialData?.sets?.toString() || '');
+  const [weightKg, setWeightKg] = useState(initialData?.weight_kg?.toString() || '');
+  const [durationMinutes, setDurationMinutes] = useState(initialData?.duration_minutes?.toString() || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
@@ -85,7 +86,7 @@ export function QuickLogModal({ onClose, onSave }: QuickLogModalProps) {
       <div className="modal-backdrop" onClick={onClose} />
       <section className="modal__panel card glass">
         <h2 className="card__title" style={{ marginBottom: 'var(--space-4)' }}>
-          ⚡ Quick Log
+          {initialData ? '🔄 Repeat Workout' : '⚡ Quick Log'}
         </h2>
 
         {/* Toast Notification */}
