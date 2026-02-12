@@ -578,7 +578,7 @@ export default function PersonalityTest() {
         setHistory(records);
       })
       .catch(() => {
-        setHistory([]);
+        // Keep existing history on transient errors rather than clearing it.
       });
   }, [activeUserId]);
 
