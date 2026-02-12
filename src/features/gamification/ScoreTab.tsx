@@ -11,10 +11,12 @@ import type {
   PacingAnalysis,
   CommitmentContract,
   ContractEvaluation,
+  ZenTokenTransaction,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
+import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward, shouldPromptEvolution, evolveReward } from '../../services/rewards';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
@@ -106,6 +108,8 @@ export function ScoreTab({
   const [activeContract, setActiveContract] = useState<CommitmentContract | null>(null);
   const [showContractWizard, setShowContractWizard] = useState(false);
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
+  const [zenTransactions, setZenTransactions] = useState<ZenTokenTransaction[]>([]);
+  const [zenTransactionsError, setZenTransactionsError] = useState<string | null>(null);
 
   useEffect(() => {
     setGoldBalance(profile?.total_points ?? 0);
@@ -158,6 +162,35 @@ export function ScoreTab({
       window.removeEventListener('dailySpinComplete', handleSpinComplete);
     };
   }, [enabled, userId, profile?.total_xp]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadZenTransactions = async () => {
+      if (!enabled || !userId || activeTab !== 'bank') {
+        setZenTransactions([]);
+        setZenTransactionsError(null);
+        return;
+      }
+
+      const { data, error } = await fetchZenTokenTransactions(userId, 4);
+      if (!isMounted) return;
+      
+      if (error) {
+        setZenTransactionsError(error.message);
+        setZenTransactions([]);
+      } else {
+        setZenTransactions(data);
+        setZenTransactionsError(null);
+      }
+    };
+
+    loadZenTransactions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [enabled, userId, activeTab, zenTokens]);
 
   const sourceChips = useMemo(() => {
     const tally = transactions.reduce<Record<string, { label: string; count: number; xp: number }>>(
@@ -747,6 +780,58 @@ export function ScoreTab({
                     </span>
                   </div>
                 ))}
+              </div>
+            )}
+          </section>
+
+          <section className="score-tab__ledger score-tab__ledger--zen">
+            <div className="score-tab__ledger-header">
+              <div>
+                <p className="score-tab__eyebrow">Zen Token activity</p>
+                <h3 className="score-tab__ledger-title">Recent Zen Token activity</h3>
+              </div>
+              <span className="score-tab__ledger-pill">Ledger</span>
+            </div>
+
+            {zenTransactionsError && (
+              <p className="score-tab__ledger-status">{zenTransactionsError}</p>
+            )}
+
+            {!zenTransactionsError && zenTransactions.length === 0 && (
+              <p className="score-tab__ledger-status">
+                Unlock your first Zen reward to start building your meditation ledger.
+              </p>
+            )}
+
+            {!zenTransactionsError && zenTransactions.length > 0 && (
+              <div className="score-tab__ledger-list">
+                {zenTransactions.map((transaction) => {
+                  const isSpend = transaction.action === 'spend';
+                  const fallbackLabel = isSpend ? 'Zen Garden unlock' : 'Meditation reward';
+                  const amountLabel = `${isSpend ? '-' : '+'}${transaction.token_amount} 🪷`;
+
+                  return (
+                    <div key={transaction.id} className="score-tab__ledger-row">
+                      <div>
+                        <p className="score-tab__ledger-row-title">
+                          {transaction.description ?? fallbackLabel}
+                        </p>
+                        <p className="score-tab__ledger-row-meta">
+                          {dateFormatter.format(new Date(transaction.created_at))}
+                        </p>
+                      </div>
+                      <span
+                        className={`score-tab__ledger-row-value ${
+                          isSpend
+                            ? 'score-tab__ledger-row-value--spend'
+                            : 'score-tab__ledger-row-value--earn'
+                        }`}
+                      >
+                        {amountLabel}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
