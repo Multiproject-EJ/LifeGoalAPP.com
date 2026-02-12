@@ -71,7 +71,7 @@ export function ScoreTab({
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
   const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
-  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'contracts'>(initialActiveTab ?? 'home');
+  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen'>(initialActiveTab ?? 'home');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
