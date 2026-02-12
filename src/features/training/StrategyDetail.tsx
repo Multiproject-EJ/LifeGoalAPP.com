@@ -24,37 +24,56 @@ export function StrategyDetail({
   const strategyType = STRATEGY_TYPES.find((t) => t.value === strategy.strategy_type);
   const icon = strategyType?.icon || '🎯';
 
+  // Helper function to calculate start date based on strategy type
+  const getStrategyStartDate = (strategyType: string, timeWindowDays: number): Date => {
+    const now = new Date();
+    
+    switch (strategyType) {
+      case 'weekly_target':
+      case 'streak':
+      case 'variety':
+      case 'recovery':
+      case 'duration': {
+        // Current week (Monday to Sunday)
+        const dayOfWeek = now.getDay();
+        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const startDate = new Date(now);
+        startDate.setDate(now.getDate() + diff);
+        startDate.setHours(0, 0, 0, 0);
+        return startDate;
+      }
+      case 'monthly_target':
+      case 'focus_muscle': {
+        // Current month
+        return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      }
+      case 'rolling_window': {
+        // Rolling window based on time_window_days
+        const startDate = new Date(now);
+        startDate.setDate(now.getDate() - timeWindowDays);
+        startDate.setHours(0, 0, 0, 0);
+        return startDate;
+      }
+      case 'micro_goal': {
+        // Today only
+        const startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+        return startDate;
+      }
+      default: {
+        // Progressive load and other types - last 2 weeks
+        const startDate = new Date(now);
+        startDate.setDate(now.getDate() - 14);
+        startDate.setHours(0, 0, 0, 0);
+        return startDate;
+      }
+    }
+  };
+
   // Filter relevant logs based on strategy
   const relevantLogs = useMemo(() => {
-    // Get logs from appropriate time window
     const now = new Date();
-    let startDate: Date;
-
-    if (strategy.strategy_type === 'weekly_target' || strategy.strategy_type === 'streak' || strategy.strategy_type === 'variety' || strategy.strategy_type === 'recovery') {
-      // Current week
-      const dayOfWeek = now.getDay();
-      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() + diff);
-      startDate.setHours(0, 0, 0, 0);
-    } else if (strategy.strategy_type === 'monthly_target' || strategy.strategy_type === 'focus_muscle') {
-      // Current month
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    } else if (strategy.strategy_type === 'rolling_window') {
-      // Rolling window
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - strategy.time_window_days);
-      startDate.setHours(0, 0, 0, 0);
-    } else if (strategy.strategy_type === 'micro_goal') {
-      // Today
-      startDate = new Date(now);
-      startDate.setHours(0, 0, 0, 0);
-    } else {
-      // Progressive load - last 2 weeks
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - 14);
-      startDate.setHours(0, 0, 0, 0);
-    }
+    const startDate = getStrategyStartDate(strategy.strategy_type, strategy.time_window_days);
 
     const filtered = logs.filter((log) => {
       const logDate = new Date(log.logged_at);

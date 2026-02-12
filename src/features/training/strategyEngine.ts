@@ -405,7 +405,8 @@ function calculateProgressiveLoad(
     forecastMessage = 'No baseline - start tracking weight!';
   } else if (status === 'on_track') {
     const increase = thisWeekLoad - lastWeekLoad;
-    forecastMessage = `+${increase.toFixed(0)} kg from last week!`;
+    const sign = increase >= 0 ? '+' : '';
+    forecastMessage = `${sign}${increase.toFixed(0)} kg from last week!`;
   } else {
     const needed = target - current;
     forecastMessage = `${needed.toFixed(0)} kg more needed vs last week`;
