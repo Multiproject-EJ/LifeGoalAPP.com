@@ -5777,6 +5777,91 @@ body {
   }
 }
 
+/* Slot machine animation styles */
+.habit-day-nav__vision-modal-slot-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 20%, rgba(224, 231, 255, 0.6), rgba(248, 250, 252, 0.3));
+}
+
+.habit-day-nav__vision-modal-slot-reel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  animation: slot-reel-spin 2.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.habit-day-nav__vision-modal-slot-item {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+  filter: blur(3px);
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.habit-day-nav__vision-modal-slot-item--selected {
+  width: 120px;
+  height: 120px;
+  filter: blur(0);
+  opacity: 1;
+  border-color: rgba(251, 191, 36, 0.8);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4), 0 0 0 3px rgba(251, 191, 36, 0.3);
+}
+
+/* Slot reel animation: Duration 2.5s matches SLOT_MACHINE_ANIMATION_DURATION_MS
+   Keyframe positions create a slot machine effect:
+   - 0-45%: Fast initial scroll (rapid acceleration)
+   - 45-75%: Steady speed (building anticipation)
+   - 75-100%: Smooth deceleration (using cubic-bezier easing)
+   
+   Transform values are calculated based on:
+   - Item height: 80px + gap: 8px = 88px per item
+   - Final position of -1000px aligns the 12th item (SLOT_MACHINE_SELECTED_INDEX)
+     to the center of the viewport after animation completes
+*/
+@keyframes slot-reel-spin {
+  0% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(-150px);
+  }
+  30% {
+    transform: translateY(-300px);
+  }
+  45% {
+    transform: translateY(-450px);
+  }
+  60% {
+    transform: translateY(-600px);
+  }
+  75% {
+    transform: translateY(-750px);
+  }
+  85% {
+    transform: translateY(-850px);
+  }
+  92% {
+    transform: translateY(-920px);
+  }
+  96% {
+    transform: translateY(-960px);
+  }
+  100% {
+    transform: translateY(-1000px);
+  }
+}
+
 @media (max-width: 600px) {
   .habit-day-nav__vision-modal-backdrop {
     padding: 1rem;
