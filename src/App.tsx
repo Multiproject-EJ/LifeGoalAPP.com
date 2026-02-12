@@ -268,6 +268,7 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'score',
   'game',
   'placeholder',
+  'identity', // Moved to quick actions section
 ] as const;
 
 const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account']);
@@ -541,7 +542,15 @@ export default function App() {
         icon: item?.icon ?? '•',
         summary: item?.summary ?? 'Open this section.',
       } satisfies MobileMenuNavItem;
-    });
+    }).concat([
+      {
+        id: 'coach',
+        label: 'Coach',
+        ariaLabel: 'AI Coach - Get a guided next step',
+        icon: '🪈',
+        summary: 'Get a guided next step from your AI coach.',
+      } satisfies MobileMenuNavItem,
+    ]);
   }, [workspaceNavItems]);
 
   useEffect(() => {
@@ -1307,6 +1316,11 @@ export default function App() {
 
     if (navId === 'game' && isMobileViewport) {
       setShowMobileGamification(true);
+      return;
+    }
+
+    if (navId === 'coach') {
+      setShowAiCoachModal(true);
       return;
     }
 
@@ -2261,44 +2275,73 @@ export default function App() {
         >
           <>
             <div className="mobile-menu-overlay__header">
-              <h2 className="mobile-menu-overlay__title">Profile</h2>
-              <div className="mobile-menu-overlay__meta" aria-label="Profile summary">
-                <div className="mobile-menu-overlay__meta-row">
-                  <span className="mobile-menu-overlay__meta-label">Name</span>
-                  <span className="mobile-menu-overlay__meta-value">
-                    {normalizedDisplayName || userDisplay || 'Guest'}
+              <div className="mobile-menu-overlay__header-top">
+                <div className="mobile-menu-overlay__profile-picture">
+                  <span className="mobile-menu-overlay__profile-initials">
+                    {(normalizedDisplayName || userDisplay || 'Guest').charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <div className="mobile-menu-overlay__meta-row">
-                  <span className="mobile-menu-overlay__meta-label">Type</span>
-                  <span className="mobile-menu-overlay__meta-value">
-                    {personalitySummary ?? 'Personality test'}
-                  </span>
+                <div className="mobile-menu-overlay__header-info">
+                  <h2 className="mobile-menu-overlay__title">Profile</h2>
+                  <div className="mobile-menu-overlay__meta" aria-label="Profile summary">
+                    <div className="mobile-menu-overlay__meta-row">
+                      <span className="mobile-menu-overlay__meta-label">Name</span>
+                      <span className="mobile-menu-overlay__meta-value">
+                        {normalizedDisplayName || userDisplay || 'Guest'}
+                      </span>
+                    </div>
+                    <div className="mobile-menu-overlay__meta-row">
+                      <span className="mobile-menu-overlay__meta-label">Type</span>
+                      <span className="mobile-menu-overlay__meta-value">
+                        {personalitySummary ?? 'Personality test'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mobile-menu-overlay__controls">
+                  <button
+                    type="button"
+                    className={`mobile-footer-nav__diode-toggle ${
+                      isMobileMenuImageActive
+                        ? 'mobile-footer-nav__diode-toggle--on'
+                        : 'mobile-footer-nav__diode-toggle--off'
+                    }`}
+                    aria-pressed={isMobileMenuImageActive}
+                    aria-label="Toggle diode indicator"
+                    onClick={() => {
+                      const nextIsActive = !isMobileMenuImageActive;
+                      setIsMobileMenuImageActive(nextIsActive);
+                      triggerMobileMenuFlash();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="mobile-menu-overlay__close"
+                    aria-label="Close menu"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
-              <div className="mobile-menu-overlay__controls">
+              <div className="mobile-menu-overlay__quick-actions">
                 <button
                   type="button"
-                  className={`mobile-footer-nav__diode-toggle ${
-                    isMobileMenuImageActive
-                      ? 'mobile-footer-nav__diode-toggle--on'
-                      : 'mobile-footer-nav__diode-toggle--off'
-                  }`}
-                  aria-pressed={isMobileMenuImageActive}
-                  aria-label="Toggle diode indicator"
-                  onClick={() => {
-                    const nextIsActive = !isMobileMenuImageActive;
-                    setIsMobileMenuImageActive(nextIsActive);
-                    triggerMobileMenuFlash();
-                  }}
-                />
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__close"
-                  aria-label="Close menu"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="mobile-menu-overlay__quick-action-btn"
+                  onClick={() => handleMobileNavSelect('identity')}
+                  aria-label="Your identity and preferences"
                 >
-                  ×
+                  <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
+                  <span className="mobile-menu-overlay__quick-action-label">ID</span>
+                </button>
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__quick-action-btn"
+                  onClick={() => handleMobileNavSelect('account')}
+                  aria-label="Profile picture and appearance"
+                >
+                  <span className="mobile-menu-overlay__quick-action-icon">👤</span>
+                  <span className="mobile-menu-overlay__quick-action-label">Look</span>
                 </button>
               </div>
             </div>
@@ -2446,19 +2489,6 @@ export default function App() {
                       </li>
                     );
                   })}
-                <li className="mobile-menu-overlay__item mobile-menu-overlay__item--coach">
-                  <button
-                    type="button"
-                    className="mobile-menu-overlay__coach-button"
-                    onClick={() => setShowAiCoachModal(true)}
-                  >
-                    <span aria-hidden="true" className="mobile-menu-overlay__coach-icon">🪈</span>
-                    <span className="mobile-menu-overlay__coach-texts">
-                      <span className="mobile-menu-overlay__coach-title">Coach</span>
-                      <span className="mobile-menu-overlay__coach-subtitle">Get a guided next step</span>
-                    </span>
-                  </button>
-                </li>
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
