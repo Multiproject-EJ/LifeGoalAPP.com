@@ -1921,6 +1921,90 @@ export interface Database {
         };
         Relationships: [];
       };
+      exercise_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          exercise_name: string;
+          muscle_groups: string[];
+          reps: number | null;
+          sets: number | null;
+          weight_kg: number | null;
+          duration_minutes: number | null;
+          notes: string | null;
+          logged_at: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          exercise_name: string;
+          muscle_groups?: string[];
+          reps?: number | null;
+          sets?: number | null;
+          weight_kg?: number | null;
+          duration_minutes?: number | null;
+          notes?: string | null;
+          logged_at?: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          exercise_name?: string;
+          muscle_groups?: string[];
+          reps?: number | null;
+          sets?: number | null;
+          weight_kg?: number | null;
+          duration_minutes?: number | null;
+          notes?: string | null;
+          logged_at?: string;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      training_strategies: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          strategy_type: string;
+          exercise_name: string | null;
+          target_value: number;
+          target_unit: string;
+          time_window_days: number;
+          focus_muscles: string[];
+          is_active: boolean;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          strategy_type: string;
+          exercise_name?: string | null;
+          target_value: number;
+          target_unit?: string;
+          time_window_days?: number;
+          focus_muscles?: string[];
+          is_active?: boolean;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          strategy_type?: string;
+          exercise_name?: string | null;
+          target_value?: number;
+          target_unit?: string;
+          time_window_days?: number;
+          focus_muscles?: string[];
+          is_active?: boolean;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_habit_streaks: {
