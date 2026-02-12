@@ -5818,6 +5818,17 @@ body {
   box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4), 0 0 0 3px rgba(251, 191, 36, 0.3);
 }
 
+/* Slot reel animation: Duration 2.5s matches SLOT_MACHINE_ANIMATION_DURATION_MS
+   Keyframe positions create a slot machine effect:
+   - 0-45%: Fast initial scroll (rapid acceleration)
+   - 45-75%: Steady speed (building anticipation)
+   - 75-100%: Smooth deceleration (using cubic-bezier easing)
+   
+   Transform values are calculated based on:
+   - Item height: 80px + gap: 8px = 88px per item
+   - Final position of -1000px aligns the 12th item (SLOT_MACHINE_SELECTED_INDEX)
+     to the center of the viewport after animation completes
+*/
 @keyframes slot-reel-spin {
   0% {
     transform: translateY(0);

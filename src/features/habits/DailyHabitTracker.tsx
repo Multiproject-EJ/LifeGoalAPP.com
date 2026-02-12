@@ -1082,7 +1082,6 @@ export function DailyHabitTracker({
                         }`}
                         src={image.publicUrl}
                         alt=""
-                        loading="lazy"
                       />
                     );
                   })}
