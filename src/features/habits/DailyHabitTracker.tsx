@@ -3055,6 +3055,24 @@ export function DailyHabitTracker({
                     </div>
                   ) : null}
                   <div className="habit-checklist__detail-actions">
+                    {/* Done-ish button for boolean habits - moved to left */}
+                    {!isCompleted && scheduledToday && habit.type === 'boolean' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Done-ish</span>
+                        <button
+                          type="button"
+                          className="habit-checklist__doneish-button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleDoneIshCompletion(habit, null);
+                          }}
+                          disabled={isSaving}
+                          aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
+                        >
+                          ✨
+                        </button>
+                      </div>
+                    )}
                     {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
                     {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
                     {isUpdatingAutoProgress ? (
@@ -3079,41 +3097,6 @@ export function DailyHabitTracker({
                       }}
                     >
                       ✏️ Edit
-                    </button>
-                    {/* Done-ish button for boolean habits */}
-                    {!isCompleted && scheduledToday && habit.type === 'boolean' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                        <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Done-ish</span>
-                        <button
-                          type="button"
-                          className="habit-checklist__doneish-button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDoneIshCompletion(habit, null);
-                          }}
-                          disabled={isSaving}
-                          aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
-                        >
-                          ✨
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      className={`habit-checklist__autoprog-toggle ${
-                        autoProgressPanels[habit.id] ? 'habit-checklist__autoprog-toggle--active' : ''
-                      }`}
-                      aria-pressed={autoProgressPanels[habit.id] ?? false}
-                      aria-label="Toggle difficulty stage card"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setAutoProgressPanels((prev) => ({
-                          ...prev,
-                          [habit.id]: !prev[habit.id],
-                        }));
-                      }}
-                    >
-                      <span className="habit-checklist__autoprog-toggle-dot" aria-hidden="true" />
                     </button>
                     <div className="habit-checklist__skip-wrap">
                       <button
@@ -3203,6 +3186,23 @@ export function DailyHabitTracker({
                         </div>
                       ) : null}
                     </div>
+                    <button
+                      type="button"
+                      className={`habit-checklist__autoprog-toggle ${
+                        autoProgressPanels[habit.id] ? 'habit-checklist__autoprog-toggle--active' : ''
+                      }`}
+                      aria-pressed={autoProgressPanels[habit.id] ?? false}
+                      aria-label="Toggle difficulty stage card"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setAutoProgressPanels((prev) => ({
+                          ...prev,
+                          [habit.id]: !prev[habit.id],
+                        }));
+                      }}
+                    >
+                      <span className="habit-checklist__autoprog-toggle-dot" aria-hidden="true" />
+                    </button>
                   </div>
                 </div>
               </li>
