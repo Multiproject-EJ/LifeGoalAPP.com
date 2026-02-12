@@ -3,13 +3,43 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 0 0 2rem;
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   min-height: 100vh;
+  overflow-y: auto;
 }
 
 .zen-garden > * {
   position: relative;
   z-index: 1;
+}
+
+/* Back Button */
+.zen-garden__back-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.zen-garden__back-button:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.05);
+}
+
+.zen-garden__back-button:active {
+  transform: scale(0.98);
 }
 
 /* To The Garden Button */

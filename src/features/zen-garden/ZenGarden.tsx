@@ -13,6 +13,7 @@ import './ZenGarden.css';
 
 type ZenGardenProps = {
   session: Session | null;
+  onBack?: () => void;
 };
 
 type ZenGardenItem = {
@@ -108,7 +109,7 @@ const TREE_MILESTONES: TreeMilestone[] = [
   },
 ];
 
-export function ZenGarden({ session }: ZenGardenProps) {
+export function ZenGarden({ session, onBack }: ZenGardenProps) {
   const [balance, setBalance] = useState(0);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [inventory, setInventory] = useState<string[]>([]);
@@ -244,6 +245,16 @@ export function ZenGarden({ session }: ZenGardenProps) {
           backgroundRepeat: 'no-repeat'
         }}
       >
+        {onBack && (
+          <button
+            type="button"
+            className="zen-garden__back-button"
+            onClick={onBack}
+            aria-label="Back to Score Tab"
+          >
+            ← Back
+          </button>
+        )}
         <header className="zen-garden__header">
           <div>
             <p className="zen-garden__eyebrow">Zen Garden</p>

@@ -43,6 +43,7 @@ interface ScoreTabProps {
   onNavigateToAchievements: () => void;
   onNavigateToBank?: () => void;
   onNavigateToShop?: () => void;
+  onNavigateToZenGarden?: () => void;
 }
 
 const REWARD_CATEGORIES: Array<{ value: RewardCategory; emoji: string; label: string }> = [
@@ -63,6 +64,7 @@ export function ScoreTab({
   onNavigateToAchievements,
   onNavigateToBank,
   onNavigateToShop,
+  onNavigateToZenGarden,
 }: ScoreTabProps) {
   const formatter = useMemo(() => new Intl.NumberFormat(), []);
   const dateFormatter = useMemo(
@@ -549,7 +551,9 @@ export function ScoreTab({
           <button
             type="button"
             className={`score-tab__tab${activeTab === 'zen' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => setActiveTab('zen')}
+            onClick={() => {
+              onNavigateToZenGarden?.();
+            }}
           >
             <span className="score-tab__tab-icon" aria-hidden="true">🪷</span>
             Zen Garden
@@ -599,7 +603,7 @@ export function ScoreTab({
             </span>
             <span className="score-tab__hub-title">Player Shop</span>
           </button>
-          <button type="button" className="score-tab__hub-card" onClick={() => setActiveTab('zen')}>
+          <button type="button" className="score-tab__hub-card" onClick={() => onNavigateToZenGarden?.()}>
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreZenGarden} alt="" />
             </span>
@@ -991,12 +995,6 @@ export function ScoreTab({
               </ul>
             )}
           </div>
-        </div>
-      )}
-
-      {!loading && enabled && activeTab === 'zen' && (
-        <div className="score-tab__status">
-          Zen Garden is ready for calm upgrades. This space is open for your future build.
         </div>
       )}
 
