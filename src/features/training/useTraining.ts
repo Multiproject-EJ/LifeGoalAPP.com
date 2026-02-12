@@ -1,5 +1,5 @@
 // React hook for Training / Exercise feature
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getActiveSupabaseSession } from '../../lib/supabaseClient';
 import type { ExerciseLog, TrainingStrategy, StrategyProgress, TodaySummary } from './types';
 import * as trainingService from './trainingService';
@@ -60,16 +60,19 @@ export function useTraining(): UseTrainingReturn {
   }, [loadData]);
 
   // Calculate strategy progress
-  const strategyProgress = new Map<string, StrategyProgress>();
-  strategies.forEach((strategy) => {
-    if (strategy.is_active) {
-      const progress = calculateProgress(strategy, logs);
-      strategyProgress.set(strategy.id, progress);
-    }
-  });
+  const strategyProgress = useMemo(() => {
+    const progress = new Map<string, StrategyProgress>();
+    strategies.forEach((strategy) => {
+      if (strategy.is_active) {
+        const strategyProgress = calculateProgress(strategy, logs);
+        progress.set(strategy.id, strategyProgress);
+      }
+    });
+    return progress;
+  }, [strategies, logs]);
 
   // Calculate today's summary
-  const todaySummary: TodaySummary = (() => {
+  const todaySummary: TodaySummary = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -88,7 +91,7 @@ export function useTraining(): UseTrainingReturn {
       ),
       totalDuration: todayLogs.reduce((sum, log) => sum + (log.duration_minutes || 0), 0),
     };
-  })();
+  }, [logs]);
 
   // Add exercise log
   const addLog = useCallback(
