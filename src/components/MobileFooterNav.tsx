@@ -478,7 +478,7 @@ export function MobileFooterNav({
                       }}
                       aria-label="Open mind energy tools"
                     >
-                      <img src={mindIcon} alt="" className="mobile-footer-nav__energy-icon" />
+                      <img src={mindIcon} alt="Mind icon" className="mobile-footer-nav__energy-icon" />
                       <span className="mobile-footer-nav__energy-label">Mind</span>
                     </button>
                     <button
@@ -490,7 +490,7 @@ export function MobileFooterNav({
                       }}
                       aria-label="Open body energy tools"
                     >
-                      <img src={bodyIcon} alt="" className="mobile-footer-nav__energy-icon" />
+                      <img src={bodyIcon} alt="Body icon" className="mobile-footer-nav__energy-icon" />
                       <span className="mobile-footer-nav__energy-label">Body</span>
                     </button>
                   </div>
