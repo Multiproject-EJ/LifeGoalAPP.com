@@ -495,6 +495,8 @@ export default function App() {
         } satisfies MobileMenuNavItem;
       }
 
+      // Transform 'identity' slot into 'contracts' button for mobile menu grid
+      // (ID button moved to top section in sibling PR)
       if (navId === 'identity') {
         return {
           id: 'contracts',
