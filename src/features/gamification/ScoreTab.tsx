@@ -112,20 +112,6 @@ export function ScoreTab({
   }, [profile?.total_points]);
 
   useEffect(() => {
-    const loadActiveContract = async () => {
-      if (!enabled || !userId) {
-        setActiveContract(null);
-        return;
-      }
-
-      const { data } = await fetchActiveContract(userId);
-      setActiveContract(data);
-    };
-
-    loadActiveContract();
-  }, [enabled, userId]);
-
-  useEffect(() => {
     let isMounted = true;
 
     const loadTransactions = async () => {

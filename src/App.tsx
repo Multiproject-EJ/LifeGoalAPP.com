@@ -329,7 +329,7 @@ export default function App() {
     'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
-  const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'contracts'>('home');
+  const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen'>('home');
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
