@@ -22,6 +22,8 @@ import './AchievementsPage.css';
 type Props = {
   session: Session;
 };
+
+export function AchievementsPage({ session }: Props) {
   const { enabled: gamificationEnabled } = useGamification(session);
   const [achievements, setAchievements] = useState<AchievementWithProgress[]>([]);
   const [stats, setStats] = useState<AchievementStats | null>(null);
@@ -44,6 +46,7 @@ type Props = {
   const [zenPurchaseError, setZenPurchaseError] = useState<string | null>(null);
   const [zenPurchaseSuccess, setZenPurchaseSuccess] = useState<string | null>(null);
   const [zenPurchasingId, setZenPurchasingId] = useState<string | null>(null);
+  const [zenLoadError, setZenLoadError] = useState<string | null>(null);
 
   const unlockedTiers = achievements
     .filter((achievement) => achievement.unlocked)
@@ -58,6 +61,7 @@ type Props = {
   }, [session.user.id]);
 
   const loadZenGardenData = async () => {
+    setZenLoadError(null);
     try {
       const profileResult = await fetchGamificationProfile(session.user.id);
       if (profileResult.data) {
@@ -69,6 +73,8 @@ type Props = {
         setZenInventory(inventoryResult.data);
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load zen garden data';
+      setZenLoadError(errorMessage);
       console.error('Failed to load zen garden data:', err);
     }
   };
@@ -355,6 +361,11 @@ type Props = {
           </div>
         </div>
 
+        {zenLoadError && (
+          <div className="achievements-page__message achievements-page__message--error">
+            {zenLoadError}
+          </div>
+        )}
         {zenPurchaseError && (
           <div className="achievements-page__message achievements-page__message--error">
             {zenPurchaseError}

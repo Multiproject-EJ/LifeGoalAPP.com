@@ -51,4 +51,6 @@ export const ZEN_GARDEN_ITEMS: ZenGardenItem[] = [
   },
 ];
 
+// Display limit for zen token transactions in the bank tab ledger
+// Chosen to show recent activity without overwhelming the UI
 export const ZEN_TRANSACTIONS_DISPLAY_LIMIT = 4;
