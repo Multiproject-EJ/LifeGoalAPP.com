@@ -811,6 +811,9 @@ export function DailyHabitTracker({
     const isSuperBoost = nextCount % 20 === 0;
     const xpAmount = isSuperBoost ? 250 : XP_REWARDS.VISION_BOARD_STAR;
 
+    // Wait for slot machine animation to complete (2.5 seconds)
+    await new Promise(resolve => setTimeout(resolve, 2500));
+
     setVisionRewarding(true);
     try {
       const result = await earnXP(
@@ -1059,7 +1062,29 @@ export function DailyHabitTracker({
             📸 🖼️ 🎯 ✨ 🚀
           </div>
           <div className="habit-day-nav__vision-modal-frame">
-            {shouldShowVisionLoading && (
+            {isVisionRewardSelecting && visionImages.length > 0 && (
+              <div className="habit-day-nav__vision-modal-slot-container" aria-hidden="true">
+                <div className="habit-day-nav__vision-modal-slot-reel">
+                  {/* Create a repeating list of images for the slot machine effect */}
+                  {Array.from({ length: 15 }).map((_, idx) => {
+                    const image = visionImages[idx % visionImages.length];
+                    const isSelectedPosition = idx === 12; // This will be the final visible position
+                    return (
+                      <img
+                        key={`slot-${idx}`}
+                        className={`habit-day-nav__vision-modal-slot-item ${
+                          isSelectedPosition ? 'habit-day-nav__vision-modal-slot-item--selected' : ''
+                        }`}
+                        src={image.publicUrl}
+                        alt=""
+                        loading="lazy"
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {!isVisionRewardSelecting && shouldShowVisionLoading && (
               <div className="habit-day-nav__vision-modal-loading" aria-hidden="true">
                 <span className="habit-day-nav__vision-modal-bloom" />
                 <span className="habit-day-nav__vision-modal-loading-text">
