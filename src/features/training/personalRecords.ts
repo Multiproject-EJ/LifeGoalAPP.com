@@ -34,6 +34,7 @@ export function detectPersonalRecord(
   }
 
   // Check for max reps PR (total reps = reps × sets)
+  // Note: This tracks total cumulative reps across all sets, not max reps in a single set
   if (newLog.reps && newLog.sets) {
     const newTotalReps = newLog.reps * newLog.sets;
     const previousMaxReps = Math.max(

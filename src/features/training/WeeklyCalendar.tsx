@@ -28,7 +28,7 @@ export function WeeklyCalendar({ logs }: WeeklyCalendarProps) {
     
     // Generate 7 days from Monday to Sunday
     const days: DayData[] = [];
-    const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const dayNames = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su'];
     
     for (let i = 0; i < 7; i++) {
       const date = new Date(monday);

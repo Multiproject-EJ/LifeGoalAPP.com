@@ -77,6 +77,8 @@ function SwipeableLogCard({ log, onDelete, children }: SwipeableLogCardProps) {
   }, []);
 
   // On desktop, show as regular card
+  // Note: This check is done once per component mount. For responsive changes during resize,
+  // the CSS media query handles hiding/showing the delete button appropriately.
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   if (!isMobile) {
@@ -258,7 +260,9 @@ export function TrainingTab() {
         </div>
         <div className="summary-stat">
           <span className="summary-stat__value">
-            {Math.round(todaySummary.totalVolume)}
+            {todaySummary.totalVolume >= 1000 
+              ? `${(todaySummary.totalVolume / 1000).toFixed(1)}k`
+              : Math.round(todaySummary.totalVolume).toLocaleString()}
           </span>
           <span className="summary-stat__label">Volume (kg)</span>
         </div>
@@ -364,6 +368,8 @@ export function TrainingTab() {
             await addLog(logData);
             
             // Detect personal record
+            // Note: Using temporary placeholder values for id/user_id as they're only needed
+            // for the PR detection comparison logic, not for database operations
             const newLog: ExerciseLog = {
               id: 'temp-id',
               user_id: 'temp-user',
