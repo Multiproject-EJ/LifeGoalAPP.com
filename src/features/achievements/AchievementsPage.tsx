@@ -10,6 +10,7 @@ import {
 import { fetchGamificationProfile } from '../../services/gamificationPrefs';
 import { fetchTrophyCatalog, fetchUserTrophies, purchaseTrophy } from '../../services/trophies';
 import { fetchZenGardenInventory, purchaseZenGardenItem } from '../../services/zenGarden';
+import { ZEN_GARDEN_ITEMS, type ZenGardenItem } from '../../constants/zenGarden';
 import { AchievementGrid } from './AchievementGrid';
 import { AchievementFilters } from './AchievementFilters';
 import { AchievementDetailModal } from './AchievementDetailModal';
@@ -21,61 +22,6 @@ import './AchievementsPage.css';
 type Props = {
   session: Session;
 };
-
-type ZenGardenItem = {
-  id: string;
-  name: string;
-  description: string;
-  cost: number;
-  emoji: string;
-};
-
-const ZEN_GARDEN_ITEMS: ZenGardenItem[] = [
-  {
-    id: 'zen_ripple_pool',
-    name: 'Ripple Pool',
-    description: 'A calm water feature for post-meditation flow.',
-    cost: 12,
-    emoji: '💧',
-  },
-  {
-    id: 'zen_bamboo',
-    name: 'Bamboo Grove',
-    description: 'Symbolic growth that rewards daily breathwork.',
-    cost: 18,
-    emoji: '🎋',
-  },
-  {
-    id: 'zen_lotus_lamp',
-    name: 'Lotus Lamp',
-    description: 'Gentle light that inspires clarity and focus.',
-    cost: 25,
-    emoji: '🪔',
-  },
-  {
-    id: 'zen_stone_path',
-    name: 'Stone Path',
-    description: 'A winding journey of steady practice.',
-    cost: 30,
-    emoji: '🪨',
-  },
-  {
-    id: 'zen_wind_chime',
-    name: 'Wind Chime',
-    description: 'Soft tones that echo mindful moments.',
-    cost: 40,
-    emoji: '🎐',
-  },
-  {
-    id: 'zen_sakura_bloom',
-    name: 'Sakura Bloom',
-    description: 'A rare tree for the most dedicated meditators.',
-    cost: 60,
-    emoji: '🌸',
-  },
-];
-
-export function AchievementsPage({ session }: Props) {
   const { enabled: gamificationEnabled } = useGamification(session);
   const [achievements, setAchievements] = useState<AchievementWithProgress[]>([]);
   const [stats, setStats] = useState<AchievementStats | null>(null);

@@ -17,6 +17,7 @@ import { GamificationHeader } from '../../components/GamificationHeader';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
+import { ZEN_TRANSACTIONS_DISPLAY_LIMIT } from '../../constants/zenGarden';
 import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward, shouldPromptEvolution, evolveReward } from '../../services/rewards';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
@@ -173,7 +174,7 @@ export function ScoreTab({
         return;
       }
 
-      const { data, error } = await fetchZenTokenTransactions(userId, 4);
+      const { data, error } = await fetchZenTokenTransactions(userId, ZEN_TRANSACTIONS_DISPLAY_LIMIT);
       if (!isMounted) return;
       
       if (error) {
