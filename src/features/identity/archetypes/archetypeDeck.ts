@@ -1,13 +1,40 @@
 import type { TraitKey, AxisKey } from '../personalityTestData';
 
+/**
+ * Archetype Suit Keys
+ * Four suits representing different life orientations:
+ * - power: Agency and action-oriented
+ * - heart: Empathy and connection-oriented
+ * - mind: Reason and analysis-oriented
+ * - spirit: Vision and exploration-oriented
+ */
 export type SuitKey = 'power' | 'heart' | 'mind' | 'spirit';
 
 export type Orientation = 'inward' | 'outward';
 export type TimeFocus = 'past' | 'present' | 'future';
 export type RiskTolerance = 'low' | 'moderate' | 'high' | 'very_high';
 
+/**
+ * Trait Weights Map
+ * Maps personality trait/axis keys to numeric weights.
+ * Positive weights = high correlation with this archetype
+ * Negative weights = inverse correlation (low trait value increases archetype score)
+ * Example: { extraversion: 1.0, agreeableness: -0.4 } means high extraversion
+ * and low agreeableness both increase the archetype score.
+ */
 export type TraitWeights = Partial<Record<TraitKey | AxisKey, number>>;
 
+/**
+ * Archetype Card
+ * Represents a personality archetype in the 4-suit deck system.
+ * Each archetype is defined by:
+ * - Trait weights: How personality traits correlate with this archetype
+ * - Behavioral characteristics: Drive, orientation, time focus, risk tolerance
+ * - Narrative elements: Strengths, weaknesses, stress behavior, growth strategy
+ * 
+ * Cards are scored against a player's personality profile to determine their
+ * 5-card hand (dominant, secondary, 2 supports, shadow).
+ */
 export type ArchetypeCard = {
   id: string;
   name: string;
@@ -25,6 +52,10 @@ export type ArchetypeCard = {
   growthStrategy: string;
 };
 
+/**
+ * Suit color palette
+ * Visual identity for each suit in the deck.
+ */
 export const SUIT_COLORS: Record<SuitKey, string> = {
   power: '#ef4444', // red
   heart: '#ec4899', // pink
@@ -32,6 +63,9 @@ export const SUIT_COLORS: Record<SuitKey, string> = {
   spirit: '#8b5cf6', // purple
 };
 
+/**
+ * Suit labels with semantic meaning
+ */
 export const SUIT_LABELS: Record<SuitKey, string> = {
   power: 'Power (Agency)',
   heart: 'Heart (Empathy)',
@@ -39,6 +73,14 @@ export const SUIT_LABELS: Record<SuitKey, string> = {
   spirit: 'Spirit (Vision)',
 };
 
+/**
+ * The Archetype Deck (16-card MVP)
+ * 4 archetypes per suit, derived from personality research.
+ * This is the foundation of the "Player's Deck" system.
+ * 
+ * Design principle: Archetypes are NOT rigid categories. They're lenses for
+ * understanding your playstyle in the Game of Life. Your deck evolves as you grow.
+ */
 export const ARCHETYPE_DECK: ArchetypeCard[] = [
   // POWER SUIT (Agency)
   {

@@ -48,6 +48,12 @@ function calculateDecayFactor(daysSinceTaken: number): number {
 
 /**
  * Blends scores from foundation test and micro-tests with decay
+ * 
+ * Note: The foundation weight is MINIMUM 50% of the total weight calculation,
+ * though the actual influence depends on the number and recency of micro-tests.
+ * With multiple recent micro-tests, the effective foundation influence may be
+ * diluted below 50% of the final score. This is intentional - we trust fresh
+ * micro-test data while keeping the foundation as an anchor.
  */
 export function blendScores(
   foundationScore: number,
@@ -156,13 +162,16 @@ export function analyzeHandChanges(
       cardName: newHand.dominant.card.name,
       message: `${newHand.dominant.card.name} leveled up to Lv ${newHand.dominant.level}!`,
     });
-  } else if (Math.abs(newHand.dominant.score - oldHand.dominant.score) < 5) {
-    changes.push({
-      type: 'confirmed',
-      cardId: newHand.dominant.card.id,
-      cardName: newHand.dominant.card.name,
-      message: `${newHand.dominant.card.name} confirmed as your dominant archetype.`,
-    });
+  } else {
+    const scoreDiff = Math.abs(newHand.dominant.score - oldHand.dominant.score);
+    if (scoreDiff <= 5 && scoreDiff > 0) {
+      changes.push({
+        type: 'confirmed',
+        cardId: newHand.dominant.card.id,
+        cardName: newHand.dominant.card.name,
+        message: `${newHand.dominant.card.name} confirmed as your dominant archetype.`,
+      });
+    }
   }
 
   // Check shadow card improvement

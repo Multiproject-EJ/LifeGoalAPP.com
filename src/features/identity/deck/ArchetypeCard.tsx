@@ -23,7 +23,7 @@ export function ArchetypeCard({ handCard, onClick, compact = false }: ArchetypeC
   const { card, role, level } = handCard;
   const copy = getArchetypeCopy(handCard);
 
-  const stars = '★'.repeat(level) + '☆'.repeat(5 - level);
+  const stars = '★'.repeat(Math.max(0, Math.min(5, level))) + '☆'.repeat(Math.max(0, 5 - Math.min(5, level)));
 
   return (
     <div

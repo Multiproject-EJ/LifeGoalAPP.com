@@ -26,7 +26,9 @@ export type ArchetypeHand = {
  */
 export function buildHand(rankedScores: ArchetypeScore[]): ArchetypeHand {
   if (rankedScores.length < 5) {
-    throw new Error('Need at least 5 archetype cards to build a hand');
+    throw new Error(
+      `Need at least 5 archetype cards to build a hand, but received ${rankedScores.length} cards`,
+    );
   }
 
   // Sort by score descending (highest first)
