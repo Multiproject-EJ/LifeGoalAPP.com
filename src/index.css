@@ -14238,6 +14238,33 @@ body {
   position: relative;
 }
 
+@keyframes energyPulse {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18), 
+      0 0 20px rgba(255, 223, 0, 0.4), 
+      0 0 40px rgba(59, 130, 246, 0.3);
+  }
+  25% {
+    background-position: 100% 50%;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18), 
+      0 0 25px rgba(239, 68, 68, 0.5), 
+      0 0 45px rgba(255, 223, 0, 0.4);
+  }
+  50% {
+    background-position: 50% 100%;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18), 
+      0 0 30px rgba(59, 130, 246, 0.5), 
+      0 0 50px rgba(139, 92, 246, 0.4);
+  }
+  75% {
+    background-position: 0% 100%;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18), 
+      0 0 25px rgba(255, 223, 0, 0.5), 
+      0 0 45px rgba(239, 68, 68, 0.3);
+  }
+}
+
 .mobile-footer-nav__energy-menu {
   position: absolute;
   left: calc(100% + 0.5rem);
@@ -14277,8 +14304,16 @@ body {
   height: clamp(70px, 30vw, 118px);
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 223, 0, 0.3) 25%, 
+    rgba(255, 255, 255, 0.95) 50%, 
+    rgba(59, 130, 246, 0.3) 75%, 
+    rgba(255, 255, 255, 0.95) 100%);
+  background-size: 200% 200%;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18), 
+    0 0 20px rgba(255, 223, 0, 0.4), 
+    0 0 40px rgba(59, 130, 246, 0.3);
   color: #0f172a;
   display: flex;
   flex-direction: column;
@@ -14290,6 +14325,7 @@ body {
   transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.2s ease;
   opacity: 0;
   transform: translateX(-14px) scale(0.7);
+  animation: energyPulse 3s ease-in-out infinite;
 }
 
 .mobile-footer-nav__energy-menu--open .mobile-footer-nav__energy-button {
@@ -14307,7 +14343,10 @@ body {
 
 .mobile-footer-nav__energy-button:hover,
 .mobile-footer-nav__energy-button:focus-visible {
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.2), 
+    0 0 30px rgba(255, 223, 0, 0.6), 
+    0 0 50px rgba(239, 68, 68, 0.4), 
+    0 0 70px rgba(59, 130, 246, 0.5);
   outline: none;
   transform: translateX(2px) scale(1.02);
 }
@@ -14319,8 +14358,8 @@ body {
 }
 
 .mobile-footer-nav__energy-icon {
-  width: clamp(1.8rem, 6vw, 2.5rem);
-  height: clamp(1.8rem, 6vw, 2.5rem);
+  width: clamp(3.6rem, 12vw, 5rem);
+  height: clamp(3.6rem, 12vw, 5rem);
   object-fit: contain;
 }
 
