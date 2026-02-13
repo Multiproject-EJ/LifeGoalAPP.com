@@ -85,11 +85,16 @@ export function useTraining(): UseTrainingReturn {
 
     return {
       totalExercises: todayLogs.length,
+      totalSets: todayLogs.reduce((sum, log) => sum + (log.sets || 0), 0),
       totalReps: todayLogs.reduce(
         (sum, log) => sum + (log.reps || 0) * (log.sets || 1),
         0
       ),
       totalDuration: todayLogs.reduce((sum, log) => sum + (log.duration_minutes || 0), 0),
+      totalVolume: todayLogs.reduce(
+        (sum, log) => sum + (log.weight_kg || 0) * (log.reps || 0) * (log.sets || 1),
+        0
+      ),
     };
   }, [logs]);
 

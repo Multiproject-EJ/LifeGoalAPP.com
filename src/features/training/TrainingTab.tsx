@@ -1,11 +1,14 @@
 // Main Training Tab Component
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTraining } from './useTraining';
 import { QuickLogModal } from './QuickLogModal';
 import { StrategyCard } from './StrategyCard';
 import { StrategySetupWizard } from './StrategySetupWizard';
 import { StrategyDetail } from './StrategyDetail';
-import type { TrainingStrategy, ExerciseLog } from './types';
+import { WeeklyCalendar } from './WeeklyCalendar';
+import { PersonalRecordBanner } from './PersonalRecordBanner';
+import { detectPersonalRecord } from './personalRecords';
+import type { TrainingStrategy, ExerciseLog, PersonalRecord } from './types';
 import './training.css';
 
 // Helper function to map log data to initial form data
@@ -20,6 +23,119 @@ function mapLogToInitialData(log: ExerciseLog | null) {
     duration_minutes: log.duration_minutes,
     notes: log.notes,
   };
+}
+
+// Swipeable Log Card Component for mobile swipe-to-delete
+interface SwipeableLogCardProps {
+  log: ExerciseLog;
+  onDelete: () => void;
+  children: React.ReactNode;
+}
+
+function SwipeableLogCard({ log, onDelete, children }: SwipeableLogCardProps) {
+  const [swipeX, setSwipeX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const startX = useRef(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    setIsSwiping(true);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isSwiping) return;
+    const currentX = e.touches[0].clientX;
+    const diff = startX.current - currentX;
+    // Only allow left swipe (positive diff), max 100px
+    if (diff > 0) {
+      setSwipeX(Math.min(diff, 100));
+    }
+  }, [isSwiping]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsSwiping(false);
+    if (swipeX > 80) {
+      // Swipe threshold reached - show confirm
+      setSwipeX(100);
+      setShowConfirm(true);
+    } else {
+      // Reset swipe
+      setSwipeX(0);
+      setShowConfirm(false);
+    }
+  }, [swipeX]);
+
+  const handleDelete = useCallback(() => {
+    onDelete();
+  }, [onDelete]);
+
+  const handleCancel = useCallback(() => {
+    setSwipeX(0);
+    setShowConfirm(false);
+  }, []);
+
+  // On desktop, show as regular card
+  // Note: This check is done once per component mount. For responsive changes during resize,
+  // the CSS media query handles hiding/showing the delete button appropriately.
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  if (!isMobile) {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="swipeable-card" ref={cardRef}>
+      <div
+        className="swipeable-card__content"
+        style={{ transform: `translateX(-${swipeX}px)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {children}
+      </div>
+      <div className="swipeable-card__action">
+        {showConfirm ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', alignItems: 'center' }}>
+            <button
+              onClick={handleDelete}
+              style={{
+                background: 'white',
+                color: 'var(--error)',
+                border: 'none',
+                padding: 'var(--space-1) var(--space-2)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--fs-xs)',
+                fontWeight: '700',
+                cursor: 'pointer',
+              }}
+            >
+              Delete
+            </button>
+            <button
+              onClick={handleCancel}
+              style={{
+                background: 'transparent',
+                color: 'white',
+                border: '1px solid white',
+                padding: 'var(--space-1) var(--space-2)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--fs-xs)',
+                fontWeight: '700',
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          'Delete'
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function TrainingTab() {
@@ -41,6 +157,7 @@ export function TrainingTab() {
   const [showStrategyWizard, setShowStrategyWizard] = useState(false);
   const [selectedStrategy, setSelectedStrategy] = useState<TrainingStrategy | null>(null);
   const [repeatLastWorkout, setRepeatLastWorkout] = useState(false);
+  const [personalRecord, setPersonalRecord] = useState<PersonalRecord | null>(null);
 
   const activeStrategies = strategies.filter((s) => s.is_active);
   const lastLog = logs.length > 0 ? logs[0] : null;
@@ -87,6 +204,14 @@ export function TrainingTab() {
 
   return (
     <div className="container">
+      {/* Personal Record Banner */}
+      {personalRecord && (
+        <PersonalRecordBanner
+          record={personalRecord}
+          onDismiss={() => setPersonalRecord(null)}
+        />
+      )}
+
       {/* Quick Action Buttons */}
       <div className="quick-action-btn">
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -116,6 +241,9 @@ export function TrainingTab() {
         </div>
       </div>
 
+      {/* Weekly Calendar Strip */}
+      <WeeklyCalendar logs={logs} />
+
       {/* Today's Summary */}
       <section className="today-summary">
         <div className="summary-stat">
@@ -123,14 +251,20 @@ export function TrainingTab() {
           <span className="summary-stat__label">Exercises</span>
         </div>
         <div className="summary-stat">
+          <span className="summary-stat__value">{todaySummary.totalSets}</span>
+          <span className="summary-stat__label">Sets</span>
+        </div>
+        <div className="summary-stat">
           <span className="summary-stat__value">{todaySummary.totalReps}</span>
           <span className="summary-stat__label">Total Reps</span>
         </div>
         <div className="summary-stat">
           <span className="summary-stat__value">
-            {Math.round(todaySummary.totalDuration)}
+            {todaySummary.totalVolume >= 1000 
+              ? `${(todaySummary.totalVolume / 1000).toFixed(1)}k`
+              : Math.round(todaySummary.totalVolume).toLocaleString()}
           </span>
-          <span className="summary-stat__label">Minutes</span>
+          <span className="summary-stat__label">Volume (kg)</span>
         </div>
       </section>
 
@@ -186,36 +320,38 @@ export function TrainingTab() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {logs.slice(0, 5).map((log) => (
-              <div key={log.id} className="card glass">
-                <div className="row">
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ fontSize: 'var(--fs-md)' }}>
-                      {log.exercise_name}
-                    </strong>
-                    <div className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 'var(--space-1)' }}>
-                      {log.reps && log.sets && `${log.sets} × ${log.reps} reps`}
-                      {log.weight_kg && ` @ ${log.weight_kg}kg`}
-                      {log.duration_minutes && ` • ${log.duration_minutes} min`}
-                    </div>
-                    {log.muscle_groups.length > 0 && (
-                      <div style={{ marginTop: 'var(--space-2)' }}>
-                        {log.muscle_groups.map((muscle) => (
-                          <span key={muscle} className="badge badge--accent" style={{ marginRight: 'var(--space-1)' }}>
-                            {muscle}
-                          </span>
-                        ))}
+              <SwipeableLogCard key={log.id} log={log} onDelete={() => removeLog(log.id)}>
+                <div className="card glass">
+                  <div className="row">
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ fontSize: 'var(--fs-md)' }}>
+                        {log.exercise_name}
+                      </strong>
+                      <div className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 'var(--space-1)' }}>
+                        {log.reps && log.sets && `${log.sets} × ${log.reps} reps`}
+                        {log.weight_kg && ` @ ${log.weight_kg}kg`}
+                        {log.duration_minutes && ` • ${log.duration_minutes} min`}
                       </div>
-                    )}
+                      {log.muscle_groups.length > 0 && (
+                        <div style={{ marginTop: 'var(--space-2)' }}>
+                          {log.muscle_groups.map((muscle) => (
+                            <span key={muscle} className="badge badge--accent" style={{ marginRight: 'var(--space-1)' }}>
+                              {muscle}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      className="btn btn--ghost delete-btn-desktop"
+                      onClick={() => removeLog(log.id)}
+                      style={{ padding: 'var(--space-2)' }}
+                    >
+                      🗑️
+                    </button>
                   </div>
-                  <button
-                    className="btn btn--ghost"
-                    onClick={() => removeLog(log.id)}
-                    style={{ padding: 'var(--space-2)' }}
-                  >
-                    🗑️
-                  </button>
                 </div>
-              </div>
+              </SwipeableLogCard>
             ))}
           </div>
         </section>
@@ -230,6 +366,21 @@ export function TrainingTab() {
           }}
           onSave={async (logData) => {
             await addLog(logData);
+            
+            // Detect personal record
+            // Note: Using temporary placeholder values for id/user_id as they're only needed
+            // for the PR detection comparison logic, not for database operations
+            const newLog: ExerciseLog = {
+              id: 'temp-id',
+              user_id: 'temp-user',
+              ...logData,
+              logged_at: new Date().toISOString(),
+            };
+            const pr = detectPersonalRecord(newLog, logs);
+            if (pr) {
+              setPersonalRecord(pr);
+            }
+            
             setShowQuickLog(false);
             setRepeatLastWorkout(false);
           }}
