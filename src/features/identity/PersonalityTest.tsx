@@ -695,6 +695,7 @@ export default function PersonalityTest() {
     setRefreshMessage(null);
 
     try {
+      // fetchPersonalityTestsFromSupabase fetches from Supabase and stores records in IndexedDB
       const remoteRecords = await fetchPersonalityTestsFromSupabase(activeUserId);
       await refreshHistory();
       
@@ -703,11 +704,12 @@ export default function PersonalityTest() {
       } else {
         setRefreshMessage('No tests found in Supabase');
       }
+      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_LONG_TIMEOUT);
     } catch (error) {
       setRefreshMessage('Failed to load from Supabase');
+      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_LONG_TIMEOUT);
     } finally {
       setIsRefreshing(false);
-      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_LONG_TIMEOUT);
     }
   };
 
