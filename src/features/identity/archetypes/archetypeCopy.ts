@@ -83,10 +83,10 @@ function getMicroTip(card: ArchetypeCard): string {
     commander: 'Lead a small project this week to activate your Commander energy.',
     champion: 'Set a personal best goal and track your progress daily.',
     strategist: 'Map out a 90-day plan for one important area of your life.',
-    challenger: 'Question one assumption you've been taking for granted.',
+    challenger: 'Question one assumption you have been taking for granted.',
     caregiver: 'Check in with someone who could use support today.',
-    mentor: 'Share one lesson you've learned with someone earlier in their journey.',
-    peacemaker: 'Mediate a small conflict or tension you've been avoiding.',
+    mentor: 'Share one lesson you have learned with someone earlier in their journey.',
+    peacemaker: 'Mediate a small conflict or tension you have been avoiding.',
     altruist: 'Volunteer or contribute to a cause you care about this week.',
     sage: 'Spend 30 minutes in reflective reading or journaling.',
     analyst: 'Make one decision today based purely on data and logic.',
@@ -94,7 +94,7 @@ function getMicroTip(card: ArchetypeCard): string {
     inventor: 'Experiment with one new approach to a familiar challenge.',
     explorer: 'Try something completely new this week—a place, activity, or perspective.',
     creator: 'Express yourself through any creative medium for 20 minutes.',
-    rebel: 'Challenge one rule or norm that doesn't serve you.',
+    rebel: 'Challenge one rule or norm that does not serve you.',
     visionary: 'Write down one bold vision for your life and share it with someone.',
   };
 
