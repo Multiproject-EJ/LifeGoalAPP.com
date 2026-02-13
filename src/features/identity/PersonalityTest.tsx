@@ -697,7 +697,7 @@ export default function PersonalityTest() {
       setRefreshMessage(null);
       refreshMessageTimeoutRef.current = null;
     }, timeout);
-  }, [setRefreshMessage]);
+  }, []);
 
   const handleRefreshFromSupabase = async () => {
     if (!activeUserId) {
@@ -819,7 +819,11 @@ export default function PersonalityTest() {
     }
 
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      
       const settingsMenu = target.closest('.identity-hub__settings-menu');
       const settingsToggle = target.closest('.identity-hub__settings-toggle');
       
