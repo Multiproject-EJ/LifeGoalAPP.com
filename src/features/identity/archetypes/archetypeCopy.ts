@@ -100,7 +100,7 @@ function getMicroTip(card: ArchetypeCard): string {
     analyst: 'Make one decision today based purely on data and logic.',
     architect: 'Design a system to improve one recurring problem.',
     inventor: 'Experiment with one new approach to a familiar challenge.',
-    scholar: 'Deep-dive into one topic you have been curious about and take notes.',
+    scholar: 'Deep dive into one topic you have been curious about and take notes.',
     detective: 'Investigate a problem by asking five why questions until you find the root cause.',
     philosopher: 'Journal about a big question that has been on your mind lately.',
     engineer: 'Optimize one workflow or routine to make it more efficient.',
