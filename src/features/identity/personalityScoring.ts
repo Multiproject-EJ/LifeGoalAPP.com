@@ -13,6 +13,7 @@ type ScoreTotals<T extends string> = Record<T, { sum: number; count: number }>;
 export type PersonalityScores = {
   traits: ScoreRecord<TraitKey>;
   axes: ScoreRecord<AxisKey>;
+  hexaco?: Partial<Record<string, number>>; // Optional HEXACO scores from micro-tests
 };
 
 const TRAIT_KEYS: TraitKey[] = [
