@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import '../../styles/player-avatar.css';
 
 type PlayerAvatarPanelProps = {
-  session: Session;
+  session: Session; // Used for future features: saving avatar preferences, unlocking items based on achievements
 };
 
 type AvatarOption = {
@@ -24,7 +24,7 @@ type EquipmentItem = {
 const AVATAR_OPTIONS: AvatarOption[] = [
   { id: 'warrior', emoji: '🧑‍🦰', name: 'Warrior' },
   { id: 'wizard', emoji: '🧙‍♂️', name: 'Wizard' },
-  { id: 'explorer', emoji: '🧑‍✈️', name: 'Explorer' },
+  { id: 'explorer', emoji: '🧑‍🚀', name: 'Explorer' },
   { id: 'scholar', emoji: '👨‍🎓', name: 'Scholar' },
   { id: 'artist', emoji: '👨‍🎨', name: 'Artist' },
   { id: 'athlete', emoji: '🏃‍♀️', name: 'Athlete' },
