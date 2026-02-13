@@ -432,11 +432,9 @@ export default function App() {
   
   // Micro-test badge state for identity tab
   const microTestPlayerState: PlayerState = useMemo(() => {
-    // Calculate days since foundation test from personality_last_tested_at
-    const lastTestedAt = activeProfile?.personality_last_tested_at;
-    const daysSinceFoundation = lastTestedAt
-      ? Math.floor((Date.now() - new Date(lastTestedAt).getTime()) / (1000 * 60 * 60 * 24))
-      : 0;
+    // TODO: Calculate days since foundation test from personality profile
+    // For now, use a placeholder until personality profile is added to component state
+    const daysSinceFoundation = 0;
     
     return {
       level: currentLevel,
@@ -444,7 +442,7 @@ export default function App() {
       daysSinceFoundationTest: daysSinceFoundation,
       completedMicroTests: [], // TODO: Load from storage/Supabase when micro-test tracking is added
     };
-  }, [currentLevel, streakMomentum, activeProfile?.personality_last_tested_at]);
+  }, [currentLevel, streakMomentum]);
   
   const microTestBadge = useMicroTestBadge(microTestPlayerState);
   
