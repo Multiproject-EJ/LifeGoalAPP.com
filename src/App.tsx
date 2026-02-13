@@ -827,10 +827,22 @@ export default function App() {
         const traits = profile?.personality_traits as Record<string, number> | null;
         const axes = profile?.personality_axes as Record<string, number> | null;
         if (profile && traits && axes && Object.keys(traits).length > 0) {
-          // Build PersonalityScores object
+          // Build PersonalityScores object with proper type mapping
           const scores: PersonalityScores = {
-            traits: traits as any,
-            axes: axes as any,
+            traits: {
+              openness: traits.openness ?? 50,
+              conscientiousness: traits.conscientiousness ?? 50,
+              extraversion: traits.extraversion ?? 50,
+              agreeableness: traits.agreeableness ?? 50,
+              emotional_stability: traits.emotional_stability ?? 50,
+            },
+            axes: {
+              regulation_style: axes.regulation_style ?? 50,
+              stress_response: axes.stress_response ?? 50,
+              identity_sensitivity: axes.identity_sensitivity ?? 50,
+              cognitive_entry: axes.cognitive_entry ?? 50,
+              honesty_humility: axes.honesty_humility ?? 50,
+            },
           };
           setPersonalityScores(scores);
 
@@ -871,9 +883,23 @@ export default function App() {
         // Fallback to records data
         const record = records[0];
         if (record.traits) {
+          const recordTraits = record.traits as Record<string, number>;
+          const recordAxes = record.axes as Record<string, number>;
           const scores: PersonalityScores = {
-            traits: record.traits as any,
-            axes: record.axes as any,
+            traits: {
+              openness: recordTraits.openness ?? 50,
+              conscientiousness: recordTraits.conscientiousness ?? 50,
+              extraversion: recordTraits.extraversion ?? 50,
+              agreeableness: recordTraits.agreeableness ?? 50,
+              emotional_stability: recordTraits.emotional_stability ?? 50,
+            },
+            axes: {
+              regulation_style: recordAxes.regulation_style ?? 50,
+              stress_response: recordAxes.stress_response ?? 50,
+              identity_sensitivity: recordAxes.identity_sensitivity ?? 50,
+              cognitive_entry: recordAxes.cognitive_entry ?? 50,
+              honesty_humility: recordAxes.honesty_humility ?? 50,
+            },
           };
           setPersonalityScores(scores);
 

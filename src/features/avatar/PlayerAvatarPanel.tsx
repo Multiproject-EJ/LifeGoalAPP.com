@@ -94,7 +94,7 @@ export function PlayerAvatarPanel({
 
   // Get "For You" recommended items (6-8 items based on player's archetype)
   const forYouItems = useMemo<AvatarItem[]>(() => {
-    if (!hasPersonalityData || !dominantSuit) return [];
+    if (!hasPersonalityData || !dominantSuit || !archetypeHand) return [];
     const recommended = AVATAR_ITEM_CATALOG.filter((item) => {
       return (
         item.suitAffinity === dominantSuit &&
@@ -346,7 +346,7 @@ export function PlayerAvatarPanel({
           {filteredArchetypes.map((archetype) => {
             const isSelected = selectedAvatar === archetype.id;
             const isInHand = topArchetypeIds.includes(archetype.id);
-            const isDominant = archetype.id === archetypeHand.dominant.card.id;
+            const isDominant = archetypeHand?.dominant.card.id === archetype.id;
             return (
               <button
                 key={archetype.id}
