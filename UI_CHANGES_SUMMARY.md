@@ -36,7 +36,7 @@ The personality test storage system is working properly:
 <div className="mobile-menu-overlay__quick-actions">
   <button onClick={() => handleMobileNavSelect('identity')}>
     <span>🪪</span>
-    <span>Players Hand</span>  // Also renamed (see Task 5)
+    <span>Player's Hand</span>  // Also renamed (see Task 5)
   </button>
   // Player Avatar button removed - no longer duplicated
 </div>
@@ -140,7 +140,7 @@ label: 'Health Goals',  // Fixed typo and renamed per requirements
 - Toggle moved below the close button
 - Added "GAME MODE (ON/OFF)" label that changes color to match toggle state (green when ON, red when OFF)
 
-### Task 5: Rename "ID" Button to "Players Hand" ✅
+### Task 5: Rename "ID" Button to "Player's Hand" ✅
 **File**: `src/App.tsx` (line ~2463)
 
 **Before**:
@@ -150,10 +150,10 @@ label: 'Health Goals',  // Fixed typo and renamed per requirements
 
 **After**:
 ```tsx
-<span className="mobile-menu-overlay__quick-action-label">Players Hand</span>
+<span className="mobile-menu-overlay__quick-action-label">Player's Hand</span>
 ```
 
-**Result**: The button now reads "Players Hand" (like a hand of cards) instead of "ID"
+**Result**: The button now reads "Player's Hand" (like a hand of cards) instead of "ID"
 
 ## Visual Summary
 
@@ -161,7 +161,7 @@ label: 'Health Goals',  // Fixed typo and renamed per requirements
 ```
 Before:                      After:
 ┌──────────────────┐        ┌──────────────────┐
-│ [🪪 ID]          │        │ [🪪 Players Hand]│
+│ [🪪 ID]          │        │ [🪪 Player's Hand]│
 │ [👤 Player Avatar]│  →    │                  │ (removed duplicate)
 └──────────────────┘        └──────────────────┘
 ```
@@ -194,7 +194,7 @@ To test in production:
 1. Open the mobile app
 2. Tap the menu button to open the player profile popup
 3. Verify:
-   - Only ONE button in quick actions section (Players Hand)
+   - Only ONE button in quick actions section (Player's Hand)
    - Close button (×) is larger
    - Toggle is below the close button
    - "GAME MODE (ON/OFF)" label appears in green or red

@@ -2471,7 +2471,7 @@ export default function App() {
                   style={{ position: 'relative' }}
                 >
                   <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
-                  <span className="mobile-menu-overlay__quick-action-label">Players Hand</span>
+                  <span className="mobile-menu-overlay__quick-action-label">Player's Hand</span>
                   {microTestBadge.showBadge && (
                     <span
                       style={{
