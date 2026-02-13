@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { PointsBadge } from './PointsBadge';
 import { splitGoldBalance } from '../constants/economy';
+import mindIcon from '../assets/mind-icon.webp';
+import bodyIcon from '../assets/body-icon.webp';
 
 type MobileFooterNavItem = {
   id: string;
@@ -476,7 +478,7 @@ export function MobileFooterNav({
                       }}
                       aria-label="Open mind energy tools"
                     >
-                      🧠
+                      <img src={mindIcon} alt="Mind icon" className="mobile-footer-nav__energy-icon" />
                       <span className="mobile-footer-nav__energy-label">Mind</span>
                     </button>
                     <button
@@ -488,7 +490,7 @@ export function MobileFooterNav({
                       }}
                       aria-label="Open body energy tools"
                     >
-                      💪
+                      <img src={bodyIcon} alt="Body icon" className="mobile-footer-nav__energy-icon" />
                       <span className="mobile-footer-nav__energy-label">Body</span>
                     </button>
                   </div>

@@ -14240,17 +14240,17 @@ body {
 
 .mobile-footer-nav__energy-menu {
   position: absolute;
-  left: 50%;
-  bottom: calc(100% - 0.35rem);
+  left: calc(100% + 0.5rem);
+  top: 50%;
   display: flex;
   gap: clamp(0.2rem, 2vw, 0.45rem);
-  flex-wrap: wrap;
-  justify-content: center;
-  width: min(100vw - 1.5rem, 300px);
+  flex-direction: row;
+  align-items: center;
+  width: auto;
   max-width: calc(100vw - 1rem);
   padding-inline: clamp(0.25rem, 3vw, 0.75rem);
-  transform: translateX(-50%) translateY(16px);
-  transform-origin: bottom center;
+  transform: translateY(-50%) translateX(-16px);
+  transform-origin: left center;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.3s ease;
@@ -14258,18 +14258,18 @@ body {
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu {
-  bottom: calc(100% - 0.15rem);
-  transform: translateX(-50%) translateY(22px);
+  left: calc(100% + 0.5rem);
+  transform: translateY(-50%) translateX(-20px);
 }
 
 .mobile-footer-nav__energy-menu--open {
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(-50%) translateX(0);
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu--open {
-  transform: translateX(-50%) translateY(6px);
+  transform: translateY(-50%) translateX(0);
 }
 
 .mobile-footer-nav__energy-button {
@@ -14289,12 +14289,12 @@ body {
   font-weight: 700;
   transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.2s ease;
   opacity: 0;
-  transform: translateY(14px) scale(0.7);
+  transform: translateX(-14px) scale(0.7);
 }
 
 .mobile-footer-nav__energy-menu--open .mobile-footer-nav__energy-button {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateX(0) scale(1);
 }
 
 .mobile-footer-nav__energy-button:nth-child(1) {
@@ -14309,13 +14309,19 @@ body {
 .mobile-footer-nav__energy-button:focus-visible {
   box-shadow: 0 16px 30px rgba(15, 23, 42, 0.2);
   outline: none;
-  transform: translateY(-2px) scale(1.02);
+  transform: translateX(2px) scale(1.02);
 }
 
 .mobile-footer-nav__energy-label {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.mobile-footer-nav__energy-icon {
+  width: clamp(1.8rem, 6vw, 2.5rem);
+  height: clamp(1.8rem, 6vw, 2.5rem);
+  object-fit: contain;
 }
 
 .mobile-footer-nav--collapsed .mobile-footer-nav__energy-menu {
