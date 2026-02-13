@@ -14375,8 +14375,8 @@ body {
 }
 
 .mobile-footer-nav__energy-icon {
-  width: clamp(12rem, 32vw, 20rem);
-  height: clamp(12rem, 32vw, 20rem);
+  width: clamp(7.2rem, 19.2vw, 12rem);
+  height: clamp(7.2rem, 19.2vw, 12rem);
   object-fit: contain;
   filter: drop-shadow(0 8px 20px rgba(15, 23, 42, 0.25));
 }
