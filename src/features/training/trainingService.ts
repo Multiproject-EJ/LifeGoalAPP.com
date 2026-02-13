@@ -3,15 +3,22 @@ import { getSupabaseClient } from '../../lib/supabaseClient';
 import type { ExerciseLog, TrainingStrategy } from './types';
 
 /**
+ * Helper to get untyped access to Supabase client for optional tables.
+ * This allows querying tables that may not exist in the generated types.
+ */
+function getUntypedSupabase() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return getSupabaseClient() as any;
+}
+
+/**
  * Fetch exercise logs for a user, optionally filtered by date range
  */
 export async function fetchExerciseLogs(
   userId: string,
   dateRange?: { start: Date; end: Date }
 ): Promise<ExerciseLog[]> {
-  const supabase = getSupabaseClient();
-
-  let query = supabase
+  let query = getUntypedSupabase()
     .from('exercise_logs')
     .select('*')
     .eq('user_id', userId)
@@ -30,16 +37,14 @@ export async function fetchExerciseLogs(
     throw error;
   }
 
-  return data || [];
+  return (data as ExerciseLog[]) || [];
 }
 
 /**
  * Create a new exercise log
  */
 export async function createExerciseLog(log: Omit<ExerciseLog, 'id'>): Promise<ExerciseLog> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await getUntypedSupabase()
     .from('exercise_logs')
     .insert(log)
     .select()
@@ -50,16 +55,14 @@ export async function createExerciseLog(log: Omit<ExerciseLog, 'id'>): Promise<E
     throw error;
   }
 
-  return data;
+  return data as ExerciseLog;
 }
 
 /**
  * Delete an exercise log
  */
 export async function deleteExerciseLog(id: string): Promise<void> {
-  const supabase = getSupabaseClient();
-
-  const { error } = await supabase.from('exercise_logs').delete().eq('id', id);
+  const { error } = await getUntypedSupabase().from('exercise_logs').delete().eq('id', id);
 
   if (error) {
     console.error('Error deleting exercise log:', error);
@@ -71,9 +74,7 @@ export async function deleteExerciseLog(id: string): Promise<void> {
  * Fetch training strategies for a user
  */
 export async function fetchStrategies(userId: string): Promise<TrainingStrategy[]> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await getUntypedSupabase()
     .from('training_strategies')
     .select('*')
     .eq('user_id', userId)
@@ -84,7 +85,7 @@ export async function fetchStrategies(userId: string): Promise<TrainingStrategy[
     throw error;
   }
 
-  return data || [];
+  return (data as TrainingStrategy[]) || [];
 }
 
 /**
@@ -93,9 +94,7 @@ export async function fetchStrategies(userId: string): Promise<TrainingStrategy[
 export async function createStrategy(
   strategy: Omit<TrainingStrategy, 'id'>
 ): Promise<TrainingStrategy> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await getUntypedSupabase()
     .from('training_strategies')
     .insert(strategy)
     .select()
@@ -106,7 +105,7 @@ export async function createStrategy(
     throw error;
   }
 
-  return data;
+  return data as TrainingStrategy;
 }
 
 /**
@@ -116,9 +115,7 @@ export async function updateStrategy(
   id: string,
   updates: Partial<TrainingStrategy>
 ): Promise<TrainingStrategy> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await getUntypedSupabase()
     .from('training_strategies')
     .update(updates)
     .eq('id', id)
@@ -130,16 +127,14 @@ export async function updateStrategy(
     throw error;
   }
 
-  return data;
+  return data as TrainingStrategy;
 }
 
 /**
  * Delete a training strategy
  */
 export async function deleteStrategy(id: string): Promise<void> {
-  const supabase = getSupabaseClient();
-
-  const { error } = await supabase.from('training_strategies').delete().eq('id', id);
+  const { error } = await getUntypedSupabase().from('training_strategies').delete().eq('id', id);
 
   if (error) {
     console.error('Error deleting training strategy:', error);
