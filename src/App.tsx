@@ -24,6 +24,7 @@ import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
+import { PlayerAvatarPanel } from './features/avatar/PlayerAvatarPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiCoach } from './features/ai-coach';
 import { Journal } from './features/journal';
@@ -251,6 +252,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'insights',
   'rituals',
   'account',
+  'player-avatar',
   'identity',
   'placeholder',
 ] as const;
@@ -2104,6 +2106,14 @@ export default function App() {
       );
     }
 
+    if (activeWorkspaceNav === 'player-avatar') {
+      return (
+        <div className="workspace-content">
+          <PlayerAvatarPanel session={activeSession} />
+        </div>
+      );
+    }
+
     if (!canAccessWorkspace) {
       return (
         <p className="workspace-onboarding-hint">
@@ -2324,7 +2334,7 @@ export default function App() {
                   </span>
                 </div>
                 <div className="mobile-menu-overlay__header-info">
-                  <h2 className="mobile-menu-overlay__title">Profile</h2>
+                  <h2 className="mobile-menu-overlay__title">Player Profile</h2>
                   <div className="mobile-menu-overlay__meta" aria-label="Profile summary">
                     <div className="mobile-menu-overlay__meta-row">
                       <span className="mobile-menu-overlay__meta-label">Name</span>
@@ -2395,11 +2405,11 @@ export default function App() {
                 <button
                   type="button"
                   className="mobile-menu-overlay__quick-action-btn"
-                  onClick={() => handleMobileNavSelect('account')}
-                  aria-label="Profile picture and appearance"
+                  onClick={() => handleMobileNavSelect('player-avatar')}
+                  aria-label="Player avatar and equipment"
                 >
                   <span className="mobile-menu-overlay__quick-action-icon">👤</span>
-                  <span className="mobile-menu-overlay__quick-action-label">Player Profile</span>
+                  <span className="mobile-menu-overlay__quick-action-label">Player Avatar</span>
                 </button>
               </div>
             </div>
