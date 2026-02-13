@@ -58,6 +58,9 @@ const ANSWER_OPTIONS: AnswerOption[] = [
   { value: 5, label: 'Strongly agree' },
 ];
 
+const REFRESH_MESSAGE_SHORT_TIMEOUT = 3000;
+const REFRESH_MESSAGE_LONG_TIMEOUT = 4000;
+
 const AXIS_LABELS: Record<keyof PersonalityScores['axes'], string> = {
   regulation_style: 'Regulation Style',
   stress_response: 'Stress Response',
@@ -684,7 +687,7 @@ export default function PersonalityTest() {
   const handleRefreshFromSupabase = async () => {
     if (!activeUserId) {
       setRefreshMessage('No active user session');
-      setTimeout(() => setRefreshMessage(null), 3000);
+      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_SHORT_TIMEOUT);
       return;
     }
 
@@ -704,7 +707,7 @@ export default function PersonalityTest() {
       setRefreshMessage('Failed to load from Supabase');
     } finally {
       setIsRefreshing(false);
-      setTimeout(() => setRefreshMessage(null), 4000);
+      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_LONG_TIMEOUT);
     }
   };
 
@@ -792,6 +795,36 @@ export default function PersonalityTest() {
       cancelled = true;
     };
   }, [scores, step]);
+
+  useEffect(() => {
+    if (!showSettingsMenu) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const settingsMenu = target.closest('.identity-hub__settings-menu');
+      const settingsToggle = target.closest('.identity-hub__settings-toggle');
+      
+      if (!settingsMenu && !settingsToggle) {
+        setShowSettingsMenu(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowSettingsMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showSettingsMenu]);
 
   useEffect(() => {
     if (step !== 'results') {
