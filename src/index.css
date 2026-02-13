@@ -14363,8 +14363,8 @@ body {
 }
 
 .mobile-footer-nav__energy-icon {
-  width: clamp(3rem, 10vw, 5rem);
-  height: clamp(3rem, 10vw, 5rem);
+  width: clamp(3rem, 8vw, 5rem);
+  height: clamp(3rem, 8vw, 5rem);
   object-fit: contain;
 }
 
