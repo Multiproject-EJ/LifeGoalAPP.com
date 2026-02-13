@@ -1,0 +1,400 @@
+/* Deck Component Styles */
+
+/* Player Deck - Main container for the 5-card hand */
+.player-deck {
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  margin-top: 16px;
+}
+
+.player-deck__header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.player-deck__title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.player-deck__subtitle {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.player-deck__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Mobile responsive - 2 columns on small screens */
+@media (max-width: 768px) {
+  .player-deck__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .player-deck {
+    padding: 16px;
+  }
+}
+
+/* Individual card wrapper */
+.player-deck__card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.player-deck__card--clickable {
+  cursor: pointer;
+}
+
+.player-deck__card--clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Shadow card - muted appearance */
+.player-deck__card--shadow {
+  opacity: 0.7;
+}
+
+.player-deck__card--shadow .archetype-card {
+  filter: grayscale(0.3);
+}
+
+.player-deck__card-label {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Archetype Card - CSS-based styles (complement inline styles) */
+.archetype-card {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.archetype-card.clickable:hover {
+  filter: brightness(1.1);
+}
+
+.archetype-card.compact {
+  padding: 12px;
+}
+
+.archetype-card__icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.archetype-card.compact .archetype-card__icon {
+  font-size: 24px;
+}
+
+.archetype-card__name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.archetype-card.compact .archetype-card__name {
+  font-size: 14px;
+}
+
+.archetype-card__suit {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.archetype-card__level {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* Micro-Test Flow - Compact quiz UI */
+.micro-test-flow {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.micro-test-flow__header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.micro-test-flow__icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.micro-test-flow__title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.micro-test-flow__subtitle {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.micro-test-flow__progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.micro-test-flow__progress-text {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.micro-test-flow__progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  margin: 0 12px;
+  overflow: hidden;
+}
+
+.micro-test-flow__progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+.micro-test-flow__question {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.micro-test-flow__question-text {
+  font-size: 16px;
+  color: #fff;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.micro-test-flow__options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.micro-test-flow__option {
+  flex: 1;
+  min-width: 80px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.micro-test-flow__option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #3b82f6;
+}
+
+.micro-test-flow__option--selected {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  font-weight: bold;
+}
+
+.micro-test-flow__nav {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.micro-test-flow__nav-btn {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.micro-test-flow__nav-btn--back {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.micro-test-flow__nav-btn--back:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.micro-test-flow__nav-btn--next {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.micro-test-flow__nav-btn--next:hover {
+  background: #2563eb;
+}
+
+.micro-test-flow__nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.micro-test-flow__time {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* Micro-Test Results - "What changed" display */
+.micro-test-results {
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.micro-test-results__header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.micro-test-results__title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.micro-test-results__subtitle {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.micro-test-results__changes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.micro-test-results__change {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border-left: 4px solid currentColor;
+}
+
+.micro-test-results__change--confirmed {
+  border-left-color: #10b981;
+}
+
+.micro-test-results__change--leveled_up {
+  border-left-color: #3b82f6;
+}
+
+.micro-test-results__change--shifted {
+  border-left-color: #f59e0b;
+}
+
+.micro-test-results__change--discovered {
+  border-left-color: #8b5cf6;
+}
+
+.micro-test-results__change--shadow_growth {
+  border-left-color: #6b7280;
+}
+
+.micro-test-results__change--no_change {
+  border-left-color: #4b5563;
+}
+
+.micro-test-results__change-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.micro-test-results__change-content {
+  flex: 1;
+}
+
+.micro-test-results__change-message {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.micro-test-results__change-detail {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.micro-test-results__action {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.micro-test-results__btn {
+  padding: 14px 32px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.micro-test-results__btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Mobile responsiveness for micro-tests */
+@media (max-width: 768px) {
+  .micro-test-flow,
+  .micro-test-results {
+    padding: 16px;
+  }
+  
+  .micro-test-flow__options {
+    flex-direction: column;
+  }
+  
+  .micro-test-flow__option {
+    flex: none;
+    width: 100%;
+  }
+}
