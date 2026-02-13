@@ -122,3 +122,26 @@ export const COMMON_EXERCISES: Array<{
   { name: 'Yoga', defaultMuscles: ['flexibility', 'core'] },
   { name: 'Stretching', defaultMuscles: ['flexibility'] },
 ];
+
+/**
+ * Helper function to get exercises that target specific muscle groups
+ * Used for focus muscle recommendations
+ */
+export function getExercisesForMuscles(muscles: string[]): string[] {
+  if (!muscles || muscles.length === 0) return [];
+  
+  const musclesSet = new Set(muscles.map(m => m.toLowerCase()));
+  const matchingExercises: string[] = [];
+  
+  for (const exercise of COMMON_EXERCISES) {
+    // Check if exercise targets any of the focus muscles
+    const hasMatch = exercise.defaultMuscles.some(muscle => 
+      musclesSet.has(muscle.toLowerCase())
+    );
+    if (hasMatch) {
+      matchingExercises.push(exercise.name);
+    }
+  }
+  
+  return matchingExercises;
+}

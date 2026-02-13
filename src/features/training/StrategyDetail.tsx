@@ -213,6 +213,79 @@ export function StrategyDetail({
           </div>
         </div>
 
+        {/* Focus Muscle Timeline */}
+        {strategy.strategy_type === 'focus_muscle' && strategy.created_at && (
+          <div className="focus-timeline">
+            <div className="focus-timeline__header">
+              📅 Focus Timeline
+            </div>
+            
+            <div className="focus-timeline__dates">
+              <div className="focus-timeline__date-item">
+                <div className="focus-timeline__date-label">Started</div>
+                <div className="focus-timeline__date-value">
+                  {new Date(strategy.created_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </div>
+              </div>
+              <div className="focus-timeline__date-item">
+                <div className="focus-timeline__date-label">Ends</div>
+                <div className="focus-timeline__date-value">
+                  {(() => {
+                    const endDate = new Date(strategy.created_at);
+                    endDate.setDate(endDate.getDate() + strategy.time_window_days);
+                    return endDate.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            <div className="focus-timeline__countdown">
+              <div className="focus-timeline__countdown-value">
+                {(() => {
+                  const createdAt = new Date(strategy.created_at);
+                  const endDate = new Date(createdAt);
+                  endDate.setDate(endDate.getDate() + strategy.time_window_days);
+                  const now = new Date();
+                  const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                  return Math.max(0, daysRemaining);
+                })()}
+              </div>
+              <div className="focus-timeline__countdown-label">
+                days remaining
+              </div>
+            </div>
+
+            <div className="focus-timeline__progress-bar">
+              <div 
+                className="focus-timeline__progress-fill" 
+                style={{ 
+                  width: `${(() => {
+                    const createdAt = new Date(strategy.created_at);
+                    const endDate = new Date(createdAt);
+                    endDate.setDate(endDate.getDate() + strategy.time_window_days);
+                    const now = new Date();
+                    const totalTime = endDate.getTime() - createdAt.getTime();
+                    const elapsed = now.getTime() - createdAt.getTime();
+                    return Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
+                  })()}%` 
+                }}
+              />
+            </div>
+            <div className="focus-timeline__progress-labels">
+              <span>Start</span>
+              <span>End</span>
+            </div>
+          </div>
+        )}
+
         {/* Daily Breakdown */}
         {dailyBreakdown.length > 0 && (
           <div style={{ marginBottom: 'var(--space-4)' }}>

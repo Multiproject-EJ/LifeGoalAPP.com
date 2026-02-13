@@ -8,6 +8,8 @@ import { StrategyDetail } from './StrategyDetail';
 import { WeeklyCalendar } from './WeeklyCalendar';
 import { PersonalRecordBanner } from './PersonalRecordBanner';
 import { detectPersonalRecord } from './personalRecords';
+import { getActiveFocusRecommendations } from './strategyEngine';
+import { MUSCLE_GROUPS } from './constants';
 import type { TrainingStrategy, ExerciseLog, PersonalRecord } from './types';
 import './training.css';
 
@@ -158,9 +160,13 @@ export function TrainingTab() {
   const [selectedStrategy, setSelectedStrategy] = useState<TrainingStrategy | null>(null);
   const [repeatLastWorkout, setRepeatLastWorkout] = useState(false);
   const [personalRecord, setPersonalRecord] = useState<PersonalRecord | null>(null);
+  const [focusBannerCollapsed, setFocusBannerCollapsed] = useState(false);
 
   const activeStrategies = strategies.filter((s) => s.is_active);
   const lastLog = logs.length > 0 ? logs[0] : null;
+  
+  // Get focus recommendations
+  const focusRecommendations = getActiveFocusRecommendations(strategies, logs);
 
   if (loading) {
     return (
@@ -210,6 +216,43 @@ export function TrainingTab() {
           record={personalRecord}
           onDismiss={() => setPersonalRecord(null)}
         />
+      )}
+
+      {/* Active Focus Banner */}
+      {focusRecommendations && !focusBannerCollapsed && (
+        <div className="focus-banner">
+          <div className="focus-banner__header">
+            <div className="focus-banner__title">
+              🎯 Active Focus
+            </div>
+            <button
+              className="focus-banner__collapse-btn"
+              onClick={() => setFocusBannerCollapsed(true)}
+              title="Collapse banner"
+            >
+              ×
+            </button>
+          </div>
+          <div className="focus-banner__muscles">
+            {focusRecommendations.focusMuscles.map((muscle) => {
+              const muscleInfo = MUSCLE_GROUPS.find(m => m.value === muscle);
+              return (
+                <div key={muscle} className="focus-banner__muscle-chip">
+                  <span>{muscleInfo?.emoji || '💪'}</span>
+                  {muscleInfo?.label || muscle}
+                </div>
+              );
+            })}
+          </div>
+          <div className="focus-banner__stats">
+            <div className="focus-banner__countdown">
+              📅 {focusRecommendations.daysRemaining} {focusRecommendations.daysRemaining === 1 ? 'day' : 'days'} remaining
+            </div>
+            <div className="focus-banner__progress-text">
+              📊 {Math.round(focusRecommendations.progress)}% complete
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Quick Action Buttons */}
@@ -385,6 +428,7 @@ export function TrainingTab() {
             setRepeatLastWorkout(false);
           }}
           initialData={repeatLastWorkout ? mapLogToInitialData(lastLog) : null}
+          focusRecommendations={focusRecommendations}
         />
       )}
 

@@ -1,5 +1,6 @@
 // Strategy Engine - Pure functions for calculating training strategy progress
 import type { TrainingStrategy, ExerciseLog, StrategyProgress, StrategyStatus } from './types';
+import { getExercisesForMuscles } from './constants';
 
 /**
  * Calculate progress for a training strategy based on exercise logs
@@ -489,4 +490,48 @@ function calculateRecovery(
   }
 
   return { current, target, percentage, status, forecastMessage };
+}
+
+/**
+ * Get active focus muscle recommendations for the user
+ * Returns the first active focus_muscle strategy with recommendations
+ */
+export function getActiveFocusRecommendations(
+  strategies: TrainingStrategy[],
+  logs: ExerciseLog[]
+): { 
+  focusMuscles: string[]; 
+  recommendedExercises: string[]; 
+  daysRemaining: number; 
+  strategyName: string;
+  progress: number;
+} | null {
+  // Find first active focus_muscle strategy
+  const focusStrategy = strategies.find(
+    (s) => s.is_active && s.strategy_type === 'focus_muscle' && s.focus_muscles.length > 0
+  );
+  
+  if (!focusStrategy) return null;
+  
+  // Calculate days remaining
+  const createdAt = focusStrategy.created_at ? new Date(focusStrategy.created_at) : new Date();
+  const endDate = new Date(createdAt);
+  endDate.setDate(endDate.getDate() + focusStrategy.time_window_days);
+  
+  const now = new Date();
+  const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Get recommended exercises using the helper from constants
+  const recommendedExercises = getExercisesForMuscles(focusStrategy.focus_muscles);
+  
+  // Calculate progress percentage
+  const progress = calculateProgress(focusStrategy, logs);
+  
+  return {
+    focusMuscles: focusStrategy.focus_muscles,
+    recommendedExercises,
+    daysRemaining: Math.max(0, daysRemaining),
+    strategyName: focusStrategy.name,
+    progress: progress.percentage,
+  };
 }

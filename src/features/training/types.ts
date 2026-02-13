@@ -91,3 +91,11 @@ export interface WorkoutSession {
   energy_rating?: number | null;
   created_at?: string | null;
 }
+
+export interface FocusRecommendation {
+  focusMuscles: string[];
+  recommendedExercises: string[];
+  daysRemaining: number;
+  strategyName: string;
+  progress: number;
+}
