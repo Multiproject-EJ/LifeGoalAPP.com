@@ -24,6 +24,25 @@ export function StrategyDetail({
   const strategyType = STRATEGY_TYPES.find((t) => t.value === strategy.strategy_type);
   const icon = strategyType?.icon || '🎯';
 
+  // Helper function to calculate focus timeline dates
+  const getFocusTimelineData = (createdAt: string, timeWindowDays: number) => {
+    const startDate = new Date(createdAt);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + timeWindowDays);
+    const now = new Date();
+    const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const totalTime = endDate.getTime() - startDate.getTime();
+    const elapsed = now.getTime() - startDate.getTime();
+    const timeProgress = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
+    
+    return {
+      startDate,
+      endDate,
+      daysRemaining: Math.max(0, daysRemaining),
+      timeProgress,
+    };
+  };
+
   // Helper function to calculate start date based on strategy type
   const getStrategyStartDate = (strategyType: string, timeWindowDays: number): Date => {
     const now = new Date();
@@ -212,6 +231,61 @@ export function StrategyDetail({
             </div>
           </div>
         </div>
+
+        {/* Focus Muscle Timeline */}
+        {strategy.strategy_type === 'focus_muscle' && strategy.created_at && (() => {
+          const timelineData = getFocusTimelineData(strategy.created_at, strategy.time_window_days);
+          return (
+            <div className="focus-timeline">
+              <div className="focus-timeline__header">
+                📅 Focus Timeline
+              </div>
+              
+              <div className="focus-timeline__dates">
+                <div className="focus-timeline__date-item">
+                  <div className="focus-timeline__date-label">Started</div>
+                  <div className="focus-timeline__date-value">
+                    {timelineData.startDate.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </div>
+                </div>
+                <div className="focus-timeline__date-item">
+                  <div className="focus-timeline__date-label">Ends</div>
+                  <div className="focus-timeline__date-value">
+                    {timelineData.endDate.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="focus-timeline__countdown">
+                <div className="focus-timeline__countdown-value">
+                  {timelineData.daysRemaining}
+                </div>
+                <div className="focus-timeline__countdown-label">
+                  days remaining
+                </div>
+              </div>
+
+              <div className="focus-timeline__progress-bar">
+                <div 
+                  className="focus-timeline__progress-fill" 
+                  style={{ width: `${timelineData.timeProgress}%` }}
+                />
+              </div>
+              <div className="focus-timeline__progress-labels">
+                <span>Start</span>
+                <span>End</span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Daily Breakdown */}
         {dailyBreakdown.length > 0 && (

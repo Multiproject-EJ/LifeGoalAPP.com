@@ -1,15 +1,16 @@
 // Quick Log Modal - Fast exercise logging interface
 import { useState, useEffect } from 'react';
 import { COMMON_EXERCISES, MUSCLE_GROUPS } from './constants';
-import type { ExerciseLog, MuscleGroup } from './types';
+import type { ExerciseLog, MuscleGroup, FocusRecommendation } from './types';
 
 interface QuickLogModalProps {
   onClose: () => void;
   onSave: (log: Omit<ExerciseLog, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
   initialData?: Partial<Omit<ExerciseLog, 'id' | 'user_id' | 'created_at'>> | null;
+  focusRecommendations?: FocusRecommendation | null;
 }
 
-export function QuickLogModal({ onClose, onSave, initialData }: QuickLogModalProps) {
+export function QuickLogModal({ onClose, onSave, initialData, focusRecommendations }: QuickLogModalProps) {
   const [exerciseName, setExerciseName] = useState(initialData?.exercise_name || '');
   const [muscleGroups, setMuscleGroups] = useState<string[]>(initialData?.muscle_groups || []);
   const [reps, setReps] = useState(initialData?.reps?.toString() || '');
@@ -43,6 +44,14 @@ export function QuickLogModal({ onClose, onSave, initialData }: QuickLogModalPro
     setExerciseName(name);
     setMuscleGroups(defaultMuscles);
     setShowAutocomplete(false);
+  };
+  
+  // Handle focus chip click
+  const handleFocusChipClick = (exerciseName: string) => {
+    const exercise = COMMON_EXERCISES.find((ex) => ex.name === exerciseName);
+    if (exercise) {
+      selectExercise(exercise.name, exercise.defaultMuscles);
+    }
   };
 
   // Toggle muscle group selection
@@ -97,6 +106,27 @@ export function QuickLogModal({ onClose, onSave, initialData }: QuickLogModalPro
         )}
 
         <div className="quick-log-form">
+          {/* Focus Recommendations Section */}
+          {focusRecommendations && focusRecommendations.recommendedExercises.length > 0 && (
+            <div className="focus-recommendations">
+              <div className="focus-recommendations__header">
+                📌 Recommended for your focus
+              </div>
+              <div className="focus-recommendations__list">
+                {focusRecommendations.recommendedExercises.slice(0, 6).map((exercise) => (
+                  <button
+                    key={exercise}
+                    type="button"
+                    className="focus-chip"
+                    onClick={() => handleFocusChipClick(exercise)}
+                  >
+                    {exercise}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Exercise Name with Autocomplete */}
           <div className="form-group">
             <label htmlFor="exercise-name">Exercise *</label>
