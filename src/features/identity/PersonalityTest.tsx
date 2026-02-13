@@ -676,6 +676,7 @@ export default function PersonalityTest() {
       userId: activeUserId,
       answers,
       scores,
+      archetypeHand: archetypeHand ?? undefined, // Save archetype hand
       version: 'v1',
     })
       .then((record) => {

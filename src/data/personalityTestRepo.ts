@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { AnswerValue } from '../features/identity/personalityTestData';
 import type { PersonalityScores } from '../features/identity/personalityScoring';
+import type { ArchetypeHand } from '../features/identity/archetypes/archetypeHandBuilder';
 import {
   getPersonalityTestsForUser,
   getDirtyPersonalityTests,
@@ -14,6 +15,7 @@ export async function queuePersonalityTestResult(params: {
   userId: string;
   answers: Record<string, AnswerValue>;
   scores: PersonalityScores;
+  archetypeHand?: ArchetypeHand; // Optional archetype hand
   version?: string;
 }): Promise<PersonalityTestRecord> {
   const now = new Date().toISOString();
@@ -25,6 +27,7 @@ export async function queuePersonalityTestResult(params: {
     axes: params.scores.axes,
     answers: params.answers,
     version: params.version ?? 'v1',
+    archetype_hand: params.archetypeHand, // Store archetype hand
     _dirty: true,
   };
 
