@@ -24,6 +24,7 @@ import { queuePersonalityTestResult, type PersonalityTestRecord } from '../../da
 import {
   loadPersonalityTestHistoryWithSupabase,
   syncPersonalityTestsWithSupabase,
+  fetchPersonalityTestsFromSupabase,
 } from '../../services/personalityTest';
 import {
   fetchPersonalityRecommendations,
@@ -521,6 +522,9 @@ export default function PersonalityTest() {
   const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
   const [aiNarrativeStatus, setAiNarrativeStatus] = useState<AiNarrativeStatus>('idle');
   const [aiNarrative, setAiNarrative] = useState<string[]>([]);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -677,6 +681,33 @@ export default function PersonalityTest() {
     setStep('results');
   };
 
+  const handleRefreshFromSupabase = async () => {
+    if (!activeUserId) {
+      setRefreshMessage('No active user session');
+      setTimeout(() => setRefreshMessage(null), 3000);
+      return;
+    }
+
+    setIsRefreshing(true);
+    setRefreshMessage(null);
+
+    try {
+      const remoteRecords = await fetchPersonalityTestsFromSupabase(activeUserId);
+      await refreshHistory();
+      
+      if (remoteRecords.length > 0) {
+        setRefreshMessage(`✓ Loaded ${remoteRecords.length} test${remoteRecords.length > 1 ? 's' : ''} from Supabase`);
+      } else {
+        setRefreshMessage('No tests found in Supabase');
+      }
+    } catch (error) {
+      setRefreshMessage('Failed to load from Supabase');
+    } finally {
+      setIsRefreshing(false);
+      setTimeout(() => setRefreshMessage(null), 4000);
+    }
+  };
+
   useEffect(() => {
     if (step !== 'results' || !scores || !activeUserId) {
       return;
@@ -800,7 +831,32 @@ export default function PersonalityTest() {
             Get a quick snapshot of how you think, feel, and show up each day.
           </p>
         </div>
+        <button
+          type="button"
+          className="identity-hub__settings-toggle"
+          onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+          title="Settings"
+          aria-label="Toggle settings menu"
+        >
+          ⚙️
+        </button>
       </div>
+
+      {showSettingsMenu && (
+        <div className="identity-hub__settings-menu">
+          <button
+            type="button"
+            className="identity-hub__settings-option"
+            onClick={handleRefreshFromSupabase}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? '⏳ Refreshing...' : '🔄 Refresh from Supabase'}
+          </button>
+          {refreshMessage && (
+            <p className="identity-hub__refresh-message">{refreshMessage}</p>
+          )}
+        </div>
+      )}
 
       {step === 'intro' && (
         <div className="identity-hub__card">
