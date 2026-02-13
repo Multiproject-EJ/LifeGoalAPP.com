@@ -15,7 +15,7 @@ export type ArchetypeScore = {
  * The score is a weighted average of trait alignments.
  */
 export function scoreArchetypes(
-  scores: PersonalityScores & { hexaco?: Record<string, number> },
+  scores: PersonalityScores & { hexaco?: Partial<Record<string, number>> },
   deck: ArchetypeCard[],
 ): ArchetypeScore[] {
   return deck.map((card) => ({
@@ -26,7 +26,7 @@ export function scoreArchetypes(
 
 function scoreArchetype(
   card: ArchetypeCard,
-  scores: PersonalityScores & { hexaco?: Record<string, number> },
+  scores: PersonalityScores & { hexaco?: Partial<Record<string, number>> },
 ): number {
   const weights = card.traitWeights;
   const entries = Object.entries(weights) as [TraitKey | AxisKey, number][];
@@ -54,7 +54,7 @@ function scoreArchetype(
 
 function getDimensionScore(
   dimension: TraitKey | AxisKey,
-  scores: PersonalityScores & { hexaco?: Record<string, number> },
+  scores: PersonalityScores & { hexaco?: Partial<Record<string, number>> },
 ): number {
   // Check Big Five traits
   if (dimension in scores.traits) {

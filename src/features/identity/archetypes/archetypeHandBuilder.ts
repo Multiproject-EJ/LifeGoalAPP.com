@@ -1,4 +1,4 @@
-import type { ArchetypeCard } from './archetypeDeck';
+import type { ArchetypeCard, SuitKey } from './archetypeDeck';
 import type { ArchetypeScore } from './archetypeScoring';
 
 export type HandRole = 'dominant' | 'secondary' | 'support' | 'shadow';
@@ -78,7 +78,7 @@ export function handToArray(hand: ArchetypeHand): HandCard[] {
  * Gets a summary of the hand for display purposes.
  */
 export type HandSummary = {
-  dominantSuit: string;
+  dominantSuit: SuitKey;
   deckStrength: number; // 0-100 percentage
   cardCount: number;
 };

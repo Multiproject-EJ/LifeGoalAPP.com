@@ -39,6 +39,8 @@ const AXIS_ORDER: AxisKey[] = [
   'stress_response',
   'identity_sensitivity',
   'cognitive_entry',
+  'honesty_humility',
+  'emotionality',
 ];
 
 export const BAND_LABELS: Record<ScoreBand, string> = {
@@ -236,6 +238,48 @@ const TRAIT_COPY: Record<TraitKey | AxisKey, TraitCardCopy> = {
       high: 'You may delay action while refining.',
     },
     microTip: 'Try a quick-start checklist.',
+  },
+  honesty_humility: {
+    label: 'Honesty-Humility',
+    icon: '⚖️',
+    color: '#4CAF50',
+    powerLine: {
+      low: "You're comfortable advocating for your interests.",
+      balanced: "You balance fairness with self-interest.",
+      high: "You value fairness, modesty, and sincerity above personal gain.",
+    },
+    strengthLine: {
+      low: 'You can negotiate assertively for yourself.',
+      balanced: 'You adapt your approach to the situation.',
+      high: 'You build trust through genuine integrity.',
+    },
+    growthEdgeLine: {
+      low: 'You may appear self-serving or manipulative.',
+      balanced: 'You may struggle with when to assert yourself.',
+      high: 'You may be taken advantage of by others.',
+    },
+    microTip: 'Reflect on one recent decision: was it fair to all involved?',
+  },
+  emotionality: {
+    label: 'Emotionality',
+    icon: '💗',
+    color: '#E91E63',
+    powerLine: {
+      low: "You stay calm and composed even in emotional situations.",
+      balanced: "You experience emotions in moderation.",
+      high: "You feel emotions deeply and form strong attachments.",
+    },
+    strengthLine: {
+      low: 'You handle stress without being overwhelmed.',
+      balanced: 'You balance emotional sensitivity with stability.',
+      high: 'You connect deeply with others and are empathetic.',
+    },
+    growthEdgeLine: {
+      low: 'You may seem emotionally distant to others.',
+      balanced: 'You may second-guess your emotional responses.',
+      high: 'You may be overwhelmed by anxieties or fears.',
+    },
+    microTip: 'Notice one emotion today and name what triggered it.',
   },
 };
 

@@ -60,6 +60,8 @@ const AXIS_LABELS: Record<keyof PersonalityScores['axes'], string> = {
   stress_response: 'Stress Response',
   identity_sensitivity: 'Identity Sensitivity',
   cognitive_entry: 'Cognitive Entry',
+  honesty_humility: 'Honesty-Humility',
+  emotionality: 'Emotionality',
 };
 
 type HandSummary = {
@@ -248,6 +250,16 @@ const AXIS_NARRATIVES: Record<
     high: 'You like to understand the “why” before taking action, so context matters.',
     mid: 'You blend intuition with logic, choosing what feels most effective.',
     low: 'You prefer practical next steps and learn best by doing.',
+  },
+  honesty_humility: {
+    high: 'You value fairness and modesty, and avoid exploiting others for personal gain.',
+    mid: 'You balance self-interest with fairness, adapting to social expectations.',
+    low: 'You are comfortable promoting your interests and may be more willing to bend rules.',
+  },
+  emotionality: {
+    high: 'You experience emotions deeply and form strong attachments to others.',
+    mid: 'You have a balanced emotional life with moderate sensitivity to stress.',
+    low: 'You remain calm under pressure and are less affected by emotional concerns.',
   },
 };
 
