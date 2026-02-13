@@ -14300,35 +14300,22 @@ body {
 }
 
 .mobile-footer-nav__energy-button {
-  width: clamp(70px, 30vw, 118px);
-  height: clamp(70px, 30vw, 118px);
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.95) 0%, 
-    rgba(255, 223, 0, 0.3) 25%, 
-    rgba(255, 255, 255, 0.95) 50%, 
-    rgba(59, 130, 246, 0.3) 75%, 
-    rgba(255, 255, 255, 0.95) 100%);
-  background-size: 200% 200%;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18), 
-    0 0 20px rgba(255, 223, 0, 0.4), 
-    0 0 40px rgba(59, 130, 246, 0.3);
-  color: #0f172a;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  font-size: clamp(1.3rem, 5.5vw, 2.2rem);
-  font-weight: 700;
-  transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.2s ease;
+  gap: 0.5rem;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   opacity: 0;
   transform: translateX(-14px) scale(0.7);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .mobile-footer-nav__energy-button {
+  .mobile-footer-nav__energy-button .mobile-footer-nav__energy-label {
     animation: energyPulse 3s ease-in-out infinite;
   }
 }
@@ -14346,26 +14333,52 @@ body {
   transition-delay: 0.12s;
 }
 
+.mobile-footer-nav__energy-button:hover .mobile-footer-nav__energy-label,
+.mobile-footer-nav__energy-button:focus-visible .mobile-footer-nav__energy-label {
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2), 
+    0 0 25px rgba(255, 223, 0, 0.5), 
+    0 0 40px rgba(239, 68, 68, 0.35), 
+    0 0 55px rgba(59, 130, 246, 0.45);
+}
+
 .mobile-footer-nav__energy-button:hover,
 .mobile-footer-nav__energy-button:focus-visible {
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.2), 
-    0 0 30px rgba(255, 223, 0, 0.6), 
-    0 0 50px rgba(239, 68, 68, 0.4), 
-    0 0 70px rgba(59, 130, 246, 0.5);
   outline: none;
   transform: translateX(2px) scale(1.02);
+}
+
+.mobile-footer-nav__energy-button:hover .mobile-footer-nav__energy-icon,
+.mobile-footer-nav__energy-button:focus-visible .mobile-footer-nav__energy-icon {
+  filter: drop-shadow(0 12px 28px rgba(15, 23, 42, 0.35));
 }
 
 .mobile-footer-nav__energy-label {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 223, 0, 0.3) 25%, 
+    rgba(255, 255, 255, 0.95) 50%, 
+    rgba(59, 130, 246, 0.3) 75%, 
+    rgba(255, 255, 255, 0.95) 100%);
+  background-size: 200% 200%;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.15), 
+    0 0 15px rgba(255, 223, 0, 0.3), 
+    0 0 25px rgba(59, 130, 246, 0.25);
+  color: #0f172a;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .mobile-footer-nav__energy-icon {
-  width: clamp(3rem, 8vw, 5rem);
-  height: clamp(3rem, 8vw, 5rem);
+  width: clamp(12rem, 32vw, 20rem);
+  height: clamp(12rem, 32vw, 20rem);
   object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(15, 23, 42, 0.25));
 }
 
 .mobile-footer-nav--collapsed .mobile-footer-nav__energy-menu {
