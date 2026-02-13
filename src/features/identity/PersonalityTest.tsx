@@ -24,6 +24,7 @@ import { queuePersonalityTestResult, type PersonalityTestRecord } from '../../da
 import {
   loadPersonalityTestHistoryWithSupabase,
   syncPersonalityTestsWithSupabase,
+  fetchPersonalityTestsFromSupabase,
 } from '../../services/personalityTest';
 import {
   fetchPersonalityRecommendations,
@@ -56,6 +57,9 @@ const ANSWER_OPTIONS: AnswerOption[] = [
   { value: 4, label: 'Agree' },
   { value: 5, label: 'Strongly agree' },
 ];
+
+const REFRESH_MESSAGE_SHORT_TIMEOUT = 3000;
+const REFRESH_MESSAGE_LONG_TIMEOUT = 4000;
 
 const AXIS_LABELS: Record<keyof PersonalityScores['axes'], string> = {
   regulation_style: 'Regulation Style',
@@ -516,11 +520,15 @@ export default function PersonalityTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
+  const refreshMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
   const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
   const [aiNarrativeStatus, setAiNarrativeStatus] = useState<AiNarrativeStatus>('idle');
   const [aiNarrative, setAiNarrative] = useState<string[]>([]);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -677,6 +685,49 @@ export default function PersonalityTest() {
     setStep('results');
   };
 
+  const setRefreshMessageWithTimeout = useCallback((message: string, timeout: number) => {
+    // Clear any existing timeout
+    if (refreshMessageTimeoutRef.current !== null) {
+      window.clearTimeout(refreshMessageTimeoutRef.current);
+      refreshMessageTimeoutRef.current = null;
+    }
+    
+    setRefreshMessage(message);
+    refreshMessageTimeoutRef.current = window.setTimeout(() => {
+      setRefreshMessage(null);
+      refreshMessageTimeoutRef.current = null;
+    }, timeout);
+  }, []);
+
+  const handleRefreshFromSupabase = async () => {
+    if (!activeUserId) {
+      setRefreshMessageWithTimeout('No active user session', REFRESH_MESSAGE_SHORT_TIMEOUT);
+      return;
+    }
+
+    setIsRefreshing(true);
+    setRefreshMessage(null);
+
+    try {
+      // fetchPersonalityTestsFromSupabase fetches from Supabase and stores records in IndexedDB
+      const remoteRecords = await fetchPersonalityTestsFromSupabase(activeUserId);
+      await refreshHistory();
+      
+      if (remoteRecords.length > 0) {
+        setRefreshMessageWithTimeout(
+          `✓ Loaded ${remoteRecords.length} test${remoteRecords.length > 1 ? 's' : ''} from Supabase`,
+          REFRESH_MESSAGE_LONG_TIMEOUT
+        );
+      } else {
+        setRefreshMessageWithTimeout('No tests found in Supabase', REFRESH_MESSAGE_LONG_TIMEOUT);
+      }
+    } catch (error) {
+      setRefreshMessageWithTimeout('Failed to load from Supabase', REFRESH_MESSAGE_LONG_TIMEOUT);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     if (step !== 'results' || !scores || !activeUserId) {
       return;
@@ -763,6 +814,40 @@ export default function PersonalityTest() {
   }, [scores, step]);
 
   useEffect(() => {
+    if (!showSettingsMenu) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      
+      const settingsMenu = target.closest('.identity-hub__settings-menu');
+      const settingsToggle = target.closest('.identity-hub__settings-toggle');
+      
+      if (!settingsMenu && !settingsToggle) {
+        setShowSettingsMenu(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowSettingsMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showSettingsMenu]);
+
+  useEffect(() => {
     if (step !== 'results') {
       setAiNarrativeEnabled(false);
       setAiNarrativeStatus('idle');
@@ -791,6 +876,15 @@ export default function PersonalityTest() {
     };
   }, [aiNarrativeEnabled, handSummary, scores, step]);
 
+  useEffect(() => {
+    // Clean up refresh message timeout on unmount
+    return () => {
+      if (refreshMessageTimeoutRef.current !== null) {
+        window.clearTimeout(refreshMessageTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <section className="identity-hub">
       <div className="identity-hub__header">
@@ -800,7 +894,32 @@ export default function PersonalityTest() {
             Get a quick snapshot of how you think, feel, and show up each day.
           </p>
         </div>
+        <button
+          type="button"
+          className="identity-hub__settings-toggle"
+          onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+          title="Settings"
+          aria-label="Toggle settings menu"
+        >
+          ⚙️
+        </button>
       </div>
+
+      {showSettingsMenu && (
+        <div className="identity-hub__settings-menu">
+          <button
+            type="button"
+            className="identity-hub__settings-option"
+            onClick={handleRefreshFromSupabase}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? '⏳ Refreshing...' : '🔄 Refresh from Supabase'}
+          </button>
+          {refreshMessage && (
+            <p className="identity-hub__refresh-message">{refreshMessage}</p>
+          )}
+        </div>
+      )}
 
       {step === 'intro' && (
         <div className="identity-hub__card">

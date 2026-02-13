@@ -17661,6 +17661,10 @@ body {
 
 .identity-hub__header {
   margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
 }
 
 .identity-hub__title {
@@ -17674,6 +17678,72 @@ body {
   font-size: 1rem;
   color: var(--text-secondary, #6b7280);
   margin: 0;
+}
+
+.identity-hub__settings-toggle {
+  background: transparent;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.identity-hub__settings-toggle:hover {
+  background: var(--card-background, #f9fafb);
+  border-color: var(--border-color-hover, #d1d5db);
+}
+
+.identity-hub__settings-toggle:focus-visible {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+.identity-hub__settings-menu {
+  background: var(--card-background, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.identity-hub__settings-option {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-primary, #111827);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  display: block;
+}
+
+.identity-hub__settings-option:hover:not(:disabled) {
+  background: var(--hover-background, #f3f4f6);
+}
+
+.identity-hub__settings-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.identity-hub__refresh-message {
+  margin: 0.5rem 0 0 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+  background: var(--hover-background, #f3f4f6);
+  border-radius: 6px;
 }
 
 .identity-hub__placeholder {
