@@ -87,6 +87,10 @@ import {
   saveProfileStrengthXpState,
 } from './features/profile-strength/profileStrengthXp';
 import { buildTopTraitSummary } from './features/identity/personalitySummary';
+import type { PersonalityScores } from './features/identity/personalityScoring';
+import { scoreArchetypes, rankArchetypes } from './features/identity/archetypes/archetypeScoring';
+import { buildHand, type ArchetypeHand } from './features/identity/archetypes/archetypeHandBuilder';
+import { ARCHETYPE_DECK } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
 import './styles/workspace.css';
@@ -770,6 +774,8 @@ export default function App() {
     useState<ProfileStrengthSignalSnapshot | null>(null);
   const [isProfileStrengthLoading, setIsProfileStrengthLoading] = useState(false);
   const [personalitySummary, setPersonalitySummary] = useState<string | null>(null);
+  const [personalityScores, setPersonalityScores] = useState<PersonalityScores | null>(null);
+  const [archetypeHand, setArchetypeHand] = useState<ArchetypeHand | null>(null);
 
   useEffect(() => {
     if (!isProfileStrengthDebugActive) {
@@ -793,6 +799,8 @@ export default function App() {
   useEffect(() => {
     if (!activeSession?.user?.id) {
       setPersonalitySummary(null);
+      setPersonalityScores(null);
+      setArchetypeHand(null);
       return;
     }
 
@@ -813,41 +821,101 @@ export default function App() {
         // If personality_summary exists in profile, use it directly
         if (profile?.personality_summary) {
           setPersonalitySummary(profile.personality_summary);
-          return;
         }
 
-        // Backward compatibility: regenerate summary if traits exist but summary doesn't
+        // Load personality scores and compute archetype hand
         const traits = profile?.personality_traits as Record<string, number> | null;
-        if (profile && traits && Object.keys(traits).length > 0) {
-          const regeneratedSummary = buildTopTraitSummary(traits);
-          setPersonalitySummary(regeneratedSummary);
-          
-          // Persist the regenerated summary to Supabase
-          // Include existing personality data to avoid overwriting
-          try {
-            await upsertPersonalityProfile({
-              user_id: userId,
-              personality_traits: profile.personality_traits,
-              personality_axes: profile.personality_axes,
-              personality_summary: regeneratedSummary,
-              personality_last_tested_at: profile.personality_last_tested_at,
-            });
-          } catch (error) {
-            // Log error but don't fail - summary is already set in local state
-            console.error('Failed to persist regenerated personality summary:', error);
+        const axes = profile?.personality_axes as Record<string, number> | null;
+        if (profile && traits && axes && Object.keys(traits).length > 0) {
+          // Build PersonalityScores object with proper type mapping
+          const scores: PersonalityScores = {
+            traits: {
+              openness: traits.openness ?? 50,
+              conscientiousness: traits.conscientiousness ?? 50,
+              extraversion: traits.extraversion ?? 50,
+              agreeableness: traits.agreeableness ?? 50,
+              emotional_stability: traits.emotional_stability ?? 50,
+            },
+            axes: {
+              regulation_style: axes.regulation_style ?? 50,
+              stress_response: axes.stress_response ?? 50,
+              identity_sensitivity: axes.identity_sensitivity ?? 50,
+              cognitive_entry: axes.cognitive_entry ?? 50,
+              honesty_humility: axes.honesty_humility ?? 50,
+            },
+          };
+          setPersonalityScores(scores);
+
+          // Compute archetype hand
+          const archetypeScores = scoreArchetypes(scores, ARCHETYPE_DECK);
+          const rankedScores = rankArchetypes(archetypeScores);
+          const hand = buildHand(rankedScores);
+          setArchetypeHand(hand);
+
+          // Backward compatibility: regenerate summary if it doesn't exist
+          if (!profile.personality_summary) {
+            const regeneratedSummary = buildTopTraitSummary(traits);
+            setPersonalitySummary(regeneratedSummary);
+            
+            // Persist the regenerated summary to Supabase
+            try {
+              await upsertPersonalityProfile({
+                user_id: userId,
+                personality_traits: profile.personality_traits,
+                personality_axes: profile.personality_axes,
+                personality_summary: regeneratedSummary,
+                personality_last_tested_at: profile.personality_last_tested_at,
+              });
+            } catch (error) {
+              console.error('Failed to persist regenerated personality summary:', error);
+            }
           }
           return;
         }
 
         if (records.length === 0) {
           setPersonalitySummary(null);
+          setPersonalityScores(null);
+          setArchetypeHand(null);
           return;
         }
 
-        setPersonalitySummary(buildTopTraitSummary(records[0].traits));
+        // Fallback to records data
+        const record = records[0];
+        if (record.traits) {
+          const recordTraits = record.traits as Record<string, number>;
+          const recordAxes = record.axes as Record<string, number>;
+          const scores: PersonalityScores = {
+            traits: {
+              openness: recordTraits.openness ?? 50,
+              conscientiousness: recordTraits.conscientiousness ?? 50,
+              extraversion: recordTraits.extraversion ?? 50,
+              agreeableness: recordTraits.agreeableness ?? 50,
+              emotional_stability: recordTraits.emotional_stability ?? 50,
+            },
+            axes: {
+              regulation_style: recordAxes.regulation_style ?? 50,
+              stress_response: recordAxes.stress_response ?? 50,
+              identity_sensitivity: recordAxes.identity_sensitivity ?? 50,
+              cognitive_entry: recordAxes.cognitive_entry ?? 50,
+              honesty_humility: recordAxes.honesty_humility ?? 50,
+            },
+          };
+          setPersonalityScores(scores);
+
+          // Compute archetype hand
+          const archetypeScores = scoreArchetypes(scores, ARCHETYPE_DECK);
+          const rankedScores = rankArchetypes(archetypeScores);
+          const hand = buildHand(rankedScores);
+          setArchetypeHand(hand);
+
+          setPersonalitySummary(buildTopTraitSummary(record.traits));
+        }
       } catch {
         if (isMounted) {
           setPersonalitySummary(null);
+          setPersonalityScores(null);
+          setArchetypeHand(null);
         }
       }
     };
@@ -2109,7 +2177,12 @@ export default function App() {
     if (activeWorkspaceNav === 'player-avatar') {
       return (
         <div className="workspace-content">
-          <PlayerAvatarPanel session={activeSession} />
+          <PlayerAvatarPanel
+            session={activeSession}
+            personalityScores={personalityScores}
+            archetypeHand={archetypeHand}
+            personalitySummary={personalitySummary}
+          />
         </div>
       );
     }

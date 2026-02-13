@@ -1,103 +1,137 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import {
+  AVATAR_ITEM_CATALOG,
+  CATEGORY_INFO,
+  type AvatarItem,
+  type AvatarItemCategory,
+} from './avatarItemCatalog';
+import {
+  ARCHETYPE_DECK,
+  SUIT_COLORS,
+  SUIT_LABELS,
+  type ArchetypeCard,
+  type SuitKey,
+} from '../identity/archetypes/archetypeDeck';
+import type { ArchetypeHand, HandCard } from '../identity/archetypes/archetypeHandBuilder';
+import type { PersonalityScores } from '../identity/personalityScoring';
 import '../../styles/player-avatar.css';
 
 type PlayerAvatarPanelProps = {
-  session: Session; // Used for future features: saving avatar preferences, unlocking items based on achievements
+  session: Session;
+  personalityScores?: PersonalityScores | null;
+  archetypeHand?: ArchetypeHand | null;
+  personalitySummary?: string | null;
 };
 
-type AvatarOption = {
-  id: string;
-  emoji: string;
-  name: string;
-};
+export function PlayerAvatarPanel({
+  session,
+  personalityScores,
+  archetypeHand,
+  personalitySummary,
+}: PlayerAvatarPanelProps) {
+  // Determine if user has personality data
+  const hasPersonalityData = Boolean(personalityScores && archetypeHand);
 
-type EquipmentItem = {
-  id: string;
-  emoji: string;
-  name: string;
-  description: string;
-  rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
-  category: 'tools' | 'charms' | 'garments' | 'auras' | 'badges';
-};
+  // Default to dominant archetype or first archetype
+  const defaultArchetype = archetypeHand?.dominant.card.id ?? ARCHETYPE_DECK[0].id;
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(defaultArchetype);
+  const [activeCategory, setActiveCategory] = useState<AvatarItemCategory>('tools');
+  const [suitFilter, setSuitFilter] = useState<SuitKey | 'all'>('all');
+  const [equippedItems, setEquippedItems] = useState<Set<string>>(new Set());
 
-const AVATAR_OPTIONS: AvatarOption[] = [
-  { id: 'warrior', emoji: '🧑‍🦰', name: 'Warrior' },
-  { id: 'wizard', emoji: '🧙‍♂️', name: 'Wizard' },
-  { id: 'explorer', emoji: '🧑‍🚀', name: 'Explorer' },
-  { id: 'scholar', emoji: '👨‍🎓', name: 'Scholar' },
-  { id: 'artist', emoji: '👨‍🎨', name: 'Artist' },
-  { id: 'athlete', emoji: '🏃‍♀️', name: 'Athlete' },
-  { id: 'scientist', emoji: '👨‍🔬', name: 'Scientist' },
-  { id: 'musician', emoji: '👨‍🎤', name: 'Musician' },
-  { id: 'chef', emoji: '👨‍🍳', name: 'Chef' },
-  { id: 'hero', emoji: '🦸‍♂️', name: 'Hero' },
-  { id: 'ninja', emoji: '🥷', name: 'Ninja' },
-  { id: 'astronaut', emoji: '👨‍🚀', name: 'Astronaut' },
-  { id: 'detective', emoji: '🕵️', name: 'Detective' },
-  { id: 'gardener', emoji: '🧑‍🌾', name: 'Gardener' },
-  { id: 'mechanic', emoji: '🧑‍🔧', name: 'Mechanic' },
-  { id: 'pilot', emoji: '🧑‍✈️', name: 'Pilot' },
-];
+  // Get player's archetype hand cards
+  const handCards = useMemo<HandCard[]>(() => {
+    if (!archetypeHand) return [];
+    return [
+      archetypeHand.dominant,
+      archetypeHand.secondary,
+      ...archetypeHand.supports,
+      archetypeHand.shadow,
+    ];
+  }, [archetypeHand]);
 
-const EQUIPMENT_ITEMS: EquipmentItem[] = [
-  // Tools
-  { id: 'golden-pen', emoji: '🖊️', name: 'Golden Pen', description: 'Write your destiny with precision', rarity: 'Legendary', category: 'tools' },
-  { id: 'crystal-compass', emoji: '🧭', name: 'Crystal Compass', description: 'Never lose your direction', rarity: 'Epic', category: 'tools' },
-  { id: 'enchanted-notebook', emoji: '📓', name: 'Enchanted Notebook', description: 'Capture every brilliant idea', rarity: 'Rare', category: 'tools' },
-  { id: 'time-hourglass', emoji: '⏳', name: 'Time Hourglass', description: 'Master the flow of time', rarity: 'Epic', category: 'tools' },
-  { id: 'wisdom-scroll', emoji: '📜', name: 'Wisdom Scroll', description: 'Ancient knowledge at your fingertips', rarity: 'Legendary', category: 'tools' },
-  { id: 'lightning-stylus', emoji: '⚡', name: 'Lightning Bolt Stylus', description: 'Strike with creative power', rarity: 'Rare', category: 'tools' },
-  
-  // Lucky Charms
-  { id: 'four-leaf-clover', emoji: '🍀', name: 'Four-Leaf Clover', description: 'Luck finds you at every turn', rarity: 'Rare', category: 'charms' },
-  { id: 'lucky-horseshoe', emoji: '🧲', name: 'Lucky Horseshoe', description: 'Attract fortune and success', rarity: 'Common', category: 'charms' },
-  { id: 'wishing-star', emoji: '⭐', name: 'Wishing Star', description: 'Make your dreams come true', rarity: 'Epic', category: 'charms' },
-  { id: 'rainbow-gem', emoji: '💎', name: 'Rainbow Gem', description: 'Shine with unlimited potential', rarity: 'Legendary', category: 'charms' },
-  { id: 'fortune-cookie', emoji: '🥠', name: 'Fortune Cookie', description: 'Wisdom comes in small packages', rarity: 'Common', category: 'charms' },
-  { id: 'magic-8-ball', emoji: '🎱', name: 'Magic 8-Ball', description: 'The answer is always yes', rarity: 'Rare', category: 'charms' },
-  
-  // Garments
-  { id: 'explorer-cape', emoji: '🧥', name: "Explorer's Cape", description: 'Adventure awaits around every corner', rarity: 'Rare', category: 'garments' },
-  { id: 'zen-master-robe', emoji: '🥋', name: 'Zen Master Robe', description: 'Find peace in every moment', rarity: 'Epic', category: 'garments' },
-  { id: 'champion-armor', emoji: '🛡️', name: "Champion's Armor", description: 'Unbreakable determination', rarity: 'Legendary', category: 'garments' },
-  { id: 'wizard-hat', emoji: '🎩', name: 'Wizard Hat', description: 'Channel mystical energies', rarity: 'Epic', category: 'garments' },
-  { id: 'runner-headband', emoji: '🎽', name: "Runner's Headband", description: 'Never stop moving forward', rarity: 'Common', category: 'garments' },
-  { id: 'scholar-glasses', emoji: '👓', name: "Scholar's Glasses", description: 'See the world with clarity', rarity: 'Rare', category: 'garments' },
-  
-  // Auras
-  { id: 'golden-glow', emoji: '✨', name: 'Golden Glow', description: 'Radiate success and confidence', rarity: 'Legendary', category: 'auras' },
-  { id: 'cosmic-nebula', emoji: '🌌', name: 'Cosmic Nebula', description: 'Infinite possibilities surround you', rarity: 'Epic', category: 'auras' },
-  { id: 'forest-spirit', emoji: '🌿', name: 'Forest Spirit', description: 'Connected to natural growth', rarity: 'Rare', category: 'auras' },
-  { id: 'ocean-wave', emoji: '🌊', name: 'Ocean Wave', description: 'Flow with adaptability', rarity: 'Rare', category: 'auras' },
-  { id: 'fire-ring', emoji: '🔥', name: 'Fire Ring', description: 'Burn with passion and intensity', rarity: 'Epic', category: 'auras' },
-  { id: 'ice-crystal', emoji: '❄️', name: 'Ice Crystal', description: 'Cool, calm, and collected', rarity: 'Rare', category: 'auras' },
-  
-  // Badges
-  { id: 'early-bird', emoji: '🌅', name: 'Early Bird', description: 'First to seize the day', rarity: 'Rare', category: 'badges' },
-  { id: 'night-owl', emoji: '🦉', name: 'Night Owl', description: 'Productive under the moon', rarity: 'Rare', category: 'badges' },
-  { id: 'streak-master', emoji: '🔥', name: 'Streak Master', description: 'Consistency is your superpower', rarity: 'Epic', category: 'badges' },
-  { id: 'zen-warrior', emoji: '☯️', name: 'Zen Warrior', description: 'Balance in all things', rarity: 'Legendary', category: 'badges' },
-  { id: 'goal-crusher', emoji: '🎯', name: 'Goal Crusher', description: 'Targets never stand a chance', rarity: 'Epic', category: 'badges' },
-  { id: 'habit-hero', emoji: '💪', name: 'Habit Hero', description: 'Routines forged in steel', rarity: 'Legendary', category: 'badges' },
-];
+  // Get player's top archetype IDs for unlock logic
+  const topArchetypeIds = useMemo<string[]>(() => {
+    return handCards.map((card) => card.card.id);
+  }, [handCards]);
 
-type EquipmentCategory = 'tools' | 'charms' | 'garments' | 'auras' | 'badges';
+  // Get player's dominant suit
+  const dominantSuit = archetypeHand?.dominant.card.suit;
 
-const CATEGORY_INFO: Record<EquipmentCategory, { emoji: string; label: string }> = {
-  tools: { emoji: '🛠️', label: 'Tools' },
-  charms: { emoji: '🍀', label: 'Lucky Charms' },
-  garments: { emoji: '👕', label: 'Garments' },
-  auras: { emoji: '✨', label: 'Auras' },
-  badges: { emoji: '🏅', label: 'Badges' },
-};
+  // Filter archetypes by suit
+  const filteredArchetypes = useMemo<ArchetypeCard[]>(() => {
+    if (suitFilter === 'all') return ARCHETYPE_DECK;
+    return ARCHETYPE_DECK.filter((card) => card.suit === suitFilter);
+  }, [suitFilter]);
 
-export function PlayerAvatarPanel({ session }: PlayerAvatarPanelProps) {
-  const [selectedAvatar, setSelectedAvatar] = useState<string>('warrior');
-  const [activeCategory, setActiveCategory] = useState<EquipmentCategory>('tools');
-  const [equippedItems, setEquippedItems] = useState<Set<string>>(new Set(['golden-pen', 'four-leaf-clover']));
+  // Determine if an item is unlocked
+  const isItemUnlocked = (item: AvatarItem): boolean => {
+    if (!hasPersonalityData) return false;
 
-  const toggleEquipItem = (itemId: string) => {
+    // Free items are always unlocked
+    if (item.unlockCondition === 'free') return true;
+
+    // Personality-based items
+    if (item.unlockCondition === 'personality') {
+      // Items with suit affinity matching player's dominant suit are unlocked
+      if (item.suitAffinity && item.suitAffinity === dominantSuit) return true;
+
+      // Items with archetype affinity containing player's top archetypes are unlocked
+      if (item.archetypeAffinity) {
+        return item.archetypeAffinity.some((archId) => topArchetypeIds.includes(archId));
+      }
+
+      // Items with trait requirements
+      if (item.traitRequirement && personalityScores) {
+        const traitValue = personalityScores.traits[item.traitRequirement.trait];
+        return traitValue >= item.traitRequirement.minScore;
+      }
+    }
+
+    return false;
+  };
+
+  // Get "For You" recommended items (6-8 items based on player's archetype)
+  const forYouItems = useMemo<AvatarItem[]>(() => {
+    if (!hasPersonalityData || !dominantSuit || !archetypeHand) return [];
+    const recommended = AVATAR_ITEM_CATALOG.filter((item) => {
+      return (
+        item.suitAffinity === dominantSuit &&
+        item.archetypeAffinity &&
+        item.archetypeAffinity.includes(archetypeHand.dominant.card.id)
+      );
+    });
+    return recommended.slice(0, 8);
+  }, [hasPersonalityData, dominantSuit, archetypeHand]);
+
+  // Filter items by category and suit
+  const categoryItems = useMemo<AvatarItem[]>(() => {
+    let items = AVATAR_ITEM_CATALOG.filter((item) => item.category === activeCategory);
+    if (suitFilter !== 'all') {
+      items = items.filter((item) => item.suitAffinity === suitFilter || !item.suitAffinity);
+    }
+    return items;
+  }, [activeCategory, suitFilter]);
+
+  // Count items per category
+  const categoryItemCounts = useMemo(() => {
+    const counts: Record<AvatarItemCategory, number> = {
+      tools: 0,
+      charms: 0,
+      garments: 0,
+      auras: 0,
+      badges: 0,
+      companions: 0,
+    };
+    AVATAR_ITEM_CATALOG.forEach((item) => {
+      counts[item.category]++;
+    });
+    return counts;
+  }, []);
+
+  const toggleEquipItem = (itemId: string, item: AvatarItem) => {
+    if (!isItemUnlocked(item)) return;
     setEquippedItems((prev) => {
       const next = new Set(prev);
       if (next.has(itemId)) {
@@ -109,8 +143,7 @@ export function PlayerAvatarPanel({ session }: PlayerAvatarPanelProps) {
     });
   };
 
-  const selectedAvatarData = AVATAR_OPTIONS.find((a) => a.id === selectedAvatar);
-  const categoryItems = EQUIPMENT_ITEMS.filter((item) => item.category === activeCategory);
+  const selectedAvatarCard = ARCHETYPE_DECK.find((a) => a.id === selectedAvatar);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -127,23 +160,118 @@ export function PlayerAvatarPanel({ session }: PlayerAvatarPanelProps) {
     }
   };
 
+  const getSuitColorWithAlpha = (suit: SuitKey, alpha: number = 0.1) => {
+    const color = SUIT_COLORS[suit];
+    // Convert hex to rgba
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // If no personality data, show CTA
+  if (!hasPersonalityData) {
+    return (
+      <div className="player-avatar-panel">
+        <div className="player-avatar-panel__header">
+          <h1 className="player-avatar-panel__title">Player Avatar</h1>
+          <p className="player-avatar-panel__subtitle">Unlock your personalized avatar</p>
+        </div>
+
+        <section className="player-avatar-panel__cta">
+          <div className="player-avatar-panel__cta-card">
+            <span className="player-avatar-panel__cta-emoji">🎭</span>
+            <h2 className="player-avatar-panel__cta-title">Take Your Personality Test</h2>
+            <p className="player-avatar-panel__cta-text">
+              Discover your unique archetype and unlock a personalized avatar and equipment tailored to
+              your personality!
+            </p>
+            <p className="player-avatar-panel__cta-hint">
+              Navigate to <strong>Identity</strong> to take the test and unlock your custom playstyle.
+            </p>
+          </div>
+        </section>
+
+        {/* Show generic starter avatars */}
+        <section className="player-avatar-panel__section">
+          <h2 className="player-avatar-panel__section-title">Preview: Starter Avatars</h2>
+          <div className="player-avatar-panel__avatar-grid">
+            {ARCHETYPE_DECK.slice(0, 8).map((archetype) => (
+              <div
+                key={archetype.id}
+                className="player-avatar-panel__avatar-card player-avatar-panel__avatar-card--locked"
+              >
+                <span className="player-avatar-panel__avatar-emoji" role="img" aria-label={archetype.name}>
+                  {archetype.icon}
+                </span>
+                <span className="player-avatar-panel__avatar-name">{archetype.name}</span>
+                <span className="player-avatar-panel__avatar-lock">🔒</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="player-avatar-panel">
       <div className="player-avatar-panel__header">
         <h1 className="player-avatar-panel__title">Player Avatar</h1>
-        <p className="player-avatar-panel__subtitle">Customize your character and equipment</p>
+        <p className="player-avatar-panel__subtitle">
+          {personalitySummary || 'Customize your character'}
+        </p>
       </div>
+
+      {/* Personality Banner */}
+      {archetypeHand && (
+        <section className="player-avatar-panel__personality-banner">
+          <div
+            className="player-avatar-panel__hand-summary"
+            style={{ '--suit-color': SUIT_COLORS[archetypeHand.dominant.card.suit] } as React.CSSProperties}
+          >
+            <div className="player-avatar-panel__hand-dominant">
+              <span className="player-avatar-panel__hand-icon">{archetypeHand.dominant.card.icon}</span>
+              <div className="player-avatar-panel__hand-info">
+                <h3 className="player-avatar-panel__hand-title">Your Playstyle</h3>
+                <p className="player-avatar-panel__hand-name">
+                  {archetypeHand.dominant.card.name} ({SUIT_LABELS[archetypeHand.dominant.card.suit]})
+                </p>
+              </div>
+            </div>
+            <div className="player-avatar-panel__hand-cards">
+              {[
+                archetypeHand.secondary,
+                ...archetypeHand.supports,
+              ].map((card) => (
+                <div
+                  key={card.card.id}
+                  className="player-avatar-panel__hand-card"
+                  title={card.card.name}
+                >
+                  <span>{card.card.icon}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Avatar Preview Section */}
       <section className="player-avatar-panel__preview">
         <div className="player-avatar-panel__preview-card">
           <div className="player-avatar-panel__preview-avatar">
-            {selectedAvatarData && (
+            {selectedAvatarCard && (
               <>
-                <span className="player-avatar-panel__preview-emoji" role="img" aria-label={selectedAvatarData.name}>
-                  {selectedAvatarData.emoji}
+                <span
+                  className="player-avatar-panel__preview-emoji"
+                  role="img"
+                  aria-label={selectedAvatarCard.name}
+                >
+                  {selectedAvatarCard.icon}
                 </span>
-                <p className="player-avatar-panel__preview-name">{selectedAvatarData.name}</p>
+                <p className="player-avatar-panel__preview-name">{selectedAvatarCard.name}</p>
+                <p className="player-avatar-panel__preview-drive">{selectedAvatarCard.drive}</p>
               </>
             )}
           </div>
@@ -153,36 +281,156 @@ export function PlayerAvatarPanel({ session }: PlayerAvatarPanelProps) {
         </div>
       </section>
 
-      {/* Avatar Selection Grid */}
+      {/* Avatar Selection */}
       <section className="player-avatar-panel__section">
         <h2 className="player-avatar-panel__section-title">Choose Your Avatar</h2>
-        <div className="player-avatar-panel__avatar-grid">
-          {AVATAR_OPTIONS.map((avatar) => (
+
+        {/* Suggested Avatars (5-card hand) */}
+        <div className="player-avatar-panel__suggested">
+          <h3 className="player-avatar-panel__suggested-title">⭐ Suggested For You</h3>
+          <div className="player-avatar-panel__avatar-grid player-avatar-panel__avatar-grid--suggested">
+            {handCards.slice(0, 4).map((handCard) => {
+              const card = handCard.card;
+              const isSelected = selectedAvatar === card.id;
+              const isDominant = handCard.role === 'dominant';
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  className={`player-avatar-panel__avatar-card ${
+                    isSelected ? 'player-avatar-panel__avatar-card--selected' : ''
+                  } ${isDominant ? 'player-avatar-panel__avatar-card--dominant' : ''}`}
+                  style={{ '--suit-color': SUIT_COLORS[card.suit] } as React.CSSProperties}
+                  onClick={() => setSelectedAvatar(card.id)}
+                  aria-label={`Select ${card.name} avatar`}
+                >
+                  <span className="player-avatar-panel__avatar-emoji" role="img" aria-label={card.name}>
+                    {card.icon}
+                  </span>
+                  <span className="player-avatar-panel__avatar-name">{card.name}</span>
+                  {isDominant && <span className="player-avatar-panel__avatar-badge">Recommended</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Suit Filter Tabs */}
+        <div className="player-avatar-panel__suit-filters">
+          <button
+            type="button"
+            className={`player-avatar-panel__suit-filter ${
+              suitFilter === 'all' ? 'player-avatar-panel__suit-filter--active' : ''
+            }`}
+            onClick={() => setSuitFilter('all')}
+          >
+            All
+          </button>
+          {(['power', 'heart', 'mind', 'spirit'] as SuitKey[]).map((suit) => (
             <button
-              key={avatar.id}
+              key={suit}
               type="button"
-              className={`player-avatar-panel__avatar-card ${
-                selectedAvatar === avatar.id ? 'player-avatar-panel__avatar-card--selected' : ''
+              className={`player-avatar-panel__suit-filter ${
+                suitFilter === suit ? 'player-avatar-panel__suit-filter--active' : ''
               }`}
-              onClick={() => setSelectedAvatar(avatar.id)}
-              aria-label={`Select ${avatar.name} avatar`}
+              style={{ '--suit-color': SUIT_COLORS[suit] } as React.CSSProperties}
+              onClick={() => setSuitFilter(suit)}
             >
-              <span className="player-avatar-panel__avatar-emoji" role="img" aria-label={avatar.name}>
-                {avatar.emoji}
-              </span>
-              <span className="player-avatar-panel__avatar-name">{avatar.name}</span>
+              {SUIT_LABELS[suit]}
             </button>
           ))}
+        </div>
+
+        {/* All Archetypes Grid */}
+        <div className="player-avatar-panel__avatar-grid">
+          {filteredArchetypes.map((archetype) => {
+            const isSelected = selectedAvatar === archetype.id;
+            const isInHand = topArchetypeIds.includes(archetype.id);
+            const isDominant = archetypeHand?.dominant.card.id === archetype.id;
+            return (
+              <button
+                key={archetype.id}
+                type="button"
+                className={`player-avatar-panel__avatar-card ${
+                  isSelected ? 'player-avatar-panel__avatar-card--selected' : ''
+                } ${isInHand ? 'player-avatar-panel__avatar-card--in-hand' : ''}`}
+                style={{ '--suit-color': SUIT_COLORS[archetype.suit] } as React.CSSProperties}
+                onClick={() => setSelectedAvatar(archetype.id)}
+                aria-label={`Select ${archetype.name} avatar`}
+              >
+                <span className="player-avatar-panel__avatar-emoji" role="img" aria-label={archetype.name}>
+                  {archetype.icon}
+                </span>
+                <span className="player-avatar-panel__avatar-name">{archetype.name}</span>
+                <span
+                  className="player-avatar-panel__avatar-suit"
+                  style={{ color: SUIT_COLORS[archetype.suit] }}
+                >
+                  {archetype.suit}
+                </span>
+                {isDominant && <span className="player-avatar-panel__avatar-badge">⭐</span>}
+              </button>
+            );
+          })}
         </div>
       </section>
 
       {/* Equipment Section */}
       <section className="player-avatar-panel__section">
         <h2 className="player-avatar-panel__section-title">Equipment & Customization</h2>
-        
+
+        {/* For You Section */}
+        {forYouItems.length > 0 && (
+          <div className="player-avatar-panel__for-you">
+            <h3 className="player-avatar-panel__for-you-title">✨ For You</h3>
+            <div className="player-avatar-panel__equipment-grid player-avatar-panel__equipment-grid--for-you">
+              {forYouItems.map((item) => {
+                const isEquipped = equippedItems.has(item.id);
+                const unlocked = isItemUnlocked(item);
+                return (
+                  <div
+                    key={item.id}
+                    className={`player-avatar-panel__equipment-card ${
+                      !unlocked ? 'player-avatar-panel__equipment-card--locked' : ''
+                    }`}
+                    style={{ '--rarity-color': getRarityColor(item.rarity) } as React.CSSProperties}
+                  >
+                    <div className="player-avatar-panel__equipment-header">
+                      <span className="player-avatar-panel__equipment-emoji" role="img" aria-label={item.name}>
+                        {item.emoji}
+                      </span>
+                      <span
+                        className="player-avatar-panel__equipment-rarity"
+                        style={{ color: getRarityColor(item.rarity) }}
+                      >
+                        {item.rarity}
+                      </span>
+                    </div>
+                    <span className="player-avatar-panel__equipment-badge player-avatar-panel__equipment-badge--new">
+                      NEW
+                    </span>
+                    <h3 className="player-avatar-panel__equipment-name">{item.name}</h3>
+                    <p className="player-avatar-panel__equipment-description">{item.description}</p>
+                    <button
+                      type="button"
+                      className={`player-avatar-panel__equipment-button ${
+                        isEquipped ? 'player-avatar-panel__equipment-button--equipped' : ''
+                      } ${!unlocked ? 'player-avatar-panel__equipment-button--locked' : ''}`}
+                      onClick={() => toggleEquipItem(item.id, item)}
+                      disabled={!unlocked}
+                    >
+                      {unlocked ? (isEquipped ? 'Equipped ✓' : 'Equip') : `🪙 ${item.price ?? 1000}`}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Category Tabs */}
         <div className="player-avatar-panel__tabs" role="tablist">
-          {(Object.keys(CATEGORY_INFO) as EquipmentCategory[]).map((category) => (
+          {(Object.keys(CATEGORY_INFO) as AvatarItemCategory[]).map((category) => (
             <button
               key={category}
               type="button"
@@ -197,6 +445,7 @@ export function PlayerAvatarPanel({ session }: PlayerAvatarPanelProps) {
                 {CATEGORY_INFO[category].emoji}
               </span>
               <span>{CATEGORY_INFO[category].label}</span>
+              <span className="player-avatar-panel__tab-count">{categoryItemCounts[category]}</span>
             </button>
           ))}
         </div>
@@ -205,10 +454,14 @@ export function PlayerAvatarPanel({ session }: PlayerAvatarPanelProps) {
         <div className="player-avatar-panel__equipment-grid" role="tabpanel">
           {categoryItems.map((item) => {
             const isEquipped = equippedItems.has(item.id);
+            const unlocked = isItemUnlocked(item);
+            const isYourSuit = item.suitAffinity === dominantSuit;
             return (
               <div
                 key={item.id}
-                className="player-avatar-panel__equipment-card"
+                className={`player-avatar-panel__equipment-card ${
+                  !unlocked ? 'player-avatar-panel__equipment-card--locked' : ''
+                }`}
                 style={{ '--rarity-color': getRarityColor(item.rarity) } as React.CSSProperties}
               >
                 <div className="player-avatar-panel__equipment-header">
@@ -222,16 +475,23 @@ export function PlayerAvatarPanel({ session }: PlayerAvatarPanelProps) {
                     {item.rarity}
                   </span>
                 </div>
+                {isYourSuit && unlocked && (
+                  <span className="player-avatar-panel__equipment-badge player-avatar-panel__equipment-badge--suit">
+                    Your Suit
+                  </span>
+                )}
+                {!unlocked && <span className="player-avatar-panel__equipment-lock">🔒</span>}
                 <h3 className="player-avatar-panel__equipment-name">{item.name}</h3>
                 <p className="player-avatar-panel__equipment-description">{item.description}</p>
                 <button
                   type="button"
                   className={`player-avatar-panel__equipment-button ${
                     isEquipped ? 'player-avatar-panel__equipment-button--equipped' : ''
-                  }`}
-                  onClick={() => toggleEquipItem(item.id)}
+                  } ${!unlocked ? 'player-avatar-panel__equipment-button--locked' : ''}`}
+                  onClick={() => toggleEquipItem(item.id, item)}
+                  disabled={!unlocked}
                 >
-                  {isEquipped ? 'Equipped ✓' : 'Equip'}
+                  {unlocked ? (isEquipped ? 'Equipped ✓' : 'Equip') : `🪙 ${item.price ?? 1000}`}
                 </button>
               </div>
             );
