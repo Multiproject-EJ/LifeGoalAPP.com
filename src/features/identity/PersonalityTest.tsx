@@ -693,11 +693,11 @@ export default function PersonalityTest() {
     }
     
     setRefreshMessage(message);
-    refreshMessageTimeoutRef.current = window.setTimeout(
-      () => setRefreshMessage(null),
-      timeout
-    );
-  }, []);
+    refreshMessageTimeoutRef.current = window.setTimeout(() => {
+      setRefreshMessage(null);
+      refreshMessageTimeoutRef.current = null;
+    }, timeout);
+  }, [setRefreshMessage]);
 
   const handleRefreshFromSupabase = async () => {
     if (!activeUserId) {
