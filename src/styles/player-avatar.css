@@ -536,8 +536,6 @@
 
   .player-avatar-panel__hand-name {
     font-size: 1rem; /* Reduce from 1.25rem */
-    word-break: break-word;
-    overflow-wrap: break-word;
     max-width: 100%;
   }
 
