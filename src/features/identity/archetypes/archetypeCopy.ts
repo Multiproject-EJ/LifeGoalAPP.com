@@ -4,9 +4,9 @@ import type { HandCard } from './archetypeHandBuilder';
 export type ScoreBand = 'low' | 'balanced' | 'high';
 
 export type ArchetypeCopy = {
-  powerLine: Record<ScoreBand, string>;
-  strengthLine: Record<ScoreBand, string>;
-  growthEdgeLine: Record<ScoreBand, string>;
+  powerLine: string;
+  strengthLine: string;
+  growthEdgeLine: string;
   microTip: string;
 };
 

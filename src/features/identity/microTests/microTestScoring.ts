@@ -118,7 +118,7 @@ export function applyMicroTestResult(
 
   // Update HEXACO scores if the micro-test measured HEXACO dimensions
   const hexaco = currentScores.hexaco || {};
-  const updatedHexaco: Record<string, number> = { ...hexaco };
+  const updatedHexaco: Partial<Record<string, number>> = { ...hexaco };
 
   Object.entries(microTestResult.dimensionScores).forEach(([dimension, score]) => {
     // Check if this is a HEXACO dimension (not in traits or axes)
