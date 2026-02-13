@@ -520,6 +520,7 @@ export default function PersonalityTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
+  const refreshMessageTimeoutRef = useRef<number | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
   const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
@@ -685,9 +686,18 @@ export default function PersonalityTest() {
   };
 
   const handleRefreshFromSupabase = async () => {
+    // Clear any existing timeout
+    if (refreshMessageTimeoutRef.current !== null) {
+      window.clearTimeout(refreshMessageTimeoutRef.current);
+      refreshMessageTimeoutRef.current = null;
+    }
+
     if (!activeUserId) {
       setRefreshMessage('No active user session');
-      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_SHORT_TIMEOUT);
+      refreshMessageTimeoutRef.current = window.setTimeout(
+        () => setRefreshMessage(null),
+        REFRESH_MESSAGE_SHORT_TIMEOUT
+      );
       return;
     }
 
@@ -704,10 +714,16 @@ export default function PersonalityTest() {
       } else {
         setRefreshMessage('No tests found in Supabase');
       }
-      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_LONG_TIMEOUT);
+      refreshMessageTimeoutRef.current = window.setTimeout(
+        () => setRefreshMessage(null),
+        REFRESH_MESSAGE_LONG_TIMEOUT
+      );
     } catch (error) {
       setRefreshMessage('Failed to load from Supabase');
-      setTimeout(() => setRefreshMessage(null), REFRESH_MESSAGE_LONG_TIMEOUT);
+      refreshMessageTimeoutRef.current = window.setTimeout(
+        () => setRefreshMessage(null),
+        REFRESH_MESSAGE_LONG_TIMEOUT
+      );
     } finally {
       setIsRefreshing(false);
     }
@@ -856,6 +872,15 @@ export default function PersonalityTest() {
       window.clearTimeout(timeout);
     };
   }, [aiNarrativeEnabled, handSummary, scores, step]);
+
+  useEffect(() => {
+    // Clean up refresh message timeout on unmount
+    return () => {
+      if (refreshMessageTimeoutRef.current !== null) {
+        window.clearTimeout(refreshMessageTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <section className="identity-hub">
