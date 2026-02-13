@@ -520,7 +520,7 @@ export default function PersonalityTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
-  const refreshMessageTimeoutRef = useRef<number | null>(null);
+  const refreshMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
   const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
@@ -685,19 +685,23 @@ export default function PersonalityTest() {
     setStep('results');
   };
 
-  const handleRefreshFromSupabase = async () => {
+  const setRefreshMessageWithTimeout = useCallback((message: string, timeout: number) => {
     // Clear any existing timeout
     if (refreshMessageTimeoutRef.current !== null) {
       window.clearTimeout(refreshMessageTimeoutRef.current);
       refreshMessageTimeoutRef.current = null;
     }
+    
+    setRefreshMessage(message);
+    refreshMessageTimeoutRef.current = window.setTimeout(
+      () => setRefreshMessage(null),
+      timeout
+    );
+  }, []);
 
+  const handleRefreshFromSupabase = async () => {
     if (!activeUserId) {
-      setRefreshMessage('No active user session');
-      refreshMessageTimeoutRef.current = window.setTimeout(
-        () => setRefreshMessage(null),
-        REFRESH_MESSAGE_SHORT_TIMEOUT
-      );
+      setRefreshMessageWithTimeout('No active user session', REFRESH_MESSAGE_SHORT_TIMEOUT);
       return;
     }
 
@@ -710,20 +714,15 @@ export default function PersonalityTest() {
       await refreshHistory();
       
       if (remoteRecords.length > 0) {
-        setRefreshMessage(`✓ Loaded ${remoteRecords.length} test${remoteRecords.length > 1 ? 's' : ''} from Supabase`);
+        setRefreshMessageWithTimeout(
+          `✓ Loaded ${remoteRecords.length} test${remoteRecords.length > 1 ? 's' : ''} from Supabase`,
+          REFRESH_MESSAGE_LONG_TIMEOUT
+        );
       } else {
-        setRefreshMessage('No tests found in Supabase');
+        setRefreshMessageWithTimeout('No tests found in Supabase', REFRESH_MESSAGE_LONG_TIMEOUT);
       }
-      refreshMessageTimeoutRef.current = window.setTimeout(
-        () => setRefreshMessage(null),
-        REFRESH_MESSAGE_LONG_TIMEOUT
-      );
     } catch (error) {
-      setRefreshMessage('Failed to load from Supabase');
-      refreshMessageTimeoutRef.current = window.setTimeout(
-        () => setRefreshMessage(null),
-        REFRESH_MESSAGE_LONG_TIMEOUT
-      );
+      setRefreshMessageWithTimeout('Failed to load from Supabase', REFRESH_MESSAGE_LONG_TIMEOUT);
     } finally {
       setIsRefreshing(false);
     }
