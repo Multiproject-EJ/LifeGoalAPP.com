@@ -29,6 +29,8 @@ const AXIS_KEYS: AxisKey[] = [
   'stress_response',
   'identity_sensitivity',
   'cognitive_entry',
+  'honesty_humility',
+  'emotionality',
 ];
 
 function createTotals<T extends string>(keys: T[]): ScoreTotals<T> {

@@ -842,6 +842,7 @@ export default function App() {
               identity_sensitivity: axes.identity_sensitivity ?? 50,
               cognitive_entry: axes.cognitive_entry ?? 50,
               honesty_humility: axes.honesty_humility ?? 50,
+              emotionality: axes.emotionality ?? 50,
             },
           };
           setPersonalityScores(scores);
@@ -899,6 +900,7 @@ export default function App() {
               identity_sensitivity: recordAxes.identity_sensitivity ?? 50,
               cognitive_entry: recordAxes.cognitive_entry ?? 50,
               honesty_humility: recordAxes.honesty_humility ?? 50,
+              emotionality: recordAxes.emotionality ?? 50,
             },
           };
           setPersonalityScores(scores);
