@@ -35,6 +35,10 @@ import {
   getTraitMicroTip,
   type TraitCard,
 } from './personalityTraitCopy';
+import { ARCHETYPE_DECK } from './archetypes/archetypeDeck';
+import { scoreArchetypes, rankArchetypes } from './archetypes/archetypeScoring';
+import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder';
+import { DeckSummary } from './deck/DeckSummary';
 
 type TestStep = 'intro' | 'quiz' | 'results';
 
@@ -527,6 +531,16 @@ export default function PersonalityTest() {
     return scorePersonality(answers);
   }, [answers, step]);
 
+  const archetypeHand = useMemo<ArchetypeHand | null>(() => {
+    if (!scores) {
+      return null;
+    }
+
+    const archetypeScores = scoreArchetypes(scores, ARCHETYPE_DECK);
+    const ranked = rankArchetypes(archetypeScores);
+    return buildHand(ranked);
+  }, [scores]);
+
   const narrative = useMemo(() => (scores ? buildNarrative(scores) : []), [scores]);
   const traitCards = useMemo(() => (scores ? buildTraitCards(scores) : []), [scores]);
   const topTraits = useMemo(
@@ -662,6 +676,7 @@ export default function PersonalityTest() {
       userId: activeUserId,
       answers,
       scores,
+      archetypeHand: archetypeHand || undefined, // Save archetype hand if present
       version: 'v1',
     })
       .then((record) => {
@@ -900,6 +915,11 @@ export default function PersonalityTest() {
               </ul>
             </div>
           </div>
+          {archetypeHand && (
+            <div className="identity-hub__section">
+              <DeckSummary hand={archetypeHand} microTestCount={0} />
+            </div>
+          )}
           <div className="identity-hub__section identity-hub__narrative">
             <h4 className="identity-hub__results-title">Profile summary</h4>
             {narrative.map((paragraph) => (

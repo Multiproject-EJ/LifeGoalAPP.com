@@ -31,6 +31,7 @@ interface LifeGoalAppDB extends DBSchema {
       axes: Record<string, number>;
       answers: Record<string, number>;
       version: string;
+      archetype_hand?: any; // Serialized ArchetypeHand (optional for backwards compatibility)
       _dirty?: boolean;
     };
     indexes: {

@@ -9,7 +9,9 @@ export type AxisKey =
   | 'regulation_style'
   | 'stress_response'
   | 'identity_sensitivity'
-  | 'cognitive_entry';
+  | 'cognitive_entry'
+  | 'honesty_humility'
+  | 'emotionality';
 
 export type AnswerValue = 1 | 2 | 3 | 4 | 5;
 
