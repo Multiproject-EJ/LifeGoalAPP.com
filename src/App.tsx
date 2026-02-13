@@ -537,7 +537,7 @@ export default function App() {
       if (navId === 'body') {
         return {
           id: navId,
-          label: 'Healht',
+          label: 'Health Goals',
           ariaLabel: 'Health routines and care',
           icon: '💪',
           summary: 'Refresh your body-focused routines and personal care rituals.',
@@ -2428,27 +2428,38 @@ export default function App() {
                 <div className="mobile-menu-overlay__controls">
                   <button
                     type="button"
-                    className={`mobile-footer-nav__diode-toggle ${
-                      isMobileMenuImageActive
-                        ? 'mobile-footer-nav__diode-toggle--on'
-                        : 'mobile-footer-nav__diode-toggle--off'
-                    }`}
-                    aria-pressed={isMobileMenuImageActive}
-                    aria-label="Toggle diode indicator"
-                    onClick={() => {
-                      const nextIsActive = !isMobileMenuImageActive;
-                      setIsMobileMenuImageActive(nextIsActive);
-                      triggerMobileMenuFlash();
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="mobile-menu-overlay__close"
+                    className="mobile-menu-overlay__close mobile-menu-overlay__close--enlarged"
                     aria-label="Close menu"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     ×
                   </button>
+                  <div className="mobile-menu-overlay__game-mode">
+                    <button
+                      type="button"
+                      className={`mobile-footer-nav__diode-toggle ${
+                        isMobileMenuImageActive
+                          ? 'mobile-footer-nav__diode-toggle--on'
+                          : 'mobile-footer-nav__diode-toggle--off'
+                      }`}
+                      aria-pressed={isMobileMenuImageActive}
+                      aria-label="Toggle diode indicator"
+                      onClick={() => {
+                        const nextIsActive = !isMobileMenuImageActive;
+                        setIsMobileMenuImageActive(nextIsActive);
+                        triggerMobileMenuFlash();
+                      }}
+                    />
+                    <span
+                      className={`mobile-menu-overlay__game-mode-label ${
+                        isMobileMenuImageActive
+                          ? 'mobile-menu-overlay__game-mode-label--on'
+                          : 'mobile-menu-overlay__game-mode-label--off'
+                      }`}
+                    >
+                      GAME MODE ({isMobileMenuImageActive ? 'ON' : 'OFF'})
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="mobile-menu-overlay__quick-actions">
@@ -2460,7 +2471,7 @@ export default function App() {
                   style={{ position: 'relative' }}
                 >
                   <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
-                  <span className="mobile-menu-overlay__quick-action-label">ID</span>
+                  <span className="mobile-menu-overlay__quick-action-label">Players Hand</span>
                   {microTestBadge.showBadge && (
                     <span
                       style={{
@@ -2476,15 +2487,6 @@ export default function App() {
                       aria-label={`${microTestBadge.count} micro-tests available`}
                     />
                   )}
-                </button>
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__quick-action-btn"
-                  onClick={() => handleMobileNavSelect('player-avatar')}
-                  aria-label="Player avatar and equipment"
-                >
-                  <span className="mobile-menu-overlay__quick-action-icon">👤</span>
-                  <span className="mobile-menu-overlay__quick-action-label">Player Avatar</span>
                 </button>
               </div>
             </div>
