@@ -16,6 +16,7 @@ import { XP_REWARDS } from '../../types/gamification';
 import { ZEN_TOKEN_REWARDS } from '../../constants/economy';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { awardZenTokens } from '../../services/zenGarden';
+import { TrainingTab } from '../training';
 import './BreathingSpace.css';
 
 type BreathingSpaceProps = {
@@ -349,7 +350,7 @@ export function BreathingSpace({
     meditation: { icon: '🧘', label: 'Meditation', uppercaseLabel: 'MEDITATION' },
     yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
     food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
-    exercise: { icon: '🏋️', label: 'Excersise', uppercaseLabel: 'EXCERSISE' },
+    exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
   };
 
   const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
@@ -489,17 +490,8 @@ export function BreathingSpace({
           </button>
         </div>
 
-        <div className="breathing-space__card breathing-space__section breathing-space__section--exercise">
-          <div className="breathing-space__card-header">
-            <span className="breathing-space__card-icon">🏋️</span>
-            <h3 className="breathing-space__card-title">Excersise</h3>
-          </div>
-          <p className="breathing-space__card-description">
-            Curate movement rituals and body resets with guided workouts.
-          </p>
-          <button className="btn btn--primary breathing-space__start-button" type="button">
-            Coming soon
-          </button>
+        <div className="breathing-space__section breathing-space__section--exercise">
+          <TrainingTab />
         </div>
       </div>
 
