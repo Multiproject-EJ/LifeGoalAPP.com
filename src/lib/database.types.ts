@@ -65,6 +65,7 @@ export interface Database {
           axes: Json;
           answers: Json | null;
           version: string;
+          archetype_hand: Json | null;
         };
         Insert: {
           id?: string;
@@ -74,6 +75,7 @@ export interface Database {
           axes: Json;
           answers?: Json | null;
           version?: string;
+          archetype_hand?: Json | null;
         };
         Update: {
           id?: string;
@@ -83,6 +85,7 @@ export interface Database {
           axes?: Json;
           answers?: Json | null;
           version?: string;
+          archetype_hand?: Json | null;
         };
         Relationships: [];
       };

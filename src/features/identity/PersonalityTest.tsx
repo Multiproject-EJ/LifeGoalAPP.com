@@ -39,6 +39,8 @@ import { ARCHETYPE_DECK } from './archetypes/archetypeDeck';
 import { scoreArchetypes, rankArchetypes } from './archetypes/archetypeScoring';
 import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder';
 import { DeckSummary } from './deck/DeckSummary';
+import { PlayerDeck } from './deck/PlayerDeck';
+import './deck/deck.css';
 
 type TestStep = 'intro' | 'quiz' | 'results';
 
@@ -928,9 +930,14 @@ export default function PersonalityTest() {
             </div>
           </div>
           {archetypeHand && (
-            <div className="identity-hub__section">
-              <DeckSummary hand={archetypeHand} microTestCount={0} />
-            </div>
+            <>
+              <div className="identity-hub__section">
+                <DeckSummary hand={archetypeHand} microTestCount={0} />
+              </div>
+              <div className="identity-hub__section">
+                <PlayerDeck hand={archetypeHand} />
+              </div>
+            </>
           )}
           <div className="identity-hub__section identity-hub__narrative">
             <h4 className="identity-hub__results-title">Profile summary</h4>

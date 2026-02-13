@@ -46,6 +46,7 @@ function normalizeSupabasePersonalityTest(
     axes: normalizeJsonRecord(row.axes),
     answers: normalizeJsonRecord(row.answers),
     version: row.version ?? 'v1',
+    archetype_hand: row.archetype_hand ?? undefined,
     _dirty: false,
   };
 }
@@ -173,6 +174,7 @@ export async function syncPersonalityTestsWithSupabase(userId: string): Promise<
       axes: test.axes,
       answers: test.answers ?? null,
       version: test.version,
+      archetype_hand: test.archetype_hand ?? null,
     }, { onConflict: 'id' });
 
     if (error) {

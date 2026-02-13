@@ -86,6 +86,8 @@ import {
   saveProfileStrengthXpState,
 } from './features/profile-strength/profileStrengthXp';
 import { buildTopTraitSummary } from './features/identity/personalitySummary';
+import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
+import type { PlayerState } from './features/identity/microTests/microTestTriggers';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -427,6 +429,23 @@ export default function App() {
   const currentLevel = levelInfo?.currentLevel ?? 1;
   const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
   const shouldShowPointsBadges = isGameModeActive && isMobileViewport;
+  
+  // Micro-test badge state for identity tab
+  const microTestPlayerState: PlayerState = useMemo(() => {
+    // TODO: Calculate days since foundation test from personality profile
+    // For now, use a placeholder until personality profile is added to component state
+    const daysSinceFoundation = 0;
+    
+    return {
+      level: currentLevel,
+      currentStreakDays: streakMomentum,
+      daysSinceFoundationTest: daysSinceFoundation,
+      completedMicroTests: [], // TODO: Load from storage/Supabase when micro-test tracking is added
+    };
+  }, [currentLevel, streakMomentum]);
+  
+  const microTestBadge = useMicroTestBadge(microTestPlayerState);
+  
   const mobileMenuPointsBadges = useMemo(() => {
     const badges: Record<string, string> = {};
     if (goldBalance > 0) {
@@ -2353,9 +2372,25 @@ export default function App() {
                   className="mobile-menu-overlay__quick-action-btn"
                   onClick={() => handleMobileNavSelect('identity')}
                   aria-label="Your identity and preferences"
+                  style={{ position: 'relative' }}
                 >
                   <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
                   <span className="mobile-menu-overlay__quick-action-label">ID</span>
+                  {microTestBadge.showBadge && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        width: '10px',
+                        height: '10px',
+                        backgroundColor: '#ef4444',
+                        borderRadius: '50%',
+                        border: '2px solid #000',
+                      }}
+                      aria-label={`${microTestBadge.count} micro-tests available`}
+                    />
+                  )}
                 </button>
                 <button
                   type="button"
