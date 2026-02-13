@@ -1,5 +1,5 @@
 // Strategy Engine - Pure functions for calculating training strategy progress
-import type { TrainingStrategy, ExerciseLog, StrategyProgress, StrategyStatus } from './types';
+import type { TrainingStrategy, ExerciseLog, StrategyProgress, StrategyStatus, FocusRecommendation } from './types';
 import { getExercisesForMuscles } from './constants';
 
 /**
@@ -499,13 +499,7 @@ function calculateRecovery(
 export function getActiveFocusRecommendations(
   strategies: TrainingStrategy[],
   logs: ExerciseLog[]
-): { 
-  focusMuscles: string[]; 
-  recommendedExercises: string[]; 
-  daysRemaining: number; 
-  strategyName: string;
-  progress: number;
-} | null {
+): FocusRecommendation | null {
   // Find first active focus_muscle strategy
   const focusStrategy = strategies.find(
     (s) => s.is_active && s.strategy_type === 'focus_muscle' && s.focus_muscles.length > 0
