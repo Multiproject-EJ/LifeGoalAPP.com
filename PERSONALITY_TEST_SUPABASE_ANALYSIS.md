@@ -1,5 +1,24 @@
 # Personality Test Supabase Storage Analysis
 
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Database Schema in Supabase](#database-schema-in-supabase)
+   - [Main Table: personality_tests](#1-main-table-personality_tests)
+   - [Profile Extensions: profiles Table](#2-profile-extensions-profiles-table)
+3. [Visual Flow Diagram](#visual-flow-diagram)
+4. [Code Flow: When Results Are Saved](#code-flow-when-results-are-saved)
+   - [Phase 1: Local Storage (Immediate)](#phase-1-local-storage-immediate)
+   - [Phase 2: Supabase Sync (Immediately After Local Save)](#phase-2-supabase-sync-immediately-after-local-save)
+   - [Phase 3: Background Sync (On Component Mount)](#phase-3-background-sync-on-component-mount)
+   - [Phase 4: App Load Sync (On App Initialization)](#phase-4-app-load-sync-on-app-initialization)
+5. [Summary: Storage Locations](#summary-storage-locations)
+6. [Timing Summary](#timing-summary)
+7. [Key Features](#key-features)
+8. [Practical Examples](#practical-examples)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Related Files](#related-files)
+
 ## Executive Summary
 
 This document provides a comprehensive analysis of where personality test results are saved in Supabase and when the saving occurs in the LifeGoalAPP.com application.
@@ -271,6 +290,122 @@ for (const test of dirtyTests) {
 - Row Level Security (RLS) enforced
 - Users can only access their own tests
 - Foreign key to auth.users ensures data isolation
+
+## Practical Examples
+
+### Example 1: Querying Test History from Supabase
+
+```sql
+-- Get all tests for a user
+SELECT 
+  id,
+  taken_at,
+  traits,
+  axes,
+  archetype_hand,
+  version
+FROM personality_tests
+WHERE user_id = '<user_uuid>'
+ORDER BY taken_at DESC;
+
+-- Get the most recent test
+SELECT * 
+FROM personality_tests
+WHERE user_id = '<user_uuid>'
+ORDER BY taken_at DESC
+LIMIT 1;
+```
+
+### Example 2: Checking User's Personality Profile
+
+```sql
+-- Get current personality summary from profiles
+SELECT 
+  user_id,
+  personality_traits,
+  personality_axes,
+  personality_summary,
+  personality_last_tested_at
+FROM profiles
+WHERE user_id = '<user_uuid>';
+```
+
+### Example 3: Sample Test Data Structure
+
+**In `personality_tests.traits` (JSONB):**
+```json
+{
+  "openness": 75,
+  "conscientiousness": 60,
+  "extraversion": 45,
+  "agreeableness": 80,
+  "emotional_stability": 55
+}
+```
+
+**In `personality_tests.axes` (JSONB):**
+```json
+{
+  "regulation_style": 65,
+  "stress_response": 50,
+  "identity_sensitivity": 70,
+  "cognitive_entry": 55,
+  "honesty_humility": 75,
+  "emotionality": 60
+}
+```
+
+**In `personality_tests.archetype_hand` (JSONB):**
+```json
+{
+  "dominant": { "id": "sage", "name": "The Sage", "score": 85 },
+  "secondary": { "id": "caregiver", "name": "The Caregiver", "score": 78 },
+  "support": [
+    { "id": "creator", "name": "The Creator", "score": 72 },
+    { "id": "hero", "name": "The Hero", "score": 68 }
+  ],
+  "shadow": { "id": "rebel", "name": "The Rebel", "score": 35 }
+}
+```
+
+### Example 4: Debugging Sync Issues
+
+**Check IndexedDB in Browser DevTools:**
+1. Open DevTools → Application → Storage → IndexedDB
+2. Expand `lifegoalapp-db` → `personality_tests`
+3. Look for records with `_dirty: true` (not yet synced)
+
+**Check if tests are being saved locally but not syncing:**
+```javascript
+// In browser console
+const db = await openDB('lifegoalapp-db', 2);
+const dirtyTests = await db.getAllFromIndex('personality_tests', 'by-user_id');
+console.log('Dirty tests:', dirtyTests.filter(t => t._dirty));
+```
+
+## Troubleshooting Guide
+
+### Issue: Test completed but not showing in history
+
+**Possible causes:**
+1. Network offline during sync → Check browser network tab
+2. Supabase authentication expired → Check console for 401 errors
+3. RLS policy blocking access → Verify user is authenticated
+4. Test saved locally but not synced → Check IndexedDB for `_dirty: true`
+
+**Solutions:**
+- Reload the page to trigger background sync
+- Check browser console for errors
+- Use "Refresh from Supabase" button in PersonalityTest component
+- Verify Supabase connection with SupabaseConnectionTest component
+
+### Issue: Old test results not loading
+
+**Check:**
+1. Query Supabase directly to verify data exists
+2. Check RLS policies allow user to read their data
+3. Verify `user_id` matches authenticated user's ID
+4. Look for errors in `loadPersonalityTestHistoryWithSupabase()` call
 
 ## Related Files
 
