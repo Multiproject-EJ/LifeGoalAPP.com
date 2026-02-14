@@ -226,17 +226,23 @@ V1 scaffolds event logging for all V2 features.
 
 # SECTION I — BUILD ORDER
 
-## Phase 0 — Shared Infrastructure (THIS PHASE)
+## Phase 0 — Shared Infrastructure (COMPLETE)
 - gameRewards.ts, gameCurrencies.ts, economy.ts extensions, habitGames.ts types, event logging scaffold
 
-## Phase 1 — Lucky Roll Core (board + dice + persist + App.tsx wiring)
-## Phase 2 — Lucky Roll Effects (tiles + mini-game stubs + near-miss + celebrations)
-## Phase 3 — Task Tower (grid + blocks + completion + line clears + entry/exit)
-## Phase 4 — Pomodoro Sprint (timer + ritual + early exit + integrity + rewards)
-## Phase 5 — Vision Quest (space + gallery + reflections + identity + multipliers + themes)
-## Phase 6 — Wheel of Wins (wheel + spin + weights + cooldowns + entry/exit)
-## Phase 7 — V1 Integrations (life wheel zones + profile strength + goal priority + journal flavor)
-## Phase 8 — Metrics & Polish (logging + balance + health checks + a11y + mobile)
+## Phase 1 — Lucky Roll Core (COMPLETE)
+## Phase 2 — Lucky Roll Effects (COMPLETE)
+## Phase 3 — Task Tower (COMPLETE)
+## Phase 4 — Pomodoro Sprint (COMPLETE)
+## Phase 5 — Vision Quest (COMPLETE)
+## Phase 6 — Wheel of Wins (COMPLETE)
+## Phase 7 — V1 Integrations (COMPLETE)
+## Phase 8 — Metrics & Polish (COMPLETE)
+
+## Phase 9 — Level Worlds Campaign Mode (IN PROGRESS)
+- NEW: Discrete level-based progression system wrapping Lucky Roll
+- Foundation: Types, state, generator, rewards, hooks, components
+- Integration: Wire into Lucky Roll as "Campaign" mode
+- See [LEVEL_WORLDS_DEV_PLAN.md](./LEVEL_WORLDS_DEV_PLAN.md) for full spec
 
 ---
 

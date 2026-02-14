@@ -10,6 +10,7 @@ import { PomodoroSprint } from '../games/pomodoro-sprint/PomodoroSprint';
 import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
 import { VisionQuest } from '../games/vision-quest/VisionQuest';
 import { LuckyRollCelebration } from './LuckyRollCelebration';
+import { LevelWorldsHub } from '../level-worlds/LevelWorldsHub';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
 import './luckyRollBoard.css';
@@ -41,6 +42,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
   const [showVisionQuest, setShowVisionQuest] = useState(false);
+  const [showLevelWorlds, setShowLevelWorlds] = useState(false);
   const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
   const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
@@ -349,6 +351,20 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   
   const isMilestone = gameState.currentLap % 5 === 0;
   
+  if (showLevelWorlds) {
+    return (
+      <LevelWorldsHub
+        session={session}
+        onClose={() => {
+          setShowLevelWorlds(false);
+          // Refresh currency balance
+          refreshCurrencyBalance();
+          setGoldBalance(getGoldBalance(userId));
+        }}
+      />
+    );
+  }
+  
   if (showDiceShop) {
     return (
       <LuckyRollDiceShop
@@ -448,6 +464,14 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             onClick={() => setShowDiceShop(true)}
           >
             🛒 Dice Shop
+          </button>
+          
+          <button
+            type="button"
+            className="lucky-roll-board__campaign-button"
+            onClick={() => setShowLevelWorlds(true)}
+          >
+            🗺️ Campaign
           </button>
         </div>
         
