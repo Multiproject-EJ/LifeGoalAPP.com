@@ -278,6 +278,7 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'game',
   'placeholder',
   'identity', // Moved to quick actions section
+  'player-avatar', // Moved to quick actions section
 ] as const;
 
 const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account']);
@@ -2465,7 +2466,7 @@ export default function App() {
               <div className="mobile-menu-overlay__quick-actions">
                 <button
                   type="button"
-                  className="mobile-menu-overlay__quick-action-btn"
+                  className="mobile-menu-overlay__quick-action-btn mobile-menu-overlay__quick-action-btn--two-thirds"
                   onClick={() => handleMobileNavSelect('identity')}
                   aria-label="Your identity and preferences"
                   style={{ position: 'relative' }}
@@ -2487,6 +2488,15 @@ export default function App() {
                       aria-label={`${microTestBadge.count} micro-tests available`}
                     />
                   )}
+                </button>
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__quick-action-btn mobile-menu-overlay__quick-action-btn--one-third"
+                  onClick={() => handleMobileNavSelect('player-avatar')}
+                  aria-label="Player avatar customization"
+                >
+                  <span className="mobile-menu-overlay__quick-action-icon">👤</span>
+                  <span className="mobile-menu-overlay__quick-action-label">Avatar</span>
                 </button>
               </div>
             </div>
