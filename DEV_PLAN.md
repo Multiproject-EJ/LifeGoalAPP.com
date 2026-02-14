@@ -16,10 +16,22 @@ Use this section first when returning to the plan.
 | M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
 | M4. Auto-progress ladder v1 | 🟡 In Progress | Done-ish weighted streak + weighted success-rate analytics are now surfaced in habit cards. Next: add UI affordances to classify skipped vs missed directly in daily check-ins. |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
-| M6. AI Coach instruction system | ☐ Not started | |
-| M7. AI Coach interventions v1 | ☐ Not started | |
+| M6. AI Coach instruction system | ✅ Complete | Fully built in `src/services/aiCoachInstructions.ts` with `loadAiCoachInstructions()`, `BASE_INSTRUCTIONS`, env-based overrides, and data access scoping. |
+| M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
 | M8. Micro-quests + retention loop v1 | ✅ Complete | Daily micro-quests with balance/habit/focus sources and harmony bonus implemented. |
-| M9. Push notification dispatch plan | ☐ Not started | |
+| M9. Push notification dispatch plan | 🟡 In Progress | Dispatch plan fully documented in `docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md`; frontend push subscription and edge function `send-reminders` exist; backend scheduling in `habitAlertNotifications.ts` still needs completion. |
+
+### Additional Feature Status Notes
+
+**Training/Exercise Tab**: ✅ Complete — Full feature under `src/features/training/` with 13+ files, all 10 strategy types built, documented in `TRAINING_FEATURE_COMPLETE.md`.
+
+**Monthly Treat Calendar**: 🟡 Phase 1-3 Complete (RNG, UI, scratch card), Phase 4 backend (Supabase tables + RLS + edge functions) still pending. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
+
+**HabitGame Core Games**: 🟡 Lucky Roll fully built + all 4 mini-games have implementations (TaskTower, PomodoroSprint, WheelOfWins, VisionQuest imported and integrated). Currency architecture working. See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
+
+**Goals Tab Redesign**: 🟡 Phase 1 done (two-card entry in `GoalWorkspace.tsx`), Phases 2-4 not started. See `GOALS_TAB_REDESIGN_PLAN.md`.
+
+**Actions Feature**: ✅ Phases 0-4 Complete (Actions Tab, Timer, Projects Manager, Kanban/Timeline views), Phase 5 (AI) and Phase 6 (Desktop) Complete. Full task-project integration operational. See `ACTIONS_FEATURE_DEV_PLAN.md`.
 
 ### First Step (always)
 1. **Determine current build status** by checking recent commits and the app for any progress on the milestones above.
