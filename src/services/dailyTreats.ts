@@ -58,6 +58,16 @@ export async function awardDailyTreatGold(
 }
 
 /**
+ * Gets today's date in YYYY-MM-DD format using UTC to ensure consistency across timezones.
+ * Using UTC prevents edge cases where users in different timezones could claim multiple times
+ * or miss a day during date transitions.
+ */
+function getTodayDateKeyUTC(): string {
+  const now = new Date();
+  return now.toISOString().split('T')[0]; // Always returns YYYY-MM-DD in UTC
+}
+
+/**
  * Collects daily hearts for the user if they haven't collected today yet.
  * Awards exactly 5 hearts per day, not stackable (missed days don't accumulate).
  * 
@@ -73,7 +83,7 @@ export function collectDailyHearts(userId: string): {
     return null;
   }
 
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+  const today = getTodayDateKeyUTC();
   const storageKey = `${DAILY_HEARTS_STORAGE_KEY_PREFIX}:${userId}:lastCollected`;
   
   try {
@@ -130,7 +140,7 @@ export function hasCollectedDailyHeartsToday(userId: string): boolean {
     return false;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayDateKeyUTC();
   const storageKey = `${DAILY_HEARTS_STORAGE_KEY_PREFIX}:${userId}:lastCollected`;
   
   try {
