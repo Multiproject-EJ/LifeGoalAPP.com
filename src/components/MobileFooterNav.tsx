@@ -537,7 +537,6 @@ export function MobileFooterNav({
       <GameBoardOverlay
         isOpen={isBoardOpen}
         onClose={() => setIsBoardOpen(false)}
-        pointsBalance={displayPointsBalance ?? 0}
       />
     </nav>
   );

@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react';
 import boardTopbar from '../assets/board_topbar.webp';
 import boardMatchbar from '../assets/board_matchbar.webp';
 import boardIconsRight from '../assets/board_icons_right.webp';
-import boardIconsLeft from '../assets/board_icons_left.webp';
 import boardController from '../assets/board_controller.webp';
 import '../styles/game-board-overlay.css';
 
 type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
-  pointsBalance: number;
 };
 
-export function GameBoardOverlay({ isOpen, onClose, pointsBalance }: GameBoardOverlayProps) {
+export function GameBoardOverlay({ isOpen, onClose }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
