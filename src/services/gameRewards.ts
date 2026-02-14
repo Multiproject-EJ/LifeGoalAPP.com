@@ -14,7 +14,7 @@ const MAX_SESSIONS = 200;
 
 const RANDOM_BUFFER = new Uint32Array(1);
 
-export type GameSource = 'lucky_roll' | 'task_tower' | 'pomodoro_sprint' | 'vision_quest' | 'wheel_of_wins' | 'dice_packs';
+export type GameSource = 'lucky_roll' | 'task_tower' | 'pomodoro_sprint' | 'vision_quest' | 'wheel_of_wins' | 'dice_packs' | 'daily_treats';
 
 export interface GameRewardEvent {
   id: string;

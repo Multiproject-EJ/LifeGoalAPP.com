@@ -53,6 +53,7 @@ import { CountdownCalendarModal } from './features/gamification/daily-treats/Cou
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
+import { collectDailyHearts, hasCollectedDailyHeartsToday } from './services/dailyTreats';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -408,12 +409,22 @@ export default function App() {
   }, [getTodayDateKey]);
 
   const handleDailyTreatsCongratsClose = useCallback(() => {
+    // Collect daily hearts when claiming treats
+    // Note: We use supabaseSession directly here instead of activeSession to avoid dependency issues
+    const userId = supabaseSession?.user?.id ?? createDemoSession().user.id;
+    if (userId) {
+      const result = collectDailyHearts(userId);
+      if (result) {
+        console.log(`Collected ${result.heartsAwarded} hearts. New balance: ${result.newBalance}`);
+      }
+    }
+    
     setShowDailyTreatsCongrats(false);
     if (pendingDailyTreatsOpen) {
       setShowDailyTreatsMenu(true);
       setPendingDailyTreatsOpen(false);
     }
-  }, [pendingDailyTreatsOpen]);
+  }, [pendingDailyTreatsOpen, supabaseSession?.user?.id]);
 
   const {
     earnXP,
@@ -469,14 +480,22 @@ export default function App() {
     const maxGold = Math.max(...goldValues);
     return formatGoldRange(minGold, maxGold);
   }, []);
-  const dailyTreatsInventory = useMemo(
-    () => ({
+  
+  // Dynamic daily treats inventory based on collection status
+  const dailyTreatsInventory = useMemo(() => {
+    // Note: We use supabaseSession directly here instead of activeSession to avoid dependency issues
+    const userId = supabaseSession?.user?.id ?? createDemoSession().user.id;
+    
+    // Check if hearts have been collected today
+    const heartsCollectedToday = hasCollectedDailyHeartsToday(userId);
+    
+    return {
       spinsRemaining: 2,
-      heartsRemaining: 5,
+      heartsRemaining: heartsCollectedToday ? 0 : 5,
       hatchesRemaining: 1,
-    }),
-    [],
-  );
+    };
+  }, [supabaseSession?.user?.id]);
+  
   const todayDailyTreatsKey = getTodayDateKey();
   const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;
   const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
