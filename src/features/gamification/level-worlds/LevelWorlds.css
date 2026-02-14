@@ -554,6 +554,36 @@
   }
 }
 
+/* === Notification Toast === */
+.level-worlds-notification {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+  border: 2px solid #daa520;
+  border-radius: 12px;
+  color: #daa520;
+  font-size: 0.95rem;
+  text-align: center;
+  z-index: 5000;
+  animation: slideUpFade 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 /* === Responsive Design === */
 @media (min-width: 768px) {
   .level-worlds-title {

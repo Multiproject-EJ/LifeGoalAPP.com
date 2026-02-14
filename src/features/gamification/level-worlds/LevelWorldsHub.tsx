@@ -30,7 +30,8 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
 
   const [selectedNode, setSelectedNode] = useState<WorldNode | null>(null);
   const [showBoardComplete, setShowBoardComplete] = useState(false);
-  const [completedBoard, setCompletedBoard] = useState<typeof currentBoard>(null);
+  const [completedBoard, setCompletedBoard] = useState<typeof currentBoard | undefined>(undefined);
+  const [notificationMessage, setNotificationMessage] = useState<string>('');
 
   // Mini-game states
   const [showTaskTower, setShowTaskTower] = useState(false);
@@ -68,9 +69,19 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
           break;
       }
     } else {
-      // For other types, show message that they need to complete in the app
-      alert(`Please complete this objective in the ${node.objective.type} section of the app, then return here.`);
+      // For other types, show notification that they need to complete in the app
+      const messages: Record<string, string> = {
+        habit: 'Complete your habits in the Habits section, then return here.',
+        goal: 'Make progress on your goals in the Goals section, then return here.',
+        journal: 'Write a journal entry in the Journal section, then return here.',
+        personality: 'Complete the personality test in your Profile, then return here.',
+        boss: 'Complete all required activities, then return here.'
+      };
+      setNotificationMessage(messages[node.objective.type] || 'Complete this objective in the app, then return here.');
       setSelectedNode(null);
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => setNotificationMessage(''), 5000);
     }
   }, []);
 
@@ -100,7 +111,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
 
   const handleBoardContinue = useCallback(() => {
     setShowBoardComplete(false);
-    setCompletedBoard(null);
+    setCompletedBoard(undefined);
     // The state will automatically load the next board
   }, []);
 
@@ -110,6 +121,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
       <TaskTower
         session={session}
         onClose={handleMiniGameComplete}
+        onComplete={handleMiniGameComplete}
       />
     );
   }
@@ -119,6 +131,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
       <PomodoroSprint
         session={session}
         onClose={handleMiniGameComplete}
+        onComplete={handleMiniGameComplete}
       />
     );
   }
@@ -128,6 +141,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
       <VisionQuest
         session={session}
         onClose={handleMiniGameComplete}
+        onComplete={handleMiniGameComplete}
       />
     );
   }
@@ -137,6 +151,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
       <WheelOfWins
         session={session}
         onClose={handleMiniGameComplete}
+        onComplete={handleMiniGameComplete}
       />
     );
   }
@@ -199,6 +214,12 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
       {isLoading && (
         <div className="level-worlds-loading-overlay">
           <div className="spinner" />
+        </div>
+      )}
+
+      {notificationMessage && (
+        <div className="level-worlds-notification">
+          {notificationMessage}
         </div>
       )}
     </div>

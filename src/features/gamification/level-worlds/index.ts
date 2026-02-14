@@ -41,10 +41,14 @@ export type {
   NodeType,
   NodeStatus,
   MiniGameType,
-  WorldNode,
   NodeObjective,
   NodeReward,
-  WorldBoard,
   BoardCompletionReward,
   LevelWorldsState
+} from './types/levelWorlds';
+
+// Avoid name collision with component exports
+export type {
+  WorldNode as WorldNodeType,
+  WorldBoard as WorldBoardType
 } from './types/levelWorlds';

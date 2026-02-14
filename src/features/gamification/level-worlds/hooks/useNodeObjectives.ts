@@ -12,9 +12,9 @@ export function useNodeObjectives(userId: string) {
   const checkHabitObjective = useCallback(async (objective: NodeObjective): Promise<boolean> => {
     if (objective.type !== 'habit') return false;
     
-    // TODO: Phase 2 - Check actual habit completion status
+    // TODO: Phase 2 - Check actual habit completion status for userId
     // For now, we'll return false to require manual completion
-    console.log('Checking habit objective:', objective);
+    console.log('Checking habit objective for user:', userId, objective);
     return false;
   }, [userId]);
 
@@ -22,8 +22,8 @@ export function useNodeObjectives(userId: string) {
   const checkGoalObjective = useCallback(async (objective: NodeObjective): Promise<boolean> => {
     if (objective.type !== 'goal') return false;
     
-    // TODO: Phase 2 - Check actual goal progress
-    console.log('Checking goal objective:', objective);
+    // TODO: Phase 2 - Check actual goal progress for userId
+    console.log('Checking goal objective for user:', userId, objective);
     return false;
   }, [userId]);
 
@@ -31,8 +31,8 @@ export function useNodeObjectives(userId: string) {
   const checkJournalObjective = useCallback(async (objective: NodeObjective): Promise<boolean> => {
     if (objective.type !== 'journal') return false;
     
-    // TODO: Phase 2 - Check if journal entry exists for today
-    console.log('Checking journal objective:', objective);
+    // TODO: Phase 2 - Check if journal entry exists for today for userId
+    console.log('Checking journal objective for user:', userId, objective);
     return false;
   }, [userId]);
 
@@ -40,8 +40,8 @@ export function useNodeObjectives(userId: string) {
   const checkPersonalityObjective = useCallback(async (objective: NodeObjective): Promise<boolean> => {
     if (objective.type !== 'personality') return false;
     
-    // TODO: Phase 2 - Check personality test completion
-    console.log('Checking personality objective:', objective);
+    // TODO: Phase 2 - Check personality test completion for userId
+    console.log('Checking personality objective for user:', userId, objective);
     return false;
   }, [userId]);
 
