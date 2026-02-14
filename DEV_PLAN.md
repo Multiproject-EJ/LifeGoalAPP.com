@@ -45,6 +45,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 - [AI_LIFE_COACH_FEATURE.md](./AI_LIFE_COACH_FEATURE.md) — AI life coach feature scope.
 - [HABITGAME_CORE_GAMES_DEV_PLAN.md](./HABITGAME_CORE_GAMES_DEV_PLAN.md) — Master plan for the 5 core games system (Lucky Roll, Task Tower, Pomodoro Sprint, Vision Quest, Wheel of Wins). Replaces the Daily Treats middle card league placeholder.
   - [HABITGAME_ACCESS_FLOW.md](./HABITGAME_ACCESS_FLOW.md) — User access patterns and navigation hierarchy for the game system.
+  - [LEVEL_WORLDS_DEV_PLAN.md](./LEVEL_WORLDS_DEV_PLAN.md) — Level Worlds campaign mode system — discrete level-based progression wrapping Lucky Roll.
 
 ---
 
