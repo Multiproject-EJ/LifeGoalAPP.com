@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Menu Demo - Player Profile Changes</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .demo-container {
+      width: 100%;
+      max-width: 375px;
+      background: #0a0e1a;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    
+    .demo-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      color: white;
+      text-align: center;
+    }
+    
+    .demo-header h1 {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    
+    .demo-header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .mobile-menu-demo {
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(30,41,59,0.4) 0%, rgba(15,23,42,0.6) 100%);
+    }
+    
+    .section-title {
+      color: #94a3b8;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .mobile-menu-overlay__quick-actions {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0 0 1rem;
+      margin-bottom: 20px;
+    }
+
+    .mobile-menu-overlay__quick-action-btn--two-thirds {
+      flex: 0 0 calc(66.666% - 0.375rem);
+      max-width: calc(66.666% - 0.375rem);
+    }
+
+    .mobile-menu-overlay__quick-action-btn--one-third {
+      flex: 0 0 calc(33.333% - 0.375rem);
+      max-width: calc(33.333% - 0.375rem);
+    }
+
+    .mobile-menu-overlay__quick-action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.75rem 0.5rem;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(71, 85, 105, 0.4);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .mobile-menu-overlay__quick-action-btn:hover {
+      background: rgba(30, 41, 59, 0.8);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .mobile-menu-overlay__quick-action-icon {
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .mobile-menu-overlay__quick-action-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #f8fafc;
+      letter-spacing: 0.01em;
+      text-align: center;
+    }
+    
+    .badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 10px;
+      height: 10px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      border: 2px solid #000;
+    }
+    
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    
+    .icon-item {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid rgba(71, 85, 105, 0.3);
+      border-radius: 12px;
+      padding: 16px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .icon-item:hover {
+      background: rgba(30, 41, 59, 0.6);
+      transform: translateY(-2px);
+    }
+    
+    .icon-item.removed {
+      opacity: 0.3;
+      text-decoration: line-through;
+    }
+    
+    .icon-item-emoji {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    
+    .icon-item-label {
+      font-size: 11px;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+    
+    .comparison {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .comparison-title {
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    .change-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .change-list li {
+      color: #94a3b8;
+      font-size: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(71, 85, 105, 0.2);
+      display: flex;
+      align-items: start;
+    }
+    
+    .change-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .change-list li::before {
+      content: "✓";
+      color: #10b981;
+      font-weight: bold;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <div class="demo-header">
+      <h1>Mobile UI Update</h1>
+      <p>Player Profile Menu Changes</p>
+    </div>
+    
+    <div class="mobile-menu-demo">
+      <div class="section-title">Quick Actions (After Changes)</div>
+      <div class="mobile-menu-overlay__quick-actions">
+        <button class="mobile-menu-overlay__quick-action-btn mobile-menu-overlay__quick-action-btn--two-thirds">
+          <span class="mobile-menu-overlay__quick-action-icon">🪪</span>
+          <span class="mobile-menu-overlay__quick-action-label">Player's Hand</span>
+          <span class="badge"></span>
+        </button>
+        <button class="mobile-menu-overlay__quick-action-btn mobile-menu-overlay__quick-action-btn--one-third">
+          <span class="mobile-menu-overlay__quick-action-icon">👤</span>
+          <span class="mobile-menu-overlay__quick-action-label">Avatar</span>
+        </button>
+      </div>
+      
+      <div class="section-title">Icon Grid (Below Quick Actions)</div>
+      <div class="icon-grid">
+        <div class="icon-item">
+          <div class="icon-item-emoji">⚙️</div>
+          <div class="icon-item-label">Settings</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-item-emoji">📊</div>
+          <div class="icon-item-label">Stats</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-item-emoji">🎨</div>
+          <div class="icon-item-label">Themes</div>
+        </div>
+        <div class="icon-item removed">
+          <div class="icon-item-emoji">👤</div>
+          <div class="icon-item-label">Avatar</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="comparison">
+      <div class="comparison-title">Changes Implemented</div>
+      <ul class="change-list">
+        <li>Player's Hand button resized to 2/3 width</li>
+        <li>Avatar button added to quick actions at 1/3 width</li>
+        <li>Avatar button removed from icon grid below</li>
+        <li>Both buttons maintain full functionality</li>
+        <li>Responsive flex layout with proper gap spacing</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
