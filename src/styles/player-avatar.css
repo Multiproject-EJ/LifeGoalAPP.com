@@ -10,8 +10,10 @@
   box-sizing: border-box;
 }
 
-.player-avatar-panel * {
-  box-sizing: border-box;
+.player-avatar-panel *,
+.player-avatar-panel *::before,
+.player-avatar-panel *::after {
+  box-sizing: inherit;
 }
 
 .player-avatar-panel__header {
@@ -295,7 +297,6 @@
   font-weight: 600;
   margin: 0 0 0.5rem;
   color: var(--text, #0f172a);
-  word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
