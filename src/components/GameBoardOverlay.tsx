@@ -53,7 +53,10 @@ export function GameBoardOverlay({ isOpen, onClose, onTopbarClick }: GameBoardOv
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
       <div className="game-board-overlay__content">
         {/* Top Bar - Now the matchbar at full width */}
-        <div className="game-board-overlay__topbar" onClick={onTopbarClick}>
+        <div 
+          className={`game-board-overlay__topbar ${onTopbarClick ? 'game-board-overlay__topbar--clickable' : ''}`}
+          onClick={onTopbarClick}
+        >
           <img src={boardMatchbar} alt="Game board top bar" className="game-board-overlay__topbar-image" />
         </div>
 

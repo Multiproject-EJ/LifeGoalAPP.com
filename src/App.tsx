@@ -1422,14 +1422,16 @@ export default function App() {
 
   const shouldRequireAuthentication = !isAuthenticated && !isDemoMode;
 
-  const handleMobileNavSelect = (navId: string, options?: { preserveBreatheTab?: boolean }) => {
-    setIsMobileMenuOpen(false);
-    setIsEnergyMenuOpen(false);
-    
-    // Close game board overlay when any footer button is clicked
+  const closeGameBoardOverlayIfOpen = () => {
     if (showGameBoardOverlay) {
       setShowGameBoardOverlay(false);
     }
+  };
+
+  const handleMobileNavSelect = (navId: string, options?: { preserveBreatheTab?: boolean }) => {
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    closeGameBoardOverlayIfOpen();
     
     const preserveBreatheTab = options?.preserveBreatheTab ?? false;
 
@@ -1473,10 +1475,7 @@ export default function App() {
   };
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
-    // Close game board overlay when energy button is clicked
-    if (showGameBoardOverlay) {
-      setShowGameBoardOverlay(false);
-    }
+    closeGameBoardOverlayIfOpen();
     
     setBreathingSpaceMobileCategory(category);
     setBreathingSpaceMobileTab(null);
