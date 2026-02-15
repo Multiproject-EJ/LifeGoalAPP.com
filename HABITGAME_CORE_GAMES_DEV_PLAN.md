@@ -157,6 +157,129 @@ Primary Emotion: Pride. A ritual, not a mini-game.
 
 ## D.6 Slices: 1.1 Timer, 1.2 Ritual, 2.1 Early exit, 2.2 Timer integrity, 3.1 Rewards, 3.2 History
 
+## D.7 Mobile launcher integration contract (REQUIRED)
+
+This section defines the non-negotiable behavior for the existing circular mobile launcher button (currently used for the player profile popup menu).
+
+### D.7.1 State model
+
+- **Idle (default):** circular button shows the existing player profile launcher icon and opens player profile menu on tap.
+- **Active timer:** while any Pomodoro Sprint timer is running, the same circular button transforms into a **clock countdown surface** (MM:SS or short remaining format).
+- **Alert mode (timer completed, not yet acknowledged):** circular button stays in timer/alert presentation until user opens timer and explicitly stops/acknowledges it.
+- **Stopped/reset:** after user stops/acknowledges timer in timer UI, circular button reverts to normal player profile launcher behavior.
+
+### D.7.2 Tap behavior contract
+
+- Tapping the circular button in **Idle** opens the player profile popup menu (unchanged behavior).
+- Tapping the circular button in **Active timer** opens the timer experience (not profile menu).
+- Tapping the circular button in **Alert mode** opens the timer experience so user can stop/acknowledge completion.
+- Once stop/acknowledge action is completed in timer UI, next tap on the circular button opens player profile popup menu again.
+
+### D.7.3 Multi-session persistence requirements
+
+- Button state must restore correctly after app reload/background/foreground using the timer source of truth.
+- If timer elapsed while app was backgrounded, launcher must restore directly into Alert mode on return.
+- No stale timer UI beyond the 24h stale-abandon rule in D.2; stale sessions must restore launcher to Idle.
+
+### D.7.4 Implementation slices for AI handoff (30–90 min each)
+
+1. **Slice D7.1 — State plumbing**
+   - Add/verify a single selector exposing timer launcher state: `idle | active | alert`.
+   - Add derived remaining-time label formatter for launcher rendering.
+2. **Slice D7.2 — Launcher visual transform**
+   - Update circular launcher component to render profile icon in `idle` and clock/countdown in `active/alert`.
+   - Preserve tap target size and accessibility labels per state.
+3. **Slice D7.3 — Launcher routing behavior**
+   - Route tap to profile menu only in `idle`.
+   - Route tap to timer entry point in `active/alert`.
+4. **Slice D7.4 — Completion acknowledgement flow**
+   - Ensure timer stop/acknowledge event clears alert state.
+   - Confirm launcher immediately reverts to profile launcher after stop.
+5. **Slice D7.5 — Persistence + background recovery**
+   - Validate reload/background/foreground transitions for all three states.
+   - Validate elapsed-in-background transition into alert state.
+6. **Slice D7.6 — QA + regression lock**
+   - Add focused test coverage for launcher state transitions and tap routing.
+   - Run manual mobile QA checklist and capture evidence in changelog.
+
+### D.7.5 Acceptance criteria (must all pass)
+
+- [ ] With no timer active, circular launcher opens player profile menu.
+- [ ] With timer running, circular launcher shows countdown clock and opens timer on tap.
+- [ ] When countdown completes, circular launcher remains timer/alert style until user acknowledges in timer UI.
+- [ ] After user stops/acknowledges timer, circular launcher reverts to profile menu launcher.
+- [ ] After app reload/background restore, launcher state matches real timer state.
+
+### D.7.6 Agent handoff log template (append-only)
+
+Use this format after each session so another AI can continue without re-discovery:
+
+```
+Date:
+Agent:
+Slice(s):
+What changed:
+Evidence (tests/manual):
+Open issues / risks:
+Next recommended slice:
+```
+
+### D.8 Next-session execution checklist (build this next)
+
+This checklist translates D.7 into concrete, restart-safe implementation sessions so an AI agent can complete one chunk per session and pause safely.
+
+#### D.8.1 Session order (strict)
+
+1. **Session 1 — Discovery + contract mapping (no behavior change)**
+   - Locate timer source-of-truth + launcher component ownership.
+   - Document exact files/functions to touch in the handoff log.
+   - Confirm whether launcher lives in `QuickActionsFAB` and where timer entry should route.
+2. **Session 2 — Timer launcher state selector**
+   - Introduce `idle | active | alert` derived selector from persisted timer state.
+   - Unit test selector transitions for running, completed-unacknowledged, acknowledged/stopped, stale (>24h).
+3. **Session 3 — Circular button visual swap**
+   - Render profile icon for `idle`.
+   - Render clock + countdown label for `active`.
+   - Render alert clock style for `alert`.
+4. **Session 4 — Tap routing + acknowledgement reset**
+   - `idle` tap opens player profile popup.
+   - `active/alert` tap opens timer UI.
+   - Stop/ack in timer UI must clear launcher alert state immediately.
+5. **Session 5 — Background/reload recovery hardening**
+   - Validate transitions across reload/background/foreground.
+   - Validate elapsed-in-background enters `alert`.
+   - Validate stale-abandon returns to `idle`.
+6. **Session 6 — Regression coverage + evidence capture**
+   - Add tests and manual QA evidence for all acceptance criteria.
+   - Append completion notes to handoff log with rollback notes.
+
+#### D.8.2 Definition of done per session
+
+A session is only complete if all are true:
+- Code/build/tests pass for touched scope.
+- D.7.6 handoff log entry is appended with evidence.
+- Next session start point is explicit (single recommended slice).
+- If partial, mark exactly what is incomplete and why.
+
+#### D.8.3 Implementation file map (verify in Session 1)
+
+- Expected launcher surface: `src/components/QuickActionsFAB.tsx`
+- Expected timer domain (launcher target + source of truth): `src/features/timer/*` and/or `src/features/gamification/games/pomodoro-sprint/*`
+- Expected app wiring entry points: `src/App.tsx`
+
+> If actual ownership differs, Session 1 must update this file map before any behavior changes.
+
+#### D.8.4 QA scenarios (minimum manual matrix)
+
+- Start timer → launcher turns into clock countdown.
+- While timer is running, tapping launcher opens timer (not profile menu).
+- Let timer complete without acknowledging → launcher remains in alert clock mode.
+- Tap alert launcher → timer opens, user stops/acknowledges → launcher returns to profile icon/menu.
+- Force reload during running timer → launcher returns as active countdown.
+- Background app until timer elapsed → foreground returns launcher as alert state.
+- Simulate stale timer data older than 24h → launcher returns to idle profile state.
+
+
 ---
 
 # SECTION E — VISION QUEST (The Anchor)
