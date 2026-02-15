@@ -152,3 +152,19 @@ Track state transitions and review decisions for analytics and future AI trainin
 - Uses existing archive functionality for stale cleanup.
 - Uses existing gamification event pathways.
 - Minimizes migration risk by allowing JSON-first storage.
+
+## Progress notes
+
+### 2026-02-15 — Phase 1 / Step: Detection layer (state machine + thresholds)
+
+Implemented (smallest shippable slice):
+- Added a reusable habit health state classifier (`active`, `at_risk`, `stalled`, `in_review`) based on existing adherence snapshots + last-completed data, with thresholds from this plan (7-day adherence <40%, 14 days stale, 30 days in-review).
+- Extended the existing `autoprog` state shape to support the proposed health metadata keys (`health_state`, `last_completed_at`, `review_due_at`, `review_reason`, `relaunch_from_habit_id`) while keeping backwards compatibility.
+- Preserved those health metadata keys during auto-progress downshift/upgrade updates so existing updates do not wipe health state once we begin persisting it.
+- Surfaced a lightweight status chip in Today checklist rows for non-active habits (`At risk`, `Stalled`, `Needs review`) without changing completion/scoring behavior.
+
+Deferred to next step:
+- Persisting computed health state back into `habits_v2.autoprog` on a schedule.
+- Review queue entry point and actions (`pause`, `redesign`, `replace`, `archive`).
+- Excluding `in_review` habits from score pressure.
+- Auto-archive grace window handling.

@@ -11,6 +11,11 @@ export type AutoProgressState = {
   baseTarget: number | null;
   lastShiftAt?: string | null;
   lastShiftType?: AutoProgressShift | null;
+  health_state?: 'active' | 'at_risk' | 'stalled' | 'in_review';
+  last_completed_at?: string | null;
+  review_due_at?: string | null;
+  review_reason?: string | null;
+  relaunch_from_habit_id?: string | null;
 };
 
 export const AUTO_PROGRESS_TIERS: Record<
@@ -76,6 +81,18 @@ export function getAutoProgressState(habit: HabitV2Row): AutoProgressState {
     record.lastShiftType === 'downshift' || record.lastShiftType === 'upgrade'
       ? record.lastShiftType
       : null;
+  const healthState =
+    record.health_state === 'active' ||
+    record.health_state === 'at_risk' ||
+    record.health_state === 'stalled' ||
+    record.health_state === 'in_review'
+      ? record.health_state
+      : undefined;
+  const lastCompletedAt = typeof record.last_completed_at === 'string' ? record.last_completed_at : null;
+  const reviewDueAt = typeof record.review_due_at === 'string' ? record.review_due_at : null;
+  const reviewReason = typeof record.review_reason === 'string' ? record.review_reason : null;
+  const relaunchFromHabitId =
+    typeof record.relaunch_from_habit_id === 'string' ? record.relaunch_from_habit_id : null;
 
   return {
     tier,
@@ -83,6 +100,11 @@ export function getAutoProgressState(habit: HabitV2Row): AutoProgressState {
     baseTarget,
     lastShiftAt,
     lastShiftType,
+    health_state: healthState,
+    last_completed_at: lastCompletedAt,
+    review_due_at: reviewDueAt,
+    review_reason: reviewReason,
+    relaunch_from_habit_id: relaunchFromHabitId,
   };
 }
 
@@ -171,6 +193,11 @@ export function buildAutoProgressPlan(params: {
       baseTarget,
       lastShiftAt: now,
       lastShiftType: shiftType,
+      health_state: state.health_state,
+      last_completed_at: state.last_completed_at,
+      review_due_at: state.review_due_at,
+      review_reason: state.review_reason,
+      relaunch_from_habit_id: state.relaunch_from_habit_id,
     },
     schedule: (nextSchedule ?? baseSchedule) as Json,
     target: nextTarget,
