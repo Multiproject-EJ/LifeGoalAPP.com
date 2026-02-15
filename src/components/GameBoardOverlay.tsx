@@ -10,9 +10,17 @@ type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
   onTopbarClick?: () => void;
+  profilePlaystyleIcon?: string;
+  profilePlaystyleLabel?: string;
 };
 
-export function GameBoardOverlay({ isOpen, onClose, onTopbarClick }: GameBoardOverlayProps) {
+export function GameBoardOverlay({
+  isOpen,
+  onClose,
+  onTopbarClick,
+  profilePlaystyleIcon,
+  profilePlaystyleLabel,
+}: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
@@ -58,6 +66,13 @@ export function GameBoardOverlay({ isOpen, onClose, onTopbarClick }: GameBoardOv
           onClick={onTopbarClick}
         >
           <img src={boardMatchbar} alt="Game board top bar" className="game-board-overlay__topbar-image" />
+          {profilePlaystyleIcon ? (
+            <div className="game-board-overlay__topbar-playstyle" aria-label={profilePlaystyleLabel}>
+              <span role="img" aria-hidden="true">
+                {profilePlaystyleIcon}
+              </span>
+            </div>
+          ) : null}
         </div>
 
         {/* Secondary Bar - Previously the topbar, now smaller */}

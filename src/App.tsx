@@ -92,7 +92,7 @@ import { buildTopTraitSummary } from './features/identity/personalitySummary';
 import type { PersonalityScores } from './features/identity/personalityScoring';
 import { scoreArchetypes, rankArchetypes } from './features/identity/archetypes/archetypeScoring';
 import { buildHand, type ArchetypeHand } from './features/identity/archetypes/archetypeHandBuilder';
-import { ARCHETYPE_DECK } from './features/identity/archetypes/archetypeDeck';
+import { ARCHETYPE_DECK, SUIT_LABELS } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
 import './styles/workspace.css';
@@ -678,7 +678,6 @@ export default function App() {
   }, [levelInfo]);
 
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
-
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
   const shouldAutoCollapseOnIdle =
     isMobileViewport &&
@@ -798,6 +797,13 @@ export default function App() {
   const [personalitySummary, setPersonalitySummary] = useState<string | null>(null);
   const [personalityScores, setPersonalityScores] = useState<PersonalityScores | null>(null);
   const [archetypeHand, setArchetypeHand] = useState<ArchetypeHand | null>(null);
+
+
+  const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
+  const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
+  const playstyleLabel = dominantPlaystyleCard
+    ? `${dominantPlaystyleCard.name} (${SUIT_LABELS[dominantPlaystyleCard.suit]})`
+    : null;
 
   useEffect(() => {
     if (!isProfileStrengthDebugActive) {
@@ -2439,10 +2445,16 @@ export default function App() {
           <>
             <div className="mobile-menu-overlay__header">
               <div className="mobile-menu-overlay__header-top">
-                <div className="mobile-menu-overlay__profile-picture">
-                  <span className="mobile-menu-overlay__profile-initials">
-                    {(normalizedDisplayName || userDisplay || 'Guest').charAt(0).toUpperCase()}
-                  </span>
+                <div className="mobile-menu-overlay__profile-picture" aria-label={playstyleLabel ?? 'Player profile picture'}>
+                  {playstyleIcon ? (
+                    <span className="mobile-menu-overlay__profile-playstyle" role="img" aria-hidden="true">
+                      {playstyleIcon}
+                    </span>
+                  ) : (
+                    <span className="mobile-menu-overlay__profile-initials">
+                      {(normalizedDisplayName || userDisplay || 'Guest').charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
                 <div className="mobile-menu-overlay__header-info">
                   <h2 className="mobile-menu-overlay__title">Player Profile</h2>
@@ -2456,7 +2468,7 @@ export default function App() {
                     <div className="mobile-menu-overlay__meta-row">
                       <span className="mobile-menu-overlay__meta-label">Type</span>
                       <span className="mobile-menu-overlay__meta-value">
-                        {personalitySummary ?? 'Personality test'}
+                        {playstyleLabel ?? personalitySummary ?? 'Personality test'}
                       </span>
                     </div>
                   </div>
@@ -3647,6 +3659,8 @@ export default function App() {
           setShowGameBoardOverlay(false);
           setShowMobileGamification(true);
         }}
+        profilePlaystyleIcon={playstyleIcon ?? undefined}
+        profilePlaystyleLabel={playstyleLabel ?? undefined}
       />
 
       {isAuthOverlayVisible ? (
