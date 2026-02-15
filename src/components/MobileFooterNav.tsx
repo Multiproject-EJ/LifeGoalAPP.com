@@ -335,6 +335,8 @@ export function MobileFooterNav({
   const handleStatusClick = () => {
     if (statusHoldTriggeredRef.current) {
       statusHoldTriggeredRef.current = false;
+      // Still call onStatusClick to open the overlay after hold
+      onStatusClick?.();
       return;
     }
     if (isDiodeActive) {
