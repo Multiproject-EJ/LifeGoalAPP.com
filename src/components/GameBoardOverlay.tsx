@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import boardTopbar from '../assets/board_topbar.webp';
-import boardMatchbar from '../assets/board_matchbar.webp';
+import boardTopbar from '../assets/IMG_8564.webp';
+import boardMatchbar from '../assets/IMG_8562.webp';
 import boardIconsRight1 from '../assets/board_icons_right1.webp';
 import boardIconsRight2 from '../assets/board_icons_right2.webp';
 import boardIconsRight3 from '../assets/board_icons_right3.webp';
