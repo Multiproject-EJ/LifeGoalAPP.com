@@ -263,9 +263,11 @@ A session is only complete if all are true:
 
 #### D.8.3 Implementation file map (verify in Session 1)
 
-- Expected launcher surface: `src/components/QuickActionsFAB.tsx`
-- Expected timer domain (launcher target + source of truth): `src/features/timer/*` and/or `src/features/gamification/games/pomodoro-sprint/*`
-- Expected app wiring entry points: `src/App.tsx`
+- ✅ Session 1 verification: launcher ownership is the mobile footer **status card** (`src/components/MobileFooterNav.tsx`), wired from `src/App.tsx` via `status`, `onStatusClick`, and `onStatusHoldToggle`.
+- Timer launcher contract in D.7 targets the **Actions timer surface** (Tasks / Projects / Timer flow) — not the Pomodoro Sprint mini-game modal.
+- Current timer route is `src/features/timer/TimerTab.tsx` via `src/App.tsx` (`activeWorkspaceNav='timer'`) and entry affordances in `src/features/actions/ActionsTab.tsx` (`onNavigateToTimer`).
+- `src/features/gamification/games/pomodoro-sprint/*` can stay as reward/minigame logic, but should not be treated as the launcher source-of-truth for D.7 behavior.
+- Expected app wiring entry points remain `src/App.tsx` + mobile footer props and Actions/Timer navigation handlers.
 
 > If actual ownership differs, Session 1 must update this file map before any behavior changes.
 
@@ -278,6 +280,25 @@ A session is only complete if all are true:
 - Force reload during running timer → launcher returns as active countdown.
 - Background app until timer elapsed → foreground returns launcher as alert state.
 - Simulate stale timer data older than 24h → launcher returns to idle profile state.
+
+#### D.8.5 Session handoff log (append-only)
+
+Date: 2026-02-15
+Agent: GPT-5.2-Codex
+Slice(s): Session 1 — Discovery + contract mapping (no behavior change)
+What changed: Verified actual launcher ownership and wiring, then updated D.8.3 implementation map to reflect real files/functions (`MobileFooterNav` status-card path instead of `QuickActionsFAB`). Confirmed Pomodoro source-of-truth remains inside `PomodoroSprint` local session state and that `TimerTab` is still placeholder-only.
+Evidence (tests/manual): Code inspection in `src/App.tsx`, `src/components/MobileFooterNav.tsx`, `src/features/gamification/games/pomodoro-sprint/PomodoroSprint.tsx`, `src/features/timer/TimerTab.tsx`. Build check passed (`npm run build`).
+Open issues / risks: No shared persisted timer store exists yet for cross-surface launcher state (`idle|active|alert`), so Session 2 must introduce derived selector state before UI behavior changes.
+Next recommended slice: Session 2 — Timer launcher state selector (`idle | active | alert`) + unit tests for running/completed-unacknowledged/acknowledged/stale (>24h).
+
+
+Date: 2026-02-15
+Agent: GPT-5.2-Codex
+Slice(s): Session 1 follow-up — scope clarification fix
+What changed: Corrected Session 1 mapping language to explicitly scope D.7 launcher work to the Actions-tab Timer flow (Tasks/Projects/Timer) instead of Pomodoro Sprint mini-game internals. Updated D.8.3 file map bullets accordingly.
+Evidence (tests/manual): Code inspection in `src/App.tsx` (timer route + nav), `src/features/actions/ActionsTab.tsx` (timer launcher buttons), and `src/features/timer/TimerTab.tsx` (current timer surface). Build check passed (`npm run build`).
+Open issues / risks: TimerTab remains placeholder-level UI; Session 2 should define selector logic in shared timer state and avoid coupling launcher behavior to mini-game modal state.
+Next recommended slice: Session 2 — Timer launcher state selector (`idle | active | alert`) for Actions Timer source, with stale (>24h) handling tests.
 
 
 ---
