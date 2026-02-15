@@ -1646,7 +1646,7 @@ export default function App() {
     setIsEnergyMenuOpen(false);
     setIsMobileFooterCollapsed(false);
     setIsMobileFooterSnapActive(false);
-    setShowGameBoardOverlay(true);
+    setShowGameBoardOverlay((previous) => !previous);
   };
 
   const handleMobileGameStatusHoldToggle = () => {
@@ -3435,6 +3435,16 @@ export default function App() {
         )}
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
+        <GameBoardOverlay
+          isOpen={showGameBoardOverlay}
+          onClose={() => setShowGameBoardOverlay(false)}
+          onTopbarClick={() => {
+            setShowGameBoardOverlay(false);
+            setShowMobileGamification(true);
+          }}
+          profilePlaystyleIcon={playstyleIcon ?? undefined}
+          profilePlaystyleLabel={playstyleLabel ?? undefined}
+        />
         {showAiCoachModal && (
           <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
         )}
