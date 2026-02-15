@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import boardTopbar from '../assets/board_topbar.webp';
 import boardMatchbar from '../assets/board_matchbar.webp';
-import boardIconsRight from '../assets/board_icons_right.webp';
-import boardController from '../assets/board_controller.webp';
+import boardIconsRight1 from '../assets/board_icons_right1.webp';
+import boardIconsRight2 from '../assets/board_icons_right2.webp';
+import boardIconsRight3 from '../assets/board_icons_right3.webp';
 import '../styles/game-board-overlay.css';
 
 type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
+  onTopbarClick?: () => void;
 };
 
-export function GameBoardOverlay({ isOpen, onClose }: GameBoardOverlayProps) {
+export function GameBoardOverlay({ isOpen, onClose, onTopbarClick }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
@@ -51,7 +53,7 @@ export function GameBoardOverlay({ isOpen, onClose }: GameBoardOverlayProps) {
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
       <div className="game-board-overlay__content">
         {/* Top Bar */}
-        <div className="game-board-overlay__topbar">
+        <div className="game-board-overlay__topbar" onClick={onTopbarClick} style={{ cursor: onTopbarClick ? 'pointer' : 'default' }}>
           <img src={boardTopbar} alt="Game board top bar" className="game-board-overlay__topbar-image" />
         </div>
 
@@ -80,13 +82,10 @@ export function GameBoardOverlay({ isOpen, onClose }: GameBoardOverlayProps) {
 
           {/* Right Side Icons */}
           <div className="game-board-overlay__side-icons game-board-overlay__side-icons--right">
-            <img src={boardIconsRight} alt="Game board right icons" className="game-board-overlay__icons-image" />
+            <img src={boardIconsRight1} alt="Game board right icons 1" className="game-board-overlay__icons-image" />
+            <img src={boardIconsRight2} alt="Game board right icons 2" className="game-board-overlay__icons-image" />
+            <img src={boardIconsRight3} alt="Game board right icons 3" className="game-board-overlay__icons-image" />
           </div>
-        </div>
-
-        {/* Bottom Controller */}
-        <div className="game-board-overlay__controller">
-          <img src={boardController} alt="Game controller" className="game-board-overlay__controller-image" />
         </div>
       </div>
     </div>
