@@ -6328,6 +6328,33 @@ body {
   white-space: nowrap;
 }
 
+.habit-health-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.habit-health-badge--at_risk {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.habit-health-badge--stalled {
+  background: rgba(249, 115, 22, 0.14);
+  color: #c2410c;
+}
+
+.habit-health-badge--in_review {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
 .habit-points-badge--offer {
   background: rgba(255, 255, 255, 0.95);
   border-color: rgba(245, 158, 11, 0.55);

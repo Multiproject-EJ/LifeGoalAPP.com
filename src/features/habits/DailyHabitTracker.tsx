@@ -48,6 +48,7 @@ import {
   type AutoProgressShift,
   type AutoProgressTier,
 } from './autoProgression';
+import { assessHabitHealth, getHabitHealthBadgeLabel, type HabitHealthState } from './habitHealth';
 import {
   getProgressStateIcon,
   getProgressStateLabel,
@@ -438,6 +439,18 @@ export function DailyHabitTracker({
     () => calculateWeightedSuccessSnapshots(habits, historicalLogs, today),
     [habits, historicalLogs, today],
   );
+  const habitHealthByHabitId = useMemo(() => {
+    const next: Record<string, HabitHealthState> = {};
+    for (const habit of habits) {
+      const insight = habitInsights[habit.id];
+      next[habit.id] = assessHabitHealth({
+        adherence7: adherenceByHabit[habit.id] ?? null,
+        lastCompletedOn: insight?.lastCompletedOn ?? null,
+        referenceDateISO: today,
+      }).state;
+    }
+    return next;
+  }, [adherenceByHabit, habitInsights, habits, today]);
 
   const isBadHabit = useCallback((habit: HabitWithGoal) => {
     const name = habit.name.toLowerCase();
@@ -2865,6 +2878,7 @@ export function DailyHabitTracker({
             const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
             const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
             const adherenceSnapshot = adherenceByHabit[habit.id];
+            const habitHealthState = habitHealthByHabitId[habit.id] ?? 'active';
             const streakDays = habitInsights[habit.id]?.currentStreak ?? 0;
             const adherencePercent = adherenceSnapshot?.percentage ?? 0;
             const canUpgrade =
@@ -2943,6 +2957,14 @@ export function DailyHabitTracker({
                     ) : null}
                     {habit.name}
                   </span>
+                  {habitHealthState !== 'active' ? (
+                    <span
+                      className={`habit-health-badge habit-health-badge--${habitHealthState}`}
+                      aria-label={`Habit health status: ${getHabitHealthBadgeLabel(habitHealthState)}`}
+                    >
+                      {getHabitHealthBadgeLabel(habitHealthState)}
+                    </span>
+                  ) : null}
                   {isOfferHabit && timeLimitedCountdownLabel ? (
                     <span className="habit-checklist__offer-timer" aria-label="Offer time remaining">
                       ⏳ {timeLimitedCountdownLabel}
