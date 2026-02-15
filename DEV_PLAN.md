@@ -27,7 +27,7 @@ Use this section first when returning to the plan.
 
 **Monthly Treat Calendar**: 🟡 Phase 1-3 Complete (RNG, UI, scratch card), Phase 4 backend (Supabase tables + RLS + edge functions) still pending. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
 
-**HabitGame Core Games**: 🟡 Lucky Roll fully built + all 4 mini-games have implementations (TaskTower, PomodoroSprint, WheelOfWins, VisionQuest imported and integrated). Currency architecture working. See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
+**HabitGame Core Games**: 🟡 Lucky Roll fully built + all 4 mini-games have implementations (TaskTower, PomodoroSprint, WheelOfWins, VisionQuest imported and integrated). Current next-build focus: Pomodoro D.7/D.8 mobile launcher timer-state integration (clock countdown takeover + profile launcher reversion contract). See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
 
 **Goals Tab Redesign**: 🟡 Phase 1 done (two-card entry in `GoalWorkspace.tsx`), Phases 2-4 not started. See `GOALS_TAB_REDESIGN_PLAN.md`.
 
