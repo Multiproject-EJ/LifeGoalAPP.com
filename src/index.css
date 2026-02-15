@@ -14987,6 +14987,12 @@ body {
   text-transform: uppercase;
 }
 
+.mobile-menu-overlay__profile-playstyle {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.35));
+}
+
 .mobile-menu-overlay__quick-actions {
   display: flex;
   gap: 0.75rem;

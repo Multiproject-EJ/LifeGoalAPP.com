@@ -61,6 +61,7 @@
 
 /* Top Bar Section (New Position - Previously Match Bar) */
 .game-board-overlay__topbar {
+  position: relative;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -79,6 +80,26 @@
   height: auto;
   display: block;
   object-fit: contain;
+}
+
+.game-board-overlay__topbar-playstyle {
+  position: absolute;
+  left: clamp(10px, 3.6vw, 24px);
+  top: clamp(8px, 2.8vw, 18px);
+  width: clamp(42px, 8vw, 58px);
+  height: clamp(42px, 8vw, 58px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.35rem, 4vw, 1.85rem);
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.34), rgba(24, 105, 255, 0.92));
+  border: 1px solid rgba(197, 232, 255, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(7, 77, 207, 0.55),
+    0 6px 12px rgba(9, 29, 90, 0.55);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* Secondary Bar (Previously Top Bar - Now Smaller) */
