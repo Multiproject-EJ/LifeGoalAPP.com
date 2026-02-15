@@ -52,12 +52,20 @@ export function GameBoardOverlay({ isOpen, onClose, onTopbarClick }: GameBoardOv
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
       <div className="game-board-overlay__content">
-        {/* Top Bar */}
-        <div className="game-board-overlay__topbar" onClick={onTopbarClick} style={{ cursor: onTopbarClick ? 'pointer' : 'default' }}>
-          <img src={boardTopbar} alt="Game board top bar" className="game-board-overlay__topbar-image" />
+        {/* Top Bar - Now the matchbar at full width */}
+        <div 
+          className={`game-board-overlay__topbar ${onTopbarClick ? 'game-board-overlay__topbar--clickable' : ''}`}
+          onClick={onTopbarClick}
+        >
+          <img src={boardMatchbar} alt="Game board top bar" className="game-board-overlay__topbar-image" />
         </div>
 
-        {/* Middle Section with Match Bar and Side Icons */}
+        {/* Secondary Bar - Previously the topbar, now smaller */}
+        <div className="game-board-overlay__secondarybar">
+          <img src={boardTopbar} alt="Game board secondary bar" className="game-board-overlay__secondarybar-image" />
+        </div>
+
+        {/* Middle Section with Side Icons */}
         <div className="game-board-overlay__middle">
           {/* Left Side Icons - Blue Circle Placeholders */}
           <div className="game-board-overlay__side-icons game-board-overlay__side-icons--left">
@@ -73,11 +81,6 @@ export function GameBoardOverlay({ isOpen, onClose, onTopbarClick }: GameBoardOv
               <div className="game-board-overlay__icon-placeholder" />
               <span className="game-board-overlay__icon-timer">45m</span>
             </div>
-          </div>
-
-          {/* Center Match Bar */}
-          <div className="game-board-overlay__matchbar">
-            <img src={boardMatchbar} alt="Match progress bar" className="game-board-overlay__matchbar-image" />
           </div>
 
           {/* Right Side Icons */}
