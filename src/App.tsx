@@ -42,6 +42,7 @@ import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } fr
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
+import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
 import { PointsBadge } from './components/PointsBadge';
@@ -342,6 +343,7 @@ export default function App() {
   const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen'>('home');
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
+  const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
@@ -1436,7 +1438,7 @@ export default function App() {
     }
 
     if (navId === 'game' && isMobileViewport) {
-      setShowMobileGamification(true);
+      setShowGameBoardOverlay(true);
       return;
     }
 
@@ -3622,6 +3624,16 @@ export default function App() {
 
       {mobileMenuOverlay}
       {mobileGamificationOverlay}
+
+      {/* Game Board Overlay */}
+      <GameBoardOverlay
+        isOpen={showGameBoardOverlay}
+        onClose={() => setShowGameBoardOverlay(false)}
+        onTopbarClick={() => {
+          setShowGameBoardOverlay(false);
+          setShowMobileGamification(true);
+        }}
+      />
 
       {isAuthOverlayVisible ? (
         <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with LifeGoalApp">

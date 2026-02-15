@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { PointsBadge } from './PointsBadge';
-import { GameBoardOverlay } from './GameBoardOverlay';
 import { splitGoldBalance } from '../constants/economy';
 import mindIcon from '../assets/mind-icon.webp';
 import bodyIcon from '../assets/body-icon.webp';
@@ -82,7 +81,6 @@ export function MobileFooterNav({
     typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
   );
   const [isPointsAnimating, setIsPointsAnimating] = useState(false);
-  const [isBoardOpen, setIsBoardOpen] = useState(false);
   const displayPointsBalanceRef = useRef<number | null>(
     typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
   );
@@ -388,10 +386,9 @@ export function MobileFooterNav({
               isDiodeActive ? ' mobile-footer-nav__diamond-counter--diode-on' : ''
             }${isCollapsed ? ' mobile-footer-nav__diamond-counter--hidden' : ''}${
               isPointsAnimating ? ' mobile-footer-nav__diamond-counter--active' : ''
-            }`}
+            }${!isPointsAnimating ? ' mobile-footer-nav__diamond-counter--invisible' : ''}`}
             aria-live="polite"
-            onClick={() => setIsBoardOpen(true)}
-            style={{ cursor: 'pointer' }}
+            style={{ visibility: isPointsAnimating ? 'visible' : 'hidden', opacity: isPointsAnimating ? 1 : 0 }}
           >
             <span className="mobile-footer-nav__diamond-icon" aria-hidden="true">
               {goldBreakdown && goldBreakdown.diamonds > 0 ? '💎' : '🪙'}
@@ -534,10 +531,6 @@ export function MobileFooterNav({
           })}
         </ul>
       </div>
-      <GameBoardOverlay
-        isOpen={isBoardOpen}
-        onClose={() => setIsBoardOpen(false)}
-      />
     </nav>
   );
 }
