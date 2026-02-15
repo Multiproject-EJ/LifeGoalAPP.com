@@ -336,6 +336,27 @@ window.addEventListener('unhandledrejection', (event) => {
   });
 });
 
+
+const lockToPortraitIfPossible = async () => {
+  const orientationApi = screen.orientation as ScreenOrientation & {
+    lock?: (orientation: 'portrait') => Promise<void>;
+  };
+  if (!orientationApi?.lock) {
+    window.__LifeGoalAppDebugger?.warn('Screen orientation lock API is unavailable in this browser.');
+    return;
+  }
+
+  try {
+    await orientationApi.lock('portrait');
+    window.__LifeGoalAppDebugger?.log('Screen orientation locked to portrait mode.');
+  } catch (error) {
+    window.__LifeGoalAppDebugger?.warn('Unable to lock orientation to portrait mode.', {
+      reason: formatDetail(error),
+    });
+  }
+};
+void lockToPortraitIfPossible();
+
 const mountFallback = (error: unknown) => {
   const root = document.getElementById('root');
   if (!root) return;
