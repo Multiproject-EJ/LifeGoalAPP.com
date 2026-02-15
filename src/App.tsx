@@ -1636,6 +1636,10 @@ export default function App() {
   };
 
   const handleMobileGameStatusClick = () => {
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsMobileFooterCollapsed(false);
+    setIsMobileFooterSnapActive(false);
     setShowGameBoardOverlay(true);
   };
 
@@ -3410,7 +3414,7 @@ export default function App() {
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
-          isCollapsed={isMobileFooterCollapsed}
+          isCollapsed={isMobileFooterCollapsed && !showGameBoardOverlay}
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
@@ -3624,7 +3628,7 @@ export default function App() {
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
-          isCollapsed={isMobileFooterCollapsed}
+          isCollapsed={isMobileFooterCollapsed && !showGameBoardOverlay}
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
