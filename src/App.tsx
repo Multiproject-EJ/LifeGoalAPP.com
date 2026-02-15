@@ -1626,7 +1626,7 @@ export default function App() {
   };
 
   const handleMobileGameStatusClick = () => {
-    setShowMobileGamification(true);
+    setShowGameBoardOverlay(true);
   };
 
   const handleMobileGameStatusHoldToggle = () => {
