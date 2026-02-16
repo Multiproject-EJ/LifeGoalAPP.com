@@ -121,6 +121,7 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
   const [impactTotal, setImpactTotal] = useState(0);
   const [showGardenPlot, setShowGardenPlot] = useState(false);
+  const [showTreeDetails, setShowTreeDetails] = useState(false);
 
   const userId = session?.user?.id ?? 'demo_user';
   const { effectiveCategory } = useTheme();
@@ -129,13 +130,17 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
   // Handle escape key to close overlay
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showGardenPlot) {
+      if (e.key !== 'Escape') return;
+      if (showGardenPlot) {
         setShowGardenPlot(false);
+      }
+      if (showTreeDetails) {
+        setShowTreeDetails(false);
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [showGardenPlot]);
+  }, [showGardenPlot, showTreeDetails]);
 
   const ownedItems = useMemo(
     () => new Set(inventory),
@@ -257,7 +262,7 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
         )}
         <header className="zen-garden__header">
           <div className="zen-garden__balance">
-            <span className="zen-garden__balance-label">Zen Tokens</span>
+            <span className="zen-garden__balance-label">Zen</span>
             <span className="zen-garden__balance-value">🪷 {balance}</span>
           </div>
         </header>
@@ -274,39 +279,15 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
           )}
 
           <section className="zen-garden__tree">
-            <div className="zen-garden__tree-card">
-              <div className="zen-garden__tree-header">
-                <div>
-                  <p className="zen-garden__eyebrow">Tree of Life</p>
-                  <h3 className="zen-garden__tree-title">{treeStage.label}</h3>
-                </div>
-                <span className="zen-garden__tree-emoji" aria-hidden="true">
-                  {treeStage.emoji}
-                </span>
-              </div>
-              <p className="zen-garden__tree-description">{treeStage.description}</p>
-              <div className="zen-garden__tree-progress">
-                <div className="zen-garden__tree-progress-bar">
-                  <span
-                    className="zen-garden__tree-progress-fill"
-                    style={{ width: `${treeProgress}%` }}
-                  />
-                </div>
-                <div className="zen-garden__tree-meta">
-                  <span>Level {currentLevel}</span>
-                  <span>{impactTotal} waterings</span>
-                  <span>{treeScore} growth points</span>
-                </div>
-              </div>
-              {nextMilestone ? (
-                <p className="zen-garden__tree-next">
-                  {nextMilestone.minScore - treeScore} growth points to reach{' '}
-                  {nextMilestone.label.toLowerCase()}.
-                </p>
-              ) : (
-                <p className="zen-garden__tree-next">Your Tree of Life is fully grown.</p>
-              )}
-            </div>
+            <button
+              type="button"
+              className="zen-garden__tree-badge"
+              onClick={() => setShowTreeDetails(true)}
+              aria-label="Open Tree of Life details"
+            >
+              <span className="zen-garden__tree-badge-icon" aria-hidden="true">🌲</span>
+              <span className="zen-garden__tree-badge-text">Tree</span>
+            </button>
           </section>
         </>
       )}
@@ -348,6 +329,55 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
             alt="Garden plot view" 
             className="zen-garden__plot-image"
           />
+        </div>
+      </div>
+    )}
+
+    {showTreeDetails && (
+      <div className="zen-garden__plot-overlay" role="dialog" aria-modal="true" aria-label="Tree of Life details">
+        <div className="zen-garden__plot-overlay-backdrop" onClick={() => setShowTreeDetails(false)} />
+        <div className="zen-garden__tree-modal-content">
+          <button
+            type="button"
+            className="zen-garden__plot-close"
+            onClick={() => setShowTreeDetails(false)}
+            aria-label="Close Tree of Life details"
+          >
+            ✕
+          </button>
+          <div className="zen-garden__tree-card">
+            <div className="zen-garden__tree-header">
+              <div>
+                <p className="zen-garden__eyebrow">Tree of Life</p>
+                <h3 className="zen-garden__tree-title">{treeStage.label}</h3>
+              </div>
+              <span className="zen-garden__tree-emoji" aria-hidden="true">
+                {treeStage.emoji}
+              </span>
+            </div>
+            <p className="zen-garden__tree-description">{treeStage.description}</p>
+            <div className="zen-garden__tree-progress">
+              <div className="zen-garden__tree-progress-bar">
+                <span
+                  className="zen-garden__tree-progress-fill"
+                  style={{ width: `${treeProgress}%` }}
+                />
+              </div>
+              <div className="zen-garden__tree-meta">
+                <span>Level {currentLevel}</span>
+                <span>{impactTotal} waterings</span>
+                <span>{treeScore} growth points</span>
+              </div>
+            </div>
+            {nextMilestone ? (
+              <p className="zen-garden__tree-next">
+                {nextMilestone.minScore - treeScore} growth points to reach{' '}
+                {nextMilestone.label.toLowerCase()}.
+              </p>
+            ) : (
+              <p className="zen-garden__tree-next">Your Tree of Life is fully grown.</p>
+            )}
+          </div>
         </div>
       </div>
     )}
