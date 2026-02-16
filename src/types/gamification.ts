@@ -409,42 +409,42 @@ export interface SpinResult {
 
 // Prize configuration
 export const SPIN_PRIZES: SpinPrize[] = [
-  { type: 'gold', value: 10, label: '10 Gold', icon: '🪙', wheelSize: 'small', wheelWeight: 1 },
-  { type: 'gold', value: 20, label: '20 Gold', icon: '🪙', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'gold', value: 6, label: '6 Gold', icon: '🪙', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'gold', value: 12, label: '12 Gold', icon: '🪙', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'gold', value: 18, label: '18 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'gold', value: 24, label: '24 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
   { type: 'gold', value: 30, label: '30 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'gold', value: 40, label: '40 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'gold', value: 50, label: '50 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'gold', value: 60, label: '60 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'gold', value: 75, label: '75 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'gold', value: 90, label: '90 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'treasure_chest', value: 50, label: 'Small Treasury Chest (50)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
-  { type: 'treasure_chest', value: 80, label: 'Small Treasury Chest (80)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
-  { type: 'treasure_chest', value: 120, label: 'Medium Treasury Chest (120)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'treasure_chest', value: 150, label: 'Medium Treasury Chest (150)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'treasure_chest', value: 180, label: 'Medium Treasury Chest (180)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
-  { type: 'treasure_chest', value: 220, label: 'Large Treasury Chest (220)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'treasure_chest', value: 260, label: 'Large Treasury Chest (260)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'treasure_chest', value: 320, label: 'Large Treasury Chest (320)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'gold', value: 36, label: '36 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'gold', value: 45, label: '45 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'gold', value: 54, label: '54 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 30, label: 'Small Treasury Chest (30)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'treasure_chest', value: 48, label: 'Small Treasury Chest (48)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'treasure_chest', value: 72, label: 'Medium Treasury Chest (72)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'treasure_chest', value: 90, label: 'Medium Treasury Chest (90)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'treasure_chest', value: 108, label: 'Medium Treasury Chest (108)', icon: '🧰', wheelSize: 'medium', wheelWeight: 2 },
+  { type: 'treasure_chest', value: 132, label: 'Large Treasury Chest (132)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 156, label: 'Large Treasury Chest (156)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 192, label: 'Large Treasury Chest (192)', icon: '🧰', wheelSize: 'large', wheelWeight: 3 },
 ];
 
 // Weighted prize probabilities (must sum to 100)
 export const PRIZE_WEIGHTS: Record<number, number> = {
-  0: 6,  // 10 Gold
-  1: 6,  // 20 Gold
-  2: 8,  // 30 Gold
-  3: 8,  // 40 Gold
-  4: 8,  // 50 Gold
-  5: 9,  // 60 Gold
-  6: 9,  // 75 Gold
-  7: 9,  // 90 Gold
-  8: 6,  // Small Chest (50)
-  9: 6,  // Small Chest (80)
-  10: 8, // Medium Chest (120)
-  11: 8, // Medium Chest (150)
-  12: 8, // Medium Chest (180)
-  13: 9, // Large Chest (220)
-  14: 9, // Large Chest (260)
-  15: 9, // Large Chest (320)
+  0: 6,  // 6 Gold
+  1: 6,  // 12 Gold
+  2: 8,  // 18 Gold
+  3: 8,  // 24 Gold
+  4: 8,  // 30 Gold
+  5: 9,  // 36 Gold
+  6: 9,  // 45 Gold
+  7: 9,  // 54 Gold
+  8: 6,  // Small Chest (30)
+  9: 6,  // Small Chest (48)
+  10: 8, // Medium Chest (72)
+  11: 8, // Medium Chest (90)
+  12: 8, // Medium Chest (108)
+  13: 9, // Large Chest (132)
+  14: 9, // Large Chest (156)
+  15: 9, // Large Chest (192)
 };
 
 // =====================================================
