@@ -37,7 +37,7 @@ import {
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
-import { updateHabitFullV2, type HabitV2Row } from '../../services/habitsV2';
+import { archiveHabitV2, updateHabitFullV2, type HabitV2Row } from '../../services/habitsV2';
 import {
   AUTO_PROGRESS_TIERS,
   AUTO_PROGRESS_UPGRADE_RULES,
@@ -171,6 +171,8 @@ type VisionReward = {
   isSuperBoost: boolean;
 };
 
+type HabitReviewAction = 'pause' | 'redesign' | 'replace' | 'archive';
+
 const STREAK_LOOKBACK_DAYS = 60;
 const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
   seed: 'Easy',
@@ -275,6 +277,7 @@ export function DailyHabitTracker({
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
   const [completions, setCompletions] = useState<Record<string, HabitCompletionState>>({});
   const [monthlyCompletions, setMonthlyCompletions] = useState<
     Record<string, HabitMonthlyCompletionState>
@@ -458,6 +461,14 @@ export function DailyHabitTracker({
     }
     return next;
   }, [habitHealthAssessmentsByHabitId, habits]);
+  const reviewQueueHabits = useMemo(
+    () =>
+      habits.filter((habit) => {
+        const state = habitHealthByHabitId[habit.id] ?? 'active';
+        return state === 'in_review';
+      }),
+    [habitHealthByHabitId, habits],
+  );
 
   const isBadHabit = useCallback((habit: HabitWithGoal) => {
     const name = habit.name.toLowerCase();
@@ -2354,10 +2365,12 @@ export function DailyHabitTracker({
       return { total: 0, scheduled: 0, completed: 0 } as const;
     }
 
+    const scoringHabits = habits.filter((habit) => (habitHealthByHabitId[habit.id] ?? 'active') !== 'in_review');
+
     let scheduled = 0;
     let completed = 0;
 
-    for (const habit of habits) {
+    for (const habit of scoringHabits) {
       const insight = habitInsights[habit.id];
       const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
       if (scheduledToday) {
@@ -2368,8 +2381,81 @@ export function DailyHabitTracker({
       }
     }
 
-    return { total: habits.length, scheduled, completed } as const;
-  }, [habits, completions, habitInsights, activeDate]);
+    return { total: scoringHabits.length, scheduled, completed } as const;
+  }, [habits, completions, habitHealthByHabitId, habitInsights, activeDate]);
+
+  const handleHabitReviewAction = useCallback(async (habit: HabitWithGoal, action: HabitReviewAction) => {
+    if (!isConfigured || isDemoExperience) {
+      setErrorMessage('Connect Supabase to review and update habits.');
+      return;
+    }
+    if (reviewActionHabitIds.has(habit.id)) {
+      return;
+    }
+
+    setReviewActionHabitIds((prev) => new Set(prev).add(habit.id));
+    setErrorMessage(null);
+
+    try {
+      if (action === 'archive') {
+        const { error } = await archiveHabitV2(habit.id);
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        setHabits((prev) => prev.filter((entry) => entry.id !== habit.id));
+        setCompletions((prev) => {
+          const next = { ...prev };
+          delete next[habit.id];
+          return next;
+        });
+        setErrorMessage(`Archived "${habit.name}".`);
+        return;
+      }
+
+      const nextReviewReason = action;
+      const currentState = getAutoProgressState({
+        autoprog: habit.autoprog ?? null,
+        schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
+        target_num: habit.target_num ?? null,
+      } as unknown as HabitV2Row);
+      const { data, error } = await updateHabitFullV2(habit.id, {
+        autoprog: {
+          ...currentState,
+          review_reason: nextReviewReason,
+        } as Database['public']['Tables']['habits_v2']['Row']['autoprog'],
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data) {
+        setHabits((prev) =>
+          prev.map((entry) => (entry.id === habit.id ? { ...entry, autoprog: data.autoprog ?? entry.autoprog } : entry)),
+        );
+      }
+
+      if (action === 'redesign') {
+        setExpandedHabits((prev) => ({ ...prev, [habit.id]: true }));
+      }
+
+      const messages: Record<Exclude<HabitReviewAction, 'archive'>, string> = {
+        pause: `Marked "${habit.name}" as paused for review.`,
+        redesign: `Marked "${habit.name}" for redesign.`,
+        replace: `Marked "${habit.name}" to be replaced.`,
+      };
+      setErrorMessage(messages[action]);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to update this habit right now.');
+    } finally {
+      setReviewActionHabitIds((prev) => {
+        const next = new Set(prev);
+        next.delete(habit.id);
+        return next;
+      });
+    }
+  }, [isConfigured, isDemoExperience, reviewActionHabitIds]);
 
   const identitySignalDayCount = useMemo(() => {
     const completionDates = new Set<string>();
@@ -2940,7 +3026,10 @@ export function DailyHabitTracker({
   };
 
   const renderCompactList = () => {
-    const baseHabits = isTimeLimitedOfferActive ? timeLimitedOrderedHabits : sortedHabits;
+    const nonReviewHabits = (isTimeLimitedOfferActive ? timeLimitedOrderedHabits : sortedHabits).filter(
+      (habit) => (habitHealthByHabitId[habit.id] ?? 'active') !== 'in_review',
+    );
+    const baseHabits = nonReviewHabits;
     const completedHabits = baseHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
     const activeHabits = baseHabits.filter((habit) => !completions[habit.id]?.completed);
     const visibleHabits = showCompletedHabits
@@ -2949,6 +3038,46 @@ export function DailyHabitTracker({
 
     return (
       <div className="habit-checklist__group">
+        {reviewQueueHabits.length > 0 ? (
+          <section className="habit-review-queue" aria-label="Habit review queue">
+            <p className="habit-review-queue__eyebrow">Habit Review</p>
+            <h3 className="habit-review-queue__title">
+              {reviewQueueHabits.length} habit{reviewQueueHabits.length === 1 ? '' : 's'} need attention
+            </h3>
+            <p className="habit-review-queue__subtitle">
+              Habits in review are removed from today&apos;s score until you decide what to do next.
+            </p>
+            <ul className="habit-review-queue__list" role="list">
+              {reviewQueueHabits.map((habit) => {
+                const isActionInFlight = reviewActionHabitIds.has(habit.id);
+                return (
+                  <li key={habit.id} className="habit-review-queue__item">
+                    <span className="habit-review-queue__name">{habit.name}</span>
+                    <div className="habit-review-queue__actions">
+                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'pause')}>
+                        Pause
+                      </button>
+                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'redesign')}>
+                        Redesign
+                      </button>
+                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'replace')}>
+                        Replace
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-review-queue__archive"
+                        disabled={isActionInFlight}
+                        onClick={() => void handleHabitReviewAction(habit, 'archive')}
+                      >
+                        Archive
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
         {isTimeLimitedOfferActive && offerHabitIds.size > 0 ? (
           <div className="habit-checklist__offer">
             <div>

@@ -168,3 +168,18 @@ Deferred to next step:
 - Review queue entry point and actions (`pause`, `redesign`, `replace`, `archive`).
 - Excluding `in_review` habits from score pressure.
 - Auto-archive grace window handling.
+
+
+### 2026-02-16 — Phase 1 / Step: Review queue entry point + remove in-review score pressure
+
+Implemented:
+- Added a **Habit Review** queue card in Today view for habits currently assessed as `in_review`, with first-pass actions: `pause`, `redesign`, `replace`, and `archive`.
+- Wired review actions to existing persistence paths:
+  - `pause` / `redesign` / `replace` now persist `autoprog.review_reason` via `updateHabitFullV2`.
+  - `archive` uses existing `archiveHabitV2` and removes the habit from active UI immediately.
+- Updated compact score math so `in_review` habits are excluded from today scoring pressure (`total`/`scheduled`/`completed` counts).
+- Kept the normal checklist focused on active habits by removing `in_review` habits from the main actionable list once they enter the review queue.
+
+Still deferred:
+- Auto-archive after grace window (e.g., 14 days with no review action).
+- AI-assisted redesign wizard handoff from the new review queue actions.
