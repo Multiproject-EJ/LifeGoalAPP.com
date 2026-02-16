@@ -84,8 +84,8 @@
 
 .game-board-overlay__topbar-playstyle {
   position: absolute;
-  left: clamp(10px, 3.6vw, 24px);
-  top: clamp(8px, 2.8vw, 18px);
+  left: clamp(-2px, 1.2vw, 10px);
+  top: clamp(18px, 4.4vw, 29px);
   width: clamp(42px, 8vw, 58px);
   height: clamp(42px, 8vw, 58px);
   border-radius: 50%;
@@ -102,6 +102,67 @@
   pointer-events: none;
 }
 
+.game-board-overlay__topbar-level {
+  position: absolute;
+  left: clamp(52px, 13.2vw, 98px);
+  top: clamp(19px, 4.5vw, 30px);
+  width: clamp(34px, 7vw, 48px);
+  height: clamp(34px, 7vw, 48px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: clamp(0.63rem, 2.02vw, 0.88rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 3px rgba(4, 16, 58, 0.9);
+  pointer-events: none;
+}
+
+
+.game-board-overlay__topbar-level--double {
+  font-size: clamp(0.56rem, 1.8vw, 0.78rem);
+  letter-spacing: 0;
+}
+
+.game-board-overlay__momentum {
+  position: absolute;
+  top: clamp(20px, 4.6vw, 31px);
+  right: clamp(16px, 5.2vw, 42px);
+  left: clamp(95px, 24vw, 180px);
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.2rem;
+  pointer-events: none;
+}
+
+.game-board-overlay__momentum-track {
+  height: clamp(5px, 1.1vw, 8px);
+  border-radius: 999px;
+  background: rgba(8, 19, 60, 0.55);
+  border: 1px solid rgba(186, 226, 255, 0.6);
+  overflow: hidden;
+  box-shadow: inset 0 0 6px rgba(12, 24, 59, 0.8);
+}
+
+.game-board-overlay__momentum-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ef4444 0%, #f59e0b 52%, #22c55e 100%);
+  transition: width 320ms ease;
+}
+
+.game-board-overlay__momentum-label {
+  color: rgba(235, 246, 255, 0.95);
+  font-size: clamp(0.56rem, 1.4vw, 0.78rem);
+  text-align: right;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.75);
+}
+
 /* Secondary Bar (Previously Top Bar - Now Smaller) */
 .game-board-overlay__secondarybar {
   width: 100%;
@@ -113,8 +174,8 @@
 }
 
 .game-board-overlay__secondarybar-image {
-  width: 59.5%;
-  max-width: 59.5%;
+  width: 53.6%;
+  max-width: 53.6%;
   height: auto;
   display: block;
   object-fit: contain;
@@ -130,14 +191,14 @@
   position: relative;
   padding: 0.2rem 0.5rem 1rem;
   gap: 0.5rem;
-  margin-top: -1rem;
+  margin-top: -2rem;
 }
 
 /* Side Icons (Left and Right) */
 .game-board-overlay__side-icons {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.58rem;
   justify-content: flex-start;
   align-items: center;
   align-self: flex-start;
@@ -146,26 +207,29 @@
 
 .game-board-overlay__side-icons--left {
   margin-left: 0.5rem;
+  margin-top: -0.9rem;
 }
 
 .game-board-overlay__side-icons--right {
   margin-right: 0.5rem;
+  margin-top: -0.9rem;
 }
 
 .game-board-overlay__icons-image {
   width: 100%;
-  max-width: 95px;
+  max-width: 86px;
   height: auto;
   display: block;
   object-fit: contain;
 }
 
 /* Left Side Icon Placeholders */
-.game-board-overlay__icon-item {
+.game-board-overlay__icon-item,
+.game-board-overlay__right-icon-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .game-board-overlay__icon-button {
@@ -199,25 +263,21 @@
   white-space: nowrap;
 }
 
-/* Bottom Controller Section - REMOVED */
-/*
-.game-board-overlay__controller {
-  width: 100%;
-  display: flex;
+.game-board-overlay__icon-counter {
+  display: inline-flex;
+  min-width: 54px;
   justify-content: center;
-  align-items: flex-end;
-  flex-shrink: 0;
-  padding: 0;
+  align-items: center;
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(199, 233, 255, 0.6);
+  background: rgba(8, 37, 104, 0.72);
+  color: #fff;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
-
-.game-board-overlay__controller-image {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-}
-*/
 
 /* Responsive adjustments */
 @media (min-width: 768px) {
@@ -232,11 +292,11 @@
   .game-board-overlay__middle {
     padding: 0.3rem 1rem 1rem;
     gap: 1rem;
-    margin-top: -1.2rem;
+    margin-top: -2.2rem;
   }
 
   .game-board-overlay__side-icons {
-    gap: 1rem;
+    gap: 0.78rem;
   }
 
   .game-board-overlay__side-icons--left {
@@ -248,7 +308,7 @@
   }
 
   .game-board-overlay__icons-image {
-    max-width: 119px;
+    max-width: 108px;
   }
 
   .game-board-overlay__icon-placeholder {
@@ -258,6 +318,11 @@
 
   .game-board-overlay__icon-timer {
     font-size: 0.8rem;
+  }
+
+  .game-board-overlay__icon-counter {
+    min-width: 66px;
+    font-size: 0.76rem;
   }
 }
 
@@ -272,7 +337,7 @@
 
   .game-board-overlay__middle {
     padding: 0.4rem 2rem 1rem;
-    margin-top: -1.35rem;
+    margin-top: -2.4rem;
   }
 
   .game-board-overlay__side-icons--left {
@@ -284,6 +349,10 @@
   }
 
   .game-board-overlay__icons-image {
-    max-width: 143px;
+    max-width: 129px;
+  }
+
+  .game-board-overlay__momentum {
+    right: clamp(22px, 7.2vw, 60px);
   }
 }
