@@ -3442,6 +3442,18 @@ export default function App() {
             setShowGameBoardOverlay(false);
             setShowMobileGamification(true);
           }}
+          onSpinWinClick={() => {
+            setShowGameBoardOverlay(false);
+            setShowDailySpinWheel(true);
+          }}
+          onHeartsGameplayClick={() => {
+            setShowGameBoardOverlay(false);
+            setShowLuckyRoll(true);
+          }}
+          onDailyHatchClick={() => {
+            setShowGameBoardOverlay(false);
+            setShowCalendarPlaceholder(true);
+          }}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
         />
@@ -3668,6 +3680,18 @@ export default function App() {
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);
           setShowMobileGamification(true);
+        }}
+        onSpinWinClick={() => {
+          setShowGameBoardOverlay(false);
+          setShowDailySpinWheel(true);
+        }}
+        onHeartsGameplayClick={() => {
+          setShowGameBoardOverlay(false);
+          setShowLuckyRoll(true);
+        }}
+        onDailyHatchClick={() => {
+          setShowGameBoardOverlay(false);
+          setShowCalendarPlaceholder(true);
         }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profilePlaystyleLabel={playstyleLabel ?? undefined}

@@ -113,8 +113,8 @@
 }
 
 .game-board-overlay__secondarybar-image {
-  width: 70%;
-  max-width: 70%;
+  width: 59.5%;
+  max-width: 59.5%;
   height: auto;
   display: block;
   object-fit: contain;
@@ -128,8 +128,9 @@
   justify-content: space-between;
   align-items: flex-start;
   position: relative;
-  padding: 0.35rem 0.5rem 1rem;
+  padding: 0.2rem 0.5rem 1rem;
   gap: 0.5rem;
+  margin-top: -1rem;
 }
 
 /* Side Icons (Left and Right) */
@@ -165,6 +166,20 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
+}
+
+.game-board-overlay__icon-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.game-board-overlay__icon-button:focus-visible {
+  outline: 2px solid rgba(191, 219, 254, 0.95);
+  outline-offset: 3px;
 }
 
 .game-board-overlay__icon-placeholder {
@@ -215,8 +230,9 @@
   }
 
   .game-board-overlay__middle {
-    padding: 0.5rem 1rem 1rem;
+    padding: 0.3rem 1rem 1rem;
     gap: 1rem;
+    margin-top: -1.2rem;
   }
 
   .game-board-overlay__side-icons {
@@ -255,7 +271,8 @@
   }
 
   .game-board-overlay__middle {
-    padding: 0.6rem 2rem 1rem;
+    padding: 0.4rem 2rem 1rem;
+    margin-top: -1.35rem;
   }
 
   .game-board-overlay__side-icons--left {

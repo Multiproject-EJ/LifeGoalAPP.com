@@ -10,6 +10,9 @@ type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
   onTopbarClick?: () => void;
+  onSpinWinClick?: () => void;
+  onHeartsGameplayClick?: () => void;
+  onDailyHatchClick?: () => void;
   profilePlaystyleIcon?: string;
   profilePlaystyleLabel?: string;
 };
@@ -18,6 +21,9 @@ export function GameBoardOverlay({
   isOpen,
   onClose,
   onTopbarClick,
+  onSpinWinClick,
+  onHeartsGameplayClick,
+  onDailyHatchClick,
   profilePlaystyleIcon,
   profilePlaystyleLabel,
 }: GameBoardOverlayProps) {
@@ -85,15 +91,36 @@ export function GameBoardOverlay({
           {/* Left Side Icons - Blue Circle Placeholders */}
           <div className="game-board-overlay__side-icons game-board-overlay__side-icons--left">
             <div className="game-board-overlay__icon-item">
-              <div className="game-board-overlay__icon-placeholder" />
+              <button
+                type="button"
+                className="game-board-overlay__icon-button"
+                onClick={onSpinWinClick}
+                aria-label="Open Spin & Win"
+              >
+                <div className="game-board-overlay__icon-placeholder" />
+              </button>
               <span className="game-board-overlay__icon-timer">1d 23m</span>
             </div>
             <div className="game-board-overlay__icon-item">
-              <div className="game-board-overlay__icon-placeholder" />
+              <button
+                type="button"
+                className="game-board-overlay__icon-button"
+                onClick={onHeartsGameplayClick}
+                aria-label="Open Hearts gameplay"
+              >
+                <div className="game-board-overlay__icon-placeholder" />
+              </button>
               <span className="game-board-overlay__icon-timer">2h 15m</span>
             </div>
             <div className="game-board-overlay__icon-item">
-              <div className="game-board-overlay__icon-placeholder" />
+              <button
+                type="button"
+                className="game-board-overlay__icon-button"
+                onClick={onDailyHatchClick}
+                aria-label="Open Daily Hatch calendar"
+              >
+                <div className="game-board-overlay__icon-placeholder" />
+              </button>
               <span className="game-board-overlay__icon-timer">45m</span>
             </div>
           </div>
