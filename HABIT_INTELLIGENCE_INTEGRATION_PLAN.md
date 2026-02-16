@@ -239,3 +239,13 @@ Implemented:
 
 Still deferred:
 - None in the current Habit Intelligence integration plan scope.
+
+### 2026-02-16 — Phase 3 / Step: Offer resilience for risk-prioritized selection
+
+Implemented:
+- Added validity checks for stored time-limited offer picks so stale offer targets are automatically recalculated when habits are completed, archived, or moved to `in_review`.
+- Ensured existing same-day offer schedule persistence is still reused when both `nextHabitId` and optional `badHabitId` remain eligible.
+- Preserved current risk-prioritized ranking/fallback behavior while preventing outdated cached picks from surfacing in Today.
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.

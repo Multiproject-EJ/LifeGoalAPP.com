@@ -674,6 +674,24 @@ export function DailyHabitTracker({
       return;
     }
 
+    const isEligibleOfferHabit = (habitId: string | null | undefined) => {
+      if (!habitId) {
+        return false;
+      }
+
+      const habit = habits.find((entry) => entry.id === habitId);
+      if (!habit) {
+        return false;
+      }
+
+      if (completions[habit.id]?.completed) {
+        return false;
+      }
+
+      const healthState = habitHealthByHabitId[habit.id] ?? 'active';
+      return healthState !== 'in_review';
+    };
+
     const storedOffer = loadDraft<{
       date: string;
       nextHabitId: string | null;
@@ -682,7 +700,12 @@ export function DailyHabitTracker({
       windowEnd: number | null;
     }>(timeLimitedOfferScheduleKey(session.user.id, activeDate));
 
-    if (storedOffer?.date === activeDate) {
+    const hasValidStoredOffer =
+      storedOffer?.date === activeDate &&
+      isEligibleOfferHabit(storedOffer.nextHabitId) &&
+      (storedOffer.badHabitId == null || isEligibleOfferHabit(storedOffer.badHabitId));
+
+    if (hasValidStoredOffer) {
       setTimeLimitedOffer(storedOffer);
       return;
     }
@@ -714,6 +737,7 @@ export function DailyHabitTracker({
     isBadHabit,
     isViewingToday,
     riskRankedOfferHabits,
+    habitHealthByHabitId,
     session.user.id,
     sortedHabits,
   ]);
