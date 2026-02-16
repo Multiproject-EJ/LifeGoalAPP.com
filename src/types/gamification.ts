@@ -171,6 +171,9 @@ export const XP_REWARDS = {
   HABIT_COMPLETE_EARLY: 15, // Total XP if completed before 9am
   ALL_DAILY_HABITS: 25, // Bonus for completing all daily habits
   YESTERDAY_RECAP_COLLECT: 50, // Bonus for collecting a missed-day recap
+  HABIT_REVIEW_COMPLETED: 20, // Completing a habit review decision
+  HABIT_RELAUNCH_STARTED: 30, // Saving a redesigned/replacement habit relaunch
+  HABIT_RELAUNCH_7DAY_SUCCESS: 75, // Hitting a 7-day streak after relaunch
 
   // Goal rewards
   GOAL_MILESTONE: 50,

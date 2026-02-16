@@ -243,6 +243,8 @@ const visionStarRewardKey = (userId: string, dateISO: string) =>
 const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
+const habitRecoveryRewardKey = (userId: string, habitId: string, rewardKey: string) =>
+  `lifegoal.habit-recovery-reward:${userId}:${habitId}:${rewardKey}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -439,6 +441,26 @@ export function DailyHabitTracker({
     return minGold === maxGold ? `${minGold}` : `${minGold}-${maxGold}`;
   }, []);
   const shouldShowHabitPoints = showPointsBadges && gamificationEnabled;
+
+  const awardHabitRecoveryXp = useCallback(async (params: {
+    habitId: string;
+    rewardKey: string;
+    xp: number;
+    sourceType: string;
+    description: string;
+  }) => {
+    if (!session?.user?.id || !gamificationEnabled || params.xp <= 0) {
+      return;
+    }
+
+    const storageKey = habitRecoveryRewardKey(session.user.id, params.habitId, params.rewardKey);
+    if (loadDraft<boolean>(storageKey)) {
+      return;
+    }
+
+    await earnXP(params.xp, params.sourceType, params.habitId, params.description);
+    saveDraft(storageKey, true);
+  }, [earnXP, gamificationEnabled, session?.user?.id]);
   const visionImagesByHabit = useMemo(() => {
     const map = new Map<string, VisionImage>();
     visionImages.forEach((image) => {
@@ -2109,6 +2131,26 @@ export function DailyHabitTracker({
           if (offerXpAmount) {
             await earnXP(offerXpAmount, 'habit_offer', habit.id, 'Time-limited habit offer');
           }
+
+          const currentState = getAutoProgressState({
+            autoprog: habit.autoprog ?? null,
+            schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
+            target_num: habit.target_num ?? null,
+          } as unknown as HabitV2Row);
+          const projectedStreak = (habitInsights[habit.id]?.currentStreak ?? 0) + 1;
+          if (
+            projectedStreak >= 7 &&
+            (currentState.review_reason === 'redesign' || currentState.review_reason === 'replace')
+          ) {
+            await awardHabitRecoveryXp({
+              habitId: habit.id,
+              rewardKey: `relaunch-7day-success:${currentState.review_due_at ?? 'none'}`,
+              xp: XP_REWARDS.HABIT_RELAUNCH_7DAY_SUCCESS,
+              sourceType: 'habit_relaunch_7day_success',
+              description: 'Reached a 7-day relaunch streak',
+            });
+          }
+
           await recordActivity();
           recordChallengeActivity(session.user.id, 'habit_complete');
         }
@@ -2500,12 +2542,27 @@ export function DailyHabitTracker({
     setReviewActionHabitIds((prev) => new Set(prev).add(habit.id));
     setErrorMessage(null);
 
+    const currentState = getAutoProgressState({
+      autoprog: habit.autoprog ?? null,
+      schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
+      target_num: habit.target_num ?? null,
+    } as unknown as HabitV2Row);
+    const reviewCycleKey = currentState.review_due_at ?? 'none';
+
     try {
       if (action === 'archive') {
         const { error } = await archiveHabitV2(habit.id);
         if (error) {
           throw new Error(error.message);
         }
+
+        await awardHabitRecoveryXp({
+          habitId: habit.id,
+          rewardKey: `review-completed:${reviewCycleKey}`,
+          xp: XP_REWARDS.HABIT_REVIEW_COMPLETED,
+          sourceType: 'habit_review_completed',
+          description: 'Completed a Habit Review decision',
+        });
 
         setHabits((prev) => prev.filter((entry) => entry.id !== habit.id));
         setCompletions((prev) => {
@@ -2518,11 +2575,6 @@ export function DailyHabitTracker({
       }
 
       const nextReviewReason = action;
-      const currentState = getAutoProgressState({
-        autoprog: habit.autoprog ?? null,
-        schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
-        target_num: habit.target_num ?? null,
-      } as unknown as HabitV2Row);
       const { data, error } = await updateHabitFullV2(habit.id, {
         autoprog: {
           ...currentState,
@@ -2533,6 +2585,14 @@ export function DailyHabitTracker({
       if (error) {
         throw new Error(error.message);
       }
+
+      await awardHabitRecoveryXp({
+        habitId: habit.id,
+        rewardKey: `review-completed:${reviewCycleKey}`,
+        xp: XP_REWARDS.HABIT_REVIEW_COMPLETED,
+        sourceType: 'habit_review_completed',
+        description: 'Completed a Habit Review decision',
+      });
 
       if (data) {
         setHabits((prev) =>
@@ -2560,7 +2620,7 @@ export function DailyHabitTracker({
         return next;
       });
     }
-  }, [isConfigured, isDemoExperience, reviewActionHabitIds, generateReviewRedesignDraft]);
+  }, [isConfigured, isDemoExperience, reviewActionHabitIds, generateReviewRedesignDraft, awardHabitRecoveryXp]);
 
   const identitySignalDayCount = useMemo(() => {
     const completionDates = new Set<string>();
@@ -2673,6 +2733,14 @@ export function DailyHabitTracker({
     const nextGoalId = editGoalId !== GOAL_UNASSIGNED ? editGoalId : null;
 
     try {
+      const habitBeforeEdit = habits.find((entry) => entry.id === editHabit.id) ?? null;
+      const currentState = habitBeforeEdit
+        ? getAutoProgressState({
+            autoprog: habitBeforeEdit.autoprog ?? null,
+            schedule: (habitBeforeEdit.schedule ?? { mode: 'daily' }) as Json,
+            target_num: habitBeforeEdit.target_num ?? null,
+          } as unknown as HabitV2Row)
+        : null;
       const { error } = await updateHabitFullV2(editHabit.id, {
         title: nextTitle,
         schedule: nextSchedule,
@@ -2681,6 +2749,17 @@ export function DailyHabitTracker({
       if (error) {
         throw error;
       }
+
+      if (currentState?.review_reason === 'redesign' || currentState?.review_reason === 'replace') {
+        await awardHabitRecoveryXp({
+          habitId: editHabit.id,
+          rewardKey: `relaunch-started:${currentState.review_due_at ?? 'none'}`,
+          xp: XP_REWARDS.HABIT_RELAUNCH_STARTED,
+          sourceType: 'habit_relaunch_started',
+          description: 'Started a relaunched habit after review',
+        });
+      }
+
       handleCloseEdit();
       await refreshHabits();
     } catch (error) {
