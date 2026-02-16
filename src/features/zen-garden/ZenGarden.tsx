@@ -5,7 +5,7 @@ import { getImpactTreeLedger } from '../../services/impactTrees';
 import type { ZenTokenTransaction } from '../../types/gamification';
 import { fetchZenGardenInventory, fetchZenTokenTransactions, purchaseZenGardenItem } from '../../services/zenGarden';
 import { useTheme } from '../../contexts/ThemeContext';
-import zenShopBg from '../../assets/zenshopmain.webp';
+import zenShopBg from '../../assets/Zen_shopV2.webp';
 import toZenGardenImg from '../../assets/tozengarden.webp';
 import zenGardenPlotLight from '../../assets/zengardenplotlight.webp';
 import zenGardenPlotDark from '../../assets/zengardenplotdark.webp';
