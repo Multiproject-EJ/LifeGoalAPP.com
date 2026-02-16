@@ -18,15 +18,15 @@ function buildChristmasPrizes(basePrizes: SpinPrize[]): SpinPrize[] {
   const updatedPrizes = [...basePrizes];
   const firstSpecialIndex = updatedPrizes.findIndex((prize) => prize.type === 'treasure_chest');
   const secondSpecialIndex = updatedPrizes.findIndex(
-    (prize, index) => prize.type === 'treasure_chest' && index > firstSpecialIndex + 1,
+    (prize, index) => prize.type === 'treasure_chest' && index > firstSpecialIndex,
   );
 
   if (firstSpecialIndex >= 0) {
     updatedPrizes[firstSpecialIndex] = {
       ...updatedPrizes[firstSpecialIndex],
-      value: 120,
+      value: 320,
       icon: '🎅',
-      label: 'Santa Surprise Chest (120)',
+      label: 'Santa Surprise Chest (320)',
       details: {
         ...(updatedPrizes[firstSpecialIndex].details ?? {}),
         specialReward: true,
@@ -38,9 +38,9 @@ function buildChristmasPrizes(basePrizes: SpinPrize[]): SpinPrize[] {
   if (secondSpecialIndex >= 0) {
     updatedPrizes[secondSpecialIndex] = {
       ...updatedPrizes[secondSpecialIndex],
-      value: 160,
+      value: 500,
       icon: '🎄',
-      label: 'Holiday Magic Chest (160)',
+      label: 'Holiday Magic Chest (500)',
       details: {
         ...(updatedPrizes[secondSpecialIndex].details ?? {}),
         specialReward: true,
