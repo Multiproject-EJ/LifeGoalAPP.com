@@ -54,6 +54,10 @@ import {
   shouldAutoArchiveHabitFromReview,
   type HabitHealthState,
 } from './habitHealth';
+import {
+  isEligibleTimeLimitedOfferHabit,
+  rankHabitsForTimeLimitedOffer,
+} from './timeLimitedOffer';
 import { buildEnhancedRationale } from './aiRationale';
 import { generateHabitSuggestion, type HabitAiSuggestion } from '../../services/habitAiSuggestions';
 import {
@@ -547,32 +551,12 @@ export function DailyHabitTracker({
   }, [habits, habitInsights, completions]);
 
   const riskRankedOfferHabits = useMemo(() => {
-    const riskScoreByState: Record<HabitHealthState, number> = {
-      in_review: 0,
-      stalled: 3,
-      at_risk: 2,
-      active: 1,
-    };
-
-    return sortedHabits
-      .filter((habit) => !completions[habit.id]?.completed)
-      .filter((habit) => (habitHealthByHabitId[habit.id] ?? 'active') !== 'in_review')
-      .sort((a, b) => {
-        const aState = habitHealthByHabitId[a.id] ?? 'active';
-        const bState = habitHealthByHabitId[b.id] ?? 'active';
-        const scoreDelta = riskScoreByState[bState] - riskScoreByState[aState];
-        if (scoreDelta !== 0) {
-          return scoreDelta;
-        }
-
-        const aAdherence = (adherenceByHabit[a.id]?.percentage ?? 100) / 100;
-        const bAdherence = (adherenceByHabit[b.id]?.percentage ?? 100) / 100;
-        if (aAdherence !== bAdherence) {
-          return aAdherence - bAdherence;
-        }
-
-        return a.name.localeCompare(b.name);
-      });
+    return rankHabitsForTimeLimitedOffer({
+      habits: sortedHabits,
+      completionsByHabitId: completions,
+      healthStateByHabitId: habitHealthByHabitId,
+      adherenceByHabitId: adherenceByHabit,
+    });
   }, [adherenceByHabit, completions, habitHealthByHabitId, sortedHabits]);
 
   const nowTimestamp = Date.now();
@@ -674,23 +658,7 @@ export function DailyHabitTracker({
       return;
     }
 
-    const isEligibleOfferHabit = (habitId: string | null | undefined) => {
-      if (!habitId) {
-        return false;
-      }
-
-      const habit = habits.find((entry) => entry.id === habitId);
-      if (!habit) {
-        return false;
-      }
-
-      if (completions[habit.id]?.completed) {
-        return false;
-      }
-
-      const healthState = habitHealthByHabitId[habit.id] ?? 'active';
-      return healthState !== 'in_review';
-    };
+    const habitIds = new Set(habits.map((habit) => habit.id));
 
     const storedOffer = loadDraft<{
       date: string;
@@ -702,8 +670,19 @@ export function DailyHabitTracker({
 
     const hasValidStoredOffer =
       storedOffer?.date === activeDate &&
-      isEligibleOfferHabit(storedOffer.nextHabitId) &&
-      (storedOffer.badHabitId == null || isEligibleOfferHabit(storedOffer.badHabitId));
+      isEligibleTimeLimitedOfferHabit({
+        habitId: storedOffer.nextHabitId,
+        completionsByHabitId: completions,
+        healthStateByHabitId: habitHealthByHabitId,
+        habitIds,
+      }) &&
+      (storedOffer.badHabitId == null ||
+        isEligibleTimeLimitedOfferHabit({
+          habitId: storedOffer.badHabitId,
+          completionsByHabitId: completions,
+          healthStateByHabitId: habitHealthByHabitId,
+          habitIds,
+        }));
 
     if (hasValidStoredOffer) {
       setTimeLimitedOffer(storedOffer);

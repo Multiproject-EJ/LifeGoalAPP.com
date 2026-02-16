@@ -249,3 +249,13 @@ Implemented:
 
 Still deferred:
 - None in the current Habit Intelligence integration plan scope.
+
+### 2026-02-16 — Phase 3 / Step: Offer selection hardening extraction
+
+Implemented:
+- Extracted risk-prioritized offer ranking into a dedicated helper (`rankHabitsForTimeLimitedOffer`) so selection rules are centralized and reusable.
+- Extracted stored-offer eligibility checks into a shared helper (`isEligibleTimeLimitedOfferHabit`) to keep recalculation/validation behavior consistent.
+- Updated `DailyHabitTracker` to use both helpers without changing selection outcomes, preserving current ranking, fallback, and in-review exclusion behavior.
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.
