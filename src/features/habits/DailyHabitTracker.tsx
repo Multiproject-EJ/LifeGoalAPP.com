@@ -48,7 +48,12 @@ import {
   type AutoProgressShift,
   type AutoProgressTier,
 } from './autoProgression';
-import { assessHabitHealth, getHabitHealthBadgeLabel, type HabitHealthState } from './habitHealth';
+import {
+  assessHabitHealth,
+  getHabitHealthBadgeLabel,
+  shouldAutoArchiveHabitFromReview,
+  type HabitHealthState,
+} from './habitHealth';
 import {
   getProgressStateIcon,
   getProgressStateLabel,
@@ -343,6 +348,7 @@ export function DailyHabitTracker({
   const [isCompactView, setIsCompactView] = useState(false);
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
+  const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());
   const [isIdentitySignalsOpen, setIsIdentitySignalsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => new Date());
   // State for intentions journal
@@ -2929,6 +2935,92 @@ export function DailyHabitTracker({
     buildAutoProgressHabit,
     habitHealthAssessmentsByHabitId,
     habitInsights,
+    habits,
+    isConfigured,
+    isDemoExperience,
+    loading,
+  ]);
+
+  useEffect(() => {
+    if (!isConfigured || isDemoExperience || loading) {
+      return;
+    }
+    if (!habits.length) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const archiveExpiredReviewHabits = async () => {
+      const referenceDateISO = formatISODate(new Date());
+      const candidates = habits.filter((habit) => {
+        if (reviewAutoArchivingHabitIdsRef.current.has(habit.id)) {
+          return false;
+        }
+
+        const currentState = getAutoProgressState(buildAutoProgressHabit(habit));
+        const healthState = habitHealthByHabitId[habit.id] ?? currentState.health_state ?? 'active';
+
+        return shouldAutoArchiveHabitFromReview({
+          state: healthState,
+          reviewDueAt: currentState.review_due_at ?? null,
+          reviewReason: currentState.review_reason ?? null,
+          referenceDateISO,
+        });
+      });
+
+      if (!candidates.length) {
+        return;
+      }
+
+      const archivedHabitIds = new Set<string>();
+
+      for (const habit of candidates) {
+        reviewAutoArchivingHabitIdsRef.current.add(habit.id);
+        const { error } = await archiveHabitV2(habit.id);
+
+        if (cancelled) {
+          return;
+        }
+
+        if (error) {
+          console.error('Unable to auto-archive review habit:', {
+            habitId: habit.id,
+            message: error.message,
+          });
+          reviewAutoArchivingHabitIdsRef.current.delete(habit.id);
+          continue;
+        }
+
+        archivedHabitIds.add(habit.id);
+        reviewAutoArchivingHabitIdsRef.current.delete(habit.id);
+      }
+
+      if (!archivedHabitIds.size || cancelled) {
+        return;
+      }
+
+      setHabits((prev) => prev.filter((habit) => !archivedHabitIds.has(habit.id)));
+      setCompletions((prev) => {
+        const next = { ...prev };
+        archivedHabitIds.forEach((habitId) => {
+          delete next[habitId];
+        });
+        return next;
+      });
+      setErrorMessage(
+        `Auto-archived ${archivedHabitIds.size} stale review habit${archivedHabitIds.size === 1 ? '' : 's'} after the grace period.`,
+      );
+    };
+
+    void archiveExpiredReviewHabits();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    buildAutoProgressHabit,
+    habitHealthByHabitId,
     habits,
     isConfigured,
     isDemoExperience,

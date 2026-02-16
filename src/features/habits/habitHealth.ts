@@ -11,6 +11,7 @@ export const HABIT_HEALTH_THRESHOLDS = {
   atRiskAdherence7: 40,
   stalledDaysWithoutCompletion: 14,
   inReviewDaysWithoutCompletion: 30,
+  autoArchiveGraceDaysAfterReviewDue: 14,
 } as const;
 
 function differenceInDays(referenceISO: string, earlierISO: string): number {
@@ -94,4 +95,30 @@ export function getHabitHealthBadgeLabel(state: HabitHealthState): string {
     default:
       return 'Active';
   }
+}
+
+export function shouldAutoArchiveHabitFromReview(params: {
+  state: HabitHealthState;
+  reviewDueAt: string | null;
+  reviewReason: string | null;
+  referenceDateISO: string;
+}): boolean {
+  const { state, reviewDueAt, reviewReason, referenceDateISO } = params;
+
+  if (state !== 'in_review') {
+    return false;
+  }
+
+  if (typeof reviewReason === 'string' && reviewReason.trim().length > 0) {
+    return false;
+  }
+
+  if (!reviewDueAt) {
+    return false;
+  }
+
+  return (
+    differenceInDays(referenceDateISO, reviewDueAt) >=
+    HABIT_HEALTH_THRESHOLDS.autoArchiveGraceDaysAfterReviewDue
+  );
 }
