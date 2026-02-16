@@ -213,3 +213,18 @@ Implemented:
 Still deferred:
 - Recovery/relaunch gamification hooks (`habit_review_completed`, `habit_relaunch_started`, `habit_relaunch_7day_success`).
 - Risk-prioritized time-limited offer input (replace random-first behavior).
+
+### 2026-02-16 — Phase 3 / Step: Recovery + relaunch gamification hooks
+
+Implemented:
+- Added explicit XP hooks for the planned recovery loop events using the existing gamification pipeline:
+  - `habit_review_completed`
+  - `habit_relaunch_started`
+  - `habit_relaunch_7day_success`
+- Wired **Habit Review** actions (`pause`, `redesign`, `replace`, `archive`) to award one-time review-completion XP per review cycle.
+- Wired habit edit save flow to award relaunch-start XP when a reviewed habit (`redesign`/`replace`) is actually saved in the existing edit flow.
+- Wired today completion flow to award relaunch 7-day success XP when a reviewed relaunch reaches a 7-day streak.
+- Added localStorage de-duplication keys so each recovery reward is granted once per habit per review cycle.
+
+Still deferred:
+- Risk-prioritized time-limited offer input (replace random-first behavior).
