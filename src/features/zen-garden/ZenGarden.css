@@ -45,7 +45,7 @@
 /* To The Garden Button */
 .zen-garden__to-garden-btn {
   position: absolute;
-  bottom: 2rem;
+  bottom: 0.5rem;
   left: 50%;
   transform: translateX(-50%);
   background: none;
@@ -57,7 +57,7 @@
 }
 
 .zen-garden__to-garden-btn img {
-  width: 420px;
+  width: min(294px, 78vw);
   height: auto;
   display: block;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
@@ -75,7 +75,7 @@
 .zen-garden__plot-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 10050;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,14 +137,10 @@
 }
 
 .zen-garden__header {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: flex-start;
-  background: rgba(15, 23, 42, 0.85);
-  padding: 1.5rem;
-  border-radius: 1.25rem;
-  backdrop-filter: blur(8px);
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 11;
 }
 
 .zen-garden__eyebrow {
@@ -170,23 +166,23 @@
 
 .zen-garden__balance {
   display: inline-flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
-  background: rgba(10, 18, 35, 0.55);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(3px);
 }
 
 .zen-garden__balance-label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .zen-garden__balance-value {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #f8fafc;
 }
@@ -222,6 +218,34 @@
 
 .zen-garden__tree {
   width: 100%;
+  margin-top: 5.5rem;
+}
+
+.zen-garden__tree-badge {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.zen-garden__tree-badge-icon {
+  font-size: 1rem;
+}
+
+.zen-garden__tree-badge-text {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.zen-garden__tree-modal-content {
+  position: relative;
+  width: min(92vw, 520px);
 }
 
 .zen-garden__tree-card {
@@ -449,12 +473,6 @@
 }
 
 @media (min-width: 768px) {
-  .zen-garden__header {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-
   .zen-garden__title {
     font-size: 1.8rem;
   }
