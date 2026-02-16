@@ -4,6 +4,7 @@ import type { DailySpinState, SpinResult, SpinPrize } from '../types/gamificatio
 import { SPIN_PRIZES } from '../types/gamification';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { recordTelemetryEvent } from './telemetry';
+import { fetchHolidayPreferences } from './holidayPreferences';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -12,6 +13,60 @@ type ServiceResponse<T> = {
 
 const DEMO_STORAGE_KEY = 'demo_daily_spin_state';
 const DEMO_HISTORY_KEY = 'lifegoal_demo_spin_history';
+
+function buildChristmasPrizes(basePrizes: SpinPrize[]): SpinPrize[] {
+  const updatedPrizes = [...basePrizes];
+  const firstSpecialIndex = updatedPrizes.findIndex((prize) => prize.type === 'treasure_chest');
+  const secondSpecialIndex = updatedPrizes.findIndex(
+    (prize, index) => prize.type === 'treasure_chest' && index > firstSpecialIndex,
+  );
+
+  if (firstSpecialIndex >= 0) {
+    updatedPrizes[firstSpecialIndex] = {
+      ...updatedPrizes[firstSpecialIndex],
+      value: 320,
+      icon: '🎅',
+      label: 'Santa Surprise Chest (320)',
+      details: {
+        ...(updatedPrizes[firstSpecialIndex].details ?? {}),
+        specialReward: true,
+        holiday: 'christmas',
+      },
+    };
+  }
+
+  if (secondSpecialIndex >= 0) {
+    updatedPrizes[secondSpecialIndex] = {
+      ...updatedPrizes[secondSpecialIndex],
+      value: 500,
+      icon: '🎄',
+      label: 'Holiday Magic Chest (500)',
+      details: {
+        ...(updatedPrizes[secondSpecialIndex].details ?? {}),
+        specialReward: true,
+        holiday: 'christmas',
+      },
+    };
+  }
+
+  return updatedPrizes;
+}
+
+export async function getSpinPrizesForUser(userId: string): Promise<SpinPrize[]> {
+  const isDecember = new Date().getMonth() === 11;
+  if (!isDecember || !canUseSupabaseData()) {
+    return SPIN_PRIZES;
+  }
+
+  const { data: holidayPreferences } = await fetchHolidayPreferences(userId);
+  const christmasEnabled = Boolean(holidayPreferences?.holidays?.christmas);
+
+  if (!christmasEnabled) {
+    return SPIN_PRIZES;
+  }
+
+  return buildChristmasPrizes(SPIN_PRIZES);
+}
 
 /**
  * Fetch or initialize daily spin state for user
@@ -195,6 +250,24 @@ export function getRandomPrize(): SpinPrize {
   return SPIN_PRIZES[0];
 }
 
+function getRandomPrizeFromPool(prizes: SpinPrize[]): SpinPrize {
+  if (prizes.length === 0) {
+    return { type: 'gold', value: 0, label: '0 Gold', icon: '🪙' };
+  }
+
+  const totalWeight = prizes.reduce((sum, prize) => sum + (prize.wheelWeight ?? 1), 0);
+  let roll = Math.random() * totalWeight;
+
+  for (const prize of prizes) {
+    roll -= prize.wheelWeight ?? 1;
+    if (roll <= 0) {
+      return prize;
+    }
+  }
+
+  return prizes[0];
+}
+
 /**
  * Update spins available based on habit completion
  */
@@ -259,7 +332,8 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
   const today = new Date().toISOString().split('T')[0];
 
   // Select prize using new weighted algorithm
-  const prize = getRandomPrize();
+  const prizePool = await getSpinPrizesForUser(userId);
+  const prize = getRandomPrizeFromPool(prizePool);
 
   // Award prize
   await awardPrize(userId, prize);

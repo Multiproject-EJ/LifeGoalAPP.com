@@ -7,6 +7,7 @@ import {
   executeSpin,
   getDailySpinState,
   getSpinHistory,
+  getSpinPrizesForUser,
 } from '../../services/dailySpin';
 import type { SpinHistoryEntry, SpinPrize } from '../../types/gamification';
 import { SPIN_PRIZES } from '../../types/gamification';
@@ -31,7 +32,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
-  const wheelSegments = useMemo(() => buildWheelSegments(SPIN_PRIZES), []);
+  const [prizePool, setPrizePool] = useState<SpinPrize[]>(SPIN_PRIZES);
+  const wheelSegments = useMemo(() => buildWheelSegments(prizePool), [prizePool]);
   const highestPrizeValue = wheelSegments.reduce((maxValue, prize) => Math.max(maxValue, prize.value), 0);
 
   const getSpinStatusErrorMessage = (err: unknown, offline: boolean) => {
@@ -54,7 +56,13 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   };
 
   useEffect(() => {
-    loadSpinStatus();
+    const initializeSpinWheel = async () => {
+      const prizes = await getSpinPrizesForUser(session.user.id);
+      setPrizePool(prizes);
+      await loadSpinStatus(prizes);
+    };
+
+    void initializeSpinWheel();
   }, [session.user.id]);
 
   useEffect(() => {
@@ -72,7 +80,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     };
   }, []);
 
-  const loadSpinStatus = async () => {
+  const loadSpinStatus = async (availablePrizes: SpinPrize[] = prizePool) => {
     setLoading(true);
     setError(null);
     setWonPrize(null);
@@ -113,7 +121,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
             const spunDate = new Date(spunAt).toISOString().split('T')[0];
             if (spunDate === today) {
-              const matchedPrize = SPIN_PRIZES.find(
+              const matchedPrize = availablePrizes.find(
                 (prize) =>
                   prize.type === prizeType && prize.value === prizeValue
               );
@@ -162,6 +170,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
       setRotation(finalRotation);
 
+      const spinAnimationDurationMs = 3200;
+
       // Wait for animation to complete
       setTimeout(() => {
         setWonPrize(prize);
@@ -180,7 +190,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
         // Emit event for other components
         window.dispatchEvent(new CustomEvent('dailySpinComplete'));
-      }, 3500);
+      }, spinAnimationDurationMs);
     } catch (err) {
       console.error('Spin failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to spin. Please try again.');
@@ -253,7 +263,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               <button
                 type="button"
                 className="new-daily-spin-modal__retry-btn"
-                onClick={loadSpinStatus}
+                onClick={() => void loadSpinStatus()}
                 disabled={loading}
               >
                 Try again
@@ -321,7 +331,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
                 <button
                   type="button"
                   className="new-daily-spin-modal__retry-btn"
-                  onClick={loadSpinStatus}
+                  onClick={() => void loadSpinStatus()}
                   disabled={loading}
                 >
                   Retry
