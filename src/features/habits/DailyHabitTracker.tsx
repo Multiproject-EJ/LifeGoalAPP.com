@@ -54,6 +54,8 @@ import {
   shouldAutoArchiveHabitFromReview,
   type HabitHealthState,
 } from './habitHealth';
+import { buildEnhancedRationale } from './aiRationale';
+import { generateHabitSuggestion, type HabitAiSuggestion } from '../../services/habitAiSuggestions';
 import {
   getProgressStateIcon,
   getProgressStateLabel,
@@ -178,6 +180,11 @@ type VisionReward = {
 
 type HabitReviewAction = 'pause' | 'redesign' | 'replace' | 'archive';
 
+type HabitReviewAiDraft = {
+  suggestion: HabitAiSuggestion;
+  rationale: string;
+};
+
 const STREAK_LOOKBACK_DAYS = 60;
 const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
   seed: 'Easy',
@@ -283,6 +290,9 @@ export function DailyHabitTracker({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
+  const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
+  const [reviewAiDraftByHabitId, setReviewAiDraftByHabitId] = useState<Record<string, HabitReviewAiDraft>>({});
+  const [pendingReviewAiApply, setPendingReviewAiApply] = useState<{ habitId: string; title: string; rationale: string } | null>(null);
   const [completions, setCompletions] = useState<Record<string, HabitCompletionState>>({});
   const [monthlyCompletions, setMonthlyCompletions] = useState<
     Record<string, HabitMonthlyCompletionState>
@@ -1854,10 +1864,17 @@ export function DailyHabitTracker({
     const domainMeta = extractLifeWheelDomain(editHabit.schedule);
     setEditLifeWheelKey(domainMeta?.key ?? LIFE_WHEEL_UNASSIGNED);
     setEditGoalId(editHabit.goalId ?? GOAL_UNASSIGNED);
-    setEditTitle(editHabit.name);
-    setEditNotes(extractHabitNotes(editHabit.schedule));
+    const baseNotes = extractHabitNotes(editHabit.schedule);
+    if (pendingReviewAiApply?.habitId === editHabit.id) {
+      setEditTitle(pendingReviewAiApply.title || editHabit.name);
+      setEditNotes(baseNotes ? `${baseNotes}\n\nAI redesign draft: ${pendingReviewAiApply.rationale}` : `AI redesign draft: ${pendingReviewAiApply.rationale}`);
+      setPendingReviewAiApply(null);
+    } else {
+      setEditTitle(editHabit.name);
+      setEditNotes(baseNotes);
+    }
     setEditError(null);
-  }, [editHabit]);
+  }, [editHabit, pendingReviewAiApply]);
 
   useEffect(() => {
     if (!editHabit) return;
@@ -2390,6 +2407,87 @@ export function DailyHabitTracker({
     return { total: scoringHabits.length, scheduled, completed } as const;
   }, [habits, completions, habitHealthByHabitId, habitInsights, activeDate]);
 
+  const generateReviewRedesignDraft = useCallback(async (habit: HabitWithGoal, action: Extract<HabitReviewAction, 'redesign' | 'replace'>) => {
+    if (reviewAiLoadingHabitIds.has(habit.id)) {
+      return;
+    }
+
+    const adherence7 = Math.round(adherenceByHabit[habit.id]?.percentage ?? 0);
+    const adherence30 = adherence7;
+    const streak = habitInsights[habit.id]?.currentStreak ?? 0;
+    const healthState = habitHealthByHabitId[habit.id] ?? 'in_review';
+    const modeLabel = action === 'replace' ? 'replace' : 'redesign';
+
+    const prompt = [
+      `${modeLabel.toUpperCase()} this habit for a fresh start.`,
+      `Current habit: ${habit.name}.`,
+      `Health state: ${healthState}.`,
+      `7-day adherence: ${adherence7}%.`,
+      `30-day adherence: ${adherence30}%.`,
+      `Current streak: ${streak} days.`,
+      'Keep the scope small and sustainable.',
+    ].join(' ');
+
+    setReviewAiLoadingHabitIds((prev) => new Set(prev).add(habit.id));
+
+    try {
+      const [suggestionResult, rationaleResult] = await Promise.all([
+        generateHabitSuggestion({ prompt }),
+        buildEnhancedRationale({
+          classification: 'underperforming',
+          adherence7,
+          adherence30,
+          streak,
+          baselineRationale:
+            action === 'replace'
+              ? 'This habit has been stale for a while. Replacing it with a simpler behavior can help rebuild consistency quickly.'
+              : 'This habit is signaling friction. A smaller or better-timed version can make it easier to relaunch momentum.',
+        }),
+      ]);
+
+      const suggestion = suggestionResult.suggestion;
+      if (!suggestion) {
+        throw new Error(suggestionResult.error ?? 'Unable to generate a redesign suggestion right now.');
+      }
+
+      setReviewAiDraftByHabitId((prev) => ({
+        ...prev,
+        [habit.id]: {
+          suggestion,
+          rationale: rationaleResult.rationale,
+        },
+      }));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to generate a redesign suggestion right now.');
+    } finally {
+      setReviewAiLoadingHabitIds((prev) => {
+        const next = new Set(prev);
+        next.delete(habit.id);
+        return next;
+      });
+    }
+  }, [adherenceByHabit, habitHealthByHabitId, habitInsights, reviewAiLoadingHabitIds]);
+
+  const handleApplyReviewAiDraftToEdit = useCallback((habit: HabitWithGoal) => {
+    const draft = reviewAiDraftByHabitId[habit.id];
+    if (!draft) {
+      return;
+    }
+
+    setEditHabit({
+      id: habit.id,
+      name: draft.suggestion.title || habit.name,
+      schedule: habit.schedule ?? null,
+      goalId: habit.goal?.id ?? null,
+    });
+    setPendingReviewAiApply({
+      habitId: habit.id,
+      title: draft.suggestion.title || habit.name,
+      rationale: draft.rationale,
+    });
+    setErrorMessage(`Loaded AI redesign draft for "${habit.name}". Review and save your changes.`);
+  }, [reviewAiDraftByHabitId]);
+
   const handleHabitReviewAction = useCallback(async (habit: HabitWithGoal, action: HabitReviewAction) => {
     if (!isConfigured || isDemoExperience) {
       setErrorMessage('Connect Supabase to review and update habits.');
@@ -2442,8 +2540,9 @@ export function DailyHabitTracker({
         );
       }
 
-      if (action === 'redesign') {
+      if (action === 'redesign' || action === 'replace') {
         setExpandedHabits((prev) => ({ ...prev, [habit.id]: true }));
+        await generateReviewRedesignDraft(habit, action);
       }
 
       const messages: Record<Exclude<HabitReviewAction, 'archive'>, string> = {
@@ -2461,7 +2560,7 @@ export function DailyHabitTracker({
         return next;
       });
     }
-  }, [isConfigured, isDemoExperience, reviewActionHabitIds]);
+  }, [isConfigured, isDemoExperience, reviewActionHabitIds, generateReviewRedesignDraft]);
 
   const identitySignalDayCount = useMemo(() => {
     const completionDates = new Set<string>();
@@ -3142,6 +3241,8 @@ export function DailyHabitTracker({
             <ul className="habit-review-queue__list" role="list">
               {reviewQueueHabits.map((habit) => {
                 const isActionInFlight = reviewActionHabitIds.has(habit.id);
+                const isAiDraftLoading = reviewAiLoadingHabitIds.has(habit.id);
+                const aiDraft = reviewAiDraftByHabitId[habit.id];
                 return (
                   <li key={habit.id} className="habit-review-queue__item">
                     <span className="habit-review-queue__name">{habit.name}</span>
@@ -3164,6 +3265,23 @@ export function DailyHabitTracker({
                         Archive
                       </button>
                     </div>
+                    {isAiDraftLoading ? <p className="habit-review-queue__draft-status">Generating AI redesign draft…</p> : null}
+                    {aiDraft ? (
+                      <div className="habit-review-queue__draft" role="status" aria-live="polite">
+                        <p className="habit-review-queue__draft-title">
+                          Suggested relaunch: {aiDraft.suggestion.emoji ? `${aiDraft.suggestion.emoji} ` : ''}
+                          {aiDraft.suggestion.title}
+                        </p>
+                        <p className="habit-review-queue__draft-rationale">{aiDraft.rationale}</p>
+                        <button
+                          type="button"
+                          className="habit-review-queue__draft-apply"
+                          onClick={() => handleApplyReviewAiDraftToEdit(habit)}
+                        >
+                          Open in edit flow
+                        </button>
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}

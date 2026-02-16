@@ -201,3 +201,15 @@ Still deferred:
 - Recovery/relaunch gamification hooks (`habit_review_completed`, `habit_relaunch_started`, `habit_relaunch_7day_success`).
 - Risk-prioritized time-limited offer input (replace random-first behavior).
 
+
+### 2026-02-16 — Phase 2 / Step: AI-assisted redesign handoff from review queue
+
+Implemented:
+- Wired `redesign` and `replace` review actions to generate an AI redesign draft using existing `generateHabitSuggestion(...)` with review-context prompts (habit name, health state, adherence, streak).
+- Added rationale generation for the redesign draft via existing `buildEnhancedRationale(...)`, preserving fallback behavior when AI is unavailable.
+- Surfaced the generated draft directly inside the Habit Review queue (suggested relaunch title + rationale) with an **Open in edit flow** CTA.
+- Connected the CTA to existing habit edit UI so users can review and save the AI draft without introducing a new create/edit stack.
+
+Still deferred:
+- Recovery/relaunch gamification hooks (`habit_review_completed`, `habit_relaunch_started`, `habit_relaunch_7day_success`).
+- Risk-prioritized time-limited offer input (replace random-first behavior).
