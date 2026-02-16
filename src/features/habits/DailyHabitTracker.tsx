@@ -546,6 +546,35 @@ export function DailyHabitTracker({
     });
   }, [habits, habitInsights, completions]);
 
+  const riskRankedOfferHabits = useMemo(() => {
+    const riskScoreByState: Record<HabitHealthState, number> = {
+      in_review: 0,
+      stalled: 3,
+      at_risk: 2,
+      active: 1,
+    };
+
+    return sortedHabits
+      .filter((habit) => !completions[habit.id]?.completed)
+      .filter((habit) => (habitHealthByHabitId[habit.id] ?? 'active') !== 'in_review')
+      .sort((a, b) => {
+        const aState = habitHealthByHabitId[a.id] ?? 'active';
+        const bState = habitHealthByHabitId[b.id] ?? 'active';
+        const scoreDelta = riskScoreByState[bState] - riskScoreByState[aState];
+        if (scoreDelta !== 0) {
+          return scoreDelta;
+        }
+
+        const aAdherence = (adherenceByHabit[a.id]?.percentage ?? 100) / 100;
+        const bAdherence = (adherenceByHabit[b.id]?.percentage ?? 100) / 100;
+        if (aAdherence !== bAdherence) {
+          return aAdherence - bAdherence;
+        }
+
+        return a.name.localeCompare(b.name);
+      });
+  }, [adherenceByHabit, completions, habitHealthByHabitId, sortedHabits]);
+
   const nowTimestamp = Date.now();
   const isTimeLimitedOfferActive =
     isViewingToday &&
@@ -658,9 +687,10 @@ export function DailyHabitTracker({
       return;
     }
 
-    const nextHabit =
-      sortedHabits.find((habit) => !completions[habit.id]?.completed) ?? sortedHabits[0] ?? null;
+    const nextHabit = riskRankedOfferHabits[0] ?? sortedHabits.find((habit) => !completions[habit.id]?.completed) ?? sortedHabits[0] ?? null;
     const badHabit =
+      riskRankedOfferHabits.find((habit) => isBadHabit(habit) && habit.id !== nextHabit?.id) ??
+      riskRankedOfferHabits.find((habit) => habit.id !== nextHabit?.id) ??
       sortedHabits.find((habit) => isBadHabit(habit) && habit.id !== nextHabit?.id) ??
       sortedHabits.find((habit) => habit.id !== nextHabit?.id) ??
       null;
@@ -683,6 +713,7 @@ export function DailyHabitTracker({
     habits.length,
     isBadHabit,
     isViewingToday,
+    riskRankedOfferHabits,
     session.user.id,
     sortedHabits,
   ]);

@@ -228,3 +228,14 @@ Implemented:
 
 Still deferred:
 - Risk-prioritized time-limited offer input (replace random-first behavior).
+
+### 2026-02-16 — Phase 3 / Step: Risk-prioritized time-limited offer input
+
+Implemented:
+- Updated Today time-limited offer habit selection to prioritize non-completed `stalled` and `at_risk` habits before default candidates.
+- Added a deterministic risk-ranking pass that orders candidates by health state severity, then by lower adherence percentage, then by habit name for stable ordering.
+- Kept fallback behavior intact by reverting to the existing sorted habit selection when no risk-prioritized candidate is available.
+- Preserved existing offer window timing and reward multiplier behavior (selection input only changed).
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.
