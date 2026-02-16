@@ -439,18 +439,25 @@ export function DailyHabitTracker({
     () => calculateWeightedSuccessSnapshots(habits, historicalLogs, today),
     [habits, historicalLogs, today],
   );
-  const habitHealthByHabitId = useMemo(() => {
-    const next: Record<string, HabitHealthState> = {};
+  const habitHealthAssessmentsByHabitId = useMemo(() => {
+    const next = {} as Record<string, ReturnType<typeof assessHabitHealth>>;
     for (const habit of habits) {
       const insight = habitInsights[habit.id];
       next[habit.id] = assessHabitHealth({
         adherence7: adherenceByHabit[habit.id] ?? null,
         lastCompletedOn: insight?.lastCompletedOn ?? null,
         referenceDateISO: today,
-      }).state;
+      });
     }
     return next;
   }, [adherenceByHabit, habitInsights, habits, today]);
+  const habitHealthByHabitId = useMemo(() => {
+    const next: Record<string, HabitHealthState> = {};
+    for (const habit of habits) {
+      next[habit.id] = habitHealthAssessmentsByHabitId[habit.id]?.state ?? 'active';
+    }
+    return next;
+  }, [habitHealthAssessmentsByHabitId, habits]);
 
   const isBadHabit = useCallback((habit: HabitWithGoal) => {
     const name = habit.name.toLowerCase();
@@ -2736,6 +2743,111 @@ export function DailyHabitTracker({
     }),
     [session.user.id],
   );
+
+  useEffect(() => {
+    if (!isConfigured || isDemoExperience || loading) {
+      return;
+    }
+    if (!habits.length) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const persistHabitHealthMetadata = async () => {
+      const updates = habits
+        .map((habit) => {
+          const assessment = habitHealthAssessmentsByHabitId[habit.id];
+          if (!assessment) {
+            return null;
+          }
+
+          const currentState = getAutoProgressState(buildAutoProgressHabit(habit));
+          const nextLastCompletedAt = habitInsights[habit.id]?.lastCompletedOn ?? null;
+
+          const hasHealthStateChanged = (currentState.health_state ?? 'active') !== assessment.state;
+          const hasLastCompletedChanged = (currentState.last_completed_at ?? null) !== nextLastCompletedAt;
+          const hasReviewDueAtChanged = (currentState.review_due_at ?? null) !== assessment.reviewDueAt;
+
+          if (!hasHealthStateChanged && !hasLastCompletedChanged && !hasReviewDueAtChanged) {
+            return null;
+          }
+
+          return {
+            habitId: habit.id,
+            autoprog: {
+              ...currentState,
+              health_state: assessment.state,
+              last_completed_at: nextLastCompletedAt,
+              review_due_at: assessment.reviewDueAt,
+            } as Database['public']['Tables']['habits_v2']['Row']['autoprog'],
+          };
+        })
+        .filter((value): value is { habitId: string; autoprog: Database['public']['Tables']['habits_v2']['Row']['autoprog'] } =>
+          Boolean(value),
+        );
+
+      if (!updates.length) {
+        return;
+      }
+
+      const persistedAutoprogByHabitId = new Map<string, Database['public']['Tables']['habits_v2']['Row']['autoprog']>();
+
+      for (const update of updates) {
+        const { data, error } = await updateHabitFullV2(update.habitId, {
+          autoprog: update.autoprog,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        if (error) {
+          console.error('Unable to persist habit health metadata:', {
+            habitId: update.habitId,
+            message: error.message,
+          });
+          continue;
+        }
+
+        if (data) {
+          persistedAutoprogByHabitId.set(update.habitId, data.autoprog ?? update.autoprog);
+        }
+      }
+
+      if (!persistedAutoprogByHabitId.size || cancelled) {
+        return;
+      }
+
+      setHabits((prev) =>
+        prev.map((habit) => {
+          const persistedAutoprog = persistedAutoprogByHabitId.get(habit.id);
+          if (!persistedAutoprog) {
+            return habit;
+          }
+
+          return {
+            ...habit,
+            autoprog: persistedAutoprog,
+          };
+        }),
+      );
+    };
+
+    void persistHabitHealthMetadata();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    buildAutoProgressHabit,
+    habitHealthAssessmentsByHabitId,
+    habitInsights,
+    habits,
+    isConfigured,
+    isDemoExperience,
+    loading,
+  ]);
 
   const handleAutoProgressShift = async (
     habit: HabitWithGoal,
