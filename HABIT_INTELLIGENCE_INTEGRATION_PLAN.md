@@ -183,3 +183,21 @@ Implemented:
 Still deferred:
 - Auto-archive after grace window (e.g., 14 days with no review action).
 - AI-assisted redesign wizard handoff from the new review queue actions.
+
+### 2026-02-16 — Phase 1 / Step: Auto-archive after review grace window
+
+Implemented:
+- Added an explicit auto-archive grace threshold (`autoArchiveGraceDaysAfterReviewDue = 14`) to the habit health rules.
+- Added a reusable `shouldAutoArchiveHabitFromReview(...)` helper so review grace-window decisions are consistent and testable in one place.
+- Wired an automatic cleanup effect in `DailyHabitTracker` that:
+  - scans `in_review` habits,
+  - checks `review_due_at` + grace threshold,
+  - skips habits that already have a user review decision (`review_reason`),
+  - archives expired habits via existing `archiveHabitV2`,
+  - removes archived habits from local Today/completion state immediately.
+
+Still deferred:
+- AI-assisted redesign wizard handoff from review queue actions.
+- Recovery/relaunch gamification hooks (`habit_review_completed`, `habit_relaunch_started`, `habit_relaunch_7day_success`).
+- Risk-prioritized time-limited offer input (replace random-first behavior).
+
