@@ -6735,6 +6735,105 @@ body {
   gap: 0.6rem;
 }
 
+
+.habit-review-queue {
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: rgba(14, 165, 233, 0.08);
+  border-radius: 14px;
+  padding: 0.75rem;
+}
+
+.habit-review-queue__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0284c7;
+  font-weight: 700;
+}
+
+.habit-review-queue__title {
+  margin: 0.2rem 0 0;
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+
+.habit-review-queue__subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.habit-review-queue__list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.habit-review-queue__item {
+  border: 1px solid rgba(14, 165, 233, 0.24);
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  padding: 0.5rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.habit-review-queue__name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.habit-review-queue__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.habit-review-queue__actions button {
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  background: #ffffff;
+  color: #0369a1;
+  border-radius: 999px;
+  padding: 0.22rem 0.58rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.habit-review-queue__actions button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.habit-review-queue__archive {
+  border-color: rgba(239, 68, 68, 0.28) !important;
+  color: #b91c1c !important;
+}
+
+[data-theme='dark-glass'] .habit-review-queue {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+[data-theme='dark-glass'] .habit-review-queue__title,
+[data-theme='dark-glass'] .habit-review-queue__name {
+  color: #e2e8f0;
+}
+
+[data-theme='dark-glass'] .habit-review-queue__subtitle {
+  color: rgba(226, 232, 240, 0.76);
+}
+
+[data-theme='dark-glass'] .habit-review-queue__actions button {
+  background: rgba(15, 23, 42, 0.72);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
 .habit-checklist__empty {
   margin: 0;
   font-size: 0.85rem;
