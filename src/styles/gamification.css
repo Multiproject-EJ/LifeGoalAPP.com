@@ -1460,6 +1460,78 @@
   opacity: 0.7;
 }
 
+
+.score-tab__risk-card {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.score-tab__risk-card--green {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.score-tab__risk-card--yellow {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.score-tab__risk-card--red {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.score-tab__risk-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.score-tab__risk-header span {
+  color: #334155;
+}
+
+.score-tab__risk-reasons {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.78rem;
+  color: #334155;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.score-tab__risk-guardrails {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.score-tab__risk-guardrail {
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.score-tab__risk-guardrail span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.score-tab__risk-guardrail small {
+  font-size: 0.72rem;
+  color: #475569;
+}
+
 .score-tab__shop-status {
   margin: 0;
   font-size: 0.85rem;

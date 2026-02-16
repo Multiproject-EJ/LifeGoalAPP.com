@@ -20,6 +20,7 @@ import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward,
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
+import { evaluateRewardRisk } from '../../lib/rewardValidation';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
@@ -101,6 +102,21 @@ export function ScoreTab({
   const [goldBalance, setGoldBalance] = useState(profile?.total_points ?? 0);
   const [zenTransactions, setZenTransactions] = useState<ZenTokenTransaction[]>([]);
   const [zenTransactionsError, setZenTransactionsError] = useState<string | null>(null);
+
+  const rewardRisk = useMemo(() => {
+    const cost = Number(rewardCost);
+    if (!rewardTitle.trim() || !cost || cost < 1) {
+      return null;
+    }
+
+    return evaluateRewardRisk({
+      title: rewardTitle,
+      description: rewardDescription,
+      costGold: cost,
+      category: rewardCategory,
+      cooldownType: rewardCooldown,
+    });
+  }, [rewardCategory, rewardCooldown, rewardCost, rewardDescription, rewardTitle]);
 
   const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen') => {
     setActiveTab(tab);
@@ -426,6 +442,34 @@ export function ScoreTab({
     setShowPacingPrompt(false);
     
     // Optional: Add actual action implementation later (e.g., navigate to create reward, etc.)
+  };
+
+  const handleApplyGuardrail = (guardrailId: 'add_cooldown' | 'raise_cost' | 'habit_pairing') => {
+    const currentCost = Number(rewardCost);
+
+    if (guardrailId === 'add_cooldown') {
+      setRewardCooldown('daily');
+      setRewardMessage({
+        type: 'success',
+        text: 'Added a 24h cooldown to keep this reward special.',
+      });
+      return;
+    }
+
+    if (guardrailId === 'raise_cost' && currentCost > 0) {
+      const nextCost = Math.max(1, Math.ceil(currentCost * 1.25));
+      setRewardCost(String(nextCost));
+      setRewardMessage({
+        type: 'success',
+        text: `Raised cost to ${nextCost} gold for better pacing.`,
+      });
+      return;
+    }
+
+    setRewardMessage({
+      type: 'success',
+      text: 'Great call — pair this reward with one completed habit before redeeming.',
+    });
   };
 
   return (
@@ -857,6 +901,33 @@ export function ScoreTab({
             >
               {rewardSubmitting ? 'Saving...' : 'Add reward'}
             </button>
+
+            {rewardRisk && (
+              <section className={`score-tab__risk-card score-tab__risk-card--${rewardRisk.band}`}>
+                <div className="score-tab__risk-header">
+                  <strong>Reward risk score: {rewardRisk.score}</strong>
+                  <span>{rewardRisk.summary}</span>
+                </div>
+                <ul className="score-tab__risk-reasons">
+                  {rewardRisk.reasons.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+                <div className="score-tab__risk-guardrails">
+                  {rewardRisk.guardrails.map((guardrail) => (
+                    <button
+                      key={guardrail.id}
+                      type="button"
+                      className="score-tab__risk-guardrail"
+                      onClick={() => handleApplyGuardrail(guardrail.id)}
+                    >
+                      <span>{guardrail.label}</span>
+                      <small>{guardrail.helper}</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
           </form>
 
           {rewardLoading && <p className="score-tab__shop-status">Loading your rewards...</p>}

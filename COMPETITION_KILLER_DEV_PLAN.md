@@ -1639,7 +1639,7 @@ WisdomTreeState {
 - [x] **P8.6** Centralize Identity Signal copy config (friendly labels + 1-line explanations in a shared config)
 
 ### Phase 9 — UX & Engagement Layers (Spec → Build)
-- [ ] **P9.1** Build reward validation heuristics UI (risk scoring nudges + guardrail options from §7.1)
+- [x] **P9.1** Build reward validation heuristics UI (risk scoring nudges + guardrail options from §7.1)
 - [ ] **P9.2** Build Party system UI (shared stakes, party check-in chip, shared reward flow from §7.4)
 - [ ] **P9.3** Build Seasonal events UI (event chip, micro-action cards, finale ritual from §7.6)
 - [ ] **P9.4** Build Motivation style matching engine (persona detection, copy adaptation, scoring rules from §7.7)
@@ -1907,3 +1907,10 @@ WisdomTreeState {
   - **Step**: P8.3 marked as Done + Phase 9 roadmap defined  
   - **What changed**: Confirmed P8.3 reward evolution (State 0→1→2→3) is fully implemented with modal UI, service functions, evolution templates, ScoreTab integration, and telemetry. Marked P8.3 checkbox as done. Added Phase 9 roadmap with 7 steps covering reward validation UI, party system, seasonal events, motivation matching, pacing optimizer UI, soft-landing mode, and Zen Garden visual loop — all based on existing specs from §7 and §8.  
   - **What's next**: Begin P9.1 (reward validation heuristics UI) or prioritize based on user impact.
+
+
+- **2026-02-16**  
+  - **Step**: P9.1 Build reward validation heuristics UI (risk scoring nudges + guardrail options from §7.1)  
+  - **What changed**: Added a rules-based reward validation helper that scores draft rewards into green/yellow/red risk bands, explains why the score was assigned, and provides one-tap guardrail actions (add cooldown, raise cost, or habit-pairing reminder). Integrated this into the Player Shop reward creation form as a live risk card with actionable buttons and styling.  
+  - **What's next**: P9.2 Build Party system UI (shared stakes, party check-in chip, shared reward flow from §7.4).
+
