@@ -13,8 +13,13 @@ type GameBoardOverlayProps = {
   onSpinWinClick?: () => void;
   onHeartsGameplayClick?: () => void;
   onDailyHatchClick?: () => void;
+  onBankClick?: () => void;
   profilePlaystyleIcon?: string;
   profilePlaystyleLabel?: string;
+  currentLevel?: number;
+  momentumPercent?: number;
+  diamondBalance?: number;
+  goldBalance?: number;
 };
 
 export function GameBoardOverlay({
@@ -24,8 +29,13 @@ export function GameBoardOverlay({
   onSpinWinClick,
   onHeartsGameplayClick,
   onDailyHatchClick,
+  onBankClick,
   profilePlaystyleIcon,
   profilePlaystyleLabel,
+  currentLevel = 1,
+  momentumPercent = 0,
+  diamondBalance = 0,
+  goldBalance = 0,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -59,6 +69,8 @@ export function GameBoardOverlay({
     }
   };
 
+  const clampedMomentum = Math.min(100, Math.max(0, momentumPercent));
+
   return (
     <div
       className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}`}
@@ -79,6 +91,18 @@ export function GameBoardOverlay({
               </span>
             </div>
           ) : null}
+          <div
+            className={`game-board-overlay__topbar-level ${currentLevel >= 10 ? 'game-board-overlay__topbar-level--double' : ''}`}
+            aria-label={`Level ${currentLevel}`}
+          >
+            Lv.{currentLevel}
+          </div>
+          <div className="game-board-overlay__momentum" aria-label={`Momentum ${clampedMomentum}%`}>
+            <div className="game-board-overlay__momentum-track">
+              <div className="game-board-overlay__momentum-fill" style={{ width: `${clampedMomentum}%` }} />
+            </div>
+            <span className="game-board-overlay__momentum-label">Momentum</span>
+          </div>
         </div>
 
         {/* Secondary Bar - Previously the topbar, now smaller */}
@@ -127,9 +151,25 @@ export function GameBoardOverlay({
 
           {/* Right Side Icons */}
           <div className="game-board-overlay__side-icons game-board-overlay__side-icons--right">
-            <img src={boardIconsRight1} alt="Game board right icons 1" className="game-board-overlay__icons-image" />
-            <img src={boardIconsRight2} alt="Game board right icons 2" className="game-board-overlay__icons-image" />
-            <img src={boardIconsRight3} alt="Game board right icons 3" className="game-board-overlay__icons-image" />
+            <div className="game-board-overlay__right-icon-item">
+              <button
+                type="button"
+                className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
+                onClick={onBankClick}
+                aria-label="Open bank tab"
+              >
+                <img src={boardIconsRight1} alt="Bank" className="game-board-overlay__icons-image" />
+              </button>
+              <span className="game-board-overlay__icon-counter">Bank</span>
+            </div>
+            <div className="game-board-overlay__right-icon-item">
+              <img src={boardIconsRight2} alt="Diamonds" className="game-board-overlay__icons-image" />
+              <span className="game-board-overlay__icon-counter">{diamondBalance.toLocaleString()}</span>
+            </div>
+            <div className="game-board-overlay__right-icon-item">
+              <img src={boardIconsRight3} alt="Gold" className="game-board-overlay__icons-image" />
+              <span className="game-board-overlay__icon-counter">{goldBalance.toLocaleString()}</span>
+            </div>
           </div>
         </div>
       </div>

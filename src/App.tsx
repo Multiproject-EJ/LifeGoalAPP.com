@@ -3454,8 +3454,17 @@ export default function App() {
             setShowGameBoardOverlay(false);
             setShowCalendarPlaceholder(true);
           }}
+          onBankClick={() => {
+            setShowGameBoardOverlay(false);
+            setScoreTabActiveTab('bank');
+            setShowMobileGamification(true);
+          }}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
+          currentLevel={currentLevel}
+          momentumPercent={Math.min(100, streakMomentum * 4)}
+          diamondBalance={goldBreakdown.diamonds}
+          goldBalance={goldBreakdown.goldRemainder}
         />
         {showAiCoachModal && (
           <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
@@ -3693,8 +3702,17 @@ export default function App() {
           setShowGameBoardOverlay(false);
           setShowCalendarPlaceholder(true);
         }}
+        onBankClick={() => {
+          setShowGameBoardOverlay(false);
+          setScoreTabActiveTab('bank');
+          setShowMobileGamification(true);
+        }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profilePlaystyleLabel={playstyleLabel ?? undefined}
+        currentLevel={currentLevel}
+        momentumPercent={Math.min(100, streakMomentum * 4)}
+        diamondBalance={goldBreakdown.diamonds}
+        goldBalance={goldBreakdown.goldRemainder}
       />
 
       {isAuthOverlayVisible ? (
