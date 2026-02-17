@@ -1,8 +1,10 @@
 import type { CommitmentContract, ContractEvaluation } from '../../types/gamification';
+import type { ReduceStakeEligibility } from '../../services/commitmentContracts';
 
 interface ContractResultModalProps {
   contract: CommitmentContract;
   evaluation: ContractEvaluation;
+  reduceStakeEligibility: ReduceStakeEligibility | null;
   onClose: () => void;
   onResetContract: () => void;
   onReduceStake: () => void;
@@ -13,6 +15,7 @@ interface ContractResultModalProps {
 export function ContractResultModal({
   contract,
   evaluation,
+  reduceStakeEligibility,
   onClose,
   onResetContract,
   onReduceStake,
@@ -20,9 +23,7 @@ export function ContractResultModal({
   onCancelContract,
 }: ContractResultModalProps) {
   const isSuccess = evaluation.result === 'success';
-
-  // Check if user can reduce stake (2+ misses in 30 days)
-  const canReduceStake = contract.missCount >= 2;
+  const canReduceStake = Boolean(reduceStakeEligibility?.eligible);
 
   if (isSuccess) {
     return (
@@ -57,7 +58,6 @@ export function ContractResultModal({
     );
   }
 
-  // Miss modal
   return (
     <div className="contract-result-modal" role="dialog" aria-modal="true">
       <div className="contract-result-modal__backdrop" onClick={onClose} />
@@ -84,14 +84,16 @@ export function ContractResultModal({
           >
             Reset contract (same settings)
           </button>
-          {canReduceStake && (
-            <button
-              type="button"
-              className="contract-result-modal__option-button"
-              onClick={onReduceStake}
-            >
-              Reduce stake (one-time option)
-            </button>
+          <button
+            type="button"
+            className="contract-result-modal__option-button"
+            onClick={onReduceStake}
+            disabled={!canReduceStake}
+          >
+            Reduce stake (one-time option)
+          </button>
+          {!canReduceStake && reduceStakeEligibility?.reason && (
+            <p className="contract-result-modal__option-hint">{reduceStakeEligibility.reason}</p>
           )}
           <button
             type="button"

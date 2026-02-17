@@ -14,6 +14,12 @@ type ServiceResponse<T> = {
   error: Error | null;
 };
 
+export type ReduceStakeEligibility = {
+  eligible: boolean;
+  missesLast30Days: number;
+  reason?: string;
+};
+
 export type ContractInput = {
   title: string;
   targetType: ContractTargetType;
@@ -102,6 +108,65 @@ function validateStakeAmount(
   // For now, just check positivity
 
   return { valid: true };
+}
+
+function getMissesInWindow(
+  evaluations: ContractEvaluation[],
+  contractId: string,
+  sinceDate: Date
+): number {
+  return evaluations.filter((evaluation) => {
+    if (evaluation.contractId !== contractId) return false;
+    if (evaluation.result !== 'miss') return false;
+    return new Date(evaluation.evaluatedAt) >= sinceDate;
+  }).length;
+}
+
+export async function getReduceStakeEligibility(
+  userId: string,
+  contract: CommitmentContract
+): Promise<ReduceStakeEligibility> {
+  if (contract.stakeAmount <= 1) {
+    return {
+      eligible: false,
+      missesLast30Days: 0,
+      reason: 'Stake is already at the minimum amount.',
+    };
+  }
+
+  if (contract.stakeReducedAt) {
+    return {
+      eligible: false,
+      missesLast30Days: 0,
+      reason: 'Reduce stake is a one-time recovery action for each contract.',
+    };
+  }
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const { data: evaluations, error } = await fetchContractEvaluations(userId, contract.id);
+  if (error || !evaluations) {
+    return {
+      eligible: false,
+      missesLast30Days: 0,
+      reason: 'Unable to verify recent misses right now.',
+    };
+  }
+
+  const missesLast30Days = getMissesInWindow(evaluations, contract.id, thirtyDaysAgo);
+  if (missesLast30Days < 2) {
+    return {
+      eligible: false,
+      missesLast30Days,
+      reason: 'Reduce stake unlocks after 2 misses in the last 30 days.',
+    };
+  }
+
+  return {
+    eligible: true,
+    missesLast30Days,
+  };
 }
 
 // =====================================================
@@ -424,6 +489,133 @@ export async function activateContract(
     return {
       data: null,
       error: error instanceof Error ? error : new Error('Failed to activate contract'),
+    };
+  }
+}
+
+export async function resetContractWithSameSettings(
+  userId: string,
+  contractId: string
+): Promise<ServiceResponse<CommitmentContract>> {
+  try {
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) {
+      return { data: null, error: error || new Error('Contracts not found') };
+    }
+
+    const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
+    if (contractIndex === -1) {
+      return { data: null, error: new Error('Contract not found') };
+    }
+
+    const contract = contracts[contractIndex];
+    if (contract.status !== 'active') {
+      return { data: null, error: new Error('Can only reset active contracts') };
+    }
+
+    const now = new Date();
+    const windowStart = getWindowStart(contract.cadence, now);
+    const updatedContract: CommitmentContract = {
+      ...contract,
+      currentProgress: 0,
+      currentWindowStart: windowStart.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+
+    const updatedContracts = [...contracts];
+    updatedContracts[contractIndex] = updatedContract;
+    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'contract_reset',
+      metadata: {
+        contractId: updatedContract.id,
+        cadence: updatedContract.cadence,
+        stakeType: updatedContract.stakeType,
+        stakeAmount: updatedContract.stakeAmount,
+      } as TelemetryEventMetadata,
+    });
+
+    return { data: updatedContract, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to reset contract'),
+    };
+  }
+}
+
+export async function reduceContractStake(
+  userId: string,
+  contractId: string
+): Promise<ServiceResponse<CommitmentContract>> {
+  try {
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) {
+      return { data: null, error: error || new Error('Contracts not found') };
+    }
+
+    const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
+    if (contractIndex === -1) {
+      return { data: null, error: new Error('Contract not found') };
+    }
+
+    const contract = contracts[contractIndex];
+    const eligibility = await getReduceStakeEligibility(userId, contract);
+    if (!eligibility.eligible) {
+      void recordTelemetryEvent({
+        userId,
+        eventType: 'contract_stake_reduce_blocked',
+        metadata: {
+          contractId: contract.id,
+          reason: eligibility.reason ?? 'ineligible',
+          missesLast30Days: eligibility.missesLast30Days,
+        } as TelemetryEventMetadata,
+      });
+
+      return {
+        data: null,
+        error: new Error(eligibility.reason ?? 'Contract is not eligible for reduce stake'),
+      };
+    }
+
+    const now = new Date().toISOString();
+    const reducedStakeAmount = Math.max(1, Math.floor(contract.stakeAmount * 0.75));
+    if (reducedStakeAmount >= contract.stakeAmount) {
+      return {
+        data: null,
+        error: new Error('Stake is already too low to reduce further.'),
+      };
+    }
+
+    const updatedContract: CommitmentContract = {
+      ...contract,
+      stakeAmount: reducedStakeAmount,
+      stakeReducedAt: now,
+      updatedAt: now,
+    };
+
+    const updatedContracts = [...contracts];
+    updatedContracts[contractIndex] = updatedContract;
+    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'contract_stake_reduced',
+      metadata: {
+        contractId: contract.id,
+        previousStakeAmount: contract.stakeAmount,
+        newStakeAmount: reducedStakeAmount,
+        missesLast30Days: eligibility.missesLast30Days,
+      } as TelemetryEventMetadata,
+    });
+
+    return { data: updatedContract, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to reduce stake'),
     };
   }
 }

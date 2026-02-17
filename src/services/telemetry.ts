@@ -36,6 +36,9 @@ export type TelemetryEventType =
   | 'contract_completed'
   | 'contract_missed'
   | 'contract_stake_forfeited'
+  | 'contract_reset'
+  | 'contract_stake_reduced'
+  | 'contract_stake_reduce_blocked'
   | 'habit_time_limited_offer_scheduled'
   | 'habit_time_limited_offer_claimed'
   | 'habit_time_limited_offer_expired';

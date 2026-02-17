@@ -586,6 +586,7 @@ export interface CommitmentContract {
   currentProgress: number;     // completions in current window
   missCount: number;           // total misses
   successCount: number;        // total successes
+  stakeReducedAt?: string | null; // ISO date when reduce-stake recovery was used
   startAt: string;             // ISO date
   endAt: string | null;        // ISO date, null = ongoing
   currentWindowStart: string;  // start of current cadence window

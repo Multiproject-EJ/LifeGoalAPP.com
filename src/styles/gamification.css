@@ -2194,6 +2194,17 @@
   background: var(--hover-background, #f0f0ff);
 }
 
+
+.contract-result-modal__option-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contract-result-modal__option-hint {
+  margin: -0.1rem 0 0.3rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+}
 .contract-result-modal__cancel-button {
   width: 100%;
   padding: 0.75rem;
