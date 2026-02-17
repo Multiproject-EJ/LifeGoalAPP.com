@@ -296,3 +296,14 @@ Implemented:
 
 Still deferred:
 - None in the current Habit Intelligence integration plan scope.
+
+### 2026-02-17 — Phase 3 / Step: Offer expiry telemetry instrumentation
+
+Implemented:
+- Added a dedicated telemetry event (`habit_time_limited_offer_expired`) for ended time-limited offer windows.
+- Instrumented Today offer lifecycle to emit expiry telemetry once per offer schedule after `windowEnd` passes.
+- Included expiry metadata for offer date/window, targeted habit IDs, which offered habits were already completed, and an explicit `wasClaimed` flag with unclaimed IDs.
+- Added in-session de-duplication so the same expired offer does not emit repeated events on re-renders.
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.
