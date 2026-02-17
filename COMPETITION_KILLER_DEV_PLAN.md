@@ -994,6 +994,45 @@ CommitmentContract {
 **Done when**
 - Contract object, setup flow, evaluation rules, miss flow, safety caps, and telemetry hooks are specified.
 
+#### Current Implementation Gaps / Risks (Audit: Feb 2026)
+- **Result flow is partially wired**: evaluation modal state exists, but result presentation is not consistently triggered in the tab flow after evaluation.
+- **Paused contract visibility gap**: paused contracts are easy to orphan from the primary contracts surface, reducing recoverability.
+- **Evaluation timing risk**: window-end evaluation depends too heavily on in-tab user actions rather than reliable automatic checks.
+- **Persistence risk**: contract records are currently local-first, which can create cross-device inconsistency and cloud/demo divergence.
+- **Economy consistency risk**: stake/bonus write paths can diverge between demo profile writes and authenticated data paths.
+- **Limited stake safeguards**: Gold has a cap, but Token/other stake types need parity validation and clearer safety rules.
+- **Recovery path incompleteness**: “reset contract” and “reduce stake” are conceptually in UX but not fully operationalized end-to-end.
+
+#### High-Impact Improvements Backlog (Prioritized)
+1. **Reliability first**
+   - Trigger and show evaluation outcomes deterministically (success/miss modal + clear next step).
+   - Surface both Active and Paused contracts in the primary Contracts tab with one-tap resume.
+   - Add automatic expiry checks on screen load and scheduled server-side evaluation for unattended windows.
+2. **Data durability + trust**
+   - Move contract + evaluation storage to Supabase tables with RLS and optimistic-safe updates.
+   - Unify economy balance mutations so stakes and bonuses use the same persistence path in all modes.
+3. **Outcome quality**
+   - Auto-link contract progress to verified habit/goal completions (reduce manual progress taps).
+   - Add miss forecasting (“on pace / at risk”) and rescue nudges before window close.
+4. **Adaptive recovery**
+   - Fully implement reset-contract and reduce-stake flows with strict one-time/interval constraints.
+   - Add guided recovery modes after repeated misses (temporary lower target, gentle ramp back).
+5. **Impact features**
+   - Add contract history analytics, trend summaries, and streak-adjusted rewards.
+   - Add optional accountability witness / social commitment modes.
+
+#### Implementation Sprint Plan (Start Now)
+- **Slice A — Contracts UX reliability (in progress)**
+  - [x] Ensure evaluation outcomes appear in Contracts tab immediately after window close checks.
+  - [x] Ensure paused contracts are discoverable and resumable from the Contracts tab.
+  - [x] Ensure contract actions render state-appropriate controls (active vs paused).
+- **Slice B — Recovery actions (next)**
+  - [ ] Implement reset contract with same settings.
+  - [ ] Implement reduce stake with explicit eligibility checks and telemetry.
+- **Slice C — Persistence hardening (next)**
+  - [ ] Introduce Supabase contract/evaluation tables + RLS.
+  - [ ] Migrate service methods from localStorage to backend-first with demo fallback.
+
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
 **Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.

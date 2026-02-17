@@ -5,6 +5,7 @@ interface ContractStatusCardProps {
   contract: CommitmentContract;
   onMarkProgress: () => void;
   onPause: () => void;
+  onResume: () => void;
   onCancel: () => void;
 }
 
@@ -12,6 +13,7 @@ export function ContractStatusCard({
   contract,
   onMarkProgress,
   onPause,
+  onResume,
   onCancel,
 }: ContractStatusCardProps) {
   // Calculate progress percentage
@@ -22,13 +24,13 @@ export function ContractStatusCard({
   // Calculate cooling-off countdown
   const coolingOffRemaining = useMemo(() => {
     if (contract.status !== 'active') return null;
-    
+
     const createdAt = new Date(contract.createdAt).getTime();
     const coolingOffEnd = createdAt + contract.coolingOffHours * 60 * 60 * 1000;
     const now = Date.now();
-    
+
     if (now >= coolingOffEnd) return null;
-    
+
     const remainingMs = coolingOffEnd - now;
     const remainingHours = Math.ceil(remainingMs / (1000 * 60 * 60));
     return remainingHours;
@@ -37,23 +39,23 @@ export function ContractStatusCard({
   // Get warm copy based on progress
   const statusMessage = useMemo(() => {
     const remaining = contract.targetCount - contract.currentProgress;
-    
+
     if (remaining <= 0) {
       return "Amazing! You've hit your target for this window";
     }
-    
+
     if (contract.currentProgress >= contract.targetCount / 2) {
       return `You've got this — ${remaining} more to go`;
     }
-    
+
     if (contract.currentProgress > 0) {
       return `Strong start — ${contract.currentProgress} completions so far`;
     }
-    
+
     if (contract.graceDays > 0) {
       return "You have grace days — one miss won't break you";
     }
-    
+
     return `Get started — complete ${contract.targetCount} this ${contract.cadence}`;
   }, [contract.currentProgress, contract.targetCount, contract.cadence, contract.graceDays]);
 
@@ -97,18 +99,20 @@ export function ContractStatusCard({
         <button
           type="button"
           className="contract-status-card__primary-button"
-          onClick={onMarkProgress}
+          onClick={contract.status === 'paused' ? onResume : onMarkProgress}
         >
-          Mark Progress
+          {contract.status === 'paused' ? 'Resume Contract' : 'Mark Progress'}
         </button>
         <div className="contract-status-card__secondary-actions">
-          <button
-            type="button"
-            className="contract-status-card__secondary-button"
-            onClick={onPause}
-          >
-            Pause
-          </button>
+          {contract.status === 'active' && (
+            <button
+              type="button"
+              className="contract-status-card__secondary-button"
+              onClick={onPause}
+            >
+              Pause
+            </button>
+          )}
           <button
             type="button"
             className="contract-status-card__secondary-button"

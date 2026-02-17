@@ -6,10 +6,13 @@ import type {
   ContractEvaluation,
 } from '../../types/gamification';
 import {
-  fetchActiveContract,
+  fetchContracts,
+  fetchContractEvaluations,
   recordContractProgress,
   pauseContract,
   cancelContract,
+  resumeContract,
+  evaluateContract,
 } from '../../services/commitmentContracts';
 import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
@@ -20,6 +23,31 @@ interface ContractsTabProps {
   profile: GamificationProfile | null;
   enabled: boolean;
   loading: boolean;
+}
+
+function getWindowEnd(contract: CommitmentContract): Date {
+  const windowStart = new Date(contract.currentWindowStart);
+  const end = new Date(windowStart);
+
+  if (contract.cadence === 'daily') {
+    end.setHours(23, 59, 59, 999);
+  } else {
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+  }
+
+  return end;
+}
+
+function pickPrimaryContract(contracts: CommitmentContract[]): CommitmentContract | null {
+  const active = contracts.find((contract) => contract.status === 'active');
+  if (active) return active;
+
+  const paused = contracts
+    .filter((contract) => contract.status === 'paused')
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  return paused[0] ?? null;
 }
 
 export function ContractsTab({
@@ -34,6 +62,7 @@ export function ContractsTab({
   const [activeContract, setActiveContract] = useState<CommitmentContract | null>(null);
   const [showContractWizard, setShowContractWizard] = useState(false);
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
+  const [resultContract, setResultContract] = useState<CommitmentContract | null>(null);
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -43,26 +72,47 @@ export function ContractsTab({
 
   useEffect(() => {
     if (!userId) return;
-    
+
     const loadContract = async () => {
-      const { data } = await fetchActiveContract(userId);
-      setActiveContract(data);
+      const { data: contracts, error } = await fetchContracts(userId);
+      if (error || !contracts) return;
+
+      const primaryContract = pickPrimaryContract(contracts);
+
+      if (!primaryContract) {
+        setActiveContract(null);
+        return;
+      }
+
+      if (primaryContract.status === 'active' && new Date() > getWindowEnd(primaryContract)) {
+        const { data: evaluation } = await evaluateContract(userId, primaryContract.id);
+        if (evaluation) {
+          setContractResult(evaluation);
+          const { data: refreshedContracts } = await fetchContracts(userId);
+          const refreshed = refreshedContracts?.find((contract) => contract.id === primaryContract.id) ?? null;
+          setActiveContract(refreshed);
+          setResultContract(refreshed ?? primaryContract);
+          return;
+        }
+      }
+
+      setActiveContract(primaryContract);
     };
-    
+
     void loadContract();
   }, [userId]);
 
   // Contract handlers
   const handleContractWizardComplete = async () => {
     setShowContractWizard(false);
-    // Reload active contract
-    const { data } = await fetchActiveContract(userId);
-    setActiveContract(data);
+    const { data: contracts } = await fetchContracts(userId);
+    setActiveContract(contracts ? pickPrimaryContract(contracts) : null);
   };
 
   const handleMarkProgress = async () => {
     if (!activeContract || !userId) return;
 
+    const previousEvaluatedAt = activeContract.lastEvaluatedAt;
     const { data, error } = await recordContractProgress(userId, activeContract.id);
     if (error) {
       console.error('Failed to record progress:', error);
@@ -71,6 +121,15 @@ export function ContractsTab({
 
     if (data) {
       setActiveContract(data);
+
+      if (data.lastEvaluatedAt && data.lastEvaluatedAt !== previousEvaluatedAt) {
+        const { data: evaluations } = await fetchContractEvaluations(userId, data.id);
+        const latestEvaluation = evaluations?.[evaluations.length - 1] ?? null;
+        if (latestEvaluation) {
+          setContractResult(latestEvaluation);
+          setResultContract(data);
+        }
+      }
     }
   };
 
@@ -80,6 +139,20 @@ export function ContractsTab({
     const { data, error } = await pauseContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to pause contract:', error);
+      return;
+    }
+
+    if (data) {
+      setActiveContract(data);
+    }
+  };
+
+  const handleResumeContract = async () => {
+    if (!activeContract || !userId) return;
+
+    const { data, error } = await resumeContract(userId, activeContract.id);
+    if (error) {
+      console.error('Failed to resume contract:', error);
       return;
     }
 
@@ -104,40 +177,44 @@ export function ContractsTab({
 
   const handleContractResultClose = () => {
     setContractResult(null);
+    setResultContract(null);
   };
 
   const handleResetContract = async () => {
     if (!activeContract || !userId) return;
-    
+
     // TODO: Implement reset contract with same settings
     // This should create a new contract with identical parameters
     console.log('Reset contract with same settings');
     setContractResult(null);
+    setResultContract(null);
   };
 
   const handleReduceStake = async () => {
     if (!activeContract || !userId) return;
-    
+
     // TODO: Implement reduce stake (one-time option for users with 2+ misses)
     // This should allow the user to modify the stake amount downward
     console.log('Reduce stake amount');
     setContractResult(null);
+    setResultContract(null);
   };
 
   const handlePauseWeek = async () => {
     if (!activeContract || !userId) return;
-    
+
     // Pause contract for a week
     const { error } = await pauseContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to pause contract:', error);
       return;
     }
-    
+
     setContractResult(null);
+    setResultContract(null);
     // Reload to reflect paused state
-    const { data } = await fetchActiveContract(userId);
-    setActiveContract(data);
+    const { data: contracts } = await fetchContracts(userId);
+    setActiveContract(contracts ? pickPrimaryContract(contracts) : null);
   };
 
   return (
@@ -190,6 +267,7 @@ export function ContractsTab({
               contract={activeContract}
               onMarkProgress={handleMarkProgress}
               onPause={handlePauseContract}
+              onResume={handleResumeContract}
               onCancel={handleCancelContract}
             />
           )}
@@ -205,9 +283,9 @@ export function ContractsTab({
         </div>
       )}
 
-      {contractResult && activeContract && (
+      {contractResult && resultContract && (
         <ContractResultModal
-          contract={activeContract}
+          contract={resultContract}
           evaluation={contractResult}
           onClose={handleContractResultClose}
           onResetContract={handleResetContract}
