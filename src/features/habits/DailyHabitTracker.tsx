@@ -2248,6 +2248,26 @@ export function DailyHabitTracker({
           await earnXP(xpAmount, 'habit_complete', habit.id);
           if (offerXpAmount) {
             await earnXP(offerXpAmount, 'habit_offer', habit.id, 'Time-limited habit offer');
+
+            if (session?.user?.id && isConfigured && !isDemoExperience) {
+              void recordTelemetryEvent({
+                userId: session.user.id,
+                eventType: 'habit_time_limited_offer_claimed',
+                metadata: {
+                  offerDate: dateISO,
+                  habitId: habit.id,
+                  habitName: habit.name,
+                  offerPrice,
+                  offerXpAmount,
+                  healthState: habitHealthByHabitId[habit.id] ?? 'active',
+                  adherencePct: Math.round(
+                    ((adherenceByHabit[habit.id]?.percentage ?? 100) + Number.EPSILON) * 100,
+                  ) / 100,
+                  isPrimaryOfferHabit: habit.id === timeLimitedOffer.nextHabitId,
+                  isBadHabitOffer: habit.id === timeLimitedOffer.badHabitId,
+                },
+              });
+            }
           }
 
           const currentState = getAutoProgressState({
