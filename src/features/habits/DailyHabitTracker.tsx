@@ -663,6 +663,24 @@ export function DailyHabitTracker({
       userId: session.user.id,
       eventType: 'habit_time_limited_offer_scheduled',
       metadata: {
+        nextHabitHealthState: params.nextHabitId
+          ? (habitHealthByHabitId[params.nextHabitId] ?? 'active')
+          : null,
+        nextHabitAdherencePct: params.nextHabitId
+          ? Math.round(
+              ((adherenceByHabit[params.nextHabitId]?.percentage ?? 100) + Number.EPSILON) *
+                100,
+            ) / 100
+          : null,
+        badHabitHealthState: params.badHabitId
+          ? (habitHealthByHabitId[params.badHabitId] ?? 'active')
+          : null,
+        badHabitAdherencePct: params.badHabitId
+          ? Math.round(
+              ((adherenceByHabit[params.badHabitId]?.percentage ?? 100) + Number.EPSILON) *
+                100,
+            ) / 100
+          : null,
         offerDate: params.offerDate,
         source: params.source,
         nextHabitId: params.nextHabitId,
@@ -671,7 +689,14 @@ export function DailyHabitTracker({
         prioritizedSelection: riskRankedOfferHabits[0]?.id === params.nextHabitId,
       },
     });
-  }, [isConfigured, isDemoExperience, riskRankedOfferHabits, session?.user?.id]);
+  }, [
+    adherenceByHabit,
+    habitHealthByHabitId,
+    isConfigured,
+    isDemoExperience,
+    riskRankedOfferHabits,
+    session?.user?.id,
+  ]);
 
   const buildTimeLimitedOfferWindow = useCallback((dateISO: string) => {
     const hasOffer = Math.random() < 0.22;
