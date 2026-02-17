@@ -285,3 +285,14 @@ Implemented:
 
 Still deferred:
 - None in the current Habit Intelligence integration plan scope.
+
+
+### 2026-02-17 — Phase 3 / Step: Offer claim telemetry instrumentation
+
+Implemented:
+- Added a dedicated telemetry event (`habit_time_limited_offer_claimed`) so completed offer habits can be analyzed separately from scheduling decisions.
+- Instrumented Today habit completion flow to emit claim telemetry whenever a time-limited offer bonus is actually awarded.
+- Included claim metadata for offer date, habit identity, offer reward values, health/adherence quality signals, and whether the claimed habit was the primary or bad-habit offer target.
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.
