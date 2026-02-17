@@ -271,3 +271,17 @@ Implemented:
 
 Still deferred:
 - None in the current Habit Intelligence integration plan scope.
+
+### 2026-02-17 — Phase 3 / Step: Offer telemetry metadata enrichment
+
+Implemented:
+- Expanded `habit_time_limited_offer_scheduled` metadata so each scheduled offer now captures selected habit quality signals for analysis:
+  - `nextHabitHealthState`
+  - `nextHabitAdherencePct`
+  - `badHabitHealthState`
+  - `badHabitAdherencePct`
+- Kept existing scheduling metadata (`source`, offer IDs, window availability, risk-prioritized flag) unchanged so dashboards remain backward compatible.
+- Reused existing in-memory adherence + health maps in `DailyHabitTracker` and defaulted unknown habits to `active` / `100%` to avoid null-driven telemetry gaps.
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.
