@@ -1027,8 +1027,8 @@ CommitmentContract {
   - [x] Ensure paused contracts are discoverable and resumable from the Contracts tab.
   - [x] Ensure contract actions render state-appropriate controls (active vs paused).
 - **Slice B — Recovery actions (next)**
-  - [ ] Implement reset contract with same settings.
-  - [ ] Implement reduce stake with explicit eligibility checks and telemetry.
+  - [x] Implement reset contract with same settings.
+  - [x] Implement reduce stake with explicit eligibility checks and telemetry.
 - **Slice C — Persistence hardening (next)**
   - [ ] Introduce Supabase contract/evaluation tables + RLS.
   - [ ] Migrate service methods from localStorage to backend-first with demo fallback.
@@ -1952,4 +1952,10 @@ WisdomTreeState {
   - **Step**: P9.1 Build reward validation heuristics UI (risk scoring nudges + guardrail options from §7.1)  
   - **What changed**: Added a rules-based reward validation helper that scores draft rewards into green/yellow/red risk bands, explains why the score was assigned, and provides one-tap guardrail actions (add cooldown, raise cost, or habit-pairing reminder). Integrated this into the Player Shop reward creation form as a live risk card with actionable buttons and styling.  
   - **What's next**: P9.2 Build Party system UI (shared stakes, party check-in chip, shared reward flow from §7.4).
+
+
+- **2026-02-17**  
+  - **Step**: Slice B — Recovery actions (Reset Contract + Reduce Stake)  
+  - **What changed**: Implemented reset-contract and reduce-stake recovery actions end-to-end with eligibility checks (2 misses in 30 days + one-time guardrail), telemetry instrumentation, UI wiring in miss results, and implementation validation via TypeScript build.  
+  - **What’s next**: Slice C — persistence hardening (Supabase contracts/evaluations + backend-first service paths).
 

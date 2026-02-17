@@ -13,6 +13,10 @@ import {
   cancelContract,
   resumeContract,
   evaluateContract,
+  getReduceStakeEligibility,
+  resetContractWithSameSettings,
+  reduceContractStake,
+  type ReduceStakeEligibility,
 } from '../../services/commitmentContracts';
 import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
@@ -63,6 +67,8 @@ export function ContractsTab({
   const [showContractWizard, setShowContractWizard] = useState(false);
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
   const [resultContract, setResultContract] = useState<CommitmentContract | null>(null);
+  const [reduceStakeEligibility, setReduceStakeEligibility] = useState<ReduceStakeEligibility | null>(null);
+  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -70,39 +76,52 @@ export function ContractsTab({
     }
   }, [profile?.total_points]);
 
-  useEffect(() => {
+  const loadContract = async () => {
     if (!userId) return;
 
-    const loadContract = async () => {
-      const { data: contracts, error } = await fetchContracts(userId);
-      if (error || !contracts) return;
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) return;
 
-      const primaryContract = pickPrimaryContract(contracts);
+    const primaryContract = pickPrimaryContract(contracts);
 
-      if (!primaryContract) {
-        setActiveContract(null);
+    if (!primaryContract) {
+      setActiveContract(null);
+      return;
+    }
+
+    if (primaryContract.status === 'active' && new Date() > getWindowEnd(primaryContract)) {
+      const { data: evaluation } = await evaluateContract(userId, primaryContract.id);
+      if (evaluation) {
+        const { data: refreshedContracts } = await fetchContracts(userId);
+        const refreshed = refreshedContracts?.find((contract) => contract.id === primaryContract.id) ?? null;
+        setContractResult(evaluation);
+        setActiveContract(refreshed);
+        setResultContract(refreshed ?? primaryContract);
         return;
       }
+    }
 
-      if (primaryContract.status === 'active' && new Date() > getWindowEnd(primaryContract)) {
-        const { data: evaluation } = await evaluateContract(userId, primaryContract.id);
-        if (evaluation) {
-          setContractResult(evaluation);
-          const { data: refreshedContracts } = await fetchContracts(userId);
-          const refreshed = refreshedContracts?.find((contract) => contract.id === primaryContract.id) ?? null;
-          setActiveContract(refreshed);
-          setResultContract(refreshed ?? primaryContract);
-          return;
-        }
-      }
+    setActiveContract(primaryContract);
+  };
 
-      setActiveContract(primaryContract);
-    };
-
+  useEffect(() => {
     void loadContract();
   }, [userId]);
 
-  // Contract handlers
+  useEffect(() => {
+    if (!userId || !resultContract || !contractResult || contractResult.result !== 'miss') {
+      setReduceStakeEligibility(null);
+      return;
+    }
+
+    const hydrateEligibility = async () => {
+      const eligibility = await getReduceStakeEligibility(userId, resultContract);
+      setReduceStakeEligibility(eligibility);
+    };
+
+    void hydrateEligibility();
+  }, [userId, resultContract, contractResult]);
+
   const handleContractWizardComplete = async () => {
     setShowContractWizard(false);
     const { data: contracts } = await fetchContracts(userId);
@@ -178,24 +197,36 @@ export function ContractsTab({
   const handleContractResultClose = () => {
     setContractResult(null);
     setResultContract(null);
+    setReduceStakeEligibility(null);
+    setRecoveryMessage(null);
   };
 
   const handleResetContract = async () => {
-    if (!activeContract || !userId) return;
+    if (!resultContract || !userId) return;
 
-    // TODO: Implement reset contract with same settings
-    // This should create a new contract with identical parameters
-    console.log('Reset contract with same settings');
+    const { data, error } = await resetContractWithSameSettings(userId, resultContract.id);
+    if (error || !data) {
+      setRecoveryMessage(error?.message ?? 'Unable to reset contract right now.');
+      return;
+    }
+
+    setActiveContract(data);
+    setRecoveryMessage('Contract reset. Fresh window, same commitment.');
     setContractResult(null);
     setResultContract(null);
   };
 
   const handleReduceStake = async () => {
-    if (!activeContract || !userId) return;
+    if (!resultContract || !userId) return;
 
-    // TODO: Implement reduce stake (one-time option for users with 2+ misses)
-    // This should allow the user to modify the stake amount downward
-    console.log('Reduce stake amount');
+    const { data, error } = await reduceContractStake(userId, resultContract.id);
+    if (error || !data) {
+      setRecoveryMessage(error?.message ?? 'Unable to reduce stake right now.');
+      return;
+    }
+
+    setActiveContract(data);
+    setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'Gold' : 'Tokens'}.`);
     setContractResult(null);
     setResultContract(null);
   };
@@ -203,7 +234,6 @@ export function ContractsTab({
   const handlePauseWeek = async () => {
     if (!activeContract || !userId) return;
 
-    // Pause contract for a week
     const { error } = await pauseContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to pause contract:', error);
@@ -212,7 +242,6 @@ export function ContractsTab({
 
     setContractResult(null);
     setResultContract(null);
-    // Reload to reflect paused state
     const { data: contracts } = await fetchContracts(userId);
     setActiveContract(contracts ? pickPrimaryContract(contracts) : null);
   };
@@ -248,6 +277,7 @@ export function ContractsTab({
               Stake Gold or Tokens to stay accountable to your goals.
             </p>
           </div>
+          {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
           {!activeContract && !showContractWizard && (
             <div className="score-tab__contracts-empty">
               <p className="score-tab__contracts-empty-text">
@@ -287,6 +317,7 @@ export function ContractsTab({
         <ContractResultModal
           contract={resultContract}
           evaluation={contractResult}
+          reduceStakeEligibility={reduceStakeEligibility}
           onClose={handleContractResultClose}
           onResetContract={handleResetContract}
           onReduceStake={handleReduceStake}
