@@ -259,3 +259,15 @@ Implemented:
 
 Still deferred:
 - None in the current Habit Intelligence integration plan scope.
+
+
+### 2026-02-17 — Phase 3 / Step: Offer selection telemetry instrumentation
+
+Implemented:
+- Added a dedicated telemetry event (`habit_time_limited_offer_scheduled`) for Today time-limited offer scheduling decisions.
+- Instrumented both valid stored-offer reuse and recalculated offer assignment paths so we can measure selection stability versus recalculation churn.
+- Included metadata for offer date, source (`stored` vs `recalculated`), selected habit IDs, window availability, and whether the selected target came from risk-prioritized ranking.
+- Added local in-session de-duplication so identical schedule decisions do not emit duplicate telemetry events on re-renders.
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.
