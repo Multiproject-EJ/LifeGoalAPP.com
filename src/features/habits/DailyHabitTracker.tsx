@@ -434,6 +434,7 @@ export function DailyHabitTracker({
     windowEnd: null,
   });
   const [timeLimitedCountdown, setTimeLimitedCountdown] = useState(0);
+  const lastTimeLimitedOfferTelemetryKeyRef = useRef<string | null>(null);
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
   const visionClaimButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
@@ -631,6 +632,47 @@ export function DailyHabitTracker({
     };
   }, []);
 
+  const recordTimeLimitedOfferTelemetry = useCallback((params: {
+    offerDate: string;
+    source: 'stored' | 'recalculated';
+    nextHabitId: string | null;
+    badHabitId: string | null;
+    windowStart: number | null;
+    windowEnd: number | null;
+  }) => {
+    if (!session?.user?.id || !isConfigured || isDemoExperience) {
+      return;
+    }
+
+    const telemetryKey = [
+      params.offerDate,
+      params.source,
+      params.nextHabitId ?? 'none',
+      params.badHabitId ?? 'none',
+      String(params.windowStart ?? 'none'),
+      String(params.windowEnd ?? 'none'),
+    ].join(':');
+
+    if (lastTimeLimitedOfferTelemetryKeyRef.current === telemetryKey) {
+      return;
+    }
+
+    lastTimeLimitedOfferTelemetryKeyRef.current = telemetryKey;
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'habit_time_limited_offer_scheduled',
+      metadata: {
+        offerDate: params.offerDate,
+        source: params.source,
+        nextHabitId: params.nextHabitId,
+        badHabitId: params.badHabitId,
+        hasWindow: Boolean(params.windowStart && params.windowEnd),
+        prioritizedSelection: riskRankedOfferHabits[0]?.id === params.nextHabitId,
+      },
+    });
+  }, [isConfigured, isDemoExperience, riskRankedOfferHabits, session?.user?.id]);
+
   const buildTimeLimitedOfferWindow = useCallback((dateISO: string) => {
     const hasOffer = Math.random() < 0.22;
     if (!hasOffer) {
@@ -686,6 +728,14 @@ export function DailyHabitTracker({
 
     if (hasValidStoredOffer) {
       setTimeLimitedOffer(storedOffer);
+      recordTimeLimitedOfferTelemetry({
+        offerDate: activeDate,
+        source: 'stored',
+        nextHabitId: storedOffer.nextHabitId,
+        badHabitId: storedOffer.badHabitId,
+        windowStart: storedOffer.windowStart,
+        windowEnd: storedOffer.windowEnd,
+      });
       return;
     }
 
@@ -708,6 +758,14 @@ export function DailyHabitTracker({
 
     setTimeLimitedOffer(nextOffer);
     saveDraft(timeLimitedOfferScheduleKey(session.user.id, activeDate), nextOffer);
+    recordTimeLimitedOfferTelemetry({
+      offerDate: activeDate,
+      source: 'recalculated',
+      nextHabitId: nextOffer.nextHabitId,
+      badHabitId: nextOffer.badHabitId,
+      windowStart: nextOffer.windowStart,
+      windowEnd: nextOffer.windowEnd,
+    });
   }, [
     activeDate,
     buildTimeLimitedOfferWindow,
@@ -717,6 +775,7 @@ export function DailyHabitTracker({
     isViewingToday,
     riskRankedOfferHabits,
     habitHealthByHabitId,
+    recordTimeLimitedOfferTelemetry,
     session.user.id,
     sortedHabits,
   ]);

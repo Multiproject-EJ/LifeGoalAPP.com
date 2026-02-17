@@ -35,7 +35,8 @@ export type TelemetryEventType =
   | 'contract_cancelled'
   | 'contract_completed'
   | 'contract_missed'
-  | 'contract_stake_forfeited';
+  | 'contract_stake_forfeited'
+  | 'habit_time_limited_offer_scheduled';
 
 export type TelemetryEventMetadata = Json;
 
