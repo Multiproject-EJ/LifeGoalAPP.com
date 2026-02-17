@@ -307,3 +307,139 @@ Implemented:
 
 Still deferred:
 - None in the current Habit Intelligence integration plan scope.
+
+### 2026-02-17 — Phase 3 / Step: Integration completion audit + recap
+
+Implemented:
+- Performed an end-to-end checklist audit against the original Product Goal and Rollout Plan sections to confirm all scoped Phase 1–3 integration items are now shipped.
+- Verified no remaining `Still deferred` items exist for the Habit Intelligence integration scope in this plan.
+- Captured a concise done-vs-missing recap so the next work can move to optimization/analytics follow-ups instead of core integration.
+
+Completion check (expected vs actual):
+- Detection/state machine (`active` / `at_risk` / `stalled` / `in_review`) — ✅ done.
+- Review queue actions + score pressure exclusion for `in_review` — ✅ done.
+- Auto-archive after review grace window — ✅ done.
+- AI-assisted redesign handoff from review flow — ✅ done.
+- Recovery/relaunch gamification XP hooks — ✅ done.
+- Risk-prioritized time-limited offer selection — ✅ done.
+- Offer selection resilience/hardening — ✅ done.
+- Offer telemetry (scheduled / claimed / expired) — ✅ done.
+
+Still deferred:
+- None in the current Habit Intelligence integration plan scope.
+
+Out-of-scope / optional next improvements (not required for plan completion):
+- Promote JSON `autoprog` health state persistence from UI/session computation to a scheduled/background write path for stronger server-side analytics consistency.
+- Add analytics dashboards/alerts over newly emitted offer telemetry to monitor risk-prioritized impact and claim-rate lift.
+- Consider `habit_health_events` normalized table (Option B) if historical state-transition analysis becomes a product requirement.
+
+### 2026-02-17 — Architecture analysis: central orchestration vs scattered logic
+
+Question addressed:
+- Should the app introduce a central “master game engine/brain” that orchestrates timing/rules (AI suggestion timing, day labels like Saturday behavior, auto-clear/reset windows, etc.), or keep logic distributed across feature modules?
+
+Short answer:
+- Best practice for this codebase is a **hybrid model**:
+  - keep domain logic in focused modules (habits, offers, AI suggestion builders, scoring rules),
+  - add a thin **central orchestration layer** that decides *when* and *in what order* those modules execute.
+- A fully monolithic “brain” would likely become brittle and slow down iteration; today’s fully scattered approach risks duplication and timing drift.
+
+Recommended target architecture (incremental, low-risk):
+1. Add a small `GameOrchestrator` (or `HabitIntelligenceOrchestrator`) service owning:
+   - daily tick lifecycle (`startOfDay`, `inSession`, `endOfDay`),
+   - event routing (`habit_completed`, `offer_scheduled`, `offer_claimed`, `offer_expired`, `review_action_taken`),
+   - idempotency/de-dup checks for once-per-window actions.
+2. Keep existing engines/helpers as pure rule providers:
+   - health state computation,
+   - risk ranking,
+   - AI rationale/suggestion generation,
+   - XP hook mapping.
+3. Move timing policy to central config:
+   - local day-boundary rules (incl. Saturday label strategy/timezone behavior),
+   - review grace/auto-archive windows,
+   - cadence caps for AI suggestion generation (cooldowns, max per day/week),
+   - auto-clear windows for stale ephemeral UI state.
+4. Emit unified orchestration telemetry:
+   - `orchestrator_tick_started`, `orchestrator_action_enqueued`, `orchestrator_action_skipped`, `orchestrator_action_succeeded/failed`.
+
+Why this is feasible (and not a rewrite):
+- Current implementation already has reusable building blocks (state machine, offer ranking, telemetry, AI hooks).
+- The orchestrator can be introduced as a coordinator over existing functions/components first, then gradually absorb duplicated timing checks.
+- This keeps product behavior stable while improving consistency and observability.
+
+Migration shape (recommended):
+- Phase A: Introduce orchestrator interface + wire only time-limited offer scheduling/expiry decisions through it.
+- Phase B: Route review grace auto-archive and relaunch reward timing through the same orchestrator tick.
+- Phase C: Route AI redesign suggestion timing/cooldowns via orchestrator policy gates.
+- Phase D: Add centralized calendar/day-label policy (e.g., Saturday handling) and reset/auto-clear policy bundle.
+
+Decision guidance:
+- If goal is speed for one feature only: keep local module logic.
+- If goal is cross-feature consistency, easier debugging, and cleaner timing control: adopt the hybrid orchestrator now.
+- Given current trajectory (multiple timed behaviors + telemetry + rewards), the hybrid orchestrator is the better long-term tradeoff.
+
+Status impact:
+- This is an architecture recommendation and does not change the previously completed Habit Intelligence scope.
+
+### 2026-02-17 — Plan hardening: orchestrator implementation blueprint (v1.1)
+
+Objective:
+- Make the orchestration recommendation immediately executable by defining boundaries, contracts, rollout guardrails, and clear acceptance criteria.
+
+Guiding principles:
+- Keep **business rules pure** and reusable; orchestrator only coordinates timing/order.
+- Make every orchestrated action **idempotent** and safe on retries.
+- Prefer **policy-driven config** over hardcoded timing constants in UI modules.
+- Preserve current UX behavior by default; new orchestration paths launch behind feature flags.
+
+Proposed module boundaries:
+- `src/features/habits/orchestration/HabitIntelligenceOrchestrator.ts`
+  - owns tick execution, action routing, and de-dup state.
+- `src/features/habits/orchestration/policies.ts`
+  - central timing/config policy (cooldowns, grace windows, day-boundary, reset windows).
+- `src/features/habits/orchestration/types.ts`
+  - canonical event/action/result contracts.
+- Existing modules remain rule providers (health computation, ranking, AI suggestion generation, XP mapping).
+
+Canonical contracts (minimum):
+- `OrchestratorEvent`
+  - `day_started`, `habit_completed`, `review_action_taken`, `offer_window_expired`, `session_resumed`.
+- `OrchestratorAction`
+  - `schedule_offer`, `expire_offer`, `auto_archive_reviewed_habit`, `queue_ai_redesign`, `grant_recovery_xp`, `clear_ephemeral_state`.
+- `OrchestratorResult`
+  - `applied`, `skipped` (with reason), `failed` (with recoverable/non-recoverable classification).
+
+Policy bundle (initial defaults):
+- Day boundary source of truth: user-local timezone with deterministic date key generation.
+- Saturday labeling rule: calendar-policy function (single source used by Today + telemetry).
+- AI redesign cadence: max N suggestions per day/week + per-habit cooldown.
+- Review auto-archive: existing `review_due_at + graceDays` policy reused.
+- Auto-clear: clear stale ephemeral offer/review UI state at day rollover.
+
+Feature flag rollout controls:
+- `orchestrator_enabled`
+- `orchestrator_offer_lifecycle_enabled`
+- `orchestrator_review_archive_enabled`
+- `orchestrator_ai_cadence_enabled`
+- `orchestrator_calendar_policy_enabled`
+
+Acceptance criteria (definition of done for orchestrator adoption):
+1. No behavior regressions in existing offer selection/claim/expiry logic when orchestrator is enabled.
+2. All orchestrated actions emit telemetry with `action`, `source_event`, `result`, and `reason` (when skipped/failed).
+3. Duplicate re-renders or repeated app resumes do not double-apply one-time actions.
+4. Disabling flags cleanly returns control to existing local module paths.
+5. Saturday/day-label and day-reset behavior is consistent across Today UI and telemetry payloads.
+
+Risk register + mitigations:
+- Risk: hidden double-execution from multiple React effects.
+  - Mitigation: idempotency key strategy (`action + habitId + dateKey`) and in-memory/session guard.
+- Risk: timezone edge cases around midnight.
+  - Mitigation: centralized date-key helper + synthetic tests for DST transitions.
+- Risk: AI over-triggering due to noisy events.
+  - Mitigation: central cooldown/cap policy and explicit skip telemetry reasons.
+
+Suggested next implementation step:
+- Implement Phase A only (`schedule_offer` + `expire_offer`) behind `orchestrator_offer_lifecycle_enabled`, then compare telemetry parity against current path before expanding scope.
+
+Status impact:
+- This strengthens execution clarity for the architecture recommendation and prepares engineering handoff without expanding current feature scope.
