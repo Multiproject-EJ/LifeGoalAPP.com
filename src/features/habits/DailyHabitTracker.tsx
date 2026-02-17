@@ -435,6 +435,7 @@ export function DailyHabitTracker({
   });
   const [timeLimitedCountdown, setTimeLimitedCountdown] = useState(0);
   const lastTimeLimitedOfferTelemetryKeyRef = useRef<string | null>(null);
+  const lastTimeLimitedOfferExpiryTelemetryKeyRef = useRef<string | null>(null);
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
   const visionClaimButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
@@ -831,6 +832,47 @@ export function DailyHabitTracker({
     const interval = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(interval);
   }, [timeLimitedOffer.windowEnd, timeLimitedOffer.windowStart]);
+
+  useEffect(() => {
+    if (!session?.user?.id || !isConfigured || isDemoExperience) {
+      return;
+    }
+
+    const { date, windowStart, windowEnd, nextHabitId, badHabitId } = timeLimitedOffer;
+    if (!date || !windowStart || !windowEnd || Date.now() <= windowEnd) {
+      return;
+    }
+
+    const offeredHabitIds = [nextHabitId, badHabitId].filter(Boolean) as string[];
+    if (offeredHabitIds.length === 0) {
+      return;
+    }
+
+    const expiryTelemetryKey = `${date}:${windowEnd}:${offeredHabitIds.join(',')}`;
+    if (lastTimeLimitedOfferExpiryTelemetryKeyRef.current === expiryTelemetryKey) {
+      return;
+    }
+
+    lastTimeLimitedOfferExpiryTelemetryKeyRef.current = expiryTelemetryKey;
+
+    const claimedHabitIds = offeredHabitIds.filter((habitId) => completions[habitId]?.completed);
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'habit_time_limited_offer_expired',
+      metadata: {
+        offerDate: date,
+        windowStart,
+        windowEnd,
+        nextHabitId,
+        badHabitId,
+        offeredHabitIds,
+        claimedHabitIds,
+        wasClaimed: claimedHabitIds.length > 0,
+        unclaimedHabitIds: offeredHabitIds.filter((habitId) => !claimedHabitIds.includes(habitId)),
+      },
+    });
+  }, [completions, isConfigured, isDemoExperience, session?.user?.id, timeLimitedOffer]);
 
   useEffect(() => {
     if (!isVisionVisualizationRunning) return;
