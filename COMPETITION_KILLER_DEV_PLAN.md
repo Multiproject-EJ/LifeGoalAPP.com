@@ -1077,6 +1077,9 @@ CommitmentContract {
 - **Slice Q — Scheduled server-side due-window sweeps (done)**
   - [x] Add a scheduled Supabase cron sweep that runs due contract evaluations even when users never open the app.
   - [x] Add a server-safe sweep function that evaluates active-contract users in bounded batches for predictable load.
+- **Slice R — Sweep observability telemetry (done)**
+  - [x] Add an audit table that records each server-side sweep run with throughput + failure counts.
+  - [x] Persist partial/failure diagnostics from bounded sweeps so operators can monitor health over time.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -2088,3 +2091,8 @@ WisdomTreeState {
   - **Step**: Slice Q — Scheduled server-side due-window sweeps (cron + bounded batch runner)
   - **What changed**: Added Supabase migration `0144_contract_due_sweep_schedule.sql` to operationalize unattended contract checks while the app is fully closed. The migration upgrades `evaluate_due_commitment_contracts` to allow trusted server-context execution, introduces `evaluate_due_commitment_contracts_sweep(max_users, max_windows_per_user)` for bounded per-run throughput, and provisions/refreshes a `pg_cron` job (`commitment-contracts-due-sweep`) that runs every 15 minutes when cron is enabled.
   - **What’s next**: Contracts observability follow-up — add lightweight server-sweep telemetry/audit logging so operators can monitor scheduled evaluation health over time.
+
+- **2026-02-18**
+  - **Step**: Slice R — Sweep observability telemetry (audit logging for scheduled due-window sweeps)
+  - **What changed**: Added Supabase migration `0145_contract_due_sweep_observability.sql` to introduce `commitment_contract_sweep_runs`, an RLS-protected audit table that tracks each server sweep run (throughput, failures, status, diagnostics). Updated `evaluate_due_commitment_contracts_sweep` to create a run record at start, capture per-user errors without aborting the full sweep, and persist partial/failure diagnostics for operators. Updated typed DB schema for the new audit table and refreshed Contracts tab durability copy to mention reliability monitoring.
+  - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
