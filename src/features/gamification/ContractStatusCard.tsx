@@ -76,6 +76,13 @@ export function ContractStatusCard({
         </span>
       </div>
 
+
+      {contract.recoveryMode === 'gentle_ramp' && (
+        <div className="contract-status-card__recovery" role="status" aria-live="polite">
+          🌱 Gentle ramp active — your target is temporarily reduced while you rebuild momentum.
+        </div>
+      )}
+
       <div className="contract-status-card__progress-section">
         <div className="contract-status-card__progress-bar">
           <div

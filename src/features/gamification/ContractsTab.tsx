@@ -16,9 +16,12 @@ import {
   evaluateDueContracts,
   syncContractProgressWithTarget,
   getReduceStakeEligibility,
+  getGentleRecoveryEligibility,
+  activateGentleRampRecovery,
   resetContractWithSameSettings,
   reduceContractStake,
   type ReduceStakeEligibility,
+  type GentleRecoveryEligibility,
 } from '../../services/commitmentContracts';
 import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
@@ -70,6 +73,7 @@ export function ContractsTab({
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
   const [resultContract, setResultContract] = useState<CommitmentContract | null>(null);
   const [reduceStakeEligibility, setReduceStakeEligibility] = useState<ReduceStakeEligibility | null>(null);
+  const [gentleRecoveryEligibility, setGentleRecoveryEligibility] = useState<GentleRecoveryEligibility | null>(null);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -149,12 +153,14 @@ export function ContractsTab({
   useEffect(() => {
     if (!userId || !resultContract || !contractResult || contractResult.result !== 'miss') {
       setReduceStakeEligibility(null);
+      setGentleRecoveryEligibility(null);
       return;
     }
 
     const hydrateEligibility = async () => {
-      const eligibility = await getReduceStakeEligibility(userId, resultContract);
-      setReduceStakeEligibility(eligibility);
+      const stakeEligibility = await getReduceStakeEligibility(userId, resultContract);
+      setReduceStakeEligibility(stakeEligibility);
+      setGentleRecoveryEligibility(getGentleRecoveryEligibility(resultContract));
     };
 
     void hydrateEligibility();
@@ -236,6 +242,7 @@ export function ContractsTab({
     setContractResult(null);
     setResultContract(null);
     setReduceStakeEligibility(null);
+    setGentleRecoveryEligibility(null);
     setRecoveryMessage(null);
   };
 
@@ -267,6 +274,24 @@ export function ContractsTab({
     setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'Gold' : 'Tokens'}.`);
     setContractResult(null);
     setResultContract(null);
+  };
+
+
+  const handleActivateGentleRecovery = async () => {
+    if (!resultContract || !userId) return;
+
+    const { data, error } = await activateGentleRampRecovery(userId, resultContract.id);
+    if (error || !data) {
+      setRecoveryMessage(error?.message ?? 'Unable to start gentle ramp recovery right now.');
+      return;
+    }
+
+    setActiveContract(data);
+    setRecoveryMessage(`Gentle ramp started. Target temporarily adjusted to ${data.targetCount} this ${data.cadence}.`);
+    setContractResult(null);
+    setResultContract(null);
+    setReduceStakeEligibility(null);
+    setGentleRecoveryEligibility(null);
   };
 
   const handlePauseWeek = async () => {
@@ -356,9 +381,11 @@ export function ContractsTab({
           contract={resultContract}
           evaluation={contractResult}
           reduceStakeEligibility={reduceStakeEligibility}
+          gentleRecoveryEligibility={gentleRecoveryEligibility}
           onClose={handleContractResultClose}
           onResetContract={handleResetContract}
           onReduceStake={handleReduceStake}
+          onActivateGentleRecovery={handleActivateGentleRecovery}
           onPauseWeek={handlePauseWeek}
           onCancelContract={handleCancelContract}
         />
