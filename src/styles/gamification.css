@@ -1993,6 +1993,17 @@
   font-weight: 500;
 }
 
+.contract-status-card__witness {
+  margin: 0 0 1rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: var(--text-primary, #333);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .contract-status-card__recovery {
   margin: 0 0 1rem;
   padding: 0.625rem 0.75rem;

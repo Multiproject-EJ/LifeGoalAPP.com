@@ -42,6 +42,8 @@ export function ContractWizard({
   const [stakeType, setStakeType] = useState<ContractStakeType>('gold');
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [graceDays, setGraceDays] = useState<number>(1);
+  const [accountabilityMode, setAccountabilityMode] = useState<'solo' | 'witness'>('solo');
+  const [witnessLabel, setWitnessLabel] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,6 +127,10 @@ export function ContractWizard({
       setError(`Stake must be between 1 and ${maxStake} (20% of your ${stakeType})`);
       return;
     }
+    if (currentStep === 3 && accountabilityMode === 'witness' && !witnessLabel.trim()) {
+      setError('Add a witness name so this mode stays intentional.');
+      return;
+    }
 
     setError(null);
     setCurrentStep((prev) => Math.min(4, prev + 1) as WizardStep);
@@ -151,6 +157,8 @@ export function ContractWizard({
         stakeType,
         stakeAmount,
         graceDays,
+        accountabilityMode,
+        witnessLabel,
       };
 
       const { data: contract, error: createError } = await createContract(userId, input);
@@ -389,6 +397,47 @@ export function ContractWizard({
             </p>
           </div>
 
+
+          <div className="contract-wizard__field-group">
+            <label className="contract-wizard__label">Accountability mode</label>
+            <div className="contract-wizard__chip-group">
+              <button
+                type="button"
+                className={`contract-wizard__chip${accountabilityMode === 'solo' ? ' contract-wizard__chip--selected' : ''}`}
+                onClick={() => setAccountabilityMode('solo')}
+              >
+                Solo
+              </button>
+              <button
+                type="button"
+                className={`contract-wizard__chip${accountabilityMode === 'witness' ? ' contract-wizard__chip--selected' : ''}`}
+                onClick={() => setAccountabilityMode('witness')}
+              >
+                Witness
+              </button>
+            </div>
+            <p className="contract-wizard__helper-text">
+              Witness mode adds a support partner label to this contract card.
+            </p>
+          </div>
+
+          {accountabilityMode === 'witness' && (
+            <div className="contract-wizard__field-group">
+              <label className="contract-wizard__label" htmlFor="witness-label">
+                Witness name
+              </label>
+              <input
+                id="witness-label"
+                type="text"
+                maxLength={40}
+                className="contract-wizard__input"
+                placeholder="e.g. Maya accountability buddy"
+                value={witnessLabel}
+                onChange={(e) => setWitnessLabel(e.target.value)}
+              />
+            </div>
+          )}
+
           <div className="contract-wizard__actions">
             <button
               type="button"
@@ -430,6 +479,10 @@ export function ContractWizard({
             <div className="contract-wizard__summary-row">
               <strong>Grace days:</strong>
               <span>{graceDays}</span>
+            </div>
+            <div className="contract-wizard__summary-row">
+              <strong>Accountability:</strong>
+              <span>{accountabilityMode === 'witness' ? `Witness · ${witnessLabel.trim()}` : 'Solo mode'}</span>
             </div>
             <div className="contract-wizard__summary-row">
               <strong>Cooling-off:</strong>

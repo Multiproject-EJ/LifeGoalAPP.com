@@ -42,6 +42,8 @@ export type ContractInput = {
   stakeAmount: number;
   graceDays?: number;
   coolingOffHours?: number;
+  accountabilityMode?: 'solo' | 'witness';
+  witnessLabel?: string;
   startAt?: string;
   endAt?: string | null;
 };
@@ -77,6 +79,8 @@ type ContractRow = {
   recovery_mode: 'gentle_ramp' | null;
   recovery_original_target_count: number | null;
   recovery_activated_at: string | null;
+  accountability_mode: 'solo' | 'witness' | null;
+  witness_label: string | null;
   start_at: string;
   end_at: string | null;
   current_window_start: string;
@@ -122,6 +126,8 @@ function contractFromRow(row: ContractRow): CommitmentContract {
     recoveryMode: row.recovery_mode,
     recoveryOriginalTargetCount: row.recovery_original_target_count,
     recoveryActivatedAt: row.recovery_activated_at,
+    accountabilityMode: row.accountability_mode,
+    witnessLabel: row.witness_label,
     startAt: row.start_at,
     endAt: row.end_at,
     currentWindowStart: row.current_window_start,
@@ -152,6 +158,8 @@ function contractToRow(contract: CommitmentContract): ContractRow {
     recovery_mode: contract.recoveryMode ?? null,
     recovery_original_target_count: contract.recoveryOriginalTargetCount ?? null,
     recovery_activated_at: contract.recoveryActivatedAt ?? null,
+    accountability_mode: contract.accountabilityMode ?? null,
+    witness_label: contract.witnessLabel ?? null,
     start_at: contract.startAt,
     end_at: contract.endAt,
     current_window_start: contract.currentWindowStart,
@@ -452,6 +460,10 @@ export async function createContract(
     const now = new Date().toISOString();
     const startAt = input.startAt || now;
     const windowStart = getWindowStart(input.cadence, new Date(startAt));
+    const accountabilityMode = input.accountabilityMode ?? 'solo';
+    const witnessLabel = accountabilityMode === 'witness'
+      ? input.witnessLabel?.trim().slice(0, 40) || null
+      : null;
 
     const newContract: CommitmentContract = {
       id: createId('contract'),
@@ -472,6 +484,8 @@ export async function createContract(
       recoveryMode: null,
       recoveryOriginalTargetCount: null,
       recoveryActivatedAt: null,
+      accountabilityMode,
+      witnessLabel,
       startAt,
       endAt: input.endAt ?? null,
       currentWindowStart: windowStart.toISOString(),
@@ -493,6 +507,8 @@ export async function createContract(
         cadence: newContract.cadence,
         stakeType: newContract.stakeType,
         stakeAmount: newContract.stakeAmount,
+        accountabilityMode: newContract.accountabilityMode,
+        witnessLabel: newContract.witnessLabel,
       } as TelemetryEventMetadata,
     });
 

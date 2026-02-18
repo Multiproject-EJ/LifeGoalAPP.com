@@ -845,6 +845,8 @@ export interface Database {
           recovery_mode: 'gentle_ramp' | null;
           recovery_original_target_count: number | null;
           recovery_activated_at: string | null;
+          accountability_mode: 'solo' | 'witness' | null;
+          witness_label: string | null;
           start_at: string;
           end_at: string | null;
           current_window_start: string;
@@ -872,6 +874,8 @@ export interface Database {
           recovery_mode?: 'gentle_ramp' | null;
           recovery_original_target_count?: number | null;
           recovery_activated_at?: string | null;
+          accountability_mode?: 'solo' | 'witness' | null;
+          witness_label?: string | null;
           start_at: string;
           end_at?: string | null;
           current_window_start: string;
@@ -899,6 +903,8 @@ export interface Database {
           recovery_mode?: 'gentle_ramp' | null;
           recovery_original_target_count?: number | null;
           recovery_activated_at?: string | null;
+          accountability_mode?: 'solo' | 'witness' | null;
+          witness_label?: string | null;
           start_at?: string;
           end_at?: string | null;
           current_window_start?: string;
