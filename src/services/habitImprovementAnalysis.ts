@@ -62,6 +62,7 @@ export type HabitExperimentDayInput = {
   dayIndex: number;
   date: string;
   followedProtocol: boolean | null;
+  protocolDifficulty: number | null;
   underPain: number | null;
   overPain: number | null;
   netEffect: 'better' | 'same' | 'worse' | null;
@@ -286,6 +287,8 @@ export async function startHabitExperiment(sessionId: string): Promise<{ error: 
 export async function logHabitExperimentDay(sessionId: string, input: HabitExperimentDayInput): Promise<{ error: string | null }> {
   const supabase = getUntypedSupabase();
   const safeDayIndex = clamp(Math.round(input.dayIndex), 1, 7);
+  const safeProtocolDifficulty =
+    input.protocolDifficulty === null ? null : clamp(Math.round(input.protocolDifficulty), 1, 5);
   const safeUnderPain = input.underPain === null ? null : clamp(Math.round(input.underPain), 0, 3);
   const safeOverPain = input.overPain === null ? null : clamp(Math.round(input.overPain), 0, 3);
 
@@ -295,6 +298,7 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
       day_index: safeDayIndex,
       date: input.date,
       followed_protocol: input.followedProtocol,
+      protocol_difficulty: safeProtocolDifficulty,
       under_pain: safeUnderPain,
       over_pain: safeOverPain,
       net_effect: input.netEffect,
@@ -321,7 +325,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
 
   const { data, error } = await supabase
     .from('habit_experiment_days')
-    .select('day_index, date, followed_protocol, under_pain, over_pain, net_effect, note')
+    .select('day_index, date, followed_protocol, protocol_difficulty, under_pain, over_pain, net_effect, note')
     .eq('session_id', sessionId)
     .order('day_index', { ascending: true });
 
@@ -337,6 +341,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
       dayIndex: Number(row.day_index ?? 0),
       date: String(row.date ?? ''),
       followedProtocol: typeof row.followed_protocol === 'boolean' ? row.followed_protocol : null,
+      protocolDifficulty: typeof row.protocol_difficulty === 'number' ? row.protocol_difficulty : null,
       underPain: typeof row.under_pain === 'number' ? row.under_pain : null,
       overPain: typeof row.over_pain === 'number' ? row.over_pain : null,
       netEffect:

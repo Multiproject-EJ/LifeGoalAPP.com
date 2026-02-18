@@ -54,6 +54,7 @@ function buildDefaultExperimentDay(dayIndex: number): HabitExperimentDayInput {
     dayIndex,
     date: new Date().toISOString().slice(0, 10),
     followedProtocol: null,
+    protocolDifficulty: null,
     underPain: 0,
     overPain: 0,
     netEffect: 'same',
@@ -106,6 +107,7 @@ export function HabitImprovementAnalysisModal({
   const [selectedDayIndex, setSelectedDayIndex] = useState(1);
   const [experimentDays, setExperimentDays] = useState<Record<number, HabitExperimentDayInput>>({});
   const [todayFollowed, setTodayFollowed] = useState<boolean | null>(null);
+  const [todayProtocolDifficulty, setTodayProtocolDifficulty] = useState<number | null>(null);
   const [todayUnderPain, setTodayUnderPain] = useState(0);
   const [todayOverPain, setTodayOverPain] = useState(0);
   const [todayNetEffect, setTodayNetEffect] = useState<'better' | 'same' | 'worse'>('same');
@@ -184,6 +186,7 @@ export function HabitImprovementAnalysisModal({
   useEffect(() => {
     const selectedDay = experimentDays[selectedDayIndex] ?? buildDefaultExperimentDay(selectedDayIndex);
     setTodayFollowed(selectedDay.followedProtocol ?? null);
+    setTodayProtocolDifficulty(selectedDay.protocolDifficulty ?? null);
     setTodayUnderPain(selectedDay.underPain ?? 0);
     setTodayOverPain(selectedDay.overPain ?? 0);
     setTodayNetEffect(selectedDay.netEffect ?? 'same');
@@ -240,6 +243,18 @@ export function HabitImprovementAnalysisModal({
     if (step === 4) {
       if (todayFollowed === null) {
         return 'Please select whether you followed the protocol today.';
+      }
+
+      if (todayProtocolDifficulty === null) {
+        return 'Please rate today\'s protocol difficulty.';
+      }
+
+      if (!Number.isFinite(todayUnderPain) || todayUnderPain < 0 || todayUnderPain > 3) {
+        return 'Under-pain must be between 0 and 3.';
+      }
+
+      if (!Number.isFinite(todayOverPain) || todayOverPain < 0 || todayOverPain > 3) {
+        return 'Over-pain must be between 0 and 3.';
       }
     }
 
@@ -388,6 +403,7 @@ export function HabitImprovementAnalysisModal({
         dayIndex: selectedDayIndex,
         date: selectedDay.date,
         followedProtocol: todayFollowed,
+        protocolDifficulty: todayProtocolDifficulty,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -403,6 +419,7 @@ export function HabitImprovementAnalysisModal({
         dayIndex: selectedDayIndex,
         date: selectedDay.date,
         followedProtocol: todayFollowed,
+        protocolDifficulty: todayProtocolDifficulty,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -633,7 +650,7 @@ export function HabitImprovementAnalysisModal({
               {Array.from({ length: 7 }, (_, index) => {
                 const dayIndex = index + 1;
                 const day = experimentDays[dayIndex];
-                const isLogged = Boolean(day && (day.followedProtocol !== null || day.note));
+                const isLogged = Boolean(day && (day.followedProtocol !== null || day.protocolDifficulty !== null || day.note));
                 return (
                   <button
                     key={`day-${dayIndex}`}
@@ -651,18 +668,39 @@ export function HabitImprovementAnalysisModal({
             <p className="habit-analysis-modal__day-help">Logging Day {selectedDayIndex}.</p>
             <label>
               Followed protocol today?
-              <select
-                value={todayFollowed === null ? 'unset' : todayFollowed ? 'yes' : 'no'}
-                onChange={(event) => {
-                  if (event.target.value === 'yes') setTodayFollowed(true);
-                  else if (event.target.value === 'no') setTodayFollowed(false);
-                  else setTodayFollowed(null);
-                }}
-              >
-                <option value="unset">Select</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
+              <div className="habit-analysis-modal__binary-toggle" role="group" aria-label="Followed protocol today">
+                <button
+                  type="button"
+                  className={todayFollowed === true ? 'is-active' : ''}
+                  aria-pressed={todayFollowed === true}
+                  onClick={() => setTodayFollowed(true)}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className={todayFollowed === false ? 'is-active' : ''}
+                  aria-pressed={todayFollowed === false}
+                  onClick={() => setTodayFollowed(false)}
+                >
+                  No
+                </button>
+              </div>
+            </label>
+            <label>
+              Protocol difficulty (1 easy, 5 hard)
+              <input
+                type="range"
+                min={1}
+                max={5}
+                value={todayProtocolDifficulty ?? 3}
+                onChange={(event) => setTodayProtocolDifficulty(Number(event.target.value))}
+              />
+              <span className="habit-analysis-modal__input-help">
+                {todayProtocolDifficulty === null
+                  ? 'Tap the slider to set a difficulty score.'
+                  : `Difficulty: ${todayProtocolDifficulty}/5`}
+              </span>
             </label>
             <label>
               Under-pain (0-3)
