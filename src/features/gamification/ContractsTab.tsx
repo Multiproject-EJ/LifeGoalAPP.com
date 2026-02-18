@@ -13,6 +13,7 @@ import {
   cancelContract,
   resumeContract,
   evaluateContract,
+  syncContractProgressWithTarget,
   getReduceStakeEligibility,
   resetContractWithSameSettings,
   reduceContractStake,
@@ -89,23 +90,42 @@ export function ContractsTab({
       return;
     }
 
-    if (primaryContract.status === 'active' && new Date() > getWindowEnd(primaryContract)) {
+    let hydratedContract = primaryContract;
+
+    if (primaryContract.status === 'active') {
+      const { data: syncedContract } = await syncContractProgressWithTarget(userId, primaryContract.id);
+      if (syncedContract) {
+        hydratedContract = syncedContract;
+      }
+    }
+
+    if (hydratedContract.status === 'active' && new Date() > getWindowEnd(hydratedContract)) {
       const { data: evaluation } = await evaluateContract(userId, primaryContract.id);
       if (evaluation) {
         const { data: refreshedContracts } = await fetchContracts(userId);
-        const refreshed = refreshedContracts?.find((contract) => contract.id === primaryContract.id) ?? null;
+        const refreshed = refreshedContracts?.find((contract) => contract.id === hydratedContract.id) ?? null;
         setContractResult(evaluation);
         setActiveContract(refreshed);
-        setResultContract(refreshed ?? primaryContract);
+        setResultContract(refreshed ?? hydratedContract);
         return;
       }
     }
 
-    setActiveContract(primaryContract);
+    setActiveContract(hydratedContract);
   };
 
   useEffect(() => {
     void loadContract();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const intervalId = window.setInterval(() => {
+      void loadContract();
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
   }, [userId]);
 
   useEffect(() => {

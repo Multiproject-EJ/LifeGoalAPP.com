@@ -1,5 +1,7 @@
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { listHabitLogsForRangeV2 } from './habitsV2';
+import { fetchGoals } from './goals';
 import type {
   CommitmentContract,
   ContractEvaluation,
@@ -241,6 +243,51 @@ function getWindowEnd(windowStart: Date, cadence: ContractCadence): Date {
   }
   
   return date;
+}
+
+function toIsoDate(value: Date): string {
+  return value.toISOString().split('T')[0];
+}
+
+async function getVerifiedProgressCount(userId: string, contract: CommitmentContract): Promise<number | null> {
+  const windowStart = new Date(contract.currentWindowStart);
+  const windowEnd = getWindowEnd(windowStart, contract.cadence);
+
+  if (contract.targetType === 'Habit') {
+    const { data: logs, error } = await listHabitLogsForRangeV2({
+      userId,
+      habitId: contract.targetId,
+      startDate: toIsoDate(windowStart),
+      endDate: toIsoDate(windowEnd),
+    });
+
+    if (error || !logs) {
+      return null;
+    }
+
+    return logs.length;
+  }
+
+  if (contract.targetType === 'Goal') {
+    const { data: goals, error } = await fetchGoals();
+    if (error || !goals) {
+      return null;
+    }
+
+    const matchingGoal = goals.find((goal) => goal.id === contract.targetId);
+    if (!matchingGoal || matchingGoal.status_tag !== 'achieved') {
+      return 0;
+    }
+
+    if (contract.cadence === 'daily') {
+      return 1;
+    }
+
+    const achievedAt = new Date(matchingGoal.created_at ?? new Date().toISOString());
+    return achievedAt >= windowStart && achievedAt <= windowEnd ? 1 : 0;
+  }
+
+  return null;
 }
 
 function validateStakeAmount(
@@ -852,6 +899,54 @@ export async function recordContractProgress(
     return {
       data: null,
       error: error instanceof Error ? error : new Error('Failed to record contract progress'),
+    };
+  }
+}
+
+export async function syncContractProgressWithTarget(
+  userId: string,
+  contractId: string,
+): Promise<ServiceResponse<CommitmentContract>> {
+  try {
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) {
+      return { data: null, error: error || new Error('Contracts not found') };
+    }
+
+    const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
+    if (contractIndex === -1) {
+      return { data: null, error: new Error('Contract not found') };
+    }
+
+    const contract = contracts[contractIndex];
+    if (contract.status !== 'active') {
+      return { data: contract, error: null };
+    }
+
+    const verifiedProgress = await getVerifiedProgressCount(userId, contract);
+    if (verifiedProgress === null) {
+      return { data: contract, error: null };
+    }
+
+    if (verifiedProgress === contract.currentProgress) {
+      return { data: contract, error: null };
+    }
+
+    const updatedContract: CommitmentContract = {
+      ...contract,
+      currentProgress: verifiedProgress,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedContracts = [...contracts];
+    updatedContracts[contractIndex] = updatedContract;
+    await saveContracts(userId, updatedContracts);
+
+    return { data: updatedContract, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to sync contract progress'),
     };
   }
 }
