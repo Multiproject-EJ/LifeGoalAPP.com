@@ -48,6 +48,15 @@ export type ContractInput = {
   endAt?: string | null;
 };
 
+export type ContractSweepHealth = {
+  status: 'running' | 'success' | 'partial' | 'failed';
+  triggeredAt: string;
+  finishedAt: string | null;
+  usersProcessed: number;
+  evaluationsCreated: number;
+  failedUsers: number;
+};
+
 const CONTRACTS_STORAGE_KEY = 'lifegoal_contracts';
 const EVALUATIONS_STORAGE_KEY = 'lifegoal_contract_evaluations';
 
@@ -103,6 +112,15 @@ type EvaluationRow = {
   bonus_awarded: number;
   evaluated_at: string;
   created_at: string;
+};
+
+type ContractSweepRunRow = {
+  status: 'running' | 'success' | 'partial' | 'failed';
+  triggered_at: string;
+  finished_at: string | null;
+  users_processed: number;
+  evaluations_created: number;
+  failed_users: number;
 };
 
 function contractFromRow(row: ContractRow): CommitmentContract {
@@ -1417,6 +1435,42 @@ export async function fetchEvaluations(
     return {
       data: null,
       error: error instanceof Error ? error : new Error('Failed to load evaluations'),
+    };
+  }
+}
+
+export async function fetchContractSweepHealth(): Promise<ServiceResponse<ContractSweepHealth | null>> {
+  try {
+    if (!canUseSupabaseData()) {
+      return { data: null, error: null };
+    }
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await (supabase as any).rpc('get_commitment_contract_sweep_health');
+    if (error) {
+      throw error;
+    }
+
+    const latestRun = (data as ContractSweepRunRow[] | null)?.[0] ?? null;
+    if (!latestRun) {
+      return { data: null, error: null };
+    }
+
+    return {
+      data: {
+        status: latestRun.status,
+        triggeredAt: latestRun.triggered_at,
+        finishedAt: latestRun.finished_at,
+        usersProcessed: latestRun.users_processed,
+        evaluationsCreated: latestRun.evaluations_created,
+        failedUsers: latestRun.failed_users,
+      },
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to load contract sweep health'),
     };
   }
 }

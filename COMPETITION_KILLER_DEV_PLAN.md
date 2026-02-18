@@ -1081,6 +1081,10 @@ CommitmentContract {
   - [x] Add an audit table that records each server-side sweep run with throughput + failure counts.
   - [x] Persist partial/failure diagnostics from bounded sweeps so operators can monitor health over time.
 
+- **Slice S — Sweep health visibility in Contracts UI (done)**
+  - [x] Add a safe RPC that returns the latest sweep run summary for authenticated clients.
+  - [x] Surface latest sweep health state in Contracts tab durability meta copy (success/running/partial/failed).
+
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
 **Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.
@@ -2095,4 +2099,9 @@ WisdomTreeState {
 - **2026-02-18**
   - **Step**: Slice R — Sweep observability telemetry (audit logging for scheduled due-window sweeps)
   - **What changed**: Added Supabase migration `0145_contract_due_sweep_observability.sql` to introduce `commitment_contract_sweep_runs`, an RLS-protected audit table that tracks each server sweep run (throughput, failures, status, diagnostics). Updated `evaluate_due_commitment_contracts_sweep` to create a run record at start, capture per-user errors without aborting the full sweep, and persist partial/failure diagnostics for operators. Updated typed DB schema for the new audit table and refreshed Contracts tab durability copy to mention reliability monitoring.
+  - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
+
+- **2026-02-18**
+  - **Step**: Slice S — Sweep health visibility in Contracts UI (user-facing latest sweep status)
+  - **What changed**: Added Supabase migration `0146_contract_sweep_health_rpc.sql` with `get_commitment_contract_sweep_health()`, a security-definer RPC that exposes only the latest non-sensitive sweep health summary to authenticated clients. Added `fetchContractSweepHealth` in the contracts service and wired Contracts tab meta copy to show the latest server sweep status (success/running/partial/failed) alongside existing auto-check messaging. Updated typed DB function definitions for the new RPC.
   - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.

@@ -2216,6 +2216,17 @@ export interface Database {
       };
     };
     Functions: {
+      get_commitment_contract_sweep_health: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          status: string;
+          triggered_at: string;
+          finished_at: string | null;
+          users_processed: number;
+          evaluations_created: number;
+          failed_users: number;
+        }[];
+      };
       get_year_in_review_stats: {
         Args: {
           year_input: number;

@@ -21,8 +21,10 @@ import {
   resetContractWithSameSettings,
   reduceContractStake,
   recordWitnessPing,
+  fetchContractSweepHealth,
   type ReduceStakeEligibility,
   type GentleRecoveryEligibility,
+  type ContractSweepHealth,
 } from '../../services/commitmentContracts';
 import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
@@ -86,6 +88,7 @@ export function ContractsTab({
   const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
   const [lastAutoCheckAt, setLastAutoCheckAt] = useState<string | null>(null);
   const [overdueCatchUpMessage, setOverdueCatchUpMessage] = useState<string | null>(null);
+  const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -97,6 +100,8 @@ export function ContractsTab({
     if (!userId) return;
 
     const { data: dueEvaluations } = await evaluateDueContracts(userId);
+    const { data: latestSweepHealth } = await fetchContractSweepHealth();
+    setSweepHealth(latestSweepHealth);
 
     const { data: contracts, error } = await fetchContracts(userId);
     if (error || !contracts) return;
@@ -402,6 +407,31 @@ export function ContractsTab({
     setActiveContract(contracts ? pickPrimaryContract(contracts) : null);
   };
 
+  const getSweepHealthCopy = () => {
+    if (!sweepHealth) {
+      return 'Server sweep status will appear after the first scheduled run.';
+    }
+
+    const relativeLabel = new Date(sweepHealth.triggeredAt).toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+
+    if (sweepHealth.status === 'success') {
+      return `Latest server sweep succeeded at ${relativeLabel} (${sweepHealth.usersProcessed} users checked).`;
+    }
+
+    if (sweepHealth.status === 'running') {
+      return `A server sweep is currently running (started ${relativeLabel}).`;
+    }
+
+    if (sweepHealth.status === 'partial') {
+      return `Latest server sweep was partial at ${relativeLabel} (${sweepHealth.failedUsers} user failures captured).`;
+    }
+
+    return `Latest server sweep failed at ${relativeLabel}. Reliability fallbacks remain active in-app.`;
+  };
+
   return (
     <section className="score-tab">
       <header className="score-tab__header">
@@ -437,6 +467,7 @@ export function ContractsTab({
               Sweep runs are audit-logged for reliability monitoring.
               {lastAutoCheckAt ? ` Last check: ${new Date(lastAutoCheckAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.` : ''}
             </p>
+            <p className="score-tab__meta">{getSweepHealthCopy()}</p>
           </div>
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
           {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
