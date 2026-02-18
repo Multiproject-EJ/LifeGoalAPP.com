@@ -85,6 +85,7 @@ export function ContractsTab({
   const [reduceStakeEligibility, setReduceStakeEligibility] = useState<ReduceStakeEligibility | null>(null);
   const [gentleRecoveryEligibility, setGentleRecoveryEligibility] = useState<GentleRecoveryEligibility | null>(null);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
   const [lastAutoCheckAt, setLastAutoCheckAt] = useState<string | null>(null);
   const [overdueCatchUpMessage, setOverdueCatchUpMessage] = useState<string | null>(null);
@@ -235,8 +236,11 @@ export function ContractsTab({
     const { data, error } = await recordContractProgress(userId, activeContract.id);
     if (error) {
       console.error('Failed to record progress:', error);
+      setActionError(error.message);
       return;
     }
+
+    setActionError(null);
 
     if (data) {
       setActiveContract(data);
@@ -260,8 +264,11 @@ export function ContractsTab({
     const { data, error } = await pauseContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to pause contract:', error);
+      setActionError(error.message);
       return;
     }
+
+    setActionError(null);
 
     if (data) {
       setActiveContract(data);
@@ -274,8 +281,11 @@ export function ContractsTab({
     const { data, error } = await resumeContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to resume contract:', error);
+      setActionError(error.message);
       return;
     }
+
+    setActionError(null);
 
     if (data) {
       setActiveContract(data);
@@ -288,8 +298,11 @@ export function ContractsTab({
     const { data, error } = await cancelContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to cancel contract:', error);
+      setActionError(error.message);
       return;
     }
+
+    setActionError(null);
 
     if (data) {
       setActiveContract(null);
@@ -398,9 +411,11 @@ export function ContractsTab({
     const { error } = await pauseContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to pause contract:', error);
+      setActionError(error.message);
       return;
     }
 
+    setActionError(null);
     setContractResult(null);
     setResultContract(null);
     const { data: contracts } = await fetchContracts(userId);
@@ -470,6 +485,7 @@ export function ContractsTab({
             <p className="score-tab__meta">{getSweepHealthCopy()}</p>
           </div>
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
+          {actionError && <p className="score-tab__status">{actionError}</p>}
           {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
           {!activeContract && !showContractWizard && (
             <div className="score-tab__contracts-empty">

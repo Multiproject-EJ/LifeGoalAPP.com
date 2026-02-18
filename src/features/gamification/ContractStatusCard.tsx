@@ -69,6 +69,7 @@ export function ContractStatusCard({
 
   const isAtRisk = paceForecast?.status === 'at_risk';
   const shouldSuggestSupportOnly = contract.missCount >= 2;
+  const isCancelAllowed = contract.status !== 'active' || coolingOffRemaining !== null;
 
   return (
     <div className="contract-status-card">
@@ -172,11 +173,19 @@ export function ContractStatusCard({
             type="button"
             className="contract-status-card__secondary-button"
             onClick={onCancel}
+            disabled={!isCancelAllowed}
+            aria-disabled={!isCancelAllowed}
+            title={!isCancelAllowed ? 'Cancellation is only available during cooling-off. Pause instead.' : undefined}
           >
             Cancel
           </button>
         </div>
       </div>
+      {!isCancelAllowed && (
+        <p className="contract-status-card__cooling-off-note" role="status" aria-live="polite">
+          Cooling-off ended. Pause to keep this contract recoverable without cancellation.
+        </p>
+      )}
     </div>
   );
 }

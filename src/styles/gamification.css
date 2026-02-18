@@ -2127,6 +2127,16 @@
   color: var(--text-primary, #333);
 }
 
+.contract-status-card__secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.contract-status-card__cooling-off-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+}
 
 
 /* Contract History Card */
