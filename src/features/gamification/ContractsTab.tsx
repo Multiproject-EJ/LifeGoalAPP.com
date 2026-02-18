@@ -13,6 +13,7 @@ import {
   cancelContract,
   resumeContract,
   evaluateContract,
+  evaluateDueContracts,
   syncContractProgressWithTarget,
   getReduceStakeEligibility,
   resetContractWithSameSettings,
@@ -80,8 +81,25 @@ export function ContractsTab({
   const loadContract = async () => {
     if (!userId) return;
 
+    const { data: dueEvaluations } = await evaluateDueContracts(userId);
+
     const { data: contracts, error } = await fetchContracts(userId);
     if (error || !contracts) return;
+
+    if (dueEvaluations && dueEvaluations.length > 0) {
+      const latestEvaluation = dueEvaluations
+        .slice()
+        .sort((a, b) => new Date(a.evaluatedAt).getTime() - new Date(b.evaluatedAt).getTime())
+        [dueEvaluations.length - 1];
+
+      if (latestEvaluation) {
+        const evaluatedContract = contracts.find((contract) => contract.id === latestEvaluation.contractId) ?? null;
+        if (evaluatedContract) {
+          setContractResult(latestEvaluation);
+          setResultContract(evaluatedContract);
+        }
+      }
+    }
 
     const primaryContract = pickPrimaryContract(contracts);
 
