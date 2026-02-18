@@ -1060,6 +1060,10 @@ CommitmentContract {
   - [x] Trigger due-window contract evaluation sweeps outside the Contracts tab (global app heartbeat).
   - [x] Refresh Contracts tab state from global sweep events with visible auto-check status context.
 
+- **Slice M — Miss recovery support-mode nudges (done)**
+  - [x] Surface a warm Support-Only accountability suggestion after repeated misses in the Contracts status card.
+  - [x] Surface the same Support-Only suggestion in miss-result recovery modal copy for in-context guidance.
+
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
 **Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.
@@ -2042,3 +2046,9 @@ WisdomTreeState {
   - **Step**: Slice L — App-wide unattended contract checks (global heartbeat + surfaced auto-check status)
   - **What changed**: Added a global due-window evaluation heartbeat in `useGamification` that runs on load, every 60 seconds, and on app focus/visibility restore so due contract windows are evaluated even when users never open the Contracts tab. Emitted a `contractsDueEvaluated` window event when evaluations occur, then wired Contracts tab to listen for that event, auto-refresh contract/history state, and surface a visible auto-check status line with the latest check time.
   - **What’s next**: Contract impact follow-up — optional accountability witness ping/reminder actions and lightweight social proof history chips.
+
+- **2026-02-18**
+  - **Step**: Slice M — Miss recovery support-mode nudges (support-only recommendation after repeated misses)
+  - **What changed**: Added warm “Support-Only accountability” guidance when users hit repeated misses (`missCount >= 2`) in both the Contracts status card and the miss-result modal so recovery messaging stays visible during active windows and immediately after a miss. Added matching styles for the new guidance callouts to keep them readable in the existing glassmorphic cards/modals.
+  - **What’s next**: Contract impact follow-up — optional accountability witness ping/reminder actions and lightweight social proof history chips.
+
