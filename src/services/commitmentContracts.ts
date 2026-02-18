@@ -325,20 +325,58 @@ function validateStakeAmount(
     return { valid: false, error: 'Stake amount must be greater than 0' };
   }
 
-  if (stakeType === 'gold') {
-    const maxStake = Math.floor(currentBalance * 0.2); // 20% cap
-    if (stakeAmount > maxStake) {
-      return {
-        valid: false,
-        error: `Stake amount cannot exceed 20% of your current Gold balance (${maxStake} Gold)`,
-      };
-    }
+  if (currentBalance <= 0) {
+    return {
+      valid: false,
+      error: `You need at least 1 ${stakeType === 'gold' ? 'Gold' : 'Token'} to create a contract stake.`,
+    };
   }
 
-  // For tokens, we could add similar validation in the future
-  // For now, just check positivity
+  const maxStake = Math.floor(currentBalance * 0.2); // 20% cap
+  const currencyLabel = stakeType === 'gold' ? 'Gold' : 'Tokens';
+
+  if (stakeAmount > maxStake) {
+    return {
+      valid: false,
+      error: `Stake amount cannot exceed 20% of your current ${currencyLabel} balance (${maxStake} ${currencyLabel})`,
+    };
+  }
+
+  if (maxStake < 1) {
+    return {
+      valid: false,
+      error: `Build up your ${currencyLabel} to at least 5 before starting a stake-based contract.`,
+    };
+  }
 
   return { valid: true };
+}
+
+async function saveProfileBalanceUpdate(
+  userId: string,
+  totalPoints: number,
+  zenTokens: number
+): Promise<void> {
+  if (!canUseSupabaseData()) {
+    saveDemoProfile({
+      total_points: totalPoints,
+      zen_tokens: zenTokens,
+      updated_at: new Date().toISOString(),
+    });
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('gamification_profiles')
+    .update({
+      total_points: totalPoints,
+      zen_tokens: zenTokens,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+
+  if (error) throw error;
 }
 
 function getMissesInWindow(
@@ -1160,11 +1198,7 @@ export async function evaluateContract(
             ? (profile.zen_tokens ?? 0) + evaluation.bonusAwarded
             : profile.zen_tokens;
 
-        saveDemoProfile({
-          ...profile,
-          total_points: newBalance,
-          zen_tokens: newTokens,
-        });
+        await saveProfileBalanceUpdate(userId, newBalance, newTokens ?? 0);
       } else {
         // Forfeit stake to commitment pool (virtual sink)
         const newBalance =
@@ -1176,11 +1210,7 @@ export async function evaluateContract(
             ? Math.max(0, (profile.zen_tokens ?? 0) - evaluation.stakeForfeited)
             : profile.zen_tokens;
 
-        saveDemoProfile({
-          ...profile,
-          total_points: newBalance,
-          zen_tokens: newTokens,
-        });
+        await saveProfileBalanceUpdate(userId, newBalance, newTokens ?? 0);
       }
     }
 

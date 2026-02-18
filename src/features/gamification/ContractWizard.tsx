@@ -112,7 +112,8 @@ export function ContractWizard({
     : Math.floor(currentTokenBalance * 0.2);
 
   const balance = stakeType === 'gold' ? currentGoldBalance : currentTokenBalance;
-  const stakeValid = stakeAmount > 0 && stakeAmount <= maxStake;
+  const hasStakeCapacity = maxStake >= 1;
+  const stakeValid = hasStakeCapacity && stakeAmount > 0 && stakeAmount <= maxStake;
 
   const handleNext = () => {
     if (currentStep === 1 && !selectedTarget) {
@@ -124,7 +125,12 @@ export function ContractWizard({
       return;
     }
     if (currentStep === 3 && !stakeValid) {
-      setError(`Stake must be between 1 and ${maxStake} (20% of your ${stakeType})`);
+      if (!hasStakeCapacity) {
+        setError(`Build your ${stakeType === 'gold' ? 'Gold' : 'Tokens'} to at least 5 before creating a contract stake.`);
+        return;
+      }
+
+      setError(`Stake must be between 1 and ${maxStake} (20% of your ${stakeType === 'gold' ? 'Gold' : 'Tokens'})`);
       return;
     }
     if (currentStep === 3 && accountabilityMode === 'witness' && !witnessLabel.trim()) {
@@ -363,7 +369,9 @@ export function ContractWizard({
               onChange={(e) => setStakeAmount(parseInt(e.target.value, 10) || 0)}
             />
             <p className="contract-wizard__helper-text">
-              You have {balance} {stakeType === 'gold' ? 'Gold' : 'Tokens'} (max stake: {maxStake})
+              {hasStakeCapacity
+                ? `You have ${balance} ${stakeType === 'gold' ? 'Gold' : 'Tokens'} (max stake: ${maxStake})`
+                : `You have ${balance} ${stakeType === 'gold' ? 'Gold' : 'Tokens'}. Reach 5+ to unlock a stake cap above 0.`}
             </p>
           </div>
 
