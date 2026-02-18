@@ -11,6 +11,10 @@ import type {
   ContractStakeType,
 } from '../types/gamification';
 import { recordTelemetryEvent, type TelemetryEventMetadata } from './telemetry';
+import {
+  getContractRewardMultiplier,
+  getSuccessStreakFromEvaluations,
+} from '../lib/contractRewardMultipliers';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -1093,6 +1097,16 @@ export async function evaluateContract(
       contract.graceDays,
       Math.max(0, contract.targetCount - actualCount)
     );
+    const { data: priorEvaluations } = await fetchContractEvaluations(userId, contract.id);
+    const successStreakBeforeEvaluation = result === 'success'
+      ? getSuccessStreakFromEvaluations(priorEvaluations ?? [])
+      : 0;
+    const successStreakAfterEvaluation = result === 'success'
+      ? successStreakBeforeEvaluation + 1
+      : 0;
+    const rewardMultiplier = result === 'success'
+      ? getContractRewardMultiplier(successStreakAfterEvaluation)
+      : 1;
 
     // Prepare evaluation record
     const evaluation: ContractEvaluation = {
@@ -1105,7 +1119,9 @@ export async function evaluateContract(
       graceDaysUsed,
       result,
       stakeForfeited: result === 'miss' ? contract.stakeAmount : 0,
-      bonusAwarded: result === 'success' ? Math.floor(contract.stakeAmount * 0.1) : 0, // 10% bonus on success
+      bonusAwarded: result === 'success'
+        ? Math.max(1, Math.floor(contract.stakeAmount * 0.1 * rewardMultiplier))
+        : 0,
       evaluatedAt: now.toISOString(),
     };
 
@@ -1188,6 +1204,8 @@ export async function evaluateContract(
         result,
         stakeForfeited: evaluation.stakeForfeited,
         bonusAwarded: evaluation.bonusAwarded,
+        rewardMultiplier,
+        successStreak: successStreakAfterEvaluation,
       } as TelemetryEventMetadata,
     });
 

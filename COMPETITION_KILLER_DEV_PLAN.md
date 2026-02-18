@@ -1047,6 +1047,9 @@ CommitmentContract {
 - **Slice H — Contract history insights (done)**
   - [x] Add in-tab contract history analytics (success rate, streaks, trend state).
   - [x] Add recent cadence-window outcomes list with stake/bonus summary context.
+- **Slice I — Streak-adjusted rewards (done)**
+  - [x] Apply streak-based bonus multipliers on successful contract evaluations.
+  - [x] Surface active reward tier + next multiplier threshold in Contracts history UI.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -2007,3 +2010,8 @@ WisdomTreeState {
   - **What changed**: Added a contract history analytics helper that summarizes success rate, current/best streaks, bonus earned, stake forfeited, and improving/steady/needs-support trend classification from evaluation records. Integrated a new in-tab Contract History card in the Contracts surface that renders KPI chips plus a recent window outcome list so users can review momentum without leaving the tab. Updated the implementation sprint checklist to mark Slice H done.
   - **What’s next**: Contract impact follow-up — add streak-adjusted reward multipliers tied to sustained contract keeps.
 
+
+- **2026-02-18**
+  - **Step**: Slice I — Streak-adjusted rewards (multiplier economy + UI surfacing)
+  - **What changed**: Added a contracts reward-tier helper with streak thresholds (base, momentum builder, consistency streak, momentum legend), then wired contract evaluation payouts to apply the multiplier against the base 10% success bonus while preserving minimum rewards. Extended contract completion telemetry with `rewardMultiplier` and `successStreak`, and updated the Contracts history/summary surfaces so users can see their current bonus boost and next streak threshold at a glance.
+  - **What’s next**: Contract impact follow-up — optional accountability witness/social commitment modes.
