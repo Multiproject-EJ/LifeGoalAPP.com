@@ -2383,6 +2383,17 @@
   text-align: left;
 }
 
+.contract-result-modal__availability-chip {
+  display: inline-flex;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.16);
+  color: var(--text-primary, #333);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
 .contract-result-modal__option-button:hover {
   border-color: var(--primary-color, #667eea);
   background: var(--hover-background, #f0f0ff);

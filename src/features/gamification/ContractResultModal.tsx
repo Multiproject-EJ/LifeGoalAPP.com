@@ -19,6 +19,30 @@ interface ContractResultModalProps {
   onCancelContract: () => void;
 }
 
+function formatRecoveryAvailability(nextEligibleAt?: string): string | null {
+  if (!nextEligibleAt) return null;
+
+  const nextEligibleTime = new Date(nextEligibleAt).getTime();
+  if (Number.isNaN(nextEligibleTime)) return null;
+
+  const remainingMs = nextEligibleTime - Date.now();
+  if (remainingMs <= 0) return 'Available now';
+
+  const totalHours = Math.ceil(remainingMs / (1000 * 60 * 60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+
+  if (days > 0 && hours > 0) {
+    return `Available in ${days}d ${hours}h`;
+  }
+
+  if (days > 0) {
+    return `Available in ${days}d`;
+  }
+
+  return `Available in ${Math.max(hours, 1)}h`;
+}
+
 export function ContractResultModal({
   contract,
   evaluation,
@@ -36,6 +60,8 @@ export function ContractResultModal({
   const canResetContract = Boolean(resetEligibility?.eligible);
   const canReduceStake = Boolean(reduceStakeEligibility?.eligible);
   const canActivateGentleRecovery = Boolean(gentleRecoveryEligibility?.eligible);
+  const resetAvailability = formatRecoveryAvailability(resetEligibility?.nextEligibleAt);
+  const reduceStakeAvailability = formatRecoveryAvailability(reduceStakeEligibility?.nextEligibleAt);
   const shouldSuggestSupportOnly = contract.missCount >= 2;
   const baseBonus = Math.max(1, Math.floor(contract.stakeAmount * 0.1));
   const rewardMultiplier = baseBonus > 0 ? evaluation.bonusAwarded / baseBonus : 1;
@@ -100,6 +126,9 @@ export function ContractResultModal({
             disabled={!canResetContract}
           >
             Reset contract (same settings)
+            {!canResetContract && resetAvailability && (
+              <span className="contract-result-modal__availability-chip">{resetAvailability}</span>
+            )}
           </button>
           {!canResetContract && resetEligibility?.reason && (
             <p className="contract-result-modal__option-hint">{resetEligibility.reason}</p>
@@ -110,7 +139,10 @@ export function ContractResultModal({
             onClick={onReduceStake}
             disabled={!canReduceStake}
           >
-            Reduce stake (one-time option)
+            Reduce stake
+            {!canReduceStake && reduceStakeAvailability && (
+              <span className="contract-result-modal__availability-chip">{reduceStakeAvailability}</span>
+            )}
           </button>
           {!canReduceStake && reduceStakeEligibility?.reason && (
             <p className="contract-result-modal__option-hint">{reduceStakeEligibility.reason}</p>

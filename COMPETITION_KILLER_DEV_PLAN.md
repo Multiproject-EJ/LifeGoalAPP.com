@@ -1097,6 +1097,10 @@ CommitmentContract {
   - [x] Add explicit reduce-stake eligibility interval checks (once per 7 days, with next-eligible timing).
   - [x] Emit reduce-stake blocked telemetry with interval metadata for support/debug visibility.
 
+- **Slice W — Recovery cooldown clarity in miss modal (done)**
+  - [x] Surface reset/reduce-stake cooldown countdown chips in miss-result actions when temporarily unavailable.
+  - [x] Align reduce-stake action copy with interval-based reuse guardrail (remove one-time wording).
+
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
 **Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.
@@ -2133,4 +2137,9 @@ WisdomTreeState {
 - **2026-02-18**
   - **Step**: Slice V — Reduce-stake interval guardrail + reuse clarity
   - **What changed**: Updated reduce-stake recovery eligibility so it is no longer permanently one-time per contract; it now unlocks again after a 7-day cooldown using `stakeReducedAt`, and returns user-facing next-eligible timing when still cooling down. Extended blocked reduce-stake telemetry to include `nextEligibleAt` metadata so support/debug tooling can distinguish cooldown blocks from miss-threshold blocks.
+  - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
+
+- **2026-02-18**
+  - **Step**: Slice W — Recovery cooldown clarity in miss modal
+  - **What changed**: Updated the miss-result recovery actions so temporarily unavailable reset/reduce options now show compact “Available in …” countdown chips based on existing eligibility metadata. Also aligned reduce-stake CTA copy with the current 7-day cooldown guardrail by removing stale one-time wording. Updated the Contracts implementation sprint checklist to mark Slice W done.
   - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
