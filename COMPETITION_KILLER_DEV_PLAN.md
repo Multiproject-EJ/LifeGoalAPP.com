@@ -1032,6 +1032,9 @@ CommitmentContract {
 - **Slice C — Persistence hardening (done)**
   - [x] Introduce Supabase contract/evaluation tables + RLS.
   - [x] Migrate service methods from localStorage to backend-first with demo fallback.
+- **Slice D — Outcome quality (done)**
+  - [x] Auto-link contract progress to verified habit/goal completions.
+  - [x] Refresh active contract progress in-tab on a timed sync to reduce manual progress taps.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -1964,3 +1967,9 @@ WisdomTreeState {
   - **Step**: Slice C — Persistence hardening (Supabase contracts/evaluations + backend-first service paths)  
   - **What changed**: Added Supabase migration `0140_commitment_contracts.sql` to create `commitment_contracts` + `commitment_contract_evaluations` with guardrail constraints, indexes, RLS policies, and updated-at trigger wiring. Updated `commitmentContracts` service to read/write contracts and evaluations backend-first when authenticated/Supabase-ready, while preserving localStorage demo fallback behavior. Added typed database table definitions for both new tables.  
   - **What’s next**: Outcome quality improvements — auto-link contract progress to verified habit/goal completions (reduce manual progress taps).
+
+
+- **2026-02-18**  
+  - **Step**: Slice D — Outcome quality (auto-link contract progress to verified completions)  
+  - **What changed**: Added a contract progress sync path that automatically maps active Habit contracts to verified `habit_logs_v2` completions in the current window and Goal contracts to achieved goals within the active window. Wired Contracts tab load logic to run this sync before evaluation and added a 60-second in-tab refresh loop so progress updates even when users do not tap “Mark Progress.” Updated the implementation sprint checklist to mark Slice D done.  
+  - **What’s next**: Outcome quality follow-up — add “on pace / at risk” forecasting and rescue nudges before window close.
