@@ -1041,6 +1041,9 @@ CommitmentContract {
 - **Slice F — Pace forecasting + rescue nudges (done)**
   - [x] Add “on pace / at risk” contract forecasting before cadence window close.
   - [x] Add warm rescue nudge copy and state-aware primary CTA label for at-risk windows.
+- **Slice G — Adaptive recovery ramp (done)**
+  - [x] Add guided “gentle ramp week” recovery action after repeated misses.
+  - [x] Restore original target automatically after a successful ramp window.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -1989,3 +1992,8 @@ WisdomTreeState {
   - **Step**: Slice F — Pace forecasting + rescue nudges (on-pace/at-risk guidance)
   - **What changed**: Added a contract pace forecast helper that compares current progress against elapsed cadence-window time and classifies each active contract as target-met, on-pace, or at-risk. Wired the Contracts status card to show a warm “on pace / at risk” guidance panel with rescue copy and switched the primary action label to “Rescue Progress” when urgency is detected. Updated the implementation sprint checklist to mark Slice F done.
   - **What’s next**: Contract outcome quality follow-up — telemetry-backed rescue effectiveness analysis and optional pre-close reminder scheduling.
+
+- **2026-02-18**
+  - **Step**: Slice G — Adaptive recovery ramp (guided gentle ramp week)
+  - **What changed**: Implemented a new guided recovery action in missed-contract results that unlocks after repeated misses and temporarily lowers the contract target for a gentle ramp week. Added end-to-end service support, telemetry events, persistence fields + Supabase migration, and UI feedback that shows when gentle ramp mode is active and auto-restores the original target after a successful recovery window.
+  - **What’s next**: Contract impact follow-up — add history analytics and trend summaries for completed/missed contract windows.

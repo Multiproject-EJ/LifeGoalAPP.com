@@ -1,13 +1,15 @@
 import type { CommitmentContract, ContractEvaluation } from '../../types/gamification';
-import type { ReduceStakeEligibility } from '../../services/commitmentContracts';
+import type { GentleRecoveryEligibility, ReduceStakeEligibility } from '../../services/commitmentContracts';
 
 interface ContractResultModalProps {
   contract: CommitmentContract;
   evaluation: ContractEvaluation;
   reduceStakeEligibility: ReduceStakeEligibility | null;
+  gentleRecoveryEligibility: GentleRecoveryEligibility | null;
   onClose: () => void;
   onResetContract: () => void;
   onReduceStake: () => void;
+  onActivateGentleRecovery: () => void;
   onPauseWeek: () => void;
   onCancelContract: () => void;
 }
@@ -16,14 +18,17 @@ export function ContractResultModal({
   contract,
   evaluation,
   reduceStakeEligibility,
+  gentleRecoveryEligibility,
   onClose,
   onResetContract,
   onReduceStake,
+  onActivateGentleRecovery,
   onPauseWeek,
   onCancelContract,
 }: ContractResultModalProps) {
   const isSuccess = evaluation.result === 'success';
   const canReduceStake = Boolean(reduceStakeEligibility?.eligible);
+  const canActivateGentleRecovery = Boolean(gentleRecoveryEligibility?.eligible);
 
   if (isSuccess) {
     return (
@@ -94,6 +99,17 @@ export function ContractResultModal({
           </button>
           {!canReduceStake && reduceStakeEligibility?.reason && (
             <p className="contract-result-modal__option-hint">{reduceStakeEligibility.reason}</p>
+          )}
+          <button
+            type="button"
+            className="contract-result-modal__option-button"
+            onClick={onActivateGentleRecovery}
+            disabled={!canActivateGentleRecovery}
+          >
+            Start gentle ramp week
+          </button>
+          {!canActivateGentleRecovery && gentleRecoveryEligibility?.reason && (
+            <p className="contract-result-modal__option-hint">{gentleRecoveryEligibility.reason}</p>
           )}
           <button
             type="button"

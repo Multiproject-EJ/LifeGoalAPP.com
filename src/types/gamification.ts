@@ -587,6 +587,9 @@ export interface CommitmentContract {
   missCount: number;           // total misses
   successCount: number;        // total successes
   stakeReducedAt?: string | null; // ISO date when reduce-stake recovery was used
+  recoveryMode?: 'gentle_ramp' | null;
+  recoveryOriginalTargetCount?: number | null;
+  recoveryActivatedAt?: string | null;
   startAt: string;             // ISO date
   endAt: string | null;        // ISO date, null = ongoing
   currentWindowStart: string;  // start of current cadence window

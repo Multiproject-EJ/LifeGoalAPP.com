@@ -23,6 +23,11 @@ export type ReduceStakeEligibility = {
   reason?: string;
 };
 
+export type GentleRecoveryEligibility = {
+  eligible: boolean;
+  reason?: string;
+};
+
 export type ContractInput = {
   title: string;
   targetType: ContractTargetType;
@@ -65,6 +70,9 @@ type ContractRow = {
   miss_count: number;
   success_count: number;
   stake_reduced_at: string | null;
+  recovery_mode: 'gentle_ramp' | null;
+  recovery_original_target_count: number | null;
+  recovery_activated_at: string | null;
   start_at: string;
   end_at: string | null;
   current_window_start: string;
@@ -107,6 +115,9 @@ function contractFromRow(row: ContractRow): CommitmentContract {
     missCount: row.miss_count,
     successCount: row.success_count,
     stakeReducedAt: row.stake_reduced_at,
+    recoveryMode: row.recovery_mode,
+    recoveryOriginalTargetCount: row.recovery_original_target_count,
+    recoveryActivatedAt: row.recovery_activated_at,
     startAt: row.start_at,
     endAt: row.end_at,
     currentWindowStart: row.current_window_start,
@@ -134,6 +145,9 @@ function contractToRow(contract: CommitmentContract): ContractRow {
     miss_count: contract.missCount,
     success_count: contract.successCount,
     stake_reduced_at: contract.stakeReducedAt ?? null,
+    recovery_mode: contract.recoveryMode ?? null,
+    recovery_original_target_count: contract.recoveryOriginalTargetCount ?? null,
+    recovery_activated_at: contract.recoveryActivatedAt ?? null,
     start_at: contract.startAt,
     end_at: contract.endAt,
     current_window_start: contract.currentWindowStart,
@@ -374,6 +388,32 @@ export async function getReduceStakeEligibility(
   };
 }
 
+
+export function getGentleRecoveryEligibility(contract: CommitmentContract): GentleRecoveryEligibility {
+  if (contract.recoveryMode === 'gentle_ramp') {
+    return {
+      eligible: false,
+      reason: 'Gentle ramp is already active for this contract.',
+    };
+  }
+
+  if (contract.targetCount <= 1) {
+    return {
+      eligible: false,
+      reason: 'This contract is already at the minimum target count.',
+    };
+  }
+
+  if (contract.missCount < 2) {
+    return {
+      eligible: false,
+      reason: 'Gentle ramp unlocks after 2 misses so recovery stays intentional.',
+    };
+  }
+
+  return { eligible: true };
+}
+
 // =====================================================
 // CRUD OPERATIONS
 // =====================================================
@@ -425,6 +465,9 @@ export async function createContract(
       currentProgress: 0,
       missCount: 0,
       successCount: 0,
+      recoveryMode: null,
+      recoveryOriginalTargetCount: null,
+      recoveryActivatedAt: null,
       startAt,
       endAt: input.endAt ?? null,
       currentWindowStart: windowStart.toISOString(),
@@ -838,6 +881,65 @@ export async function reduceContractStake(
   }
 }
 
+export async function activateGentleRampRecovery(
+  userId: string,
+  contractId: string
+): Promise<ServiceResponse<CommitmentContract>> {
+  try {
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) {
+      return { data: null, error: error || new Error('Contracts not found') };
+    }
+
+    const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
+    if (contractIndex === -1) {
+      return { data: null, error: new Error('Contract not found') };
+    }
+
+    const contract = contracts[contractIndex];
+    const eligibility = getGentleRecoveryEligibility(contract);
+    if (!eligibility.eligible) {
+      return {
+        data: null,
+        error: new Error(eligibility.reason ?? 'Contract is not eligible for gentle ramp recovery'),
+      };
+    }
+
+    const now = new Date().toISOString();
+    const updatedContract: CommitmentContract = {
+      ...contract,
+      targetCount: Math.max(1, contract.targetCount - 1),
+      recoveryMode: 'gentle_ramp',
+      recoveryOriginalTargetCount: contract.targetCount,
+      recoveryActivatedAt: now,
+      updatedAt: now,
+    };
+
+    const updatedContracts = [...contracts];
+    updatedContracts[contractIndex] = updatedContract;
+    await saveContracts(userId, updatedContracts);
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'contract_recovery_mode_enabled',
+      metadata: {
+        contractId: contract.id,
+        recoveryMode: 'gentle_ramp',
+        previousTargetCount: contract.targetCount,
+        newTargetCount: updatedContract.targetCount,
+      } as TelemetryEventMetadata,
+    });
+
+    return { data: updatedContract, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to activate gentle ramp recovery'),
+    };
+  }
+}
+
+
 // =====================================================
 // PROGRESS TRACKING
 // =====================================================
@@ -1056,9 +1158,17 @@ export async function evaluateContract(
       new Date(windowEnd.getTime() + 1000)
     );
 
+    const shouldExitGentleRamp = contract.recoveryMode === 'gentle_ramp' && result === 'success';
+
     const updatedContract: CommitmentContract = {
       ...contract,
       currentProgress: 0,
+      targetCount: shouldExitGentleRamp
+        ? contract.recoveryOriginalTargetCount ?? contract.targetCount
+        : contract.targetCount,
+      recoveryMode: shouldExitGentleRamp ? null : contract.recoveryMode ?? null,
+      recoveryOriginalTargetCount: shouldExitGentleRamp ? null : contract.recoveryOriginalTargetCount ?? null,
+      recoveryActivatedAt: shouldExitGentleRamp ? null : contract.recoveryActivatedAt ?? null,
       currentWindowStart: nextWindowStart.toISOString(),
       missCount: result === 'miss' ? contract.missCount + 1 : contract.missCount,
       successCount: result === 'success' ? contract.successCount + 1 : contract.successCount,
@@ -1089,6 +1199,18 @@ export async function evaluateContract(
           contractId: contract.id,
           stakeAmount: evaluation.stakeForfeited,
           stakeType: contract.stakeType,
+        } as TelemetryEventMetadata,
+      });
+    }
+
+    if (shouldExitGentleRamp) {
+      void recordTelemetryEvent({
+        userId,
+        eventType: 'contract_recovery_mode_completed',
+        metadata: {
+          contractId: contract.id,
+          recoveryMode: 'gentle_ramp',
+          restoredTargetCount: updatedContract.targetCount,
         } as TelemetryEventMetadata,
       });
     }
