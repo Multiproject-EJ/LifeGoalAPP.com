@@ -77,6 +77,7 @@ export function ContractsTab({
   const [gentleRecoveryEligibility, setGentleRecoveryEligibility] = useState<GentleRecoveryEligibility | null>(null);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
+  const [lastAutoCheckAt, setLastAutoCheckAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -144,6 +145,32 @@ export function ContractsTab({
 
   useEffect(() => {
     void loadContract();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId || typeof window === 'undefined') {
+      return;
+    }
+
+    const handleContractsEvaluated = (event: Event) => {
+      const payload = event as CustomEvent<{
+        userId?: string;
+        evaluatedAt?: string;
+      }>;
+
+      if (!payload.detail || payload.detail.userId !== userId) {
+        return;
+      }
+
+      setLastAutoCheckAt(payload.detail.evaluatedAt ?? new Date().toISOString());
+      void loadContract();
+    };
+
+    window.addEventListener('contractsDueEvaluated', handleContractsEvaluated);
+
+    return () => {
+      window.removeEventListener('contractsDueEvaluated', handleContractsEvaluated);
+    };
   }, [userId]);
 
   useEffect(() => {
@@ -352,6 +379,10 @@ export function ContractsTab({
           <div className="score-tab__contracts-header">
             <p className="score-tab__subtitle">
               Stake Gold or Tokens to stay accountable to your goals.
+            </p>
+            <p className="score-tab__meta">
+              Auto-checks run every minute while the app is open to catch due windows.
+              {lastAutoCheckAt ? ` Last check: ${new Date(lastAutoCheckAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.` : ''}
             </p>
           </div>
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
