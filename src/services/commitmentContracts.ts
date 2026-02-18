@@ -997,6 +997,30 @@ export async function activateGentleRampRecovery(
   }
 }
 
+export async function recordWitnessPing(
+  userId: string,
+  contract: CommitmentContract,
+  channel: 'share' | 'clipboard'
+): Promise<void> {
+  if (contract.accountabilityMode !== 'witness' || !contract.witnessLabel) {
+    return;
+  }
+
+  await recordTelemetryEvent({
+    userId,
+    eventType: 'contract_witness_pinged',
+    metadata: {
+      contractId: contract.id,
+      stakeType: contract.stakeType,
+      stakeAmount: contract.stakeAmount,
+      cadence: contract.cadence,
+      missCount: contract.missCount,
+      witnessLabel: contract.witnessLabel,
+      channel,
+    } as TelemetryEventMetadata,
+  });
+}
+
 
 // =====================================================
 // PROGRESS TRACKING
