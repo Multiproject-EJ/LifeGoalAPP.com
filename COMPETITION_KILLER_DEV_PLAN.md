@@ -1085,6 +1085,10 @@ CommitmentContract {
   - [x] Add a safe RPC that returns the latest sweep run summary for authenticated clients.
   - [x] Surface latest sweep health state in Contracts tab durability meta copy (success/running/partial/failed).
 
+- **Slice T — Cancellation guardrail clarity (done)**
+  - [x] Disable active-contract cancel actions once cooling-off ends and show pause-first guidance inline.
+  - [x] Surface contract action failures in-tab so recovery steps are visible without console inspection.
+
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
 **Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.
@@ -2104,4 +2108,10 @@ WisdomTreeState {
 - **2026-02-18**
   - **Step**: Slice S — Sweep health visibility in Contracts UI (user-facing latest sweep status)
   - **What changed**: Added Supabase migration `0146_contract_sweep_health_rpc.sql` with `get_commitment_contract_sweep_health()`, a security-definer RPC that exposes only the latest non-sensitive sweep health summary to authenticated clients. Added `fetchContractSweepHealth` in the contracts service and wired Contracts tab meta copy to show the latest server sweep status (success/running/partial/failed) alongside existing auto-check messaging. Updated typed DB function definitions for the new RPC.
+  - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
+
+
+- **2026-02-18**
+  - **Step**: Slice T — Cancellation guardrail clarity (cooling-off CTA + in-tab error surfacing)
+  - **What changed**: Updated the Contracts status card to disable cancel actions for active contracts after cooling-off expires and added inline guidance that recommends pause-first recovery. Wired Contracts tab action handlers (progress, pause/resume, cancel) to surface failures as visible status messaging instead of console-only errors, so users immediately understand why an action was blocked.
   - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
