@@ -962,6 +962,54 @@ export interface Database {
         };
         Relationships: [];
       };
+      commitment_contract_sweep_runs: {
+        Row: {
+          id: string;
+          triggered_at: string;
+          finished_at: string | null;
+          job_source: 'cron' | 'manual' | 'app';
+          max_users: number;
+          max_windows_per_user: number;
+          users_processed: number;
+          evaluations_created: number;
+          failed_users: number;
+          status: 'running' | 'success' | 'partial' | 'failed';
+          error_message: string | null;
+          details: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          triggered_at?: string;
+          finished_at?: string | null;
+          job_source?: 'cron' | 'manual' | 'app';
+          max_users: number;
+          max_windows_per_user: number;
+          users_processed?: number;
+          evaluations_created?: number;
+          failed_users?: number;
+          status?: 'running' | 'success' | 'partial' | 'failed';
+          error_message?: string | null;
+          details?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          triggered_at?: string;
+          finished_at?: string | null;
+          job_source?: 'cron' | 'manual' | 'app';
+          max_users?: number;
+          max_windows_per_user?: number;
+          users_processed?: number;
+          evaluations_created?: number;
+          failed_users?: number;
+          status?: 'running' | 'success' | 'partial' | 'failed';
+          error_message?: string | null;
+          details?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       workspace_profiles: {
         Row: {
           id: string;

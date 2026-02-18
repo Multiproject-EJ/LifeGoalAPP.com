@@ -434,6 +434,7 @@ export function ContractsTab({
             </p>
             <p className="score-tab__meta">
               Auto-checks run every minute while the app is open, with server-backed due-window sweeps for durability.
+              Sweep runs are audit-logged for reliability monitoring.
               {lastAutoCheckAt ? ` Last check: ${new Date(lastAutoCheckAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.` : ''}
             </p>
           </div>
