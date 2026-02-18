@@ -2000,8 +2000,28 @@
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.3);
   color: var(--text-primary, #333);
+}
+
+.contract-status-card__witness-text {
+  margin: 0;
   font-size: 0.85rem;
   line-height: 1.4;
+}
+
+.contract-status-card__witness-button {
+  margin-top: 0.55rem;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.16);
+  color: var(--text-primary, #1f2937);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.contract-status-card__witness-button:hover {
+  background: rgba(99, 102, 241, 0.24);
 }
 
 .contract-status-card__recovery {
@@ -2167,6 +2187,24 @@
   font-size: 0.78rem;
   color: var(--text-secondary, #666);
   margin-bottom: 0.75rem;
+}
+
+
+.contract-history-card__social-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+}
+
+.contract-history-card__social-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.09);
+  color: var(--text-primary, #333);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
 }
 
 .contract-history-card__recent-list {

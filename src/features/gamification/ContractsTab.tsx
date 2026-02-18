@@ -20,6 +20,7 @@ import {
   activateGentleRampRecovery,
   resetContractWithSameSettings,
   reduceContractStake,
+  recordWitnessPing,
   type ReduceStakeEligibility,
   type GentleRecoveryEligibility,
 } from '../../services/commitmentContracts';
@@ -27,6 +28,12 @@ import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
 import { ContractResultModal } from './ContractResultModal';
 import { ContractHistoryCard } from './ContractHistoryCard';
+
+function buildWitnessReminder(contract: CommitmentContract): string {
+  const witnessName = contract.witnessLabel ?? 'my accountability witness';
+  const cadenceLabel = contract.cadence === 'daily' ? 'today' : 'this week';
+  return `Hey ${witnessName} — quick contract check-in: I'm committing to ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${cadenceLabel} for "${contract.title}". A quick encouragement message from you would help me stay on track 💛`;
+}
 
 interface ContractsTabProps {
   session: Session | null;
@@ -335,6 +342,40 @@ export function ContractsTab({
     setGentleRecoveryEligibility(null);
   };
 
+
+  const handleWitnessPing = async () => {
+    if (!activeContract || !userId || activeContract.accountabilityMode !== 'witness') return;
+
+    const reminderMessage = buildWitnessReminder(activeContract);
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'LifeGoal Contract Check-In',
+          text: reminderMessage,
+        });
+        await recordWitnessPing(userId, activeContract, 'share');
+        setRecoveryMessage("Witness check-in shared. You're not doing this alone.");
+        return;
+      } catch (error) {
+        console.warn('Share sheet unavailable, falling back to copy.', error);
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(reminderMessage);
+        await recordWitnessPing(userId, activeContract, 'clipboard');
+        setRecoveryMessage("Witness reminder copied. Send it when you're ready.");
+        return;
+      } catch (error) {
+        console.warn('Clipboard write failed.', error);
+      }
+    }
+
+    setRecoveryMessage('Could not open share/copy in this browser. You can still message your witness manually.');
+  };
+
   const handlePauseWeek = async () => {
     if (!activeContract || !userId) return;
 
@@ -407,6 +448,7 @@ export function ContractsTab({
               onPause={handlePauseContract}
               onResume={handleResumeContract}
               onCancel={handleCancelContract}
+              onWitnessPing={handleWitnessPing}
             />
           )}
 

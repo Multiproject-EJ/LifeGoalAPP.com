@@ -41,6 +41,7 @@ export type TelemetryEventType =
   | 'contract_stake_reduce_blocked'
   | 'contract_recovery_mode_enabled'
   | 'contract_recovery_mode_completed'
+  | 'contract_witness_pinged'
   | 'habit_time_limited_offer_scheduled'
   | 'habit_time_limited_offer_claimed'
   | 'habit_time_limited_offer_expired';

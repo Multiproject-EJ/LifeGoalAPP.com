@@ -24,6 +24,11 @@ export function ContractHistoryCard({ contract, evaluations }: ContractHistoryCa
   const currentRewardTier = getContractRewardTier(summary.currentStreak);
   const nextRewardTier = getNextContractRewardTier(summary.currentStreak);
 
+  const witnessSuccessCount =
+    contract.accountabilityMode === 'witness'
+      ? evaluations.filter((evaluation) => evaluation.result === 'success').length
+      : 0;
+
   if (summary.totalWindows === 0) {
     return (
       <section className="contract-history-card" aria-live="polite">
@@ -72,6 +77,13 @@ export function ContractHistoryCard({ contract, evaluations }: ContractHistoryCa
         <span>Bonuses earned: +{summary.totalBonusAwarded}</span>
         <span>Stake forfeited: -{summary.totalStakeForfeited}</span>
       </div>
+
+      {contract.accountabilityMode === 'witness' && contract.witnessLabel && (
+        <div className="contract-history-card__social-proof" aria-live="polite">
+          <span className="contract-history-card__social-chip">🤝 Witness: {contract.witnessLabel}</span>
+          <span className="contract-history-card__social-chip">✅ Kept with witness: {witnessSuccessCount}/{summary.totalWindows}</span>
+        </div>
+      )}
 
       <div className="contract-history-card__reward-tier" aria-live="polite">
         <span>Current reward boost: x{currentRewardTier.multiplier.toFixed(2)} · {currentRewardTier.label}</span>

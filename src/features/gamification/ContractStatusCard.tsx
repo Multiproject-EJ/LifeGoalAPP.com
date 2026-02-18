@@ -8,6 +8,7 @@ interface ContractStatusCardProps {
   onPause: () => void;
   onResume: () => void;
   onCancel: () => void;
+  onWitnessPing: () => void;
 }
 
 export function ContractStatusCard({
@@ -16,6 +17,7 @@ export function ContractStatusCard({
   onPause,
   onResume,
   onCancel,
+  onWitnessPing,
 }: ContractStatusCardProps) {
   // Calculate progress percentage
   const progressPercentage = useMemo(() => {
@@ -85,9 +87,16 @@ export function ContractStatusCard({
       )}
 
       {contract.accountabilityMode === 'witness' && contract.witnessLabel && (
-        <p className="contract-status-card__witness" role="status" aria-live="polite">
-          🤝 Witness mode on with {contract.witnessLabel}
-        </p>
+        <div className="contract-status-card__witness" role="status" aria-live="polite">
+          <p className="contract-status-card__witness-text">🤝 Witness mode on with {contract.witnessLabel}</p>
+          <button
+            type="button"
+            className="contract-status-card__witness-button"
+            onClick={onWitnessPing}
+          >
+            Ping witness
+          </button>
+        </div>
       )}
 
       <div className="contract-status-card__progress-section">

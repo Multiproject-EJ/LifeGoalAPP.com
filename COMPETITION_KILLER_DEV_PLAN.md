@@ -1063,6 +1063,9 @@ CommitmentContract {
 - **Slice M — Miss recovery support-mode nudges (done)**
   - [x] Surface a warm Support-Only accountability suggestion after repeated misses in the Contracts status card.
   - [x] Surface the same Support-Only suggestion in miss-result recovery modal copy for in-context guidance.
+- **Slice N — Witness reminder actions + social proof chips (done)**
+  - [x] Add a one-tap witness reminder action in active witness-mode contracts with share/copy fallback and telemetry.
+  - [x] Add lightweight witness social-proof chips in contract history (witness label + kept windows summary).
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -2051,4 +2054,9 @@ WisdomTreeState {
   - **Step**: Slice M — Miss recovery support-mode nudges (support-only recommendation after repeated misses)
   - **What changed**: Added warm “Support-Only accountability” guidance when users hit repeated misses (`missCount >= 2`) in both the Contracts status card and the miss-result modal so recovery messaging stays visible during active windows and immediately after a miss. Added matching styles for the new guidance callouts to keep them readable in the existing glassmorphic cards/modals.
   - **What’s next**: Contract impact follow-up — optional accountability witness ping/reminder actions and lightweight social proof history chips.
+
+- **2026-02-18**
+  - **Step**: Slice N — Witness reminder actions + social proof chips
+  - **What changed**: Added a one-tap witness reminder action in active witness-mode contracts with native share-sheet first, clipboard fallback, and `contract_witness_pinged` telemetry on successful send/copy. Updated the active Contracts status card to surface the new witness ping CTA inline with witness context. Extended contract history with lightweight witness social-proof chips (witness label + kept windows ratio) so accountability momentum is visible at a glance.
+  - **What’s next**: Contracts slice complete for current sprint; shift focus to Phase 9.2 Party system UI implementation.
 
