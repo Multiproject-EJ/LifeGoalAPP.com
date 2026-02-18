@@ -7,6 +7,7 @@ import {
   saveHabitAnalysisCosts,
   saveHabitAnalysisDesires,
   saveHabitAnalysisProtocol,
+  saveHabitAnalysisProgress,
   saveHabitAnalysisRange,
   saveHabitDiagnosis,
   saveHabitReadiness,
@@ -138,6 +139,8 @@ export function HabitImprovementAnalysisModal({
       setSessionId(result.session.id);
       setExperimentStarted(result.session.status === 'active' || result.session.status === 'completed');
       setSelectedDayIndex(Math.min((result.session.last_logged_day_index || 0) + 1, 7));
+      setStep(Math.max(0, Math.min(result.session.current_step ?? 0, 4)));
+      setSuccess(result.session.current_step > 0 ? `Resumed your draft at step ${result.session.current_step + 1}.` : null);
     });
 
     return () => {
@@ -210,6 +213,16 @@ export function HabitImprovementAnalysisModal({
   };
 
   const validateCurrentStep = () => {
+    if (step === 0) {
+      if (!primaryDesire) {
+        return 'Choose a primary desire to continue.';
+      }
+
+      if (secondaryDesire && secondaryDesire === primaryDesire) {
+        return 'Secondary desire must be different from your primary desire.';
+      }
+    }
+
     if (step === 2) {
       const minValue = Number(rangeMin);
       const maxValue = Number(rangeMax);
@@ -258,6 +271,11 @@ export function HabitImprovementAnalysisModal({
         setError(result.error);
         return;
       }
+      const progressResult = await saveHabitAnalysisProgress(id, 1);
+      if (progressResult.error) {
+        setError(progressResult.error);
+        return;
+      }
       setSuccess('Desires saved.');
       setStep(1);
       return;
@@ -273,6 +291,11 @@ export function HabitImprovementAnalysisModal({
       setLoading(false);
       if (result.error) {
         setError(result.error);
+        return;
+      }
+      const progressResult = await saveHabitAnalysisProgress(id, 2);
+      if (progressResult.error) {
+        setError(progressResult.error);
         return;
       }
       setSuccess('Cost map saved.');
@@ -291,6 +314,11 @@ export function HabitImprovementAnalysisModal({
       setLoading(false);
       if (result.error) {
         setError(result.error);
+        return;
+      }
+      const progressResult = await saveHabitAnalysisProgress(id, 3);
+      if (progressResult.error) {
+        setError(progressResult.error);
         return;
       }
       setSuccess('Right-size range saved.');
@@ -341,6 +369,11 @@ export function HabitImprovementAnalysisModal({
       setLoading(false);
       if (experimentResult.error) {
         setError(experimentResult.error);
+        return;
+      }
+      const progressResult = await saveHabitAnalysisProgress(id, 4);
+      if (progressResult.error) {
+        setError(progressResult.error);
         return;
       }
       setExperimentStarted(true);
@@ -413,6 +446,14 @@ export function HabitImprovementAnalysisModal({
         <div className="habit-analysis-modal__progress" aria-hidden="true">
           <span style={{ width: `${((step + 1) / 5) * 100}%` }} />
         </div>
+        <ol className="habit-analysis-modal__step-dots" aria-hidden="true">
+          {Array.from({ length: 5 }, (_, index) => (
+            <li
+              key={`step-dot-${index + 1}`}
+              className={index <= step ? 'is-complete' : ''}
+            />
+          ))}
+        </ol>
 
         {step === 0 ? (
           <div className="habit-analysis-modal__section">

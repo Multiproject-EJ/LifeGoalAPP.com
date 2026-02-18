@@ -22726,6 +22726,25 @@ html.platform-ipad .workspace-shell__menu-edge {
   transition: width 0.2s ease;
 }
 
+.habit-analysis-modal__step-dots {
+  display: flex;
+  gap: 0.35rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.95rem;
+}
+
+.habit-analysis-modal__step-dots li {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.28);
+}
+
+.habit-analysis-modal__step-dots li.is-complete {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.9), rgba(16, 185, 129, 0.9));
+}
+
 .habit-analysis-modal__section {
   display: grid;
   gap: 0.65rem;

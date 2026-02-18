@@ -13,6 +13,7 @@ export type HabitAnalysisSession = {
   goal_type: HabitAnalysisGoalType;
   target_cadence: string | null;
   last_logged_day_index: number;
+  current_step: number;
   created_at: string;
   updated_at: string;
 };
@@ -346,4 +347,16 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
     })),
     error: null,
   };
+}
+
+export async function saveHabitAnalysisProgress(sessionId: string, step: number): Promise<{ error: string | null }> {
+  const supabase = getUntypedSupabase();
+  const safeStep = clamp(Math.round(step), 0, 4);
+
+  const { error } = await supabase
+    .from('habit_analysis_sessions')
+    .update({ current_step: safeStep })
+    .eq('id', sessionId);
+
+  return { error: error?.message ?? null };
 }
