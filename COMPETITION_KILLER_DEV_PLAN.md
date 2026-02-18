@@ -1070,6 +1070,10 @@ CommitmentContract {
   - [x] Evaluate multiple missed cadence windows in one unattended sweep until the active window is current.
   - [x] Surface an in-tab catch-up status message when multiple overdue windows are resolved automatically.
 
+- **Slice P — Server durability RPC sweep (done)**
+  - [x] Add a secure Supabase RPC that evaluates due active contract windows with catch-up support and economy updates.
+  - [x] Route app-side due-contract sweeps to the RPC in Supabase mode while preserving demo-mode fallback behavior.
+
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
 **Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.
@@ -2068,3 +2072,9 @@ WisdomTreeState {
   - **What changed**: Updated due-window evaluation to process multiple overdue cadence windows per contract in a single unattended sweep (with a safety cap), so long absences catch up to the current window immediately instead of one result per refresh. Added a Contracts tab status message that explicitly confirms when multiple overdue windows were resolved automatically.
   - **What’s next**: Contracts server durability follow-up — explore scheduled server-side evaluations for fully unattended windows when the app is closed.
 
+
+
+- **2026-02-18**
+  - **Step**: Slice P — Server durability RPC sweep (Supabase-backed due-window evaluations)
+  - **What changed**: Added Supabase migration `0143_contract_due_evaluation_rpc.sql` with `evaluate_due_commitment_contracts`, a security-definer RPC that evaluates due active contract windows (including overdue catch-up loops), writes evaluation records, applies streak-based bonus multipliers, and updates Gold/Token balances directly in `gamification_profiles`. Updated `evaluateDueContracts` in the contracts service to call this RPC in Supabase mode while retaining the existing local/demo fallback path. Updated Contracts tab meta copy to communicate server-backed durability for unattended checks.
+  - **What’s next**: Contracts server durability follow-up — wire this RPC into a scheduled server-side trigger (cron/edge scheduler) so due windows resolve even when the app is fully closed.
