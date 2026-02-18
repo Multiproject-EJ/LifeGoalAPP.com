@@ -1029,9 +1029,9 @@ CommitmentContract {
 - **Slice B — Recovery actions (next)**
   - [x] Implement reset contract with same settings.
   - [x] Implement reduce stake with explicit eligibility checks and telemetry.
-- **Slice C — Persistence hardening (next)**
-  - [ ] Introduce Supabase contract/evaluation tables + RLS.
-  - [ ] Migrate service methods from localStorage to backend-first with demo fallback.
+- **Slice C — Persistence hardening (done)**
+  - [x] Introduce Supabase contract/evaluation tables + RLS.
+  - [x] Migrate service methods from localStorage to backend-first with demo fallback.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -1959,3 +1959,8 @@ WisdomTreeState {
   - **What changed**: Implemented reset-contract and reduce-stake recovery actions end-to-end with eligibility checks (2 misses in 30 days + one-time guardrail), telemetry instrumentation, UI wiring in miss results, and implementation validation via TypeScript build.  
   - **What’s next**: Slice C — persistence hardening (Supabase contracts/evaluations + backend-first service paths).
 
+
+- **2026-02-17**  
+  - **Step**: Slice C — Persistence hardening (Supabase contracts/evaluations + backend-first service paths)  
+  - **What changed**: Added Supabase migration `0140_commitment_contracts.sql` to create `commitment_contracts` + `commitment_contract_evaluations` with guardrail constraints, indexes, RLS policies, and updated-at trigger wiring. Updated `commitmentContracts` service to read/write contracts and evaluations backend-first when authenticated/Supabase-ready, while preserving localStorage demo fallback behavior. Added typed database table definitions for both new tables.  
+  - **What’s next**: Outcome quality improvements — auto-link contract progress to verified habit/goal completions (reduce manual progress taps).
