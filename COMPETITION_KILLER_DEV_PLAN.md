@@ -1035,6 +1035,9 @@ CommitmentContract {
 - **Slice D — Outcome quality (done)**
   - [x] Auto-link contract progress to verified habit/goal completions.
   - [x] Refresh active contract progress in-tab on a timed sync to reduce manual progress taps.
+- **Slice E — Unattended window reliability (done)**
+  - [x] Evaluate all due active contracts on Contracts tab load/refresh (not only the visible card).
+  - [x] Surface the latest due-window outcome modal immediately after automated evaluations run.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -1973,3 +1976,9 @@ WisdomTreeState {
   - **Step**: Slice D — Outcome quality (auto-link contract progress to verified completions)  
   - **What changed**: Added a contract progress sync path that automatically maps active Habit contracts to verified `habit_logs_v2` completions in the current window and Goal contracts to achieved goals within the active window. Wired Contracts tab load logic to run this sync before evaluation and added a 60-second in-tab refresh loop so progress updates even when users do not tap “Mark Progress.” Updated the implementation sprint checklist to mark Slice D done.  
   - **What’s next**: Outcome quality follow-up — add “on pace / at risk” forecasting and rescue nudges before window close.
+
+- **2026-02-18**  
+  - **Step**: Slice E — Unattended window reliability (due-window evaluation sweep + surfaced outcome)  
+  - **What changed**: Added `evaluateDueContracts` in the commitment contracts service to sweep and evaluate every due active contract in one pass, then wired Contracts tab loading to run this sweep before choosing the primary card so unattended windows are still resolved and the latest evaluation outcome modal is surfaced automatically. Updated the implementation sprint checklist to mark Slice E done.  
+  - **What’s next**: Outcome quality follow-up — add “on pace / at risk” forecasting and rescue nudges before window close.
+

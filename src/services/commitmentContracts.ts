@@ -1102,6 +1102,47 @@ export async function evaluateContract(
   }
 }
 
+export async function evaluateDueContracts(
+  userId: string
+): Promise<ServiceResponse<ContractEvaluation[]>> {
+  try {
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) {
+      return { data: null, error: error || new Error('Contracts not found') };
+    }
+
+    const now = new Date();
+    const dueContracts = contracts.filter((contract) => {
+      if (contract.status !== 'active') {
+        return false;
+      }
+
+      const windowStart = new Date(contract.currentWindowStart);
+      const windowEnd = getWindowEnd(windowStart, contract.cadence);
+      return now > windowEnd;
+    });
+
+    if (dueContracts.length === 0) {
+      return { data: [], error: null };
+    }
+
+    const evaluations: ContractEvaluation[] = [];
+    for (const contract of dueContracts) {
+      const { data: evaluation, error: evaluationError } = await evaluateContract(userId, contract.id);
+      if (!evaluationError && evaluation) {
+        evaluations.push(evaluation);
+      }
+    }
+
+    return { data: evaluations, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to evaluate due contracts'),
+    };
+  }
+}
+
 export async function fetchEvaluations(
   userId: string
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
