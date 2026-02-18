@@ -22709,6 +22709,23 @@ html.platform-ipad .workspace-shell__menu-edge {
   letter-spacing: 0.06em;
 }
 
+
+.habit-analysis-modal__progress {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+  overflow: hidden;
+  margin: 0 0 0.9rem;
+}
+
+.habit-analysis-modal__progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #60a5fa, #34d399);
+  transition: width 0.2s ease;
+}
+
 .habit-analysis-modal__section {
   display: grid;
   gap: 0.65rem;
@@ -22728,6 +22745,34 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(15, 23, 42, 0.75);
   color: #f8fafc;
   padding: 0.55rem 0.7rem;
+}
+
+
+.habit-analysis-modal__day-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.habit-analysis-modal__day-picker button {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+  color: #cbd5e1;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.8rem;
+}
+
+.habit-analysis-modal__day-picker button.is-active {
+  background: rgba(37, 99, 235, 0.32);
+  border-color: rgba(96, 165, 250, 0.9);
+  color: #dbeafe;
+}
+
+.habit-analysis-modal__day-help {
+  margin: 0.1rem 0;
+  font-size: 0.82rem;
+  color: #bfdbfe;
 }
 
 .habit-analysis-modal__chips {
@@ -22789,4 +22834,29 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-analysis-modal__success {
   color: #86efac;
   margin: 0.5rem 0 0;
+}
+
+
+@media (max-width: 640px) {
+  .habit-analysis-modal {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 16px;
+    padding: 0.9rem;
+  }
+
+  .habit-analysis-modal__header {
+    align-items: flex-start;
+  }
+
+  .habit-analysis-modal__footer {
+    position: sticky;
+    bottom: -0.9rem;
+    padding: 0.75rem 0 0.2rem;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0), #0f172a 36%);
+  }
+
+  .habit-analysis-modal__day-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

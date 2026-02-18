@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   getOrCreateHabitAnalysisSession,
+  listHabitExperimentDays,
   logHabitExperimentDay,
   saveHabitAnalysisCosts,
   saveHabitAnalysisDesires,
@@ -12,6 +13,7 @@ import {
   startHabitExperiment,
   type HabitAnalysisGoalType,
   type HabitDiagnosis,
+  type HabitExperimentDayInput,
 } from '../../services/habitImprovementAnalysis';
 
 const DESIRE_OPTIONS = [
@@ -45,6 +47,18 @@ type HabitImprovementAnalysisModalProps = {
   habitName: string;
   onClose: () => void;
 };
+
+function buildDefaultExperimentDay(dayIndex: number): HabitExperimentDayInput {
+  return {
+    dayIndex,
+    date: new Date().toISOString().slice(0, 10),
+    followedProtocol: null,
+    underPain: 0,
+    overPain: 0,
+    netEffect: 'same',
+    note: '',
+  };
+}
 
 export function HabitImprovementAnalysisModal({
   isOpen,
@@ -88,10 +102,13 @@ export function HabitImprovementAnalysisModal({
   const [reboundSafe, setReboundSafe] = useState(3);
   const [identityFit, setIdentityFit] = useState(3);
   const [experimentStarted, setExperimentStarted] = useState(false);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(1);
+  const [experimentDays, setExperimentDays] = useState<Record<number, HabitExperimentDayInput>>({});
   const [todayFollowed, setTodayFollowed] = useState<boolean | null>(null);
   const [todayUnderPain, setTodayUnderPain] = useState(0);
   const [todayOverPain, setTodayOverPain] = useState(0);
   const [todayNetEffect, setTodayNetEffect] = useState<'better' | 'same' | 'worse'>('same');
+  const [todayNote, setTodayNote] = useState('');
 
   useEffect(() => {
     if (!isOpen) {
@@ -100,6 +117,8 @@ export function HabitImprovementAnalysisModal({
       setError(null);
       setSuccess(null);
       setExperimentStarted(false);
+      setSelectedDayIndex(1);
+      setExperimentDays({});
       return;
     }
 
@@ -117,12 +136,56 @@ export function HabitImprovementAnalysisModal({
         return;
       }
       setSessionId(result.session.id);
+      setExperimentStarted(result.session.status === 'active' || result.session.status === 'completed');
+      setSelectedDayIndex(Math.min((result.session.last_logged_day_index || 0) + 1, 7));
     });
 
     return () => {
       mounted = false;
     };
   }, [goalType, habitId, isOpen, userId]);
+
+  useEffect(() => {
+    if (!sessionId || step !== 4) {
+      return;
+    }
+
+    let mounted = true;
+    void listHabitExperimentDays(sessionId).then((result) => {
+      if (!mounted || result.error) {
+        return;
+      }
+
+      const mapped = result.days.reduce<Record<number, HabitExperimentDayInput>>((acc, day) => {
+        acc[day.dayIndex] = day;
+        return acc;
+      }, {});
+
+      setExperimentDays(mapped);
+      setExperimentStarted(result.days.length > 0);
+      if (result.days.length > 0) {
+        const highestLogged = result.days
+          .filter((day) => day.followedProtocol !== null || day.note)
+          .reduce((max, day) => Math.max(max, day.dayIndex), 0);
+        if (highestLogged > 0) {
+          setSelectedDayIndex(Math.min(highestLogged + 1, 7));
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [sessionId, step]);
+
+  useEffect(() => {
+    const selectedDay = experimentDays[selectedDayIndex] ?? buildDefaultExperimentDay(selectedDayIndex);
+    setTodayFollowed(selectedDay.followedProtocol ?? null);
+    setTodayUnderPain(selectedDay.underPain ?? 0);
+    setTodayOverPain(selectedDay.overPain ?? 0);
+    setTodayNetEffect(selectedDay.netEffect ?? 'same');
+    setTodayNote(selectedDay.note ?? '');
+  }, [experimentDays, selectedDayIndex]);
 
   const readinessAverage = useMemo(() => {
     return (desireMet + costReduced + badDayOk + reboundSafe + identityFit) / 5;
@@ -146,9 +209,40 @@ export function HabitImprovementAnalysisModal({
     return sessionId;
   };
 
+  const validateCurrentStep = () => {
+    if (step === 2) {
+      const minValue = Number(rangeMin);
+      const maxValue = Number(rangeMax);
+      if (Number.isFinite(minValue) && Number.isFinite(maxValue) && minValue > maxValue) {
+        return 'Min threshold must be less than or equal to max threshold.';
+      }
+    }
+
+    if (step === 3) {
+      if (!ifTrigger.trim() || !thenAction.trim()) {
+        return 'Please fill in both the trigger and action to create a usable protocol.';
+      }
+    }
+
+    if (step === 4) {
+      if (todayFollowed === null) {
+        return 'Please select whether you followed the protocol today.';
+      }
+    }
+
+    return null;
+  };
+
   const saveCurrentStep = async () => {
     const id = requireSession();
     if (!id) return;
+
+    const validationError = validateCurrentStep();
+    if (validationError) {
+      setError(validationError);
+      setSuccess(null);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -256,22 +350,38 @@ export function HabitImprovementAnalysisModal({
     }
 
     if (step === 4) {
-      const now = new Date().toISOString().slice(0, 10);
-      const dayNumber = 1;
+      const selectedDay = experimentDays[selectedDayIndex] ?? buildDefaultExperimentDay(selectedDayIndex);
       const result = await logHabitExperimentDay(id, {
-        dayIndex: dayNumber,
-        date: now,
+        dayIndex: selectedDayIndex,
+        date: selectedDay.date,
         followedProtocol: todayFollowed,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
+        note: todayNote,
       });
       setLoading(false);
       if (result.error) {
         setError(result.error);
         return;
       }
-      setSuccess('Day 1 check-in saved.');
+
+      const updatedDay: HabitExperimentDayInput = {
+        dayIndex: selectedDayIndex,
+        date: selectedDay.date,
+        followedProtocol: todayFollowed,
+        underPain: todayUnderPain,
+        overPain: todayOverPain,
+        netEffect: todayNetEffect,
+        note: todayNote,
+      };
+
+      setExperimentDays((current) => ({
+        ...current,
+        [selectedDayIndex]: updatedDay,
+      }));
+      setSelectedDayIndex((current) => Math.min(current + 1, 7));
+      setSuccess(`Day ${selectedDayIndex} check-in saved.`);
       return;
     }
 
@@ -300,6 +410,9 @@ export function HabitImprovementAnalysisModal({
         </header>
 
         <p className="habit-analysis-modal__step">Step {step + 1} of 5</p>
+        <div className="habit-analysis-modal__progress" aria-hidden="true">
+          <span style={{ width: `${((step + 1) / 5) * 100}%` }} />
+        </div>
 
         {step === 0 ? (
           <div className="habit-analysis-modal__section">
@@ -475,6 +588,26 @@ export function HabitImprovementAnalysisModal({
         {step === 4 ? (
           <div className="habit-analysis-modal__section">
             <p>7-day experiment is {experimentStarted ? 'active' : 'not started'}.</p>
+            <div className="habit-analysis-modal__day-picker" role="tablist" aria-label="Experiment day picker">
+              {Array.from({ length: 7 }, (_, index) => {
+                const dayIndex = index + 1;
+                const day = experimentDays[dayIndex];
+                const isLogged = Boolean(day && (day.followedProtocol !== null || day.note));
+                return (
+                  <button
+                    key={`day-${dayIndex}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedDayIndex === dayIndex}
+                    className={selectedDayIndex === dayIndex ? 'is-active' : ''}
+                    onClick={() => setSelectedDayIndex(dayIndex)}
+                  >
+                    Day {dayIndex}{isLogged ? ' ✓' : ''}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="habit-analysis-modal__day-help">Logging Day {selectedDayIndex}.</p>
             <label>
               Followed protocol today?
               <select
@@ -505,6 +638,10 @@ export function HabitImprovementAnalysisModal({
                 <option value="same">Same</option>
                 <option value="worse">Worse</option>
               </select>
+            </label>
+            <label>
+              Quick note (optional)
+              <textarea value={todayNote} onChange={(event) => setTodayNote(event.target.value)} rows={2} maxLength={240} />
             </label>
           </div>
         ) : null}
