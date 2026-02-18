@@ -66,6 +66,7 @@ export function ContractStatusCard({
   );
 
   const isAtRisk = paceForecast?.status === 'at_risk';
+  const shouldSuggestSupportOnly = contract.missCount >= 2;
 
   return (
     <div className="contract-status-card">
@@ -126,6 +127,13 @@ export function ContractStatusCard({
             {isAtRisk ? '⚠️ At risk' : paceForecast.status === 'on_pace' ? '✅ On pace' : '🎉 Target met'}
           </p>
           <p className="contract-status-card__pace-message">{paceForecast.rescueSuggestion}</p>
+        </div>
+      )}
+
+      {shouldSuggestSupportOnly && (
+        <div className="contract-status-card__support-mode" role="status" aria-live="polite">
+          💛 Tough windows happen. After a couple misses, support-only accountability with a trusted person
+          can keep momentum gentle without extra pressure.
         </div>
       )}
 

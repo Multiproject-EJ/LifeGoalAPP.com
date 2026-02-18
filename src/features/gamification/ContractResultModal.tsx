@@ -29,6 +29,7 @@ export function ContractResultModal({
   const isSuccess = evaluation.result === 'success';
   const canReduceStake = Boolean(reduceStakeEligibility?.eligible);
   const canActivateGentleRecovery = Boolean(gentleRecoveryEligibility?.eligible);
+  const shouldSuggestSupportOnly = contract.missCount >= 2;
   const baseBonus = Math.max(1, Math.floor(contract.stakeAmount * 0.1));
   const rewardMultiplier = baseBonus > 0 ? evaluation.bonusAwarded / baseBonus : 1;
 
@@ -122,6 +123,12 @@ export function ContractResultModal({
             Pause for a week
           </button>
         </div>
+        {shouldSuggestSupportOnly && (
+          <p className="contract-result-modal__support-hint">
+            💛 You&apos;ve hit a few tough windows lately. Consider switching to support-only accountability
+            with someone you trust while you rebuild momentum.
+          </p>
+        )}
         <button
           type="button"
           className="contract-result-modal__cancel-button"
