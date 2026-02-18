@@ -58,6 +58,7 @@ import {
   isEligibleTimeLimitedOfferHabit,
   rankHabitsForTimeLimitedOffer,
 } from './timeLimitedOffer';
+import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { buildEnhancedRationale } from './aiRationale';
 import { generateHabitSuggestion, type HabitAiSuggestion } from '../../services/habitAiSuggestions';
 import {
@@ -298,6 +299,7 @@ export function DailyHabitTracker({
   const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiDraftByHabitId, setReviewAiDraftByHabitId] = useState<Record<string, HabitReviewAiDraft>>({});
+  const [analysisHabitId, setAnalysisHabitId] = useState<string | null>(null);
   const [pendingReviewAiApply, setPendingReviewAiApply] = useState<{ habitId: string; title: string; rationale: string } | null>(null);
   const [completions, setCompletions] = useState<Record<string, HabitCompletionState>>({});
   const [monthlyCompletions, setMonthlyCompletions] = useState<
@@ -3506,6 +3508,9 @@ export function DailyHabitTracker({
                   <li key={habit.id} className="habit-review-queue__item">
                     <span className="habit-review-queue__name">{habit.name}</span>
                     <div className="habit-review-queue__actions">
+                      <button type="button" disabled={isActionInFlight} onClick={() => setAnalysisHabitId(habit.id)}>
+                        Deep Fix
+                      </button>
                       <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'pause')}>
                         Pause
                       </button>
@@ -4648,6 +4653,16 @@ export function DailyHabitTracker({
             ) : (
               renderCompactList()
             )}
+
+            {analysisHabitId ? (
+              <HabitImprovementAnalysisModal
+                isOpen={Boolean(analysisHabitId)}
+                userId={session.user.id}
+                habitId={analysisHabitId}
+                habitName={habits.find((habit) => habit.id === analysisHabitId)?.name ?? 'Habit'}
+                onClose={() => setAnalysisHabitId(null)}
+              />
+            ) : null}
 
             {identitySignalsUnlocked ? (
               <div className="identity-signals-card" aria-live="polite">
