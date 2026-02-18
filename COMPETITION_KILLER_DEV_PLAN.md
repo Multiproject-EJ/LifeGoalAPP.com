@@ -1038,6 +1038,9 @@ CommitmentContract {
 - **Slice E — Unattended window reliability (done)**
   - [x] Evaluate all due active contracts on Contracts tab load/refresh (not only the visible card).
   - [x] Surface the latest due-window outcome modal immediately after automated evaluations run.
+- **Slice F — Pace forecasting + rescue nudges (done)**
+  - [x] Add “on pace / at risk” contract forecasting before cadence window close.
+  - [x] Add warm rescue nudge copy and state-aware primary CTA label for at-risk windows.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -1977,8 +1980,12 @@ WisdomTreeState {
   - **What changed**: Added a contract progress sync path that automatically maps active Habit contracts to verified `habit_logs_v2` completions in the current window and Goal contracts to achieved goals within the active window. Wired Contracts tab load logic to run this sync before evaluation and added a 60-second in-tab refresh loop so progress updates even when users do not tap “Mark Progress.” Updated the implementation sprint checklist to mark Slice D done.  
   - **What’s next**: Outcome quality follow-up — add “on pace / at risk” forecasting and rescue nudges before window close.
 
-- **2026-02-18**  
-  - **Step**: Slice E — Unattended window reliability (due-window evaluation sweep + surfaced outcome)  
-  - **What changed**: Added `evaluateDueContracts` in the commitment contracts service to sweep and evaluate every due active contract in one pass, then wired Contracts tab loading to run this sweep before choosing the primary card so unattended windows are still resolved and the latest evaluation outcome modal is surfaced automatically. Updated the implementation sprint checklist to mark Slice E done.  
+- **2026-02-18**
+  - **Step**: Slice E — Unattended window reliability (due-window evaluation sweep + surfaced outcome)
+  - **What changed**: Added `evaluateDueContracts` in the commitment contracts service to sweep and evaluate every due active contract in one pass, then wired Contracts tab loading to run this sweep before choosing the primary card so unattended windows are still resolved and the latest evaluation outcome modal is surfaced automatically. Updated the implementation sprint checklist to mark Slice E done.
   - **What’s next**: Outcome quality follow-up — add “on pace / at risk” forecasting and rescue nudges before window close.
 
+- **2026-02-18**
+  - **Step**: Slice F — Pace forecasting + rescue nudges (on-pace/at-risk guidance)
+  - **What changed**: Added a contract pace forecast helper that compares current progress against elapsed cadence-window time and classifies each active contract as target-met, on-pace, or at-risk. Wired the Contracts status card to show a warm “on pace / at risk” guidance panel with rescue copy and switched the primary action label to “Rescue Progress” when urgency is detected. Updated the implementation sprint checklist to mark Slice F done.
+  - **What’s next**: Contract outcome quality follow-up — telemetry-backed rescue effectiveness analysis and optional pre-close reminder scheduling.
