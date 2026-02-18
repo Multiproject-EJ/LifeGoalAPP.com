@@ -2084,6 +2084,87 @@
   color: var(--text-primary, #333);
 }
 
+
+
+/* Contract History Card */
+.contract-history-card {
+  background: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 0 0 1rem;
+  border: 1px solid var(--border-color, rgba(148, 163, 184, 0.35));
+}
+
+.contract-history-card__header {
+  margin-bottom: 0.75rem;
+}
+
+.contract-history-card__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary, #333);
+}
+
+.contract-history-card__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+}
+
+.contract-history-card__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.contract-history-card__stat {
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: var(--hover-background, rgba(99, 102, 241, 0.08));
+}
+
+.contract-history-card__stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+}
+
+.contract-history-card__stat-value {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+  color: var(--text-primary, #333);
+}
+
+.contract-history-card__economy {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #666);
+  margin-bottom: 0.75rem;
+}
+
+.contract-history-card__recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.contract-history-card__recent-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-primary, #333);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px dashed var(--border-color, rgba(148, 163, 184, 0.35));
+}
+
 /* Contract Result Modal */
 .contract-result-modal {
   position: fixed;

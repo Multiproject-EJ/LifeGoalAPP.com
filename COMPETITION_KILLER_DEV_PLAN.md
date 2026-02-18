@@ -1044,6 +1044,9 @@ CommitmentContract {
 - **Slice G — Adaptive recovery ramp (done)**
   - [x] Add guided “gentle ramp week” recovery action after repeated misses.
   - [x] Restore original target automatically after a successful ramp window.
+- **Slice H — Contract history insights (done)**
+  - [x] Add in-tab contract history analytics (success rate, streaks, trend state).
+  - [x] Add recent cadence-window outcomes list with stake/bonus summary context.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -1997,3 +2000,10 @@ WisdomTreeState {
   - **Step**: Slice G — Adaptive recovery ramp (guided gentle ramp week)
   - **What changed**: Implemented a new guided recovery action in missed-contract results that unlocks after repeated misses and temporarily lowers the contract target for a gentle ramp week. Added end-to-end service support, telemetry events, persistence fields + Supabase migration, and UI feedback that shows when gentle ramp mode is active and auto-restores the original target after a successful recovery window.
   - **What’s next**: Contract impact follow-up — add history analytics and trend summaries for completed/missed contract windows.
+
+
+- **2026-02-18**
+  - **Step**: Slice H — Contract history insights (analytics + trend summaries)
+  - **What changed**: Added a contract history analytics helper that summarizes success rate, current/best streaks, bonus earned, stake forfeited, and improving/steady/needs-support trend classification from evaluation records. Integrated a new in-tab Contract History card in the Contracts surface that renders KPI chips plus a recent window outcome list so users can review momentum without leaving the tab. Updated the implementation sprint checklist to mark Slice H done.
+  - **What’s next**: Contract impact follow-up — add streak-adjusted reward multipliers tied to sustained contract keeps.
+
