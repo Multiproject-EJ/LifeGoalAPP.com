@@ -22666,3 +22666,127 @@ html.platform-ipad .workspace-shell__menu-edge {
     display: none;
   }
 }
+
+.habit-analysis-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.66);
+  display: grid;
+  place-items: center;
+  z-index: 1200;
+  padding: 1rem;
+}
+
+.habit-analysis-modal {
+  width: min(640px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  padding: 1rem;
+  background: linear-gradient(180deg, #101a37, #0f172a);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.45);
+}
+
+.habit-analysis-modal__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.habit-analysis-modal__header h3 {
+  margin: 0;
+}
+
+.habit-analysis-modal__eyebrow,
+.habit-analysis-modal__step {
+  margin: 0 0 0.5rem;
+  color: #93c5fd;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.habit-analysis-modal__section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.habit-analysis-modal__section label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.habit-analysis-modal__section input,
+.habit-analysis-modal__section select,
+.habit-analysis-modal__section textarea {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+  padding: 0.55rem 0.7rem;
+}
+
+.habit-analysis-modal__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.habit-analysis-modal__chips button {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: #cbd5e1;
+  padding: 0.35rem 0.65rem;
+}
+
+.habit-analysis-modal__chips button.is-active {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(96, 165, 250, 0.8);
+  color: #dbeafe;
+}
+
+.habit-analysis-modal__score-grid {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.5rem;
+}
+
+.habit-analysis-modal__traffic {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+.habit-analysis-modal__traffic--green { color: #86efac; }
+.habit-analysis-modal__traffic--yellow { color: #fcd34d; }
+.habit-analysis-modal__traffic--red { color: #fca5a5; }
+
+.habit-analysis-modal__footer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.habit-analysis-modal__footer button,
+.habit-analysis-modal__close {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.75);
+  color: #e2e8f0;
+  padding: 0.45rem 0.85rem;
+}
+
+.habit-analysis-modal__error {
+  color: #fca5a5;
+  margin: 0.5rem 0 0;
+}
+
+.habit-analysis-modal__success {
+  color: #86efac;
+  margin: 0.5rem 0 0;
+}
