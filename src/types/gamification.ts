@@ -586,6 +586,8 @@ export interface CommitmentContract {
   currentProgress: number;     // completions in current window
   missCount: number;           // total misses
   successCount: number;        // total successes
+  resetCount?: number;
+  lastResetAt?: string | null;
   stakeReducedAt?: string | null; // ISO date when reduce-stake recovery was used
   recoveryMode?: 'gentle_ramp' | null;
   recoveryOriginalTargetCount?: number | null;

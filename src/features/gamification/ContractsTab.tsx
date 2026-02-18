@@ -17,6 +17,7 @@ import {
   syncContractProgressWithTarget,
   getReduceStakeEligibility,
   getGentleRecoveryEligibility,
+  getResetContractEligibility,
   activateGentleRampRecovery,
   resetContractWithSameSettings,
   reduceContractStake,
@@ -25,6 +26,7 @@ import {
   type ReduceStakeEligibility,
   type GentleRecoveryEligibility,
   type ContractSweepHealth,
+  type ResetContractEligibility,
 } from '../../services/commitmentContracts';
 import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
@@ -84,6 +86,7 @@ export function ContractsTab({
   const [resultContract, setResultContract] = useState<CommitmentContract | null>(null);
   const [reduceStakeEligibility, setReduceStakeEligibility] = useState<ReduceStakeEligibility | null>(null);
   const [gentleRecoveryEligibility, setGentleRecoveryEligibility] = useState<GentleRecoveryEligibility | null>(null);
+  const [resetEligibility, setResetEligibility] = useState<ResetContractEligibility | null>(null);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
@@ -211,6 +214,7 @@ export function ContractsTab({
     if (!userId || !resultContract || !contractResult || contractResult.result !== 'miss') {
       setReduceStakeEligibility(null);
       setGentleRecoveryEligibility(null);
+      setResetEligibility(null);
       return;
     }
 
@@ -218,6 +222,7 @@ export function ContractsTab({
       const stakeEligibility = await getReduceStakeEligibility(userId, resultContract);
       setReduceStakeEligibility(stakeEligibility);
       setGentleRecoveryEligibility(getGentleRecoveryEligibility(resultContract));
+      setResetEligibility(getResetContractEligibility(resultContract));
     };
 
     void hydrateEligibility();
@@ -314,6 +319,7 @@ export function ContractsTab({
     setResultContract(null);
     setReduceStakeEligibility(null);
     setGentleRecoveryEligibility(null);
+    setResetEligibility(null);
     setRecoveryMessage(null);
   };
 
@@ -332,6 +338,7 @@ export function ContractsTab({
     setRecoveryMessage('Contract reset. Fresh window, same commitment.');
     setContractResult(null);
     setResultContract(null);
+    setResetEligibility(null);
   };
 
   const handleReduceStake = async () => {
@@ -349,6 +356,7 @@ export function ContractsTab({
     setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'Gold' : 'Tokens'}.`);
     setContractResult(null);
     setResultContract(null);
+    setResetEligibility(null);
   };
 
 
@@ -367,6 +375,7 @@ export function ContractsTab({
     setRecoveryMessage(`Gentle ramp started. Target temporarily adjusted to ${data.targetCount} this ${data.cadence}.`);
     setContractResult(null);
     setResultContract(null);
+    setResetEligibility(null);
     setReduceStakeEligibility(null);
     setGentleRecoveryEligibility(null);
   };
@@ -534,6 +543,7 @@ export function ContractsTab({
         <ContractResultModal
           contract={resultContract}
           evaluation={contractResult}
+          resetEligibility={resetEligibility}
           reduceStakeEligibility={reduceStakeEligibility}
           gentleRecoveryEligibility={gentleRecoveryEligibility}
           onClose={handleContractResultClose}

@@ -1,9 +1,14 @@
 import type { CommitmentContract, ContractEvaluation } from '../../types/gamification';
-import type { GentleRecoveryEligibility, ReduceStakeEligibility } from '../../services/commitmentContracts';
+import type {
+  GentleRecoveryEligibility,
+  ReduceStakeEligibility,
+  ResetContractEligibility,
+} from '../../services/commitmentContracts';
 
 interface ContractResultModalProps {
   contract: CommitmentContract;
   evaluation: ContractEvaluation;
+  resetEligibility: ResetContractEligibility | null;
   reduceStakeEligibility: ReduceStakeEligibility | null;
   gentleRecoveryEligibility: GentleRecoveryEligibility | null;
   onClose: () => void;
@@ -17,6 +22,7 @@ interface ContractResultModalProps {
 export function ContractResultModal({
   contract,
   evaluation,
+  resetEligibility,
   reduceStakeEligibility,
   gentleRecoveryEligibility,
   onClose,
@@ -27,6 +33,7 @@ export function ContractResultModal({
   onCancelContract,
 }: ContractResultModalProps) {
   const isSuccess = evaluation.result === 'success';
+  const canResetContract = Boolean(resetEligibility?.eligible);
   const canReduceStake = Boolean(reduceStakeEligibility?.eligible);
   const canActivateGentleRecovery = Boolean(gentleRecoveryEligibility?.eligible);
   const shouldSuggestSupportOnly = contract.missCount >= 2;
@@ -90,9 +97,13 @@ export function ContractResultModal({
             type="button"
             className="contract-result-modal__option-button"
             onClick={onResetContract}
+            disabled={!canResetContract}
           >
             Reset contract (same settings)
           </button>
+          {!canResetContract && resetEligibility?.reason && (
+            <p className="contract-result-modal__option-hint">{resetEligibility.reason}</p>
+          )}
           <button
             type="button"
             className="contract-result-modal__option-button"

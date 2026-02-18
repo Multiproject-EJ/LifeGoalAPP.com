@@ -1089,6 +1089,10 @@ CommitmentContract {
   - [x] Disable active-contract cancel actions once cooling-off ends and show pause-first guidance inline.
   - [x] Surface contract action failures in-tab so recovery steps are visible without console inspection.
 
+- **Slice U — Reset guardrail interval + eligibility clarity (done)**
+  - [x] Add explicit reset-contract eligibility checks (post-miss only + once per 7 days interval).
+  - [x] Persist reset usage metadata and surface warm in-modal eligibility reasons when reset is temporarily unavailable.
+
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
 **Purpose**: Create lightweight, time-boxed community arcs that boost motivation without overwhelming users. Events should feel optional, warm, and celebratory—never punitive.
@@ -2114,4 +2118,9 @@ WisdomTreeState {
 - **2026-02-18**
   - **Step**: Slice T — Cancellation guardrail clarity (cooling-off CTA + in-tab error surfacing)
   - **What changed**: Updated the Contracts status card to disable cancel actions for active contracts after cooling-off expires and added inline guidance that recommends pause-first recovery. Wired Contracts tab action handlers (progress, pause/resume, cancel) to surface failures as visible status messaging instead of console-only errors, so users immediately understand why an action was blocked.
+  - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
+
+- **2026-02-18**
+  - **Step**: Slice U — Reset guardrail interval + eligibility clarity
+  - **What changed**: Added explicit reset-contract guardrails so reset remains a true recovery action: active-contract + post-miss eligibility plus a once-per-7-days interval. Persisted `reset_count` and `last_reset_at` on contracts (Supabase migration + typed schema + service mappers), added reset-blocked telemetry, and surfaced warm reason copy in the miss-result modal when reset is temporarily unavailable.
   - **What’s next**: Return to Phase 9 roadmap slices (start P9.2 Party system UI) unless additional Contracts hardening is prioritized.
