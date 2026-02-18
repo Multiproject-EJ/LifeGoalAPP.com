@@ -1316,6 +1316,21 @@ export async function evaluateDueContracts(
   userId: string
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
   try {
+    if (canUseSupabaseData()) {
+      const supabase = getSupabaseClient();
+      const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
+        p_user_id: userId,
+        p_max_windows: 12,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const evaluations = (data ?? []).map((row: unknown) => evaluationFromRow(row as EvaluationRow));
+      return { data: evaluations, error: null };
+    }
+
     const { data: contracts, error } = await fetchContracts(userId);
     if (error || !contracts) {
       return { data: null, error: error || new Error('Contracts not found') };
@@ -1396,7 +1411,7 @@ export async function fetchEvaluations(
       .order('evaluated_at', { ascending: false });
 
     if (error) throw error;
-    const evaluations = (data ?? []).map((row) => evaluationFromRow(row as EvaluationRow));
+    const evaluations = (data ?? []).map((row: unknown) => evaluationFromRow(row as EvaluationRow));
     return { data: evaluations, error: null };
   } catch (error) {
     return {

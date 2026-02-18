@@ -433,7 +433,7 @@ export function ContractsTab({
               Stake Gold or Tokens to stay accountable to your goals.
             </p>
             <p className="score-tab__meta">
-              Auto-checks run every minute while the app is open to catch due windows.
+              Auto-checks run every minute while the app is open, with server-backed due-window sweeps for durability.
               {lastAutoCheckAt ? ` Last check: ${new Date(lastAutoCheckAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.` : ''}
             </p>
           </div>
