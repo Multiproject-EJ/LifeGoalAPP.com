@@ -841,6 +841,8 @@ export interface Database {
           current_progress: number;
           miss_count: number;
           success_count: number;
+          reset_count: number;
+          last_reset_at: string | null;
           stake_reduced_at: string | null;
           recovery_mode: 'gentle_ramp' | null;
           recovery_original_target_count: number | null;
@@ -870,6 +872,8 @@ export interface Database {
           current_progress?: number;
           miss_count?: number;
           success_count?: number;
+          reset_count?: number;
+          last_reset_at?: string | null;
           stake_reduced_at?: string | null;
           recovery_mode?: 'gentle_ramp' | null;
           recovery_original_target_count?: number | null;
@@ -899,6 +903,8 @@ export interface Database {
           current_progress?: number;
           miss_count?: number;
           success_count?: number;
+          reset_count?: number;
+          last_reset_at?: string | null;
           stake_reduced_at?: string | null;
           recovery_mode?: 'gentle_ramp' | null;
           recovery_original_target_count?: number | null;

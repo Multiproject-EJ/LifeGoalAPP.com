@@ -32,6 +32,12 @@ export type GentleRecoveryEligibility = {
   reason?: string;
 };
 
+export type ResetContractEligibility = {
+  eligible: boolean;
+  reason?: string;
+  nextEligibleAt?: string;
+};
+
 export type ContractInput = {
   title: string;
   targetType: ContractTargetType;
@@ -84,6 +90,8 @@ type ContractRow = {
   current_progress: number;
   miss_count: number;
   success_count: number;
+  reset_count: number;
+  last_reset_at: string | null;
   stake_reduced_at: string | null;
   recovery_mode: 'gentle_ramp' | null;
   recovery_original_target_count: number | null;
@@ -140,6 +148,8 @@ function contractFromRow(row: ContractRow): CommitmentContract {
     currentProgress: row.current_progress,
     missCount: row.miss_count,
     successCount: row.success_count,
+    resetCount: row.reset_count,
+    lastResetAt: row.last_reset_at,
     stakeReducedAt: row.stake_reduced_at,
     recoveryMode: row.recovery_mode,
     recoveryOriginalTargetCount: row.recovery_original_target_count,
@@ -172,6 +182,8 @@ function contractToRow(contract: CommitmentContract): ContractRow {
     current_progress: contract.currentProgress,
     miss_count: contract.missCount,
     success_count: contract.successCount,
+    reset_count: contract.resetCount ?? 0,
+    last_reset_at: contract.lastResetAt ?? null,
     stake_reduced_at: contract.stakeReducedAt ?? null,
     recovery_mode: contract.recoveryMode ?? null,
     recovery_original_target_count: contract.recoveryOriginalTargetCount ?? null,
@@ -482,6 +494,42 @@ export function getGentleRecoveryEligibility(contract: CommitmentContract): Gent
   return { eligible: true };
 }
 
+export function getResetContractEligibility(contract: CommitmentContract): ResetContractEligibility {
+  if (contract.status !== 'active') {
+    return {
+      eligible: false,
+      reason: 'Reset is only available for active contracts.',
+    };
+  }
+
+  if (contract.missCount < 1) {
+    return {
+      eligible: false,
+      reason: 'Reset unlocks after your first miss so it stays a true recovery tool.',
+    };
+  }
+
+  if (!contract.lastResetAt) {
+    return { eligible: true };
+  }
+
+  const lastResetTime = new Date(contract.lastResetAt).getTime();
+  if (Number.isNaN(lastResetTime)) {
+    return { eligible: true };
+  }
+
+  const nextEligibleAt = new Date(lastResetTime + 7 * 24 * 60 * 60 * 1000);
+  if (Date.now() < nextEligibleAt.getTime()) {
+    return {
+      eligible: false,
+      reason: `Reset can be used once every 7 days. Available again ${nextEligibleAt.toLocaleDateString()}.`,
+      nextEligibleAt: nextEligibleAt.toISOString(),
+    };
+  }
+
+  return { eligible: true };
+}
+
 // =====================================================
 // CRUD OPERATIONS
 // =====================================================
@@ -537,6 +585,8 @@ export async function createContract(
       currentProgress: 0,
       missCount: 0,
       successCount: 0,
+      resetCount: 0,
+      lastResetAt: null,
       recoveryMode: null,
       recoveryOriginalTargetCount: null,
       recoveryActivatedAt: null,
@@ -846,8 +896,22 @@ export async function resetContractWithSameSettings(
     }
 
     const contract = contracts[contractIndex];
-    if (contract.status !== 'active') {
-      return { data: null, error: new Error('Can only reset active contracts') };
+    const eligibility = getResetContractEligibility(contract);
+    if (!eligibility.eligible) {
+      void recordTelemetryEvent({
+        userId,
+        eventType: 'contract_reset_blocked',
+        metadata: {
+          contractId: contract.id,
+          reason: eligibility.reason ?? 'ineligible',
+          nextEligibleAt: eligibility.nextEligibleAt ?? null,
+        } as TelemetryEventMetadata,
+      });
+
+      return {
+        data: null,
+        error: new Error(eligibility.reason ?? 'Contract is not eligible for reset'),
+      };
     }
 
     const now = new Date();
@@ -855,6 +919,8 @@ export async function resetContractWithSameSettings(
     const updatedContract: CommitmentContract = {
       ...contract,
       currentProgress: 0,
+      resetCount: (contract.resetCount ?? 0) + 1,
+      lastResetAt: now.toISOString(),
       currentWindowStart: windowStart.toISOString(),
       updatedAt: now.toISOString(),
     };
@@ -871,6 +937,7 @@ export async function resetContractWithSameSettings(
         cadence: updatedContract.cadence,
         stakeType: updatedContract.stakeType,
         stakeAmount: updatedContract.stakeAmount,
+        resetCount: updatedContract.resetCount,
       } as TelemetryEventMetadata,
     });
 
