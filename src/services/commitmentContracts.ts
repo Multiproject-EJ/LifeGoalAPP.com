@@ -1337,10 +1337,35 @@ export async function evaluateDueContracts(
     }
 
     const evaluations: ContractEvaluation[] = [];
+    const maxCatchUpWindowsPerSweep = 12;
+
     for (const contract of dueContracts) {
-      const { data: evaluation, error: evaluationError } = await evaluateContract(userId, contract.id);
-      if (!evaluationError && evaluation) {
+      let windowsProcessed = 0;
+      let shouldContinue = true;
+
+      while (shouldContinue && windowsProcessed < maxCatchUpWindowsPerSweep) {
+        const { data: evaluation, error: evaluationError } = await evaluateContract(userId, contract.id);
+        if (evaluationError || !evaluation) {
+          break;
+        }
+
         evaluations.push(evaluation);
+        windowsProcessed += 1;
+
+        const { data: refreshedContracts, error: refreshedContractsError } = await fetchContracts(userId);
+        if (refreshedContractsError || !refreshedContracts) {
+          break;
+        }
+
+        const refreshedContract = refreshedContracts.find((item) => item.id === contract.id);
+        if (!refreshedContract || refreshedContract.status !== 'active') {
+          shouldContinue = false;
+          continue;
+        }
+
+        const refreshedWindowStart = new Date(refreshedContract.currentWindowStart);
+        const refreshedWindowEnd = getWindowEnd(refreshedWindowStart, refreshedContract.cadence);
+        shouldContinue = new Date() > refreshedWindowEnd;
       }
     }
 

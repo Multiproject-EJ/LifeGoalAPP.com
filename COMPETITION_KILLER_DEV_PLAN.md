@@ -1066,6 +1066,9 @@ CommitmentContract {
 - **Slice N — Witness reminder actions + social proof chips (done)**
   - [x] Add a one-tap witness reminder action in active witness-mode contracts with share/copy fallback and telemetry.
   - [x] Add lightweight witness social-proof chips in contract history (witness label + kept windows summary).
+- **Slice O — Overdue window catch-up reliability (done)**
+  - [x] Evaluate multiple missed cadence windows in one unattended sweep until the active window is current.
+  - [x] Surface an in-tab catch-up status message when multiple overdue windows are resolved automatically.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -2058,5 +2061,10 @@ WisdomTreeState {
 - **2026-02-18**
   - **Step**: Slice N — Witness reminder actions + social proof chips
   - **What changed**: Added a one-tap witness reminder action in active witness-mode contracts with native share-sheet first, clipboard fallback, and `contract_witness_pinged` telemetry on successful send/copy. Updated the active Contracts status card to surface the new witness ping CTA inline with witness context. Extended contract history with lightweight witness social-proof chips (witness label + kept windows ratio) so accountability momentum is visible at a glance.
-  - **What’s next**: Contracts slice complete for current sprint; shift focus to Phase 9.2 Party system UI implementation.
+  - **What’s next**: Contract reliability follow-up — auto-catch overdue windows from unattended gaps without requiring repeated manual checks.
+
+- **2026-02-18**
+  - **Step**: Slice O — Overdue window catch-up reliability (multi-window unattended sweep)
+  - **What changed**: Updated due-window evaluation to process multiple overdue cadence windows per contract in a single unattended sweep (with a safety cap), so long absences catch up to the current window immediately instead of one result per refresh. Added a Contracts tab status message that explicitly confirms when multiple overdue windows were resolved automatically.
+  - **What’s next**: Contracts server durability follow-up — explore scheduled server-side evaluations for fully unattended windows when the app is closed.
 

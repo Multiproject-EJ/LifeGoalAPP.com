@@ -85,6 +85,7 @@ export function ContractsTab({
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
   const [lastAutoCheckAt, setLastAutoCheckAt] = useState<string | null>(null);
+  const [overdueCatchUpMessage, setOverdueCatchUpMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -101,6 +102,14 @@ export function ContractsTab({
     if (error || !contracts) return;
 
     if (dueEvaluations && dueEvaluations.length > 0) {
+      if (dueEvaluations.length > 1) {
+        setOverdueCatchUpMessage(
+          `Resolved ${dueEvaluations.length} overdue contract windows while you were away.`
+        );
+      } else {
+        setOverdueCatchUpMessage(null);
+      }
+
       const latestEvaluation = dueEvaluations
         .slice()
         .sort((a, b) => new Date(a.evaluatedAt).getTime() - new Date(b.evaluatedAt).getTime())
@@ -113,6 +122,8 @@ export function ContractsTab({
           setResultContract(evaluatedContract);
         }
       }
+    } else {
+      setOverdueCatchUpMessage(null);
     }
 
     const primaryContract = pickPrimaryContract(contracts);
@@ -427,6 +438,7 @@ export function ContractsTab({
             </p>
           </div>
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
+          {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
           {!activeContract && !showContractWizard && (
             <div className="score-tab__contracts-empty">
               <p className="score-tab__contracts-empty-text">
