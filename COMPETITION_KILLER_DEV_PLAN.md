@@ -1053,6 +1053,9 @@ CommitmentContract {
 - **Slice J — Social commitment mode (done)**
   - [x] Add optional witness accountability mode in contract setup (solo vs witness + label).
   - [x] Persist and surface witness mode context in Contracts status experience + telemetry.
+- **Slice K — Economy consistency + stake safeguards (done)**
+  - [x] Unify contract stake bonus/forfeit profile writes across Supabase and demo fallback paths.
+  - [x] Add Token stake cap parity + low-balance safety messaging in service validation and setup UX.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -2023,4 +2026,10 @@ WisdomTreeState {
 - **2026-02-18**
   - **Step**: Slice J — Social commitment mode (optional witness accountability)
   - **What changed**: Added optional witness accountability support end-to-end for Contracts: setup UI now offers solo vs witness mode with an optional witness label, contract persistence now stores social mode metadata in both local + Supabase paths, contract-created telemetry includes accountability context, and the Contracts status card surfaces witness mode context during active windows. Added Supabase migration `0142_contract_accountability_mode.sql` and updated typed DB contract schema to include the new fields.
+  - **What’s next**: Contract impact follow-up — optional accountability witness ping/reminder actions and lightweight social proof history chips.
+
+
+- **2026-02-18**
+  - **Step**: Slice K — Economy consistency + stake safeguards (Supabase profile writes + token cap parity)
+  - **What changed**: Unified contract evaluation economy mutations so bonus awards and stake forfeits now persist through the authenticated `gamification_profiles` update path (with demo fallback retained), eliminating local/demo divergence in cloud mode. Added Token stake cap parity in backend validation and improved low-balance guardrail messaging in the contract wizard so users get clear, warm guidance when a 20% stake cap would otherwise be zero.
   - **What’s next**: Contract impact follow-up — optional accountability witness ping/reminder actions and lightweight social proof history chips.
