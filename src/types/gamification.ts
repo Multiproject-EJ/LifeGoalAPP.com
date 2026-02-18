@@ -590,6 +590,8 @@ export interface CommitmentContract {
   recoveryMode?: 'gentle_ramp' | null;
   recoveryOriginalTargetCount?: number | null;
   recoveryActivatedAt?: string | null;
+  accountabilityMode?: 'solo' | 'witness' | null;
+  witnessLabel?: string | null;
   startAt: string;             // ISO date
   endAt: string | null;        // ISO date, null = ongoing
   currentWindowStart: string;  // start of current cadence window

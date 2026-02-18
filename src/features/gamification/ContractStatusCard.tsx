@@ -83,6 +83,12 @@ export function ContractStatusCard({
         </div>
       )}
 
+      {contract.accountabilityMode === 'witness' && contract.witnessLabel && (
+        <p className="contract-status-card__witness" role="status" aria-live="polite">
+          🤝 Witness mode on with {contract.witnessLabel}
+        </p>
+      )}
+
       <div className="contract-status-card__progress-section">
         <div className="contract-status-card__progress-bar">
           <div

@@ -1050,6 +1050,9 @@ CommitmentContract {
 - **Slice I — Streak-adjusted rewards (done)**
   - [x] Apply streak-based bonus multipliers on successful contract evaluations.
   - [x] Surface active reward tier + next multiplier threshold in Contracts history UI.
+- **Slice J — Social commitment mode (done)**
+  - [x] Add optional witness accountability mode in contract setup (solo vs witness + label).
+  - [x] Persist and surface witness mode context in Contracts status experience + telemetry.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -2015,3 +2018,9 @@ WisdomTreeState {
   - **Step**: Slice I — Streak-adjusted rewards (multiplier economy + UI surfacing)
   - **What changed**: Added a contracts reward-tier helper with streak thresholds (base, momentum builder, consistency streak, momentum legend), then wired contract evaluation payouts to apply the multiplier against the base 10% success bonus while preserving minimum rewards. Extended contract completion telemetry with `rewardMultiplier` and `successStreak`, and updated the Contracts history/summary surfaces so users can see their current bonus boost and next streak threshold at a glance.
   - **What’s next**: Contract impact follow-up — optional accountability witness/social commitment modes.
+
+
+- **2026-02-18**
+  - **Step**: Slice J — Social commitment mode (optional witness accountability)
+  - **What changed**: Added optional witness accountability support end-to-end for Contracts: setup UI now offers solo vs witness mode with an optional witness label, contract persistence now stores social mode metadata in both local + Supabase paths, contract-created telemetry includes accountability context, and the Contracts status card surfaces witness mode context during active windows. Added Supabase migration `0142_contract_accountability_mode.sql` and updated typed DB contract schema to include the new fields.
+  - **What’s next**: Contract impact follow-up — optional accountability witness ping/reminder actions and lightweight social proof history chips.
