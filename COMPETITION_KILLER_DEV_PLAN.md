@@ -1056,6 +1056,9 @@ CommitmentContract {
 - **Slice K — Economy consistency + stake safeguards (done)**
   - [x] Unify contract stake bonus/forfeit profile writes across Supabase and demo fallback paths.
   - [x] Add Token stake cap parity + low-balance safety messaging in service validation and setup UX.
+- **Slice L — App-wide unattended contract checks (done)**
+  - [x] Trigger due-window contract evaluation sweeps outside the Contracts tab (global app heartbeat).
+  - [x] Refresh Contracts tab state from global sweep events with visible auto-check status context.
 
 ### 7.6 Social & Stakes: **Seasonal Events / Community Arcs**
 
@@ -2032,4 +2035,10 @@ WisdomTreeState {
 - **2026-02-18**
   - **Step**: Slice K — Economy consistency + stake safeguards (Supabase profile writes + token cap parity)
   - **What changed**: Unified contract evaluation economy mutations so bonus awards and stake forfeits now persist through the authenticated `gamification_profiles` update path (with demo fallback retained), eliminating local/demo divergence in cloud mode. Added Token stake cap parity in backend validation and improved low-balance guardrail messaging in the contract wizard so users get clear, warm guidance when a 20% stake cap would otherwise be zero.
+  - **What’s next**: Contract reliability follow-up — run unattended due-window checks app-wide (outside Contracts tab context).
+
+
+- **2026-02-18**
+  - **Step**: Slice L — App-wide unattended contract checks (global heartbeat + surfaced auto-check status)
+  - **What changed**: Added a global due-window evaluation heartbeat in `useGamification` that runs on load, every 60 seconds, and on app focus/visibility restore so due contract windows are evaluated even when users never open the Contracts tab. Emitted a `contractsDueEvaluated` window event when evaluations occur, then wired Contracts tab to listen for that event, auto-refresh contract/history state, and surface a visible auto-check status line with the latest check time.
   - **What’s next**: Contract impact follow-up — optional accountability witness ping/reminder actions and lightweight social proof history chips.
