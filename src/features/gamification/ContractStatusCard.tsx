@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { CommitmentContract } from '../../types/gamification';
+import { getContractPaceForecast } from '../../lib/contractForecast';
 
 interface ContractStatusCardProps {
   contract: CommitmentContract;
@@ -59,6 +60,13 @@ export function ContractStatusCard({
     return `Get started — complete ${contract.targetCount} this ${contract.cadence}`;
   }, [contract.currentProgress, contract.targetCount, contract.cadence, contract.graceDays]);
 
+  const paceForecast = useMemo(
+    () => (contract.status === 'active' ? getContractPaceForecast(contract) : null),
+    [contract],
+  );
+
+  const isAtRisk = paceForecast?.status === 'at_risk';
+
   return (
     <div className="contract-status-card">
       <div className="contract-status-card__header">
@@ -95,13 +103,30 @@ export function ContractStatusCard({
 
       <p className="contract-status-card__message">{statusMessage}</p>
 
+      {paceForecast && (
+        <div
+          className={`contract-status-card__pace contract-status-card__pace--${paceForecast.status}`}
+          role="status"
+          aria-live="polite"
+        >
+          <p className="contract-status-card__pace-label">
+            {isAtRisk ? '⚠️ At risk' : paceForecast.status === 'on_pace' ? '✅ On pace' : '🎉 Target met'}
+          </p>
+          <p className="contract-status-card__pace-message">{paceForecast.rescueSuggestion}</p>
+        </div>
+      )}
+
       <div className="contract-status-card__actions">
         <button
           type="button"
           className="contract-status-card__primary-button"
           onClick={contract.status === 'paused' ? onResume : onMarkProgress}
         >
-          {contract.status === 'paused' ? 'Resume Contract' : 'Mark Progress'}
+          {contract.status === 'paused'
+            ? 'Resume Contract'
+            : isAtRisk
+              ? 'Rescue Progress'
+              : 'Mark Progress'}
         </button>
         <div className="contract-status-card__secondary-actions">
           {contract.status === 'active' && (

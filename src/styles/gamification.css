@@ -1993,6 +1993,37 @@
   font-weight: 500;
 }
 
+.contract-status-card__pace {
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin: 0 0 1rem;
+  border: 1px solid transparent;
+}
+
+.contract-status-card__pace--on_pace,
+.contract-status-card__pace--target_met {
+  background: rgba(78, 201, 176, 0.14);
+  border-color: rgba(78, 201, 176, 0.35);
+}
+
+.contract-status-card__pace--at_risk {
+  background: rgba(255, 183, 77, 0.15);
+  border-color: rgba(255, 183, 77, 0.4);
+}
+
+.contract-status-card__pace-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary, #333);
+}
+
+.contract-status-card__pace-message {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+}
+
 .contract-status-card__actions {
   display: flex;
   flex-direction: column;
