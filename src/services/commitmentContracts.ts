@@ -25,6 +25,7 @@ export type ReduceStakeEligibility = {
   eligible: boolean;
   missesLast30Days: number;
   reason?: string;
+  nextEligibleAt?: string;
 };
 
 export type GentleRecoveryEligibility = {
@@ -434,11 +435,19 @@ export async function getReduceStakeEligibility(
   }
 
   if (contract.stakeReducedAt) {
-    return {
-      eligible: false,
-      missesLast30Days: 0,
-      reason: 'Reduce stake is a one-time recovery action for each contract.',
-    };
+    const lastReducedTime = new Date(contract.stakeReducedAt).getTime();
+    if (!Number.isNaN(lastReducedTime)) {
+      const nextEligibleAt = new Date(lastReducedTime + 7 * 24 * 60 * 60 * 1000);
+      if (Date.now() < nextEligibleAt.getTime()) {
+        return {
+          eligible: false,
+          missesLast30Days: 0,
+          reason: `Reduce stake can be used once every 7 days. Available again ${nextEligibleAt.toLocaleDateString()}.`,
+          nextEligibleAt: nextEligibleAt.toISOString(),
+        };
+      }
+    }
+
   }
 
   const thirtyDaysAgo = new Date();
@@ -975,6 +984,7 @@ export async function reduceContractStake(
           contractId: contract.id,
           reason: eligibility.reason ?? 'ineligible',
           missesLast30Days: eligibility.missesLast30Days,
+          nextEligibleAt: eligibility.nextEligibleAt ?? null,
         } as TelemetryEventMetadata,
       });
 
