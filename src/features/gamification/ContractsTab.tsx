@@ -26,6 +26,7 @@ import {
 import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
 import { ContractResultModal } from './ContractResultModal';
+import { ContractHistoryCard } from './ContractHistoryCard';
 
 interface ContractsTabProps {
   session: Session | null;
@@ -75,6 +76,7 @@ export function ContractsTab({
   const [reduceStakeEligibility, setReduceStakeEligibility] = useState<ReduceStakeEligibility | null>(null);
   const [gentleRecoveryEligibility, setGentleRecoveryEligibility] = useState<GentleRecoveryEligibility | null>(null);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
+  const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -109,8 +111,12 @@ export function ContractsTab({
 
     if (!primaryContract) {
       setActiveContract(null);
+      setHistoryEvaluations([]);
       return;
     }
+
+    const { data: contractEvaluations } = await fetchContractEvaluations(userId, primaryContract.id);
+    setHistoryEvaluations(contractEvaluations ?? []);
 
     let hydratedContract = primaryContract;
 
@@ -184,6 +190,8 @@ export function ContractsTab({
 
     if (data) {
       setActiveContract(data);
+      const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
+      setHistoryEvaluations(refreshedEvaluations ?? []);
 
       if (data.lastEvaluatedAt && data.lastEvaluatedAt !== previousEvaluatedAt) {
         const { data: evaluations } = await fetchContractEvaluations(userId, data.id);
@@ -256,6 +264,8 @@ export function ContractsTab({
     }
 
     setActiveContract(data);
+    const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
+    setHistoryEvaluations(refreshedEvaluations ?? []);
     setRecoveryMessage('Contract reset. Fresh window, same commitment.');
     setContractResult(null);
     setResultContract(null);
@@ -271,6 +281,8 @@ export function ContractsTab({
     }
 
     setActiveContract(data);
+    const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
+    setHistoryEvaluations(refreshedEvaluations ?? []);
     setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'Gold' : 'Tokens'}.`);
     setContractResult(null);
     setResultContract(null);
@@ -287,6 +299,8 @@ export function ContractsTab({
     }
 
     setActiveContract(data);
+    const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
+    setHistoryEvaluations(refreshedEvaluations ?? []);
     setRecoveryMessage(`Gentle ramp started. Target temporarily adjusted to ${data.targetCount} this ${data.cadence}.`);
     setContractResult(null);
     setResultContract(null);
@@ -362,6 +376,13 @@ export function ContractsTab({
               onPause={handlePauseContract}
               onResume={handleResumeContract}
               onCancel={handleCancelContract}
+            />
+          )}
+
+          {activeContract && !showContractWizard && (
+            <ContractHistoryCard
+              contract={activeContract}
+              evaluations={historyEvaluations}
             />
           )}
           {showContractWizard && (
