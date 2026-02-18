@@ -12,6 +12,7 @@ export type HabitAnalysisSession = {
   status: HabitAnalysisStatus;
   goal_type: HabitAnalysisGoalType;
   target_cadence: string | null;
+  last_logged_day_index: number;
   created_at: string;
   updated_at: string;
 };
@@ -65,6 +66,10 @@ export type HabitExperimentDayInput = {
   netEffect: 'better' | 'same' | 'worse' | null;
   note?: string;
 };
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
 
 function getUntypedSupabase() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -271,7 +276,7 @@ export async function startHabitExperiment(sessionId: string): Promise<{ error: 
 
   const { error: statusError } = await supabase
     .from('habit_analysis_sessions')
-    .update({ status: 'active' })
+    .update({ status: 'active', last_logged_day_index: 0 })
     .eq('id', sessionId);
 
   return { error: statusError?.message ?? null };
@@ -279,21 +284,35 @@ export async function startHabitExperiment(sessionId: string): Promise<{ error: 
 
 export async function logHabitExperimentDay(sessionId: string, input: HabitExperimentDayInput): Promise<{ error: string | null }> {
   const supabase = getUntypedSupabase();
+  const safeDayIndex = clamp(Math.round(input.dayIndex), 1, 7);
+  const safeUnderPain = input.underPain === null ? null : clamp(Math.round(input.underPain), 0, 3);
+  const safeOverPain = input.overPain === null ? null : clamp(Math.round(input.overPain), 0, 3);
+
   const { error } = await supabase.from('habit_experiment_days').upsert(
     {
       session_id: sessionId,
-      day_index: input.dayIndex,
+      day_index: safeDayIndex,
       date: input.date,
       followed_protocol: input.followedProtocol,
-      under_pain: input.underPain,
-      over_pain: input.overPain,
+      under_pain: safeUnderPain,
+      over_pain: safeOverPain,
       net_effect: input.netEffect,
       note: input.note?.trim() || null,
     },
     { onConflict: 'session_id,day_index' },
   );
 
-  return { error: error?.message ?? null };
+  if (error) {
+    return { error: error.message };
+  }
+
+  const { error: sessionError } = await supabase
+    .from('habit_analysis_sessions')
+    .update({ last_logged_day_index: safeDayIndex })
+    .eq('id', sessionId)
+    .lt('last_logged_day_index', safeDayIndex);
+
+  return { error: sessionError?.message ?? null };
 }
 
 export async function listHabitExperimentDays(sessionId: string): Promise<{ days: HabitExperimentDayInput[]; error: string | null }> {
