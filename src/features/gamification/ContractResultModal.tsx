@@ -29,6 +29,8 @@ export function ContractResultModal({
   const isSuccess = evaluation.result === 'success';
   const canReduceStake = Boolean(reduceStakeEligibility?.eligible);
   const canActivateGentleRecovery = Boolean(gentleRecoveryEligibility?.eligible);
+  const baseBonus = Math.max(1, Math.floor(contract.stakeAmount * 0.1));
+  const rewardMultiplier = baseBonus > 0 ? evaluation.bonusAwarded / baseBonus : 1;
 
   if (isSuccess) {
     return (
@@ -46,6 +48,7 @@ export function ContractResultModal({
               <span className="contract-result-modal__bonus-icon">🎁</span>
               <span className="contract-result-modal__bonus-text">
                 +{evaluation.bonusAwarded} {contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} earned
+                {rewardMultiplier > 1 ? ` (x${rewardMultiplier.toFixed(2)} streak boost)` : ''}
               </span>
             </div>
           )}

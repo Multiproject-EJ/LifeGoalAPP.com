@@ -1,5 +1,6 @@
 import type { CommitmentContract, ContractEvaluation } from '../../types/gamification';
 import { summarizeContractHistory } from '../../lib/contractHistoryAnalytics';
+import { getContractRewardTier, getNextContractRewardTier } from '../../lib/contractRewardMultipliers';
 
 interface ContractHistoryCardProps {
   contract: CommitmentContract;
@@ -20,6 +21,8 @@ function formatDate(iso: string): string {
 
 export function ContractHistoryCard({ contract, evaluations }: ContractHistoryCardProps) {
   const summary = summarizeContractHistory(evaluations);
+  const currentRewardTier = getContractRewardTier(summary.currentStreak);
+  const nextRewardTier = getNextContractRewardTier(summary.currentStreak);
 
   if (summary.totalWindows === 0) {
     return (
@@ -68,6 +71,15 @@ export function ContractHistoryCard({ contract, evaluations }: ContractHistoryCa
       <div className="contract-history-card__economy">
         <span>Bonuses earned: +{summary.totalBonusAwarded}</span>
         <span>Stake forfeited: -{summary.totalStakeForfeited}</span>
+      </div>
+
+      <div className="contract-history-card__reward-tier" aria-live="polite">
+        <span>Current reward boost: x{currentRewardTier.multiplier.toFixed(2)} · {currentRewardTier.label}</span>
+        {nextRewardTier ? (
+          <span>Next at {nextRewardTier.minStreak} streak: x{nextRewardTier.multiplier.toFixed(2)}</span>
+        ) : (
+          <span>Top tier unlocked — keep the streak alive.</span>
+        )}
       </div>
 
       <ul className="contract-history-card__recent-list">
