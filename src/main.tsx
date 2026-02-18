@@ -9,6 +9,14 @@ if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {
     mode: import.meta.env.MODE,
   });
+
+  const isIpadSizedTouchDevice =
+    /iPad/i.test(window.navigator.userAgent) ||
+    (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+
+  if (isIpadSizedTouchDevice) {
+    document.documentElement.classList.add('platform-ipad');
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

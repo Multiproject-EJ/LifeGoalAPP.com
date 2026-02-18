@@ -898,6 +898,29 @@ body {
   transition: padding-left 0.3s ease;
 }
 
+html.platform-ipad .app--workspace {
+  --workspace-shell-offset: 0px;
+  --ipad-phone-aspect-ratio: 9 / 19.5;
+  --ipad-phone-frame-height: calc(100vh - (var(--workspace-shell-padding) * 2));
+  --ipad-phone-frame-height: calc(100dvh - (var(--workspace-shell-padding) * 2));
+}
+
+html.platform-ipad .workspace-shell {
+  width: min(
+    460px,
+    calc(var(--ipad-phone-frame-height) * var(--ipad-phone-aspect-ratio)),
+    calc(100vw - 1rem)
+  );
+  min-height: var(--ipad-phone-frame-height);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html.platform-ipad .workspace-sidebar,
+html.platform-ipad .workspace-shell__menu-edge {
+  display: none;
+}
+
 .workspace-shell--menu-collapsed {
   --workspace-shell-offset: 0px;
   padding-left: clamp(1rem, 3vw, 1.75rem);
