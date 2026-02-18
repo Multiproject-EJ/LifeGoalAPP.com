@@ -1,4 +1,5 @@
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type {
   CommitmentContract,
   ContractEvaluation,
@@ -43,6 +44,163 @@ function getContractsKey(userId: string) {
 
 function getEvaluationsKey(userId: string) {
   return `${EVALUATIONS_STORAGE_KEY}_${userId}`;
+}
+
+type ContractRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  target_type: ContractTargetType;
+  target_id: string;
+  cadence: ContractCadence;
+  target_count: number;
+  stake_type: ContractStakeType;
+  stake_amount: number;
+  grace_days: number;
+  cooling_off_hours: number;
+  status: ContractStatus;
+  current_progress: number;
+  miss_count: number;
+  success_count: number;
+  stake_reduced_at: string | null;
+  start_at: string;
+  end_at: string | null;
+  current_window_start: string;
+  last_evaluated_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type EvaluationRow = {
+  id: string;
+  contract_id: string;
+  user_id: string;
+  window_start: string;
+  window_end: string;
+  target_count: number;
+  actual_count: number;
+  grace_days_used: number;
+  result: 'success' | 'miss';
+  stake_forfeited: number;
+  bonus_awarded: number;
+  evaluated_at: string;
+  created_at: string;
+};
+
+function contractFromRow(row: ContractRow): CommitmentContract {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    title: row.title,
+    targetType: row.target_type,
+    targetId: row.target_id,
+    cadence: row.cadence,
+    targetCount: row.target_count,
+    stakeType: row.stake_type,
+    stakeAmount: row.stake_amount,
+    graceDays: row.grace_days,
+    coolingOffHours: row.cooling_off_hours,
+    status: row.status,
+    currentProgress: row.current_progress,
+    missCount: row.miss_count,
+    successCount: row.success_count,
+    stakeReducedAt: row.stake_reduced_at,
+    startAt: row.start_at,
+    endAt: row.end_at,
+    currentWindowStart: row.current_window_start,
+    lastEvaluatedAt: row.last_evaluated_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function contractToRow(contract: CommitmentContract): ContractRow {
+  return {
+    id: contract.id,
+    user_id: contract.userId,
+    title: contract.title,
+    target_type: contract.targetType,
+    target_id: contract.targetId,
+    cadence: contract.cadence,
+    target_count: contract.targetCount,
+    stake_type: contract.stakeType,
+    stake_amount: contract.stakeAmount,
+    grace_days: contract.graceDays,
+    cooling_off_hours: contract.coolingOffHours,
+    status: contract.status,
+    current_progress: contract.currentProgress,
+    miss_count: contract.missCount,
+    success_count: contract.successCount,
+    stake_reduced_at: contract.stakeReducedAt ?? null,
+    start_at: contract.startAt,
+    end_at: contract.endAt,
+    current_window_start: contract.currentWindowStart,
+    last_evaluated_at: contract.lastEvaluatedAt,
+    created_at: contract.createdAt,
+    updated_at: contract.updatedAt,
+  };
+}
+
+function evaluationFromRow(row: EvaluationRow): ContractEvaluation {
+  return {
+    id: row.id,
+    contractId: row.contract_id,
+    windowStart: row.window_start,
+    windowEnd: row.window_end,
+    targetCount: row.target_count,
+    actualCount: row.actual_count,
+    graceDaysUsed: row.grace_days_used,
+    result: row.result,
+    stakeForfeited: row.stake_forfeited,
+    bonusAwarded: row.bonus_awarded,
+    evaluatedAt: row.evaluated_at,
+  };
+}
+
+function evaluationToRow(userId: string, evaluation: ContractEvaluation): EvaluationRow {
+  return {
+    id: evaluation.id,
+    contract_id: evaluation.contractId,
+    user_id: userId,
+    window_start: evaluation.windowStart,
+    window_end: evaluation.windowEnd,
+    target_count: evaluation.targetCount,
+    actual_count: evaluation.actualCount,
+    grace_days_used: evaluation.graceDaysUsed,
+    result: evaluation.result,
+    stake_forfeited: evaluation.stakeForfeited,
+    bonus_awarded: evaluation.bonusAwarded,
+    evaluated_at: evaluation.evaluatedAt,
+    created_at: evaluation.evaluatedAt,
+  };
+}
+
+async function saveContracts(userId: string, contracts: CommitmentContract[]): Promise<void> {
+  if (!canUseSupabaseData()) {
+    localStorage.setItem(getContractsKey(userId), JSON.stringify(contracts));
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('commitment_contracts')
+    .upsert(contracts.map(contractToRow), { onConflict: 'id' });
+
+  if (error) throw error;
+}
+
+async function saveEvaluations(userId: string, evaluations: ContractEvaluation[]): Promise<void> {
+  if (!canUseSupabaseData()) {
+    localStorage.setItem(getEvaluationsKey(userId), JSON.stringify(evaluations));
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('commitment_contract_evaluations')
+    .upsert(evaluations.map((evaluation) => evaluationToRow(userId, evaluation)), { onConflict: 'id' });
+
+  if (error) throw error;
 }
 
 function createId(prefix: string): string {
@@ -230,7 +388,7 @@ export async function createContract(
 
     const { data: contracts } = await fetchContracts(userId);
     const updated = [...(contracts ?? []), newContract];
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updated));
+    await saveContracts(userId, updated);
 
     void recordTelemetryEvent({
       userId,
@@ -255,8 +413,21 @@ export async function createContract(
 
 export async function fetchContracts(userId: string): Promise<ServiceResponse<CommitmentContract[]>> {
   try {
-    const stored = localStorage.getItem(getContractsKey(userId));
-    const contracts: CommitmentContract[] = stored ? JSON.parse(stored) : [];
+    if (!canUseSupabaseData()) {
+      const stored = localStorage.getItem(getContractsKey(userId));
+      const contracts: CommitmentContract[] = stored ? JSON.parse(stored) : [];
+      return { data: contracts, error: null };
+    }
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('commitment_contracts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    const contracts = (data ?? []).map((row) => contractFromRow(row as ContractRow));
     return { data: contracts, error: null };
   } catch (error) {
     return {
@@ -321,7 +492,7 @@ export async function cancelContract(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     void recordTelemetryEvent({
       userId,
@@ -373,7 +544,7 @@ export async function pauseContract(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     return { data: updatedContract, error: null };
   } catch (error) {
@@ -422,7 +593,7 @@ export async function resumeContract(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     return { data: updatedContract, error: null };
   } catch (error) {
@@ -474,7 +645,7 @@ export async function activateContract(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     void recordTelemetryEvent({
       userId,
@@ -524,7 +695,7 @@ export async function resetContractWithSameSettings(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     void recordTelemetryEvent({
       userId,
@@ -598,7 +769,7 @@ export async function reduceContractStake(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     void recordTelemetryEvent({
       userId,
@@ -674,7 +845,7 @@ export async function recordContractProgress(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     return { data: updatedContract, error: null };
   } catch (error) {
@@ -744,7 +915,7 @@ export async function evaluateContract(
     // Store evaluation
     const { data: evaluations } = await fetchEvaluations(userId);
     const updatedEvaluations = [...(evaluations ?? []), evaluation];
-    localStorage.setItem(getEvaluationsKey(userId), JSON.stringify(updatedEvaluations));
+    await saveEvaluations(userId, updatedEvaluations);
 
     // Update profile currency
     const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
@@ -802,7 +973,7 @@ export async function evaluateContract(
 
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
-    localStorage.setItem(getContractsKey(userId), JSON.stringify(updatedContracts));
+    await saveContracts(userId, updatedContracts);
 
     void recordTelemetryEvent({
       userId,
@@ -840,8 +1011,21 @@ export async function fetchEvaluations(
   userId: string
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
   try {
-    const stored = localStorage.getItem(getEvaluationsKey(userId));
-    const evaluations: ContractEvaluation[] = stored ? JSON.parse(stored) : [];
+    if (!canUseSupabaseData()) {
+      const stored = localStorage.getItem(getEvaluationsKey(userId));
+      const evaluations: ContractEvaluation[] = stored ? JSON.parse(stored) : [];
+      return { data: evaluations, error: null };
+    }
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('commitment_contract_evaluations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('evaluated_at', { ascending: false });
+
+    if (error) throw error;
+    const evaluations = (data ?? []).map((row) => evaluationFromRow(row as EvaluationRow));
     return { data: evaluations, error: null };
   } catch (error) {
     return {
