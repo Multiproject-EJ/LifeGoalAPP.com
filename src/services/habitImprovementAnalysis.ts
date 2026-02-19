@@ -102,6 +102,16 @@ export type HabitAnalysisCompletionReflection = {
   nextTweak: string;
 };
 
+export type HabitAnalysisCompletionSummary = {
+  adherenceRate: number;
+  betterDays: number;
+  sameDays: number;
+  worseDays: number;
+  averageStressLevel: number | null;
+  averageConfidenceTomorrow: number | null;
+  averageUrgeLevel: number | null;
+};
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -632,6 +642,51 @@ export async function saveHabitAnalysisCompletionReflection(
         biggestWin: reflection.biggestWin.trim().slice(0, 160),
         hardestMoment: reflection.hardestMoment.trim().slice(0, 240),
         nextTweak: nextTweak.slice(0, 160),
+      },
+    })
+    .eq('id', sessionId);
+
+  return { error: error?.message ?? null };
+}
+
+export async function saveHabitAnalysisCompletionSummary(
+  sessionId: string,
+  summary: HabitAnalysisCompletionSummary,
+): Promise<{ error: string | null }> {
+  const supabase = getUntypedSupabase();
+
+  const adherenceRate = clamp(Number(summary.adherenceRate) || 0, 0, 100);
+  const betterDays = clamp(Math.round(Number(summary.betterDays) || 0), 0, 7);
+  const sameDays = clamp(Math.round(Number(summary.sameDays) || 0), 0, 7);
+  const worseDays = clamp(Math.round(Number(summary.worseDays) || 0), 0, 7);
+  const effectDays = betterDays + sameDays + worseDays;
+
+  if (effectDays === 0) {
+    return { error: 'Complete at least one daily check-in before saving completion summary.' };
+  }
+
+  if (effectDays > 7) {
+    return { error: 'Completion summary is invalid: too many logged days.' };
+  }
+
+  const normalizeAverage = (value: number | null) => {
+    if (value === null || !Number.isFinite(value)) {
+      return null;
+    }
+    return clamp(Number(value.toFixed(2)), 1, 5);
+  };
+
+  const { error } = await supabase
+    .from('habit_analysis_sessions')
+    .update({
+      completion_summary: {
+        adherenceRate: Number(adherenceRate.toFixed(1)),
+        betterDays,
+        sameDays,
+        worseDays,
+        averageStressLevel: normalizeAverage(summary.averageStressLevel),
+        averageConfidenceTomorrow: normalizeAverage(summary.averageConfidenceTomorrow),
+        averageUrgeLevel: normalizeAverage(summary.averageUrgeLevel),
       },
     })
     .eq('id', sessionId);
