@@ -64,6 +64,7 @@ export type HabitExperimentDayInput = {
   date: string;
   followedProtocol: boolean | null;
   protocolDifficulty: number | null;
+  urgeLevel: number | null;
   energyLevel: number | null;
   confidenceTomorrow: number | null;
   underPain: number | null;
@@ -78,6 +79,7 @@ export type HabitAnalysisMobileDraft = {
   dayIndex: number;
   followedProtocol: boolean | null;
   protocolDifficulty: number | null;
+  urgeLevel: number | null;
   energyLevel: number | null;
   confidenceTomorrow: number | null;
   underPain: number;
@@ -332,6 +334,7 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
       date: input.date,
       followed_protocol: input.followedProtocol,
       protocol_difficulty: safeProtocolDifficulty,
+      urge_level: input.urgeLevel === null ? null : clamp(Math.round(input.urgeLevel), 1, 5),
       energy_level: safeEnergyLevel,
       confidence_tomorrow: safeConfidenceTomorrow,
       under_pain: safeUnderPain,
@@ -372,7 +375,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
 
   const { data, error } = await supabase
     .from('habit_experiment_days')
-    .select('day_index, date, followed_protocol, protocol_difficulty, energy_level, confidence_tomorrow, under_pain, over_pain, net_effect, win_note, note')
+    .select('day_index, date, followed_protocol, protocol_difficulty, urge_level, energy_level, confidence_tomorrow, under_pain, over_pain, net_effect, win_note, note')
     .eq('session_id', sessionId)
     .order('day_index', { ascending: true });
 
@@ -389,6 +392,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
       date: String(row.date ?? ''),
       followedProtocol: typeof row.followed_protocol === 'boolean' ? row.followed_protocol : null,
       protocolDifficulty: typeof row.protocol_difficulty === 'number' ? row.protocol_difficulty : null,
+      urgeLevel: typeof row.urge_level === 'number' ? row.urge_level : null,
       energyLevel: typeof row.energy_level === 'number' ? row.energy_level : null,
       confidenceTomorrow: typeof row.confidence_tomorrow === 'number' ? row.confidence_tomorrow : null,
       underPain: typeof row.under_pain === 'number' ? row.under_pain : null,
@@ -449,6 +453,10 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
     row.energyLevel === null || row.energyLevel === undefined
       ? null
       : clamp(Math.round(Number(row.energyLevel)), 1, 5);
+  const urgeLevel =
+    row.urgeLevel === null || row.urgeLevel === undefined
+      ? null
+      : clamp(Math.round(Number(row.urgeLevel)), 1, 5);
   const confidenceTomorrow =
     row.confidenceTomorrow === null || row.confidenceTomorrow === undefined
       ? null
@@ -465,6 +473,7 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
       dayIndex,
       followedProtocol: typeof row.followedProtocol === 'boolean' ? row.followedProtocol : null,
       protocolDifficulty: Number.isFinite(protocolDifficulty) ? protocolDifficulty : null,
+      urgeLevel: Number.isFinite(urgeLevel) ? urgeLevel : null,
       energyLevel: Number.isFinite(energyLevel) ? energyLevel : null,
       confidenceTomorrow: Number.isFinite(confidenceTomorrow) ? confidenceTomorrow : null,
       underPain: clamp(Math.round(Number(row.underPain ?? 0)), 0, 3),
@@ -513,6 +522,8 @@ export async function saveHabitAnalysisMobileDraft(
           followedProtocol: draft.followedProtocol,
           protocolDifficulty:
             draft.protocolDifficulty === null ? null : clamp(Math.round(draft.protocolDifficulty), 1, 5),
+          urgeLevel:
+            draft.urgeLevel === null ? null : clamp(Math.round(draft.urgeLevel), 1, 5),
           energyLevel:
             draft.energyLevel === null ? null : clamp(Math.round(draft.energyLevel), 1, 5),
           confidenceTomorrow:
