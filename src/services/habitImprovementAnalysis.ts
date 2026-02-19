@@ -114,6 +114,10 @@ function isMissingTableError(error: { code?: string; message?: string } | null):
   return error.code === '42P01' || (error.message?.includes('does not exist') ?? false);
 }
 
+function normalizeNetEffect(value: unknown): 'better' | 'same' | 'worse' {
+  return value === 'better' || value === 'same' || value === 'worse' ? value : 'same';
+}
+
 export async function getOrCreateHabitAnalysisSession(params: {
   userId: string;
   habitId: string;
@@ -326,6 +330,12 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
     input.confidenceTomorrow === null ? null : clamp(Math.round(input.confidenceTomorrow), 1, 5);
   const safeUnderPain = input.underPain === null ? null : clamp(Math.round(input.underPain), 0, 3);
   const safeOverPain = input.overPain === null ? null : clamp(Math.round(input.overPain), 0, 3);
+  const safeNetEffect = normalizeNetEffect(input.netEffect);
+  const safeWinNote = input.winNote?.trim().slice(0, 160) ?? '';
+
+  if (safeNetEffect === 'better' && !safeWinNote) {
+    return { error: 'Add a quick win when net effect is better.' };
+  }
 
   const { error } = await supabase.from('habit_experiment_days').upsert(
     {
@@ -339,8 +349,8 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
       confidence_tomorrow: safeConfidenceTomorrow,
       under_pain: safeUnderPain,
       over_pain: safeOverPain,
-      net_effect: input.netEffect,
-      win_note: input.winNote?.trim() || null,
+      net_effect: safeNetEffect,
+      win_note: safeWinNote || null,
       note: input.note?.trim() || null,
     },
     { onConflict: 'session_id,day_index' },
@@ -462,9 +472,7 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
       ? null
       : clamp(Math.round(Number(row.confidenceTomorrow)), 1, 5);
 
-  const netEffect = row.netEffect === 'better' || row.netEffect === 'same' || row.netEffect === 'worse'
-    ? row.netEffect
-    : 'same';
+  const netEffect = normalizeNetEffect(row.netEffect);
 
   return {
     state: {
@@ -530,10 +538,14 @@ export async function saveHabitAnalysisMobileDraft(
             draft.confidenceTomorrow === null ? null : clamp(Math.round(draft.confidenceTomorrow), 1, 5),
           underPain: clamp(Math.round(draft.underPain), 0, 3),
           overPain: clamp(Math.round(draft.overPain), 0, 3),
-          netEffect: draft.netEffect,
+          netEffect: normalizeNetEffect(draft.netEffect),
           winNote: draft.winNote.trim().slice(0, 160),
           note: draft.note.trim().slice(0, 240),
         };
+
+  if (normalizedDraft && normalizedDraft.netEffect === 'better' && !normalizedDraft.winNote) {
+    return { error: 'Add a quick win before saving a better-day draft.' };
+  }
 
   const { error } = await supabase
     .from('habit_analysis_sessions')
