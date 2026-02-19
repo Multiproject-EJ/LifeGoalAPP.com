@@ -155,3 +155,34 @@ CREATE TABLE analytics_events (
 - Event properties are defined for first-loop, habit, miss, and weekly ritual events.
 - D1/D3/D7 retention can be computed from logs.
 
+
+
+## 7) Goals Chat Telemetry (Added)
+
+- `goal_coach_chat_sent`
+- `goal_coach_chat_draft_received`
+- `goal_coach_chat_goal_created`
+
+Suggested properties:
+```
+{
+  messageCount,
+  messageLength,
+  hasPersonalitySummary,
+  existingGoalsCount,
+  includeGoalEvolution,
+  milestoneCount,
+  taskCount,
+  finalized,
+  lifeWheelCategory,
+  stepCount,
+  contextProfile // summary_only | structured
+  cohort // new | returning
+}
+```
+
+
+Dashboard helper: `getGoalCoachTelemetrySummary({ userId, sinceISO })` in `src/services/telemetry.ts` aggregates send/draft/create conversion overall and by `contextProfile`.
+
+
+Export helper: `buildGoalCoachTelemetrySnapshot(...)` can generate JSON snapshots for experiment reviews.

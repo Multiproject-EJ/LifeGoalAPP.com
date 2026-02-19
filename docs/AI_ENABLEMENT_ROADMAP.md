@@ -31,3 +31,6 @@ This document is the living source of truth for AI across the PWA: what is live 
 - [ ] **AI breathing + meditation**: tailor sessions to boost wisdom, awareness, gratitude, and compassion.
 - [ ] **AI lessons archive**: personal, evolving library of AI-curated lessons and reflections.
 - [ ] **“Improve with AI” for active goals**: on-demand refinement for goal titles, milestones, and next steps.
+
+
+- **Goal Coach Chat**: `Chat with AI` can call `goal-coach-chat` (multi-turn) via `VITE_AI_GOAL_COACH_CHAT_URL`, returning `{ assistant_message, draft_goal }` for confirm-to-create-goal flows.

@@ -2694,6 +2694,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 @media (max-width: 640px) {
+
+  .life-goal-dialog__guided-stepper {
+    grid-template-columns: 1fr 1fr;
+    padding: 0.75rem 1rem;
+  }
   .app--workspace {
     padding: clamp(1.25rem, 7vw, 2rem) clamp(0.5rem, 3vw, 0.75rem);
   }
@@ -19444,6 +19449,66 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #0f172a;
 }
 
+
+.life-goal-dialog__guided-subtitle {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.life-goal-dialog__guided-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.life-goal-dialog__guided-step {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.life-goal-dialog__guided-step--active {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.life-goal-dialog__guided-step-index {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  background: rgba(30, 64, 175, 0.18);
+}
+
+.life-goal-dialog__guided-nav {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 1rem;
+  gap: 0.75rem;
+}
+
+.life-goal-dialog__guided-nav .life-goal-dialog__cancel,
+.life-goal-dialog__guided-nav .life-goal-dialog__save {
+  width: auto;
+  flex: 1;
+}
+
+.life-goal-dialog__tab:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
 .life-goal-dialog__tabs {
   display: flex;
   gap: 0.5rem;
@@ -19814,7 +19879,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .life-goal-dialog__ai-generate:hover:not(:disabled) {
@@ -19954,6 +20019,117 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: linear-gradient(135deg, #047857, #065f46);
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);
+}
+
+
+.life-goal-dialog__ai-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.life-goal-dialog__ai-chat,
+.life-goal-dialog__ai-create {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.life-goal-dialog__ai-chat:hover,
+.life-goal-dialog__ai-create:hover:not(:disabled) {
+  background: #dbeafe;
+}
+
+.life-goal-dialog__ai-create:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.life-goal-dialog__chat-panel {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.life-goal-dialog__chat-hint,
+.life-goal-dialog__chat-empty {
+  margin: 0;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.life-goal-dialog__chat-log {
+  margin: 0.75rem 0;
+  max-height: 180px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.life-goal-dialog__chat-message {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.life-goal-dialog__chat-message--user {
+  background: #eff6ff;
+}
+
+.life-goal-dialog__chat-message--assistant {
+  background: #f8fafc;
+}
+
+.life-goal-dialog__chat-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.life-goal-dialog__chat-compose textarea {
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  border-radius: 6px;
+  padding: 0.65rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.life-goal-dialog__chat-compose button {
+  align-self: flex-end;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.life-goal-dialog__chat-compose button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.life-goal-dialog__ai-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .life-goal-dialog__ai-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ideas-page {

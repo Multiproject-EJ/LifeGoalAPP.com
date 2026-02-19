@@ -876,6 +876,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
         onClose={handleCloseDialog}
         onSave={handleSaveLifeGoal}
         initialCategory={null}
+        coachingMode={entryChoice === 'guided' ? 'guided' : 'slice'}
       />
     </section>
   );

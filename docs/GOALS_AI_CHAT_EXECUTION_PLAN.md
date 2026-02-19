@@ -9,10 +9,26 @@ Primary goals:
 3. Complete the remaining Goals UX phases (single-goal mode, guided wizard, wheel submenu).
 4. Persist meaningful onboarding outputs into real goals/habits.
 
+### Implementation status (updated)
+- ✅ Chat entry now exists in `LifeGoalInputDialog` alongside quick generation.
+- ✅ Chat transcript panel now captures local multi-turn messages and drafts a summary card.
+- ✅ Summary card now supports **confirm-to-create-goal** in one action (goal + steps via existing save flow).
+- ✅ Added `goal-coach-chat` edge function MVP contract and wired chat UI to it.
+- ✅ Added finalize-on-demand flow for chat-to-goal confirmation with stronger backend/schema guardrails.
+- ✅ Added personality summary + existing goals context injection, with opt-in gating for goal evolution snapshots.
+- ✅ Added richer structured context payloads (goals + goal evolution events) and telemetry around context usage.
+- ✅ Added feature-flagged context experiment variant (`control` vs `context_rich`) and telemetry metadata tagging by context profile.
+- ✅ Added dashboard-ready telemetry summary helper for chat-to-goal conversion by context profile.
+- ✅ Wired the chat conversion summary helper into Account telemetry settings as an internal report view.
+- ✅ Added date-window filters and daily trend reporting in the surfaced telemetry report view.
+- ✅ Added cohort segmentation (new vs returning) and exportable experiment snapshots in telemetry reporting.
+- ✅ Guided – Coached now runs a real stepper flow in the creation dialog (Outcome → First actions → Timeline → Confirm).
+- ⏳ Next: connect the telemetry report to a dedicated experiment dashboard panel with persisted filters.
+
 ---
 
 ## Current state (baseline)
-- Two-path entry exists in Goals (`Slice by Slice`, `Guided – Coached`) but the guided path is not yet a true wizard.
+- Two-path entry exists in Goals (`Slice by Slice`, `Guided – Coached`), and guided mode now advances through a stepper sequence with next/back controls.
 - Life Wheel category exploration and category context already exist.
 - AI goal generation exists in the dialog (`Generate with AI`) as a one-shot suggestion.
 - Onboarding captures goal/habit text but does not persist them into domain records.
@@ -169,6 +185,7 @@ Track:
 - AI mode used (`quick_generate`, `chat_coach`)
 - chat-to-goal conversion
 - abandonment points per wizard step
+- chat telemetry events for draft/creation path (`goal_coach_chat_sent`, `goal_coach_chat_draft_received`, `goal_coach_chat_goal_created`)
 
 Use feature flags for:
 - chat mode rollout

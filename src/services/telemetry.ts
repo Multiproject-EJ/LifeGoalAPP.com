@@ -45,7 +45,10 @@ export type TelemetryEventType =
   | 'contract_witness_pinged'
   | 'habit_time_limited_offer_scheduled'
   | 'habit_time_limited_offer_claimed'
-  | 'habit_time_limited_offer_expired';
+  | 'habit_time_limited_offer_expired'
+  | 'goal_coach_chat_sent'
+  | 'goal_coach_chat_draft_received'
+  | 'goal_coach_chat_goal_created';
 
 export type TelemetryEventMetadata = Json;
 
@@ -250,6 +253,161 @@ export async function listTelemetryEvents(options: {
   }
 
   return (data ?? []) as TelemetryEventRow[];
+}
+
+
+
+export type GoalCoachTelemetryCohort = 'all' | 'new' | 'returning';
+
+export type GoalCoachTelemetrySummary = {
+  totalSent: number;
+  totalDraftReceived: number;
+  totalGoalCreated: number;
+  conversionRate: number;
+  byContextProfile: Record<
+    string,
+    {
+      sent: number;
+      draftReceived: number;
+      goalCreated: number;
+      conversionRate: number;
+    }
+  >;
+};
+
+export async function getGoalCoachTelemetrySummary(options: {
+  userId: string;
+  sinceISO?: string;
+  cohort?: GoalCoachTelemetryCohort;
+}): Promise<GoalCoachTelemetrySummary> {
+  const events = await listTelemetryEvents({
+    userId: options.userId,
+    sinceISO: options.sinceISO,
+    eventTypes: ['goal_coach_chat_sent', 'goal_coach_chat_draft_received', 'goal_coach_chat_goal_created'],
+    limit: 500,
+  });
+
+  const summary: GoalCoachTelemetrySummary = {
+    totalSent: 0,
+    totalDraftReceived: 0,
+    totalGoalCreated: 0,
+    conversionRate: 0,
+    byContextProfile: {},
+  };
+
+  for (const event of events) {
+    const metadata = (event.metadata as Record<string, unknown> | null) ?? {};
+    const cohort = typeof metadata.cohort === 'string' ? metadata.cohort.trim() : 'unknown';
+    if (options.cohort && options.cohort !== 'all' && cohort !== options.cohort) {
+      continue;
+    }
+    const profileRaw = typeof metadata.contextProfile === 'string' ? metadata.contextProfile.trim() : '';
+    const contextProfile = profileRaw || 'unknown';
+
+    if (!summary.byContextProfile[contextProfile]) {
+      summary.byContextProfile[contextProfile] = {
+        sent: 0,
+        draftReceived: 0,
+        goalCreated: 0,
+        conversionRate: 0,
+      };
+    }
+
+    if (event.event_type === 'goal_coach_chat_sent') {
+      summary.totalSent += 1;
+      summary.byContextProfile[contextProfile].sent += 1;
+    } else if (event.event_type === 'goal_coach_chat_draft_received') {
+      summary.totalDraftReceived += 1;
+      summary.byContextProfile[contextProfile].draftReceived += 1;
+    } else if (event.event_type === 'goal_coach_chat_goal_created') {
+      summary.totalGoalCreated += 1;
+      summary.byContextProfile[contextProfile].goalCreated += 1;
+    }
+  }
+
+  summary.conversionRate = summary.totalSent > 0 ? summary.totalGoalCreated / summary.totalSent : 0;
+
+  Object.values(summary.byContextProfile).forEach((bucket) => {
+    bucket.conversionRate = bucket.sent > 0 ? bucket.goalCreated / bucket.sent : 0;
+  });
+
+  return summary;
+}
+
+
+export type GoalCoachTelemetryDailyPoint = {
+  day: string;
+  sent: number;
+  draftReceived: number;
+  goalCreated: number;
+  conversionRate: number;
+};
+
+export async function getGoalCoachTelemetryDailySeries(options: {
+  userId: string;
+  sinceISO?: string;
+  cohort?: GoalCoachTelemetryCohort;
+}): Promise<GoalCoachTelemetryDailyPoint[]> {
+  const events = await listTelemetryEvents({
+    userId: options.userId,
+    sinceISO: options.sinceISO,
+    eventTypes: ['goal_coach_chat_sent', 'goal_coach_chat_draft_received', 'goal_coach_chat_goal_created'],
+    limit: 1000,
+  });
+
+  const byDay = new Map<string, GoalCoachTelemetryDailyPoint>();
+
+  for (const event of events) {
+    const metadata = (event.metadata as Record<string, unknown> | null) ?? {};
+    const cohort = typeof metadata.cohort === 'string' ? metadata.cohort.trim() : 'unknown';
+    if (options.cohort && options.cohort !== 'all' && cohort !== options.cohort) {
+      continue;
+    }
+
+    const day = event.occurred_at.slice(0, 10);
+    if (!byDay.has(day)) {
+      byDay.set(day, {
+        day,
+        sent: 0,
+        draftReceived: 0,
+        goalCreated: 0,
+        conversionRate: 0,
+      });
+    }
+
+    const point = byDay.get(day)!;
+    if (event.event_type === 'goal_coach_chat_sent') {
+      point.sent += 1;
+    } else if (event.event_type === 'goal_coach_chat_draft_received') {
+      point.draftReceived += 1;
+    } else if (event.event_type === 'goal_coach_chat_goal_created') {
+      point.goalCreated += 1;
+    }
+  }
+
+  return Array.from(byDay.values())
+    .sort((a, b) => a.day.localeCompare(b.day))
+    .map((point) => ({
+      ...point,
+      conversionRate: point.sent > 0 ? point.goalCreated / point.sent : 0,
+    }));
+}
+
+
+
+export function buildGoalCoachTelemetrySnapshot(options: {
+  summary: GoalCoachTelemetrySummary;
+  dailySeries: GoalCoachTelemetryDailyPoint[];
+  lookbackDays: 7 | 14 | 30;
+  cohort: GoalCoachTelemetryCohort;
+}) {
+  return {
+    exportedAt: new Date().toISOString(),
+    lookbackDays: options.lookbackDays,
+    cohort: options.cohort,
+    summary: options.summary,
+    dailySeries: options.dailySeries,
+  };
 }
 
 export async function getTelemetryDifficultyAdjustment(userId: string): Promise<{ minProgressStreak: number }> {
