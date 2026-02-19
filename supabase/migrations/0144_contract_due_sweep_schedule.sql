@@ -268,7 +268,7 @@ BEGIN
     PERFORM cron.schedule(
       'commitment-contracts-due-sweep',
       '*/15 * * * *',
-      $$SELECT public.evaluate_due_commitment_contracts_sweep(200, 12);$$
+      $job$SELECT public.evaluate_due_commitment_contracts_sweep(200, 12);$job$
     );
   ELSE
     RAISE NOTICE 'cron extension is not enabled; skipping commitment-contracts-due-sweep schedule setup.';
