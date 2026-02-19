@@ -308,6 +308,15 @@ export function HabitImprovementAnalysisModal({
 
   const trafficLight = readinessAverage >= 4 ? 'green' : readinessAverage >= 3 ? 'yellow' : 'red';
 
+  const highestLoggedDay = useMemo(() => {
+    return Object.values(experimentDays).reduce((max, day) => {
+      const hasEntry = day.followedProtocol !== null || day.protocolDifficulty !== null || Boolean(day.note);
+      return hasEntry ? Math.max(max, day.dayIndex) : max;
+    }, 0);
+  }, [experimentDays]);
+
+  const isExperimentCompleted = highestLoggedDay >= 7;
+
   const toggleTag = (list: string[], setList: (value: string[]) => void, value: string) => {
     if (list.includes(value)) {
       setList(list.filter((item) => item !== value));
@@ -350,6 +359,10 @@ export function HabitImprovementAnalysisModal({
     }
 
     if (step === 4) {
+      if (selectedDayIndex > highestLoggedDay + 1) {
+        return 'Please complete days in order so your trend stays accurate.';
+      }
+
       if (todayFollowed === null) {
         return 'Please select whether you followed the protocol today.';
       }
@@ -559,8 +572,13 @@ export function HabitImprovementAnalysisModal({
       } else {
         setDraftSaveState('idle');
       }
-      setSelectedDayIndex((current) => Math.min(current + 1, 7));
-      setSuccess(`Day ${selectedDayIndex} check-in saved.`);
+      const nextDayIndex = Math.min(selectedDayIndex + 1, 7);
+      setSelectedDayIndex(nextDayIndex);
+      setSuccess(
+        selectedDayIndex === 7
+          ? 'Day 7 saved. Experiment complete — great work showing up for the full week.'
+          : `Day ${selectedDayIndex} check-in saved.`,
+      );
       return;
     }
 
@@ -774,7 +792,10 @@ export function HabitImprovementAnalysisModal({
 
         {step === 4 ? (
           <div className="habit-analysis-modal__section">
-            <p>7-day experiment is {experimentStarted ? 'active' : 'not started'}.</p>
+            <p>
+              7-day experiment is{' '}
+              {isExperimentCompleted ? 'completed' : experimentStarted ? 'active' : 'not started'}.
+            </p>
             <div className="habit-analysis-modal__day-picker" role="tablist" aria-label="Experiment day picker">
               {Array.from({ length: 7 }, (_, index) => {
                 const dayIndex = index + 1;
@@ -788,13 +809,19 @@ export function HabitImprovementAnalysisModal({
                     aria-selected={selectedDayIndex === dayIndex}
                     className={selectedDayIndex === dayIndex ? 'is-active' : ''}
                     onClick={() => setSelectedDayIndex(dayIndex)}
+                    disabled={dayIndex > highestLoggedDay + 1}
                   >
                     Day {dayIndex}{isLogged ? ' ✓' : ''}
                   </button>
                 );
               })}
             </div>
-            <p className="habit-analysis-modal__day-help">Logging Day {selectedDayIndex}.</p>
+            <p className="habit-analysis-modal__day-help">
+              Logging Day {selectedDayIndex}.
+              {selectedDayIndex > highestLoggedDay + 1
+                ? ' Complete prior days first.'
+                : ' Keep entries chronological for cleaner insights.'}
+            </p>
             {hasLoadedDraft && draftSaveState !== 'idle' ? (
               <p className={`habit-analysis-modal__draft-status habit-analysis-modal__draft-status--${draftSaveState}`}>
                 {draftSaveState === 'saving' ? 'Saving mobile draft…' : null}
@@ -888,7 +915,7 @@ export function HabitImprovementAnalysisModal({
             Back
           </button>
           <button type="button" onClick={() => void saveCurrentStep()} disabled={loading || !sessionId}>
-            {step === 4 ? 'Save check-in' : 'Save & continue'}
+            {step === 4 ? (selectedDayIndex === 7 ? 'Finish experiment' : 'Save check-in') : 'Save & continue'}
           </button>
         </footer>
       </section>

@@ -22788,6 +22788,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #dbeafe;
 }
 
+.habit-analysis-modal__day-picker button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .habit-analysis-modal__day-help {
   margin: 0.1rem 0;
   font-size: 0.82rem;
