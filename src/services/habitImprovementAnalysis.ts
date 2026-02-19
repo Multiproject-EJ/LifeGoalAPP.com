@@ -85,6 +85,11 @@ export type HabitAnalysisMobileDraft = {
   note: string;
 };
 
+export type HabitAnalysisMobileDraftState = {
+  draft: HabitAnalysisMobileDraft | null;
+  savedAt: string | null;
+};
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -399,25 +404,27 @@ export async function saveHabitAnalysisProgress(sessionId: string, step: number)
   return { error: error?.message ?? null };
 }
 
-export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ draft: HabitAnalysisMobileDraft | null; error: string | null }> {
+export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ state: HabitAnalysisMobileDraftState; error: string | null }> {
   const supabase = getUntypedSupabase();
 
   const { data, error } = await supabase
     .from('habit_analysis_sessions')
-    .select('mobile_draft')
+    .select('mobile_draft, mobile_draft_saved_at')
     .eq('id', sessionId)
     .maybeSingle();
 
   if (error) {
     if (isMissingTableError(error)) {
-      return { draft: null, error: null };
+      return { state: { draft: null, savedAt: null }, error: null };
     }
-    return { draft: null, error: error.message };
+    return { state: { draft: null, savedAt: null }, error: error.message };
   }
 
-  const rawDraft = (data as { mobile_draft?: unknown } | null)?.mobile_draft;
+  const rowData = (data as { mobile_draft?: unknown; mobile_draft_saved_at?: unknown } | null) ?? null;
+  const rawDraft = rowData?.mobile_draft;
+  const savedAt = typeof rowData?.mobile_draft_saved_at === 'string' ? rowData.mobile_draft_saved_at : null;
   if (!rawDraft || typeof rawDraft !== 'object' || Array.isArray(rawDraft)) {
-    return { draft: null, error: null };
+    return { state: { draft: null, savedAt: null }, error: null };
   }
 
   const row = rawDraft as Record<string, unknown>;
@@ -436,7 +443,9 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
     : 'same';
 
   return {
-    draft: {
+    state: {
+      savedAt,
+      draft: {
       dayIndex,
       followedProtocol: typeof row.followedProtocol === 'boolean' ? row.followedProtocol : null,
       protocolDifficulty: Number.isFinite(protocolDifficulty) ? protocolDifficulty : null,
@@ -446,6 +455,7 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
       netEffect,
       winNote: typeof row.winNote === 'string' ? row.winNote.slice(0, 160) : '',
       note: typeof row.note === 'string' ? row.note.slice(0, 240) : '',
+      },
     },
     error: null,
   };
@@ -456,6 +466,27 @@ export async function saveHabitAnalysisMobileDraft(
   draft: HabitAnalysisMobileDraft | null,
 ): Promise<{ error: string | null }> {
   const supabase = getUntypedSupabase();
+
+  if (draft && !Number.isFinite(draft.dayIndex)) {
+    return { error: 'Draft day is invalid. Pick a day between 1 and 7.' };
+  }
+
+  if (draft) {
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('habit_analysis_sessions')
+      .select('last_logged_day_index')
+      .eq('id', sessionId)
+      .maybeSingle();
+
+    if (sessionError) {
+      return { error: sessionError.message };
+    }
+
+    const lastLoggedDayIndex = Number((sessionData as { last_logged_day_index?: unknown } | null)?.last_logged_day_index ?? 0);
+    if (draft.dayIndex > Math.min(lastLoggedDayIndex + 1, 7)) {
+      return { error: 'Please finish earlier experiment days before saving this draft.' };
+    }
+  }
 
   const normalizedDraft =
     draft === null
@@ -476,7 +507,10 @@ export async function saveHabitAnalysisMobileDraft(
 
   const { error } = await supabase
     .from('habit_analysis_sessions')
-    .update({ mobile_draft: normalizedDraft })
+    .update({
+      mobile_draft: normalizedDraft,
+      mobile_draft_saved_at: normalizedDraft ? new Date().toISOString() : null,
+    })
     .eq('id', sessionId);
 
   return { error: error?.message ?? null };

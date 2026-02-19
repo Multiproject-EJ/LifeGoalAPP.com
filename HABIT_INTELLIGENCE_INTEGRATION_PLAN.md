@@ -443,3 +443,21 @@ Suggested next implementation step:
 
 Status impact:
 - This strengthens execution clarity for the architecture recommendation and prepares engineering handoff without expanding current feature scope.
+
+### 2026-02-19 — Mobile UI first / Habit Improvement Analysis: draft save timestamp + guardrails
+
+Implemented:
+- Added a schema increment for mobile draft persistence safety:
+  - `mobile_draft_saved_at` on `habit_analysis_sessions`.
+  - Check constraints to keep draft timestamp/nullability consistent with `mobile_draft` presence.
+  - Added JSON shape constraints for mobile draft day index, under/over pain ranges, and note/win-note lengths.
+- Updated habit analysis mobile draft service wiring to:
+  - return both draft content and `savedAt` metadata,
+  - write `mobile_draft_saved_at` whenever autosave persists,
+  - clear `mobile_draft_saved_at` when draft is cleared,
+  - reject out-of-sequence draft saves (cannot draft a day beyond `last_logged_day_index + 1`).
+- Updated the mobile Habit Improvement Analysis UI to show a lightweight “Last draft save” timestamp and surface draft-save validation errors.
+
+Still deferred:
+- Post-experiment summary/recommendation card generated from 7-day trend data.
+- Explicit “Resume latest draft” CTA from habit row/tile entry points outside the modal.

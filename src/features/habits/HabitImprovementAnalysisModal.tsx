@@ -122,6 +122,7 @@ export function HabitImprovementAnalysisModal({
   const [draftSaveState, setDraftSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const [loadedDraft, setLoadedDraft] = useState<HabitAnalysisMobileDraft | null>(null);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const draftHydrationRef = useRef(false);
 
   useEffect(() => {
@@ -136,6 +137,7 @@ export function HabitImprovementAnalysisModal({
       setDraftSaveState('idle');
       setHasLoadedDraft(false);
       setLoadedDraft(null);
+      setDraftSavedAt(null);
       draftHydrationRef.current = false;
       return;
     }
@@ -213,18 +215,19 @@ export function HabitImprovementAnalysisModal({
         return;
       }
 
-      setLoadedDraft(result.draft ?? null);
-      if (result.draft) {
+      setLoadedDraft(result.state.draft ?? null);
+      setDraftSavedAt(result.state.savedAt);
+      if (result.state.draft) {
         draftHydrationRef.current = true;
-        setSelectedDayIndex(result.draft.dayIndex);
-        setTodayFollowed(result.draft.followedProtocol);
-        setTodayProtocolDifficulty(result.draft.protocolDifficulty);
-        setTodayEnergyLevel(result.draft.energyLevel);
-        setTodayUnderPain(result.draft.underPain);
-        setTodayOverPain(result.draft.overPain);
-        setTodayNetEffect(result.draft.netEffect);
-        setTodayWinNote(result.draft.winNote);
-        setTodayNote(result.draft.note);
+        setSelectedDayIndex(result.state.draft.dayIndex);
+        setTodayFollowed(result.state.draft.followedProtocol);
+        setTodayProtocolDifficulty(result.state.draft.protocolDifficulty);
+        setTodayEnergyLevel(result.state.draft.energyLevel);
+        setTodayUnderPain(result.state.draft.underPain);
+        setTodayOverPain(result.state.draft.overPain);
+        setTodayNetEffect(result.state.draft.netEffect);
+        setTodayWinNote(result.state.draft.winNote);
+        setTodayNote(result.state.draft.note);
       }
       setHasLoadedDraft(true);
     });
@@ -285,9 +288,11 @@ export function HabitImprovementAnalysisModal({
       }).then((result) => {
         if (result.error) {
           setDraftSaveState('error');
+          setError(result.error);
           return;
         }
         setDraftSaveState('saved');
+        setDraftSavedAt(new Date().toISOString());
       });
     }, 350);
 
@@ -584,6 +589,7 @@ export function HabitImprovementAnalysisModal({
         setDraftSaveState('error');
       } else {
         setDraftSaveState('idle');
+        setDraftSavedAt(null);
       }
       const nextDayIndex = Math.min(selectedDayIndex + 1, 7);
       setSelectedDayIndex(nextDayIndex);
@@ -840,6 +846,11 @@ export function HabitImprovementAnalysisModal({
                 {draftSaveState === 'saving' ? 'Saving mobile draft…' : null}
                 {draftSaveState === 'saved' ? 'Draft saved' : null}
                 {draftSaveState === 'error' ? 'Draft not saved yet. Keep going—manual save still works.' : null}
+              </p>
+            ) : null}
+            {draftSavedAt ? (
+              <p className="habit-analysis-modal__input-help">
+                Last draft save: {new Date(draftSavedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
               </p>
             ) : null}
             <label>
