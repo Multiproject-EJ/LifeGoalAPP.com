@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   getOrCreateHabitAnalysisSession,
+  getHabitAnalysisCompletionReflection,
   listHabitExperimentDays,
   logHabitExperimentDay,
   saveHabitAnalysisCosts,
+  saveHabitAnalysisCompletionReflection,
   saveHabitAnalysisDesires,
   saveHabitAnalysisProtocol,
   saveHabitAnalysisMobileDraft,
@@ -15,6 +17,7 @@ import {
   startHabitExperiment,
   getHabitAnalysisMobileDraft,
   type HabitAnalysisGoalType,
+  type HabitAnalysisCompletionReflection,
   type HabitDiagnosis,
   type HabitExperimentDayInput,
   type HabitAnalysisMobileDraft,
@@ -125,6 +128,9 @@ export function HabitImprovementAnalysisModal({
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const [loadedDraft, setLoadedDraft] = useState<HabitAnalysisMobileDraft | null>(null);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [completionBiggestWin, setCompletionBiggestWin] = useState('');
+  const [completionHardestMoment, setCompletionHardestMoment] = useState('');
+  const [completionNextTweak, setCompletionNextTweak] = useState('');
   const draftHydrationRef = useRef(false);
 
   useEffect(() => {
@@ -140,6 +146,9 @@ export function HabitImprovementAnalysisModal({
       setHasLoadedDraft(false);
       setLoadedDraft(null);
       setDraftSavedAt(null);
+      setCompletionBiggestWin('');
+      setCompletionHardestMoment('');
+      setCompletionNextTweak('');
       draftHydrationRef.current = false;
       return;
     }
@@ -195,6 +204,28 @@ export function HabitImprovementAnalysisModal({
           setSelectedDayIndex(Math.min(highestLogged + 1, 7));
         }
       }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [sessionId, step]);
+
+  useEffect(() => {
+    if (!sessionId || step !== 4) {
+      return;
+    }
+
+    let mounted = true;
+    void getHabitAnalysisCompletionReflection(sessionId).then((result) => {
+      if (!mounted || result.error || !result.reflection) {
+        return;
+      }
+
+      const reflection: HabitAnalysisCompletionReflection = result.reflection;
+      setCompletionBiggestWin(reflection.biggestWin);
+      setCompletionHardestMoment(reflection.hardestMoment);
+      setCompletionNextTweak(reflection.nextTweak);
     });
 
     return () => {
@@ -417,6 +448,22 @@ export function HabitImprovementAnalysisModal({
       if (todayNote.trim().length > 240) {
         return 'Quick note must be 240 characters or less.';
       }
+
+      if (selectedDayIndex === 7 && !completionNextTweak.trim()) {
+        return 'Add one next tweak so future-you has a clear starting point.';
+      }
+
+      if (completionBiggestWin.trim().length > 160) {
+        return 'Biggest win must be 160 characters or less.';
+      }
+
+      if (completionHardestMoment.trim().length > 240) {
+        return 'Hardest moment must be 240 characters or less.';
+      }
+
+      if (completionNextTweak.trim().length > 160) {
+        return 'Next tweak must be 160 characters or less.';
+      }
     }
 
     return null;
@@ -577,6 +624,19 @@ export function HabitImprovementAnalysisModal({
       if (result.error) {
         setError(result.error);
         return;
+      }
+
+      if (selectedDayIndex === 7) {
+        const reflectionResult = await saveHabitAnalysisCompletionReflection(id, {
+          biggestWin: completionBiggestWin,
+          hardestMoment: completionHardestMoment,
+          nextTweak: completionNextTweak,
+        });
+
+        if (reflectionResult.error) {
+          setError(reflectionResult.error);
+          return;
+        }
       }
 
       const updatedDay: HabitExperimentDayInput = {
@@ -971,6 +1031,43 @@ export function HabitImprovementAnalysisModal({
               <textarea value={todayNote} onChange={(event) => setTodayNote(event.target.value)} rows={2} maxLength={240} />
               <span className="habit-analysis-modal__input-help">{todayNote.trim().length}/240</span>
             </label>
+            {selectedDayIndex === 7 || isExperimentCompleted ? (
+              <section className="habit-analysis-modal__completion-card" aria-label="Experiment completion reflection">
+                <h4>7-day recap</h4>
+                <p>Capture a quick reflection so your next week starts sharper.</p>
+                <label>
+                  Biggest win (optional)
+                  <input
+                    value={completionBiggestWin}
+                    onChange={(event) => setCompletionBiggestWin(event.target.value)}
+                    maxLength={160}
+                    placeholder="What worked best this week?"
+                  />
+                  <span className="habit-analysis-modal__input-help">{completionBiggestWin.trim().length}/160</span>
+                </label>
+                <label>
+                  Hardest moment (optional)
+                  <textarea
+                    value={completionHardestMoment}
+                    onChange={(event) => setCompletionHardestMoment(event.target.value)}
+                    rows={2}
+                    maxLength={240}
+                    placeholder="Where did this feel hardest?"
+                  />
+                  <span className="habit-analysis-modal__input-help">{completionHardestMoment.trim().length}/240</span>
+                </label>
+                <label>
+                  Next tweak (required)
+                  <input
+                    value={completionNextTweak}
+                    onChange={(event) => setCompletionNextTweak(event.target.value)}
+                    maxLength={160}
+                    placeholder="One tweak to keep momentum next week"
+                  />
+                  <span className="habit-analysis-modal__input-help">{completionNextTweak.trim().length}/160</span>
+                </label>
+              </section>
+            ) : null}
           </div>
         ) : null}
 

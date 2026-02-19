@@ -92,6 +92,12 @@ export type HabitAnalysisMobileDraftState = {
   savedAt: string | null;
 };
 
+export type HabitAnalysisCompletionReflection = {
+  biggestWin: string;
+  hardestMoment: string;
+  nextTweak: string;
+};
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -523,6 +529,74 @@ export async function saveHabitAnalysisMobileDraft(
     .update({
       mobile_draft: normalizedDraft,
       mobile_draft_saved_at: normalizedDraft ? new Date().toISOString() : null,
+    })
+    .eq('id', sessionId);
+
+  return { error: error?.message ?? null };
+}
+
+export async function getHabitAnalysisCompletionReflection(
+  sessionId: string,
+): Promise<{ reflection: HabitAnalysisCompletionReflection | null; error: string | null }> {
+  const supabase = getUntypedSupabase();
+
+  const { data, error } = await supabase
+    .from('habit_analysis_sessions')
+    .select('completion_reflection')
+    .eq('id', sessionId)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { reflection: null, error: null };
+    }
+    return { reflection: null, error: error.message };
+  }
+
+  const reflection = (data as { completion_reflection?: unknown } | null)?.completion_reflection;
+  if (!reflection || typeof reflection !== 'object' || Array.isArray(reflection)) {
+    return { reflection: null, error: null };
+  }
+
+  const parsedReflection = reflection as Record<string, unknown>;
+  return {
+    reflection: {
+      biggestWin:
+        typeof parsedReflection.biggestWin === 'string'
+          ? parsedReflection.biggestWin.slice(0, 160)
+          : '',
+      hardestMoment:
+        typeof parsedReflection.hardestMoment === 'string'
+          ? parsedReflection.hardestMoment.slice(0, 240)
+          : '',
+      nextTweak:
+        typeof parsedReflection.nextTweak === 'string'
+          ? parsedReflection.nextTweak.slice(0, 160)
+          : '',
+    },
+    error: null,
+  };
+}
+
+export async function saveHabitAnalysisCompletionReflection(
+  sessionId: string,
+  reflection: HabitAnalysisCompletionReflection,
+): Promise<{ error: string | null }> {
+  const supabase = getUntypedSupabase();
+  const nextTweak = reflection.nextTweak.trim();
+
+  if (!nextTweak) {
+    return { error: 'Add one next tweak before finishing your 7-day experiment.' };
+  }
+
+  const { error } = await supabase
+    .from('habit_analysis_sessions')
+    .update({
+      completion_reflection: {
+        biggestWin: reflection.biggestWin.trim().slice(0, 160),
+        hardestMoment: reflection.hardestMoment.trim().slice(0, 240),
+        nextTweak: nextTweak.slice(0, 160),
+      },
     })
     .eq('id', sessionId);
 

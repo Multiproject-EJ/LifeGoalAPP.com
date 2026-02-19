@@ -22879,6 +22879,26 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-analysis-modal__traffic--yellow { color: #fcd34d; }
 .habit-analysis-modal__traffic--red { color: #fca5a5; }
 
+.habit-analysis-modal__completion-card {
+  margin-top: 0.85rem;
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.45);
+  padding: 0.75rem;
+}
+
+.habit-analysis-modal__completion-card h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #dbeafe;
+}
+
+.habit-analysis-modal__completion-card > p {
+  margin: 0.25rem 0 0.6rem;
+  color: #bfdbfe;
+  font-size: 0.82rem;
+}
+
 .habit-analysis-modal__footer {
   margin-top: 1rem;
   display: flex;
