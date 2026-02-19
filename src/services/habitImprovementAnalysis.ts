@@ -66,6 +66,7 @@ export type HabitExperimentDayInput = {
   underPain: number | null;
   overPain: number | null;
   netEffect: 'better' | 'same' | 'worse' | null;
+  winNote?: string;
   note?: string;
 };
 
@@ -302,6 +303,7 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
       under_pain: safeUnderPain,
       over_pain: safeOverPain,
       net_effect: input.netEffect,
+      win_note: input.winNote?.trim() || null,
       note: input.note?.trim() || null,
     },
     { onConflict: 'session_id,day_index' },
@@ -325,7 +327,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
 
   const { data, error } = await supabase
     .from('habit_experiment_days')
-    .select('day_index, date, followed_protocol, protocol_difficulty, under_pain, over_pain, net_effect, note')
+    .select('day_index, date, followed_protocol, protocol_difficulty, under_pain, over_pain, net_effect, win_note, note')
     .eq('session_id', sessionId)
     .order('day_index', { ascending: true });
 
@@ -348,6 +350,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
         row.net_effect === 'better' || row.net_effect === 'same' || row.net_effect === 'worse'
           ? row.net_effect
           : null,
+      winNote: typeof row.win_note === 'string' ? row.win_note : undefined,
       note: typeof row.note === 'string' ? row.note : undefined,
     })),
     error: null,
