@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   getOrCreateHabitAnalysisSession,
@@ -7,14 +7,17 @@ import {
   saveHabitAnalysisCosts,
   saveHabitAnalysisDesires,
   saveHabitAnalysisProtocol,
+  saveHabitAnalysisMobileDraft,
   saveHabitAnalysisProgress,
   saveHabitAnalysisRange,
   saveHabitDiagnosis,
   saveHabitReadiness,
   startHabitExperiment,
+  getHabitAnalysisMobileDraft,
   type HabitAnalysisGoalType,
   type HabitDiagnosis,
   type HabitExperimentDayInput,
+  type HabitAnalysisMobileDraft,
 } from '../../services/habitImprovementAnalysis';
 
 const DESIRE_OPTIONS = [
@@ -114,6 +117,10 @@ export function HabitImprovementAnalysisModal({
   const [todayNetEffect, setTodayNetEffect] = useState<'better' | 'same' | 'worse'>('same');
   const [todayWinNote, setTodayWinNote] = useState('');
   const [todayNote, setTodayNote] = useState('');
+  const [draftSaveState, setDraftSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
+  const [loadedDraft, setLoadedDraft] = useState<HabitAnalysisMobileDraft | null>(null);
+  const draftHydrationRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -124,6 +131,10 @@ export function HabitImprovementAnalysisModal({
       setExperimentStarted(false);
       setSelectedDayIndex(1);
       setExperimentDays({});
+      setDraftSaveState('idle');
+      setHasLoadedDraft(false);
+      setLoadedDraft(null);
+      draftHydrationRef.current = false;
       return;
     }
 
@@ -186,7 +197,55 @@ export function HabitImprovementAnalysisModal({
   }, [sessionId, step]);
 
   useEffect(() => {
+    if (!sessionId || step !== 4) {
+      return;
+    }
+
+    let mounted = true;
+    setHasLoadedDraft(false);
+    void getHabitAnalysisMobileDraft(sessionId).then((result) => {
+      if (!mounted) return;
+      if (result.error) {
+        setDraftSaveState('error');
+        setError(result.error);
+        return;
+      }
+
+      setLoadedDraft(result.draft ?? null);
+      if (result.draft) {
+        draftHydrationRef.current = true;
+        setSelectedDayIndex(result.draft.dayIndex);
+        setTodayFollowed(result.draft.followedProtocol);
+        setTodayProtocolDifficulty(result.draft.protocolDifficulty);
+        setTodayUnderPain(result.draft.underPain);
+        setTodayOverPain(result.draft.overPain);
+        setTodayNetEffect(result.draft.netEffect);
+        setTodayWinNote(result.draft.winNote);
+        setTodayNote(result.draft.note);
+      }
+      setHasLoadedDraft(true);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [sessionId, step]);
+
+  useEffect(() => {
     const selectedDay = experimentDays[selectedDayIndex] ?? buildDefaultExperimentDay(selectedDayIndex);
+    const shouldUseDraft = loadedDraft && loadedDraft.dayIndex === selectedDayIndex && !experimentDays[selectedDayIndex];
+
+    if (shouldUseDraft) {
+      setTodayFollowed(loadedDraft.followedProtocol);
+      setTodayProtocolDifficulty(loadedDraft.protocolDifficulty);
+      setTodayUnderPain(loadedDraft.underPain);
+      setTodayOverPain(loadedDraft.overPain);
+      setTodayNetEffect(loadedDraft.netEffect);
+      setTodayWinNote(loadedDraft.winNote);
+      setTodayNote(loadedDraft.note);
+      return;
+    }
+
     setTodayFollowed(selectedDay.followedProtocol ?? null);
     setTodayProtocolDifficulty(selectedDay.protocolDifficulty ?? null);
     setTodayUnderPain(selectedDay.underPain ?? 0);
@@ -194,7 +253,54 @@ export function HabitImprovementAnalysisModal({
     setTodayNetEffect(selectedDay.netEffect ?? 'same');
     setTodayWinNote(selectedDay.winNote ?? '');
     setTodayNote(selectedDay.note ?? '');
-  }, [experimentDays, selectedDayIndex]);
+  }, [experimentDays, loadedDraft, selectedDayIndex]);
+
+  useEffect(() => {
+    if (!sessionId || step !== 4 || !hasLoadedDraft) {
+      return;
+    }
+
+    if (draftHydrationRef.current) {
+      draftHydrationRef.current = false;
+      return;
+    }
+
+    setDraftSaveState('saving');
+    const timeoutId = window.setTimeout(() => {
+      void saveHabitAnalysisMobileDraft(sessionId, {
+        dayIndex: selectedDayIndex,
+        followedProtocol: todayFollowed,
+        protocolDifficulty: todayProtocolDifficulty,
+        underPain: todayUnderPain,
+        overPain: todayOverPain,
+        netEffect: todayNetEffect,
+        winNote: todayWinNote,
+        note: todayNote,
+      }).then((result) => {
+        if (result.error) {
+          setDraftSaveState('error');
+          return;
+        }
+        setDraftSaveState('saved');
+      });
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    hasLoadedDraft,
+    selectedDayIndex,
+    sessionId,
+    step,
+    todayFollowed,
+    todayNetEffect,
+    todayNote,
+    todayOverPain,
+    todayProtocolDifficulty,
+    todayUnderPain,
+    todayWinNote,
+  ]);
 
   const readinessAverage = useMemo(() => {
     return (desireMet + costReduced + badDayOk + reboundSafe + identityFit) / 5;
@@ -447,6 +553,12 @@ export function HabitImprovementAnalysisModal({
         ...current,
         [selectedDayIndex]: updatedDay,
       }));
+      const draftResult = await saveHabitAnalysisMobileDraft(id, null);
+      if (draftResult.error) {
+        setDraftSaveState('error');
+      } else {
+        setDraftSaveState('idle');
+      }
       setSelectedDayIndex((current) => Math.min(current + 1, 7));
       setSuccess(`Day ${selectedDayIndex} check-in saved.`);
       return;
@@ -683,6 +795,13 @@ export function HabitImprovementAnalysisModal({
               })}
             </div>
             <p className="habit-analysis-modal__day-help">Logging Day {selectedDayIndex}.</p>
+            {hasLoadedDraft && draftSaveState !== 'idle' ? (
+              <p className={`habit-analysis-modal__draft-status habit-analysis-modal__draft-status--${draftSaveState}`}>
+                {draftSaveState === 'saving' ? 'Saving mobile draft…' : null}
+                {draftSaveState === 'saved' ? 'Draft saved' : null}
+                {draftSaveState === 'error' ? 'Draft not saved yet. Keep going—manual save still works.' : null}
+              </p>
+            ) : null}
             <label>
               Followed protocol today?
               <div className="habit-analysis-modal__binary-toggle" role="group" aria-label="Followed protocol today">
