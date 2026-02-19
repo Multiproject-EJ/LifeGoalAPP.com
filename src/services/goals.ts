@@ -8,6 +8,11 @@ import {
   removeDemoGoal,
   updateDemoGoal,
 } from './demoData';
+import {
+  buildSnapshotSummary,
+  createGoalSnapshot,
+  inferSnapshotType,
+} from './goalSnapshots';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type GoalInsert = Database['public']['Tables']['goals']['Insert'];
@@ -37,12 +42,28 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
   }
 
   const supabase = getSupabaseClient();
-  return supabase
+  const { data, error } = await supabase
     .from('goals')
     .insert(payload)
     .select()
-    .returns<GoalRow>()
-    .single();
+    .single<GoalRow>();
+
+  if (data) {
+    const snapshotType = inferSnapshotType(null, data);
+    await createGoalSnapshot({
+      goal_id: data.id,
+      user_id: data.user_id,
+      snapshot_type: snapshotType,
+      summary: buildSnapshotSummary(snapshotType),
+      before_state: null,
+      after_state: data,
+      metadata: {
+        source: 'goals.insert',
+      },
+    });
+  }
+
+  return { data: data ?? null, error };
 }
 
 export async function updateGoal(id: string, payload: GoalUpdate): Promise<ServiceResponse<GoalRow>> {
@@ -52,13 +73,36 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
   }
 
   const supabase = getSupabaseClient();
-  return supabase
+
+  const { data: beforeState } = await supabase
+    .from('goals')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle<GoalRow>();
+
+  const { data, error } = await supabase
     .from('goals')
     .update(payload)
     .eq('id', id)
     .select()
-    .returns<GoalRow>()
-    .single();
+    .single<GoalRow>();
+
+  if (data) {
+    const snapshotType = inferSnapshotType(beforeState ?? null, data);
+    await createGoalSnapshot({
+      goal_id: data.id,
+      user_id: data.user_id,
+      snapshot_type: snapshotType,
+      summary: buildSnapshotSummary(snapshotType),
+      before_state: beforeState,
+      after_state: data,
+      metadata: {
+        source: 'goals.update',
+      },
+    });
+  }
+
+  return { data: data ?? null, error };
 }
 
 export async function deleteGoal(id: string): Promise<ServiceResponse<GoalRow>> {
@@ -68,10 +112,33 @@ export async function deleteGoal(id: string): Promise<ServiceResponse<GoalRow>> 
   }
 
   const supabase = getSupabaseClient();
-  return supabase
+  const { data: beforeState } = await supabase
+    .from('goals')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle<GoalRow>();
+
+  const { data, error } = await supabase
     .from('goals')
     .delete()
     .eq('id', id)
     .select()
-    .single();
+    .single<GoalRow>();
+
+  if (data) {
+    const snapshotType = inferSnapshotType(beforeState ?? null, null);
+    await createGoalSnapshot({
+      goal_id: data.id,
+      user_id: data.user_id,
+      snapshot_type: snapshotType,
+      summary: buildSnapshotSummary(snapshotType),
+      before_state: beforeState,
+      after_state: null,
+      metadata: {
+        source: 'goals.delete',
+      },
+    });
+  }
+
+  return { data: data ?? null, error };
 }

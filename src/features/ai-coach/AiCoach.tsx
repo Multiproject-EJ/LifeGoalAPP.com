@@ -13,6 +13,7 @@ import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { AI_FEATURE_ICON } from '../../constants/ai';
+import { fetchRecentGoalSnapshots } from '../../services/goalSnapshots';
 
 export interface AiCoachProps {
   session: Session;
@@ -35,7 +36,7 @@ interface CoachingTopic {
   prompt: string;
 }
 
-type CoachInterventionType = 'imbalance' | 'habit-struggle' | 'overconfidence' | 'fixation';
+type CoachInterventionType = 'imbalance' | 'habit-struggle' | 'goal-evolution' | 'overconfidence' | 'fixation';
 
 type CoachIntervention = {
   id: string;
@@ -144,6 +145,7 @@ const AXIS_REBALANCE_OPTIONS: Record<BalanceAxisKey, string[]> = {
 const INTERVENTION_LABELS: Record<CoachInterventionType, string> = {
   imbalance: 'Imbalance',
   'habit-struggle': 'Habit friction',
+  'goal-evolution': 'Goal evolution',
   overconfidence: 'Overconfidence',
   fixation: 'Fixation',
 };
@@ -305,6 +307,25 @@ const buildHabitStruggleIntervention = async (
   };
 };
 
+
+const buildGoalEvolutionIntervention = (snapshotCount: number): CoachIntervention | null => {
+  if (snapshotCount < 2) {
+    return null;
+  }
+
+  return {
+    id: `goal-evolution-${snapshotCount}`,
+    type: 'goal-evolution',
+    title: 'Goal evolution check-in',
+    description:
+      'Your goals have changed across time. That is growth, not failure. Want to refresh one goal so it matches your current season?',
+    options: [
+      'Help me evolve one goal while preserving momentum.',
+      'Show me what to archive, adapt, and recommit to this week.',
+    ],
+  };
+};
+
 const buildOverconfidenceIntervention = (entry: JournalEntry): CoachIntervention => ({
   id: `overconfidence-${entry.id}`,
   type: 'overconfidence',
@@ -392,6 +413,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     const blocked: string[] = [];
     const entries = [
       { label: 'Goals', enabled: dataAccess.goals },
+      { label: 'Goal evolution', enabled: dataAccess.goalEvolution },
       { label: 'Habits', enabled: dataAccess.habits },
       { label: 'Journaling', enabled: dataAccess.journaling },
       { label: 'Reflections', enabled: dataAccess.reflections },
@@ -447,6 +469,15 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         }
       }
 
+
+      if (dataAccess.goalEvolution) {
+        const snapshots = await fetchRecentGoalSnapshots(session.user.id, 12);
+        const evolutionIntervention = buildGoalEvolutionIntervention(snapshots.length);
+        if (evolutionIntervention) {
+          nextInterventions.push(evolutionIntervention);
+        }
+      }
+
       if (dataAccess.journaling) {
         const since = new Date();
         since.setDate(since.getDate() - 14);
@@ -468,7 +499,14 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     return () => {
       isMounted = false;
     };
-  }, [dataAccess.habits, dataAccess.journaling, dataAccess.reflections, demoMode, session.user.id]);
+  }, [
+    dataAccess.goalEvolution,
+    dataAccess.habits,
+    dataAccess.journaling,
+    dataAccess.reflections,
+    demoMode,
+    session.user.id,
+  ]);
 
   useEffect(() => {
     // Focus input on mount
