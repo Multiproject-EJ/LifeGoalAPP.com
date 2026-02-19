@@ -64,6 +64,7 @@ function buildDefaultExperimentDay(dayIndex: number): HabitExperimentDayInput {
     urgeLevel: null,
     energyLevel: null,
     confidenceTomorrow: null,
+    stressLevel: null,
     underPain: 0,
     overPain: 0,
     netEffect: 'same',
@@ -121,6 +122,7 @@ export function HabitImprovementAnalysisModal({
   const [todayUrgeLevel, setTodayUrgeLevel] = useState<number | null>(null);
   const [todayEnergyLevel, setTodayEnergyLevel] = useState<number | null>(null);
   const [todayConfidenceTomorrow, setTodayConfidenceTomorrow] = useState<number | null>(null);
+  const [todayStressLevel, setTodayStressLevel] = useState<number | null>(null);
   const [todayUnderPain, setTodayUnderPain] = useState(0);
   const [todayOverPain, setTodayOverPain] = useState(0);
   const [todayNetEffect, setTodayNetEffect] = useState<'better' | 'same' | 'worse'>('same');
@@ -260,6 +262,7 @@ export function HabitImprovementAnalysisModal({
         setTodayUrgeLevel(result.state.draft.urgeLevel);
         setTodayEnergyLevel(result.state.draft.energyLevel);
         setTodayConfidenceTomorrow(result.state.draft.confidenceTomorrow);
+        setTodayStressLevel(result.state.draft.stressLevel);
         setTodayUnderPain(result.state.draft.underPain);
         setTodayOverPain(result.state.draft.overPain);
         setTodayNetEffect(result.state.draft.netEffect);
@@ -284,6 +287,7 @@ export function HabitImprovementAnalysisModal({
       setTodayUrgeLevel(loadedDraft.urgeLevel);
       setTodayEnergyLevel(loadedDraft.energyLevel);
       setTodayConfidenceTomorrow(loadedDraft.confidenceTomorrow);
+      setTodayStressLevel(loadedDraft.stressLevel);
       setTodayUnderPain(loadedDraft.underPain);
       setTodayOverPain(loadedDraft.overPain);
       setTodayNetEffect(loadedDraft.netEffect);
@@ -297,6 +301,7 @@ export function HabitImprovementAnalysisModal({
     setTodayUrgeLevel(selectedDay.urgeLevel ?? null);
     setTodayEnergyLevel(selectedDay.energyLevel ?? null);
     setTodayConfidenceTomorrow(selectedDay.confidenceTomorrow ?? null);
+    setTodayStressLevel(selectedDay.stressLevel ?? null);
     setTodayUnderPain(selectedDay.underPain ?? 0);
     setTodayOverPain(selectedDay.overPain ?? 0);
     setTodayNetEffect(selectedDay.netEffect ?? 'same');
@@ -323,6 +328,7 @@ export function HabitImprovementAnalysisModal({
         urgeLevel: todayUrgeLevel,
         energyLevel: todayEnergyLevel,
         confidenceTomorrow: todayConfidenceTomorrow,
+        stressLevel: todayStressLevel,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -353,6 +359,7 @@ export function HabitImprovementAnalysisModal({
     todayUrgeLevel,
     todayEnergyLevel,
     todayConfidenceTomorrow,
+    todayStressLevel,
     todayOverPain,
     todayProtocolDifficulty,
     todayUnderPain,
@@ -444,6 +451,10 @@ export function HabitImprovementAnalysisModal({
 
       if (todayConfidenceTomorrow === null || !Number.isFinite(todayConfidenceTomorrow) || todayConfidenceTomorrow < 1 || todayConfidenceTomorrow > 5) {
         return 'Confidence for tomorrow must be between 1 and 5.';
+      }
+
+      if (todayStressLevel === null || !Number.isFinite(todayStressLevel) || todayStressLevel < 1 || todayStressLevel > 5) {
+        return 'Stress level must be between 1 and 5.';
       }
 
       if (!Number.isFinite(todayOverPain) || todayOverPain < 0 || todayOverPain > 3) {
@@ -628,6 +639,7 @@ export function HabitImprovementAnalysisModal({
         urgeLevel: todayUrgeLevel,
         energyLevel: todayEnergyLevel,
         confidenceTomorrow: todayConfidenceTomorrow,
+        stressLevel: todayStressLevel,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -661,6 +673,7 @@ export function HabitImprovementAnalysisModal({
         urgeLevel: todayUrgeLevel,
         energyLevel: todayEnergyLevel,
         confidenceTomorrow: todayConfidenceTomorrow,
+        stressLevel: todayStressLevel,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -1020,6 +1033,21 @@ export function HabitImprovementAnalysisModal({
                 {todayConfidenceTomorrow === null
                   ? 'Rate how confident you feel about following through tomorrow.'
                   : `Tomorrow confidence: ${todayConfidenceTomorrow}/5`}
+              </span>
+            </label>
+            <label>
+              Stress level (1 steady, 5 maxed out)
+              <input
+                type="range"
+                min={1}
+                max={5}
+                value={todayStressLevel ?? 3}
+                onChange={(event) => setTodayStressLevel(Number(event.target.value))}
+              />
+              <span className="habit-analysis-modal__input-help">
+                {todayStressLevel === null
+                  ? 'How tense did your day feel overall?'
+                  : `Stress level: ${todayStressLevel}/5`}
               </span>
             </label>
             <label>
