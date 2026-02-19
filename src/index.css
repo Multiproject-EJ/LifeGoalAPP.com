@@ -22844,6 +22844,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #93c5fd;
 }
 
+.habit-analysis-modal__input-help--warning {
+  color: #fca5a5;
+}
+
 .habit-analysis-modal__chips {
   display: flex;
   flex-wrap: wrap;

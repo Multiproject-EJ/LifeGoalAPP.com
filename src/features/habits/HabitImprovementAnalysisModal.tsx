@@ -373,6 +373,8 @@ export function HabitImprovementAnalysisModal({
   }, [experimentDays]);
 
   const isExperimentCompleted = highestLoggedDay >= 7;
+  const requiresWinNote = step === 4 && todayNetEffect === 'better';
+  const isWinNoteMissing = requiresWinNote && todayWinNote.trim().length === 0;
 
   const toggleTag = (list: string[], setList: (value: string[]) => void, value: string) => {
     if (list.includes(value)) {
@@ -1051,8 +1053,12 @@ export function HabitImprovementAnalysisModal({
                 onChange={(event) => setTodayWinNote(event.target.value)}
                 maxLength={160}
                 placeholder="What helped today?"
+                aria-invalid={isWinNoteMissing}
               />
-              <span className="habit-analysis-modal__input-help">{todayWinNote.trim().length}/160</span>
+              <span className={`habit-analysis-modal__input-help ${isWinNoteMissing ? 'habit-analysis-modal__input-help--warning' : ''}`}>
+                {isWinNoteMissing ? 'Required when net effect is Better. ' : ''}
+                {todayWinNote.trim().length}/160
+              </span>
             </label>
             <label>
               Quick note (optional)
