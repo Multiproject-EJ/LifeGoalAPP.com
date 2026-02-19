@@ -14,6 +14,7 @@ export type HabitAnalysisSession = {
   target_cadence: string | null;
   last_logged_day_index: number;
   current_step: number;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -325,9 +326,20 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
     return { error: error.message };
   }
 
+  const isCompletionDay = safeDayIndex === 7;
+  const sessionUpdate: Record<string, unknown> = {
+    last_logged_day_index: safeDayIndex,
+  };
+
+  if (isCompletionDay) {
+    sessionUpdate.status = 'completed';
+    sessionUpdate.completed_at = new Date().toISOString();
+    sessionUpdate.mobile_draft = null;
+  }
+
   const { error: sessionError } = await supabase
     .from('habit_analysis_sessions')
-    .update({ last_logged_day_index: safeDayIndex })
+    .update(sessionUpdate)
     .eq('id', sessionId)
     .lt('last_logged_day_index', safeDayIndex);
 
