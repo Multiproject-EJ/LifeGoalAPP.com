@@ -67,6 +67,7 @@ export type HabitExperimentDayInput = {
   urgeLevel: number | null;
   energyLevel: number | null;
   confidenceTomorrow: number | null;
+  stressLevel: number | null;
   underPain: number | null;
   overPain: number | null;
   netEffect: 'better' | 'same' | 'worse' | null;
@@ -82,6 +83,7 @@ export type HabitAnalysisMobileDraft = {
   urgeLevel: number | null;
   energyLevel: number | null;
   confidenceTomorrow: number | null;
+  stressLevel: number | null;
   underPain: number;
   overPain: number;
   netEffect: 'better' | 'same' | 'worse';
@@ -328,6 +330,8 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
     input.energyLevel === null ? null : clamp(Math.round(input.energyLevel), 1, 5);
   const safeConfidenceTomorrow =
     input.confidenceTomorrow === null ? null : clamp(Math.round(input.confidenceTomorrow), 1, 5);
+  const safeStressLevel =
+    input.stressLevel === null ? null : clamp(Math.round(input.stressLevel), 1, 5);
   const safeUnderPain = input.underPain === null ? null : clamp(Math.round(input.underPain), 0, 3);
   const safeOverPain = input.overPain === null ? null : clamp(Math.round(input.overPain), 0, 3);
   const safeNetEffect = normalizeNetEffect(input.netEffect);
@@ -347,6 +351,7 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
       urge_level: input.urgeLevel === null ? null : clamp(Math.round(input.urgeLevel), 1, 5),
       energy_level: safeEnergyLevel,
       confidence_tomorrow: safeConfidenceTomorrow,
+      stress_level: safeStressLevel,
       under_pain: safeUnderPain,
       over_pain: safeOverPain,
       net_effect: safeNetEffect,
@@ -385,7 +390,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
 
   const { data, error } = await supabase
     .from('habit_experiment_days')
-    .select('day_index, date, followed_protocol, protocol_difficulty, urge_level, energy_level, confidence_tomorrow, under_pain, over_pain, net_effect, win_note, note')
+    .select('day_index, date, followed_protocol, protocol_difficulty, urge_level, energy_level, confidence_tomorrow, stress_level, under_pain, over_pain, net_effect, win_note, note')
     .eq('session_id', sessionId)
     .order('day_index', { ascending: true });
 
@@ -405,6 +410,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
       urgeLevel: typeof row.urge_level === 'number' ? row.urge_level : null,
       energyLevel: typeof row.energy_level === 'number' ? row.energy_level : null,
       confidenceTomorrow: typeof row.confidence_tomorrow === 'number' ? row.confidence_tomorrow : null,
+      stressLevel: typeof row.stress_level === 'number' ? row.stress_level : null,
       underPain: typeof row.under_pain === 'number' ? row.under_pain : null,
       overPain: typeof row.over_pain === 'number' ? row.over_pain : null,
       netEffect:
@@ -471,6 +477,10 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
     row.confidenceTomorrow === null || row.confidenceTomorrow === undefined
       ? null
       : clamp(Math.round(Number(row.confidenceTomorrow)), 1, 5);
+  const stressLevel =
+    row.stressLevel === null || row.stressLevel === undefined
+      ? null
+      : clamp(Math.round(Number(row.stressLevel)), 1, 5);
 
   const netEffect = normalizeNetEffect(row.netEffect);
 
@@ -484,6 +494,7 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
       urgeLevel: Number.isFinite(urgeLevel) ? urgeLevel : null,
       energyLevel: Number.isFinite(energyLevel) ? energyLevel : null,
       confidenceTomorrow: Number.isFinite(confidenceTomorrow) ? confidenceTomorrow : null,
+      stressLevel: Number.isFinite(stressLevel) ? stressLevel : null,
       underPain: clamp(Math.round(Number(row.underPain ?? 0)), 0, 3),
       overPain: clamp(Math.round(Number(row.overPain ?? 0)), 0, 3),
       netEffect,
@@ -536,6 +547,8 @@ export async function saveHabitAnalysisMobileDraft(
             draft.energyLevel === null ? null : clamp(Math.round(draft.energyLevel), 1, 5),
           confidenceTomorrow:
             draft.confidenceTomorrow === null ? null : clamp(Math.round(draft.confidenceTomorrow), 1, 5),
+          stressLevel:
+            draft.stressLevel === null ? null : clamp(Math.round(draft.stressLevel), 1, 5),
           underPain: clamp(Math.round(draft.underPain), 0, 3),
           overPain: clamp(Math.round(draft.overPain), 0, 3),
           netEffect: normalizeNetEffect(draft.netEffect),
