@@ -58,6 +58,7 @@ function buildDefaultExperimentDay(dayIndex: number): HabitExperimentDayInput {
     date: new Date().toISOString().slice(0, 10),
     followedProtocol: null,
     protocolDifficulty: null,
+    energyLevel: null,
     underPain: 0,
     overPain: 0,
     netEffect: 'same',
@@ -112,6 +113,7 @@ export function HabitImprovementAnalysisModal({
   const [experimentDays, setExperimentDays] = useState<Record<number, HabitExperimentDayInput>>({});
   const [todayFollowed, setTodayFollowed] = useState<boolean | null>(null);
   const [todayProtocolDifficulty, setTodayProtocolDifficulty] = useState<number | null>(null);
+  const [todayEnergyLevel, setTodayEnergyLevel] = useState<number | null>(null);
   const [todayUnderPain, setTodayUnderPain] = useState(0);
   const [todayOverPain, setTodayOverPain] = useState(0);
   const [todayNetEffect, setTodayNetEffect] = useState<'better' | 'same' | 'worse'>('same');
@@ -217,6 +219,7 @@ export function HabitImprovementAnalysisModal({
         setSelectedDayIndex(result.draft.dayIndex);
         setTodayFollowed(result.draft.followedProtocol);
         setTodayProtocolDifficulty(result.draft.protocolDifficulty);
+        setTodayEnergyLevel(result.draft.energyLevel);
         setTodayUnderPain(result.draft.underPain);
         setTodayOverPain(result.draft.overPain);
         setTodayNetEffect(result.draft.netEffect);
@@ -238,6 +241,7 @@ export function HabitImprovementAnalysisModal({
     if (shouldUseDraft) {
       setTodayFollowed(loadedDraft.followedProtocol);
       setTodayProtocolDifficulty(loadedDraft.protocolDifficulty);
+      setTodayEnergyLevel(loadedDraft.energyLevel);
       setTodayUnderPain(loadedDraft.underPain);
       setTodayOverPain(loadedDraft.overPain);
       setTodayNetEffect(loadedDraft.netEffect);
@@ -248,6 +252,7 @@ export function HabitImprovementAnalysisModal({
 
     setTodayFollowed(selectedDay.followedProtocol ?? null);
     setTodayProtocolDifficulty(selectedDay.protocolDifficulty ?? null);
+    setTodayEnergyLevel(selectedDay.energyLevel ?? null);
     setTodayUnderPain(selectedDay.underPain ?? 0);
     setTodayOverPain(selectedDay.overPain ?? 0);
     setTodayNetEffect(selectedDay.netEffect ?? 'same');
@@ -271,6 +276,7 @@ export function HabitImprovementAnalysisModal({
         dayIndex: selectedDayIndex,
         followedProtocol: todayFollowed,
         protocolDifficulty: todayProtocolDifficulty,
+        energyLevel: todayEnergyLevel,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -296,6 +302,7 @@ export function HabitImprovementAnalysisModal({
     todayFollowed,
     todayNetEffect,
     todayNote,
+    todayEnergyLevel,
     todayOverPain,
     todayProtocolDifficulty,
     todayUnderPain,
@@ -373,6 +380,10 @@ export function HabitImprovementAnalysisModal({
 
       if (!Number.isFinite(todayUnderPain) || todayUnderPain < 0 || todayUnderPain > 3) {
         return 'Under-pain must be between 0 and 3.';
+      }
+
+      if (todayEnergyLevel === null || !Number.isFinite(todayEnergyLevel) || todayEnergyLevel < 1 || todayEnergyLevel > 5) {
+        return 'Energy level must be between 1 and 5.';
       }
 
       if (!Number.isFinite(todayOverPain) || todayOverPain < 0 || todayOverPain > 3) {
@@ -538,6 +549,7 @@ export function HabitImprovementAnalysisModal({
         date: selectedDay.date,
         followedProtocol: todayFollowed,
         protocolDifficulty: todayProtocolDifficulty,
+        energyLevel: todayEnergyLevel,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -555,6 +567,7 @@ export function HabitImprovementAnalysisModal({
         date: selectedDay.date,
         followedProtocol: todayFollowed,
         protocolDifficulty: todayProtocolDifficulty,
+        energyLevel: todayEnergyLevel,
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
@@ -863,6 +876,21 @@ export function HabitImprovementAnalysisModal({
                 {todayProtocolDifficulty === null
                   ? 'Tap the slider to set a difficulty score.'
                   : `Difficulty: ${todayProtocolDifficulty}/5`}
+              </span>
+            </label>
+            <label>
+              Energy level (1 depleted, 5 energized)
+              <input
+                type="range"
+                min={1}
+                max={5}
+                value={todayEnergyLevel ?? 3}
+                onChange={(event) => setTodayEnergyLevel(Number(event.target.value))}
+              />
+              <span className="habit-analysis-modal__input-help">
+                {todayEnergyLevel === null
+                  ? 'Tap the slider to set your energy level.'
+                  : `Energy level: ${todayEnergyLevel}/5`}
               </span>
             </label>
             <label>

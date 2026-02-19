@@ -64,6 +64,7 @@ export type HabitExperimentDayInput = {
   date: string;
   followedProtocol: boolean | null;
   protocolDifficulty: number | null;
+  energyLevel: number | null;
   underPain: number | null;
   overPain: number | null;
   netEffect: 'better' | 'same' | 'worse' | null;
@@ -76,6 +77,7 @@ export type HabitAnalysisMobileDraft = {
   dayIndex: number;
   followedProtocol: boolean | null;
   protocolDifficulty: number | null;
+  energyLevel: number | null;
   underPain: number;
   overPain: number;
   netEffect: 'better' | 'same' | 'worse';
@@ -303,6 +305,8 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
   const safeDayIndex = clamp(Math.round(input.dayIndex), 1, 7);
   const safeProtocolDifficulty =
     input.protocolDifficulty === null ? null : clamp(Math.round(input.protocolDifficulty), 1, 5);
+  const safeEnergyLevel =
+    input.energyLevel === null ? null : clamp(Math.round(input.energyLevel), 1, 5);
   const safeUnderPain = input.underPain === null ? null : clamp(Math.round(input.underPain), 0, 3);
   const safeOverPain = input.overPain === null ? null : clamp(Math.round(input.overPain), 0, 3);
 
@@ -313,6 +317,7 @@ export async function logHabitExperimentDay(sessionId: string, input: HabitExper
       date: input.date,
       followed_protocol: input.followedProtocol,
       protocol_difficulty: safeProtocolDifficulty,
+      energy_level: safeEnergyLevel,
       under_pain: safeUnderPain,
       over_pain: safeOverPain,
       net_effect: input.netEffect,
@@ -351,7 +356,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
 
   const { data, error } = await supabase
     .from('habit_experiment_days')
-    .select('day_index, date, followed_protocol, protocol_difficulty, under_pain, over_pain, net_effect, win_note, note')
+    .select('day_index, date, followed_protocol, protocol_difficulty, energy_level, under_pain, over_pain, net_effect, win_note, note')
     .eq('session_id', sessionId)
     .order('day_index', { ascending: true });
 
@@ -368,6 +373,7 @@ export async function listHabitExperimentDays(sessionId: string): Promise<{ days
       date: String(row.date ?? ''),
       followedProtocol: typeof row.followed_protocol === 'boolean' ? row.followed_protocol : null,
       protocolDifficulty: typeof row.protocol_difficulty === 'number' ? row.protocol_difficulty : null,
+      energyLevel: typeof row.energy_level === 'number' ? row.energy_level : null,
       underPain: typeof row.under_pain === 'number' ? row.under_pain : null,
       overPain: typeof row.over_pain === 'number' ? row.over_pain : null,
       netEffect:
@@ -420,6 +426,10 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
     row.protocolDifficulty === null || row.protocolDifficulty === undefined
       ? null
       : clamp(Math.round(Number(row.protocolDifficulty)), 1, 5);
+  const energyLevel =
+    row.energyLevel === null || row.energyLevel === undefined
+      ? null
+      : clamp(Math.round(Number(row.energyLevel)), 1, 5);
 
   const netEffect = row.netEffect === 'better' || row.netEffect === 'same' || row.netEffect === 'worse'
     ? row.netEffect
@@ -430,6 +440,7 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
       dayIndex,
       followedProtocol: typeof row.followedProtocol === 'boolean' ? row.followedProtocol : null,
       protocolDifficulty: Number.isFinite(protocolDifficulty) ? protocolDifficulty : null,
+      energyLevel: Number.isFinite(energyLevel) ? energyLevel : null,
       underPain: clamp(Math.round(Number(row.underPain ?? 0)), 0, 3),
       overPain: clamp(Math.round(Number(row.overPain ?? 0)), 0, 3),
       netEffect,
@@ -454,6 +465,8 @@ export async function saveHabitAnalysisMobileDraft(
           followedProtocol: draft.followedProtocol,
           protocolDifficulty:
             draft.protocolDifficulty === null ? null : clamp(Math.round(draft.protocolDifficulty), 1, 5),
+          energyLevel:
+            draft.energyLevel === null ? null : clamp(Math.round(draft.energyLevel), 1, 5),
           underPain: clamp(Math.round(draft.underPain), 0, 3),
           overPain: clamp(Math.round(draft.overPain), 0, 3),
           netEffect: draft.netEffect,
