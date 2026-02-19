@@ -22795,6 +22795,21 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 
+.habit-analysis-modal__draft-status {
+  margin: 0;
+  font-size: 0.76rem;
+}
+
+.habit-analysis-modal__draft-status--saving,
+.habit-analysis-modal__draft-status--saved {
+  color: #93c5fd;
+}
+
+.habit-analysis-modal__draft-status--error {
+  color: #fca5a5;
+}
+
+
 .habit-analysis-modal__binary-toggle {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

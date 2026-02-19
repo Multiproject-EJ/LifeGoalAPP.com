@@ -70,6 +70,18 @@ export type HabitExperimentDayInput = {
   note?: string;
 };
 
+
+export type HabitAnalysisMobileDraft = {
+  dayIndex: number;
+  followedProtocol: boolean | null;
+  protocolDifficulty: number | null;
+  underPain: number;
+  overPain: number;
+  netEffect: 'better' | 'same' | 'worse';
+  winNote: string;
+  note: string;
+};
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -364,6 +376,82 @@ export async function saveHabitAnalysisProgress(sessionId: string, step: number)
   const { error } = await supabase
     .from('habit_analysis_sessions')
     .update({ current_step: safeStep })
+    .eq('id', sessionId);
+
+  return { error: error?.message ?? null };
+}
+
+export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ draft: HabitAnalysisMobileDraft | null; error: string | null }> {
+  const supabase = getUntypedSupabase();
+
+  const { data, error } = await supabase
+    .from('habit_analysis_sessions')
+    .select('mobile_draft')
+    .eq('id', sessionId)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { draft: null, error: null };
+    }
+    return { draft: null, error: error.message };
+  }
+
+  const rawDraft = (data as { mobile_draft?: unknown } | null)?.mobile_draft;
+  if (!rawDraft || typeof rawDraft !== 'object' || Array.isArray(rawDraft)) {
+    return { draft: null, error: null };
+  }
+
+  const row = rawDraft as Record<string, unknown>;
+  const dayIndex = clamp(Math.round(Number(row.dayIndex ?? 1)), 1, 7);
+  const protocolDifficulty =
+    row.protocolDifficulty === null || row.protocolDifficulty === undefined
+      ? null
+      : clamp(Math.round(Number(row.protocolDifficulty)), 1, 5);
+
+  const netEffect = row.netEffect === 'better' || row.netEffect === 'same' || row.netEffect === 'worse'
+    ? row.netEffect
+    : 'same';
+
+  return {
+    draft: {
+      dayIndex,
+      followedProtocol: typeof row.followedProtocol === 'boolean' ? row.followedProtocol : null,
+      protocolDifficulty: Number.isFinite(protocolDifficulty) ? protocolDifficulty : null,
+      underPain: clamp(Math.round(Number(row.underPain ?? 0)), 0, 3),
+      overPain: clamp(Math.round(Number(row.overPain ?? 0)), 0, 3),
+      netEffect,
+      winNote: typeof row.winNote === 'string' ? row.winNote.slice(0, 160) : '',
+      note: typeof row.note === 'string' ? row.note.slice(0, 240) : '',
+    },
+    error: null,
+  };
+}
+
+export async function saveHabitAnalysisMobileDraft(
+  sessionId: string,
+  draft: HabitAnalysisMobileDraft | null,
+): Promise<{ error: string | null }> {
+  const supabase = getUntypedSupabase();
+
+  const normalizedDraft =
+    draft === null
+      ? null
+      : {
+          dayIndex: clamp(Math.round(draft.dayIndex), 1, 7),
+          followedProtocol: draft.followedProtocol,
+          protocolDifficulty:
+            draft.protocolDifficulty === null ? null : clamp(Math.round(draft.protocolDifficulty), 1, 5),
+          underPain: clamp(Math.round(draft.underPain), 0, 3),
+          overPain: clamp(Math.round(draft.overPain), 0, 3),
+          netEffect: draft.netEffect,
+          winNote: draft.winNote.trim().slice(0, 160),
+          note: draft.note.trim().slice(0, 240),
+        };
+
+  const { error } = await supabase
+    .from('habit_analysis_sessions')
+    .update({ mobile_draft: normalizedDraft })
     .eq('id', sessionId);
 
   return { error: error?.message ?? null };
