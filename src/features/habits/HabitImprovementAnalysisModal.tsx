@@ -7,6 +7,7 @@ import {
   logHabitExperimentDay,
   saveHabitAnalysisCosts,
   saveHabitAnalysisCompletionReflection,
+  saveHabitAnalysisCompletionSummary,
   saveHabitAnalysisDesires,
   saveHabitAnalysisProtocol,
   saveHabitAnalysisMobileDraft,
@@ -383,6 +384,53 @@ export function HabitImprovementAnalysisModal({
   const requiresWinNote = step === 4 && todayNetEffect === 'better';
   const isWinNoteMissing = requiresWinNote && todayWinNote.trim().length === 0;
 
+  const completionSummary = useMemo(() => {
+    const days = Object.values(experimentDays).filter((day) => day.followedProtocol !== null);
+    if (days.length === 0) {
+      return {
+        adherenceRate: 0,
+        betterDays: 0,
+        sameDays: 0,
+        worseDays: 0,
+        averageStressLevel: null,
+        averageConfidenceTomorrow: null,
+        averageUrgeLevel: null,
+      };
+    }
+
+    const followedDays = days.filter((day) => day.followedProtocol === true).length;
+    const netEffects = days.reduce(
+      (acc, day) => {
+        if (day.netEffect === 'better') acc.betterDays += 1;
+        if (day.netEffect === 'same') acc.sameDays += 1;
+        if (day.netEffect === 'worse') acc.worseDays += 1;
+        return acc;
+      },
+      { betterDays: 0, sameDays: 0, worseDays: 0 },
+    );
+
+    const stressValues = days.map((day) => day.stressLevel).filter((value): value is number => typeof value === 'number');
+    const confidenceValues = days
+      .map((day) => day.confidenceTomorrow)
+      .filter((value): value is number => typeof value === 'number');
+    const urgeValues = days.map((day) => day.urgeLevel).filter((value): value is number => typeof value === 'number');
+
+    const average = (values: number[]) => {
+      if (values.length === 0) {
+        return null;
+      }
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    };
+
+    return {
+      adherenceRate: (followedDays / days.length) * 100,
+      ...netEffects,
+      averageStressLevel: average(stressValues),
+      averageConfidenceTomorrow: average(confidenceValues),
+      averageUrgeLevel: average(urgeValues),
+    };
+  }, [experimentDays]);
+
   const toggleTag = (list: string[], setList: (value: string[]) => void, value: string) => {
     if (list.includes(value)) {
       setList(list.filter((item) => item !== value));
@@ -661,6 +709,12 @@ export function HabitImprovementAnalysisModal({
 
         if (reflectionResult.error) {
           setError(reflectionResult.error);
+          return;
+        }
+
+        const completionSummaryResult = await saveHabitAnalysisCompletionSummary(id, completionSummary);
+        if (completionSummaryResult.error) {
+          setError(completionSummaryResult.error);
           return;
         }
       }
@@ -1097,6 +1151,21 @@ export function HabitImprovementAnalysisModal({
               <section className="habit-analysis-modal__completion-card" aria-label="Experiment completion reflection">
                 <h4>7-day recap</h4>
                 <p>Capture a quick reflection so your next week starts sharper.</p>
+                <div className="habit-analysis-modal__completion-metrics" aria-label="7 day metrics snapshot">
+                  <p><strong>Adherence:</strong> {completionSummary.adherenceRate.toFixed(0)}%</p>
+                  <p>
+                    <strong>Net days:</strong>{' '}
+                    {completionSummary.betterDays} better · {completionSummary.sameDays} same · {completionSummary.worseDays} worse
+                  </p>
+                  <p>
+                    <strong>Avg stress/confidence:</strong>{' '}
+                    {completionSummary.averageStressLevel ? completionSummary.averageStressLevel.toFixed(1) : '—'}/5 ·{' '}
+                    {completionSummary.averageConfidenceTomorrow
+                      ? completionSummary.averageConfidenceTomorrow.toFixed(1)
+                      : '—'}
+                    /5
+                  </p>
+                </div>
                 <label>
                   Biggest win (optional)
                   <input

@@ -22903,6 +22903,22 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.82rem;
 }
 
+.habit-analysis-modal__completion-metrics {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 0.65rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(147, 197, 253, 0.22);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.habit-analysis-modal__completion-metrics p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #dbeafe;
+}
+
 .habit-analysis-modal__footer {
   margin-top: 1rem;
   display: flex;
@@ -22960,5 +22976,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .habit-analysis-modal__binary-toggle--triple button {
     font-size: 0.82rem;
+  }
+
+  .habit-analysis-modal__completion-metrics {
+    gap: 0.4rem;
+    padding: 0.55rem;
   }
 }
