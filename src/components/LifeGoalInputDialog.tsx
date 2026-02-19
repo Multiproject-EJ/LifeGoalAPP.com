@@ -1,10 +1,21 @@
-import { ChangeEvent, FormEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
 import type { GoalStatusTag } from '../features/goals/goalStatus';
 import { DEFAULT_GOAL_STATUS, GOAL_STATUS_OPTIONS } from '../features/goals/goalStatus';
 import useAiGoalSuggestion from '../hooks/useAiGoalSuggestion';
+import useGoalCoachChat, {
+  type GoalCoachContextEvolutionEvent,
+  type GoalCoachContextGoal,
+  type GoalCoachDraft,
+} from '../hooks/useGoalCoachChat';
+import { fetchPersonalityProfile } from '../services/personalityTest';
+import { fetchGoals } from '../services/goals';
+import { fetchRecentGoalSnapshots } from '../services/goalSnapshots';
+import { getAiCoachAccess } from '../services/aiCoachAccess';
+import { recordTelemetryEvent } from '../services/telemetry';
 import { AI_FEATURE_ICON } from '../constants/ai';
+import { resolveGoalCoachExperimentVariant } from '../features/goals/goalCoachExperiments';
 
 type LifeGoalStep = {
   id: string;
@@ -42,12 +53,19 @@ type LifeGoalFormData = {
   alerts: LifeGoalAlert[];
 };
 
+type GoalCoachUiMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+};
+
 type LifeGoalInputDialogProps = {
   session: Session;
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: LifeGoalFormData) => Promise<void>;
   initialCategory: LifeWheelCategoryKey | null;
+  coachingMode?: 'slice' | 'guided';
 };
 
 export function LifeGoalInputDialog({
@@ -56,9 +74,11 @@ export function LifeGoalInputDialog({
   onClose,
   onSave,
   initialCategory,
+  coachingMode = 'slice',
 }: LifeGoalInputDialogProps) {
   // Initialize AI goal suggestion hook for generating goal recommendations
   const { loading: aiLoading, error: aiError, suggestion: aiSuggestion, generateSuggestion } = useAiGoalSuggestion();
+  const { loading: chatLoading, error: chatServiceError, sendMessage } = useGoalCoachChat();
 
   const [formData, setFormData] = useState<LifeGoalFormData>(() => ({
     title: '',
@@ -92,12 +112,176 @@ export function LifeGoalInputDialog({
 
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'steps' | 'timing' | 'alerts'>('basic');
+  const guidedTabOrder: Array<'basic' | 'steps' | 'timing' | 'alerts'> = ['basic', 'steps', 'timing', 'alerts'];
+  const guidedTabIndex = guidedTabOrder.indexOf(activeTab);
+  const isGuidedMode = coachingMode === 'guided';
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<GoalCoachUiMessage[]>([]);
+  const [chatSubmitting, setChatSubmitting] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatDraftGoal, setChatDraftGoal] = useState<GoalCoachDraft | null>(null);
+  const [personalitySummary, setPersonalitySummary] = useState<string | null>(null);
+  const [existingGoalTitles, setExistingGoalTitles] = useState<string[]>([]);
+  const [existingGoalsStructured, setExistingGoalsStructured] = useState<GoalCoachContextGoal[]>([]);
+  const [goalEvolutionSummary, setGoalEvolutionSummary] = useState<string | null>(null);
+  const [goalEvolutionEvents, setGoalEvolutionEvents] = useState<GoalCoachContextEvolutionEvent[]>([]);
+  const aiCoachAccess = getAiCoachAccess(session);
+  const goalCoachVariant = resolveGoalCoachExperimentVariant();
+  const buildCoachMessagesPayload = useCallback(
+    (newUserMessage?: string) => {
+      const baseMessages = chatMessages.map((message) => ({
+        role: message.role,
+        content: message.text,
+      }));
+
+      if (newUserMessage?.trim()) {
+        baseMessages.push({
+          role: 'user',
+          content: newUserMessage.trim(),
+        });
+      }
+
+      return baseMessages;
+    },
+    [chatMessages],
+  );
+
+
+
+  const recordCoachTelemetry = useCallback(
+    (eventType: 'goal_coach_chat_sent' | 'goal_coach_chat_draft_received' | 'goal_coach_chat_goal_created', metadata?: Record<string, unknown>) => {
+      const userId = session?.user?.id;
+      if (!userId) {
+        return;
+      }
+
+      void recordTelemetryEvent({
+        userId,
+        eventType,
+        metadata: {
+          source: 'life_goal_input_dialog',
+          variant: goalCoachVariant,
+          ...metadata,
+        },
+      });
+    },
+    [session?.user?.id],
+  );
+
+  useEffect(() => {
+    if (!isOpen || !session?.user?.id) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadCoachContext = async () => {
+      try {
+        const [profileResult, goalsResult] = await Promise.all([
+          fetchPersonalityProfile(session.user.id),
+          fetchGoals(),
+        ]);
+
+        if (!cancelled) {
+          const summary = profileResult.data?.personality_summary;
+          setPersonalitySummary(typeof summary === 'string' && summary.trim().length > 0 ? summary.trim() : null);
+
+          const goals = goalsResult.data ?? [];
+          const goalTitles = goals
+            .map((goal) => (typeof goal.title === 'string' ? goal.title.trim() : ''))
+            .filter((title) => title.length > 0)
+            .slice(0, 12);
+          setExistingGoalTitles(goalTitles);
+
+          const structuredGoals: GoalCoachContextGoal[] = goals
+            .map((goal) => ({
+              title: typeof goal.title === 'string' ? goal.title.trim() : '',
+              statusTag: goal.status_tag,
+              lifeWheelCategory: goal.life_wheel_category,
+              targetDate: goal.target_date,
+            }))
+            .filter((goal) => goal.title.length > 0)
+            .slice(0, 12);
+          setExistingGoalsStructured(structuredGoals);
+        }
+
+        if (aiCoachAccess.goalEvolution) {
+          const snapshots = await fetchRecentGoalSnapshots(session.user.id, 8);
+          if (!cancelled) {
+            const snapshotSummary = snapshots
+              .map((snapshot) => (typeof snapshot.summary === 'string' ? snapshot.summary.trim() : ''))
+              .filter((item) => item.length > 0)
+              .slice(0, 6)
+              .join(' | ');
+            setGoalEvolutionSummary(snapshotSummary || null);
+
+            const structuredEvents: GoalCoachContextEvolutionEvent[] = snapshots
+              .map((snapshot) => ({
+                snapshotType: snapshot.snapshot_type,
+                summary: typeof snapshot.summary === 'string' ? snapshot.summary.trim() : '',
+                createdAt: snapshot.created_at,
+              }))
+              .filter((event) => event.summary.length > 0)
+              .slice(0, 8);
+            setGoalEvolutionEvents(structuredEvents);
+          }
+        } else if (!cancelled) {
+          setGoalEvolutionSummary(null);
+          setGoalEvolutionEvents([]);
+        }
+      } catch {
+        if (!cancelled) {
+          setPersonalitySummary(null);
+          setExistingGoalTitles([]);
+          setExistingGoalsStructured([]);
+          setGoalEvolutionSummary(null);
+          setGoalEvolutionEvents([]);
+        }
+      }
+    };
+
+    void loadCoachContext();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [aiCoachAccess.goalEvolution, isOpen, session]);
 
   const handleFieldChange = (field: keyof LifeGoalFormData) => (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setFormData((current) => ({ ...current, [field]: event.target.value }));
   };
+
+  const canAdvanceGuidedStep = useCallback((tab: 'basic' | 'steps' | 'timing' | 'alerts') => {
+    if (tab === 'basic') {
+      return formData.title.trim().length > 0 && formData.description.trim().length > 0;
+    }
+
+    if (tab === 'steps') {
+      return formData.steps.length > 0 || (currentStep.title?.trim().length ?? 0) > 0;
+    }
+
+    if (tab === 'timing') {
+      return formData.targetDate.trim().length > 0 || formData.estimatedDurationDays.trim().length > 0;
+    }
+
+    return true;
+  }, [currentStep.title, formData.description, formData.estimatedDurationDays, formData.steps.length, formData.targetDate, formData.title]);
+
+  const handleGuidedNext = useCallback(() => {
+    if (!canAdvanceGuidedStep(activeTab)) {
+      return;
+    }
+    const nextTab = guidedTabOrder[Math.min(guidedTabIndex + 1, guidedTabOrder.length - 1)];
+    setActiveTab(nextTab);
+  }, [activeTab, canAdvanceGuidedStep, guidedTabIndex, guidedTabOrder]);
+
+  const handleGuidedBack = useCallback(() => {
+    const previousTab = guidedTabOrder[Math.max(guidedTabIndex - 1, 0)];
+    setActiveTab(previousTab);
+  }, [guidedTabIndex, guidedTabOrder]);
 
   const handleAddStep = () => {
     if (!currentStep.title?.trim()) return;
@@ -211,17 +395,43 @@ export function LifeGoalInputDialog({
     });
   };
 
-  const handleUseAiSuggestion = () => {
-    if (!aiSuggestion) return;
+  const buildAiDraft = useCallback(() => {
+    if (chatDraftGoal?.title) {
+      const steps: LifeGoalStep[] = chatDraftGoal.milestones.map((milestone) => ({
+        id: crypto.randomUUID(),
+        title: milestone,
+        description: '',
+        dueDate: '',
+        substeps: [],
+      }));
 
-    // Update the title with AI-generated goal
-    setFormData((current) => ({
-      ...current,
-      title: aiSuggestion.goal,
-    }));
+      if (chatDraftGoal.tasks.length > 0 && steps.length > 0) {
+        steps[0].substeps = chatDraftGoal.tasks.map((task) => ({
+          id: crypto.randomUUID(),
+          title: task,
+        }));
+      }
 
-    // Convert milestones to steps
-    const newSteps: LifeGoalStep[] = aiSuggestion.milestones.map((milestone, index) => ({
+      return {
+        title: chatDraftGoal.title,
+        description: chatDraftGoal.description,
+        targetDate: chatDraftGoal.target_date ?? '',
+        statusTag: (chatDraftGoal.status_tag as GoalStatusTag) || DEFAULT_GOAL_STATUS,
+        lifeWheelCategory: (chatDraftGoal.life_wheel_category as LifeWheelCategoryKey) || formData.lifeWheelCategory,
+        steps,
+      };
+    }
+
+    if (!aiSuggestion) {
+      return null;
+    }
+
+    const title = aiSuggestion.goal.trim();
+    if (!title) {
+      return null;
+    }
+
+    const steps: LifeGoalStep[] = aiSuggestion.milestones.map((milestone) => ({
       id: crypto.randomUUID(),
       title: milestone,
       description: '',
@@ -229,18 +439,206 @@ export function LifeGoalInputDialog({
       substeps: [],
     }));
 
-    // If there are tasks, add them as substeps to the first milestone
-    if (aiSuggestion.tasks.length > 0 && newSteps.length > 0) {
-      newSteps[0].substeps = aiSuggestion.tasks.map((task) => ({
+    if (aiSuggestion.tasks.length > 0 && steps.length > 0) {
+      steps[0].substeps = aiSuggestion.tasks.map((task) => ({
         id: crypto.randomUUID(),
         title: task,
       }));
     }
 
+    return {
+      title,
+      description: formData.description,
+      targetDate: formData.targetDate,
+      statusTag: formData.statusTag,
+      lifeWheelCategory: formData.lifeWheelCategory,
+      steps,
+    };
+  }, [aiSuggestion, chatDraftGoal, formData.description, formData.lifeWheelCategory, formData.statusTag, formData.targetDate]);
+
+  const handleUseAiSuggestion = () => {
+    const draft = buildAiDraft();
+    if (!draft) {
+      return;
+    }
+
     setFormData((current) => ({
       ...current,
-      steps: [...current.steps, ...newSteps],
+      title: draft.title,
+      description: draft.description || current.description,
+      targetDate: draft.targetDate || current.targetDate,
+      statusTag: draft.statusTag,
+      lifeWheelCategory: draft.lifeWheelCategory,
+      steps: [...current.steps, ...draft.steps],
     }));
+  };
+
+  const handleCreateGoalFromAi = async () => {
+    if (saving || chatSubmitting || chatLoading) {
+      return;
+    }
+
+    let draft = buildAiDraft();
+
+    if (!draft && chatMessages.length > 0) {
+      try {
+        setChatSubmitting(true);
+        const response = await sendMessage({
+          messages: buildCoachMessagesPayload(),
+          lifeWheelCategory: formData.lifeWheelCategory,
+          personalitySummary: personalitySummary ?? undefined,
+          existingGoals: existingGoalTitles,
+          existingGoalsStructured: goalCoachVariant === 'context_rich' ? existingGoalsStructured : undefined,
+          includeGoalEvolution: aiCoachAccess.goalEvolution,
+          goalEvolutionSummary: goalEvolutionSummary ?? undefined,
+          goalEvolutionEvents: goalCoachVariant === 'context_rich' ? goalEvolutionEvents : undefined,
+          finalize: true,
+        });
+
+        setChatMessages((current) => [
+          ...current,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            text: response.assistantMessage,
+          },
+        ]);
+
+        setChatDraftGoal(response.draftGoal);
+        if (response.draftGoal) {
+          recordCoachTelemetry('goal_coach_chat_draft_received', {
+            milestoneCount: response.draftGoal.milestones.length,
+            taskCount: response.draftGoal.tasks.length,
+            statusTag: response.draftGoal.status_tag,
+            finalized: true,
+            cohort: existingGoalTitles.length === 0 ? 'new' : 'returning',
+          });
+        }
+        const finalizedDraft = response.draftGoal;
+        draft = finalizedDraft
+          ? {
+              title: finalizedDraft.title,
+              description: finalizedDraft.description,
+              targetDate: finalizedDraft.target_date ?? '',
+              statusTag: (finalizedDraft.status_tag as GoalStatusTag) || DEFAULT_GOAL_STATUS,
+              lifeWheelCategory:
+                (finalizedDraft.life_wheel_category as LifeWheelCategoryKey) || formData.lifeWheelCategory,
+              steps: finalizedDraft.milestones.map((milestone, index) => ({
+                id: crypto.randomUUID(),
+                title: milestone,
+                description: '',
+                dueDate: '',
+                substeps:
+                  index === 0
+                    ? finalizedDraft.tasks.map((task) => ({ id: crypto.randomUUID(), title: task }))
+                    : [],
+              })),
+            }
+          : null;
+      } catch (error) {
+        setChatError(error instanceof Error ? error.message : 'Unable to finalize draft right now.');
+      } finally {
+        setChatSubmitting(false);
+      }
+    }
+
+    if (!draft) {
+      setChatError('No draft available yet. Continue the chat a bit more or use quick AI generate.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave({
+        ...formData,
+        title: draft.title,
+        description: draft.description || formData.description,
+        targetDate: draft.targetDate || formData.targetDate,
+        statusTag: draft.statusTag,
+        lifeWheelCategory: draft.lifeWheelCategory,
+        steps: [...formData.steps, ...draft.steps],
+      });
+      recordCoachTelemetry('goal_coach_chat_goal_created', {
+        lifeWheelCategory: draft.lifeWheelCategory,
+        stepCount: draft.steps.length,
+        usedChatDraft: Boolean(chatDraftGoal),
+        contextProfile: goalCoachVariant === 'context_rich' ? 'structured' : 'summary_only',
+        cohort: existingGoalTitles.length === 0 ? 'new' : 'returning',
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error creating life goal from AI summary:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSendChatMessage = async () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed || chatSubmitting || chatLoading) {
+      return;
+    }
+
+    const nextMessages = buildCoachMessagesPayload(trimmed);
+
+    setChatSubmitting(true);
+    setChatError(null);
+    setChatInput('');
+    setChatMessages((current) => [
+      ...current,
+      {
+        id: crypto.randomUUID(),
+        role: 'user',
+        text: trimmed,
+      },
+    ]);
+
+    recordCoachTelemetry('goal_coach_chat_sent', {
+      messageLength: trimmed.length,
+      messageCount: nextMessages.length,
+      hasPersonalitySummary: Boolean(personalitySummary),
+      existingGoalsCount: existingGoalTitles.length,
+      existingGoalsStructuredCount: existingGoalsStructured.length,
+      includeGoalEvolution: aiCoachAccess.goalEvolution,
+      goalEvolutionEventsCount: goalEvolutionEvents.length,
+      contextProfile: goalCoachVariant === 'context_rich' ? 'structured' : 'summary_only',
+      cohort: existingGoalTitles.length === 0 ? 'new' : 'returning',
+    });
+
+    try {
+      const response = await sendMessage({
+        messages: nextMessages,
+        lifeWheelCategory: formData.lifeWheelCategory,
+        personalitySummary: personalitySummary ?? undefined,
+        existingGoals: existingGoalTitles,
+        includeGoalEvolution: aiCoachAccess.goalEvolution,
+        goalEvolutionSummary: goalEvolutionSummary ?? undefined,
+        finalize: false,
+      });
+
+      setChatDraftGoal(response.draftGoal);
+      if (response.draftGoal) {
+        recordCoachTelemetry('goal_coach_chat_draft_received', {
+          milestoneCount: response.draftGoal.milestones.length,
+          taskCount: response.draftGoal.tasks.length,
+          statusTag: response.draftGoal.status_tag,
+          finalized: false,
+          cohort: existingGoalTitles.length === 0 ? 'new' : 'returning',
+        });
+      }
+      setChatMessages((current) => [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          text: response.assistantMessage,
+        },
+      ]);
+    } catch (error) {
+      setChatError(error instanceof Error ? error.message : 'Unable to send chat message right now.');
+    } finally {
+      setChatSubmitting(false);
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -275,7 +673,10 @@ export function LifeGoalInputDialog({
     <div className="life-goal-dialog-overlay" onClick={onClose}>
       <div className="life-goal-dialog" onClick={(e) => e.stopPropagation()}>
         <header className="life-goal-dialog__header">
-          <h2>Create Life Goal</h2>
+          <div>
+            <h2>{isGuidedMode ? 'Guided goal coach' : 'Create Life Goal'}</h2>
+            {isGuidedMode ? <p className="life-goal-dialog__guided-subtitle">Follow each step to build one clear goal before you save.</p> : null}
+          </div>
           <button
             type="button"
             className="life-goal-dialog__close"
@@ -286,11 +687,25 @@ export function LifeGoalInputDialog({
           </button>
         </header>
 
+        {isGuidedMode ? (
+          <div className="life-goal-dialog__guided-stepper" role="status" aria-live="polite">
+            {guidedTabOrder.map((tab, index) => (
+              <div key={tab} className={`life-goal-dialog__guided-step ${index <= guidedTabIndex ? 'life-goal-dialog__guided-step--active' : ''}`}>
+                <span className="life-goal-dialog__guided-step-index">{index + 1}</span>
+                <span className="life-goal-dialog__guided-step-label">
+                  {tab === 'basic' ? 'Outcome' : tab === 'steps' ? 'First actions' : tab === 'timing' ? 'Timeline' : 'Confirm'}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         <div className="life-goal-dialog__tabs">
           <button
             type="button"
             className={`life-goal-dialog__tab ${activeTab === 'basic' ? 'life-goal-dialog__tab--active' : ''}`}
             onClick={() => setActiveTab('basic')}
+            disabled={isGuidedMode}
           >
             Basic Info
           </button>
@@ -298,6 +713,7 @@ export function LifeGoalInputDialog({
             type="button"
             className={`life-goal-dialog__tab ${activeTab === 'steps' ? 'life-goal-dialog__tab--active' : ''}`}
             onClick={() => setActiveTab('steps')}
+            disabled={isGuidedMode}
           >
             Steps ({formData.steps.length})
           </button>
@@ -305,6 +721,7 @@ export function LifeGoalInputDialog({
             type="button"
             className={`life-goal-dialog__tab ${activeTab === 'timing' ? 'life-goal-dialog__tab--active' : ''}`}
             onClick={() => setActiveTab('timing')}
+            disabled={isGuidedMode}
           >
             Timing
           </button>
@@ -312,6 +729,7 @@ export function LifeGoalInputDialog({
             type="button"
             className={`life-goal-dialog__tab ${activeTab === 'alerts' ? 'life-goal-dialog__tab--active' : ''}`}
             onClick={() => setActiveTab('alerts')}
+            disabled={isGuidedMode}
           >
             Alerts ({formData.alerts.length})
           </button>
@@ -343,14 +761,55 @@ export function LifeGoalInputDialog({
 
               {/* AI Suggestion Section */}
               <div className="life-goal-dialog__ai-section">
-                <button
-                  type="button"
-                  className="life-goal-dialog__ai-generate"
-                  onClick={handleGenerateAiSuggestion}
-                  disabled={!formData.description.trim() || aiLoading}
-                >
-                  {aiLoading ? `${AI_FEATURE_ICON} Generating...` : `${AI_FEATURE_ICON} Generate with AI`}
-                </button>
+                <div className="life-goal-dialog__ai-actions">
+                  <button
+                    type="button"
+                    className="life-goal-dialog__ai-generate"
+                    onClick={handleGenerateAiSuggestion}
+                    disabled={!formData.description.trim() || aiLoading}
+                  >
+                    {aiLoading ? `${AI_FEATURE_ICON} Generating...` : `${AI_FEATURE_ICON} Generate with AI`}
+                  </button>
+                  <button
+                    type="button"
+                    className="life-goal-dialog__ai-chat"
+                    onClick={() => setChatOpen((current) => !current)}
+                    aria-expanded={chatOpen}
+                  >
+                    {AI_FEATURE_ICON} Chat with AI
+                  </button>
+                </div>
+
+                {chatOpen && (
+                  <div className="life-goal-dialog__chat-panel">
+                    <p className="life-goal-dialog__chat-hint">
+                      Describe your current situation, blockers, and desired outcome. The AI coach will draft a goal summary you can confirm.
+                    </p>
+                    <div className="life-goal-dialog__chat-log" role="log" aria-live="polite">
+                      {chatMessages.length === 0 ? (
+                        <p className="life-goal-dialog__chat-empty">No messages yet. Start with what you want to improve in this life area.</p>
+                      ) : (
+                        chatMessages.map((message) => (
+                          <p key={message.id} className={`life-goal-dialog__chat-message life-goal-dialog__chat-message--${message.role}`}>
+                            <strong>{message.role === 'user' ? 'You' : 'AI Coach'}:</strong> {message.text}
+                          </p>
+                        ))
+                      )}
+                    </div>
+                    <div className="life-goal-dialog__chat-compose">
+                      <textarea
+                        value={chatInput}
+                        onChange={(event) => setChatInput(event.target.value)}
+                        rows={3}
+                        placeholder="I want to improve my consistency with workouts because..."
+                      />
+                      <button type="button" onClick={handleSendChatMessage} disabled={chatSubmitting || chatLoading || !chatInput.trim()}>
+                        {chatSubmitting ? 'Sending...' : 'Send'}
+                      </button>
+                    </div>
+                    {chatError || chatServiceError ? <p className="life-goal-dialog__ai-error">{chatError ?? chatServiceError}</p> : null}
+                  </div>
+                )}
 
                 {aiLoading && (
                   <p className="life-goal-dialog__ai-status">
@@ -364,44 +823,54 @@ export function LifeGoalInputDialog({
                   </div>
                 )}
 
-                {aiSuggestion && (
+                {(aiSuggestion || chatDraftGoal) && (
                   <div className="life-goal-dialog__ai-suggestion">
                     <h4>💡 AI Suggestion</h4>
                     <div className="life-goal-dialog__ai-content">
                       <div className="life-goal-dialog__ai-goal">
                         <strong>Goal:</strong>
-                        <p>{aiSuggestion.goal}</p>
+                        <p>{chatDraftGoal?.title ?? aiSuggestion?.goal}</p>
                       </div>
-                      
-                      {aiSuggestion.milestones.length > 0 && (
+
+                      {(chatDraftGoal?.milestones ?? aiSuggestion?.milestones ?? []).length > 0 && (
                         <div className="life-goal-dialog__ai-milestones">
                           <strong>Milestones:</strong>
                           <ul>
-                            {aiSuggestion.milestones.map((milestone, index) => (
+                            {(chatDraftGoal?.milestones ?? aiSuggestion?.milestones ?? []).map((milestone, index) => (
                               <li key={index}>{milestone}</li>
                             ))}
                           </ul>
                         </div>
                       )}
-                      
-                      {aiSuggestion.tasks.length > 0 && (
+
+                      {(chatDraftGoal?.tasks ?? aiSuggestion?.tasks ?? []).length > 0 && (
                         <div className="life-goal-dialog__ai-tasks">
                           <strong>Tasks:</strong>
                           <ul>
-                            {aiSuggestion.tasks.map((task, index) => (
+                            {(chatDraftGoal?.tasks ?? aiSuggestion?.tasks ?? []).map((task, index) => (
                               <li key={index}>{task}</li>
                             ))}
                           </ul>
                         </div>
                       )}
-                      
-                      <button
-                        type="button"
-                        className="life-goal-dialog__ai-use"
-                        onClick={handleUseAiSuggestion}
-                      >
-                        ✓ Use this as goal
-                      </button>
+
+                      <div className="life-goal-dialog__ai-confirm-actions">
+                        <button
+                          type="button"
+                          className="life-goal-dialog__ai-use"
+                          onClick={handleUseAiSuggestion}
+                        >
+                          ✓ Use this as goal
+                        </button>
+                        <button
+                          type="button"
+                          className="life-goal-dialog__ai-create"
+                          onClick={() => void handleCreateGoalFromAi()}
+                          disabled={saving || chatSubmitting || chatLoading}
+                        >
+                          {saving || chatSubmitting ? 'Creating…' : 'Create goal from summary'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -685,12 +1154,35 @@ export function LifeGoalInputDialog({
             </div>
           )}
 
+          {isGuidedMode ? (
+            <div className="life-goal-dialog__guided-nav">
+              <button
+                type="button"
+                className="life-goal-dialog__cancel"
+                onClick={handleGuidedBack}
+                disabled={guidedTabIndex === 0}
+              >
+                Back
+              </button>
+              {guidedTabIndex < guidedTabOrder.length - 1 ? (
+                <button
+                  type="button"
+                  className="life-goal-dialog__save"
+                  onClick={handleGuidedNext}
+                  disabled={!canAdvanceGuidedStep(activeTab)}
+                >
+                  Continue
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="life-goal-dialog__actions">
             <button type="button" className="life-goal-dialog__cancel" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="life-goal-dialog__save" disabled={saving || !formData.title.trim()}>
-              {saving ? 'Saving...' : 'Save Goal'}
+            <button type="submit" className="life-goal-dialog__save" disabled={saving || !formData.title.trim() || (isGuidedMode && guidedTabIndex < guidedTabOrder.length - 1)}>
+              {saving ? 'Saving...' : isGuidedMode ? 'Finish guided goal' : 'Save Goal'}
             </button>
           </div>
         </form>
