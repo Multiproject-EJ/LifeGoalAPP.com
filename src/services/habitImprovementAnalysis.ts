@@ -89,6 +89,9 @@ export type HabitAnalysisMobileDraft = {
   netEffect: 'better' | 'same' | 'worse';
   winNote: string;
   note: string;
+  completionBiggestWin: string;
+  completionHardestMoment: string;
+  completionNextTweak: string;
 };
 
 export type HabitAnalysisMobileDraftState = {
@@ -510,6 +513,12 @@ export async function getHabitAnalysisMobileDraft(sessionId: string): Promise<{ 
       netEffect,
       winNote: typeof row.winNote === 'string' ? row.winNote.slice(0, 160) : '',
       note: typeof row.note === 'string' ? row.note.slice(0, 240) : '',
+      completionBiggestWin:
+        typeof row.completionBiggestWin === 'string' ? row.completionBiggestWin.slice(0, 160) : '',
+      completionHardestMoment:
+        typeof row.completionHardestMoment === 'string' ? row.completionHardestMoment.slice(0, 240) : '',
+      completionNextTweak:
+        typeof row.completionNextTweak === 'string' ? row.completionNextTweak.slice(0, 160) : '',
       },
     },
     error: null,
@@ -564,6 +573,9 @@ export async function saveHabitAnalysisMobileDraft(
           netEffect: normalizeNetEffect(draft.netEffect),
           winNote: draft.winNote.trim().slice(0, 160),
           note: draft.note.trim().slice(0, 240),
+          completionBiggestWin: draft.completionBiggestWin.trim().slice(0, 160),
+          completionHardestMoment: draft.completionHardestMoment.trim().slice(0, 240),
+          completionNextTweak: draft.completionNextTweak.trim().slice(0, 160),
         };
 
   if (normalizedDraft && normalizedDraft.netEffect === 'better' && !normalizedDraft.winNote) {

@@ -269,6 +269,9 @@ export function HabitImprovementAnalysisModal({
         setTodayNetEffect(result.state.draft.netEffect);
         setTodayWinNote(result.state.draft.winNote);
         setTodayNote(result.state.draft.note);
+        setCompletionBiggestWin(result.state.draft.completionBiggestWin);
+        setCompletionHardestMoment(result.state.draft.completionHardestMoment);
+        setCompletionNextTweak(result.state.draft.completionNextTweak);
       }
       setHasLoadedDraft(true);
     });
@@ -294,6 +297,9 @@ export function HabitImprovementAnalysisModal({
       setTodayNetEffect(loadedDraft.netEffect);
       setTodayWinNote(loadedDraft.winNote);
       setTodayNote(loadedDraft.note);
+      setCompletionBiggestWin(loadedDraft.completionBiggestWin);
+      setCompletionHardestMoment(loadedDraft.completionHardestMoment);
+      setCompletionNextTweak(loadedDraft.completionNextTweak);
       return;
     }
 
@@ -335,6 +341,9 @@ export function HabitImprovementAnalysisModal({
         netEffect: todayNetEffect,
         winNote: todayWinNote,
         note: todayNote,
+        completionBiggestWin,
+        completionHardestMoment,
+        completionNextTweak,
       }).then((result) => {
         if (result.error) {
           setDraftSaveState('error');
@@ -365,6 +374,9 @@ export function HabitImprovementAnalysisModal({
     todayProtocolDifficulty,
     todayUnderPain,
     todayWinNote,
+    completionBiggestWin,
+    completionHardestMoment,
+    completionNextTweak,
   ]);
 
   const readinessAverage = useMemo(() => {
@@ -1008,6 +1020,9 @@ export function HabitImprovementAnalysisModal({
                 Last draft save: {new Date(draftSavedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
               </p>
             ) : null}
+            {selectedDayIndex === 7 || isExperimentCompleted ? (
+              <p className="habit-analysis-modal__input-help">Day 7 recap fields autosave with your daily draft.</p>
+            ) : null}
             <label>
               Followed protocol today?
               <div className="habit-analysis-modal__binary-toggle" role="group" aria-label="Followed protocol today">
@@ -1194,8 +1209,18 @@ export function HabitImprovementAnalysisModal({
                     onChange={(event) => setCompletionNextTweak(event.target.value)}
                     maxLength={160}
                     placeholder="One tweak to keep momentum next week"
+                    aria-invalid={selectedDayIndex === 7 && !completionNextTweak.trim()}
                   />
-                  <span className="habit-analysis-modal__input-help">{completionNextTweak.trim().length}/160</span>
+                  <span
+                    className={`habit-analysis-modal__input-help ${
+                      selectedDayIndex === 7 && !completionNextTweak.trim()
+                        ? 'habit-analysis-modal__input-help--warning'
+                        : ''
+                    }`}
+                  >
+                    {selectedDayIndex === 7 && !completionNextTweak.trim() ? 'Required to finish Day 7. ' : ''}
+                    {completionNextTweak.trim().length}/160
+                  </span>
                 </label>
               </section>
             ) : null}
