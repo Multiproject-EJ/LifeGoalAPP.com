@@ -1,5 +1,6 @@
 export type AiCoachDataAccess = {
   goals: boolean;
+  goalEvolution: boolean;
   habits: boolean;
   journaling: boolean;
   reflections: boolean;
@@ -8,6 +9,7 @@ export type AiCoachDataAccess = {
 
 export const DEFAULT_AI_COACH_ACCESS: AiCoachDataAccess = {
   goals: true,
+  goalEvolution: true,
   habits: true,
   journaling: true,
   reflections: true,
@@ -23,6 +25,11 @@ export const AI_COACH_ACCESS_FIELDS: Array<{
     key: 'goals',
     label: 'Goals',
     description: 'Allow the coach to reference your goal titles, milestones, and progress notes.',
+  },
+  {
+    key: 'goalEvolution',
+    label: 'Goal evolution history',
+    description: 'Allow the coach to read historical goal snapshots so it understands how your direction has evolved.',
   },
   {
     key: 'habits',
@@ -52,6 +59,7 @@ export function normalizeAiCoachAccess(
   return {
     goals: value?.goals ?? DEFAULT_AI_COACH_ACCESS.goals,
     habits: value?.habits ?? DEFAULT_AI_COACH_ACCESS.habits,
+    goalEvolution: value?.goalEvolution ?? DEFAULT_AI_COACH_ACCESS.goalEvolution,
     journaling: value?.journaling ?? DEFAULT_AI_COACH_ACCESS.journaling,
     reflections: value?.reflections ?? DEFAULT_AI_COACH_ACCESS.reflections,
     visionBoard: value?.visionBoard ?? DEFAULT_AI_COACH_ACCESS.visionBoard,

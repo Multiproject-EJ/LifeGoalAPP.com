@@ -48,6 +48,7 @@ export function loadAiCoachInstructions(
 
   const accessSummary = [
     formatAccessLine('Goals', dataAccess.goals),
+    formatAccessLine('Goal evolution history', dataAccess.goalEvolution),
     formatAccessLine('Habits', dataAccess.habits),
     formatAccessLine('Journaling', dataAccess.journaling),
     formatAccessLine('Reflections', dataAccess.reflections),

@@ -149,6 +149,42 @@ export interface Database {
         };
         Relationships: [];
       };
+      goal_snapshots: {
+        Row: {
+          id: string;
+          goal_id: string;
+          user_id: string;
+          snapshot_type: string;
+          summary: string | null;
+          before_state: Json | null;
+          after_state: Json | null;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          goal_id: string;
+          user_id: string;
+          snapshot_type: string;
+          summary?: string | null;
+          before_state?: Json | null;
+          after_state?: Json | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          goal_id?: string;
+          user_id?: string;
+          snapshot_type?: string;
+          summary?: string | null;
+          before_state?: Json | null;
+          after_state?: Json | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       goals: {
         Row: {
           id: string;

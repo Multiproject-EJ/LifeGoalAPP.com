@@ -10,10 +10,10 @@ Use this section first when returning to the plan.
 
 | Phase | Status | Next Task |
 |-------|--------|-----------|
-| Phase 1 — Entry Simplification | ☐ Not started | |
-| Phase 2 — Single-Goal View | ☐ Not started | |
-| Phase 3 — Guided Flow | ☐ Not started | |
-| Phase 4 — Life Wheel as Submenu | ☐ Not started | |
+| Phase 1 — Entry Simplification | 🟡 In progress (partially shipped) | Validate current UI against acceptance criteria, then mark complete. |
+| Phase 2 — Single-Goal View | ☐ Not started | Build one-goal-at-a-time view with prev/next + search. |
+| Phase 3 — Guided Flow | ☐ Not started | Implement true stepper wizard (not just entry label). |
+| Phase 4 — Life Wheel as Submenu | ☐ Not started | Add compact wheel launcher integrated into single-goal mode. |
 
 ### First Step (always)
 1. **Determine current build status** by checking recent commits and the app to see which phase is implemented.
@@ -134,3 +134,4 @@ When a goal is opened (either flow):
 - Single-goal view reduces overload and improves focus.
 - Users can quickly find goals via search or wheel.
 - Guided flow helps create structured, high‑quality goals.
+- Goal evolution is tracked as healthy adaptation (not failure) via snapshots/history.
