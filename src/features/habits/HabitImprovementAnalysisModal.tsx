@@ -61,6 +61,7 @@ function buildDefaultExperimentDay(dayIndex: number): HabitExperimentDayInput {
     date: new Date().toISOString().slice(0, 10),
     followedProtocol: null,
     protocolDifficulty: null,
+    urgeLevel: null,
     energyLevel: null,
     confidenceTomorrow: null,
     underPain: 0,
@@ -117,6 +118,7 @@ export function HabitImprovementAnalysisModal({
   const [experimentDays, setExperimentDays] = useState<Record<number, HabitExperimentDayInput>>({});
   const [todayFollowed, setTodayFollowed] = useState<boolean | null>(null);
   const [todayProtocolDifficulty, setTodayProtocolDifficulty] = useState<number | null>(null);
+  const [todayUrgeLevel, setTodayUrgeLevel] = useState<number | null>(null);
   const [todayEnergyLevel, setTodayEnergyLevel] = useState<number | null>(null);
   const [todayConfidenceTomorrow, setTodayConfidenceTomorrow] = useState<number | null>(null);
   const [todayUnderPain, setTodayUnderPain] = useState(0);
@@ -255,6 +257,7 @@ export function HabitImprovementAnalysisModal({
         setSelectedDayIndex(result.state.draft.dayIndex);
         setTodayFollowed(result.state.draft.followedProtocol);
         setTodayProtocolDifficulty(result.state.draft.protocolDifficulty);
+        setTodayUrgeLevel(result.state.draft.urgeLevel);
         setTodayEnergyLevel(result.state.draft.energyLevel);
         setTodayConfidenceTomorrow(result.state.draft.confidenceTomorrow);
         setTodayUnderPain(result.state.draft.underPain);
@@ -278,6 +281,7 @@ export function HabitImprovementAnalysisModal({
     if (shouldUseDraft) {
       setTodayFollowed(loadedDraft.followedProtocol);
       setTodayProtocolDifficulty(loadedDraft.protocolDifficulty);
+      setTodayUrgeLevel(loadedDraft.urgeLevel);
       setTodayEnergyLevel(loadedDraft.energyLevel);
       setTodayConfidenceTomorrow(loadedDraft.confidenceTomorrow);
       setTodayUnderPain(loadedDraft.underPain);
@@ -290,6 +294,7 @@ export function HabitImprovementAnalysisModal({
 
     setTodayFollowed(selectedDay.followedProtocol ?? null);
     setTodayProtocolDifficulty(selectedDay.protocolDifficulty ?? null);
+    setTodayUrgeLevel(selectedDay.urgeLevel ?? null);
     setTodayEnergyLevel(selectedDay.energyLevel ?? null);
     setTodayConfidenceTomorrow(selectedDay.confidenceTomorrow ?? null);
     setTodayUnderPain(selectedDay.underPain ?? 0);
@@ -315,6 +320,7 @@ export function HabitImprovementAnalysisModal({
         dayIndex: selectedDayIndex,
         followedProtocol: todayFollowed,
         protocolDifficulty: todayProtocolDifficulty,
+        urgeLevel: todayUrgeLevel,
         energyLevel: todayEnergyLevel,
         confidenceTomorrow: todayConfidenceTomorrow,
         underPain: todayUnderPain,
@@ -344,6 +350,7 @@ export function HabitImprovementAnalysisModal({
     todayFollowed,
     todayNetEffect,
     todayNote,
+    todayUrgeLevel,
     todayEnergyLevel,
     todayConfidenceTomorrow,
     todayOverPain,
@@ -427,6 +434,10 @@ export function HabitImprovementAnalysisModal({
 
       if (todayEnergyLevel === null || !Number.isFinite(todayEnergyLevel) || todayEnergyLevel < 1 || todayEnergyLevel > 5) {
         return 'Energy level must be between 1 and 5.';
+      }
+
+      if (todayUrgeLevel === null || !Number.isFinite(todayUrgeLevel) || todayUrgeLevel < 1 || todayUrgeLevel > 5) {
+        return 'Urge intensity must be between 1 and 5.';
       }
 
       if (todayConfidenceTomorrow === null || !Number.isFinite(todayConfidenceTomorrow) || todayConfidenceTomorrow < 1 || todayConfidenceTomorrow > 5) {
@@ -612,6 +623,7 @@ export function HabitImprovementAnalysisModal({
         date: selectedDay.date,
         followedProtocol: todayFollowed,
         protocolDifficulty: todayProtocolDifficulty,
+        urgeLevel: todayUrgeLevel,
         energyLevel: todayEnergyLevel,
         confidenceTomorrow: todayConfidenceTomorrow,
         underPain: todayUnderPain,
@@ -644,6 +656,7 @@ export function HabitImprovementAnalysisModal({
         date: selectedDay.date,
         followedProtocol: todayFollowed,
         protocolDifficulty: todayProtocolDifficulty,
+        urgeLevel: todayUrgeLevel,
         energyLevel: todayEnergyLevel,
         confidenceTomorrow: todayConfidenceTomorrow,
         underPain: todayUnderPain,
@@ -960,6 +973,21 @@ export function HabitImprovementAnalysisModal({
                 {todayProtocolDifficulty === null
                   ? 'Tap the slider to set a difficulty score.'
                   : `Difficulty: ${todayProtocolDifficulty}/5`}
+              </span>
+            </label>
+            <label>
+              Urge intensity (1 calm, 5 very strong)
+              <input
+                type="range"
+                min={1}
+                max={5}
+                value={todayUrgeLevel ?? 3}
+                onChange={(event) => setTodayUrgeLevel(Number(event.target.value))}
+              />
+              <span className="habit-analysis-modal__input-help">
+                {todayUrgeLevel === null
+                  ? 'How strong was the urge/craving to break protocol today?'
+                  : `Urge intensity: ${todayUrgeLevel}/5`}
               </span>
             </label>
             <label>
