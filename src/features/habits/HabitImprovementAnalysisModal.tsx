@@ -58,6 +58,7 @@ function buildDefaultExperimentDay(dayIndex: number): HabitExperimentDayInput {
     underPain: 0,
     overPain: 0,
     netEffect: 'same',
+    winNote: '',
     note: '',
   };
 }
@@ -111,6 +112,7 @@ export function HabitImprovementAnalysisModal({
   const [todayUnderPain, setTodayUnderPain] = useState(0);
   const [todayOverPain, setTodayOverPain] = useState(0);
   const [todayNetEffect, setTodayNetEffect] = useState<'better' | 'same' | 'worse'>('same');
+  const [todayWinNote, setTodayWinNote] = useState('');
   const [todayNote, setTodayNote] = useState('');
 
   useEffect(() => {
@@ -190,6 +192,7 @@ export function HabitImprovementAnalysisModal({
     setTodayUnderPain(selectedDay.underPain ?? 0);
     setTodayOverPain(selectedDay.overPain ?? 0);
     setTodayNetEffect(selectedDay.netEffect ?? 'same');
+    setTodayWinNote(selectedDay.winNote ?? '');
     setTodayNote(selectedDay.note ?? '');
   }, [experimentDays, selectedDayIndex]);
 
@@ -255,6 +258,18 @@ export function HabitImprovementAnalysisModal({
 
       if (!Number.isFinite(todayOverPain) || todayOverPain < 0 || todayOverPain > 3) {
         return 'Over-pain must be between 0 and 3.';
+      }
+
+      if (todayNetEffect === 'better' && !todayWinNote.trim()) {
+        return 'Capture one quick win when the day felt better.';
+      }
+
+      if (todayWinNote.trim().length > 160) {
+        return 'Quick win must be 160 characters or less.';
+      }
+
+      if (todayNote.trim().length > 240) {
+        return 'Quick note must be 240 characters or less.';
       }
     }
 
@@ -408,6 +423,7 @@ export function HabitImprovementAnalysisModal({
         overPain: todayOverPain,
         netEffect: todayNetEffect,
         note: todayNote,
+        winNote: todayWinNote,
       });
       setLoading(false);
       if (result.error) {
@@ -423,6 +439,7 @@ export function HabitImprovementAnalysisModal({
         underPain: todayUnderPain,
         overPain: todayOverPain,
         netEffect: todayNetEffect,
+        winNote: todayWinNote,
         note: todayNote,
       };
 
@@ -712,15 +729,34 @@ export function HabitImprovementAnalysisModal({
             </label>
             <label>
               Net effect
-              <select value={todayNetEffect} onChange={(event) => setTodayNetEffect(event.target.value as 'better' | 'same' | 'worse')}>
-                <option value="better">Better</option>
-                <option value="same">Same</option>
-                <option value="worse">Worse</option>
-              </select>
+              <div className="habit-analysis-modal__binary-toggle habit-analysis-modal__binary-toggle--triple" role="group" aria-label="Net effect">
+                {(['better', 'same', 'worse'] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={todayNetEffect === value ? 'is-active' : ''}
+                    aria-pressed={todayNetEffect === value}
+                    onClick={() => setTodayNetEffect(value)}
+                  >
+                    {value.charAt(0).toUpperCase() + value.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </label>
+            <label>
+              Quick win {todayNetEffect === 'better' ? '(required)' : '(optional)'}
+              <input
+                value={todayWinNote}
+                onChange={(event) => setTodayWinNote(event.target.value)}
+                maxLength={160}
+                placeholder="What helped today?"
+              />
+              <span className="habit-analysis-modal__input-help">{todayWinNote.trim().length}/160</span>
             </label>
             <label>
               Quick note (optional)
               <textarea value={todayNote} onChange={(event) => setTodayNote(event.target.value)} rows={2} maxLength={240} />
+              <span className="habit-analysis-modal__input-help">{todayNote.trim().length}/240</span>
             </label>
           </div>
         ) : null}

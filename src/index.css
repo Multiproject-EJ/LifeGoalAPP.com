@@ -22801,6 +22801,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.45rem;
 }
 
+.habit-analysis-modal__binary-toggle--triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .habit-analysis-modal__binary-toggle button {
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.35);
@@ -22908,5 +22912,9 @@ html.platform-ipad .workspace-shell__menu-edge {
   .habit-analysis-modal__binary-toggle button {
     min-height: 2.5rem;
     font-weight: 600;
+  }
+
+  .habit-analysis-modal__binary-toggle--triple button {
+    font-size: 0.82rem;
   }
 }
