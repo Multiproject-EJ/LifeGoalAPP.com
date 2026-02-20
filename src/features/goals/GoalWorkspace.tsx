@@ -95,6 +95,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<GoalStatusFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeGoalIndex, setActiveGoalIndex] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [entryChoice, setEntryChoice] = useState<'slice' | 'guided' | null>(null);
 
@@ -160,10 +162,26 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     return goals.filter((goal) => normalizeGoalStatus(goal.status_tag) === statusFilter);
   }, [goals, statusFilter]);
 
+  const searchedGoals = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return filteredGoals;
+    }
+
+    return filteredGoals.filter((goal) => {
+      const title = goal.title?.toLowerCase() ?? '';
+      const description = goal.description?.toLowerCase() ?? '';
+      const notes = goal.progress_notes?.toLowerCase() ?? '';
+      return title.includes(query) || description.includes(query) || notes.includes(query);
+    });
+  }, [filteredGoals, searchQuery]);
+
+  const activeGoal = searchedGoals[activeGoalIndex] ?? null;
+
   const completedGoals = useMemo(
     () =>
-      filteredGoals.filter((goal) => Boolean(goal.target_date && new Date(goal.target_date).getTime() < Date.now())),
-    [filteredGoals],
+      searchedGoals.filter((goal) => Boolean(goal.target_date && new Date(goal.target_date).getTime() < Date.now())),
+    [searchedGoals],
   );
 
   const totalGoals = goals.length;
@@ -195,20 +213,42 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       return hasLoadedOnce ? 'No goals yet—start by capturing your first big win.' : 'Loading goals…';
     }
 
+    if (searchedGoals.length === 0 && searchQuery.trim()) {
+      return `No goals matched “${searchQuery.trim()}”.`;
+    }
+
     if (statusFilter === 'all') {
-      return `${totalGoals} goal${totalGoals === 1 ? '' : 's'} in flight`;
+      return `${searchedGoals.length} of ${totalGoals} goal${totalGoals === 1 ? '' : 's'} in single-goal view`;
     }
 
     const label = GOAL_STATUS_META[statusFilter].label.toLowerCase();
-    return `Showing ${filteredGoals.length} of ${totalGoals} goal${totalGoals === 1 ? '' : 's'} marked ${label}.`;
+    return `Showing ${searchedGoals.length} of ${totalGoals} goal${totalGoals === 1 ? '' : 's'} marked ${label}.`;
   }, [
-    filteredGoals.length,
     hasLoadedOnce,
     isConfigured,
     isDemoExperience,
+    searchQuery,
+    searchedGoals.length,
     statusFilter,
     totalGoals,
   ]);
+
+  useEffect(() => {
+    setActiveGoalIndex(0);
+  }, [statusFilter, searchQuery]);
+
+  useEffect(() => {
+    if (searchedGoals.length === 0) {
+      if (activeGoalIndex !== 0) {
+        setActiveGoalIndex(0);
+      }
+      return;
+    }
+
+    if (activeGoalIndex > searchedGoals.length - 1) {
+      setActiveGoalIndex(searchedGoals.length - 1);
+    }
+  }, [activeGoalIndex, searchedGoals.length]);
 
   const handleDraftChange = (field: keyof GoalDraft) =>
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -685,24 +725,62 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
               </div>
 
               {totalGoals > 0 ? (
-                <div className="goal-list__filters" role="group" aria-label="Filter goals by status">
-                  {filterOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      className={`goal-list__filter ${statusFilter === option.value ? 'goal-list__filter--active' : ''}`}
-                      onClick={() => setStatusFilter(option.value)}
-                      aria-pressed={statusFilter === option.value}
-                    >
-                      <span className="goal-list__filter-label">{option.label}</span>
-                      <span className="goal-list__filter-count">{option.count}</span>
-                    </button>
-                  ))}
+                <>
+                  <div className="goal-list__filters" role="group" aria-label="Filter goals by status">
+                    {filterOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`goal-list__filter ${statusFilter === option.value ? 'goal-list__filter--active' : ''}`}
+                        onClick={() => setStatusFilter(option.value)}
+                        aria-pressed={statusFilter === option.value}
+                      >
+                        <span className="goal-list__filter-label">{option.label}</span>
+                        <span className="goal-list__filter-count">{option.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <label className="goal-list__search">
+                    <span>Search goals</span>
+                    <input
+                      type="search"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search title, why, or weekly notes"
+                    />
+                  </label>
+                </>
+              ) : null}
+
+              {activeGoal ? (
+                <div className="goal-list__nav" role="navigation" aria-label="Single goal navigation">
+                  <button
+                    type="button"
+                    className="goal-list__nav-button"
+                    onClick={() => setActiveGoalIndex((current) => Math.max(0, current - 1))}
+                    disabled={activeGoalIndex === 0}
+                  >
+                    Previous
+                  </button>
+                  <span className="goal-list__nav-position">
+                    Goal {activeGoalIndex + 1} of {searchedGoals.length}
+                  </span>
+                  <button
+                    type="button"
+                    className="goal-list__nav-button"
+                    onClick={() =>
+                      setActiveGoalIndex((current) => Math.min(searchedGoals.length - 1, current + 1))
+                    }
+                    disabled={activeGoalIndex >= searchedGoals.length - 1}
+                  >
+                    Next
+                  </button>
                 </div>
               ) : null}
 
-              <ul className="goal-list__items">
-                {filteredGoals.map((goal) => {
+              <ul className="goal-list__items" aria-live="polite">
+                {activeGoal ? (() => {
+                  const goal = activeGoal;
                   const isEditing = editingGoalId === goal.id;
                   const isPendingDelete = pendingDeleteId === goal.id;
                   const isUpdating = updatingGoalId === goal.id;
@@ -847,20 +925,22 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
                       )}
                     </li>
                   );
-                })}
+                })() : null}
               </ul>
 
-              {filteredGoals.length === 0 && totalGoals > 0 ? (
+              {searchedGoals.length === 0 && totalGoals > 0 ? (
                 <p className="goal-list__empty">
-                  {statusFilter === 'all'
+                  {searchQuery.trim()
+                    ? 'No goals match this search yet. Try a different keyword.'
+                    : statusFilter === 'all'
                     ? 'No goals match the current filters.'
                     : GOAL_STATUS_META[statusFilter].empty}
                 </p>
               ) : null}
 
-              {filteredGoals.length > 0 && completedGoals.length > 0 ? (
+              {searchedGoals.length > 0 && completedGoals.length > 0 ? (
                 <p className="goal-list__status">
-                  {completedGoals.length === filteredGoals.length
+                  {completedGoals.length === searchedGoals.length
                     ? 'Every goal here has passed its target date—time to celebrate and set the next milestone!'
                     : `${completedGoals.length} goal${completedGoals.length === 1 ? ' has' : 's have'} crossed the target date.`}
                 </p>

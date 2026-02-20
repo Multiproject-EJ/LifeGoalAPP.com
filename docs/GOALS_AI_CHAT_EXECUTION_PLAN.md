@@ -23,12 +23,14 @@ Primary goals:
 - ✅ Added date-window filters and daily trend reporting in the surfaced telemetry report view.
 - ✅ Added cohort segmentation (new vs returning) and exportable experiment snapshots in telemetry reporting.
 - ✅ Guided – Coached now runs a real stepper flow in the creation dialog (Outcome → First actions → Timeline → Confirm).
-- ⏳ Next: connect the telemetry report to a dedicated experiment dashboard panel with persisted filters.
+- ✅ Added single-goal mode foundations in Goals workspace (search + previous/next navigation with one-goal card rendering).
+- ⏳ Next: integrate Life Wheel compact launcher into single-goal mode.
 
 ---
 
 ## Current state (baseline)
 - Two-path entry exists in Goals (`Slice by Slice`, `Guided – Coached`), and guided mode now advances through a stepper sequence with next/back controls.
+- Slice path now defaults to a one-goal-at-a-time card viewer with search and sequential navigation controls.
 - Life Wheel category exploration and category context already exist.
 - AI goal generation exists in the dialog (`Generate with AI`) as a one-shot suggestion.
 - Onboarding captures goal/habit text but does not persist them into domain records.

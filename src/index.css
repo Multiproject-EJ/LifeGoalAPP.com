@@ -3128,6 +3128,55 @@ html.platform-ipad .workspace-shell__menu-edge {
   pointer-events: none;
 }
 
+
+.goal-list__search {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.goal-list__search input {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.goal-list__search input:focus-visible {
+  outline: 2px solid rgba(79, 70, 229, 0.35);
+  outline-offset: 2px;
+}
+
+.goal-list__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.goal-list__nav-button {
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.08);
+  color: #312e81;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+}
+
+.goal-list__nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.goal-list__nav-position {
+  font-size: 0.88rem;
+  color: #475569;
+  font-weight: 600;
+}
+
 .goal-list__items {
   list-style: none;
   margin: 0;
@@ -10127,6 +10176,22 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .progress-dashboard__impact-button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+@media (max-width: 720px) {
+  .goal-list__nav {
+    flex-wrap: wrap;
+  }
+
+  .goal-list__nav-button {
+    flex: 1 1 8rem;
+  }
+
+  .goal-list__nav-position {
     width: 100%;
     text-align: center;
   }
