@@ -20,6 +20,41 @@ const RISK_SCORE_BY_STATE: Record<HabitHealthState, number> = {
   active: 1,
 };
 
+const DEFAULT_HABIT_REWARD_MIN = 5;
+const DEFAULT_HABIT_REWARD_MAX = 85;
+
+function clamp01(value: number): number {
+  if (Number.isNaN(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
+
+/**
+ * Computes a dynamic default habit reward.
+ * Lower adherence / weaker streaks / riskier health states produce higher rewards.
+ */
+export function getDefaultHabitRewardGold(params: {
+  healthState: HabitHealthState | undefined;
+  adherencePercentage: number | null | undefined;
+  currentStreak: number | null | undefined;
+}): number {
+  const state = params.healthState ?? 'active';
+  const adherenceRisk = 1 - clamp01((params.adherencePercentage ?? 100) / 100);
+  const streakRisk = 1 - clamp01((params.currentStreak ?? 0) / 14);
+
+  const stateRisk =
+    state === 'stalled' ? 1 :
+    state === 'at_risk' ? 0.75 :
+    state === 'in_review' ? 0.6 :
+    0.35;
+
+  const combinedRisk = clamp01((stateRisk * 0.5) + (adherenceRisk * 0.35) + (streakRisk * 0.15));
+  const scaledReward =
+    DEFAULT_HABIT_REWARD_MIN +
+    (DEFAULT_HABIT_REWARD_MAX - DEFAULT_HABIT_REWARD_MIN) * combinedRisk;
+
+  return Math.round(Math.min(DEFAULT_HABIT_REWARD_MAX, Math.max(DEFAULT_HABIT_REWARD_MIN, scaledReward)));
+}
+
 export function rankHabitsForTimeLimitedOffer<T extends HabitLike>(params: {
   habits: T[];
   completionsByHabitId: Record<string, CompletionLike | undefined>;
