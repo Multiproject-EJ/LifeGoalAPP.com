@@ -248,6 +248,11 @@ const visionStarRewardKey = (userId: string, dateISO: string) =>
 const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
+
+type HabitPromptWindow = {
+  windowStart: number | null;
+  windowEnd: number | null;
+};
 const habitRecoveryRewardKey = (userId: string, habitId: string, rewardKey: string) =>
   `lifegoal.habit-recovery-reward:${userId}:${habitId}:${rewardKey}`;
 
@@ -436,6 +441,10 @@ export function DailyHabitTracker({
     windowEnd: null,
   });
   const [timeLimitedCountdown, setTimeLimitedCountdown] = useState(0);
+  const [habitReviewWindow, setHabitReviewWindow] = useState<HabitPromptWindow>({
+    windowStart: null,
+    windowEnd: null,
+  });
   const lastTimeLimitedOfferTelemetryKeyRef = useRef<string | null>(null);
   const lastTimeLimitedOfferExpiryTelemetryKeyRef = useRef<string | null>(null);
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -570,6 +579,14 @@ export function DailyHabitTracker({
     timeLimitedOffer.windowEnd !== null &&
     nowTimestamp >= timeLimitedOffer.windowStart &&
     nowTimestamp <= timeLimitedOffer.windowEnd;
+  const isHabitReviewPromptActive =
+    isViewingToday &&
+    reviewQueueHabits.length > 0 &&
+    habitReviewWindow.windowStart !== null &&
+    habitReviewWindow.windowEnd !== null &&
+    nowTimestamp >= habitReviewWindow.windowStart &&
+    nowTimestamp <= habitReviewWindow.windowEnd &&
+    !isTimeLimitedOfferActive;
   const offerHabitIds = useMemo(
     () => new Set([timeLimitedOffer.nextHabitId, timeLimitedOffer.badHabitId].filter(Boolean) as string[]),
     [timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
@@ -701,27 +718,75 @@ export function DailyHabitTracker({
     session?.user?.id,
   ]);
 
-  const buildTimeLimitedOfferWindow = useCallback((dateISO: string) => {
-    const hasOffer = Math.random() < 0.22;
-    if (!hasOffer) {
+  const buildPromptWindow = useCallback((params: {
+    dateISO: string;
+    probability: number;
+    durationMinutesMin: number;
+    durationMinutesMax: number;
+    avoidWindows?: HabitPromptWindow[];
+  }): HabitPromptWindow => {
+    if (Math.random() >= params.probability) {
       return { windowStart: null, windowEnd: null };
     }
 
-    const baseDate = parseISODate(dateISO);
+    const baseDate = parseISODate(params.dateISO);
     baseDate.setHours(0, 0, 0, 0);
-    const isLateSlot = Math.random() < 0.35;
-    const startHourMin = isLateSlot ? 20 : 9;
-    const startHourMax = isLateSlot ? 23 : 20;
-    const startHour =
-      startHourMin + Math.floor(Math.random() * (startHourMax - startHourMin + 1));
-    const startMinute = Math.floor(Math.random() * 60);
-    const startDate = new Date(baseDate);
-    startDate.setHours(startHour, startMinute, 0, 0);
-    const durationMinutes = 18 + Math.floor(Math.random() * 22);
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
 
-    return { windowStart: startDate.getTime(), windowEnd: endDate.getTime() };
+    const awakeHourMin = 9;
+    const awakeHourMax = 23;
+    const startMinuteMin = awakeHourMin * 60;
+    const startMinuteMax = awakeHourMax * 60;
+
+    const attempts = 24;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const startMinute =
+        startMinuteMin + Math.floor(Math.random() * Math.max(1, startMinuteMax - startMinuteMin));
+      const durationMinutes =
+        params.durationMinutesMin +
+        Math.floor(Math.random() * Math.max(1, params.durationMinutesMax - params.durationMinutesMin + 1));
+
+      const startDate = new Date(baseDate.getTime() + startMinute * 60 * 1000);
+      const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+
+      if (endDate.getHours() > awakeHourMax || (endDate.getHours() === awakeHourMax && endDate.getMinutes() > 0)) {
+        continue;
+      }
+
+      const overlapsOtherWindow = (params.avoidWindows ?? []).some((window) => {
+        if (!window.windowStart || !window.windowEnd) {
+          return false;
+        }
+        return startDate.getTime() < window.windowEnd && endDate.getTime() > window.windowStart;
+      });
+
+      if (overlapsOtherWindow) {
+        continue;
+      }
+
+      return { windowStart: startDate.getTime(), windowEnd: endDate.getTime() };
+    }
+
+    return { windowStart: null, windowEnd: null };
   }, []);
+
+  const buildTimeLimitedOfferWindow = useCallback((dateISO: string) => {
+    return buildPromptWindow({
+      dateISO,
+      probability: 0.22,
+      durationMinutesMin: 18,
+      durationMinutesMax: 40,
+    });
+  }, [buildPromptWindow]);
+
+  const buildHabitReviewWindow = useCallback((dateISO: string, offerWindow: HabitPromptWindow) => {
+    return buildPromptWindow({
+      dateISO,
+      probability: 0.22,
+      durationMinutesMin: 20,
+      durationMinutesMax: 45,
+      avoidWindows: [offerWindow],
+    });
+  }, [buildPromptWindow]);
 
   useEffect(() => {
     if (!isViewingToday || habits.length === 0) {
@@ -736,6 +801,8 @@ export function DailyHabitTracker({
       badHabitId: string | null;
       windowStart: number | null;
       windowEnd: number | null;
+      reviewWindowStart?: number | null;
+      reviewWindowEnd?: number | null;
     }>(timeLimitedOfferScheduleKey(session.user.id, activeDate));
 
     const hasValidStoredOffer =
@@ -756,6 +823,10 @@ export function DailyHabitTracker({
 
     if (hasValidStoredOffer) {
       setTimeLimitedOffer(storedOffer);
+      setHabitReviewWindow({
+        windowStart: storedOffer.reviewWindowStart ?? null,
+        windowEnd: storedOffer.reviewWindowEnd ?? null,
+      });
       recordTimeLimitedOfferTelemetry({
         offerDate: activeDate,
         source: 'stored',
@@ -774,17 +845,21 @@ export function DailyHabitTracker({
       sortedHabits.find((habit) => isBadHabit(habit) && habit.id !== nextHabit?.id) ??
       sortedHabits.find((habit) => habit.id !== nextHabit?.id) ??
       null;
-    const { windowStart, windowEnd } = buildTimeLimitedOfferWindow(activeDate);
+    const offerWindow = buildTimeLimitedOfferWindow(activeDate);
+    const reviewWindow = buildHabitReviewWindow(activeDate, offerWindow);
 
     const nextOffer = {
       date: activeDate,
       nextHabitId: nextHabit?.id ?? null,
       badHabitId: badHabit?.id ?? null,
-      windowStart,
-      windowEnd,
+      windowStart: offerWindow.windowStart,
+      windowEnd: offerWindow.windowEnd,
+      reviewWindowStart: reviewWindow.windowStart,
+      reviewWindowEnd: reviewWindow.windowEnd,
     };
 
     setTimeLimitedOffer(nextOffer);
+    setHabitReviewWindow(reviewWindow);
     saveDraft(timeLimitedOfferScheduleKey(session.user.id, activeDate), nextOffer);
     recordTimeLimitedOfferTelemetry({
       offerDate: activeDate,
@@ -797,6 +872,7 @@ export function DailyHabitTracker({
   }, [
     activeDate,
     buildTimeLimitedOfferWindow,
+    buildHabitReviewWindow,
     completions,
     habits.length,
     isBadHabit,
@@ -3490,7 +3566,7 @@ export function DailyHabitTracker({
 
     return (
       <div className="habit-checklist__group">
-        {reviewQueueHabits.length > 0 ? (
+        {isHabitReviewPromptActive ? (
           <section className="habit-review-queue" aria-label="Habit review queue">
             <p className="habit-review-queue__eyebrow">Habit Review</p>
             <h3 className="habit-review-queue__title">
