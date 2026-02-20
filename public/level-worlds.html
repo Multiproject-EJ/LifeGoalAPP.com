@@ -64,24 +64,21 @@
         aspect-ratio: 16 / 9;
         z-index: 3;
       }
-      .island {
+      #landmarksLayer {
         position: absolute;
-        left: 50%;
-        bottom: 7%;
-        transform: translateX(-50%);
-        width: min(900px, 90vw);
+        inset: 0;
       }
       .landmark {
         position: absolute;
-        width: 38px;
-        height: 38px;
+        width: 30px;
+        height: 30px;
         border-radius: 999px;
         border: 2px solid #fff;
         background: radial-gradient(circle at 30% 30%, #fff, #9fffd1 28%, #24c45f 100%);
         box-shadow: 0 0 10px #3bff6f, 0 0 24px rgba(59,255,111,0.8);
         cursor: pointer;
       }
-      .landmark:hover { transform: scale(1.08); }
+      .landmark:hover { transform: translate(-50%, -50%) scale(1.08); }
       .hint {
         position: absolute;
         bottom: 16px;
@@ -97,51 +94,116 @@
   </head>
   <body>
     <main class="level-screen">
-      <img id="levelBg" class="level-bg" src="/level-worlds/assets/level-bg-01.svg" alt="Level background" />
+      <img id="levelBg" class="level-bg" src="/level-worlds/assets/level-bg-01.webp" alt="Level background" />
       <div class="hud">
         <div id="levelLabel" class="level-pill">LEVEL 1</div>
         <button class="exit-btn" id="exitBtn" aria-label="Exit level map">✕</button>
       </div>
-      <section class="island-wrap" aria-label="Island route">
-        <img id="islandOverlay" class="island" src="/level-worlds/assets/island-overlay-01.svg" alt="Island" />
-        <button class="landmark" style="left: 24%; bottom: 42%;" data-index="0" aria-label="Landmark 1"></button>
-        <button class="landmark" style="left: 39%; bottom: 52%;" data-index="1" aria-label="Landmark 2"></button>
-        <button class="landmark" style="left: 54%; bottom: 47%;" data-index="2" aria-label="Landmark 3"></button>
-        <button class="landmark" style="left: 67%; bottom: 38%;" data-index="3" aria-label="Landmark 4"></button>
+      <section class="island-wrap" aria-label="Level route">
+        <div id="landmarksLayer" aria-label="Landmarks"></div>
       </section>
       <div class="hint">Click any glowing stop to move to the next level. End loops back to Level 1.</div>
     </main>
 
     <script>
       const levels = [
-        {
-          background: '/level-worlds/assets/level-bg-01.svg',
-          island: '/level-worlds/assets/island-overlay-01.svg'
-        },
-        {
-          background: '/level-worlds/assets/level-bg-02.svg',
-          island: '/level-worlds/assets/island-overlay-01.svg'
-        },
-        {
-          background: '/level-worlds/assets/level-bg-03.svg',
-          island: '/level-worlds/assets/island-overlay-01.svg'
-        }
+        { background: '/level-worlds/assets/level-bg-01.webp' },
+        { background: '/level-worlds/assets/level-bg-02.webp' },
+        { background: '/level-worlds/assets/level-bg-03.webp' },
+        { background: '/level-worlds/assets/level-bg-04.webp' },
+        { background: '/level-worlds/assets/level-bg-05.webp' },
+        { background: '/level-worlds/assets/level-bg-06.webp' },
+        { background: '/level-worlds/assets/level-bg-07.webp' }
       ];
-      let level = 0;
+
+      const routes = [
+        [
+          { x: 29, y: 66 },
+          { x: 36, y: 58 },
+          { x: 45, y: 53 },
+          { x: 56, y: 53 },
+          { x: 65, y: 58 },
+          { x: 72, y: 65 }
+        ],
+        [
+          { x: 28, y: 67 },
+          { x: 37, y: 59 },
+          { x: 46, y: 54 },
+          { x: 57, y: 54 },
+          { x: 66, y: 59 },
+          { x: 73, y: 66 }
+        ],
+        [
+          { x: 27, y: 65 },
+          { x: 36, y: 57 },
+          { x: 45, y: 51 },
+          { x: 55, y: 51 },
+          { x: 64, y: 56 },
+          { x: 72, y: 64 }
+        ],
+        [
+          { x: 30, y: 66 },
+          { x: 39, y: 58 },
+          { x: 48, y: 52 },
+          { x: 58, y: 52 },
+          { x: 67, y: 58 },
+          { x: 74, y: 66 }
+        ],
+        [
+          { x: 28, y: 66 },
+          { x: 37, y: 57 },
+          { x: 46, y: 51 },
+          { x: 56, y: 51 },
+          { x: 65, y: 57 },
+          { x: 73, y: 66 }
+        ],
+        [
+          { x: 29, y: 65 },
+          { x: 38, y: 56 },
+          { x: 47, y: 50 },
+          { x: 57, y: 50 },
+          { x: 66, y: 56 },
+          { x: 74, y: 64 }
+        ],
+        [
+          { x: 28, y: 67 },
+          { x: 36, y: 59 },
+          { x: 45, y: 54 },
+          { x: 55, y: 54 },
+          { x: 64, y: 60 },
+          { x: 72, y: 67 }
+        ]
+      ];
+      const requestedLevel = Number.parseInt(new URLSearchParams(window.location.search).get('level') || '1', 10);
+      let level = Number.isNaN(requestedLevel) ? 0 : Math.min(levels.length - 1, Math.max(0, requestedLevel - 1));
       const bg = document.getElementById('levelBg');
-      const island = document.getElementById('islandOverlay');
       const label = document.getElementById('levelLabel');
+      const landmarksLayer = document.getElementById('landmarksLayer');
+
+      const renderLandmarks = () => {
+        const route = routes[level] ?? routes[0];
+        landmarksLayer.innerHTML = '';
+        route.forEach((stop, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'landmark';
+          button.style.left = `${stop.x}%`;
+          button.style.top = `${stop.y}%`;
+          button.style.transform = 'translate(-50%, -50%)';
+          button.setAttribute('aria-label', `Landmark ${index + 1}`);
+          button.addEventListener('click', () => {
+            level = (level + 1) % levels.length;
+            update();
+          });
+          landmarksLayer.appendChild(button);
+        });
+      };
+
       const update = () => {
         bg.src = levels[level].background;
-        island.src = levels[level].island;
         label.textContent = `LEVEL ${level + 1} / ${levels.length}`;
+        renderLandmarks();
       };
-      document.querySelectorAll('.landmark').forEach((button) => {
-        button.addEventListener('click', () => {
-          level = (level + 1) % levels.length;
-          update();
-        });
-      });
       document.getElementById('exitBtn').addEventListener('click', () => {
         if (window.history.length > 1) {
           window.close();
