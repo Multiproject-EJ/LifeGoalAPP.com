@@ -3438,6 +3438,10 @@ export default function App() {
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
+          onPlayClick={() => {
+            setShowGameBoardOverlay(false);
+            window.location.href = '/level-worlds.html?level=1';
+          }}
           onTopbarClick={() => {
             setShowGameBoardOverlay(false);
             setShowMobileGamification(true);
@@ -3686,6 +3690,10 @@ export default function App() {
       <GameBoardOverlay
         isOpen={showGameBoardOverlay}
         onClose={() => setShowGameBoardOverlay(false)}
+        onPlayClick={() => {
+          setShowGameBoardOverlay(false);
+          window.location.href = '/level-worlds.html?level=1';
+        }}
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);
           setShowMobileGamification(true);

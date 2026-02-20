@@ -9,6 +9,7 @@ import '../styles/game-board-overlay.css';
 type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
+  onPlayClick?: () => void;
   onTopbarClick?: () => void;
   onSpinWinClick?: () => void;
   onHeartsGameplayClick?: () => void;
@@ -25,6 +26,7 @@ type GameBoardOverlayProps = {
 export function GameBoardOverlay({
   isOpen,
   onClose,
+  onPlayClick,
   onTopbarClick,
   onSpinWinClick,
   onHeartsGameplayClick,
@@ -112,6 +114,15 @@ export function GameBoardOverlay({
 
         {/* Middle Section with Side Icons */}
         <div className="game-board-overlay__middle">
+          <button
+            type="button"
+            className="game-board-overlay__play-button"
+            onClick={onPlayClick}
+            aria-label="Play level one"
+          >
+            PLAY
+          </button>
+
           {/* Left Side Icons - Blue Circle Placeholders */}
           <div className="game-board-overlay__side-icons game-board-overlay__side-icons--left">
             <div className="game-board-overlay__icon-item">
