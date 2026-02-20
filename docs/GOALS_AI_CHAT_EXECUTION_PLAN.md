@@ -24,7 +24,8 @@ Primary goals:
 - ✅ Added cohort segmentation (new vs returning) and exportable experiment snapshots in telemetry reporting.
 - ✅ Guided – Coached now runs a real stepper flow in the creation dialog (Outcome → First actions → Timeline → Confirm).
 - ✅ Added single-goal mode foundations in Goals workspace (search + previous/next navigation with one-goal card rendering).
-- ⏳ Next: integrate Life Wheel compact launcher into single-goal mode.
+- ✅ Integrated a compact Life Wheel launcher into single-goal mode for category jumping without leaving one-goal view.
+- ⏳ Next: add goal strength/progress indicators to the single-goal card.
 
 ---
 

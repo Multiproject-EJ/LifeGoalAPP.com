@@ -14,7 +14,7 @@ import {
 import { isDemoSession } from '../../services/demoSession';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
 import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
-import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { AI_FEATURE_ICON } from '../../constants/ai';
@@ -69,6 +69,7 @@ const STATUS_OPTIONS = GOAL_STATUS_OPTIONS;
 const defaultStatusTag: GoalStatusTag = DEFAULT_GOAL_STATUS;
 
 type GoalStatusFilter = 'all' | GoalStatusTag;
+type LifeWheelFilter = 'all' | LifeWheelCategoryKey | 'uncategorized';
 
 const initialDraft: GoalDraft = {
   title: '',
@@ -95,6 +96,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<GoalStatusFilter>('all');
+  const [lifeWheelFilter, setLifeWheelFilter] = useState<LifeWheelFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeGoalIndex, setActiveGoalIndex] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -162,19 +164,64 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     return goals.filter((goal) => normalizeGoalStatus(goal.status_tag) === statusFilter);
   }, [goals, statusFilter]);
 
-  const searchedGoals = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) {
+  const lifeWheelFilterLabel = useMemo(() => {
+    if (lifeWheelFilter === 'all') {
+      return 'All life areas';
+    }
+    if (lifeWheelFilter === 'uncategorized') {
+      return 'Unassigned goals';
+    }
+    return LIFE_WHEEL_CATEGORIES.find((category) => category.key === lifeWheelFilter)?.label ?? 'Selected life area';
+  }, [lifeWheelFilter]);
+
+  const lifeWheelCounts = useMemo(() => {
+    const counts = LIFE_WHEEL_CATEGORIES.reduce<Record<LifeWheelCategoryKey, number>>((acc, category) => {
+      acc[category.key] = 0;
+      return acc;
+    }, {} as Record<LifeWheelCategoryKey, number>);
+
+    let uncategorized = 0;
+
+    for (const goal of filteredGoals) {
+      const goalCategory = goal.life_wheel_category as LifeWheelCategoryKey | null;
+      if (goalCategory && Object.prototype.hasOwnProperty.call(counts, goalCategory)) {
+        counts[goalCategory] += 1;
+      } else {
+        uncategorized += 1;
+      }
+    }
+
+    return { counts, uncategorized };
+  }, [filteredGoals]);
+
+  const lifeWheelFilteredGoals = useMemo(() => {
+    if (lifeWheelFilter === 'all') {
       return filteredGoals;
     }
 
-    return filteredGoals.filter((goal) => {
+    if (lifeWheelFilter === 'uncategorized') {
+      return filteredGoals.filter((goal) => {
+        const goalCategory = goal.life_wheel_category as LifeWheelCategoryKey | null;
+        return !goalCategory || !LIFE_WHEEL_CATEGORIES.some((category) => category.key === goalCategory);
+      });
+    }
+
+    return filteredGoals.filter((goal) => goal.life_wheel_category === lifeWheelFilter);
+  }, [filteredGoals, lifeWheelFilter]);
+
+  const searchedGoals = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return lifeWheelFilteredGoals;
+    }
+
+    return lifeWheelFilteredGoals.filter((goal) => {
       const title = goal.title?.toLowerCase() ?? '';
       const description = goal.description?.toLowerCase() ?? '';
       const notes = goal.progress_notes?.toLowerCase() ?? '';
       return title.includes(query) || description.includes(query) || notes.includes(query);
     });
-  }, [filteredGoals, searchQuery]);
+  }, [lifeWheelFilteredGoals, searchQuery]);
 
   const activeGoal = searchedGoals[activeGoalIndex] ?? null;
 
@@ -217,6 +264,19 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
       return `No goals matched “${searchQuery.trim()}”.`;
     }
 
+    if (statusFilter === 'all' && lifeWheelFilter === 'all') {
+      return `${searchedGoals.length} of ${totalGoals} goal${totalGoals === 1 ? '' : 's'} in single-goal view`;
+    }
+
+    if (lifeWheelFilter !== 'all' && statusFilter === 'all') {
+      return `Showing ${searchedGoals.length} of ${totalGoals} goal${totalGoals === 1 ? '' : 's'} in ${lifeWheelFilterLabel.toLowerCase()}.`;
+    }
+
+    if (statusFilter !== 'all' && lifeWheelFilter !== 'all') {
+      const statusLabel = GOAL_STATUS_META[statusFilter].label.toLowerCase();
+      return `Showing ${searchedGoals.length} goal${searchedGoals.length === 1 ? '' : 's'} marked ${statusLabel} in ${lifeWheelFilterLabel.toLowerCase()}.`;
+    }
+
     if (statusFilter === 'all') {
       return `${searchedGoals.length} of ${totalGoals} goal${totalGoals === 1 ? '' : 's'} in single-goal view`;
     }
@@ -227,6 +287,8 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
     hasLoadedOnce,
     isConfigured,
     isDemoExperience,
+    lifeWheelFilter,
+    lifeWheelFilterLabel,
     searchQuery,
     searchedGoals.length,
     statusFilter,
@@ -235,7 +297,7 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
 
   useEffect(() => {
     setActiveGoalIndex(0);
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, lifeWheelFilter, searchQuery]);
 
   useEffect(() => {
     if (searchedGoals.length === 0) {
@@ -749,6 +811,37 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
                       placeholder="Search title, why, or weekly notes"
                     />
                   </label>
+                  <div className="goal-list__wheel" role="group" aria-label="Life wheel quick launcher">
+                    <button
+                      type="button"
+                      className={`goal-list__wheel-chip ${lifeWheelFilter === 'all' ? 'goal-list__wheel-chip--active' : ''}`}
+                      onClick={() => setLifeWheelFilter('all')}
+                      aria-pressed={lifeWheelFilter === 'all'}
+                    >
+                      All ({filteredGoals.length})
+                    </button>
+                    {LIFE_WHEEL_CATEGORIES.map((category) => (
+                      <button
+                        key={category.key}
+                        type="button"
+                        className={`goal-list__wheel-chip ${lifeWheelFilter === category.key ? 'goal-list__wheel-chip--active' : ''}`}
+                        onClick={() => setLifeWheelFilter(category.key)}
+                        aria-pressed={lifeWheelFilter === category.key}
+                      >
+                        {category.label} ({lifeWheelCounts.counts[category.key] ?? 0})
+                      </button>
+                    ))}
+                    {lifeWheelCounts.uncategorized > 0 ? (
+                      <button
+                        type="button"
+                        className={`goal-list__wheel-chip ${lifeWheelFilter === 'uncategorized' ? 'goal-list__wheel-chip--active' : ''}`}
+                        onClick={() => setLifeWheelFilter('uncategorized')}
+                        aria-pressed={lifeWheelFilter === 'uncategorized'}
+                      >
+                        Unassigned ({lifeWheelCounts.uncategorized})
+                      </button>
+                    ) : null}
+                  </div>
                 </>
               ) : null}
 
