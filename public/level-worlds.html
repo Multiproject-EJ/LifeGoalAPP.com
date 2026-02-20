@@ -103,7 +103,7 @@
         <button class="exit-btn" id="exitBtn" aria-label="Exit level map">✕</button>
       </div>
       <section class="island-wrap" aria-label="Island route">
-        <img class="island" src="/level-worlds/assets/island-overlay-01.svg" alt="Island" />
+        <img id="islandOverlay" class="island" src="/level-worlds/assets/island-overlay-01.svg" alt="Island" />
         <button class="landmark" style="left: 24%; bottom: 42%;" data-index="0" aria-label="Landmark 1"></button>
         <button class="landmark" style="left: 39%; bottom: 52%;" data-index="1" aria-label="Landmark 2"></button>
         <button class="landmark" style="left: 54%; bottom: 47%;" data-index="2" aria-label="Landmark 3"></button>
@@ -114,16 +114,27 @@
 
     <script>
       const levels = [
-        '/level-worlds/assets/level-bg-01.svg',
-        '/level-worlds/assets/level-bg-02.svg',
-        '/level-worlds/assets/level-bg-03.svg'
+        {
+          background: '/level-worlds/assets/level-bg-01.svg',
+          island: '/level-worlds/assets/island-overlay-01.svg'
+        },
+        {
+          background: '/level-worlds/assets/level-bg-02.svg',
+          island: '/level-worlds/assets/island-overlay-01.svg'
+        },
+        {
+          background: '/level-worlds/assets/level-bg-03.svg',
+          island: '/level-worlds/assets/island-overlay-01.svg'
+        }
       ];
       let level = 0;
       const bg = document.getElementById('levelBg');
+      const island = document.getElementById('islandOverlay');
       const label = document.getElementById('levelLabel');
       const update = () => {
-        bg.src = levels[level];
-        label.textContent = `LEVEL ${level + 1}`;
+        bg.src = levels[level].background;
+        island.src = levels[level].island;
+        label.textContent = `LEVEL ${level + 1} / ${levels.length}`;
       };
       document.querySelectorAll('.landmark').forEach((button) => {
         button.addEventListener('click', () => {

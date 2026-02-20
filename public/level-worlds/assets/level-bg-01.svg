@@ -1,17 +1,12 @@
 <svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0f1f4e"/>
-      <stop offset="60%" stop-color="#1c4d8a"/>
-      <stop offset="100%" stop-color="#2d8fd4"/>
+    <linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#101b40"/>
+      <stop offset="55%" stop-color="#1f4f8d"/>
+      <stop offset="100%" stop-color="#2d8ecf"/>
     </linearGradient>
-    <radialGradient id="glow" cx="70%" cy="20%" r="50%">
-      <stop offset="0%" stop-color="#9bf6ff" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#9bf6ff" stop-opacity="0"/>
-    </radialGradient>
   </defs>
-  <rect width="1600" height="900" fill="url(#sky)"/>
-  <rect width="1600" height="900" fill="url(#glow)"/>
-  <path d="M0 720 Q350 640 680 700 T1600 650 V900 H0 Z" fill="#145e9b" opacity="0.7"/>
-  <path d="M0 760 Q390 680 900 740 T1600 700 V900 H0 Z" fill="#0f4f7e" opacity="0.8"/>
+  <rect width="1600" height="900" fill="url(#sky1)"/>
+  <path d="M0 720 Q330 640 700 710 T1600 650 V900 H0 Z" fill="#145e9b" opacity="0.75"/>
+  <path d="M0 770 Q380 690 880 760 T1600 710 V900 H0 Z" fill="#0f4f7e" opacity="0.85"/>
 </svg>

@@ -1,12 +1,12 @@
 <svg width="1200" height="650" viewBox="0 0 1200 650" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <radialGradient id="land" cx="50%" cy="45%" r="58%">
-      <stop offset="0%" stop-color="#9fe870"/>
-      <stop offset="100%" stop-color="#4d8f3f"/>
+      <stop offset="0%" stop-color="#a4ef76"/>
+      <stop offset="100%" stop-color="#4b8d3f"/>
     </radialGradient>
   </defs>
   <ellipse cx="600" cy="350" rx="460" ry="180" fill="url(#land)"/>
   <ellipse cx="600" cy="410" rx="480" ry="120" fill="#c69c6d"/>
-  <ellipse cx="350" cy="300" rx="110" ry="70" fill="#79bd52"/>
-  <ellipse cx="830" cy="300" rx="90" ry="60" fill="#79bd52"/>
+  <ellipse cx="350" cy="300" rx="110" ry="70" fill="#77bc52"/>
+  <ellipse cx="830" cy="300" rx="90" ry="60" fill="#77bc52"/>
 </svg>
