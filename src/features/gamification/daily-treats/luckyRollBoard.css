@@ -359,6 +359,53 @@
   gap: 12px;
 }
 
+
+.lucky-roll-board__play-button {
+  background: linear-gradient(135deg, #39ff66 0%, #16c94b 100%);
+  color: #ffffff;
+  border: 2px solid #97ffb2;
+  padding: 14px 28px;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  border-radius: 999px;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 10px rgba(57, 255, 102, 0.85),
+    0 0 22px rgba(57, 255, 102, 0.7),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.28);
+  animation: lucky-roll-play-pulse 1.4s ease-in-out infinite;
+  transition: transform 0.15s ease-out;
+}
+
+.lucky-roll-board__play-button:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.lucky-roll-board__play-button:active {
+  transform: scale(0.96);
+}
+
+@keyframes lucky-roll-play-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(57, 255, 102, 0.72),
+      0 0 16px rgba(57, 255, 102, 0.52),
+      inset 0 -3px 8px rgba(0, 0, 0, 0.28);
+  }
+
+  50% {
+    box-shadow:
+      0 0 14px rgba(57, 255, 102, 0.95),
+      0 0 30px rgba(57, 255, 102, 0.9),
+      0 0 44px rgba(57, 255, 102, 0.6),
+      inset 0 -3px 8px rgba(0, 0, 0, 0.28);
+  }
+}
+
 .lucky-roll-board__roll-button {
   background: linear-gradient(135deg, var(--lucky-roll-accent) 0%, #c89960 100%);
   color: var(--lucky-roll-text);
