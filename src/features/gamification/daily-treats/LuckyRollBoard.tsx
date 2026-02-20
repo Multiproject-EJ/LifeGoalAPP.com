@@ -350,6 +350,10 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   };
   
   const isMilestone = gameState.currentLap % 5 === 0;
+
+  const handleOpenLevelWorldMap = useCallback(() => {
+    window.open('/level-worlds.html', '_blank', 'noopener,noreferrer');
+  }, []);
   
   if (showLevelWorlds) {
     return (
@@ -449,6 +453,14 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
         
         {/* Actions */}
         <div className="lucky-roll-board__actions">
+          <button
+            type="button"
+            className="lucky-roll-board__play-button"
+            onClick={handleOpenLevelWorldMap}
+          >
+            PLAY
+          </button>
+
           <button
             type="button"
             className="lucky-roll-board__roll-button"
