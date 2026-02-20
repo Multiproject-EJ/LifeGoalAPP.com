@@ -11,13 +11,14 @@ Use this section first when returning to the plan.
 | Phase | Status | Next Task |
 |-------|--------|-----------|
 | Phase 1 — Entry Simplification | 🟡 In progress (partially shipped) | Validate current UI against acceptance criteria, then mark complete. |
-| Phase 2 — Single-Goal View | ☐ Not started | Build one-goal-at-a-time view with prev/next + search. |
+| Phase 2 — Single-Goal View | ◐ In progress | Integrate compact Life Wheel launcher + goal strength indicator into one-goal card. |
 | Phase 3 — Guided Flow | ◐ In progress | Guided entry now uses a stepper dialog flow; remaining work is richer step validation and refine-in-chat bridge. |
 | Phase 4 — Life Wheel as Submenu | ☐ Not started | Add compact wheel launcher integrated into single-goal mode. |
 
 ### Related slice progress
 - ✅ Added a **Chat with AI** path inside goal creation with transcript + confirm-to-create-goal behavior.
-- ⏳ Still pending for this plan: single-goal navigation, wheel submenu integration, and deeper guided validation/polish.
+- ✅ Single-goal foundations shipped: status filter + search now drive a one-goal-at-a-time card with previous/next navigation.
+- ⏳ Still pending for this plan: wheel submenu integration, goal strength/progress indicators, and deeper guided validation/polish.
 
 ### First Step (always)
 1. **Determine current build status** by checking recent commits and the app to see which phase is implemented.
