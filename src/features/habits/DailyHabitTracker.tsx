@@ -55,6 +55,7 @@ import {
   type HabitHealthState,
 } from './habitHealth';
 import {
+  getDefaultHabitRewardGold,
   isEligibleTimeLimitedOfferHabit,
   rankHabitsForTimeLimitedOffer,
 } from './timeLimitedOffer';
@@ -450,13 +451,6 @@ export function DailyHabitTracker({
   const visionButtonRef = useRef<HTMLButtonElement | null>(null);
   const visionClaimButtonRef = useRef<HTMLButtonElement | null>(null);
   const { earnXP, recordActivity, enabled: gamificationEnabled, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
-  const habitGoldLabel = useMemo(() => {
-    const baseGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE);
-    const earlyGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE_EARLY);
-    const minGold = Math.min(baseGold, earlyGold);
-    const maxGold = Math.max(baseGold, earlyGold);
-    return minGold === maxGold ? `${minGold}` : `${minGold}-${maxGold}`;
-  }, []);
   const shouldShowHabitPoints = showPointsBadges && gamificationEnabled;
 
   const awardHabitRecoveryXp = useCallback(async (params: {
@@ -524,6 +518,26 @@ export function DailyHabitTracker({
       }),
     [habitHealthByHabitId, habits],
   );
+  const defaultPriceByHabitId = useCallback((habitId: string) => {
+    return getDefaultHabitRewardGold({
+      healthState: habitHealthByHabitId[habitId],
+      adherencePercentage: adherenceByHabit[habitId]?.percentage,
+      currentStreak: habitInsights[habitId]?.currentStreak,
+    });
+  }, [adherenceByHabit, habitHealthByHabitId, habitInsights]);
+  const habitGoldLabel = useMemo(() => {
+    const prices = habits.map((habit) => defaultPriceByHabitId(habit.id));
+    if (!prices.length) {
+      const baseGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE);
+      const earlyGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE_EARLY);
+      const minGold = Math.min(baseGold, earlyGold);
+      const maxGold = Math.max(baseGold, earlyGold);
+      return minGold === maxGold ? `${minGold}` : `${minGold}-${maxGold}`;
+    }
+    const minGold = Math.min(...prices);
+    const maxGold = Math.max(...prices);
+    return minGold === maxGold ? `${minGold}` : `${minGold}-${maxGold}`;
+  }, [defaultPriceByHabitId, habits]);
 
   const isBadHabit = useCallback((habit: HabitWithGoal) => {
     const name = habit.name.toLowerCase();
@@ -1338,13 +1352,26 @@ export function DailyHabitTracker({
     return `${minutes}m:${String(seconds).padStart(2, '0')}s`;
   }, [isTimeLimitedOfferActive, timeLimitedCountdown, timeLimitedOffer.windowEnd]);
   const timeLimitedOfferCopy = useMemo(
-    () => ({
-      eyebrow: '⏳ Time-limited offer',
-      nextUp: 'Next up: 🏁EASY START 15 Beinhev (stol) - 30 sec anytime for 💎 85',
-      badBoost: 'Bad habit boost: 📸🫦Lungs(!), Teeth (acid/sugar), Hair (roller,miondxl). for 💎 250',
-      limited: 'Limited time',
-    }),
-    [],
+    () => {
+      const nextHabit = habits.find((habit) => habit.id === timeLimitedOffer.nextHabitId);
+      const badHabit = habits.find((habit) => habit.id === timeLimitedOffer.badHabitId);
+      const nextPrice = timeLimitedOffer.nextHabitId ? offerPriceByHabitId(timeLimitedOffer.nextHabitId) : null;
+      const badPrice = timeLimitedOffer.badHabitId ? offerPriceByHabitId(timeLimitedOffer.badHabitId) : null;
+
+      return {
+        eyebrow: '⏳ Time-limited offer',
+        nextUp:
+          nextHabit && nextPrice
+            ? `Next up: ${nextHabit.name} for 💎 ${nextPrice}`
+            : 'Next up offer is ready when your next focus habit is selected.',
+        badBoost:
+          badHabit && badPrice
+            ? `Struggle boost: ${badHabit.name} for 💎 ${badPrice}`
+            : 'Higher-risk habits get stronger temporary boosts when available.',
+        limited: 'Limited time',
+      };
+    },
+    [habits, offerPriceByHabitId, timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
   );
   const shouldShowOfferBonus = hasClaimedVisionStar && isTimeLimitedOfferActive;
   const visionRewardModal =
@@ -2345,9 +2372,11 @@ export function DailyHabitTracker({
             ? XP_REWARDS.HABIT_COMPLETE_EARLY
             : XP_REWARDS.HABIT_COMPLETE;
           const offerPrice = offerPriceByHabitId(habit.id);
-          const offerXpAmount =
-            offerPrice && XP_TO_GOLD_RATIO > 0
-              ? Math.round(offerPrice / XP_TO_GOLD_RATIO)
+          const defaultPrice = defaultPriceByHabitId(habit.id);
+          const effectivePrice = offerPrice ?? defaultPrice;
+          const effectivePriceXpAmount =
+            effectivePrice && XP_TO_GOLD_RATIO > 0
+              ? Math.round(effectivePrice / XP_TO_GOLD_RATIO)
               : null;
 
           // 1. Immediately add instant feedback (pop/glow)
@@ -2366,10 +2395,15 @@ export function DailyHabitTracker({
           }, 320);
 
           await earnXP(xpAmount, 'habit_complete', habit.id);
-          if (offerXpAmount) {
-            await earnXP(offerXpAmount, 'habit_offer', habit.id, 'Time-limited habit offer');
+          if (effectivePriceXpAmount) {
+            await earnXP(
+              effectivePriceXpAmount,
+              offerPrice ? 'habit_offer' : 'habit_dynamic_reward',
+              habit.id,
+              offerPrice ? 'Time-limited habit offer' : 'Dynamic default habit reward',
+            );
 
-            if (session?.user?.id && isConfigured && !isDemoExperience) {
+            if (offerPrice && session?.user?.id && isConfigured && !isDemoExperience) {
               void recordTelemetryEvent({
                 userId: session.user.id,
                 eventType: 'habit_time_limited_offer_claimed',
@@ -2378,7 +2412,7 @@ export function DailyHabitTracker({
                   habitId: habit.id,
                   habitName: habit.name,
                   offerPrice,
-                  offerXpAmount,
+                  offerXpAmount: effectivePriceXpAmount,
                   healthState: habitHealthByHabitId[habit.id] ?? 'active',
                   adherencePct: Math.round(
                     ((adherenceByHabit[habit.id]?.percentage ?? 100) + Number.EPSILON) * 100,
@@ -3663,6 +3697,7 @@ export function DailyHabitTracker({
             const linkedVisionImage = visionImagesByHabit.get(habit.id);
             const isOfferHabit = isTimeLimitedOfferActive && offerHabitIds.has(habit.id);
             const offerPrice = offerPriceByHabitId(habit.id);
+            const defaultPrice = defaultPriceByHabitId(habit.id);
             const isSkipDisabled = isOfferHabit;
             const autoProgressHabit = buildAutoProgressHabit(habit);
             const autoProgressState = getAutoProgressState(autoProgressHabit);
@@ -3689,7 +3724,7 @@ export function DailyHabitTracker({
               >
                 {(shouldShowHabitPoints || isOfferHabit) ? (
                   <PointsBadge
-                    value={isOfferHabit && offerPrice !== null ? offerPrice : habitGoldLabel}
+                    value={isOfferHabit && offerPrice !== null ? offerPrice : defaultPrice}
                     className={`points-badge--corner habit-points-badge${
                       isOfferHabit ? ' habit-points-badge--offer' : ''
                     }`}
@@ -3697,7 +3732,7 @@ export function DailyHabitTracker({
                     ariaLabel={
                       isOfferHabit && offerPrice !== null
                         ? `Limited offer: ${offerPrice} diamonds`
-                        : undefined
+                        : `Dynamic habit reward: ${defaultPrice} diamonds`
                     }
                   />
                 ) : null}

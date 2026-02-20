@@ -12,6 +12,19 @@ The habits feature enables users to create, track, and monitor habits that suppo
 
 The original vanilla implementation still exists at `/app/habits` as a reference, but the React-based feature is now the primary implementation for the application.
 
+## Dynamic Habit Reward Model
+
+Daily checklist habits now use a **dynamic default coin reward** instead of a flat amount.
+
+- Default reward range: **5 to 85 diamonds/coins** per habit.
+- Reward increases for habits that show more struggle signals (lower adherence, lower streak stability, and riskier habit health states).
+- The dynamic reward is converted to XP-equivalent earn events in the completion flow so the coin economy and XP pipeline stay aligned.
+- **Time-limited offers always take precedence** over this default model while they are active on a habit.
+
+Implementation references:
+- `src/features/habits/timeLimitedOffer.ts` (`getDefaultHabitRewardGold`)
+- `src/features/habits/DailyHabitTracker.tsx` (reward display + completion payout precedence)
+
 ## Database Entities
 
 ### `habits_v2`
