@@ -3456,10 +3456,7 @@ export default function App() {
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
-          onPlayClick={() => {
-            setShowGameBoardOverlay(false);
-            setShowLuckyRoll(true);
-          }}
+          onPlayClick={handleGameOverlayPlayClick}
           onTopbarClick={() => {
             setShowGameBoardOverlay(false);
             setShowMobileGamification(true);
@@ -3708,10 +3705,7 @@ export default function App() {
       <GameBoardOverlay
         isOpen={showGameBoardOverlay}
         onClose={() => setShowGameBoardOverlay(false)}
-        onPlayClick={() => {
-          setShowGameBoardOverlay(false);
-          setShowLuckyRoll(true);
-        }}
+        onPlayClick={handleGameOverlayPlayClick}
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);
           setShowMobileGamification(true);
