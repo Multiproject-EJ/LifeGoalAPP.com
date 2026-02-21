@@ -2073,6 +2073,12 @@ export default function App() {
       setAuthError(profileAutosaveError);
     }
   }, [profileAutosaveError]);
+
+  useEffect(() => {
+    setShowGameBoardOverlay(false);
+    setIsMobileMenuOpen(false);
+  }, [supabaseSession?.user?.id]);
+
   const shouldShowWorkspaceSetup =
     showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 
@@ -3391,6 +3397,12 @@ export default function App() {
     />
   ) : null;
 
+  const handleGameOverlayPlayClick = useCallback(() => {
+    setShowGameBoardOverlay(false);
+    // Route directly to Level 1 map (level-bg-01.webp)
+    window.location.assign('/level-worlds.html?level=1');
+  }, []);
+
   const countdownCalendarModal = (
     <CountdownCalendarModal
       isOpen={showCalendarPlaceholder}
@@ -3444,10 +3456,7 @@ export default function App() {
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
-          onPlayClick={() => {
-            setShowGameBoardOverlay(false);
-            window.location.href = '/level-worlds.html?level=1';
-          }}
+          onPlayClick={handleGameOverlayPlayClick}
           onTopbarClick={() => {
             setShowGameBoardOverlay(false);
             setShowMobileGamification(true);
@@ -3493,7 +3502,7 @@ export default function App() {
 
   const appClassName = `app app--workspace${activeWorkspaceNav === 'insights' ? ' app--vision-board' : ''} ${
     isAnyModalVisible ? 'app--auth-overlay' : ''
-  }`;
+  }${showGameBoardOverlay ? ' app--game-overlay-open' : ''}`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }${!isMobileViewport && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;
@@ -3696,10 +3705,7 @@ export default function App() {
       <GameBoardOverlay
         isOpen={showGameBoardOverlay}
         onClose={() => setShowGameBoardOverlay(false)}
-        onPlayClick={() => {
-          setShowGameBoardOverlay(false);
-          window.location.href = '/level-worlds.html?level=1';
-        }}
+        onPlayClick={handleGameOverlayPlayClick}
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);
           setShowMobileGamification(true);
