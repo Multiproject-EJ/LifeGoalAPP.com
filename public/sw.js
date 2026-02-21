@@ -304,7 +304,9 @@ function handleVersionedAsset(event) {
       try {
         const networkResponse = await fetch(event.request, { cache: 'no-cache' });
         const cache = await caches.open(SHELL_CACHE);
-        await cache.put(event.request, networkResponse.clone());
+        if (networkResponse && networkResponse.status === 200) {
+          await cache.put(event.request, networkResponse.clone());
+        }
         return networkResponse;
       } catch (error) {
         const cache = await caches.open(SHELL_CACHE);
