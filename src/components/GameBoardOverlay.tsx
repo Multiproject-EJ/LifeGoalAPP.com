@@ -39,27 +39,25 @@ export function GameBoardOverlay({
   diamondBalance = 0,
   goldBalance = 0,
 }: GameBoardOverlayProps) {
-  const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
-      // Small delay to trigger animation
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsAnimating(true);
-        });
-      });
-    } else {
-      setIsAnimating(false);
-      // Wait for animation to complete before unmounting
-      const timer = setTimeout(() => {
-        setShouldRender(false);
-      }, 400);
-      return () => clearTimeout(timer);
+      return;
     }
-  }, [isOpen]);
+
+    if (!shouldRender) {
+      return;
+    }
+
+    // Keep mounted briefly for exit animation when closing
+    const timer = setTimeout(() => {
+      setShouldRender(false);
+    }, 320);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, shouldRender]);
 
   if (!shouldRender) {
     return null;
@@ -75,7 +73,7 @@ export function GameBoardOverlay({
 
   return (
     <div
-      className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}`}
+      className={`game-board-overlay ${isOpen ? 'game-board-overlay--open' : ''}`}
       onClick={handleBackdropClick}
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />

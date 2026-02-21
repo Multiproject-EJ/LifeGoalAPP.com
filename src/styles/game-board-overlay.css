@@ -25,10 +25,10 @@
   left: 0;
   width: 100%;
   height: 100%; /* Extend to full height */
-  background: rgba(1, 6, 20, 0.86);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 35;
+  background: rgba(2, 10, 30, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 25; /* Below footer (footer is z-index 30) */
   opacity: 0;
   transition: opacity 400ms ease-out;
 }
@@ -48,7 +48,7 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding-bottom: 80px; /* Reserve space for footer menu */
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); /* Reserve space for footer menu */
   transform: translateY(100%);
   transition: transform 450ms cubic-bezier(0.23, 1, 0.32, 1);
   pointer-events: none;
@@ -197,7 +197,7 @@
 .game-board-overlay__play-button {
   position: fixed;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(9rem, 20vh, 12rem));
+  bottom: calc(106px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   min-width: min(68vw, 320px);
   padding: 0.9rem 2rem;
@@ -353,6 +353,7 @@
   }
 
   .game-board-overlay__play-button {
+    bottom: calc(104px + env(safe-area-inset-bottom, 0px));
     min-width: min(52vw, 340px);
   }
 
@@ -399,6 +400,10 @@
   .game-board-overlay__middle {
     padding: 0.4rem 2rem 1rem;
     margin-top: -2.4rem;
+  }
+
+  .game-board-overlay__play-button {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   }
 
   .game-board-overlay__side-icons--left {
