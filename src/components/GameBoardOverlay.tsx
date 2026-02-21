@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import type { MouseEvent } from 'react';
 import boardTopbar from '../assets/IMG_8564.webp';
 import boardMatchbar from '../assets/IMG_8562.webp';
 import boardIconsRight1 from '../assets/board_icons_right1.webp';
@@ -39,33 +39,11 @@ export function GameBoardOverlay({
   diamondBalance = 0,
   goldBalance = 0,
 }: GameBoardOverlayProps) {
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [shouldRender, setShouldRender] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-      // Small delay to trigger animation
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsAnimating(true);
-        });
-      });
-    } else {
-      setIsAnimating(false);
-      // Wait for animation to complete before unmounting
-      const timer = setTimeout(() => {
-        setShouldRender(false);
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  if (!shouldRender) {
+  if (!isOpen) {
     return null;
   }
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = (e: MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -75,7 +53,7 @@ export function GameBoardOverlay({
 
   return (
     <div
-      className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}`}
+      className="game-board-overlay game-board-overlay--open"
       onClick={handleBackdropClick}
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
