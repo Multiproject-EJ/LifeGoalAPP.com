@@ -1640,6 +1640,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: clamp(1.5rem, 3vw, 2.5rem);
   min-height: 0;
   overflow: visible;
+  transition: opacity 220ms ease;
+}
+
+.app--game-overlay-open .workspace-stage__body {
+  opacity: 0.28;
+  transition: opacity 220ms ease;
 }
 
 .habits-module-container {
