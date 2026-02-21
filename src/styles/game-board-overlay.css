@@ -25,9 +25,9 @@
   left: 0;
   width: 100%;
   height: 100%; /* Extend to full height */
-  background: rgba(2, 10, 30, 0.72);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(1, 6, 20, 0.93);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
   z-index: 25; /* Below footer (footer is z-index 30) */
   opacity: 0;
   transition: opacity 400ms ease-out;
@@ -197,7 +197,7 @@
 .game-board-overlay__play-button {
   position: fixed;
   left: 50%;
-  bottom: calc(106px + env(safe-area-inset-bottom, 0px));
+  top: clamp(7.5rem, 24vh, 12rem);
   transform: translateX(-50%);
   min-width: min(68vw, 320px);
   padding: 0.9rem 2rem;
@@ -214,12 +214,7 @@
     0 12px 26px rgba(3, 23, 71, 0.6),
     0 0 18px rgba(56, 189, 248, 0.55);
   cursor: pointer;
-  z-index: 40;
-  pointer-events: auto;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  animation: game-overlay-play-breathe 1.8s ease-in-out infinite;
+  z-index: 3;
 }
 
 .game-board-overlay__play-button:focus-visible {
@@ -353,7 +348,7 @@
   }
 
   .game-board-overlay__play-button {
-    bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+    top: clamp(8.5rem, 20vh, 12.5rem);
     min-width: min(52vw, 340px);
   }
 
@@ -403,7 +398,7 @@
   }
 
   .game-board-overlay__play-button {
-    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    top: clamp(9rem, 18vh, 13rem);
   }
 
   .game-board-overlay__side-icons--left {
