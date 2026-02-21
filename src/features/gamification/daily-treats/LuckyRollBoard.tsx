@@ -352,14 +352,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const isMilestone = gameState.currentLap % 5 === 0;
 
   const handleOpenLevelWorldMap = useCallback(() => {
-    const openedWindow = window.open('/level-worlds.html', '_blank', 'noopener,noreferrer');
-
-    if (!openedWindow) {
-      window.location.assign('/level-worlds.html');
-      return;
-    }
-
-    openedWindow.opener = null;
+    setShowLevelWorlds(true);
   }, []);
   
   if (showLevelWorlds) {

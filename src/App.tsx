@@ -344,7 +344,7 @@ export default function App() {
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
-  const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
+  const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(false);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [showDailyTreatsMenu, setShowDailyTreatsMenu] = useState(false);
@@ -1303,6 +1303,8 @@ export default function App() {
         setAuthMessage('Signed in successfully.');
         setShowAuthPanel(false);
         setActiveWorkspaceNav('planning');
+        setShowGameBoardOverlay(false);
+        setIsMobileMenuImageActive(false);
         if (isMobileViewport) {
           setShowMobileHome(true);
         }
@@ -1366,6 +1368,8 @@ export default function App() {
       setAuthMessage('Signed in to the demo workspace.');
       setShowAuthPanel(false);
       setActiveWorkspaceNav('planning');
+      setShowGameBoardOverlay(false);
+      setIsMobileMenuImageActive(false);
       if (isMobileViewport) {
         setShowMobileHome(true);
       }
@@ -1402,6 +1406,8 @@ export default function App() {
       setEmail('');
       setPassword('');
       setFullName('');
+      setShowGameBoardOverlay(false);
+      setIsMobileMenuImageActive(false);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Unable to sign out.');
     }
@@ -3440,7 +3446,7 @@ export default function App() {
           onClose={() => setShowGameBoardOverlay(false)}
           onPlayClick={() => {
             setShowGameBoardOverlay(false);
-            window.location.href = '/level-worlds.html?level=1';
+            setShowLuckyRoll(true);
           }}
           onTopbarClick={() => {
             setShowGameBoardOverlay(false);
@@ -3692,7 +3698,7 @@ export default function App() {
         onClose={() => setShowGameBoardOverlay(false)}
         onPlayClick={() => {
           setShowGameBoardOverlay(false);
-          window.location.href = '/level-worlds.html?level=1';
+          setShowLuckyRoll(true);
         }}
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);
