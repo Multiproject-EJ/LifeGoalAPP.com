@@ -224,7 +224,27 @@
 }
 
 .game-board-overlay__play-button:active {
-  transform: translateX(-50%) scale(0.98);
+  transform: translateX(-50%) scale(0.97);
+}
+
+@keyframes game-overlay-play-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 12px 26px rgba(3, 23, 71, 0.6),
+      0 0 14px rgba(56, 189, 248, 0.48);
+    filter: saturate(1);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 16px 30px rgba(3, 23, 71, 0.7),
+      0 0 26px rgba(56, 189, 248, 0.88),
+      0 0 42px rgba(125, 211, 252, 0.5);
+    filter: saturate(1.16);
+  }
 }
 
 /* Side Icons (Left and Right) */
