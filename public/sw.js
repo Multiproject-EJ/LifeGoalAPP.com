@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const SHELL_CACHE = `lifegoalapp-shell-${CACHE_VERSION}`;
 const DATA_CACHE = `lifegoalapp-data-${CACHE_VERSION}`;
 const APP_SHELL = [
@@ -7,6 +7,7 @@ const APP_SHELL = [
   '/icons/icon-512x512.svg'
 ];
 const DOCUMENT_FALLBACKS = ['/', '/index.html'];
+const VERSIONED_ASSET_PATH = /^\/assets\/.*\.(js|css)$/;
 
 const SUPABASE_HOST_MATCHER = /supabase\.(co|in)$/;
 const SUPABASE_SYNC_TAG = 'lifegoalapp-supabase-sync';
@@ -297,6 +298,28 @@ function cacheSupabaseData(event) {
   );
 }
 
+function handleVersionedAsset(event) {
+  event.respondWith(
+    (async () => {
+      try {
+        const networkResponse = await fetch(event.request, { cache: 'no-cache' });
+        const cache = await caches.open(SHELL_CACHE);
+        if (networkResponse && networkResponse.status === 200) {
+          await cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        const cache = await caches.open(SHELL_CACHE);
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        throw error;
+      }
+    })()
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
@@ -317,6 +340,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (requestUrl.origin === self.location.origin) {
+    if (VERSIONED_ASSET_PATH.test(requestUrl.pathname)) {
+      handleVersionedAsset(event);
+      return;
+    }
+
     if (event.request.mode === 'navigate' || DOCUMENT_FALLBACKS.includes(requestUrl.pathname)) {
       event.respondWith(
         (async () => {
