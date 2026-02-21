@@ -6,7 +6,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 34; /* Keep game overlay above mobile footer while open */
+  z-index: 40; /* Keep game overlay above mobile footer/controller when open */
   display: flex;
   flex-direction: column;
   pointer-events: none;
@@ -28,7 +28,7 @@
   background: rgba(1, 6, 20, 0.92);
   backdrop-filter: blur(1px);
   -webkit-backdrop-filter: blur(1px);
-  z-index: 25; /* Below footer (footer is z-index 30) */
+  z-index: 41;
   opacity: 0;
   transition: opacity 400ms ease-out;
 }
@@ -43,13 +43,13 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 26; /* Below footer (footer is z-index 30) */
+  z-index: 42;
   background: linear-gradient(180deg, rgba(2, 9, 30, 0.28) 0%, rgba(2, 9, 30, 0.6) 38%, rgba(1, 6, 20, 0.78) 100%);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); /* Reserve space for footer menu */
+  padding-bottom: 0;
   transform: translateY(100%);
   transition: transform 450ms cubic-bezier(0.23, 1, 0.32, 1);
   pointer-events: none;
@@ -198,7 +198,7 @@
 .game-board-overlay__play-button {
   position: fixed;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(11.5rem, 24vh, 15rem));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(7rem, 14vh, 9.25rem));
   transform: translateX(-50%);
   min-width: min(68vw, 320px);
   padding: 0.9rem 2rem;
@@ -215,7 +215,7 @@
     0 12px 26px rgba(3, 23, 71, 0.6),
     0 0 18px rgba(56, 189, 248, 0.55);
   cursor: pointer;
-  z-index: 3;
+  z-index: 44;
 }
 
 .game-board-overlay__play-button:focus-visible {
@@ -349,7 +349,7 @@
   }
 
   .game-board-overlay__play-button {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(10.5rem, 18vh, 13rem));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(6.5rem, 12vh, 8.25rem));
     min-width: min(52vw, 340px);
   }
 
@@ -399,7 +399,7 @@
   }
 
   .game-board-overlay__play-button {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(9.5rem, 14vh, 12rem));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(6rem, 10vh, 7.25rem));
   }
 
   .game-board-overlay__side-icons--left {
