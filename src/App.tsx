@@ -3385,6 +3385,12 @@ export default function App() {
     />
   ) : null;
 
+  const handleGameOverlayPlayClick = useCallback(() => {
+    setShowGameBoardOverlay(false);
+    // Route directly to Level 1 map (level-bg-01.webp)
+    window.location.assign('/level-worlds.html?level=1');
+  }, []);
+
   const countdownCalendarModal = (
     <CountdownCalendarModal
       isOpen={showCalendarPlaceholder}
@@ -3438,10 +3444,7 @@ export default function App() {
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
-          onPlayClick={() => {
-            setShowGameBoardOverlay(false);
-            window.location.href = '/level-worlds.html?level=1';
-          }}
+          onPlayClick={handleGameOverlayPlayClick}
           onTopbarClick={() => {
             setShowGameBoardOverlay(false);
             setShowMobileGamification(true);
@@ -3690,10 +3693,7 @@ export default function App() {
       <GameBoardOverlay
         isOpen={showGameBoardOverlay}
         onClose={() => setShowGameBoardOverlay(false)}
-        onPlayClick={() => {
-          setShowGameBoardOverlay(false);
-          window.location.href = '/level-worlds.html?level=1';
-        }}
+        onPlayClick={handleGameOverlayPlayClick}
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);
           setShowMobileGamification(true);
