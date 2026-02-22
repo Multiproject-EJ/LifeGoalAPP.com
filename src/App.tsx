@@ -95,6 +95,10 @@ import { buildHand, type ArchetypeHand } from './features/identity/archetypes/ar
 import { ARCHETYPE_DECK, SUIT_LABELS } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
+import {
+  EXPERIMENTAL_FEATURES_UPDATED_EVENT,
+  getExperimentalFeatures,
+} from './services/experimentalFeatures';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -328,6 +332,8 @@ export default function App() {
   );
   const [showAuthPanel, setShowAuthPanel] = useState(false);
   const isMobileViewport = useMediaQuery(WORKSPACE_MOBILE_MEDIA_QUERY);
+  const [isDesktopUiResearchPreviewEnabled, setIsDesktopUiResearchPreviewEnabled] = useState(false);
+  const isMobileExperience = isMobileViewport || !isDesktopUiResearchPreviewEnabled;
   const [showMobileHome, setShowMobileHome] = useState(false);
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
   const [workspaceStats, setWorkspaceStats] = useState<WorkspaceStats | null>(null);
@@ -340,7 +346,7 @@ export default function App() {
     'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
-  const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen'>('home');
+  const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage'>('home');
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
@@ -448,7 +454,7 @@ export default function App() {
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
   const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
-  const shouldShowPointsBadges = isGameModeActive && isMobileViewport;
+  const shouldShowPointsBadges = isGameModeActive && isMobileExperience;
   
   // Micro-test badge state for identity tab
   const microTestPlayerState: PlayerState = useMemo(() => {
@@ -680,10 +686,10 @@ export default function App() {
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
   const shouldAutoCollapseOnIdle =
-    isMobileViewport &&
+    isMobileExperience &&
     mobileActiveNavId !== null &&
     MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId);
-  const shouldAllowFooterCollapse = isMobileViewport && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
+  const shouldAllowFooterCollapse = isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
 
   const scheduleMobileFooterCollapse = useCallback(() => {
     if (!shouldAutoCollapseOnIdle) {
@@ -742,7 +748,7 @@ export default function App() {
   }, [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle]);
 
   useEffect(() => {
-    if (!isMobileViewport || !isMobileMenuImageActive || typeof window === 'undefined') {
+    if (!isMobileExperience || !isMobileMenuImageActive || typeof window === 'undefined') {
       return;
     }
 
@@ -764,10 +770,10 @@ export default function App() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileViewport]);
+  }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileExperience]);
 
   useEffect(() => {
-    if (!isVisionRewardOpen || !isMobileViewport || !isMobileMenuImageActive) {
+    if (!isVisionRewardOpen || !isMobileExperience || !isMobileMenuImageActive) {
       return;
     }
     if (mobileFooterCollapseTimeoutRef.current !== null) {
@@ -775,7 +781,7 @@ export default function App() {
       mobileFooterCollapseTimeoutRef.current = null;
     }
     setIsMobileFooterCollapsed(true);
-  }, [isVisionRewardOpen, isMobileMenuImageActive, isMobileViewport]);
+  }, [isVisionRewardOpen, isMobileMenuImageActive, isMobileExperience]);
 
   const isDemoMode = mode === 'demo';
   const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
@@ -786,6 +792,37 @@ export default function App() {
     }
     return createDemoSession();
   }, [supabaseSession, demoProfile]);
+
+  useEffect(() => {
+    const userId = activeSession?.user?.id;
+    if (!userId) {
+      setIsDesktopUiResearchPreviewEnabled(false);
+      return;
+    }
+
+    const syncExperimentalFeatures = () => {
+      const experimentalFeatures = getExperimentalFeatures(userId);
+      setIsDesktopUiResearchPreviewEnabled(Boolean(experimentalFeatures.desktopUiResearchPreview));
+    };
+
+    syncExperimentalFeatures();
+
+    const handleExperimentalFeaturesUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userId?: string }>;
+      if (customEvent.detail?.userId && customEvent.detail.userId !== userId) {
+        return;
+      }
+      syncExperimentalFeatures();
+    };
+
+    window.addEventListener(EXPERIMENTAL_FEATURES_UPDATED_EVENT, handleExperimentalFeaturesUpdate as EventListener);
+    return () => {
+      window.removeEventListener(
+        EXPERIMENTAL_FEATURES_UPDATED_EVENT,
+        handleExperimentalFeaturesUpdate as EventListener,
+      );
+    };
+  }, [activeSession?.user?.id]);
 
   const [profileStrengthDebugSnapshot, setProfileStrengthDebugSnapshot] =
     useState<ProfileStrengthResult | null>(null);
@@ -1148,12 +1185,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!isMobileViewport) {
+    if (!isMobileExperience) {
       setShowMobileHome(false);
       return;
     }
     setShowMobileHome((current) => (current ? current : true));
-  }, [isMobileViewport]);
+  }, [isMobileExperience]);
 
   useEffect(() => {
     if (!authMessage) {
@@ -1246,7 +1283,7 @@ export default function App() {
   );
 
   const scheduleDesktopMenuAutoHide = useCallback(() => {
-    if (isMobileViewport || !isDesktopMenuOpen || isDesktopMenuPinned) return;
+    if (isMobileExperience || !isDesktopMenuOpen || isDesktopMenuPinned) return;
     if (desktopMenuAutoHideTimeoutRef.current !== null) {
       window.clearTimeout(desktopMenuAutoHideTimeoutRef.current);
     }
@@ -1254,7 +1291,7 @@ export default function App() {
       setIsDesktopMenuOpen(false);
       desktopMenuAutoHideTimeoutRef.current = null;
     }, 3000);
-  }, [isDesktopMenuOpen, isMobileViewport, isDesktopMenuPinned]);
+  }, [isDesktopMenuOpen, isMobileExperience, isDesktopMenuPinned]);
 
   const handleDesktopMenuPinToggle = () => {
     setIsDesktopMenuPinned((current) => {
@@ -1303,7 +1340,7 @@ export default function App() {
         setAuthMessage('Signed in successfully.');
         setShowAuthPanel(false);
         setActiveWorkspaceNav('planning');
-        if (isMobileViewport) {
+        if (isMobileExperience) {
           setShowMobileHome(true);
         }
       } else if (authMode === 'signup') {
@@ -1366,7 +1403,7 @@ export default function App() {
       setAuthMessage('Signed in to the demo workspace.');
       setShowAuthPanel(false);
       setActiveWorkspaceNav('planning');
-      if (isMobileViewport) {
+      if (isMobileExperience) {
         setShowMobileHome(true);
       }
     } catch (error) {
@@ -1451,7 +1488,7 @@ export default function App() {
       return;
     }
 
-    if (navId === 'game' && isMobileViewport) {
+    if (navId === 'game' && isMobileExperience) {
       setShowGameBoardOverlay(true);
       return;
     }
@@ -1471,9 +1508,13 @@ export default function App() {
       return;
     }
 
-    if (navId === 'planning' && isMobileViewport) {
+    if (navId === 'planning' && isMobileExperience) {
       openTodayHome();
       return;
+    }
+
+    if (navId === 'score') {
+      setScoreTabActiveTab('home');
     }
 
     setActiveWorkspaceNav(navId);
@@ -1520,7 +1561,7 @@ export default function App() {
 
   const handleProfileStrengthHoldStart = useCallback(
     (event: PointerEvent<HTMLButtonElement>, area: AreaKey | null) => {
-      if (!isMobileViewport || !area || event.pointerType === 'mouse') {
+      if (!isMobileExperience || !area || event.pointerType === 'mouse') {
         return;
       }
       profileStrengthHoldTriggeredRef.current = false;
@@ -1531,12 +1572,12 @@ export default function App() {
         openProfileStrengthHold(area);
       }, PROFILE_STRENGTH_HOLD_DURATION_MS);
     },
-    [clearProfileStrengthHoldTimer, isMobileViewport, openProfileStrengthHold],
+    [clearProfileStrengthHoldTimer, isMobileExperience, openProfileStrengthHold],
   );
 
   const handleMenuHelperHoldStart = useCallback(
     (event: PointerEvent<HTMLButtonElement>, item: MobileMenuNavItem | null) => {
-      if (!isMobileViewport || !item || event.pointerType === 'mouse') {
+      if (!isMobileExperience || !item || event.pointerType === 'mouse') {
         return;
       }
       menuHelperHoldTriggeredRef.current = false;
@@ -1547,12 +1588,12 @@ export default function App() {
         setActiveMobileMenuHelper(item);
       }, PROFILE_STRENGTH_HOLD_DURATION_MS);
     },
-    [clearMenuHelperHoldTimer, isMobileViewport],
+    [clearMenuHelperHoldTimer, isMobileExperience],
   );
 
   const handleProfileStrengthHoldMove = useCallback(
     (event: PointerEvent<HTMLButtonElement>, area: AreaKey | null) => {
-      if (!isMobileViewport || !area || !profileStrengthHoldStartRef.current) {
+      if (!isMobileExperience || !area || !profileStrengthHoldStartRef.current) {
         return;
       }
       const deltaX = event.clientX - profileStrengthHoldStartRef.current.x;
@@ -1561,12 +1602,12 @@ export default function App() {
         clearProfileStrengthHoldTimer();
       }
     },
-    [clearProfileStrengthHoldTimer, isMobileViewport],
+    [clearProfileStrengthHoldTimer, isMobileExperience],
   );
 
   const handleMenuHelperHoldMove = useCallback(
     (event: PointerEvent<HTMLButtonElement>, item: MobileMenuNavItem | null) => {
-      if (!isMobileViewport || !item || !menuHelperHoldStartRef.current) {
+      if (!isMobileExperience || !item || !menuHelperHoldStartRef.current) {
         return;
       }
       const deltaX = event.clientX - menuHelperHoldStartRef.current.x;
@@ -1575,7 +1616,7 @@ export default function App() {
         clearMenuHelperHoldTimer();
       }
     },
-    [clearMenuHelperHoldTimer, isMobileViewport],
+    [clearMenuHelperHoldTimer, isMobileExperience],
   );
 
   const handleProfileStrengthHoldEnd = useCallback(() => {
@@ -2075,7 +2116,7 @@ export default function App() {
     setWorkspaceSetupDismissed(true);
   };
 
-  if (shouldRequireAuthentication && isMobileViewport) {
+  if (shouldRequireAuthentication && isMobileExperience) {
     return (
       <div className="app app--auth-gate">
         <header className="auth-gate__masthead">
@@ -2092,7 +2133,7 @@ export default function App() {
     );
   }
 
-  const shouldForceAuthOverlay = shouldRequireAuthentication && !isMobileViewport;
+  const shouldForceAuthOverlay = shouldRequireAuthentication && !isMobileExperience;
   const isAuthOverlayVisible = shouldForceAuthOverlay || showAuthPanel;
   const isAnyModalVisible = isAuthOverlayVisible;
 
@@ -2243,7 +2284,7 @@ export default function App() {
       case 'planning':
         return (
           <div className="workspace-content">
-            {isMobileViewport ? (
+            {isMobileExperience ? (
               <div className="workspace-link-callout">
                 <p className="workspace-link-callout__text">Prefer the simplified Today home?</p>
                 <button
@@ -2274,7 +2315,7 @@ export default function App() {
               showPointsBadges={shouldShowPointsBadges}
               onNavigateToProjects={() => setActiveWorkspaceNav('projects')}
               onNavigateToTimer={() => setActiveWorkspaceNav('timer')}
-              isMobileView={isMobileViewport}
+              isMobileView={isMobileExperience}
             />
           </div>
         );
@@ -2299,6 +2340,9 @@ export default function App() {
               }}
               onNavigateToZenGarden={() => {
                 setShowZenGardenFullScreen(true);
+              }}
+              onNavigateToGarage={() => {
+                setScoreTabActiveTab('garage');
               }}
               initialActiveTab={scoreTabActiveTab}
               onActiveTabChange={(tab) => setScoreTabActiveTab(tab)}
@@ -2423,7 +2467,7 @@ export default function App() {
   };
 
   const mobileMenuOverlay =
-    isMobileViewport && isMobileMenuOpen ? (
+    isMobileExperience && isMobileMenuOpen ? (
       <div
         className={`mobile-menu-overlay${isMobileMenuImageActive ? ' mobile-menu-overlay--diode-on' : ''}`}
         role="dialog"
@@ -2609,7 +2653,7 @@ export default function App() {
                           onPointerCancel={handleMobileMenuHoldEnd}
                           onPointerLeave={handleMobileMenuHoldEnd}
                           onContextMenu={(event) => {
-                            if ((profileStrengthArea || isHelperHoldTarget) && isMobileViewport) {
+                            if ((profileStrengthArea || isHelperHoldTarget) && isMobileExperience) {
                               event.preventDefault();
                             }
                           }}
@@ -2898,7 +2942,7 @@ export default function App() {
     ) : null;
 
   const mobileGamificationOverlay =
-    isMobileViewport && showMobileGamification ? (
+    isMobileExperience && showMobileGamification ? (
       <div
         className="mobile-gamification-overlay"
         role="dialog"
@@ -3393,7 +3437,7 @@ export default function App() {
     />
   );
 
-  if (isMobileViewport && showMobileHome) {
+  if (isMobileExperience && showMobileHome) {
     return (
       <>
         <MobileHabitHome
@@ -3463,6 +3507,16 @@ export default function App() {
             setScoreTabActiveTab('bank');
             setShowMobileGamification(true);
           }}
+          onDiamondClick={() => {
+            setShowGameBoardOverlay(false);
+            setScoreTabActiveTab('garage');
+            setShowMobileGamification(true);
+          }}
+          onGoldClick={() => {
+            setShowGameBoardOverlay(false);
+            setScoreTabActiveTab('shop');
+            setShowMobileGamification(true);
+          }}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
           currentLevel={currentLevel}
@@ -3485,19 +3539,20 @@ export default function App() {
     );
   }
 
-  const appClassName = `app app--workspace${activeWorkspaceNav === 'insights' ? ' app--vision-board' : ''} ${
-    isAnyModalVisible ? 'app--auth-overlay' : ''
-  }`;
+  const isMobileFrameLocked = !isDesktopUiResearchPreviewEnabled && !isMobileViewport;
+  const appClassName = `app app--workspace${activeWorkspaceNav === 'insights' ? ' app--vision-board' : ''}${
+    isAnyModalVisible ? ' app--auth-overlay' : ''
+  }${isMobileFrameLocked ? ' app--mobile-frame' : ''}`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
-  }${!isMobileViewport && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;
+  }${!isMobileExperience && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;
 
   const canDismissOverlay = isAuthOverlayVisible && !shouldForceAuthOverlay;
 
   return (
     <div className={appClassName}>
       <div className={workspaceShellClassName}>
-        {!isMobileViewport && !isDesktopMenuOpen && (
+        {!isMobileExperience && !isDesktopMenuOpen && (
           <button
             type="button"
             className="workspace-shell__menu-edge"
@@ -3505,7 +3560,7 @@ export default function App() {
             onClick={() => setIsDesktopMenuOpen(true)}
           />
         )}
-        {!isMobileViewport && (
+        {!isMobileExperience && (
           <aside
             className="workspace-sidebar"
             aria-label="Workspace navigation"
@@ -3653,7 +3708,7 @@ export default function App() {
           </section>
         </main>
       </div>
-      {isMobileViewport && !showZenGardenFullScreen ? (
+      {isMobileExperience && !showZenGardenFullScreen ? (
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
@@ -3713,6 +3768,16 @@ export default function App() {
         onBankClick={() => {
           setShowGameBoardOverlay(false);
           setScoreTabActiveTab('bank');
+          setShowMobileGamification(true);
+        }}
+        onDiamondClick={() => {
+          setShowGameBoardOverlay(false);
+          setScoreTabActiveTab('garage');
+          setShowMobileGamification(true);
+        }}
+        onGoldClick={() => {
+          setShowGameBoardOverlay(false);
+          setScoreTabActiveTab('shop');
           setShowMobileGamification(true);
         }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}

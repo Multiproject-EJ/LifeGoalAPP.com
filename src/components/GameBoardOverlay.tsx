@@ -15,6 +15,8 @@ type GameBoardOverlayProps = {
   onHeartsGameplayClick?: () => void;
   onDailyHatchClick?: () => void;
   onBankClick?: () => void;
+  onDiamondClick?: () => void;
+  onGoldClick?: () => void;
   profilePlaystyleIcon?: string;
   profilePlaystyleLabel?: string;
   currentLevel?: number;
@@ -32,6 +34,8 @@ export function GameBoardOverlay({
   onHeartsGameplayClick,
   onDailyHatchClick,
   onBankClick,
+  onDiamondClick,
+  onGoldClick,
   profilePlaystyleIcon,
   profilePlaystyleLabel,
   currentLevel = 1,
@@ -174,11 +178,25 @@ export function GameBoardOverlay({
               <span className="game-board-overlay__icon-counter">Bank</span>
             </div>
             <div className="game-board-overlay__right-icon-item">
-              <img src={boardIconsRight2} alt="Diamonds" className="game-board-overlay__icons-image" />
+              <button
+                type="button"
+                className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
+                onClick={onDiamondClick}
+                aria-label="Open garage tab"
+              >
+                <img src={boardIconsRight2} alt="Diamonds" className="game-board-overlay__icons-image" />
+              </button>
               <span className="game-board-overlay__icon-counter">{diamondBalance.toLocaleString()}</span>
             </div>
             <div className="game-board-overlay__right-icon-item">
-              <img src={boardIconsRight3} alt="Gold" className="game-board-overlay__icons-image" />
+              <button
+                type="button"
+                className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
+                onClick={onGoldClick}
+                aria-label="Open player shop tab"
+              >
+                <img src={boardIconsRight3} alt="Gold" className="game-board-overlay__icons-image" />
+              </button>
               <span className="game-board-overlay__icon-counter">{goldBalance.toLocaleString()}</span>
             </div>
           </div>
