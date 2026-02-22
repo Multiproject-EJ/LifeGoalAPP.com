@@ -37,8 +37,9 @@ interface ScoreTabProps {
   onNavigateToBank?: () => void;
   onNavigateToShop?: () => void;
   onNavigateToZenGarden?: () => void;
-  initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen';
-  onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen') => void;
+  onNavigateToGarage?: () => void;
+  initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen' | 'garage';
+  onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage') => void;
 }
 
 const REWARD_CATEGORIES: Array<{ value: RewardCategory; emoji: string; label: string }> = [
@@ -60,6 +61,7 @@ export function ScoreTab({
   onNavigateToBank,
   onNavigateToShop,
   onNavigateToZenGarden,
+  onNavigateToGarage,
   initialActiveTab,
   onActiveTabChange,
 }: ScoreTabProps) {
@@ -72,7 +74,7 @@ export function ScoreTab({
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
   const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
-  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'contracts'>(initialActiveTab ?? 'home');
+  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage'>(initialActiveTab ?? 'home');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -118,7 +120,7 @@ export function ScoreTab({
     });
   }, [rewardCategory, rewardCooldown, rewardCost, rewardDescription, rewardTitle]);
 
-  const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen') => {
+  const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage') => {
     setActiveTab(tab);
     onActiveTabChange?.(tab);
   };
@@ -523,11 +525,23 @@ export function ScoreTab({
             type="button"
             className={`score-tab__tab${activeTab === 'zen' ? ' score-tab__tab--active' : ''}`}
             onClick={() => {
+              handleTabChange('zen');
               onNavigateToZenGarden?.();
             }}
           >
             <span className="score-tab__tab-icon" aria-hidden="true">🪷</span>
             Zen Garden
+          </button>
+          <button
+            type="button"
+            className={`score-tab__tab${activeTab === 'garage' ? ' score-tab__tab--active' : ''}`}
+            onClick={() => {
+              handleTabChange('garage');
+              onNavigateToGarage?.();
+            }}
+          >
+            <span className="score-tab__tab-icon" aria-hidden="true">🚀</span>
+            Garage
           </button>
         </div>
       </header>
@@ -566,11 +580,29 @@ export function ScoreTab({
             </span>
             <span className="score-tab__hub-title">Player Shop</span>
           </button>
-          <button type="button" className="score-tab__hub-card" onClick={() => onNavigateToZenGarden?.()}>
+          <button
+            type="button"
+            className="score-tab__hub-card"
+            onClick={() => {
+              handleTabChange('zen');
+              onNavigateToZenGarden?.();
+            }}
+          >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreZenGarden} alt="" />
             </span>
             <span className="score-tab__hub-title">Zen Garden</span>
+          </button>
+          <button
+            type="button"
+            className="score-tab__hub-card"
+            onClick={() => {
+              handleTabChange('garage');
+              onNavigateToGarage?.();
+            }}
+          >
+            <span className="score-tab__hub-visual" aria-hidden="true">🚀</span>
+            <span className="score-tab__hub-title">Garage</span>
           </button>
         </div>
       )}
@@ -762,6 +794,23 @@ export function ScoreTab({
         </div>
       )}
 
+
+      {!loading && enabled && activeTab === 'garage' && (
+        <div className="score-tab__content">
+          <div className="score-tab__bank-intro">
+            <h2 className="score-tab__headline">Spaceship Controller Garage</h2>
+            <p className="score-tab__subtitle">
+              Unlock themes, ship parts, and timed boosters like bonus hearts throughout the day.
+            </p>
+          </div>
+          <div className="score-tab__card">
+            <h3 className="score-tab__card-title">Garage is preparing for launch</h3>
+            <p className="score-tab__meta">
+              Next up: skin unlocks, booster modules, and progression parts tied to your score economy.
+            </p>
+          </div>
+        </div>
+      )}
       {!loading && enabled && activeTab === 'bank' && (!profile || !levelInfo) && (
         <div className="score-tab__status">
           No score data yet. Complete a habit or spin the wheel to start earning XP.

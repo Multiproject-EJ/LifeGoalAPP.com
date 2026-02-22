@@ -1,7 +1,8 @@
 export type ExperimentalFeatureKey =
   | 'aiCoachCompanion'
   | 'goalReflectionExperiments'
-  | 'focusModeExtensions';
+  | 'focusModeExtensions'
+  | 'desktopUiResearchPreview';
 
 export type ExperimentalFeatureState = Record<ExperimentalFeatureKey, boolean>;
 
@@ -28,6 +29,11 @@ export const EXPERIMENTAL_FEATURES: ExperimentalFeatureDefinition[] = [
     key: 'focusModeExtensions',
     title: 'Focus Mode Extensions',
     description: 'Try new focus sessions, pacing options, and completion rituals.',
+  },
+  {
+    key: 'desktopUiResearchPreview',
+    title: 'Research Preview: Enable Desktop UI',
+    description: 'Turn this on to use the desktop/iPad layout. Keep off to lock mobile-first UI scaling.',
   },
 ];
 
@@ -60,7 +66,17 @@ export function getExperimentalFeatures(userId: string): ExperimentalFeatureStat
 export function saveExperimentalFeatures(userId: string, features: ExperimentalFeatureState): void {
   try {
     localStorage.setItem(getStorageKey(userId), JSON.stringify(features));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent(EXPERIMENTAL_FEATURES_UPDATED_EVENT, {
+          detail: { userId, features },
+        }),
+      );
+    }
   } catch {
     // Ignore storage errors
   }
 }
+
+
+export const EXPERIMENTAL_FEATURES_UPDATED_EVENT = 'lifegoal:experimental-features-updated';
