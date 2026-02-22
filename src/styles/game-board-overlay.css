@@ -6,7 +6,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 34; /* Keep game overlay above mobile footer while open */
+  z-index: 20; /* Keep entire overlay stack below mobile footer (z-index 30) */
   display: flex;
   flex-direction: column;
   pointer-events: none;
@@ -28,7 +28,7 @@
   background: rgba(1, 6, 20, 0.86);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  z-index: 35;
+  z-index: 25; /* Below footer (footer is z-index 30) */
   opacity: 0;
   transition: opacity 400ms ease-out;
 }
@@ -43,7 +43,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 36;
+  z-index: 26; /* Below footer (footer is z-index 30) */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -195,9 +195,9 @@
 }
 
 .game-board-overlay__play-button {
-  position: fixed;
+  position: absolute;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(9rem, 20vh, 12rem));
+  bottom: clamp(8rem, 18vh, 11.5rem);
   transform: translateX(-50%);
   min-width: min(68vw, 320px);
   padding: 0.9rem 2rem;
@@ -214,12 +214,7 @@
     0 12px 26px rgba(3, 23, 71, 0.6),
     0 0 18px rgba(56, 189, 248, 0.55);
   cursor: pointer;
-  z-index: 40;
-  pointer-events: auto;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  animation: game-overlay-play-breathe 1.8s ease-in-out infinite;
+  z-index: 2;
 }
 
 .game-board-overlay__play-button:focus-visible {
@@ -228,27 +223,7 @@
 }
 
 .game-board-overlay__play-button:active {
-  transform: translateX(-50%) scale(0.97);
-}
-
-@keyframes game-overlay-play-breathe {
-  0%,
-  100% {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.45),
-      0 12px 26px rgba(3, 23, 71, 0.6),
-      0 0 14px rgba(56, 189, 248, 0.48);
-    filter: saturate(1);
-  }
-
-  50% {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      0 16px 30px rgba(3, 23, 71, 0.7),
-      0 0 26px rgba(56, 189, 248, 0.88),
-      0 0 42px rgba(125, 211, 252, 0.5);
-    filter: saturate(1.16);
-  }
+  transform: translateX(-50%) scale(0.98);
 }
 
 /* Side Icons (Left and Right) */
@@ -353,6 +328,7 @@
   }
 
   .game-board-overlay__play-button {
+    bottom: clamp(7.5rem, 14vh, 10rem);
     min-width: min(52vw, 340px);
   }
 
@@ -399,6 +375,10 @@
   .game-board-overlay__middle {
     padding: 0.4rem 2rem 1rem;
     margin-top: -2.4rem;
+  }
+
+  .game-board-overlay__play-button {
+    bottom: clamp(7rem, 12vh, 9rem);
   }
 
   .game-board-overlay__side-icons--left {
