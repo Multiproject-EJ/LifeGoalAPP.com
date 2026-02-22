@@ -1133,13 +1133,22 @@
 }
 
 /* Dark theme support */
-[data-theme='dark-glass'] .actions-tab__quick-add,
-[data-theme='midnight-purple'] .actions-tab__quick-add,
-[data-theme='flow-night'] .actions-tab__quick-add,
-[data-theme='bio-night'] .actions-tab__quick-add {
-  background: var(--color-surface-primary, rgba(26, 31, 46, 0.7));
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--color-border-primary, rgba(148, 163, 184, 0.15));
+[data-theme='dark-glass'] .actions-tab--launcher .actions-tab__launcher-card,
+[data-theme='midnight-purple'] .actions-tab--launcher .actions-tab__launcher-card,
+[data-theme='flow-night'] .actions-tab--launcher .actions-tab__launcher-card,
+[data-theme='bio-night'] .actions-tab--launcher .actions-tab__launcher-card {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+}
+
+[data-theme='dark-glass'] .actions-tab--launcher .actions-tab__quick-add,
+[data-theme='midnight-purple'] .actions-tab--launcher .actions-tab__quick-add,
+[data-theme='flow-night'] .actions-tab--launcher .actions-tab__quick-add,
+[data-theme='bio-night'] .actions-tab--launcher .actions-tab__quick-add {
+  background: transparent;
+  box-shadow: none;
+  border: none;
 }
 
 [data-theme='dark-glass'] .action-item,
