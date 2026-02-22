@@ -2067,12 +2067,6 @@ export default function App() {
       setAuthError(profileAutosaveError);
     }
   }, [profileAutosaveError]);
-
-  useEffect(() => {
-    setShowGameBoardOverlay(false);
-    setIsMobileMenuOpen(false);
-  }, [supabaseSession?.user?.id]);
-
   const shouldShowWorkspaceSetup =
     showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 

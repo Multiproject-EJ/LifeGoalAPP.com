@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import { useEffect, useState } from 'react';
 import boardTopbar from '../assets/IMG_8564.webp';
 import boardMatchbar from '../assets/IMG_8562.webp';
 import boardIconsRight1 from '../assets/board_icons_right1.webp';
@@ -39,11 +39,31 @@ export function GameBoardOverlay({
   diamondBalance = 0,
   goldBalance = 0,
 }: GameBoardOverlayProps) {
-  if (!isOpen) {
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      return;
+    }
+
+    if (!shouldRender) {
+      return;
+    }
+
+    // Keep mounted briefly for exit animation when closing
+    const timer = setTimeout(() => {
+      setShouldRender(false);
+    }, 320);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, shouldRender]);
+
+  if (!shouldRender) {
     return null;
   }
 
-  const handleBackdropClick = (e: MouseEvent) => {
+  const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -53,7 +73,7 @@ export function GameBoardOverlay({
 
   return (
     <div
-      className="game-board-overlay game-board-overlay--open"
+      className={`game-board-overlay ${isOpen ? 'game-board-overlay--open' : ''}`}
       onClick={handleBackdropClick}
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
