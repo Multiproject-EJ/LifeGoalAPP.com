@@ -11,7 +11,6 @@ export async function registerServiceWorker() {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
       type: 'classic',
-      updateViaCache: 'none',
     });
 
     if (typeof window !== 'undefined') {
@@ -19,8 +18,6 @@ export async function registerServiceWorker() {
         scope: registration.scope,
       });
     }
-
-    void registration.update();
 
     registration.onupdatefound = () => {
       const installingWorker = registration.installing;

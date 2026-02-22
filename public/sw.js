@@ -353,11 +353,8 @@ self.addEventListener('fetch', (event) => {
             const cache = await caches.open(SHELL_CACHE);
 
             await cache.put(event.request, networkResponse.clone());
-
-            if (DOCUMENT_FALLBACKS.includes(requestUrl.pathname)) {
-              await cache.put('/index.html', networkResponse.clone());
-              await cache.put('/', networkResponse.clone());
-            }
+            await cache.put('/index.html', networkResponse.clone());
+            await cache.put('/', networkResponse.clone());
 
             return networkResponse;
           } catch (error) {
