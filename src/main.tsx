@@ -4,7 +4,6 @@ import App from './App.tsx';
 import { registerServiceWorker } from './registerServiceWorker.ts';
 import { SupabaseAuthProvider } from './features/auth/SupabaseAuthProvider.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
-import { AppErrorBoundary } from './components/AppErrorBoundary.tsx';
 
 if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {
@@ -24,9 +23,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ThemeProvider>
       <SupabaseAuthProvider>
-        <AppErrorBoundary>
-          <App />
-        </AppErrorBoundary>
+        <App />
       </SupabaseAuthProvider>
     </ThemeProvider>
   </React.StrictMode>
