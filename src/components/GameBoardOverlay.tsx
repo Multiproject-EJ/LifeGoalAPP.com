@@ -23,6 +23,7 @@ type GameBoardOverlayProps = {
   momentumPercent?: number;
   diamondBalance?: number;
   goldBalance?: number;
+  spinsRemaining?: number;
 };
 
 export function GameBoardOverlay({
@@ -42,6 +43,7 @@ export function GameBoardOverlay({
   momentumPercent = 0,
   diamondBalance = 0,
   goldBalance = 0,
+  spinsRemaining = 0,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -136,7 +138,11 @@ export function GameBoardOverlay({
                 onClick={onSpinWinClick}
                 aria-label="Open Spin & Win"
               >
-                <div className="game-board-overlay__icon-placeholder" />
+                <div className="game-board-overlay__icon-placeholder">
+                  <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
+                    {spinsRemaining}
+                  </span>
+                </div>
               </button>
               <span className="game-board-overlay__icon-timer">1d 23m</span>
             </div>
@@ -173,9 +179,13 @@ export function GameBoardOverlay({
                 onClick={onBankClick}
                 aria-label="Open bank tab"
               >
-                <img src={boardIconsRight1} alt="Bank" className="game-board-overlay__icons-image" />
+                <img
+                  src={boardIconsRight1}
+                  alt="Bank"
+                  className="game-board-overlay__icons-image game-board-overlay__icons-image--bank"
+                />
+                <span className="game-board-overlay__icon-bank-label">BANK</span>
               </button>
-              <span className="game-board-overlay__icon-counter">Bank</span>
             </div>
             <div className="game-board-overlay__right-icon-item">
               <button

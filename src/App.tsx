@@ -382,6 +382,7 @@ export default function App() {
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
+  const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
   const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
@@ -3381,6 +3382,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.spinsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
+                  setReopenGameOverlayOnRewardClose(false);
                   setShowDailySpinWheel(true);
                 }}
               >
@@ -3399,6 +3401,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.spinsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
+                  setReopenGameOverlayOnRewardClose(false);
                   setShowDailySpinWheel(true);
                 }}
               >
@@ -3418,6 +3421,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.heartsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
+                  setReopenGameOverlayOnRewardClose(false);
                   setShowLuckyRoll(true);
                 }}
               >
@@ -3436,6 +3440,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.heartsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
+                  setReopenGameOverlayOnRewardClose(false);
                   setShowLuckyRoll(true);
                 }}
               >
@@ -3455,6 +3460,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.hatchesRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
+                  setReopenGameOverlayOnRewardClose(false);
                   setShowCalendarPlaceholder(true);
                 }}
               >
@@ -3471,6 +3477,7 @@ export default function App() {
                 disabled={dailyTreatsInventory.hatchesRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
+                  setReopenGameOverlayOnRewardClose(false);
                   setShowCalendarPlaceholder(true);
                 }}
               >
@@ -3567,17 +3574,25 @@ export default function App() {
     </div>
   ) : null;
 
+  const handleRewardModalClose = (closeModal: () => void) => {
+    closeModal();
+    if (reopenGameOverlayOnRewardClose) {
+      setShowGameBoardOverlay(true);
+      setReopenGameOverlayOnRewardClose(false);
+    }
+  };
+
   const luckyRollModal = showLuckyRoll && activeSession ? (
     <LuckyRollBoard
       session={activeSession}
-      onClose={() => setShowLuckyRoll(false)}
+      onClose={() => handleRewardModalClose(() => setShowLuckyRoll(false))}
     />
   ) : null;
 
   const countdownCalendarModal = (
     <CountdownCalendarModal
       isOpen={showCalendarPlaceholder}
-      onClose={() => setShowCalendarPlaceholder(false)}
+      onClose={() => handleRewardModalClose(() => setShowCalendarPlaceholder(false))}
       userId={activeSession?.user?.id}
     />
   );
@@ -3637,18 +3652,22 @@ export default function App() {
           }}
           onSpinWinClick={() => {
             setShowGameBoardOverlay(false);
+            setReopenGameOverlayOnRewardClose(true);
             setShowDailySpinWheel(true);
           }}
           onHeartsGameplayClick={() => {
             setShowGameBoardOverlay(false);
+            setReopenGameOverlayOnRewardClose(true);
             setShowLuckyRoll(true);
           }}
           onDailyHatchClick={() => {
             setShowGameBoardOverlay(false);
+            setReopenGameOverlayOnRewardClose(true);
             setShowCalendarPlaceholder(true);
           }}
           onBankClick={() => {
             setShowGameBoardOverlay(false);
+            setReopenGameOverlayOnRewardClose(false);
             setScoreTabActiveTab('bank');
             setShowMobileGamification(true);
           }}
@@ -3668,12 +3687,13 @@ export default function App() {
           momentumPercent={Math.min(100, streakMomentum * 4)}
           diamondBalance={goldBreakdown.diamonds}
           goldBalance={goldBreakdown.goldRemainder}
+          spinsRemaining={dailyTreatsInventory.spinsRemaining}
         />
         {showAiCoachModal && (
           <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
         )}
         {showDailySpinWheel && (
-          <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
+          <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />
         )}
         {quickGainsModal}
         {dailyTreatsCongratsModal}
@@ -3900,18 +3920,22 @@ export default function App() {
         }}
         onSpinWinClick={() => {
           setShowGameBoardOverlay(false);
+          setReopenGameOverlayOnRewardClose(true);
           setShowDailySpinWheel(true);
         }}
         onHeartsGameplayClick={() => {
           setShowGameBoardOverlay(false);
+          setReopenGameOverlayOnRewardClose(true);
           setShowLuckyRoll(true);
         }}
         onDailyHatchClick={() => {
           setShowGameBoardOverlay(false);
+          setReopenGameOverlayOnRewardClose(true);
           setShowCalendarPlaceholder(true);
         }}
         onBankClick={() => {
           setShowGameBoardOverlay(false);
+          setReopenGameOverlayOnRewardClose(false);
           setScoreTabActiveTab('bank');
           setShowMobileGamification(true);
         }}
@@ -3931,6 +3955,7 @@ export default function App() {
         momentumPercent={Math.min(100, streakMomentum * 4)}
         diamondBalance={goldBreakdown.diamonds}
         goldBalance={goldBreakdown.goldRemainder}
+        spinsRemaining={dailyTreatsInventory.spinsRemaining}
       />
 
       {isAuthOverlayVisible ? (
@@ -3972,7 +3997,7 @@ export default function App() {
         <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
       )}
       {showDailySpinWheel && (
-        <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />
+        <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />
       )}
       {quickGainsModal}
       {dailyTreatsModal}
