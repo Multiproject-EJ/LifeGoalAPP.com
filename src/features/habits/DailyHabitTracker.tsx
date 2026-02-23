@@ -27,6 +27,7 @@ import {
 import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { fetchVisionImages, getVisionImagePublicUrl } from '../../services/visionBoard';
+import { generateSpecialVisionStar, persistSpecialVisionStarImage } from '../../services/visionStarSpecial';
 import { HabitAlertConfig } from './HabitAlertConfig';
 import {
   createJournalEntry,
@@ -1329,19 +1330,49 @@ export function DailyHabitTracker({
         isSpecial ? 'Special weekly vision star story' : 'Vision board star boost'
       );
       await recordActivity();
-      const specialStoryPanels = isSpecial
-        ? buildSpecialVisionStoryPanels({
+      const fallbackStoryPanels = buildSpecialVisionStoryPanels({
+        habitNames: sortedHabits.map((habit) => habit.name),
+        goalTitles: goals.map((goal) => goal.title),
+        userDisplayName: session.user.email?.split('@')[0] ?? 'You',
+        isAvatarPOV: Boolean(profileStrengthSnapshot),
+      });
+
+      const specialAiResult = isSpecial
+        ? await generateSpecialVisionStar({
             habitNames: sortedHabits.map((habit) => habit.name),
             goalTitles: goals.map((goal) => goal.title),
             userDisplayName: session.user.email?.split('@')[0] ?? 'You',
             isAvatarPOV: Boolean(profileStrengthSnapshot),
           })
+        : null;
+
+      if (isSpecial && specialAiResult?.error) {
+        console.warn('Special vision star AI generation failed, using fallback story/image:', specialAiResult.error);
+      }
+
+      let selectedImageUrl =
+        isSpecial && specialAiResult?.data?.imageDataUrl
+          ? specialAiResult.data.imageDataUrl
+          : selection.publicUrl;
+      const selectedCaption = isSpecial
+        ? specialAiResult?.data?.caption ?? '✨ Special vision star unlocked: your AI-crafted weekly comic just dropped.'
+        : selection.caption ?? null;
+      const specialStoryPanels = isSpecial
+        ? specialAiResult?.data?.panels ?? fallbackStoryPanels
         : undefined;
+
+      if (isSpecial && selectedImageUrl.startsWith('data:image/')) {
+        const persisted = await persistSpecialVisionStarImage(session.user.id, selectedImageUrl);
+        if (persisted.publicUrl) {
+          selectedImageUrl = persisted.publicUrl;
+        } else if (persisted.error) {
+          console.warn('Unable to persist special vision star image to storage:', persisted.error);
+        }
+      }
+
       setVisionReward({
-        imageUrl: selection.publicUrl,
-        caption: isSpecial
-          ? '✨ Special vision star unlocked: your AI-crafted weekly comic just dropped.'
-          : selection.caption ?? null,
+        imageUrl: selectedImageUrl,
+        caption: selectedCaption,
         xpAwarded: result?.xpAwarded ?? xpAmount,
         isSuperBoost,
         isSpecial,
@@ -1350,11 +1381,15 @@ export function DailyHabitTracker({
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
       saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
+
+      const persistImageUrl =
+        selectedImageUrl.startsWith('data:image/') && selectedImageUrl.length > 200_000
+          ? selection.publicUrl
+          : selectedImageUrl;
+
       saveDraft(visionStarRewardKey(session.user.id, activeDate), {
-        imageUrl: selection.publicUrl,
-        caption: isSpecial
-          ? '✨ Special vision star unlocked: your AI-crafted weekly comic just dropped.'
-          : selection.caption ?? null,
+        imageUrl: persistImageUrl,
+        caption: selectedCaption,
         xpAwarded: result?.xpAwarded ?? xpAmount,
         isSuperBoost,
         isSpecial,
@@ -1383,6 +1418,8 @@ export function DailyHabitTracker({
     sortedHabits,
     visionImages,
     visionStarCount,
+    persistSpecialVisionStarImage,
+    generateSpecialVisionStar,
   ]);
 
   const triggerStarBurst = useCallback(() => {

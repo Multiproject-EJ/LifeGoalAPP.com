@@ -415,3 +415,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M4/M8 follow-up — Time-bound Vision Star scheduling + weekly special story star.  
   - **What changed**: Updated the Today tab Vision Star flow to be windowed instead of always-available: two smart, non-fixed daily appearance windows (2 minutes each), coordinated to avoid overlap with existing time-limited offer/review windows, and disabled outside live windows. Added a weekly randomized “special vision star” day with a visually distinct state and an AI-style 5-panel motivational story payload generated from goals/habits context. Persisted daily and weekly scheduling in localStorage keys for consistency across app opens.  
   - **What’s next**: Move special-story generation from local templating to real AI generation endpoint (image/story/comic variants), then A/B test window probabilities and conversion to claim rate.
+- **2026-02-23**  
+  - **Slice**: Vision Star Phase 2.2 — async image persistence for generated special star assets.  
+  - **What changed**: Added client-side storage persistence for AI-generated special-star images by uploading generated data URLs to the existing vision storage bucket and replacing in-memory/base64 image payloads with a durable public URL when available. Kept robust fallback behavior if upload is unavailable/fails and retained localStorage size guard fallback.  
+  - **What’s next**: Add server-side persistence/audit trail for generated special-star outputs and configurable style presets.
