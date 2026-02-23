@@ -411,3 +411,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M4 Slice — Weighted success-rate metrics on habit analytics cards.  
   - **What changed**: Added 30-day weighted success snapshots (done, done-ish, skipped, missed with partial-credit scoring) and surfaced weighted success directly in each habit card under streak stats, including done-ish day counts for transparency. Updated milestone status + checklist to reflect completion.  
   - **What's next**: Add daily check-in controls and copy that let users explicitly classify skipped vs missed days so grading stays accurate.
+- **2026-02-23**  
+  - **Slice**: M4/M8 follow-up — Time-bound Vision Star scheduling + weekly special story star.  
+  - **What changed**: Updated the Today tab Vision Star flow to be windowed instead of always-available: two smart, non-fixed daily appearance windows (2 minutes each), coordinated to avoid overlap with existing time-limited offer/review windows, and disabled outside live windows. Added a weekly randomized “special vision star” day with a visually distinct state and an AI-style 5-panel motivational story payload generated from goals/habits context. Persisted daily and weekly scheduling in localStorage keys for consistency across app opens.  
+  - **What’s next**: Move special-story generation from local templating to real AI generation endpoint (image/story/comic variants), then A/B test window probabilities and conversion to claim rate.
