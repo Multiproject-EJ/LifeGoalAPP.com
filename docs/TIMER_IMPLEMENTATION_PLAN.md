@@ -31,33 +31,36 @@ A beautiful, minimal, low-friction timer that can be started in 1 tap, but still
 - [x] Ensure mobile-first visual structure and responsive layout.
 
 ### Phase 2 — Cross-module deep links
-- [~] Add timer icon CTA in:
+- [x] Add timer icon CTA in:
   - [x] Actions task rows (per-action timer icon)
   - [x] Habits (today checklist timer icon)
-  - [ ] Goals
+  - [x] Goals (goal-card timer launch)
   - [x] Journal (header focus timer launch)
   - [x] Meditation (Breathing Space timer launch)
   - [x] Projects (project-task timer icon in Project detail)
-  - [ ] Vision Board
-- [~] Pass source metadata into timer route from each entry point.
-- [x] Pre-fill timer source and label based on launch origin (implemented for Actions launches).
+  - [x] Vision Board (card-level timer launch)
+- [x] Pass source metadata into timer route from each entry point.
+- [x] Pre-fill timer source and label based on launch origin.
 
 ### Phase 3 — Shared launcher state + footer behavior
-- [ ] Expose derived launcher state selector `idle | active | alert` from timer source-of-truth.
-- [ ] Make footer launcher switch to countdown while active.
-- [ ] Keep launcher in alert mode until explicit acknowledgement.
-- [ ] Handle stale sessions (>24h) and reset to idle.
+- [x] Expose derived launcher state selector `idle | active | alert` from timer source-of-truth.
+- [x] Make footer launcher switch to countdown while active.
+- [x] Keep launcher in alert mode until explicit acknowledgement.
+- [x] Handle stale sessions (>24h) and reset to idle.
 
 ### Phase 4 — Delight + customization
-- [ ] Sound/vibration profiles for completion.
-- [ ] Theme variants (sleek minimal / high contrast / calm).
-- [ ] Saved personal presets and default source type.
-- [ ] Session analytics (time focused by source type).
+- [x] Lightweight local timer telemetry events (lifecycle, presets, launch context, theme/profile changes).
+- [x] QA checklist for launcher, analytics, preferences, and deep-link regression coverage (`docs/TIMER_QA_CHECKLIST.md`).
+- [x] Add lightweight timer regression smoke automation for key completion/launcher motion guards (`npm run check:timer-regression`).
+- [x] Sound/vibration profiles for completion.
+- [x] Theme variants (sleek minimal / high contrast / calm).
+- [x] Saved personal presets and default source type.
+- [x] Session analytics (time focused by source type).
 
 ## AI-agent substep policy
 The implementing agent may introduce additional sub-steps whenever hidden complexity appears (state migration, UX edge cases, telemetry, accessibility, stale recovery). New sub-steps should be appended under the active phase and marked as done/next.
 
 ## Current status board
-- **Now doing**: Phase 2 integration in progress (Actions + Projects + Habits + Journal + Meditation deep-links shipped).
-- **Next**: Add timer deep links for Goals and Vision Board.
-- **Later**: launcher selector + footer active/alert behavior.
+- **Next**: Expand optional automation from smoke checks into end-to-end auth-gated flow coverage.
+- **Next**: Broader device QA passes for launcher/analytics/theme combinations.
+- **Later**: future timer enhancements based on usage data.

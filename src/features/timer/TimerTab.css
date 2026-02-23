@@ -1,4 +1,12 @@
 .timer-tab {
+  --timer-card-bg: var(--surface-primary, #ffffff);
+  --timer-card-border: color-mix(in srgb, var(--text-primary, #0f172a) 8%, transparent);
+  --timer-card-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --timer-progress-gradient: linear-gradient(90deg, #6366f1, #22c55e);
+  --timer-chip-active-bg: color-mix(in srgb, #3b82f6 18%, transparent);
+  --timer-chip-active-border: #3b82f6;
+  --timer-source-active-bg: color-mix(in srgb, #3b82f6 14%, transparent);
+  --timer-source-active-border: #3b82f6;
   padding: 0.9rem;
   max-width: 920px;
   margin: 0 auto;
@@ -50,9 +58,9 @@
 .timer-tab__main-card,
 .timer-tab__setup {
   border-radius: 16px;
-  background: var(--surface-primary, #ffffff);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-  border: 1px solid color-mix(in srgb, var(--text-primary, #0f172a) 8%, transparent);
+  background: var(--timer-card-bg);
+  box-shadow: var(--timer-card-shadow);
+  border: 1px solid var(--timer-card-border);
   padding: 1rem;
 }
 
@@ -74,7 +82,7 @@
 .timer-tab__progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #6366f1, #22c55e);
+  background: var(--timer-progress-gradient);
   transition: width 0.35s ease;
 }
 
@@ -136,8 +144,8 @@
 }
 
 .timer-tab__chip--active {
-  background: color-mix(in srgb, #3b82f6 18%, transparent);
-  border-color: #3b82f6;
+  background: var(--timer-chip-active-bg);
+  border-color: var(--timer-chip-active-border);
 }
 
 .timer-tab__field {
@@ -151,6 +159,58 @@
 .timer-tab__field-row {
   display: flex;
   gap: 0.5rem;
+}
+
+.timer-tab__field-row--wrap {
+  flex-wrap: wrap;
+}
+
+.timer-tab__saved-presets {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.timer-tab__saved-preset-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.timer-tab__saved-preset-remove {
+  border: 1px solid color-mix(in srgb, var(--text-primary, #0f172a) 18%, transparent);
+  background: var(--surface-primary, #fff);
+  color: var(--text-secondary, #64748b);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  line-height: 1.1;
+}
+
+.timer-tab__hint {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.75rem;
+}
+
+.timer-tab__analytics-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.timer-tab__analytics-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.timer-tab__analytics-source {
+  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+}
+
+.timer-tab__analytics-value {
+  color: var(--text-secondary, #64748b);
+  text-align: right;
 }
 
 .timer-tab__input {
@@ -181,8 +241,53 @@
 }
 
 .timer-tab__source-card--active {
-  border-color: #3b82f6;
-  background: color-mix(in srgb, #3b82f6 14%, transparent);
+  border-color: var(--timer-source-active-border);
+  background: var(--timer-source-active-bg);
+}
+
+.timer-tab--theme-high-contrast {
+  --timer-card-bg: #0f172a;
+  --timer-card-border: #f8fafc;
+  --timer-card-shadow: 0 12px 28px rgba(2, 6, 23, 0.55);
+  --timer-progress-gradient: linear-gradient(90deg, #f97316, #facc15);
+  --timer-chip-active-bg: rgba(250, 204, 21, 0.24);
+  --timer-chip-active-border: #facc15;
+  --timer-source-active-bg: rgba(248, 250, 252, 0.16);
+  --timer-source-active-border: #f8fafc;
+}
+
+.timer-tab--theme-high-contrast .timer-tab__title,
+.timer-tab--theme-high-contrast .timer-tab__subtitle,
+.timer-tab--theme-high-contrast .timer-tab__meta,
+.timer-tab--theme-high-contrast .timer-tab__status,
+.timer-tab--theme-high-contrast .timer-tab__field,
+.timer-tab--theme-high-contrast .timer-tab__source-title,
+.timer-tab--theme-high-contrast .timer-tab__source-description,
+.timer-tab--theme-high-contrast .timer-tab__analytics-source,
+.timer-tab--theme-high-contrast .timer-tab__analytics-value,
+.timer-tab--theme-high-contrast .timer-tab__hint {
+  color: #f8fafc;
+}
+
+.timer-tab--theme-high-contrast .timer-tab__btn,
+.timer-tab--theme-high-contrast .timer-tab__chip,
+.timer-tab--theme-high-contrast .timer-tab__saved-preset-remove,
+.timer-tab--theme-high-contrast .timer-tab__input,
+.timer-tab--theme-high-contrast .timer-tab__source-card {
+  background: #111827;
+  color: #f8fafc;
+  border-color: rgba(248, 250, 252, 0.45);
+}
+
+.timer-tab--theme-calm {
+  --timer-card-bg: #f0f9ff;
+  --timer-card-border: rgba(14, 116, 144, 0.22);
+  --timer-card-shadow: 0 8px 20px rgba(8, 47, 73, 0.09);
+  --timer-progress-gradient: linear-gradient(90deg, #0ea5e9, #22c55e);
+  --timer-chip-active-bg: rgba(14, 165, 233, 0.18);
+  --timer-chip-active-border: #0ea5e9;
+  --timer-source-active-bg: rgba(34, 197, 94, 0.16);
+  --timer-source-active-border: #22c55e;
 }
 
 .timer-tab__source-icon {

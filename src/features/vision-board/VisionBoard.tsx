@@ -20,6 +20,7 @@ import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/image
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import type { TimerLaunchContext } from '../timer/timerSession';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -27,6 +28,7 @@ type HabitRow = Database['public']['Tables']['habits_v2']['Row'];
 
 type VisionBoardProps = {
   session: Session;
+  onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
 type SortMode = 'newest' | 'oldest' | 'caption';
@@ -120,7 +122,7 @@ function getVisionTypeLabel(value: string | null | undefined): string {
   return VISION_TYPES.find((type) => type.value === value)?.label ?? 'Goal';
 }
 
-export function VisionBoard({ session }: VisionBoardProps) {
+export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const { earnXP, recordActivity } = useGamification(session);
@@ -1414,6 +1416,21 @@ export function VisionBoard({ session }: VisionBoardProps) {
                 );
               })()}
               <div className="vision-board__card-actions">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onNavigateToTimer?.({
+                      sourceType: 'vision',
+                      sourceId: image.id,
+                      sourceName: image.caption?.trim() || 'Vision board entry',
+                    })
+                  }
+                  className="vision-board__edit"
+                  aria-label={`Start timer for vision image: ${image.caption?.trim() || 'Vision board entry'}`}
+                  title="Start timer"
+                >
+                  ⏱️ Timer
+                </button>
                 <button type="button" onClick={() => startEditing(image)} className="vision-board__edit">
                   Edit details
                 </button>
