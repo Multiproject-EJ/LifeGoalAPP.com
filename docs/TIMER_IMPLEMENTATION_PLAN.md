@@ -51,6 +51,7 @@ A beautiful, minimal, low-friction timer that can be started in 1 tap, but still
 ### Phase 4 — Delight + customization
 - [x] Lightweight local timer telemetry events (lifecycle, presets, launch context, theme/profile changes).
 - [x] QA checklist for launcher, analytics, preferences, and deep-link regression coverage (`docs/TIMER_QA_CHECKLIST.md`).
+- [x] Add lightweight timer regression smoke automation for key completion/launcher motion guards (`npm run check:timer-regression`).
 - [x] Sound/vibration profiles for completion.
 - [x] Theme variants (sleek minimal / high contrast / calm).
 - [x] Saved personal presets and default source type.
@@ -60,6 +61,6 @@ A beautiful, minimal, low-friction timer that can be started in 1 tap, but still
 The implementing agent may introduce additional sub-steps whenever hidden complexity appears (state migration, UX edge cases, telemetry, accessibility, stale recovery). New sub-steps should be appended under the active phase and marked as done/next.
 
 ## Current status board
-- **Now doing**: Timer polish and QA hardening.
+- **Next**: Expand optional automation from smoke checks into end-to-end auth-gated flow coverage.
 - **Next**: Broader device QA passes for launcher/analytics/theme combinations.
 - **Later**: future timer enhancements based on usage data.
