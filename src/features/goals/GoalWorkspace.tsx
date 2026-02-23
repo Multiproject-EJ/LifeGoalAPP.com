@@ -18,11 +18,13 @@ import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/Li
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { AI_FEATURE_ICON } from '../../constants/ai';
+import type { TimerLaunchContext } from '../timer/timerSession';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
 type GoalWorkspaceProps = {
   session: Session;
+  onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
 type GoalDraft = {
@@ -79,7 +81,7 @@ const initialDraft: GoalDraft = {
   statusTag: defaultStatusTag,
 };
 
-export function GoalWorkspace({ session }: GoalWorkspaceProps) {
+export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const { earnXP, recordActivity } = useGamification(session);
@@ -996,6 +998,21 @@ export function GoalWorkspace({ session }: GoalWorkspaceProps) {
                                 </>
                               ) : (
                                 <>
+                                  <button
+                                    type="button"
+                                    className="goal-card__button goal-card__button--primary"
+                                    onClick={() =>
+                                      onNavigateToTimer?.({
+                                        sourceType: 'goal',
+                                        sourceId: goal.id,
+                                        sourceName: goal.title,
+                                      })
+                                    }
+                                    aria-label={`Start timer for goal: ${goal.title}`}
+                                    title="Start timer"
+                                  >
+                                    ⏱️ Timer
+                                  </button>
                                   <button
                                     type="button"
                                     className="goal-card__button goal-card__button--primary"

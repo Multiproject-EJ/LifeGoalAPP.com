@@ -34,7 +34,16 @@ import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import PersonalityTest from './features/identity/PersonalityTest';
 import { ActionsTab } from './features/actions';
 import { TimerTab } from './features/timer';
-import type { TimerLaunchContext } from './features/timer/timerSession';
+import {
+  DEFAULT_TIMER_SESSION,
+  deriveRunningRemainingSeconds,
+  deriveTimerLauncherState,
+  normalizeTimerSession,
+  readTimerSession,
+  writeTimerSession,
+  type TimerLaunchContext,
+  type TimerSessionState,
+} from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
@@ -147,6 +156,13 @@ const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
 const DAILY_TREATS_DAILY_VISIT_KEY = 'lifegoal_daily_treats_daily_visit';
+
+function formatTimerSeconds(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds));
+  const mins = Math.floor(safe / 60);
+  const secs = safe % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
 
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
@@ -349,6 +365,9 @@ export default function App() {
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
   const [timerLaunchContext, setTimerLaunchContext] = useState<TimerLaunchContext | null>(null);
+  const [footerTimerSession, setFooterTimerSession] = useState<TimerSessionState>(() =>
+    normalizeTimerSession(readTimerSession()),
+  );
   const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage'>('home');
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
@@ -400,6 +419,30 @@ export default function App() {
     if (typeof window === 'undefined') return;
     setHasSeenDailyTreats(window.localStorage.getItem(DAILY_TREATS_SEEN_KEY) === 'true');
     setDailyTreatsFirstVisitDate(window.localStorage.getItem(DAILY_TREATS_DAILY_VISIT_KEY));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const syncTimerSession = () => {
+      const storedSession = readTimerSession();
+      const normalizedSession = normalizeTimerSession(storedSession);
+      if (normalizedSession !== storedSession) {
+        writeTimerSession(normalizedSession);
+      }
+      setFooterTimerSession(normalizedSession);
+    };
+
+    syncTimerSession();
+    const intervalId = window.setInterval(syncTimerSession, 1000);
+    window.addEventListener('storage', syncTimerSession);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('storage', syncTimerSession);
+    };
   }, []);
 
   const getTodayDateKey = useCallback(() => new Date().toISOString().split('T')[0], []);
@@ -633,6 +676,12 @@ export default function App() {
     };
   }, []);
 
+  const timerLauncherState = useMemo(() => deriveTimerLauncherState(footerTimerSession), [footerTimerSession]);
+  const timerLauncherSeconds = useMemo(
+    () => deriveRunningRemainingSeconds(footerTimerSession),
+    [footerTimerSession],
+  );
+
   const mobileFooterNavItems = useMemo(() => {
     const footerIds: MobileMenuNavItem['id'][] = [
       'planning',
@@ -642,8 +691,35 @@ export default function App() {
     ];
     return footerIds
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
-      .filter((item): item is MobileMenuNavItem => Boolean(item));
-  }, [mobileMenuNavItems]);
+      .filter((item): item is MobileMenuNavItem => Boolean(item))
+      .map((item) => {
+        if (item.id !== 'actions') {
+          return item;
+        }
+
+        if (timerLauncherState === 'active') {
+          return {
+            ...item,
+            label: formatTimerSeconds(timerLauncherSeconds),
+            ariaLabel: `Open timer with ${formatTimerSeconds(timerLauncherSeconds)} remaining`,
+            icon: '⏱️',
+            summary: 'Return to your active timer.',
+          };
+        }
+
+        if (timerLauncherState === 'alert') {
+          return {
+            ...item,
+            label: 'Done!',
+            ariaLabel: 'Open timer completion alert',
+            icon: '🔔',
+            summary: 'Timer complete. Open to acknowledge.',
+          };
+        }
+
+        return item;
+      });
+  }, [mobileMenuNavItems, timerLauncherSeconds, timerLauncherState]);
   const mobileFooterPointsBadges: Partial<Record<MobileMenuNavItem['id'], string>> = {};
 
   const triggerMobileMenuFlash = () => {
@@ -1518,6 +1594,12 @@ export default function App() {
 
     if (navId === 'score') {
       setScoreTabActiveTab('home');
+    }
+
+    if (navId === 'actions' && timerLauncherState !== 'idle') {
+      setActiveWorkspaceNav('timer');
+      setShowMobileHome(false);
+      return;
     }
 
     setActiveWorkspaceNav(navId);
@@ -2459,14 +2541,30 @@ export default function App() {
       case 'insights':
         return (
           <div className="workspace-content">
-            <VisionBoard session={activeSession} />
+            <VisionBoard
+              session={activeSession}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
+            />
           </div>
         );
       case 'support':
         return (
           <div className="workspace-content">
             <LifeGoalsSection session={activeSession} />
-            <GoalWorkspace session={activeSession} />
+            <GoalWorkspace
+              session={activeSession}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
+            />
           </div>
         );
       case 'game':
