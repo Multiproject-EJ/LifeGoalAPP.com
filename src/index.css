@@ -5079,6 +5079,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   animation: vision-glow 2.8s ease-in-out infinite;
 }
 
+
+.habit-day-nav__vision-button--special .habit-day-nav__vision-button-image {
+  filter: drop-shadow(0 12px 24px rgba(168, 85, 247, 0.45));
+}
+
+.habit-day-nav__vision-button--special .habit-day-nav__vision-title {
+  color: #fef3ff;
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.65);
+}
+
 .habit-day-nav__vision-button-image {
   width: 100%;
   height: auto;
@@ -5547,6 +5557,21 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.95rem;
   font-weight: 600;
   color: #7c2d12;
+}
+
+
+.habit-day-nav__vision-special-story {
+  margin: 0;
+  width: 100%;
+  padding: 0.8rem 0.9rem 0.8rem 1.5rem;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(76, 29, 149, 0.12), rgba(168, 85, 247, 0.08));
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  color: #4c1d95;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  display: grid;
+  gap: 0.2rem;
 }
 
 .habit-day-nav__vision-modal-button {
