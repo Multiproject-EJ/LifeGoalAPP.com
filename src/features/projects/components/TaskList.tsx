@@ -10,6 +10,7 @@ interface TaskListProps {
   onUpdateTask: (id: string, title: string) => void;
   onDeleteTask: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
+  onStartTimer?: (task: ProjectTaskItem) => void;
 }
 
 export function TaskList({
@@ -20,6 +21,7 @@ export function TaskList({
   onUpdateTask,
   onDeleteTask,
   onStatusChange,
+  onStartTimer,
 }: TaskListProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
@@ -68,6 +70,7 @@ export function TaskList({
               onUpdate={onUpdateTask}
               onDelete={onDeleteTask}
               onStatusChange={onStatusChange}
+              onStartTimer={onStartTimer}
             />
           ))}
         </div>

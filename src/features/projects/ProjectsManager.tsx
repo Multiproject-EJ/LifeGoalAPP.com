@@ -8,16 +8,18 @@ import { ProjectDetail } from './components/ProjectDetail';
 import { ProjectForm } from './components/ProjectForm';
 import { ProjectBoard } from './components/ProjectBoard';
 import { ProjectTimeline } from './components/ProjectTimeline';
-import type { Project, ProjectStatus, CreateProjectInput, TaskStatus } from '../../types/actions';
+import type { Project, ProjectStatus, CreateProjectInput, TaskStatus, ProjectTaskItem } from '../../types/actions';
+import type { TimerLaunchContext } from '../timer/timerSession';
 import { PROJECT_STATUS_CONFIG } from '../../types/actions';
 import './ProjectsManager.css';
 
 interface ProjectsManagerProps {
   session: Session | null;
   onNavigateToActions?: () => void;
+  onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 }
 
-export function ProjectsManager({ session, onNavigateToActions }: ProjectsManagerProps) {
+export function ProjectsManager({ session, onNavigateToActions, onNavigateToTimer }: ProjectsManagerProps) {
   const { projects, loading, error, createProject, updateProject, deleteProject, completeProject, refresh } = useProjects(session);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -39,6 +41,16 @@ export function ProjectsManager({ session, onNavigateToActions }: ProjectsManage
   const handleTaskClick = useCallback((task: any) => {
     // TODO: Implement task detail modal in future phase
   }, []);
+
+  const handleStartProjectTaskTimer = useCallback((project: Project, task: ProjectTaskItem) => {
+    if (!onNavigateToTimer) return;
+
+    onNavigateToTimer({
+      sourceType: 'project',
+      sourceId: task.id,
+      sourceName: `${project.title} • ${task.title}`,
+    });
+  }, [onNavigateToTimer]);
 
   // Calculate progress for all projects
   // NOTE: This is a simplified implementation showing 0 progress for list view.
@@ -219,6 +231,7 @@ export function ProjectsManager({ session, onNavigateToActions }: ProjectsManage
                   onComplete={handleCompleteProject}
                   onClose={() => setSelectedProjectId(null)}
                   onEdit={handleEditProject}
+                  onStartTaskTimer={handleStartProjectTaskTimer}
                 />
               </div>
             )}

@@ -19,6 +19,7 @@ export interface ActionItemProps {
   onDragEnter?: () => void;
   onDragEnd?: () => void;
   showPointsBadge?: boolean;
+  onStartTimer?: () => void;
 }
 
 export function ActionItem({
@@ -34,6 +35,7 @@ export function ActionItem({
   onDragEnter,
   onDragEnd,
   showPointsBadge = false,
+  onStartTimer,
 }: ActionItemProps) {
   const timeRemaining = calculateTimeRemaining(action.expires_at);
   const config = ACTION_CATEGORY_CONFIG[action.category];
@@ -208,7 +210,20 @@ export function ActionItem({
         {action.notes && <span className="action-item__notes">{action.notes}</span>}
       </div>
 
-      <ActionTimer action={action} />
+      <div className="action-item__side-actions">
+        <ActionTimer action={action} />
+        {onStartTimer ? (
+          <button
+            type="button"
+            className="action-item__start-timer"
+            onClick={onStartTimer}
+            aria-label={`Start timer for: ${action.title}`}
+            title="Start timer"
+          >
+            ⏱️
+          </button>
+        ) : null}
+      </div>
 
       {showDeleteConfirm ? (
         <div className="action-item__delete-confirm" role="group" aria-label={`Delete ${action.title}`}>

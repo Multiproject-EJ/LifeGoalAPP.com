@@ -20,6 +20,7 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import projectsIcon from '../../assets/Projects.webp';
 import timerIcon from '../../assets/Timer.webp';
 import taskIcon from '../../assets/Task.webp';
+import type { TimerLaunchContext } from '../timer/timerSession';
 import './ActionsTab.css';
 
 // Constants
@@ -33,7 +34,7 @@ const shouldAlwaysShow = (action: Action): boolean => {
 type ActionsTabProps = {
   session: Session;
   onNavigateToProjects?: () => void;
-  onNavigateToTimer?: () => void;
+  onNavigateToTimer?: (context?: TimerLaunchContext) => void;
   showPointsBadges?: boolean;
   isMobileView?: boolean;
 };
@@ -89,6 +90,17 @@ export function ActionsTab({
   }, [levelUpEvent]);
   
   const userId = session?.user?.id ?? DEMO_USER_ID;
+
+  const handleLaunchActionTimer = useCallback((action: Action) => {
+    if (!onNavigateToTimer) return;
+
+    const sourceType: TimerLaunchContext['sourceType'] = action.category === 'project' ? 'project' : 'general';
+    onNavigateToTimer({
+      sourceType,
+      sourceId: action.id,
+      sourceName: action.title,
+    });
+  }, [onNavigateToTimer]);
 
   // Run cleanup on load (once per 24 hours) - safety net for Edge Functions
   useActionsCleanupOnLoad(session, {
@@ -438,7 +450,7 @@ export function ActionsTab({
               <button
                 type="button"
                 className="actions-tab__launcher-button"
-                onClick={onNavigateToTimer}
+                onClick={() => onNavigateToTimer({ sourceType: 'general' })}
                 aria-label="Open timer"
               >
                 <span className="actions-tab__launcher-icon" aria-hidden="true">
@@ -496,7 +508,7 @@ export function ActionsTab({
           {onNavigateToTimer && (
             <button
               className="actions-tab__header-icon"
-              onClick={onNavigateToTimer}
+              onClick={() => onNavigateToTimer({ sourceType: 'general' })}
               type="button"
               aria-label="Open Timer"
               title="Open Timer"
@@ -557,6 +569,7 @@ export function ActionsTab({
           selectedIds={selectedIds}
           justCompletedActionId={justCompletedActionId}
           showPointsBadges={showPointsBadges}
+          onStartTimer={handleLaunchActionTimer}
         />
       ) : (
         <ActionEmptyState />

@@ -12,6 +12,7 @@ import { getTelemetryDifficultyAdjustment, recordTelemetryEvent } from '../../se
 import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
+import type { TimerLaunchContext } from '../timer/timerSession';
 import './HabitsModule.css';
 import {
   AUTO_PROGRESS_TIERS,
@@ -34,9 +35,10 @@ const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1
 
 type HabitsModuleProps = {
   session: Session;
+  onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
-export function HabitsModule({ session }: HabitsModuleProps) {
+export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) {
   const [showDevNotes, setShowDevNotes] = useState(false);
   const [habits, setHabits] = useState<HabitV2Row[]>([]);
   const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
@@ -1526,6 +1528,34 @@ export function HabitsModule({ session }: HabitsModuleProps) {
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {onNavigateToTimer && !isDone ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onNavigateToTimer({
+                              sourceType: 'habit',
+                              sourceId: habit.id,
+                              sourceName: habit.title,
+                            })
+                          }
+                          title="Start timer for habit"
+                          aria-label={`Start timer for habit: ${habit.title}`}
+                          style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: '8px',
+                            border: '1px solid #c7d2fe',
+                            background: '#eef2ff',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.95rem',
+                          }}
+                        >
+                          ⏱️
+                        </button>
+                      ) : null}
                       {isDone ? (
                         <div style={{ 
                           fontSize: '0.875rem',

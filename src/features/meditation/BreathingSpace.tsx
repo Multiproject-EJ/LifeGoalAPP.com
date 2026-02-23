@@ -18,6 +18,7 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { awardZenTokens } from '../../services/zenGarden';
 import { TrainingTab } from '../training';
 import './BreathingSpace.css';
+import type { TimerLaunchContext } from '../timer/timerSession';
 
 type BreathingSpaceProps = {
   session: Session;
@@ -25,6 +26,7 @@ type BreathingSpaceProps = {
   initialMobileCategory?: MobileCategory;
   onMobileTabChange?: (tab: MobileTab) => void;
   onMobileCategoryChange?: (category: MobileCategory) => void;
+  onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
 type MobileTab = 'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise';
@@ -54,6 +56,7 @@ export function BreathingSpace({
   initialMobileCategory,
   onMobileTabChange,
   onMobileCategoryChange,
+  onNavigateToTimer,
 }: BreathingSpaceProps) {
   const [stats, setStats] = useState<MeditationStats>({
     totalMinutes: 0,
@@ -422,6 +425,24 @@ export function BreathingSpace({
           ))}
         </div>
       )}
+
+      {onNavigateToTimer ? (
+        <div className="breathing-space__timer-launch">
+          <button
+            type="button"
+            className="btn breathing-space__timer-launch-button"
+            onClick={() =>
+              onNavigateToTimer({
+                sourceType: 'meditation',
+                sourceName: 'Breathing Space session',
+              })
+            }
+            aria-label="Open meditation focus timer"
+          >
+            ⏱️ Meditation timer
+          </button>
+        </div>
+      ) : null}
 
       {/* Left Column: Quick Start & Reminder */}
       <div className="breathing-space__left-column breathing-space__section breathing-space__section--breathing">

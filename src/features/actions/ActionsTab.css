@@ -1062,6 +1062,36 @@
   font-size: 0.75rem;
 }
 
+.action-item__side-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.action-item__start-timer {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--category-color, #6366f1) 30%, transparent);
+  background: color-mix(in srgb, var(--category-color, #6366f1) 8%, var(--surface-primary, #fff));
+  color: var(--text-primary, #1a1a1a);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-item__start-timer:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(15, 23, 42, 0.14);
+}
+
+.action-item__start-timer:active {
+  transform: translateY(0);
+}
+
 /* Delete button */
 .action-item__delete {
   width: 28px;
