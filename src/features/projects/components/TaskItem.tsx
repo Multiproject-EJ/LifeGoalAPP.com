@@ -8,9 +8,10 @@ interface TaskItemProps {
   onUpdate: (id: string, title: string) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
+  onStartTimer?: (task: ProjectTaskItem) => void;
 }
 
-export function TaskItem({ task, onComplete, onUpdate, onDelete, onStatusChange }: TaskItemProps) {
+export function TaskItem({ task, onComplete, onUpdate, onDelete, onStatusChange, onStartTimer }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
 
@@ -94,6 +95,17 @@ export function TaskItem({ task, onComplete, onUpdate, onDelete, onStatusChange 
           <span className="task-item__due-date">
             Due: {formatDate(task.due_date)}
           </span>
+        )}
+
+        {onStartTimer && (
+          <button
+            onClick={() => onStartTimer(task)}
+            className="task-item__timer"
+            aria-label={`Start timer for ${task.title}`}
+            title="Start timer"
+          >
+            ⏱️
+          </button>
         )}
 
         <button

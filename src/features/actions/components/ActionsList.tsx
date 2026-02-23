@@ -14,6 +14,7 @@ export interface ActionsListProps {
   selectedIds?: Set<string>;
   justCompletedActionId?: string | null;
   showPointsBadges?: boolean;
+  onStartTimer?: (action: Action) => void;
 }
 
 type ActionsByCategory = Record<ActionCategory, Action[]>;
@@ -58,6 +59,7 @@ export function ActionsList({
   selectedIds = new Set(),
   justCompletedActionId = null,
   showPointsBadges = false,
+  onStartTimer,
 }: ActionsListProps) {
   const computedByCategory = useMemo(() => buildActionsByCategory(actions), [actions]);
   const [orderedByCategory, setOrderedByCategory] = useState<ActionsByCategory>(computedByCategory);
@@ -181,6 +183,7 @@ export function ActionsList({
                 onDragEnter={() => handleDragEnter(category, action.id)}
                 onDragEnd={handleDragEnd}
                 showPointsBadge={showPointsBadges}
+                onStartTimer={onStartTimer ? () => onStartTimer(action) : undefined}
               />
             );
           })}

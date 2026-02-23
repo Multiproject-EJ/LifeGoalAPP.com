@@ -707,3 +707,19 @@
     gap: var(--space-3);
   }
 }
+
+
+.breathing-space__timer-launch {
+  margin: 0.35rem 0 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.breathing-space__timer-launch-button {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--primary-color, #6366f1) 35%, transparent);
+  background: color-mix(in srgb, var(--primary-color, #6366f1) 10%, var(--surface-primary, #fff));
+  color: var(--text-primary, #0f172a);
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+}

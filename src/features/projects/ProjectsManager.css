@@ -711,6 +711,29 @@
   color: var(--text-secondary, #6b7280);
 }
 
+.task-item__timer {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--primary-color, #6366f1) 32%, transparent);
+  background: color-mix(in srgb, var(--primary-color, #6366f1) 10%, var(--surface-primary, #fff));
+  color: var(--text-primary, #111827);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-item__timer:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(15, 23, 42, 0.15);
+}
+
+.task-item__timer:active {
+  transform: translateY(0);
+}
+
 .task-item__delete {
   background: none;
   border: none;

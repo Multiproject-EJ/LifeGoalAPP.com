@@ -34,6 +34,7 @@ import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import PersonalityTest from './features/identity/PersonalityTest';
 import { ActionsTab } from './features/actions';
 import { TimerTab } from './features/timer';
+import type { TimerLaunchContext } from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
@@ -146,6 +147,7 @@ const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
 const DAILY_TREATS_DAILY_VISIT_KEY = 'lifegoal_daily_treats_daily_visit';
+
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
@@ -346,6 +348,7 @@ export default function App() {
     'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
+  const [timerLaunchContext, setTimerLaunchContext] = useState<TimerLaunchContext | null>(null);
   const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage'>('home');
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
@@ -2304,7 +2307,15 @@ export default function App() {
               profileStrengthSignals={profileStrengthSignals}
               personalitySummary={personalitySummary}
             />
-            <HabitsModule session={activeSession} />
+            <HabitsModule
+              session={activeSession}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
+            />
           </div>
         );
       case 'actions':
@@ -2314,7 +2325,12 @@ export default function App() {
               session={activeSession}
               showPointsBadges={shouldShowPointsBadges}
               onNavigateToProjects={() => setActiveWorkspaceNav('projects')}
-              onNavigateToTimer={() => setActiveWorkspaceNav('timer')}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
               isMobileView={isMobileExperience}
             />
           </div>
@@ -2322,7 +2338,12 @@ export default function App() {
       case 'timer':
         return (
           <div className="workspace-content">
-            <TimerTab onNavigateToActions={() => setActiveWorkspaceNav('actions')} />
+            <TimerTab
+              onNavigateToActions={() => setActiveWorkspaceNav('actions')}
+              userId={activeSession?.user?.id ?? null}
+              launchContext={timerLaunchContext}
+              onLaunchContextHandled={() => setTimerLaunchContext(null)}
+            />
           </div>
         );
       case 'score':
@@ -2366,6 +2387,12 @@ export default function App() {
             <ProjectsManager
               session={activeSession}
               onNavigateToActions={() => setActiveWorkspaceNav('actions')}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
             />
           </div>
         );
@@ -2384,7 +2411,15 @@ export default function App() {
       case 'habits':
         return (
           <div className="workspace-content">
-            <HabitsModule session={activeSession} />
+            <HabitsModule
+              session={activeSession}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
+            />
           </div>
         );
       case 'journal':
@@ -2394,6 +2429,12 @@ export default function App() {
               session={activeSession}
               onNavigateToGoals={() => handleJournalNavigation('support')}
               onNavigateToHabits={() => handleJournalNavigation('planning')}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
             />
           </div>
         );
@@ -2406,6 +2447,12 @@ export default function App() {
               initialMobileCategory={breathingSpaceMobileCategory}
               onMobileTabChange={(tab) => setBreathingSpaceMobileTab(tab)}
               onMobileCategoryChange={(category) => setBreathingSpaceMobileCategory(category)}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
             />
           </div>
         );

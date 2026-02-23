@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { Project, UpdateProjectInput, CreateProjectTaskInput } from '../../../types/actions';
+import type { Project, UpdateProjectInput, CreateProjectTaskInput, ProjectTaskItem } from '../../../types/actions';
 import { PROJECT_STATUS_CONFIG } from '../../../types/actions';
 import { useProjectTasks } from '../hooks/useProjectTasks';
 import { useProjectProgress } from '../hooks/useProjectProgress';
@@ -18,6 +18,7 @@ interface ProjectDetailProps {
   onComplete: (id: string) => Promise<void>;
   onClose: () => void;
   onEdit: () => void;
+  onStartTaskTimer?: (project: Project, task: ProjectTaskItem) => void;
 }
 
 export function ProjectDetail({
@@ -28,6 +29,7 @@ export function ProjectDetail({
   onComplete,
   onClose,
   onEdit,
+  onStartTaskTimer,
 }: ProjectDetailProps) {
   const { tasks, createTask, updateTask, deleteTask, completeTask } = useProjectTasks(session, project.id);
   const progress = useProjectProgress(project, tasks);
@@ -187,6 +189,7 @@ export function ProjectDetail({
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
             onStatusChange={handleStatusChange}
+            onStartTimer={onStartTaskTimer ? (task) => onStartTaskTimer(project, task) : undefined}
           />
         </div>
       </div>

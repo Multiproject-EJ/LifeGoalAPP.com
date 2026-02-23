@@ -25,6 +25,7 @@ import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { GoalReflectionJournal } from '../goals/GoalReflectionJournal';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import type { TimerLaunchContext } from '../timer/timerSession';
 
 /**
  * Journal mode type representing different journaling experiences.
@@ -51,6 +52,7 @@ type JournalProps = {
   session: Session;
   onNavigateToGoals?: () => void;
   onNavigateToHabits?: () => void;
+  onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
 type StatusState = { kind: 'success' | 'error'; message: string } | null;
@@ -65,7 +67,7 @@ function sortEntries(entries: JournalEntry[]): JournalEntry[] {
   });
 }
 
-export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: JournalProps) {
+export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavigateToTimer }: JournalProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const journalDisabled = !isConfigured && !isDemoExperience;
@@ -428,6 +430,21 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits }: Jour
         </div>
         <div className="journal__header-actions">
           <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
+          {onNavigateToTimer ? (
+            <button
+              type="button"
+              className="journal__new"
+              onClick={() =>
+                onNavigateToTimer({
+                  sourceType: 'journal',
+                  sourceName: 'Journal reflection',
+                })
+              }
+              disabled={journalDisabled}
+            >
+              ⏱️ Focus timer
+            </button>
+          ) : null}
           {!isGoalReflectionMode ? (
             <button
               type="button"
