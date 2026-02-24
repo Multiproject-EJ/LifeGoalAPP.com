@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
   STOP_TILES,
@@ -12,6 +13,7 @@ const ROLL_MIN = 1;
 const ROLL_MAX = 3;
 const DEV_ISLAND_DURATION_SEC = 45;
 const DEV_EGG_DURATION_SEC = 40;
+const ENCOUNTER_TILE_INDEX = 6;
 
 type EggTier = 'common' | 'rare' | 'mythic';
 
@@ -63,7 +65,11 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
-export function IslandRunBoardPrototype() {
+interface IslandRunBoardPrototypeProps {
+  session: Session;
+}
+
+export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
@@ -81,6 +87,37 @@ export function IslandRunBoardPrototype() {
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
   const [nowMs, setNowMs] = useState(Date.now());
+  const [showOnboardingBooster, setShowOnboardingBooster] = useState(false);
+  const [boosterName, setBoosterName] = useState('');
+  const [boosterError, setBoosterError] = useState<string | null>(null);
+  const [isDisplayNameLoopCompleted, setIsDisplayNameLoopCompleted] = useState(false);
+  const [showEncounterModal, setShowEncounterModal] = useState(false);
+  const [encounterResolved, setEncounterResolved] = useState(false);
+
+  const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
+
+  useEffect(() => {
+    const defaultName =
+      (typeof session.user.user_metadata?.full_name === 'string' && session.user.user_metadata.full_name.trim()) ||
+      session.user.email ||
+      'Game of Life Player';
+    setBoosterName(defaultName);
+  }, [session.user.email, session.user.user_metadata]);
+
+  useEffect(() => {
+    const storedValue = window.localStorage.getItem(onboardingStorageKey);
+    if (!storedValue) {
+      setIsDisplayNameLoopCompleted(false);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(storedValue) as { stepIndex?: number };
+      setIsDisplayNameLoopCompleted((parsed.stepIndex ?? 0) >= 1);
+    } catch {
+      setIsDisplayNameLoopCompleted(false);
+    }
+  }, [onboardingStorageKey]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -202,6 +239,8 @@ export function IslandRunBoardPrototype() {
       setHearts(30);
       setRollValue(null);
       setActiveStopId(null);
+      setShowEncounterModal(false);
+      setEncounterResolved(false);
       setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
       setLandingText('Arrived at next island. Ready to roll. Egg progress carried over (prototype).');
       setShowTravelOverlay(false);
@@ -236,8 +275,16 @@ export function IslandRunBoardPrototype() {
     if (landedStop) {
       setLandingText(`Landed on STOP: ${landedStop.toUpperCase()} (#${currentIndex})`);
       setActiveStopId(landedStop);
+      setShowEncounterModal(false);
+      setEncounterResolved(false);
+    } else if (currentIndex === ENCOUNTER_TILE_INDEX) {
+      setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
+      setShowEncounterModal(true);
+      setEncounterResolved(false);
     } else {
       setLandingText(`Landed on tile #${currentIndex}`);
+      setShowEncounterModal(false);
+      setEncounterResolved(false);
     }
 
     setIsRolling(false);
@@ -246,6 +293,56 @@ export function IslandRunBoardPrototype() {
   const handleSetEgg = (tier: EggTier) => {
     const start = Date.now();
     setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + DEV_EGG_DURATION_SEC * 1000 });
+  };
+
+  const handleClaimOnboardingBooster = () => {
+    const trimmedName = boosterName.trim();
+    if (!trimmedName) {
+      setBoosterError('Display name is required.');
+      return;
+    }
+
+    let nextStepIndex = 1;
+    let tokens = 0;
+    let unlockedItemIds: string[] = [];
+
+    const existingState = window.localStorage.getItem(onboardingStorageKey);
+    if (existingState) {
+      try {
+        const parsed = JSON.parse(existingState) as {
+          stepIndex?: number;
+          tokens?: number;
+          unlockedItemIds?: string[];
+        };
+        nextStepIndex = Math.max(1, parsed.stepIndex ?? 0);
+        tokens = parsed.tokens ?? 0;
+        unlockedItemIds = parsed.unlockedItemIds ?? [];
+      } catch {
+        // ignore broken storage and write a fresh payload
+      }
+    }
+
+    window.localStorage.setItem(
+      onboardingStorageKey,
+      JSON.stringify({
+        stepIndex: nextStepIndex,
+        tokens,
+        unlockedItemIds,
+      }),
+    );
+
+    setIsDisplayNameLoopCompleted(true);
+    setHearts((current) => current + 1);
+    setLandingText(`Onboarding display-name loop complete for ${trimmedName}. +1 heart rewarded.`);
+    setShowOnboardingBooster(false);
+    setBoosterError(null);
+  };
+
+  const handleResolveEncounter = () => {
+    if (encounterResolved) return;
+    setEncounterResolved(true);
+    setHearts((current) => current + 1);
+    setLandingText('Encounter resolved: +1 heart reward (prototype).');
   };
 
   return (
@@ -282,6 +379,19 @@ export function IslandRunBoardPrototype() {
           >
             {isRolling ? 'Rolling...' : 'Roll (1 heart)'}
           </button>
+          {hearts < 1 && (
+            <button
+              type="button"
+              className="island-run-prototype__booster-btn"
+              onClick={() => {
+                setBoosterError(null);
+                setShowOnboardingBooster(true);
+              }}
+              disabled={isDisplayNameLoopCompleted}
+            >
+              {isDisplayNameLoopCompleted ? 'Onboarding booster used' : 'Use onboarding booster (+1 heart)'}
+            </button>
+          )}
         </div>
       </header>
 
@@ -292,18 +402,19 @@ export function IslandRunBoardPrototype() {
           {TILE_ANCHORS.map((anchor, index) => {
             const position = toScreen(anchor, boardSize.width, boardSize.height);
             const isStop = stopMap.has(index);
+            const isEncounter = index === ENCOUNTER_TILE_INDEX;
 
             return (
               <div
                 key={anchor.id}
-                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''}`}
+                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''}`}
                 style={{
                   left: position.x,
                   top: position.y,
                   transform: `translate(-50%, -50%) scale(${anchor.scale})`,
                 }}
               >
-                <span>{index + 1}</span>
+                <span>{isEncounter ? '⚔️' : index + 1}</span>
                 {showDebug && <small>{anchor.id}</small>}
               </div>
             );
@@ -393,6 +504,60 @@ export function IslandRunBoardPrototype() {
             )}
 
             <button type="button" onClick={() => setActiveStopId(null)}>Close</button>
+          </section>
+        </div>
+      )}
+
+      {showEncounterModal && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
+            <h3>⚔️ Encounter Tile</h3>
+            <p>Easy challenge stub: steady your path and claim a small reward.</p>
+            <div className="island-hatchery-card">
+              <p>{encounterResolved ? 'Reward granted: +1 heart.' : 'Resolve this encounter to gain +1 heart.'}</p>
+            </div>
+            {!encounterResolved ? (
+              <button type="button" onClick={handleResolveEncounter}>Resolve Encounter</button>
+            ) : null}
+            <button type="button" onClick={() => setShowEncounterModal(false)}>Close</button>
+          </section>
+        </div>
+      )}
+
+      {showOnboardingBooster && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="Game of Life onboarding booster">
+            <div className="gol-onboarding__header-row">
+              <span className="gol-onboarding__step">Loop 1 of 21</span>
+              <button type="button" className="gol-onboarding__close" onClick={() => setShowOnboardingBooster(false)}>
+                Close
+              </button>
+            </div>
+            <p className="gol-onboarding__eyebrow">Game of Life 2.0 onboarding</p>
+            <h3>Claim your player name</h3>
+            <p>Step into Game of Life 2.0 with a display name that makes every win feel personal.</p>
+            <div className="gol-onboarding__progress">
+              <span>Progress</span>
+              <div className="gol-onboarding__progress-bar" aria-hidden="true">
+                <span style={{ width: `${(1 / 21) * 100}%` }} />
+              </div>
+              <span>1/21</span>
+            </div>
+            <label className="supabase-auth__field">
+              <span>Display name</span>
+              <input
+                type="text"
+                value={boosterName}
+                onChange={(event) => setBoosterName(event.target.value)}
+                placeholder={session.user.email ?? 'you@example.com'}
+              />
+            </label>
+            {boosterError && <p className="island-run-prototype__error">{boosterError}</p>}
+            <div className="gol-onboarding__actions">
+              <button type="button" className="supabase-auth__action" onClick={handleClaimOnboardingBooster}>
+                Save name & continue
+              </button>
+            </div>
           </section>
         </div>
       )}

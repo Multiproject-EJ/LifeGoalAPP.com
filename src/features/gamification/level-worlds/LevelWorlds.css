@@ -666,7 +666,8 @@
 
 .island-run-prototype__scene-btn,
 .island-run-prototype__debug-btn,
-.island-run-prototype__roll-btn {
+.island-run-prototype__roll-btn,
+.island-run-prototype__booster-btn {
   min-height: 38px;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
@@ -742,6 +743,11 @@
   box-shadow: 0 0 0 2px rgba(106, 251, 255, 0.75), 0 0 22px rgba(106, 251, 255, 0.35);
 }
 
+.island-tile--encounter {
+  box-shadow: 0 0 0 2px rgba(255, 170, 110, 0.8), 0 0 24px rgba(255, 128, 64, 0.45);
+  border-color: rgba(255, 220, 180, 0.95);
+}
+
 .island-token {
   position: absolute;
   transform: translate(-50%, -120%);
@@ -774,7 +780,8 @@
 }
 
 
-.island-run-prototype__roll-btn:disabled {
+.island-run-prototype__roll-btn:disabled,
+.island-run-prototype__booster-btn:disabled {
   opacity: 0.6;
 }
 
@@ -867,4 +874,15 @@
   color: #e8faff;
   font-size: 0.82rem;
   padding: 0.25rem 0.6rem;
+}
+
+
+.island-run-prototype__error {
+  margin-top: 0.5rem;
+  color: #ffb8b8;
+  font-size: 0.82rem;
+}
+
+.island-stop-modal--onboarding {
+  width: min(520px, 100%);
 }
