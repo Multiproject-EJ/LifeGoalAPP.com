@@ -43,6 +43,8 @@ import {
   AUTO_PROGRESS_TIERS,
   AUTO_PROGRESS_UPGRADE_RULES,
   buildAutoProgressPlan,
+  getHabitScalePlan,
+  getStageCreditMultiplier,
   getAutoProgressState,
   getNextDownshiftTier,
   getNextUpgradeTier,
@@ -104,6 +106,7 @@ type HabitCompletionState = {
   completed: boolean;
   progressState?: ProgressState;
   completionPercentage?: number;
+  loggedStage?: AutoProgressTier | null;
 };
 
 /**
@@ -125,6 +128,7 @@ type HabitLogInsert = {
   completed: boolean;
   progress_state?: string;
   completion_percentage?: number;
+  logged_stage?: AutoProgressTier;
   id?: string;
 };
 
@@ -135,6 +139,7 @@ type HabitLogRow = {
   completed: boolean;
   progress_state?: string | null;
   completion_percentage?: number | null;
+  logged_stage?: string | null;
 };
 
 type HabitInsights = {
@@ -212,6 +217,8 @@ const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
   minimum: 'Medium',
   standard: 'Hard',
 };
+
+const SCALE_STAGE_ORDER: AutoProgressTier[] = ['seed', 'minimum', 'standard'];
 
 // Vision star slot machine animation constants
 const SLOT_MACHINE_ANIMATION_DURATION_MS = 2500;
@@ -546,6 +553,10 @@ export function DailyHabitTracker({
   const weightedSuccessByHabit = useMemo(
     () => calculateWeightedSuccessSnapshots(habits, historicalLogs, today),
     [habits, historicalLogs, today],
+  );
+  const stageMixSnapshot = useMemo(
+    () => calculateStageMixSnapshot(historicalLogs, today),
+    [historicalLogs, today],
   );
   const habitHealthAssessmentsByHabitId = useMemo(() => {
     const next = {} as Record<string, ReturnType<typeof assessHabitHealth>>;
@@ -2340,6 +2351,7 @@ export function DailyHabitTracker({
           completed: Boolean(log.completed),
           progressState: (log.progress_state as ProgressState) ?? 'done',
           completionPercentage: log.completion_percentage ?? 100,
+          loggedStage: (log.logged_stage as AutoProgressTier | null) ?? null,
         };
 
         if (log.date === trackingDateISO) {
@@ -2784,6 +2796,7 @@ export function DailyHabitTracker({
           completed: false,
           progressState: 'doneIsh',
           completionPercentage,
+          loggedStage: null,
         },
       }));
 
@@ -2795,6 +2808,7 @@ export function DailyHabitTracker({
           completed: false,
           progressState: 'doneIsh',
           completionPercentage,
+          loggedStage: null,
         };
         next[habit.id] = habitMatrix;
         return next;
@@ -2845,6 +2859,138 @@ export function DailyHabitTracker({
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to mark habit as done-ish.');
+    } finally {
+      setSaving((current) => ({ ...current, [habit.id]: false }));
+    }
+  };
+
+  const handleLogHabitAtStage = async (
+    habit: HabitWithGoal,
+    stage: AutoProgressTier,
+    originElement?: HTMLElement | null,
+  ) => {
+    if (!isConfigured && !isDemoExperience) {
+      setErrorMessage('Supabase credentials are not configured yet.');
+      return;
+    }
+
+    const dateISO = activeDate;
+    const isToday = dateISO === today;
+    const autoProgressHabit = buildAutoProgressHabit(habit);
+    const scalePlan = getHabitScalePlan(autoProgressHabit);
+    const stageConfig = scalePlan.stages[stage];
+    const completionPercentage = stageConfig.completionPercent;
+    const isFullCompletion = completionPercentage >= 100;
+    const progressState: ProgressState = isFullCompletion ? 'done' : 'doneIsh';
+
+    if (originElement) {
+      const rect = originElement.getBoundingClientRect();
+      setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    } else {
+      setCelebrationOrigin(null);
+    }
+
+    setSaving((current) => ({ ...current, [habit.id]: true }));
+    setErrorMessage(null);
+
+    try {
+      const payload: HabitLogInsert = {
+        habit_id: habit.id,
+        date: dateISO,
+        completed: isFullCompletion,
+        progress_state: progressState,
+        completion_percentage: completionPercentage,
+        logged_stage: stage,
+      };
+
+      const { data, error } = await logHabitCompletion(payload);
+      if (error) throw error;
+
+      const logRow: HabitLogRow =
+        data ?? ({
+          id: `temp-${habit.id}-${dateISO}`,
+          habit_id: habit.id,
+          date: dateISO,
+          completed: isFullCompletion,
+          progress_state: progressState,
+          completion_percentage: completionPercentage,
+          logged_stage: stage,
+        } satisfies HabitLogRow);
+
+      setCompletions((current) => ({
+        ...current,
+        [habit.id]: {
+          logId: logRow.id,
+          completed: isFullCompletion,
+          progressState,
+          completionPercentage,
+          loggedStage: stage,
+        },
+      }));
+
+      setMonthlyCompletions((current) => {
+        const next = { ...current };
+        const habitMatrix = { ...(next[habit.id] ?? {}) };
+        habitMatrix[dateISO] = {
+          logId: logRow.id,
+          completed: isFullCompletion,
+          progressState,
+          completionPercentage,
+          loggedStage: stage,
+        };
+        next[habit.id] = habitMatrix;
+        return next;
+      });
+
+      setHistoricalLogs((current) => {
+        const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
+        nextLogs.push(logRow);
+        setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
+        return nextLogs;
+      });
+
+      if (session?.user?.id) {
+        const stageMultiplier = getStageCreditMultiplier(stage);
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'habit_stage_logged',
+          metadata: {
+            habitId: habit.id,
+            habitName: habit.name,
+            stage,
+            stageMultiplier,
+            completionPercentage,
+            progressState,
+          },
+        });
+      }
+
+      if (isToday) {
+        const now = new Date();
+        const baseXP = now.getHours() < 9 ? XP_REWARDS.HABIT_COMPLETE_EARLY : XP_REWARDS.HABIT_COMPLETE;
+        const stageMultiplier = getStageCreditMultiplier(stage);
+        const xpAmount = Math.max(
+          1,
+          Math.round(baseXP * PROGRESS_STATE_EFFECTS[progressState].xpMultiplier * stageMultiplier),
+        );
+
+        setJustCompletedHabitId(habit.id);
+        setTimeout(() => {
+          setCelebrationType('habit');
+          setCelebrationXP(xpAmount);
+          setShowCelebration(true);
+        }, 300);
+
+        setTimeout(() => {
+          setJustCompletedHabitId(null);
+        }, 320);
+
+        await earnXP(xpAmount, 'habit_complete', habit.id);
+        await recordActivity();
+        recordChallengeActivity(session.user.id, 'habit_complete');
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to log this habit stage.');
     } finally {
       setSaving((current) => ({ ...current, [habit.id]: false }));
     }
@@ -3785,9 +3931,13 @@ export function DailyHabitTracker({
       return;
     }
 
-    const habitSnapshot = buildAutoProgressHabit(habit);
-    const currentState = getAutoProgressState(habitSnapshot);
-    if (currentState.tier === targetTier) {
+  const habitSnapshot = buildAutoProgressHabit(habit);
+  const currentState = getAutoProgressState(habitSnapshot);
+  if (currentState.lastShiftAt && formatISODate(new Date(currentState.lastShiftAt)) === today) {
+    setErrorMessage('You can change a habit stage once per day. Try again tomorrow.');
+    return;
+  }
+  if (currentState.tier === targetTier) {
       setErrorMessage(`"${habit.name}" is already on the ${AUTO_PROGRESS_STAGE_LABELS[targetTier]} stage.`);
       return;
     }
@@ -3950,6 +4100,22 @@ export function DailyHabitTracker({
             </span>
           </div>
         ) : null}
+        {stageMixSnapshot.totalLogged > 0 ? (
+          <div className="habit-checklist__offer" aria-label="Stage mix insights">
+            <div>
+              <p className="habit-checklist__offer-eyebrow">Last 30 days stage mix</p>
+              <h3 className="habit-checklist__offer-title">
+                Easy {stageMixSnapshot.seedCount} • Medium {stageMixSnapshot.minimumCount} • Hard {stageMixSnapshot.standardCount}
+              </h3>
+              <p className="habit-checklist__offer-subtitle">
+                You logged {stageMixSnapshot.totalLogged} staged check-ins. Use this to see whether you're rebuilding or pushing.
+              </p>
+              <p className="habit-checklist__offer-subtitle" style={{ marginTop: '0.25rem' }}>
+                Mix: Easy {stageMixSnapshot.seedPercent}% • Medium {stageMixSnapshot.minimumPercent}% • Hard {stageMixSnapshot.standardPercent}%
+              </p>
+            </div>
+          </div>
+        ) : null}
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
@@ -3976,6 +4142,7 @@ export function DailyHabitTracker({
             const isSkipDisabled = isOfferHabit;
             const autoProgressHabit = buildAutoProgressHabit(habit);
             const autoProgressState = getAutoProgressState(autoProgressHabit);
+            const scalePlan = getHabitScalePlan(autoProgressHabit);
             const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
             const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
             const adherenceSnapshot = adherenceByHabit[habit.id];
@@ -3987,6 +4154,7 @@ export function DailyHabitTracker({
               streakDays >= AUTO_PROGRESS_UPGRADE_RULES.minStreakDays &&
               adherencePercent >= AUTO_PROGRESS_UPGRADE_RULES.minAdherence30;
             const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
+            const suggestedDownshiftStage = downshiftTier && adherencePercent < 50 ? downshiftTier : null;
 
             return (
               <li
@@ -4101,7 +4269,7 @@ export function DailyHabitTracker({
                     </button>
                   ) : null}
                   {/* Progress bar for done-ish completions */}
-                  {isCompleted && state?.progressState === 'doneIsh' && state?.completionPercentage && (
+                  {state?.progressState === 'doneIsh' && state?.completionPercentage && (
                     <div className="habit-checklist__progress">
                       <div className="progress-bar-container">
                         <div
@@ -4114,6 +4282,54 @@ export function DailyHabitTracker({
                       </p>
                     </div>
                   )}
+                  {state?.loggedStage ? (
+                    <p className="habit-checklist__note" style={{ marginTop: 0 }}>
+                      Logged stage: <strong>{AUTO_PROGRESS_STAGE_LABELS[state.loggedStage]}</strong>
+                    </p>
+                  ) : null}
+                  {scalePlan.enabled ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.7rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase' }}>
+                        Log as
+                      </span>
+                      {SCALE_STAGE_ORDER.map((stage) => {
+                        const stageInfo = scalePlan.stages[stage];
+                        return (
+                          <button
+                            key={`${habit.id}-${stage}`}
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleLogHabitAtStage(habit, stage);
+                            }}
+                            disabled={isSaving}
+                            style={{
+                              border: stage === autoProgressState.tier ? '1px solid #6366f1' : '1px solid #cbd5e1',
+                              background: stage === autoProgressState.tier ? '#eef2ff' : '#fff',
+                              borderRadius: '999px',
+                              padding: '0.25rem 0.6rem',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              color: '#1e293b',
+                              cursor: isSaving ? 'not-allowed' : 'pointer',
+                              opacity: isSaving ? 0.6 : 1,
+                            }}
+                            title={`Log as ${AUTO_PROGRESS_STAGE_LABELS[stage]}: ${stageInfo.label}`}
+                          >
+                            {AUTO_PROGRESS_STAGE_LABELS[stage]} · {stageInfo.completionPercent}%
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                   {autoProgressPanels[habit.id] ? (
                     <div className="habit-checklist__autoprog">
                       <div className="habit-checklist__autoprog-header">
@@ -4138,6 +4354,37 @@ export function DailyHabitTracker({
                           30-day adherence: {adherenceSnapshot ? `${adherencePercent}%` : '—'}
                         </span>
                       </div>
+                      {suggestedDownshiftStage ? (
+                        <div
+                          className="habit-checklist__autoprog-locked"
+                          style={{ color: '#92400e', background: '#fef3c7', borderColor: '#fcd34d', display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between' }}
+                        >
+                          <span>
+                            Low adherence detected. Consider a temporary reset to {AUTO_PROGRESS_STAGE_LABELS[suggestedDownshiftStage]} to protect momentum.
+                          </span>
+                          <button
+                            type="button"
+                            className="habit-checklist__autoprog-button"
+                            disabled={isUpdatingAutoProgress}
+                            onClick={() => {
+                              void handleAutoProgressShift(habit, suggestedDownshiftStage, 'downshift');
+                              if (session?.user?.id) {
+                                void recordTelemetryEvent({
+                                  userId: session.user.id,
+                                  eventType: 'habit_stage_recommendation_applied',
+                                  metadata: {
+                                    habitId: habit.id,
+                                    toStage: suggestedDownshiftStage,
+                                    adherencePercent,
+                                  },
+                                });
+                              }
+                            }}
+                          >
+                            Apply now
+                          </button>
+                        </div>
+                      ) : null}
                       <div className="habit-checklist__autoprog-actions">
                         <button
                           type="button"
@@ -6669,6 +6916,16 @@ type HabitSuccessSnapshot = {
   missedCount: number;
 };
 
+type StageMixSnapshot = {
+  seedCount: number;
+  minimumCount: number;
+  standardCount: number;
+  totalLogged: number;
+  seedPercent: number;
+  minimumPercent: number;
+  standardPercent: number;
+};
+
 function calculateAdherenceSnapshots(
   habits: HabitWithGoal[],
   logs: HabitLogRow[],
@@ -6738,20 +6995,26 @@ function calculateWeightedSuccessSnapshots(
   const startDate = subtractDays(endDate, windowDays - 1);
   const startISO = formatISODate(startDate);
 
-  const stateByHabitDate = new Map<string, Map<string, ProgressState>>();
+  const stateByHabitDate = new Map<string, Map<string, { state: ProgressState; stageMultiplier: number }>>();
   for (const log of logs) {
     if (log.date < startISO || log.date > endDateISO) continue;
 
     const progressState = (log.progress_state as ProgressState | null) ?? (log.completed ? 'done' : 'missed');
+    const loggedStage = (log.logged_stage as AutoProgressTier | null) ?? null;
+    const stageMultiplier = getStageCreditMultiplier(loggedStage);
     let dayMap = stateByHabitDate.get(log.habit_id);
     if (!dayMap) {
-      dayMap = new Map<string, ProgressState>();
+      dayMap = new Map<string, { state: ProgressState; stageMultiplier: number }>();
       stateByHabitDate.set(log.habit_id, dayMap);
     }
 
     const existing = dayMap.get(log.date);
-    if (!existing || PROGRESS_STATE_EFFECTS[progressState].streakCredit > PROGRESS_STATE_EFFECTS[existing].streakCredit) {
-      dayMap.set(log.date, progressState);
+    const newCredit = PROGRESS_STATE_EFFECTS[progressState].streakCredit * stageMultiplier;
+    const existingCredit = existing
+      ? PROGRESS_STATE_EFFECTS[existing.state].streakCredit * existing.stageMultiplier
+      : -1;
+    if (!existing || newCredit > existingCredit) {
+      dayMap.set(log.date, { state: progressState, stageMultiplier });
     }
   }
 
@@ -6759,7 +7022,7 @@ function calculateWeightedSuccessSnapshots(
 
   for (const habit of habits) {
     const scheduleChecker = createScheduleChecker(habit.frequency, habit.schedule);
-    const dayMap = stateByHabitDate.get(habit.id) ?? new Map<string, ProgressState>();
+    const dayMap = stateByHabitDate.get(habit.id) ?? new Map<string, { state: ProgressState; stageMultiplier: number }>();
     let scheduledCount = 0;
     let weightedCredit = 0;
     let doneCount = 0;
@@ -6778,14 +7041,15 @@ function calculateWeightedSuccessSnapshots(
 
       scheduledCount += 1;
       const isoDate = formatISODate(day);
-      const state = dayMap.get(isoDate) ?? 'missed';
+      const record = dayMap.get(isoDate) ?? { state: 'missed' as ProgressState, stageMultiplier: 1 };
+      const state = record.state;
 
       if (state === 'done') doneCount += 1;
       if (state === 'doneIsh') doneIshCount += 1;
       if (state === 'skipped') skippedCount += 1;
       if (state === 'missed') missedCount += 1;
 
-      weightedCredit += PROGRESS_STATE_EFFECTS[state].streakCredit;
+      weightedCredit += PROGRESS_STATE_EFFECTS[state].streakCredit * record.stageMultiplier;
     }
 
     const weightedPercentage = scheduledCount
@@ -6804,6 +7068,52 @@ function calculateWeightedSuccessSnapshots(
   }
 
   return snapshots;
+}
+
+function calculateStageMixSnapshot(
+  logs: HabitLogRow[],
+  endDateISO: string,
+  windowDays = 30,
+): StageMixSnapshot {
+  if (!logs.length || !endDateISO) {
+    return {
+      seedCount: 0,
+      minimumCount: 0,
+      standardCount: 0,
+      totalLogged: 0,
+      seedPercent: 0,
+      minimumPercent: 0,
+      standardPercent: 0,
+    };
+  }
+
+  const endDate = parseISODate(endDateISO);
+  const startDate = subtractDays(endDate, windowDays - 1);
+  const startISO = formatISODate(startDate);
+
+  let seedCount = 0;
+  let minimumCount = 0;
+  let standardCount = 0;
+
+  for (const log of logs) {
+    if (log.date < startISO || log.date > endDateISO) continue;
+    const stage = (log.logged_stage as AutoProgressTier | null) ?? null;
+    if (!stage) continue;
+    if (stage === 'seed') seedCount += 1;
+    if (stage === 'minimum') minimumCount += 1;
+    if (stage === 'standard') standardCount += 1;
+  }
+
+  const totalLogged = seedCount + minimumCount + standardCount;
+  return {
+    seedCount,
+    minimumCount,
+    standardCount,
+    totalLogged,
+    seedPercent: totalLogged ? Math.round((seedCount / totalLogged) * 100) : 0,
+    minimumPercent: totalLogged ? Math.round((minimumCount / totalLogged) * 100) : 0,
+    standardPercent: totalLogged ? Math.round((standardCount / totalLogged) * 100) : 0,
+  };
 }
 
 function calculateHabitInsights(

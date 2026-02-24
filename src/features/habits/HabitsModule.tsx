@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, updateHabitFullV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
@@ -55,6 +55,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const [adherenceSnapshots, setAdherenceSnapshots] = useState<HabitAdherenceSnapshot[]>([]);
   const [adherenceLoading, setAdherenceLoading] = useState(false);
   const [showAdherence, setShowAdherence] = useState(false);
+  const [stageMixByHabit, setStageMixByHabit] = useState<Record<string, { seed: number; minimum: number; standard: number; total: number }>>({});
   
   // Wizard state
   const [showWizard, setShowWizard] = useState(false);
@@ -297,6 +298,39 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     try {
       const snapshots = await buildAdherenceSnapshots(session.user.id, habits);
       setAdherenceSnapshots(snapshots);
+
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime());
+      startDate.setDate(startDate.getDate() - 29);
+      const startISO = startDate.toISOString().split('T')[0];
+      const endISO = endDate.toISOString().split('T')[0];
+      const habitIds = habits.map((habit) => habit.id);
+
+      const { data: rangeLogs, error: rangeLogsError } = await listHabitLogsForRangeMultiV2({
+        userId: session.user.id,
+        habitIds,
+        startDate: startISO,
+        endDate: endISO,
+      });
+      if (rangeLogsError) {
+        throw new Error(rangeLogsError.message);
+      }
+
+      const nextStageMix: Record<string, { seed: number; minimum: number; standard: number; total: number }> = {};
+      habitIds.forEach((habitId) => {
+        nextStageMix[habitId] = { seed: 0, minimum: 0, standard: 0, total: 0 };
+      });
+      (rangeLogs ?? []).forEach((log) => {
+        const stage = log.logged_stage;
+        if (!stage || !nextStageMix[log.habit_id]) {
+          return;
+        }
+        if (stage === 'seed' || stage === 'minimum' || stage === 'standard') {
+          nextStageMix[log.habit_id][stage] += 1;
+          nextStageMix[log.habit_id].total += 1;
+        }
+      });
+      setStageMixByHabit(nextStageMix);
 
       const { minProgressStreak } = await getTelemetryDifficultyAdjustment(session.user.id);
       
@@ -543,6 +577,11 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     }
 
     const currentState = getAutoProgressState(habit);
+    const todayISO = new Date().toISOString().split('T')[0];
+    if (currentState.lastShiftAt && new Date(currentState.lastShiftAt).toISOString().split('T')[0] === todayISO) {
+      setError(`"${habit.title}" already changed tier today. Try again tomorrow.`);
+      return;
+    }
     if (currentState.tier === targetTier) {
       setError(`"${habit.title}" is already on the ${AUTO_PROGRESS_TIERS[targetTier].label} tier.`);
       return;
@@ -591,6 +630,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
   // Handler for editing a habit (opens wizard with pre-filled data)
   const handleEditHabit = (habit: HabitV2Row) => {
+    const autoProgressState = getAutoProgressState(habit);
+    const scalePlan = autoProgressState.scale_plan;
+
     // Build HabitWizardDraft from HabitV2Row
     const draft: HabitWizardDraft = {
       habitId: habit.id,
@@ -604,6 +646,25 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       },
       remindersEnabled: false,
       reminderTimes: [],
+      habitEnvironment: habit.habit_environment ?? undefined,
+      doneIshThreshold:
+        habit.type === 'quantity'
+          ? ((habit.done_ish_config as DoneIshConfig | null)?.quantityThresholdPercent ?? 80)
+          : habit.type === 'duration'
+            ? ((habit.done_ish_config as DoneIshConfig | null)?.durationThresholdPercent ?? 80)
+            : 80,
+      booleanPartialEnabled: ((habit.done_ish_config as DoneIshConfig | null)?.booleanPartialEnabled ?? true),
+      scalePlanEnabled: scalePlan?.enabled ?? true,
+      stageLabels: {
+        seed: scalePlan?.stages.seed.label ?? 'Quick fallback',
+        minimum: scalePlan?.stages.minimum.label ?? 'Smaller version',
+        standard: scalePlan?.stages.standard.label ?? 'Full version',
+      },
+      stageCompletionPercents: {
+        seed: scalePlan?.stages.seed.completionPercent ?? 50,
+        minimum: scalePlan?.stages.minimum.completionPercent ?? 75,
+        standard: scalePlan?.stages.standard.completionPercent ?? 100,
+      },
     };
     
     setWizardInitialDraft(draft);
@@ -642,6 +703,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     
     try {
       if (isEditMode && draft.habitId) {
+        const existingHabit = habits.find((h) => h.id === draft.habitId);
+        const existingAutoprog = existingHabit ? getAutoProgressState(existingHabit) : null;
+
         // Update existing habit
         const doneIshConfig = {
           booleanPartialEnabled: draft.booleanPartialEnabled ?? true,
@@ -658,6 +722,29 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
+          autoprog: {
+            ...(existingAutoprog ?? buildDefaultAutoProgressState({
+              schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+              target: draft.targetValue ?? null,
+            })),
+            scale_plan: {
+              enabled: draft.scalePlanEnabled ?? true,
+              stages: {
+                seed: {
+                  label: draft.stageLabels?.seed ?? 'Quick fallback',
+                  completionPercent: draft.stageCompletionPercents?.seed ?? 50,
+                },
+                minimum: {
+                  label: draft.stageLabels?.minimum ?? 'Smaller version',
+                  completionPercent: draft.stageCompletionPercents?.minimum ?? 75,
+                },
+                standard: {
+                  label: draft.stageLabels?.standard ?? 'Full version',
+                  completionPercent: draft.stageCompletionPercents?.standard ?? 100,
+                },
+              },
+            },
+          } as unknown as Database['public']['Tables']['habits_v2']['Row']['autoprog'],
         };
         
         const { data: updatedHabit, error: updateError } = await updateHabitFullV2(draft.habitId, updatePayload);
@@ -714,6 +801,27 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           }) as Database['public']['Tables']['habits_v2']['Insert']['autoprog'],
           archived: false,
         };
+
+        insertPayload.autoprog = {
+          ...(insertPayload.autoprog as Record<string, unknown>),
+          scale_plan: {
+            enabled: draft.scalePlanEnabled ?? true,
+            stages: {
+              seed: {
+                label: draft.stageLabels?.seed ?? 'Quick fallback',
+                completionPercent: draft.stageCompletionPercents?.seed ?? 50,
+              },
+              minimum: {
+                label: draft.stageLabels?.minimum ?? 'Smaller version',
+                completionPercent: draft.stageCompletionPercents?.minimum ?? 75,
+              },
+              standard: {
+                label: draft.stageLabels?.standard ?? 'Full version',
+                completionPercent: draft.stageCompletionPercents?.standard ?? 100,
+              },
+            },
+          },
+        } as Database['public']['Tables']['habits_v2']['Insert']['autoprog'];
         
         const { data: newHabit, error: createError } = await createHabitV2(insertPayload, session.user.id);
         
@@ -1739,6 +1847,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                       <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Habit</th>
                       <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>7-day</th>
                       <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>30-day</th>
+                      <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Stage mix</th>
                       <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Suggestion</th>
                       {SUGGESTIONS_ENABLED && (
                         <th style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontWeight: 600 }}>Actions</th>
@@ -1752,6 +1861,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                       const isApplying = applyingSuggestionIds.has(snapshot.habitId);
                       const isApplied = appliedSuggestionHabitIds.has(snapshot.habitId);
                       const canApply = SUGGESTIONS_ENABLED && suggestion?.previewChange && !isApplied;
+                      const stageMix = stageMixByHabit[snapshot.habitId] ?? { seed: 0, minimum: 0, standard: 0, total: 0 };
                       
                       // Determine suggestion badge colors
                       const getSuggestionBadgeStyle = (action: string) => {
@@ -1808,6 +1918,17 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                             <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '0.125rem' }}>
                               {snapshot.window30.completedCount}/{snapshot.window30.scheduledCount}
                             </div>
+                          </td>
+                          <td style={{ textAlign: 'center', padding: '0.75rem 0.5rem', fontSize: '0.75rem', color: '#334155' }}>
+                            {stageMix.total > 0 ? (
+                              <>
+                                <div>E {stageMix.seed}</div>
+                                <div>M {stageMix.minimum}</div>
+                                <div>H {stageMix.standard}</div>
+                              </>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>—</span>
+                            )}
                           </td>
                           <td style={{ padding: '0.75rem 0.5rem' }}>
                             {suggestion ? (

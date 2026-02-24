@@ -16,6 +16,35 @@ export type AutoProgressState = {
   review_due_at?: string | null;
   review_reason?: string | null;
   relaunch_from_habit_id?: string | null;
+  scale_plan?: AutoProgressScalePlan;
+};
+
+export type AutoProgressScalePlanStage = {
+  label: string;
+  completionPercent: number;
+};
+
+export type AutoProgressScalePlan = {
+  enabled: boolean;
+  stages: Record<AutoProgressTier, AutoProgressScalePlanStage>;
+};
+
+const DEFAULT_SCALE_PLAN: AutoProgressScalePlan = {
+  enabled: true,
+  stages: {
+    seed: {
+      label: 'Quick fallback',
+      completionPercent: 50,
+    },
+    minimum: {
+      label: 'Smaller version',
+      completionPercent: 75,
+    },
+    standard: {
+      label: 'Full version',
+      completionPercent: 100,
+    },
+  },
 };
 
 export const AUTO_PROGRESS_TIERS: Record<
@@ -41,10 +70,71 @@ export const AUTO_PROGRESS_UPGRADE_RULES = {
   minAdherence30: 85,
 };
 
+export const STAGE_CREDIT_MULTIPLIERS: Record<AutoProgressTier, number> = {
+  seed: 0.5,
+  minimum: 0.75,
+  standard: 1,
+};
+
 const FALLBACK_TIER: AutoProgressTier = 'standard';
 
 function isTier(value: unknown): value is AutoProgressTier {
   return value === 'seed' || value === 'minimum' || value === 'standard';
+}
+
+function clampCompletionPercent(value: unknown, fallback: number): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return fallback;
+  }
+  return Math.max(1, Math.min(100, Math.round(value)));
+}
+
+function parseScalePlan(value: unknown): AutoProgressScalePlan {
+  if (!value || typeof value !== 'object') {
+    return DEFAULT_SCALE_PLAN;
+  }
+
+  const record = value as Record<string, unknown>;
+  const rawStages = record.stages as Record<string, unknown> | undefined;
+
+  const parseStage = (
+    tier: AutoProgressTier,
+    fallback: AutoProgressScalePlanStage,
+  ): AutoProgressScalePlanStage => {
+    const raw = rawStages?.[tier];
+    if (!raw || typeof raw !== 'object') {
+      return fallback;
+    }
+    const stage = raw as Record<string, unknown>;
+    return {
+      label: typeof stage.label === 'string' && stage.label.trim() ? stage.label.trim() : fallback.label,
+      completionPercent: clampCompletionPercent(stage.completionPercent, fallback.completionPercent),
+    };
+  };
+
+  return {
+    enabled: Boolean(record.enabled),
+    stages: {
+      seed: parseStage('seed', DEFAULT_SCALE_PLAN.stages.seed),
+      minimum: parseStage('minimum', DEFAULT_SCALE_PLAN.stages.minimum),
+      standard: parseStage('standard', DEFAULT_SCALE_PLAN.stages.standard),
+    },
+  };
+}
+
+export function getHabitScalePlan(habit: HabitV2Row): AutoProgressScalePlan {
+  const state = getAutoProgressState(habit);
+  return state.scale_plan ?? DEFAULT_SCALE_PLAN;
+}
+
+export function getStageCompletionPercent(habit: HabitV2Row, stage: AutoProgressTier): number {
+  const scalePlan = getHabitScalePlan(habit);
+  return scalePlan.stages[stage].completionPercent;
+}
+
+export function getStageCreditMultiplier(stage: AutoProgressTier | null | undefined): number {
+  if (!stage) return STAGE_CREDIT_MULTIPLIERS.standard;
+  return STAGE_CREDIT_MULTIPLIERS[stage] ?? STAGE_CREDIT_MULTIPLIERS.standard;
 }
 
 export function buildDefaultAutoProgressState(params: {
@@ -93,6 +183,7 @@ export function getAutoProgressState(habit: HabitV2Row): AutoProgressState {
   const reviewReason = typeof record.review_reason === 'string' ? record.review_reason : null;
   const relaunchFromHabitId =
     typeof record.relaunch_from_habit_id === 'string' ? record.relaunch_from_habit_id : null;
+  const scalePlan = parseScalePlan(record.scale_plan);
 
   return {
     tier,
@@ -105,6 +196,7 @@ export function getAutoProgressState(habit: HabitV2Row): AutoProgressState {
     review_due_at: reviewDueAt,
     review_reason: reviewReason,
     relaunch_from_habit_id: relaunchFromHabitId,
+    scale_plan: scalePlan,
   };
 }
 
@@ -198,6 +290,7 @@ export function buildAutoProgressPlan(params: {
       review_due_at: state.review_due_at,
       review_reason: state.review_reason,
       relaunch_from_habit_id: state.relaunch_from_habit_id,
+      scale_plan: state.scale_plan,
     },
     schedule: (nextSchedule ?? baseSchedule) as Json,
     target: nextTarget,

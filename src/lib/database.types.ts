@@ -483,6 +483,7 @@ export interface Database {
           mood: number | null;
           progress_state: string | null;
           completion_percentage: number | null;
+          logged_stage: string | null;
         };
         Insert: {
           id?: string;
@@ -496,6 +497,7 @@ export interface Database {
           mood?: number | null;
           progress_state?: string | null;
           completion_percentage?: number | null;
+          logged_stage?: string | null;
         };
         Update: {
           id?: string;
@@ -509,6 +511,7 @@ export interface Database {
           mood?: number | null;
           progress_state?: string | null;
           completion_percentage?: number | null;
+          logged_stage?: string | null;
         };
         Relationships: [];
       };

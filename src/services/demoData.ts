@@ -525,6 +525,7 @@ const defaultState: DemoState = {
         mood: null,
         progress_state: morningState,
         completion_percentage: morningPercentage,
+        logged_stage: null,
       },
       {
         id: createId('habit-log'),
@@ -538,6 +539,7 @@ const defaultState: DemoState = {
         mood: null,
         progress_state: outreachState,
         completion_percentage: outreachPercentage,
+        logged_stage: null,
       },
     );
   }
@@ -1324,6 +1326,7 @@ export function logDemoHabitCompletion(payload: HabitLogInsert): HabitLogRow {
     mood: payload.mood ?? null,
     progress_state: payload.progress_state ?? 'done',
     completion_percentage: payload.completion_percentage ?? 100,
+    logged_stage: payload.logged_stage ?? null,
   };
   updateState((current) => ({ ...current, habitLogs: [...current.habitLogs, record] }));
   return clone(record);

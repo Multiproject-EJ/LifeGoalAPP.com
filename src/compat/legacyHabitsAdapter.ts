@@ -31,8 +31,15 @@ type LegacyHabitUpdate = Database['public']['Tables']['habits']['Update'];
 type LegacyHabitLogRow = Database['public']['Tables']['habit_logs']['Row'] & {
   progress_state?: string | null;
   completion_percentage?: number | null;
+  logged_stage?: string | null;
 };
-type LegacyHabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'];
+type LegacyHabitLogInsert = Database['public']['Tables']['habit_logs']['Insert'] & {
+  progress_state?: string | null;
+  completion_percentage?: number | null;
+  logged_stage?: string | null;
+  value?: number | null;
+  note?: string | null;
+};
 
 export type LegacyHabitWithGoal = LegacyHabitRow & {
   emoji?: string | null;
@@ -107,6 +114,7 @@ function toLegacyLog(v2Log: HabitLogV2Row): LegacyHabitLogRow {
     completed: v2Log.done,
     progress_state: v2Log.progress_state,
     completion_percentage: v2Log.completion_percentage,
+    logged_stage: v2Log.logged_stage,
   };
 }
 
@@ -267,8 +275,12 @@ export async function logHabitCompletion(
   const v2Payload = {
     habit_id: payload.habit_id,
     done: payload.completed ?? true,
-    value: null,
+    value: payload.value ?? null,
+    note: payload.note ?? null,
     date: payload.date,
+    progress_state: payload.progress_state ?? undefined,
+    completion_percentage: payload.completion_percentage ?? undefined,
+    logged_stage: payload.logged_stage ?? undefined,
     // Set timestamp to midnight UTC for the target date to ensure the trigger sets the correct date
     // The database trigger converts ts to UTC timezone before extracting the date
     ts: payload.date ? new Date(payload.date + 'T00:00:00Z').toISOString() : undefined,
