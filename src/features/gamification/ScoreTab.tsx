@@ -22,6 +22,7 @@ import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
 import { evaluateRewardRisk } from '../../lib/rewardValidation';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
+import { PowerUpsStore } from '../power-ups/PowerUpsStore';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
 import scoreShop from '../../assets/Score_shop.webp';
@@ -800,15 +801,14 @@ export function ScoreTab({
           <div className="score-tab__bank-intro">
             <h2 className="score-tab__headline">Spaceship Controller Garage</h2>
             <p className="score-tab__subtitle">
-              Unlock themes, ship parts, and timed boosters like bonus hearts throughout the day.
+              Manage your power-ups and timed boosters from your garage bay.
             </p>
           </div>
-          <div className="score-tab__card">
-            <h3 className="score-tab__card-title">Garage is preparing for launch</h3>
-            <p className="score-tab__meta">
-              Next up: skin unlocks, booster modules, and progression parts tied to your score economy.
-            </p>
-          </div>
+          {session ? (
+            <PowerUpsStore session={session} />
+          ) : (
+            <div className="score-tab__status">Sign in to access your power-ups.</div>
+          )}
         </div>
       )}
       {!loading && enabled && activeTab === 'bank' && (!profile || !levelInfo) && (

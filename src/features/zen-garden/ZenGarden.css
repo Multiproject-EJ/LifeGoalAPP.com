@@ -484,3 +484,92 @@
     font-size: 2rem;
   }
 }
+
+.zen-garden__shop {
+  margin-top: 5.5rem;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  max-height: 56vh;
+  overflow: auto;
+}
+
+.zen-garden__shop-title {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.1rem;
+}
+
+.zen-garden__shop-subtitle {
+  margin: 0.3rem 0 0;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.85rem;
+}
+
+.zen-garden__shop-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.zen-garden__item {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 0.85rem;
+  padding: 0.65rem;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.zen-garden__item--owned {
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.zen-garden__item-icon {
+  font-size: 1.3rem;
+}
+
+.zen-garden__item-title {
+  margin: 0.35rem 0 0;
+  color: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.zen-garden__item-description {
+  margin: 0.35rem 0;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.8rem;
+}
+
+.zen-garden__item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.zen-garden__item-cost {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.zen-garden__item-button {
+  border: 1px solid rgba(94, 234, 212, 0.4);
+  background: rgba(45, 212, 191, 0.2);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  cursor: pointer;
+}
+
+.zen-garden__item-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.zen-garden__item-lock {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(254, 202, 202, 0.85);
+  font-size: 0.75rem;
+}

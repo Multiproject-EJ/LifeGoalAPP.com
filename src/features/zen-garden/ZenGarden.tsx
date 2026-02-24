@@ -278,6 +278,44 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
             <div className="zen-garden__message zen-garden__message--success">{purchaseSuccess}</div>
           )}
 
+          <section className="zen-garden__shop">
+            <div className="zen-garden__shop-header">
+              <div>
+                <h2 className="zen-garden__shop-title">🪷 Zen Garden Unlocks</h2>
+                <p className="zen-garden__shop-subtitle">
+                  Meditation-only rewards • Use Zen Tokens to unlock peaceful garden elements.
+                </p>
+              </div>
+            </div>
+            <div className="zen-garden__shop-grid">
+              {ZEN_GARDEN_ITEMS.map((item) => {
+                const owned = ownedItems.has(item.id);
+                const canAfford = balance >= item.cost;
+                const isPurchasing = purchasingId === item.id;
+
+                return (
+                  <article key={item.id} className={`zen-garden__item${owned ? ' zen-garden__item--owned' : ''}`}>
+                    <div className="zen-garden__item-icon">{item.emoji}</div>
+                    <h3 className="zen-garden__item-title">{item.name}</h3>
+                    <p className="zen-garden__item-description">{item.description}</p>
+                    <div className="zen-garden__item-footer">
+                      <span className="zen-garden__item-cost">🪷 {item.cost}</span>
+                      <button
+                        type="button"
+                        className="zen-garden__item-button"
+                        disabled={owned || !canAfford || isPurchasing}
+                        onClick={() => handlePurchase(item)}
+                      >
+                        {owned ? 'Unlocked' : isPurchasing ? 'Purchasing...' : 'Unlock'}
+                      </button>
+                    </div>
+                    {!owned && !canAfford && <span className="zen-garden__item-lock">Earn more Zen Tokens</span>}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
           <section className="zen-garden__tree">
             <button
               type="button"
