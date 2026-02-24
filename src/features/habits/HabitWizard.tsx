@@ -20,6 +20,17 @@ export interface HabitWizardDraft {
   habitEnvironment?: string;
   doneIshThreshold?: number; // Percentage threshold for quantity/duration (0-100)
   booleanPartialEnabled?: boolean; // For boolean habits
+  scalePlanEnabled?: boolean;
+  stageLabels?: {
+    seed: string;
+    minimum: string;
+    standard: string;
+  };
+  stageCompletionPercents?: {
+    seed: number;
+    minimum: number;
+    standard: number;
+  };
   /** If present, indicates we're editing an existing habit */
   habitId?: string;
 }
@@ -58,6 +69,13 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   const [doneIshThreshold, setDoneIshThreshold] = useState<number>(80);
   const [booleanPartialEnabled, setBooleanPartialEnabled] = useState<boolean>(true);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false);
+  const [scalePlanEnabled, setScalePlanEnabled] = useState<boolean>(true);
+  const [seedStageLabel, setSeedStageLabel] = useState<string>('Quick fallback');
+  const [minimumStageLabel, setMinimumStageLabel] = useState<string>('Smaller version');
+  const [standardStageLabel, setStandardStageLabel] = useState<string>('Full version');
+  const [seedStagePercent, setSeedStagePercent] = useState<number>(50);
+  const [minimumStagePercent, setMinimumStagePercent] = useState<number>(75);
+  const [standardStagePercent, setStandardStagePercent] = useState<number>(100);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiApplied, setAiApplied] = useState(false);
@@ -77,6 +95,13 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       setHabitEnvironment(initialDraft.habitEnvironment || '');
       setDoneIshThreshold(initialDraft.doneIshThreshold ?? 80);
       setBooleanPartialEnabled(initialDraft.booleanPartialEnabled ?? true);
+      setScalePlanEnabled(initialDraft.scalePlanEnabled ?? true);
+      setSeedStageLabel(initialDraft.stageLabels?.seed ?? 'Quick fallback');
+      setMinimumStageLabel(initialDraft.stageLabels?.minimum ?? 'Smaller version');
+      setStandardStageLabel(initialDraft.stageLabels?.standard ?? 'Full version');
+      setSeedStagePercent(initialDraft.stageCompletionPercents?.seed ?? 50);
+      setMinimumStagePercent(initialDraft.stageCompletionPercents?.minimum ?? 75);
+      setStandardStagePercent(initialDraft.stageCompletionPercents?.standard ?? 100);
       setStep(1); // Reset to first step
       setAiError(null);
       setAiApplied(false);
@@ -141,6 +166,17 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       habitEnvironment: habitEnvironment.trim() || undefined,
       doneIshThreshold,
       booleanPartialEnabled,
+      scalePlanEnabled,
+      stageLabels: {
+        seed: seedStageLabel.trim() || 'Quick fallback',
+        minimum: minimumStageLabel.trim() || 'Smaller version',
+        standard: standardStageLabel.trim() || 'Full version',
+      },
+      stageCompletionPercents: {
+        seed: Math.max(1, Math.min(100, seedStagePercent)),
+        minimum: Math.max(1, Math.min(100, minimumStagePercent)),
+        standard: Math.max(1, Math.min(100, standardStagePercent)),
+      },
       // Preserve habitId if editing
       habitId: initialDraft?.habitId,
     };
@@ -493,7 +529,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
                 gap: '0.5rem',
               }}
             >
-              {showAdvancedOptions ? '▼' : '▶'} Advanced: Done-ish Settings
+              {showAdvancedOptions ? '▼' : '▶'} Advanced: Done-ish + Habit Stages
             </button>
           </div>
 
@@ -553,6 +589,55 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
                   </p>
                 </div>
               )}
+
+              <div style={{ marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={scalePlanEnabled}
+                    onChange={(e) => setScalePlanEnabled(e.target.checked)}
+                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>
+                    Enable habit stages (easy/medium/hard fallbacks)
+                  </span>
+                </label>
+
+                {scalePlanEnabled ? (
+                  <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    {[
+                      { key: 'seed', label: 'Easy stage', labelValue: seedStageLabel, onLabel: setSeedStageLabel, percentValue: seedStagePercent, onPercent: setSeedStagePercent },
+                      { key: 'minimum', label: 'Medium stage', labelValue: minimumStageLabel, onLabel: setMinimumStageLabel, percentValue: minimumStagePercent, onPercent: setMinimumStagePercent },
+                      { key: 'standard', label: 'Hard stage', labelValue: standardStageLabel, onLabel: setStandardStageLabel, percentValue: standardStagePercent, onPercent: setStandardStagePercent },
+                    ].map((stage) => (
+                      <div key={stage.key} style={{ display: 'grid', gridTemplateColumns: '1fr 110px', gap: '0.5rem' }}>
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>{stage.label} label</span>
+                          <input
+                            type="text"
+                            value={stage.labelValue}
+                            onChange={(e) => stage.onLabel(e.target.value)}
+                            placeholder="Stage label"
+                            style={{ padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.875rem' }}
+                          />
+                        </label>
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>Log %</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            step="1"
+                            value={stage.percentValue}
+                            onChange={(e) => stage.onPercent(parseInt(e.target.value || '0', 10))}
+                            style={{ padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.875rem' }}
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </div>
           )}
 
