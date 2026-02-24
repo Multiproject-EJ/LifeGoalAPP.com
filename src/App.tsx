@@ -30,7 +30,6 @@ import { AiCoach } from './features/ai-coach';
 import { Journal } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
-import { PowerUpsStore } from './features/power-ups/PowerUpsStore';
 import PersonalityTest from './features/identity/PersonalityTest';
 import { ActionsTab } from './features/actions';
 import { TimerTab } from './features/timer';
@@ -2574,8 +2573,6 @@ export default function App() {
             <section className="game-hub">
               <div className="game-hub__sections">
                 <AchievementsPage session={activeSession} />
-                <PowerUpsStore session={activeSession} />
-                <ZenGarden session={activeSession} />
               </div>
             </section>
           </div>
