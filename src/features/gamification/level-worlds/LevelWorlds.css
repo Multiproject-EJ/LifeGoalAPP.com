@@ -620,3 +620,251 @@
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* === Island Run M1A Prototype === */
+.island-run-prototype {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.island-run-prototype__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(14, 28, 34, 0.65);
+  border: 1px solid rgba(145, 206, 230, 0.45);
+}
+
+.island-run-prototype__header h2 {
+  margin: 0;
+  color: #b7eeff;
+  font-size: 1rem;
+}
+
+.island-run-prototype__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.island-run-prototype__status-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  color: #d5f8ff;
+  font-size: 0.86rem;
+}
+
+.island-run-prototype__landing {
+  margin: 0;
+  color: #9eeaff;
+  font-size: 0.82rem;
+}
+
+.island-run-prototype__scene-btn,
+.island-run-prototype__debug-btn,
+.island-run-prototype__roll-btn {
+  min-height: 38px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(10, 24, 34, 0.72);
+  color: #e5f8ff;
+  font-weight: 600;
+}
+
+.island-run-prototype__scene-btn--active {
+  border-color: #93f7ff;
+  box-shadow: 0 0 0 1px rgba(147, 247, 255, 0.7) inset;
+}
+
+.island-run-board {
+  position: relative;
+  height: min(76vh, 680px);
+  min-height: 520px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.35);
+}
+
+.island-run-board--scene-1 {
+  background: radial-gradient(circle at 50% 48%, #6bd5d5 0%, #4ebcbc 18%, #4f8f63 40%, #426742 62%, #273b29 100%);
+}
+
+.island-run-board--scene-2 {
+  background: radial-gradient(circle at 48% 46%, #5dc7db 0%, #4a99d4 20%, #7f8f4d 44%, #5d6b3f 64%, #2e3a2f 100%);
+}
+
+.island-run-board--scene-3 {
+  background: radial-gradient(circle at 52% 48%, #55becf 0%, #3f8bb9 20%, #6f8b7f 44%, #67546f 63%, #2f2135 100%);
+}
+
+.island-run-board__path,
+.island-run-board__tiles,
+.island-debug-overlay,
+.island-run-board__depth-mask {
+  position: absolute;
+  inset: 0;
+}
+
+.island-run-board__tiles {
+  z-index: 3;
+}
+
+.island-tile {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(249, 234, 175, 0.95), rgba(182, 126, 56, 0.95));
+  border: 2px solid rgba(255, 246, 195, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #2d1a02;
+  font-weight: 800;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.island-tile small {
+  font-size: 9px;
+  line-height: 1;
+}
+
+.island-tile--back { filter: brightness(0.9); }
+.island-tile--front { filter: brightness(1.1); }
+.island-tile--stop {
+  box-shadow: 0 0 0 2px rgba(106, 251, 255, 0.75), 0 0 22px rgba(106, 251, 255, 0.35);
+}
+
+.island-token {
+  position: absolute;
+  transform: translate(-50%, -120%);
+  font-size: 34px;
+  z-index: 4;
+  transition: left 220ms cubic-bezier(0.22, 0.61, 0.36, 1), top 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.45));
+}
+
+.island-token--moving {
+  animation: island-token-bob 220ms ease-in-out infinite alternate;
+}
+
+@keyframes island-token-bob {
+  from { transform: translate(-50%, -124%) scale(1); }
+  to { transform: translate(-50%, -116%) scale(1.06); }
+}
+
+.island-run-board__depth-mask {
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.island-debug-overlay {
+  z-index: 6;
+  pointer-events: none;
+}
+
+
+.island-run-prototype__roll-btn:disabled {
+  opacity: 0.6;
+}
+
+.island-stop-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.42);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.island-stop-modal {
+  width: min(420px, 100%);
+  border-radius: 16px;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(22, 34, 46, 0.97), rgba(11, 19, 28, 0.97));
+  border: 1px solid rgba(148, 227, 255, 0.55);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.island-stop-modal h3 {
+  margin: 0 0 0.5rem;
+  color: #d0f5ff;
+}
+
+.island-stop-modal p {
+  margin: 0;
+  color: #a8e8ff;
+}
+
+.island-stop-modal button {
+  margin-top: 0.9rem;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(26, 61, 80, 0.9);
+  color: #ecfbff;
+  font-weight: 600;
+  padding: 0.35rem 0.9rem;
+}
+
+
+.island-travel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 14, 22, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.island-travel-overlay__card {
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(157, 230, 255, 0.6);
+  background: rgba(10, 26, 36, 0.92);
+  color: #d5f4ff;
+  font-weight: 700;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.35);
+}
+
+
+.island-hatchery-card {
+  margin-top: 0.85rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(145, 225, 255, 0.4);
+  border-radius: 12px;
+  background: rgba(15, 38, 54, 0.7);
+}
+
+.island-hatchery-card p {
+  margin: 0.25rem 0;
+}
+
+.island-hatchery-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.island-hatchery-card__actions button {
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(32, 77, 102, 0.86);
+  color: #e8faff;
+  font-size: 0.82rem;
+  padding: 0.25rem 0.6rem;
+}
