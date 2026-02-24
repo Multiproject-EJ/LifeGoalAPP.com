@@ -95,3 +95,41 @@ Testing:
 - manual dev verification at /level-worlds.html?islandRunDev=1&debugBoard=1
 Next:
 - M6A encounter tile prototype behavior.
+
+Date: 2026-02-24
+Slice: M5B-prep — Hearts-empty onboarding booster bridge
+Summary:
+- Wired Island Run dev prototype to accept session context so it can bridge into existing Game of Life onboarding progress state.
+- Added hearts-empty booster action that opens Loop 1 (display-name) onboarding panel copy and interaction.
+- On successful "Save name & continue", persisted onboarding display-name loop completion (`stepIndex >= 1`) in existing onboarding storage key and granted +1 heart reward.
+- Added guard to prevent repeated booster claiming once the display-name loop has already been completed.
+Files changed:
+- src/features/gamification/level-worlds/LevelWorldsHub.tsx
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+- npm run lint
+- manual dev verification at /level-worlds.html?islandRunDev=1&debugBoard=1
+Next:
+- M6A encounter tile prototype behavior.
+
+Date: 2026-02-24
+Slice: M6A — Encounter tile prototype behavior
+Summary:
+- Added a fixed encounter tile marker in the Island Run dev board so at least one encounter tile is clearly identifiable.
+- Wired landing resolution so encounter tile landing opens an encounter challenge modal (non-stop, easy stub).
+- Added encounter resolve action that grants prototype reward feedback (+1 heart) and updates landing status messaging.
+- Preserved existing stop-tile modal behavior so non-encounter tiles and stop flow remain unaffected.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+- manual dev verification at /level-worlds.html?islandRunDev=1&debugBoard=1
+Next:
+- M7A boss stop reward prototype behavior.

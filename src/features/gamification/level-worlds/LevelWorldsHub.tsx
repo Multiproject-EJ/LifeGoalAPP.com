@@ -186,7 +186,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
 
       <div className="level-worlds-content">
         {isIslandRunPrototype ? (
-          <IslandRunBoardPrototype />
+          <IslandRunBoardPrototype session={session} />
         ) : currentBoard ? (
           <WorldBoard
             board={currentBoard}

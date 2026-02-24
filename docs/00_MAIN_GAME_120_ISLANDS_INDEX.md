@@ -64,20 +64,23 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [🟡] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype)
 - [🟡] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped)
 - [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
-- [ ] M6: Encounter tile (easy) + rewards
+- [🟡] M6: Encounter tile (easy) + rewards (M6A prototype shipped in dev mode)
 - [ ] M7: Boss stop (trial) + rewards
 - [ ] M8: Market stop + purchases
 - [ ] M9: Home island + hatchery slots + always collect
 - [ ] M10: Audio + haptics system integrated
 - [ ] M11: Minigame framework + first minigame stub
 
+Support shipped:
+- ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
+
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M6A: Encounter tile prototype behavior (single easy challenge stub + reward message)  
-**Files to touch:** `src/features/gamification/level-worlds/*` (encounter tile assignment + simple resolve panel), `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
-**Acceptance criteria:** at least one encounter tile is identifiable in prototype; landing on it opens encounter stub; resolving it shows reward feedback; non-encounter tiles unaffected  
-**How to test:** Open `/level-worlds.html?islandRunDev=1&debugBoard=1`, roll until encounter tile is reached, verify encounter modal opens and can be resolved/closed  
+**Objective:** M7A: Boss stop reward prototype (stub challenge resolve + reward feedback)  
+**Files to touch:** `src/features/gamification/level-worlds/*` (boss stop modal action + resolve feedback), `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
+**Acceptance criteria:** landing on boss stop shows challenge stub; resolving grants reward feedback; non-boss stops unchanged  
+**How to test:** Open `/level-worlds.html?islandRunDev=1&debugBoard=1`, roll to boss stop (tile 16), verify resolve action and reward messaging  
 
 ---
 
