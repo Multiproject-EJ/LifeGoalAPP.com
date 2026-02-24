@@ -59,11 +59,11 @@ It forces the agent to:
 Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 
 ## Milestones
-- [ ] M1: Hybrid 3D board foundation (ring path + 17 anchors + depth masks) renders on top of island art
-- [ ] M2: Dice movement + token animation along 17 anchors
-- [ ] M3: Stops (5) land-to-open modals wired
-- [ ] M4: Island timer + expiry -> travel overlay -> advance
-- [ ] M5: Hatchery + egg stages + dormant carryover
+- [🟡] M1: Hybrid 3D board foundation (ring path + 17 anchors + depth masks) renders on top of island art (M1A shipped in dev mode)
+- [🟡] M2: Dice movement + token animation along 17 anchors (M1B core roll/hop loop shipped in dev prototype)
+- [🟡] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype)
+- [🟡] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped)
+- [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
 - [ ] M6: Encounter tile (easy) + rewards
 - [ ] M7: Boss stop (trial) + rewards
 - [ ] M8: Market stop + purchases
@@ -74,10 +74,10 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M1A: Hybrid board renderer v1 (pseudo-3D tile ring around pond) + dev overlay  
-**Files to touch:** `src/features/gamification/level-worlds/*` (board layout + board renderer + depth mask support), `public/assets/islands/*` (mask templates), `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
-**Acceptance criteria:** ring path visually hugs pond; 17 anchors visible in dev mode; front/back depth ordering works (token passes behind foreground props where masked); stable across 3 backgrounds  
-**How to test:** Open level worlds in dev mode on mobile viewport, toggle anchor/depth debug, verify path alignment + occlusion + readable stop markers on at least 3 island arts  
+**Objective:** M6A: Encounter tile prototype behavior (single easy challenge stub + reward message)  
+**Files to touch:** `src/features/gamification/level-worlds/*` (encounter tile assignment + simple resolve panel), `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
+**Acceptance criteria:** at least one encounter tile is identifiable in prototype; landing on it opens encounter stub; resolving it shows reward feedback; non-encounter tiles unaffected  
+**How to test:** Open `/level-worlds.html?islandRunDev=1&debugBoard=1`, roll until encounter tile is reached, verify encounter modal opens and can be resolved/closed  
 
 ---
 

@@ -8,6 +8,7 @@ import { useWorldProgress } from './hooks/useWorldProgress';
 import { WorldBoard } from './components/WorldBoard';
 import { NodeDetailSheet } from './components/NodeDetailSheet';
 import { BoardCompleteOverlay } from './components/BoardCompleteOverlay';
+import { IslandRunBoardPrototype } from './components/IslandRunBoardPrototype';
 import type { WorldNode } from './types/levelWorlds';
 
 // Import mini-games
@@ -38,6 +39,8 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
   const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
   const [showVisionQuest, setShowVisionQuest] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
+
+  const isIslandRunPrototype = new URLSearchParams(window.location.search).get('islandRunDev') === '1';
 
   const handleNodeClick = useCallback((node: WorldNode) => {
     if (node.status === 'active') {
@@ -182,7 +185,9 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
       </div>
 
       <div className="level-worlds-content">
-        {currentBoard ? (
+        {isIslandRunPrototype ? (
+          <IslandRunBoardPrototype />
+        ) : currentBoard ? (
           <WorldBoard
             board={currentBoard}
             userId={userId}
