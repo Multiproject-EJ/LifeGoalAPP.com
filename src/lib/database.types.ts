@@ -200,6 +200,11 @@ export interface Database {
           start_date: string | null;
           timing_notes: string | null;
           estimated_duration_days: number | null;
+          why_it_matters: string | null;
+          priority_level: string | null;
+          weekly_workload_target: number | null;
+          plan_quality_score: number | null;
+          plan_quality_breakdown: Json | null;
         };
         Insert: {
           id?: string;
@@ -214,6 +219,11 @@ export interface Database {
           start_date?: string | null;
           timing_notes?: string | null;
           estimated_duration_days?: number | null;
+          why_it_matters?: string | null;
+          priority_level?: string | null;
+          weekly_workload_target?: number | null;
+          plan_quality_score?: number | null;
+          plan_quality_breakdown?: Json | null;
         };
         Update: {
           id?: string;
@@ -228,6 +238,77 @@ export interface Database {
           start_date?: string | null;
           timing_notes?: string | null;
           estimated_duration_days?: number | null;
+          why_it_matters?: string | null;
+          priority_level?: string | null;
+          weekly_workload_target?: number | null;
+          plan_quality_score?: number | null;
+          plan_quality_breakdown?: Json | null;
+        };
+        Relationships: [];
+      };
+      goal_health_snapshots: {
+        Row: {
+          id: string;
+          goal_id: string;
+          user_id: string;
+          captured_at: string;
+          health_state: string;
+          risk_reason: string | null;
+          recommended_action: string | null;
+          signals: Json | null;
+        };
+        Insert: {
+          id?: string;
+          goal_id: string;
+          user_id: string;
+          captured_at?: string;
+          health_state: string;
+          risk_reason?: string | null;
+          recommended_action?: string | null;
+          signals?: Json | null;
+        };
+        Update: {
+          id?: string;
+          goal_id?: string;
+          user_id?: string;
+          captured_at?: string;
+          health_state?: string;
+          risk_reason?: string | null;
+          recommended_action?: string | null;
+          signals?: Json | null;
+        };
+        Relationships: [];
+      };
+      goal_adaptations: {
+        Row: {
+          id: string;
+          goal_id: string;
+          user_id: string;
+          action_type: string;
+          before_state: Json | null;
+          after_state: Json | null;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          goal_id: string;
+          user_id: string;
+          action_type: string;
+          before_state?: Json | null;
+          after_state?: Json | null;
+          source?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          goal_id?: string;
+          user_id?: string;
+          action_type?: string;
+          before_state?: Json | null;
+          after_state?: Json | null;
+          source?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -287,6 +368,8 @@ export interface Database {
           irrational_fears: string | null;
           training_solutions: string | null;
           concrete_steps: string | null;
+          friction_tag: string | null;
+          ai_suggested_prompt_id: string | null;
         };
         Insert: {
           id?: string;
@@ -310,6 +393,8 @@ export interface Database {
           irrational_fears?: string | null;
           training_solutions?: string | null;
           concrete_steps?: string | null;
+          friction_tag?: string | null;
+          ai_suggested_prompt_id?: string | null;
         };
         Update: {
           id?: string;
@@ -333,6 +418,8 @@ export interface Database {
           irrational_fears?: string | null;
           training_solutions?: string | null;
           concrete_steps?: string | null;
+          friction_tag?: string | null;
+          ai_suggested_prompt_id?: string | null;
         };
         Relationships: [];
       };

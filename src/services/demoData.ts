@@ -172,6 +172,11 @@ const defaultState: DemoState = {
       start_date: null,
       timing_notes: null,
       estimated_duration_days: null,
+      why_it_matters: null,
+      priority_level: null,
+      weekly_workload_target: null,
+      plan_quality_score: null,
+      plan_quality_breakdown: null,
     },
     {
       id: createId('goal'),
@@ -187,6 +192,11 @@ const defaultState: DemoState = {
       start_date: null,
       timing_notes: null,
       estimated_duration_days: null,
+      why_it_matters: null,
+      priority_level: null,
+      weekly_workload_target: null,
+      plan_quality_score: null,
+      plan_quality_breakdown: null,
     },
     {
       id: createId('goal'),
@@ -201,6 +211,11 @@ const defaultState: DemoState = {
       start_date: null,
       timing_notes: null,
       estimated_duration_days: null,
+      why_it_matters: null,
+      priority_level: null,
+      weekly_workload_target: null,
+      plan_quality_score: null,
+      plan_quality_breakdown: null,
     },
   ],
   habits: [],
@@ -736,6 +751,8 @@ const defaultState: DemoState = {
       irrational_fears: null,
       training_solutions: null,
       concrete_steps: null,
+      friction_tag: null,
+      ai_suggested_prompt_id: null,
     },
     {
       id: createId('journal'),
@@ -760,6 +777,8 @@ const defaultState: DemoState = {
       irrational_fears: null,
       training_solutions: null,
       concrete_steps: null,
+      friction_tag: null,
+      ai_suggested_prompt_id: null,
     },
     {
       id: createId('journal'),
@@ -784,6 +803,8 @@ const defaultState: DemoState = {
       irrational_fears: null,
       training_solutions: null,
       concrete_steps: null,
+      friction_tag: null,
+      ai_suggested_prompt_id: null,
     },
     {
       id: createId('journal'),
@@ -808,6 +829,8 @@ const defaultState: DemoState = {
       irrational_fears: null,
       training_solutions: null,
       concrete_steps: null,
+      friction_tag: null,
+      ai_suggested_prompt_id: null,
     },
     {
       id: createId('journal'),
@@ -832,6 +855,8 @@ const defaultState: DemoState = {
       irrational_fears: null,
       training_solutions: null,
       concrete_steps: null,
+      friction_tag: null,
+      ai_suggested_prompt_id: null,
     },
   ];
 
@@ -1015,6 +1040,11 @@ function normalizeGoalRow(goal: GoalRow): GoalRow {
     target_date: goal.target_date ?? null,
     progress_notes: goal.progress_notes ?? null,
     status_tag: statusTag,
+    why_it_matters: goal.why_it_matters ?? null,
+    priority_level: goal.priority_level ?? null,
+    weekly_workload_target: goal.weekly_workload_target ?? null,
+    plan_quality_score: goal.plan_quality_score ?? null,
+    plan_quality_breakdown: goal.plan_quality_breakdown ?? null,
   };
 }
 
@@ -1048,7 +1078,7 @@ function loadState(): DemoState {
         parsed.telemetryPreferences ?? clone(defaultState.telemetryPreferences),
       telemetryEvents: parsed.telemetryEvents ?? clone(defaultState.telemetryEvents),
       goalReflections: parsed.goalReflections ?? clone(defaultState.goalReflections),
-      journalEntries: parsed.journalEntries ?? clone(defaultState.journalEntries),
+      journalEntries: (parsed.journalEntries ?? clone(defaultState.journalEntries)).map(normalizeJournalEntryRow),
       actions: parsed.actions ?? clone(defaultState.actions),
       projects: parsed.projects ?? clone(defaultState.projects),
       projectTasks: parsed.projectTasks ?? clone(defaultState.projectTasks),
@@ -1162,6 +1192,14 @@ function sortJournalEntries(entries: JournalEntryRow[]): JournalEntryRow[] {
   });
 }
 
+function normalizeJournalEntryRow(entry: JournalEntryRow): JournalEntryRow {
+  return {
+    ...entry,
+    friction_tag: entry.friction_tag ?? null,
+    ai_suggested_prompt_id: entry.ai_suggested_prompt_id ?? null,
+  };
+}
+
 export function getDemoGoals(userId: string): GoalRow[] {
   return clone(
     sortByDateDesc(state.goals.filter((goal) => goal.user_id === userId).map(normalizeGoalRow)),
@@ -1182,6 +1220,11 @@ export function addDemoGoal(payload: GoalInsert): GoalRow {
     start_date: payload.start_date ?? null,
     timing_notes: payload.timing_notes ?? null,
     estimated_duration_days: payload.estimated_duration_days ?? null,
+    why_it_matters: payload.why_it_matters ?? null,
+    priority_level: payload.priority_level ?? null,
+    weekly_workload_target: payload.weekly_workload_target ?? null,
+    plan_quality_score: payload.plan_quality_score ?? null,
+    plan_quality_breakdown: payload.plan_quality_breakdown ?? null,
   });
 
   updateState((current) => ({ ...current, goals: [record, ...current.goals] }));
@@ -1204,6 +1247,11 @@ export function updateDemoGoal(id: string, payload: GoalUpdate): GoalRow | null 
         start_date: payload.start_date ?? goal.start_date,
         timing_notes: payload.timing_notes ?? goal.timing_notes,
         estimated_duration_days: payload.estimated_duration_days ?? goal.estimated_duration_days,
+        why_it_matters: payload.why_it_matters ?? goal.why_it_matters,
+        priority_level: payload.priority_level ?? goal.priority_level,
+        weekly_workload_target: payload.weekly_workload_target ?? goal.weekly_workload_target,
+        plan_quality_score: payload.plan_quality_score ?? goal.plan_quality_score,
+        plan_quality_breakdown: payload.plan_quality_breakdown ?? goal.plan_quality_breakdown,
       });
       return updated;
     });
@@ -1644,7 +1692,7 @@ export function removeDemoGoalReflection(id: string): GoalReflectionRow | null {
 }
 
 export function getDemoJournalEntries(userId: string): JournalEntryRow[] {
-  return clone(sortJournalEntries(state.journalEntries.filter((entry) => entry.user_id === userId)));
+  return clone(sortJournalEntries(state.journalEntries.filter((entry) => entry.user_id === userId).map(normalizeJournalEntryRow)));
 }
 
 export function addDemoJournalEntry(payload: JournalEntryInsert): JournalEntryRow {
@@ -1670,6 +1718,8 @@ export function addDemoJournalEntry(payload: JournalEntryInsert): JournalEntryRo
     irrational_fears: payload.irrational_fears ?? null,
     training_solutions: payload.training_solutions ?? null,
     concrete_steps: payload.concrete_steps ?? null,
+    friction_tag: payload.friction_tag ?? null,
+    ai_suggested_prompt_id: payload.ai_suggested_prompt_id ?? null,
   };
 
   updateState((current) => ({
@@ -1700,6 +1750,8 @@ export function updateDemoJournalEntry(
         attachments: payload.attachments ?? entry.attachments,
         linked_goal_ids: payload.linked_goal_ids ?? entry.linked_goal_ids,
         linked_habit_ids: payload.linked_habit_ids ?? entry.linked_habit_ids,
+        friction_tag: payload.friction_tag ?? entry.friction_tag,
+        ai_suggested_prompt_id: payload.ai_suggested_prompt_id ?? entry.ai_suggested_prompt_id,
         updated_at: new Date().toISOString(),
       } satisfies JournalEntryRow;
       return updated;
