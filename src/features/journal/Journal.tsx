@@ -7,6 +7,7 @@ import {
   createJournalEntry,
   deleteJournalEntry,
   listJournalEntries,
+  listJournalEntriesByMode,
   updateJournalEntry,
   type JournalEntry,
 } from '../../services/journal';
@@ -17,14 +18,18 @@ import { JournalEntryList } from './JournalEntryList';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
 import { JournalTypeSelector } from './JournalTypeSelector';
-import type { Database, JournalEntryType } from '../../lib/database.types';
+import type { Database, JournalEntryType, Json } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
 import { isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { GoalReflectionJournal } from '../goals/GoalReflectionJournal';
+import { awardZenTokens } from '../../services/zenGarden';
+import { getGratitudeCoachFeedback, type GratitudeCoachResult } from './gratitudeCoach';
+import { buildGratitudeWeeklySummary, buildThankYouDraft, type GratitudeWeeklySummary } from './gratitudeInsights';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { recordTelemetryEvent } from '../../services/telemetry';
 import type { TimerLaunchContext } from '../timer/timerSession';
 
 /**
@@ -48,14 +53,113 @@ type HabitRow = HabitV2Row;
 type JournalEntryInsertPayload = Database['public']['Tables']['journal_entries']['Insert'];
 type JournalEntryUpdatePayload = Database['public']['Tables']['journal_entries']['Update'];
 
+type JournalLaunchRequest = {
+  type: JournalType;
+  openComposer?: boolean;
+  requestId: number;
+};
+
 type JournalProps = {
   session: Session;
   onNavigateToGoals?: () => void;
   onNavigateToHabits?: () => void;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
+  onOpenAiCoach?: (starterQuestion?: string) => void;
+  launchRequest?: JournalLaunchRequest | null;
 };
 
-type StatusState = { kind: 'success' | 'error'; message: string } | null;
+type StatusState = { kind: 'success' | 'warning' | 'error'; message: string } | null;
+
+type GratitudeAttachmentMeta = {
+  coachScore: number;
+  isAuthentic: boolean;
+  warning: string | null;
+  evaluatedAt: string;
+  version: number;
+};
+
+function toRecord(value: Json | null | undefined): Record<string, Json> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+  return { ...(value as Record<string, Json>) };
+}
+
+function buildGratitudeMeta(result: GratitudeCoachResult): GratitudeAttachmentMeta {
+  return {
+    coachScore: result.score,
+    isAuthentic: result.isAuthentic,
+    warning: result.warning ?? null,
+    evaluatedAt: new Date().toISOString(),
+    version: 1,
+  };
+}
+
+function readGratitudeMeta(attachments: Json | null | undefined): GratitudeAttachmentMeta | null {
+  const record = toRecord(attachments);
+  const raw = record.gratitudeCoach;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+
+  const candidate = raw as Record<string, Json>;
+  const coachScore = typeof candidate.coachScore === 'number' ? candidate.coachScore : null;
+  const isAuthentic = typeof candidate.isAuthentic === 'boolean' ? candidate.isAuthentic : null;
+  const warning = typeof candidate.warning === 'string' ? candidate.warning : candidate.warning === null ? null : null;
+  const evaluatedAt = typeof candidate.evaluatedAt === 'string' ? candidate.evaluatedAt : null;
+  const version = typeof candidate.version === 'number' ? candidate.version : 1;
+
+  if (coachScore === null || isAuthentic === null || !evaluatedAt) return null;
+
+  return {
+    coachScore,
+    isAuthentic,
+    warning,
+    evaluatedAt,
+    version,
+  };
+}
+
+function withGratitudeMeta(attachments: Json | null | undefined, result: GratitudeCoachResult): Json {
+  const next = toRecord(attachments);
+  next.gratitudeCoach = buildGratitudeMeta(result) as unknown as Json;
+  return next as Json;
+}
+
+function isAuthenticGratitudeEntry(entry: JournalEntry): boolean {
+  const attachmentMeta = readGratitudeMeta(entry.attachments);
+  if (attachmentMeta) return attachmentMeta.isAuthentic;
+  return getGratitudeCoachFeedback(entry.content).isAuthentic;
+}
+
+function getGratitudeWarning(entry: JournalEntry): string | null {
+  const attachmentMeta = readGratitudeMeta(entry.attachments);
+  if (attachmentMeta) return attachmentMeta.warning;
+  return getGratitudeCoachFeedback(entry.content).warning ?? null;
+}
+
+function getWarningTheme(warning: string): string {
+  const normalized = warning.toLowerCase();
+  if (normalized.includes('pain') || normalized.includes('celebrate')) return 'avoid joy in others’ pain';
+  if (normalized.includes('revenge')) return 'reframe revenge language';
+  if (normalized.includes('compassion')) return 'increase compassion';
+  if (normalized.includes('specific')) return 'be more specific';
+  return 'tone needs reframing';
+}
+
+function formatMonthDay(value: string): string {
+  const date = new Date(value);
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${month}-${day}`;
+}
+
+function getIsoDateDaysAgo(daysAgo: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 function sortEntries(entries: JournalEntry[]): JournalEntry[] {
   return [...entries].sort((a, b) => {
@@ -67,7 +171,7 @@ function sortEntries(entries: JournalEntry[]): JournalEntry[] {
   });
 }
 
-export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavigateToTimer }: JournalProps) {
+export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavigateToTimer, onOpenAiCoach, launchRequest }: JournalProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const journalDisabled = !isConfigured && !isDemoExperience;
@@ -98,6 +202,11 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [celebrationType, setCelebrationType] = useState<'journal' | 'action' | 'breathing' | 'levelup'>('journal');
   const [justSavedEntryId, setJustSavedEntryId] = useState<string | null>(null);
+  const [gratitudeCoach, setGratitudeCoach] = useState<GratitudeCoachResult | null>(null);
+  const [gratitudeWeeklySummary, setGratitudeWeeklySummary] = useState<GratitudeWeeklySummary | null>(null);
+  const [thankYouDraft, setThankYouDraft] = useState<string | null>(null);
+  const [thankYouCopied, setThankYouCopied] = useState(false);
+  const [handledLaunchRequestId, setHandledLaunchRequestId] = useState<number | null>(null);
 
   // Watch for level-up events
   useEffect(() => {
@@ -121,6 +230,21 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     const timer = window.setTimeout(() => setStatus(null), 4000);
     return () => window.clearTimeout(timer);
   }, [status]);
+
+  useEffect(() => {
+    if (!launchRequest) return;
+    if (launchRequest.requestId === handledLaunchRequestId) return;
+
+    setJournalType(launchRequest.type);
+    if (launchRequest.openComposer) {
+      setEditorMode('create');
+      setEditingEntry(null);
+      setEditorError(null);
+      setEditorOpen(true);
+    }
+
+    setHandledLaunchRequestId(launchRequest.requestId);
+  }, [launchRequest, handledLaunchRequestId]);
 
   const loadEntries = useCallback(async () => {
     if (!session || journalDisabled) {
@@ -222,6 +346,157 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
 
   const activeEntry = filteredEntries.find((entry) => entry.id === selectedEntryId) ?? null;
 
+  useEffect(() => {
+    if (journalType !== 'gratitude') {
+      setGratitudeWeeklySummary(null);
+      setThankYouDraft(null);
+      setThankYouCopied(false);
+      return;
+    }
+
+    const gratitudeEntries = entries.filter((entry) => entry.type === 'gratitude');
+    const summary = buildGratitudeWeeklySummary(gratitudeEntries);
+    setGratitudeWeeklySummary(summary);
+  }, [entries, journalType]);
+
+  const gratitudeLookbackEntry = useMemo(() => {
+    if (journalType !== 'gratitude') return null;
+    const todayMonthDay = formatMonthDay(new Date().toISOString());
+
+    const sameDayHistory = entries
+      .filter((entry) => entry.type === 'gratitude')
+      .filter((entry) => formatMonthDay(entry.entry_date) === todayMonthDay)
+      .filter((entry) => entry.entry_date !== new Date().toISOString().slice(0, 10))
+      .sort((a, b) => b.entry_date.localeCompare(a.entry_date));
+
+    if (sameDayHistory.length > 0) return sameDayHistory[0];
+
+    const fallback = entries
+      .filter((entry) => entry.type === 'gratitude')
+      .filter((entry) => entry.entry_date < new Date().toISOString().slice(0, 10))
+      .sort((a, b) => b.entry_date.localeCompare(a.entry_date));
+
+    return fallback[0] ?? null;
+  }, [entries, journalType]);
+
+  const hasTodayGratitudeEntry = useMemo(() => {
+    if (journalType !== 'gratitude') return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return entries.some((entry) => entry.type === 'gratitude' && entry.entry_date === today);
+  }, [entries, journalType]);
+
+  const gratitudeAuthenticityStats = useMemo(() => {
+    if (journalType !== 'gratitude') {
+      return {
+        authenticCount: 0,
+        totalCount: 0,
+        authenticRate: 0,
+        weeklyAuthenticCount: 0,
+        weeklyTotalCount: 0,
+        weeklyAuthenticRate: 0,
+        previousWeeklyAuthenticRate: 0,
+        weeklyAuthenticDelta: 0,
+      };
+    }
+
+    const weekStartIso = getIsoDateDaysAgo(6);
+    const previousWeekStartIso = getIsoDateDaysAgo(13);
+    const previousWeekEndIso = getIsoDateDaysAgo(7);
+
+    const gratitudeEntries = entries.filter((entry) => entry.type === 'gratitude');
+    const weeklyGratitudeEntries = gratitudeEntries.filter((entry) => entry.entry_date >= weekStartIso);
+    const previousWeeklyEntries = gratitudeEntries.filter(
+      (entry) => entry.entry_date >= previousWeekStartIso && entry.entry_date <= previousWeekEndIso,
+    );
+
+    const authenticCount = gratitudeEntries.filter(isAuthenticGratitudeEntry).length;
+    const totalCount = gratitudeEntries.length;
+    const authenticRate = totalCount > 0 ? Math.round((authenticCount / totalCount) * 100) : 0;
+
+    const weeklyAuthenticCount = weeklyGratitudeEntries.filter(isAuthenticGratitudeEntry).length;
+    const weeklyTotalCount = weeklyGratitudeEntries.length;
+    const weeklyAuthenticRate = weeklyTotalCount > 0 ? Math.round((weeklyAuthenticCount / weeklyTotalCount) * 100) : 0;
+
+    const previousWeeklyAuthenticCount = previousWeeklyEntries.filter(isAuthenticGratitudeEntry).length;
+    const previousWeeklyTotalCount = previousWeeklyEntries.length;
+    const previousWeeklyAuthenticRate =
+      previousWeeklyTotalCount > 0 ? Math.round((previousWeeklyAuthenticCount / previousWeeklyTotalCount) * 100) : 0;
+
+    return {
+      authenticCount,
+      totalCount,
+      authenticRate,
+      weeklyAuthenticCount,
+      weeklyTotalCount,
+      weeklyAuthenticRate,
+      previousWeeklyAuthenticRate,
+      weeklyAuthenticDelta: weeklyAuthenticRate - previousWeeklyAuthenticRate,
+    };
+  }, [entries, journalType]);
+
+  const gratitudeWarningSummary = useMemo(() => {
+    if (journalType !== 'gratitude') {
+      return { totalFlagged: 0, topWarningThemes: [] as Array<{ theme: string; count: number; percent: number }> };
+    }
+
+    const weekStartIso = getIsoDateDaysAgo(6);
+
+    const warningMap = new Map<string, number>();
+    let totalFlagged = 0;
+
+    entries
+      .filter((entry) => entry.type === 'gratitude')
+      .filter((entry) => entry.entry_date >= weekStartIso)
+      .forEach((entry) => {
+        if (isAuthenticGratitudeEntry(entry)) return;
+        const warning = getGratitudeWarning(entry);
+        const theme = warning ? getWarningTheme(warning) : 'tone needs reframing';
+        warningMap.set(theme, (warningMap.get(theme) ?? 0) + 1);
+        totalFlagged += 1;
+      });
+
+    const topWarningThemes = [...warningMap.entries()]
+      .sort((a, b) => {
+        const countDiff = b[1] - a[1];
+        if (countDiff !== 0) return countDiff;
+        return a[0].localeCompare(b[0]);
+      })
+      .slice(0, 3)
+      .map(([theme, count]) => ({
+        theme,
+        count,
+        percent: totalFlagged > 0 ? Math.round((count / totalFlagged) * 100) : 0,
+      }));
+
+    return { totalFlagged, topWarningThemes };
+  }, [entries, journalType]);
+
+  const gratitudeReadiness = useMemo(() => {
+    if (journalType !== 'gratitude') return null;
+
+    if (gratitudeAuthenticityStats.totalCount === 0) {
+      return {
+        tone: 'neutral' as const,
+        title: 'Start your first gratitude check-in',
+        message: 'Write one short authentic gratitude moment to unlock weekly coaching insights.',
+      };
+    }
+
+    if (gratitudeWarningSummary.totalFlagged === 0 && gratitudeAuthenticityStats.weeklyAuthenticRate >= 80) {
+      return {
+        tone: 'success' as const,
+        title: 'You are on a healthy gratitude track',
+        message: 'Great compassion signal this week. Keep your entries specific and people-aware.',
+      };
+    }
+
+    return {
+      tone: 'warning' as const,
+      title: 'Small reframing can boost your impact',
+      message: 'Use “Coach me on this” to rewrite one flagged theme into compassionate gratitude.',
+    };
+  }, [journalType, gratitudeAuthenticityStats, gratitudeWarningSummary]);
+
   const goalMap = useMemo(() => {
     const map: Record<string, GoalRow> = {};
     goals.forEach((goal) => {
@@ -257,6 +532,90 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     setEditorOpen(true);
   };
 
+  const handleCopyThankYouDraft = async () => {
+    if (!thankYouDraft) return;
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(thankYouDraft);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = thankYouDraft;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      setThankYouCopied(true);
+      window.setTimeout(() => setThankYouCopied(false), 1800);
+
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'gratitude_thank_you_draft_copied',
+        metadata: {
+          hasTarget: Boolean(gratitudeWeeklySummary?.suggestedThankYouTarget),
+          draftLength: thankYouDraft.length,
+        },
+      });
+    } catch {
+      setStatus({ kind: 'warning', message: 'Could not copy draft automatically. Select text manually to copy.' });
+    }
+  };
+
+  const handleRefineDraftWithCoach = () => {
+    if (!thankYouDraft || !onOpenAiCoach) return;
+
+    const target = gratitudeWeeklySummary?.suggestedThankYouTarget?.trim();
+    const targetHint = target ? `The thank-you target is ${target}.` : 'No specific target was detected; help me choose one.';
+
+    onOpenAiCoach(
+      `Please help me refine this gratitude thank-you message so it feels warm, authentic, and concise. ${targetHint}
+
+Draft:
+${thankYouDraft}`,
+    );
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'gratitude_thank_you_draft_refine_requested',
+      metadata: {
+        hasTarget: Boolean(target),
+        draftLength: thankYouDraft.length,
+      },
+    });
+  };
+
+  const handleOpenWarningCoach = () => {
+    if (!onOpenAiCoach || gratitudeWarningSummary.totalFlagged === 0) return;
+
+    const themes = gratitudeWarningSummary.topWarningThemes.length
+      ? gratitudeWarningSummary.topWarningThemes
+          .map(({ theme, count, percent }) => `${theme} (${count}, ${percent}%)`)
+          .join(', ')
+      : 'tone needs reframing';
+
+    onOpenAiCoach(
+      `Please coach me to improve my gratitude journaling tone. My recent flagged themes were: ${themes}. Give me 3 short reframing examples and one prompt for tomorrow.`,
+    );
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'gratitude_warning_coach_opened',
+      metadata: {
+        totalFlagged: gratitudeWarningSummary.totalFlagged,
+        themes: gratitudeWarningSummary.topWarningThemes.map(({ theme, count, percent }) => ({
+          theme,
+          count,
+          percent,
+        })),
+      },
+    });
+  };
+
   const handleSaveEntry = async (draft: JournalEntryDraft) => {
     // For problem mode, validate that at least one section has content
     const isProblemMode = draft.type === 'problem';
@@ -273,6 +632,17 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
       }
     }
     
+    const isGratitudeMode = draft.type === 'gratitude';
+    const gratitudeCoachResult = isGratitudeMode ? getGratitudeCoachFeedback(draft.content) : null;
+
+    if (isGratitudeMode) {
+      const trimmedContent = draft.content.trim();
+      if (trimmedContent.length < 10) {
+        setEditorError('Add at least one meaningful gratitude thought before saving.');
+        return;
+      }
+    }
+
     // For other modes, require content
     if (!isProblemMode && !draft.content.trim()) {
       setEditorError('Write a few lines before saving.');
@@ -291,6 +661,9 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
         tags: draft.tags.length ? draft.tags : null,
         linked_goal_ids: draft.linkedGoalIds.length ? draft.linkedGoalIds : null,
         linked_habit_ids: draft.linkedHabitIds.length ? draft.linkedHabitIds : null,
+        attachments: gratitudeCoachResult
+          ? withGratitudeMeta(editingEntry?.attachments ?? null, gratitudeCoachResult)
+          : undefined,
         is_private: true,
         type: draft.type ?? DEFAULT_JOURNAL_TYPE,
         mood_score: draft.moodScore ?? null,
@@ -340,6 +713,71 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
           await recordActivity(); // Update daily streak
           recordChallengeActivity(session.user.id, 'journal_entry');
 
+          if (draft.type === 'gratitude' && gratitudeCoachResult) {
+            const coachResult = gratitudeCoachResult;
+            setGratitudeCoach(coachResult);
+            setThankYouDraft(null);
+
+            if (coachResult.isAuthentic) {
+              const { data: gratitudeEntries } = await listJournalEntriesByMode({ type: 'gratitude', limit: 1000 });
+              const existingValidCount = (gratitudeEntries ?? [])
+                .filter((entry) => entry.id !== saved.id)
+                .filter(isAuthenticGratitudeEntry).length;
+
+              const validCountIncludingCurrent = existingValidCount + 1;
+              const baseZen = 3;
+              const milestoneBonus =
+                validCountIncludingCurrent > 0 && validCountIncludingCurrent % 10 === 0 ? 12 : 0;
+              const totalZen = baseZen + milestoneBonus;
+
+              await awardZenTokens(
+                session.user.id,
+                totalZen,
+                'gratitude_journal',
+                saved.id,
+                milestoneBonus > 0
+                  ? `Authentic gratitude entry + 10th-entry bonus (${totalZen} zen)`
+                  : 'Authentic gratitude entry reward',
+              );
+
+              setStatus({
+                kind: 'success',
+                message:
+                  milestoneBonus > 0
+                    ? `Gratitude saved. +${totalZen} Zen (includes 10-entry bonus).`
+                    : `Gratitude saved. +${totalZen} Zen.`,
+              });
+
+              void recordTelemetryEvent({
+                userId: session.user.id,
+                eventType: 'gratitude_entry_rewarded',
+                metadata: {
+                  authenticityScore: coachResult.score,
+                  zenAwarded: totalZen,
+                  milestoneBonus,
+                  entryId: saved.id,
+                },
+              });
+            } else {
+              setStatus({
+                kind: 'warning',
+                message: 'Entry saved, but no Zen reward this time. Coach suggests reframing toward compassionate gratitude.',
+              });
+
+              void recordTelemetryEvent({
+                userId: session.user.id,
+                eventType: 'gratitude_entry_flagged',
+                metadata: {
+                  authenticityScore: coachResult.score,
+                  warning: coachResult.warning ?? null,
+                  entryId: saved.id,
+                },
+              });
+            }
+          } else {
+            setGratitudeCoach(null);
+          }
+
           // 1. Immediately add instant feedback (pop/glow)
           setJustSavedEntryId(saved.id);
 
@@ -357,7 +795,9 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
         }
 
         setSelectedEntryId(saved.id);
-        setStatus({ kind: 'success', message: editorMode === 'create' ? 'Entry saved.' : 'Entry updated.' });
+        if (!(editorMode === 'create' && draft.type === 'gratitude')) {
+          setStatus({ kind: 'success', message: editorMode === 'create' ? 'Entry saved.' : 'Entry updated.' });
+        }
         setEditorOpen(false);
         if (isCompactLayout) {
           setShowMobileDetail(true);
@@ -466,6 +906,154 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
 
       {status ? <p className={`journal__status journal__status--${status.kind}`}>{status.message}</p> : null}
       {error ? <p className="journal__status journal__status--error">{error}</p> : null}
+      {gratitudeCoach ? (
+        <section className="journal-gratitude-coach" aria-live="polite">
+          <div>
+            <p className="journal-gratitude-coach__eyebrow">Coach check-in</p>
+            <h3>Want to hear what Coach is saying?</h3>
+            {gratitudeCoach.warning ? <p className="journal-gratitude-coach__warning">{gratitudeCoach.warning}</p> : null}
+            <p>{gratitudeCoach.feedback}</p>
+          </div>
+          <div className="journal-gratitude-coach__actions">
+            <span className="journal-gratitude-coach__score">Authenticity score: {gratitudeCoach.score}%</span>
+            {onOpenAiCoach ? (
+              <button
+                type="button" className="journal__new"
+                onClick={() =>
+                  onOpenAiCoach?.(
+                    gratitudeCoach.warning
+                      ? `I just wrote a gratitude entry and got this warning: ${gratitudeCoach.warning} Please help me rewrite it into compassionate gratitude.`
+                      : `I just completed a gratitude entry. Here is the coach feedback: ${gratitudeCoach.feedback} Can you give me one deeper prompt for tomorrow?`,
+                  )
+                }
+              >
+                Report to AI chat
+              </button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {journalType === 'gratitude' && !hasTodayGratitudeEntry ? (
+        <section className="journal-gratitude-today" aria-live="polite">
+          <p className="journal-gratitude-today__eyebrow">Today’s gratitude</p>
+          <h3>Capture one gratitude moment for today</h3>
+          <p>A 60-second note keeps your reflection streak warm and your weekly insights richer.</p>
+          <button
+            type="button"
+            className="journal__new"
+            onClick={() => handleOpenEditor('create', null)}
+            disabled={journalDisabled}
+          >
+            Capture today’s gratitude
+          </button>
+        </section>
+      ) : null}
+
+      {journalType === 'gratitude' && gratitudeWeeklySummary ? (
+        <section className="journal-gratitude-weekly" aria-live="polite">
+          <div className="journal-gratitude-weekly__head">
+            <p className="journal-gratitude-weekly__eyebrow">Weekly gratitude review</p>
+            <h3>{gratitudeWeeklySummary.totalEntries} entries • {gratitudeWeeklySummary.totalMoments} gratitude moments</h3>
+          </div>
+          <div className="journal-gratitude-weekly__stats">
+            <span className="journal-gratitude-weekly__stat">Days practiced this month: {gratitudeWeeklySummary.daysPracticedThisMonth}</span>
+            <span className="journal-gratitude-weekly__stat">Best streak: {gratitudeWeeklySummary.bestStreakDays} day{gratitudeWeeklySummary.bestStreakDays === 1 ? '' : 's'}</span>
+            <span className="journal-gratitude-weekly__stat">
+              Authentic entries this week: {gratitudeAuthenticityStats.weeklyAuthenticCount}/{gratitudeAuthenticityStats.weeklyTotalCount} ({gratitudeAuthenticityStats.weeklyAuthenticRate}%)
+            </span>
+            {gratitudeAuthenticityStats.previousWeeklyAuthenticRate > 0 ? (
+              <span className="journal-gratitude-weekly__stat">
+                Authenticity trend: {gratitudeAuthenticityStats.weeklyAuthenticDelta >= 0 ? '+' : ''}{gratitudeAuthenticityStats.weeklyAuthenticDelta} pts vs last week
+              </span>
+            ) : null}
+          </div>
+          {gratitudeReadiness ? (
+            <div className={`journal-gratitude-weekly__readiness journal-gratitude-weekly__readiness--${gratitudeReadiness.tone}`}>
+              <p className="journal-gratitude-weekly__label">{gratitudeReadiness.title}</p>
+              <p>{gratitudeReadiness.message}</p>
+            </div>
+          ) : null}
+          {gratitudeWarningSummary.totalFlagged > 0 ? (
+            <div className="journal-gratitude-weekly__flags" aria-live="polite">
+              <p className="journal-gratitude-weekly__label">
+                Coach noticed {gratitudeWarningSummary.totalFlagged} entry{gratitudeWarningSummary.totalFlagged === 1 ? '' : 'ies'} this week needing reframing
+              </p>
+              <div className="journal-gratitude-weekly__themes">
+                {gratitudeWarningSummary.topWarningThemes.map(({ theme, count, percent }) => (
+                  <span key={theme} className="journal-gratitude-weekly__theme journal-gratitude-weekly__theme--warning">
+                    {theme} ({count}, {percent}%)
+                  </span>
+                ))}
+              </div>
+              {onOpenAiCoach ? (
+                <button
+                  type="button"
+                  className="journal-gratitude-weekly__coach-help"
+                  onClick={handleOpenWarningCoach}
+                >
+                  Coach me on this
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          <p className="journal-gratitude-weekly__label">Top themes this week</p>
+          <div className="journal-gratitude-weekly__themes">
+            {(gratitudeWeeklySummary.topThemes.length ? gratitudeWeeklySummary.topThemes : ['consistency', 'small wins'])
+              .map((theme) => (
+                <span key={theme} className="journal-gratitude-weekly__theme">#{theme}</span>
+              ))}
+          </div>
+          <div className="journal-gratitude-weekly__actions">
+            <button
+              type="button"
+              className="journal__new"
+              onClick={() => {
+                setThankYouDraft(buildThankYouDraft(gratitudeWeeklySummary.suggestedThankYouTarget));
+                setThankYouCopied(false);
+              }}
+            >
+              Draft thank-you message
+            </button>
+          </div>
+          {thankYouDraft ? (
+            <div className="journal-gratitude-weekly__draft-wrap">
+              <p className="journal-gratitude-weekly__draft">{thankYouDraft}</p>
+              <div className="journal-gratitude-weekly__draft-actions">
+                <button type="button" className="journal-gratitude-weekly__copy" onClick={handleCopyThankYouDraft}>
+                  {thankYouCopied ? 'Copied ✓' : 'Copy draft'}
+                </button>
+                {onOpenAiCoach ? (
+                  <button
+                    type="button"
+                    className="journal-gratitude-weekly__coach"
+                    onClick={handleRefineDraftWithCoach}
+                  >
+                    Refine with Coach
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {journalType === 'gratitude' && gratitudeLookbackEntry ? (
+        <section className="journal-gratitude-lookback" aria-live="polite">
+          <p className="journal-gratitude-lookback__eyebrow">Look back</p>
+          <h3>On this day gratitude memory</h3>
+          <p className="journal-gratitude-lookback__date">{new Date(gratitudeLookbackEntry.entry_date).toLocaleDateString()}</p>
+          <p className="journal-gratitude-lookback__content">{gratitudeLookbackEntry.content.slice(0, 180)}{gratitudeLookbackEntry.content.length > 180 ? '…' : ''}</p>
+          <button
+            type="button"
+            className="journal-gratitude-lookback__open"
+            onClick={() => handleSelectEntry(gratitudeLookbackEntry.id)}
+          >
+            Open this entry
+          </button>
+        </section>
+      ) : null}
 
       {isGoalReflectionMode ? (
         <GoalReflectionJournal session={session} />

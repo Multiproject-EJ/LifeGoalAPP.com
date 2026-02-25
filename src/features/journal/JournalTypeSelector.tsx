@@ -21,6 +21,7 @@ const JOURNAL_MODE_OPTIONS: JournalModeOption[] = [
   { value: 'goal', label: 'Goal' },
   { value: 'time_capsule', label: 'Time Capsule' },
   { value: 'problem', label: 'Problem' },
+  { value: 'gratitude', label: 'Guided Gratitude' },
 ];
 
 export function JournalTypeSelector({ journalType, onChange }: JournalTypeSelectorProps) {

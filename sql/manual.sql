@@ -2795,7 +2795,7 @@ END $$;
 -- Add the updated constraint with 'problem' included
 ALTER TABLE public.journal_entries
 ADD CONSTRAINT journal_entries_type_allowed_values
-CHECK (type IN ('quick', 'deep', 'brain_dump', 'life_wheel', 'secret', 'goal', 'time_capsule', 'standard', 'problem'));
+CHECK (type IN ('quick', 'deep', 'brain_dump', 'life_wheel', 'secret', 'goal', 'time_capsule', 'standard', 'problem', 'gratitude'));
 
 -- Add comments to document the new fields
 COMMENT ON COLUMN public.journal_entries.irrational_fears IS 'Problem journal mode: Section for identifying and acknowledging potential irrational fears';

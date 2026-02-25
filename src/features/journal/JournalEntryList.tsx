@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { JournalEntry } from '../../services/journal';
 import type { JournalMoodOption } from './JournalEntryEditor';
 import { JournalCalendar } from './JournalCalendar';
-import { entryListDateFormatter, unlockDateFormatter } from './utils';
+import { entryListDateFormatter, unlockDateFormatter, getModeLabel } from './utils';
 
 type ViewMode = 'list' | 'calendar';
 
@@ -170,7 +170,7 @@ export function JournalEntryList({
                           <div className="journal-list__item-meta">
                             {moodMeta ? <span className="journal-list__item-mood">{moodMeta.icon}</span> : null}
                             {entry.type && entry.type !== 'standard' && (
-                              <span className="journal-list__item-type">{entry.type}</span>
+                              <span className="journal-list__item-type">{getModeLabel(entry.type)}</span>
                             )}
                           </div>
                           <strong>{entry.title?.trim() || 'Untitled'}</strong>

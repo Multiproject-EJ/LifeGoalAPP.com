@@ -50,7 +50,12 @@ export type TelemetryEventType =
   | 'habit_time_limited_offer_expired'
   | 'goal_coach_chat_sent'
   | 'goal_coach_chat_draft_received'
-  | 'goal_coach_chat_goal_created';
+  | 'goal_coach_chat_goal_created'
+  | 'gratitude_entry_rewarded'
+  | 'gratitude_entry_flagged'
+  | 'gratitude_thank_you_draft_copied'
+  | 'gratitude_thank_you_draft_refine_requested'
+  | 'gratitude_warning_coach_opened';
 
 export type TelemetryEventMetadata = Json;
 

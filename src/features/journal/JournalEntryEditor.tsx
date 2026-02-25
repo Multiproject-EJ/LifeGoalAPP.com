@@ -93,6 +93,16 @@ const LIFE_WHEEL_CATEGORIES = [
 // Default mood score for quick and life wheel modes
 const DEFAULT_MOOD_SCORE = 5;
 
+type GratitudeItem = { gratitude: string; why: string };
+
+const GRATITUDE_PROMPTS = [
+  'A person I appreciate today',
+  'A small moment that made life better',
+  'Progress or support I am thankful for',
+] as const;
+
+const EMPTY_GRATITUDE_ITEMS: GratitudeItem[] = GRATITUDE_PROMPTS.map(() => ({ gratitude: '', why: '' }));
+
 function getRandomPrompt(): string {
   return QUICK_PROMPTS[Math.floor(Math.random() * QUICK_PROMPTS.length)];
 }
@@ -145,6 +155,34 @@ function createDraft(entry: JournalEntry | null, journalType?: JournalType): Jou
   };
 }
 
+function parseGratitudeContent(content: string): GratitudeItem[] {
+  if (!content.trim()) return [...EMPTY_GRATITUDE_ITEMS];
+
+  const parts = content
+    .split(/\n\s*\n/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const items = parts.map((chunk) => {
+    const gratitude = chunk.match(/Grateful for:\s*(.*)/i)?.[1]?.trim() ?? '';
+    const why = chunk.match(/Why:\s*(.*)/i)?.[1]?.trim() ?? '';
+    return { gratitude, why };
+  });
+
+  while (items.length < 3) items.push({ gratitude: '', why: '' });
+  return items;
+}
+
+function serializeGratitudeContent(items: GratitudeItem[]): string {
+  return items
+    .map((item, index) =>
+      `${index + 1}. Grateful for: ${item.gratitude.trim()}\nWhy: ${item.why.trim()}`
+    )
+    .join('\n\n')
+    .trim();
+}
+
 /**
  * AI analysis stub for brain dump mode.
  * This is a placeholder function that will be replaced with actual AI integration.
@@ -174,6 +212,8 @@ export function JournalEntryEditor({
   const titleId = useId();
   const [draft, setDraft] = useState<JournalEntryDraft>(createDraft(entry, journalType));
   const [tagInput, setTagInput] = useState('');
+  const [gratitudeItems, setGratitudeItems] = useState<GratitudeItem[]>([...EMPTY_GRATITUDE_ITEMS]);
+  const [isGuidedGratitude, setIsGuidedGratitude] = useState(true);
 
   // Brain dump mode state
   const [timeLeft, setTimeLeft] = useState(BRAIN_DUMP_DURATION_SECONDS);
@@ -199,6 +239,10 @@ export function JournalEntryEditor({
     if (!open) return;
     setDraft(createDraft(entry, journalType));
     setTagInput('');
+    const parsedItems = parseGratitudeContent(entry?.content ?? '');
+    setGratitudeItems(parsedItems);
+    const hasStructuredContent = (entry?.content ?? '').toLowerCase().includes('grateful for:');
+    setIsGuidedGratitude(hasStructuredContent || !(entry?.content ?? '').trim());
     // Reset brain dump state when opening/changing entries
     setTimeLeft(BRAIN_DUMP_DURATION_SECONDS);
     setHasFinished(false);
@@ -380,6 +424,19 @@ export function JournalEntryEditor({
     }));
   };
 
+  const handleGratitudeChange = (index: number, field: keyof GratitudeItem, value: string) => {
+    setGratitudeItems((current) => {
+      const next = current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item
+      );
+      setDraft((draftCurrent) => ({
+        ...draftCurrent,
+        content: serializeGratitudeContent(next),
+      }));
+      return next;
+    });
+  };
+
   const handleUsePrompt = () => {
     const prompt = getRandomPrompt();
     const promptWithNewline = `${prompt}\n`;
@@ -436,6 +493,7 @@ export function JournalEntryEditor({
   const isSecretMode = draft.type === 'secret';
   const isDeepMode = draft.type === 'deep';
   const isProblemMode = draft.type === 'problem';
+  const isGratitudeMode = draft.type === 'gratitude';
 
   // Memoize blur calculation to avoid unnecessary computations on every render
   const blurAmount = useMemo(() => {
@@ -678,6 +736,69 @@ export function JournalEntryEditor({
     return null;
   };
 
+  const renderGratitudeSection = () => {
+    if (!isGratitudeMode) return null;
+    return (
+      <section className="journal-gratitude">
+        <header className="journal-gratitude__header">
+          <h3>Guided gratitude</h3>
+          <p>Optional help: use guided prompts or switch to freeform gratitude writing.</p>
+        </header>
+
+        <div className="journal-gratitude__toggle" role="tablist" aria-label="Gratitude writing style">
+          <button
+            type="button"
+            className={`journal-gratitude__toggle-btn ${isGuidedGratitude ? 'journal-gratitude__toggle-btn--active' : ''}`}
+            onClick={() => setIsGuidedGratitude(true)}
+            aria-selected={isGuidedGratitude}
+          >
+            Guided
+          </button>
+          <button
+            type="button"
+            className={`journal-gratitude__toggle-btn ${!isGuidedGratitude ? 'journal-gratitude__toggle-btn--active' : ''}`}
+            onClick={() => setIsGuidedGratitude(false)}
+            aria-selected={!isGuidedGratitude}
+          >
+            Freeform
+          </button>
+        </div>
+
+        {isGuidedGratitude ? (
+          <div className="journal-gratitude__list">
+            {gratitudeItems.map((item, index) => (
+              <article key={index} className="journal-gratitude__item">
+                <p className="journal-gratitude__prompt">{index + 1}. {GRATITUDE_PROMPTS[index]}</p>
+                <input
+                  type="text"
+                  value={item.gratitude}
+                  onChange={(event) => handleGratitudeChange(index, 'gratitude', event.target.value)}
+                  placeholder="I am grateful for…"
+                />
+                <textarea
+                  rows={2}
+                  value={item.why}
+                  onChange={(event) => handleGratitudeChange(index, 'why', event.target.value)}
+                  placeholder="Why this matters (optional)"
+                />
+              </article>
+            ))}
+          </div>
+        ) : (
+          <label className="journal-editor__field">
+            <span>Freeform gratitude</span>
+            <textarea
+              rows={8}
+              value={draft.content}
+              onChange={(event) => handleFieldChange('content', event.target.value)}
+              placeholder="Write gratitude in your own style. Example: Who helped you, what went well, and why it mattered."
+            />
+          </label>
+        )}
+      </section>
+    );
+  };
+
   const renderProblemModeSection = () => {
     if (!isProblemMode) return null;
 
@@ -823,9 +944,11 @@ export function JournalEntryEditor({
 
           {renderLifeWheelSection()}
 
+          {renderGratitudeSection()}
+
           {renderProblemModeSection()}
 
-          {!isSecretMode && !isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && !isProblemMode && (
+          {!isSecretMode && !isQuickMode && !isGoalMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && !isProblemMode && !isGratitudeMode && (
             <label className="journal-editor__field">
               <span>Title</span>
               <input
@@ -841,7 +964,7 @@ export function JournalEntryEditor({
 
           {renderDeepModeSection()}
 
-          {!isProblemMode && (
+          {!isProblemMode && !isGratitudeMode && (
           <label className="journal-editor__field">
             <span>{getContentLabel(draft.type)}</span>
             <textarea
@@ -864,7 +987,7 @@ export function JournalEntryEditor({
 
           {renderQuickModeActions()}
 
-          {!isSecretMode && !isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && !isProblemMode && (
+          {!isSecretMode && !isQuickMode && !isTimeCapsuleMode && !isLifeWheelMode && !isBrainDumpMode && !isProblemMode && !isGratitudeMode && (
             <>
               <div className="journal-editor__field">
                 <span>Tags</span>

@@ -15,7 +15,8 @@ export type JournalEntryType =
   | 'goal' 
   | 'time_capsule' 
   | 'standard'
-  | 'problem';
+  | 'problem'
+  | 'gratitude';
 
 export interface Database {
   public: {
