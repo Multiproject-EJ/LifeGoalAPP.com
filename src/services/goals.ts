@@ -2,6 +2,10 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
+  computePlanQuality,
+  toPlanQualityBreakdownJson,
+} from '../features/goals/planQuality';
+import {
   DEMO_USER_ID,
   addDemoGoal,
   getDemoGoals,
@@ -23,6 +27,23 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
+
+function buildPlanQualityPatch(goal: GoalInsert | GoalUpdate): Pick<GoalUpdate, 'plan_quality_score' | 'plan_quality_breakdown'> {
+  const result = computePlanQuality({
+    goalOutcomeStatement: ('title' in goal ? goal.title : null) ?? null,
+    successMetric: ('description' in goal ? goal.description : null) ?? null,
+    targetDate: ('target_date' in goal ? goal.target_date : null) ?? null,
+    firstAction: ('timing_notes' in goal ? goal.timing_notes : null) ?? null,
+    weeklyWorkloadTarget: ('weekly_workload_target' in goal ? goal.weekly_workload_target : null) ?? null,
+    priorityLevel: ('priority_level' in goal ? goal.priority_level : null) ?? null,
+  });
+
+  return {
+    plan_quality_score: result.score,
+    plan_quality_breakdown: toPlanQualityBreakdownJson(result.breakdown),
+  };
+}
+
 export async function fetchGoals(): Promise<ServiceResponse<GoalRow[]>> {
   if (!canUseSupabaseData()) {
     return { data: getDemoGoals(DEMO_USER_ID), error: null };
@@ -37,14 +58,19 @@ export async function fetchGoals(): Promise<ServiceResponse<GoalRow[]>> {
 }
 
 export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<GoalRow>> {
+  const payloadWithQuality = {
+    ...payload,
+    ...buildPlanQualityPatch(payload),
+  };
+
   if (!canUseSupabaseData()) {
-    return { data: addDemoGoal(payload), error: null };
+    return { data: addDemoGoal(payloadWithQuality), error: null };
   }
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('goals')
-    .insert(payload)
+    .insert(payloadWithQuality)
     .select()
     .single<GoalRow>();
 
@@ -68,7 +94,16 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
 
 export async function updateGoal(id: string, payload: GoalUpdate): Promise<ServiceResponse<GoalRow>> {
   if (!canUseSupabaseData()) {
-    const record = updateDemoGoal(id, payload);
+    const existingGoal = getDemoGoals(DEMO_USER_ID).find((goal) => goal.id === id);
+    const mergedGoalForScoring = {
+      ...existingGoal,
+      ...payload,
+    } as GoalRow;
+
+    const record = updateDemoGoal(id, {
+      ...payload,
+      ...buildPlanQualityPatch(mergedGoalForScoring),
+    });
     return { data: record, error: null };
   }
 
@@ -80,9 +115,17 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
     .eq('id', id)
     .maybeSingle<GoalRow>();
 
+  const mergedGoalForScoring = {
+    ...beforeState,
+    ...payload,
+  } as GoalRow;
+
   const { data, error } = await supabase
     .from('goals')
-    .update(payload)
+    .update({
+      ...payload,
+      ...buildPlanQualityPatch(mergedGoalForScoring),
+    })
     .eq('id', id)
     .select()
     .single<GoalRow>();
