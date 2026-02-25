@@ -17,7 +17,7 @@ import { AI_FEATURE_ICON } from '../constants/ai';
 import { splitGoldBalance } from '../constants/economy';
 import { PROGRESS_STATE_EFFECTS, type ProgressState } from '../features/habits/progressGrading';
 
-type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule';
+type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule' | 'gratitude';
 
 type QuickActionsFABProps = {
   session: Session;
@@ -41,14 +41,15 @@ const JOURNAL_TYPES: { type: JournalType; icon: string; label: string }[] = [
   { type: 'brain_dump', icon: '🧠', label: 'Brain Dump' },
   { type: 'life_wheel', icon: '🎯', label: 'Life Wheel' },
   { type: 'goal', icon: '🎪', label: 'Goal' },
+  { type: 'gratitude', icon: '🌱', label: 'Guided Gratitude' },
 ];
 
 const QUICK_JOURNAL_SHORTCUTS = JOURNAL_TYPES.filter((jt) =>
-  ['quick', 'brain_dump'].includes(jt.type),
+  ['quick', 'brain_dump', 'gratitude'].includes(jt.type),
 );
 
 const EXTENDED_JOURNAL_TYPES = JOURNAL_TYPES.filter(
-  (jt) => !['quick', 'brain_dump'].includes(jt.type),
+  (jt) => !['quick', 'brain_dump', 'gratitude'].includes(jt.type),
 );
 
 const STREAK_LOOKBACK_DAYS = 60;

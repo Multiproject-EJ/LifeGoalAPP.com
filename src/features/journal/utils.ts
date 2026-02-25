@@ -83,6 +83,7 @@ export const CONTENT_LABELS: Record<JournalEntryType, string> = {
   deep: "Full entry",
   standard: "Content",
   problem: "Brain dump (self-destructs after timer)",
+  gratitude: "3 gratitude moments + why",
 } as const;
 
 /**
@@ -98,6 +99,7 @@ export const CONTENT_PLACEHOLDERS: Record<JournalEntryType, string> = {
   deep: "Write deeply and thoughtfully. Take your time to explore your thoughts...",
   standard: "Capture what unfolded, how you felt, and any momentum you want to carry forward.",
   problem: "Write freely to get your thoughts out quickly. This will self-destruct...",
+  gratitude: "List 3 things you are grateful for today, then add why each mattered...",
 } as const;
 
 /**
@@ -113,6 +115,7 @@ export const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'time_capsule': 'Time Capsule',
   'standard': 'Standard',
   'problem': 'Problem',
+  'gratitude': 'Guided Gratitude',
 };
 
 /**

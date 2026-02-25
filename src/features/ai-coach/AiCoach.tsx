@@ -440,6 +440,11 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   }, [messages]);
 
   useEffect(() => {
+    if (!starterQuestion) return;
+    setInputValue(starterQuestion);
+  }, [starterQuestion]);
+
+  useEffect(() => {
     let isMounted = true;
 
     const loadInterventions = async () => {

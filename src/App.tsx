@@ -27,7 +27,7 @@ import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { PlayerAvatarPanel } from './features/avatar/PlayerAvatarPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiCoach } from './features/ai-coach';
-import { Journal } from './features/journal';
+import { Journal, type JournalType } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
 import PersonalityTest from './features/identity/PersonalityTest';
@@ -373,6 +373,8 @@ export default function App() {
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
+  const [aiCoachStarterQuestion, setAiCoachStarterQuestion] = useState<string | undefined>(undefined);
+  const [journalLaunchRequest, setJournalLaunchRequest] = useState<{ type: JournalType; openComposer?: boolean; requestId: number } | null>(null);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [showDailyTreatsMenu, setShowDailyTreatsMenu] = useState(false);
   const [showDailyTreatsCongrats, setShowDailyTreatsCongrats] = useState(false);
@@ -1573,6 +1575,7 @@ export default function App() {
     }
 
     if (navId === 'coach') {
+      setAiCoachStarterQuestion(undefined);
       setShowAiCoachModal(true);
       return;
     }
@@ -1792,10 +1795,14 @@ export default function App() {
     setShowMobileHome(false);
   }, []);
 
-  const handleQuickJournalNow = useCallback((type: string) => {
+  const handleQuickJournalNow = useCallback((type: JournalType) => {
+    setJournalLaunchRequest({
+      type,
+      openComposer: true,
+      requestId: Date.now(),
+    });
     setActiveWorkspaceNav('journal');
     setShowMobileHome(false);
-    // Note: Journal type selection could be passed via context in future enhancement
   }, []);
 
   const handleOpenLifeCoach = useCallback(() => {
@@ -2242,6 +2249,7 @@ export default function App() {
                 setShowMobileHome(false);
               }}
               onOpenCoach={() => {
+                setAiCoachStarterQuestion(undefined);
                 setShowAiCoachModal(true);
               }}
               onClose={() => {
@@ -2511,6 +2519,11 @@ export default function App() {
               session={activeSession}
               onNavigateToGoals={() => handleJournalNavigation('support')}
               onNavigateToHabits={() => handleJournalNavigation('planning')}
+              onOpenAiCoach={(starterQuestion) => {
+                setAiCoachStarterQuestion(starterQuestion);
+                setShowAiCoachModal(true);
+              }}
+              launchRequest={journalLaunchRequest}
               onNavigateToTimer={(context) => {
                 if (context) {
                   setTimerLaunchContext(context);
@@ -3687,7 +3700,14 @@ export default function App() {
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
         />
         {showAiCoachModal && (
-          <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
+          <AiCoach
+            session={activeSession}
+            starterQuestion={aiCoachStarterQuestion}
+            onClose={() => {
+              setShowAiCoachModal(false);
+              setAiCoachStarterQuestion(undefined);
+            }}
+          />
         )}
         {showDailySpinWheel && (
           <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />
@@ -3991,7 +4011,14 @@ export default function App() {
 
       {/* AI Coach Modal from Main Menu */}
       {showAiCoachModal && (
-        <AiCoach session={activeSession} onClose={() => setShowAiCoachModal(false)} />
+        <AiCoach
+          session={activeSession}
+          starterQuestion={aiCoachStarterQuestion}
+          onClose={() => {
+            setShowAiCoachModal(false);
+            setAiCoachStarterQuestion(undefined);
+          }}
+        />
       )}
       {showDailySpinWheel && (
         <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />

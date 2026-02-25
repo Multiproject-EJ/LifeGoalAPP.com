@@ -20507,6 +20507,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(244, 63, 94, 0.18);
 }
 
+.journal__status--warning {
+  color: #92400e;
+  background: rgba(251, 191, 36, 0.22);
+}
+
 .journal__layout {
   display: grid;
   grid-template-columns: 340px 1fr;
@@ -23299,4 +23304,384 @@ html.platform-ipad .workspace-shell__menu-edge {
     gap: 0.4rem;
     padding: 0.55rem;
   }
+}
+
+.journal-gratitude-coach {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: linear-gradient(160deg, rgba(16, 185, 129, 0.1), rgba(14, 165, 233, 0.08));
+}
+
+.journal-gratitude-coach h3 {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1rem;
+}
+
+.journal-gratitude-coach p {
+  margin: 0;
+  color: var(--color-text-secondary, #334155);
+}
+
+.journal-gratitude-coach__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.journal-gratitude-coach__warning {
+  color: #b45309;
+  font-weight: 600;
+  margin-bottom: 0.4rem !important;
+}
+
+.journal-gratitude-coach__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.journal-gratitude-coach__score {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #065f46;
+}
+
+.journal-gratitude {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.journal-gratitude__header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.journal-gratitude__header p {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.88rem;
+}
+
+.journal-gratitude__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.journal-gratitude__item {
+  border-radius: 14px;
+  border: 1px solid var(--color-border-light, rgba(15, 23, 42, 0.08));
+  padding: 0.75rem;
+  background: var(--color-surface-glass-light, rgba(248, 250, 252, 0.85));
+  display: grid;
+  gap: 0.55rem;
+}
+
+.journal-gratitude__prompt {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #334155);
+}
+
+.journal-gratitude__item input,
+.journal-gratitude__item textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.1));
+  padding: 0.7rem;
+  font: inherit;
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .journal-mode-selector {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.25rem;
+    scrollbar-width: thin;
+  }
+
+  .journal-mode-selector__option {
+    flex: 0 0 auto;
+  }
+
+  .journal-gratitude-coach {
+    flex-direction: column;
+  }
+
+  .journal-gratitude-coach__actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .journal__new {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.journal-gratitude-weekly {
+  border-radius: 16px;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.08), rgba(168, 85, 247, 0.05));
+  padding: 1rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.journal-gratitude-weekly__head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.journal-gratitude-weekly__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0369a1;
+}
+
+.journal-gratitude-weekly__label {
+  margin: 0;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.85rem;
+}
+
+
+.journal-gratitude-weekly__stats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.journal-gratitude-weekly__stat {
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--color-text-secondary, #334155);
+}
+
+.journal-gratitude-weekly__themes {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.journal-gratitude-weekly__theme {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.journal-gratitude-weekly__flags {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.journal-gratitude-weekly__theme--warning {
+  background: rgba(251, 191, 36, 0.18);
+  color: #92400e;
+  border-color: rgba(251, 146, 60, 0.34);
+}
+
+.journal-gratitude-weekly__readiness {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.journal-gratitude-weekly__readiness p {
+  margin: 0;
+}
+
+.journal-gratitude-weekly__readiness--success {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.09);
+}
+
+.journal-gratitude-weekly__readiness--warning {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.journal-gratitude-weekly__readiness--neutral {
+  border-color: rgba(14, 165, 233, 0.3);
+  background: rgba(14, 165, 233, 0.09);
+}
+
+.journal-gratitude-weekly__coach-help {
+  justify-self: start;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.72rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #312e81;
+  background: rgba(238, 242, 255, 0.92);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+}
+
+.journal-gratitude-weekly__draft {
+  margin: 0;
+  padding: 0.8rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+
+.journal-gratitude-weekly__draft-wrap {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.journal-gratitude-weekly__copy {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(14, 165, 233, 0.28);
+}
+
+.journal-gratitude-weekly__draft-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.journal-gratitude-weekly__coach {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(79, 70, 229, 0.3);
+}
+
+.journal-gratitude__toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.journal-gratitude__toggle-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #334155);
+  background: transparent;
+}
+
+.journal-gratitude__toggle-btn--active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25);
+}
+
+
+.journal-gratitude-lookback {
+  border-radius: 16px;
+  border: 1px solid rgba(168, 85, 247, 0.24);
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.08), rgba(14, 165, 233, 0.04));
+  padding: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.journal-gratitude-lookback__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7e22ce;
+}
+
+.journal-gratitude-lookback h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.journal-gratitude-lookback__date {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.journal-gratitude-lookback__content {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #334155);
+}
+
+.journal-gratitude-lookback__open {
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary, #0f172a);
+  border: 1px solid rgba(168, 85, 247, 0.26);
+}
+
+
+.journal-gratitude-today {
+  border-radius: 16px;
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.1), rgba(14, 165, 233, 0.06));
+  padding: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.journal-gratitude-today__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #047857;
+}
+
+.journal-gratitude-today h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.journal-gratitude-today p {
+  margin: 0;
+  color: var(--color-text-secondary, #334155);
 }
