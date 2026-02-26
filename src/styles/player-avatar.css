@@ -866,3 +866,43 @@
     rgba(234, 179, 8, 0.05));
   border-color: rgba(234, 179, 8, 0.3);
 }
+
+/* Dark-glass hardening for avatar panel core surfaces (analysis pass 10) */
+[data-theme='dark-glass'] .player-avatar-panel {
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .player-avatar-panel__preview-card,
+[data-theme='dark-glass'] .player-avatar-panel__avatar-card,
+[data-theme='dark-glass'] .player-avatar-panel__equipment-card,
+[data-theme='dark-glass'] .player-avatar-panel__tab,
+[data-theme='dark-glass'] .player-avatar-panel__for-you {
+  background: color-mix(in srgb, var(--color-surface-primary, rgba(26, 31, 46, 0.9)) 88%, transparent);
+  border-color: var(--color-border-primary, rgba(148, 163, 184, 0.25));
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .player-avatar-panel__preview-equipped {
+  border-top-color: var(--color-border-secondary, rgba(148, 163, 184, 0.3));
+}
+
+[data-theme='dark-glass'] .player-avatar-panel__tab:hover,
+[data-theme='dark-glass'] .player-avatar-panel__avatar-card:hover,
+[data-theme='dark-glass'] .player-avatar-panel__equipment-card:hover {
+  background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 90%, transparent);
+  border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.35));
+}
+
+[data-theme='dark-glass'] .player-avatar-panel__preview-name,
+[data-theme='dark-glass'] .player-avatar-panel__section-title,
+[data-theme='dark-glass'] .player-avatar-panel__avatar-name,
+[data-theme='dark-glass'] .player-avatar-panel__for-you-title {
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .player-avatar-panel__subtitle,
+[data-theme='dark-glass'] .player-avatar-panel__preview-label,
+[data-theme='dark-glass'] .player-avatar-panel__avatar-suit,
+[data-theme='dark-glass'] .player-avatar-panel__tab-count {
+  color: var(--color-text-secondary, #cbd5e1);
+}
