@@ -16,6 +16,7 @@ import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
 import { playTone, playSweep, playChime } from '../../../../utils/audioUtils';
+import { triggerCompletionHaptic } from '../../../../utils/completionHaptics';
 import './wheelOfWins.css';
 
 const playWheelSpin = () => {
@@ -132,6 +133,7 @@ export function WheelOfWins({ session, onClose, onComplete }: WheelOfWinsProps) 
 
       // Show celebration
       playWinReveal();
+      triggerCompletionHaptic('medium', { channel: 'gamification', minIntervalMs: 2800 });
       setShowCelebration(true);
 
       // Log completion

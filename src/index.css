@@ -23022,6 +23022,95 @@ html.platform-ipad .workspace-shell__menu-edge {
   transition: box-shadow 0.3s ease-out;
 }
 
+.habit-item--feedback-quick-win {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.45), 0 10px 24px rgba(14, 165, 233, 0.22);
+}
+
+.habit-item--feedback-streak-build {
+  animation: habit-feedback-streak 0.5s ease-out;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.45), 0 14px 30px rgba(34, 197, 94, 0.24);
+}
+
+.habit-item--feedback-milestone {
+  animation: habit-feedback-milestone 0.7s ease-out;
+  box-shadow:
+    0 0 0 2px rgba(251, 191, 36, 0.5),
+    0 0 24px rgba(251, 191, 36, 0.45),
+    0 14px 34px rgba(234, 88, 12, 0.3);
+}
+
+@keyframes habit-feedback-streak {
+  0% {
+    filter: saturate(1);
+  }
+  45% {
+    filter: saturate(1.2);
+  }
+  100% {
+    filter: saturate(1);
+  }
+}
+
+@keyframes habit-feedback-milestone {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.04);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-item--feedback-streak-build,
+  .habit-item--feedback-milestone,
+  .habit-item--just-completed,
+  .action-item--just-completed,
+  .journal-item--just-completed,
+  .breathing-item--just-completed {
+    animation: none;
+  }
+}
+
+
+.action-item--feedback-standard {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4), 0 10px 24px rgba(14, 165, 233, 0.2);
+}
+
+.action-item--feedback-bonus {
+  box-shadow:
+    0 0 0 2px rgba(251, 191, 36, 0.52),
+    0 0 24px rgba(251, 191, 36, 0.36),
+    0 14px 32px rgba(249, 115, 22, 0.28);
+}
+
+.journal-item--feedback-reflective {
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.45), 0 12px 28px rgba(124, 58, 237, 0.26);
+}
+
+.journal-item--feedback-gratitude {
+  box-shadow:
+    0 0 0 2px rgba(34, 197, 94, 0.48),
+    0 0 22px rgba(34, 197, 94, 0.3),
+    0 12px 30px rgba(22, 163, 74, 0.24);
+}
+
+.breathing-item--feedback-reset {
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.38), 0 14px 32px rgba(14, 165, 233, 0.22);
+}
+
+.breathing-item--feedback-deep {
+  box-shadow:
+    0 0 0 2px rgba(99, 102, 241, 0.5),
+    0 0 24px rgba(99, 102, 241, 0.34),
+    0 14px 32px rgba(79, 70, 229, 0.28);
+}
+
 /* Instant pop effect for actions */
 .action-item--just-completed {
   animation: instant-pop 0.3s ease-out;

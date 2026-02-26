@@ -3,6 +3,7 @@ import { PointsBadge } from './PointsBadge';
 import { splitGoldBalance } from '../constants/economy';
 import mindIcon from '../assets/mind-icon.webp';
 import bodyIcon from '../assets/body-icon.webp';
+import { triggerCompletionHaptic } from '../utils/completionHaptics';
 
 type MobileFooterNavItem = {
   id: string;
@@ -309,9 +310,7 @@ export function MobileFooterNav({
       if (progress >= 1 && !statusHoldTriggeredRef.current) {
         statusHoldTriggeredRef.current = true;
         onStatusHoldToggle();
-        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-          navigator.vibrate([80, 40, 80, 40, 160]);
-        }
+        triggerCompletionHaptic('medium', { channel: 'navigation', minIntervalMs: 2000 });
         setIsStatusHoldSnap(true);
         setIsStatusHoldActive(false);
         statusHoldTimeoutRef.current = window.setTimeout(() => {

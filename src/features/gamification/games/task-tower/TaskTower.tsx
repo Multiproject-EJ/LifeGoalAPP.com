@@ -10,6 +10,7 @@ import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import type { TowerBlock, TaskTowerSession } from './taskTowerTypes';
 import { TOWER_GRID } from './taskTowerTypes';
 import { playTone, playChime, playCelebrationCascade } from '../../../../utils/audioUtils';
+import { triggerCompletionHaptic } from '../../../../utils/completionHaptics';
 import './taskTower.css';
 
 // Sound implementations
@@ -226,6 +227,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
           };
           
           // Show all clear celebration
+          triggerCompletionHaptic('strong', { channel: 'gamification', minIntervalMs: 3000 });
           setShowCelebration(true);
           
           setTimeout(() => {

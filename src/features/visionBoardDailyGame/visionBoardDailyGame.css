@@ -271,6 +271,69 @@
   font-size: 0.95rem;
 }
 
+[data-theme='dark-glass'] .daily-game {
+  background: var(--color-surface-elevated, rgba(15, 23, 42, 0.82));
+  color: var(--color-text-primary, #e2e8f0);
+  border: 1px solid var(--color-border-soft, rgba(148, 163, 184, 0.28));
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.5);
+}
+
+[data-theme='dark-glass'] .daily-game__close,
+[data-theme='dark-glass'] .daily-game__chip,
+[data-theme='dark-glass'] .daily-game__section,
+[data-theme='dark-glass'] .daily-game__list-item,
+[data-theme='dark-glass'] .daily-game__balance-card,
+[data-theme='dark-glass'] .daily-game__summary,
+[data-theme='dark-glass'] .daily-game__summary-inline,
+[data-theme='dark-glass'] .daily-game__field input,
+[data-theme='dark-glass'] .daily-game__field textarea,
+[data-theme='dark-glass'] .daily-game__field select {
+  border-color: var(--color-border-soft, rgba(148, 163, 184, 0.32));
+}
+
+[data-theme='dark-glass'] .daily-game__status,
+[data-theme='dark-glass'] .daily-game__placeholder,
+[data-theme='dark-glass'] .daily-game__actions button,
+[data-theme='dark-glass'] .daily-game__field input,
+[data-theme='dark-glass'] .daily-game__field textarea,
+[data-theme='dark-glass'] .daily-game__field select,
+[data-theme='dark-glass'] .daily-game__list-item,
+[data-theme='dark-glass'] .daily-game__balance-card {
+  background: var(--color-surface-secondary, rgba(30, 41, 59, 0.72));
+  color: var(--color-text-primary, #e2e8f0);
+}
+
+[data-theme='dark-glass'] .daily-game__eyebrow,
+[data-theme='dark-glass'] .daily-game__lede,
+[data-theme='dark-glass'] .daily-game__description,
+[data-theme='dark-glass'] .daily-game__caption,
+[data-theme='dark-glass'] .daily-game__score-label {
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+[data-theme='dark-glass'] .daily-game__card,
+[data-theme='dark-glass'] .daily-game__summary,
+[data-theme='dark-glass'] .daily-game__summary-inline {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.18));
+}
+
+[data-theme='dark-glass'] .daily-game__status--warning {
+  background: rgba(249, 115, 22, 0.18);
+  border-color: rgba(251, 146, 60, 0.38);
+  color: #fed7aa;
+}
+
+[data-theme='dark-glass'] .daily-game__status--error {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(248, 113, 113, 0.38);
+  color: #fecaca;
+}
+
+[data-theme='dark-glass'] .daily-game__actions button:hover:not(:disabled),
+[data-theme='dark-glass'] .daily-game__close:hover {
+  background: var(--color-surface-tertiary, rgba(51, 65, 85, 0.78));
+}
+
 @media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .daily-game__header {
     flex-direction: column;

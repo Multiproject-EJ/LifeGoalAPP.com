@@ -15,6 +15,7 @@ import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
 import { generateInitials } from '../../utils/initials';
+import { getHapticMode, setHapticMode, triggerCompletionHaptic, type HapticMode } from '../../utils/completionHaptics';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -59,6 +60,7 @@ export function MyAccountPanel({
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
+  const [hapticMode, setHapticModeState] = useState<HapticMode>('balanced');
   const [onboardingSnapshot, setOnboardingSnapshot] = useState<string | null>(null);
   const [dayZeroStored, setDayZeroStored] = useState(false);
   
@@ -128,6 +130,11 @@ export function MyAccountPanel({
       setOnboardingSnapshot('Stored onboarding progress is unreadable.');
     }
   }, [onLaunchOnboarding, onLaunchDayZeroOnboarding, session.user.id]);
+
+
+  useEffect(() => {
+    setHapticModeState(getHapticMode());
+  }, []);
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -350,6 +357,65 @@ export function MyAccountPanel({
           </dl>
         </section>
 
+
+        <section className="account-panel__card" aria-labelledby="account-haptics">
+          <p className="account-panel__eyebrow">Haptic feedback</p>
+          <h3 id="account-haptics">Vibration intensity</h3>
+          <p className="account-panel__hint">
+            Tune how much vibration feedback you receive across habits, rewards, and timer/game completions.
+          </p>
+          <p className="account-panel__hint" style={{ marginTop: '0.35rem' }}>
+            Off = no vibration, Subtle = lighter pulses, Balanced = full recommended feedback.
+          </p>
+          <div className="account-panel__actions-row" role="radiogroup" aria-label="Haptic feedback mode">
+            <button
+              type="button"
+              className={`btn ${hapticMode === 'off' ? 'btn--primary' : ''}`}
+              aria-pressed={hapticMode === 'off'}
+              onClick={() => {
+                setHapticMode('off');
+                setHapticModeState('off');
+              }}
+            >
+              Off
+            </button>
+            <button
+              type="button"
+              className={`btn ${hapticMode === 'subtle' ? 'btn--primary' : ''}`}
+              aria-pressed={hapticMode === 'subtle'}
+              onClick={() => {
+                setHapticMode('subtle');
+                setHapticModeState('subtle');
+              }}
+            >
+              Subtle
+            </button>
+            <button
+              type="button"
+              className={`btn ${hapticMode === 'balanced' ? 'btn--primary' : ''}`}
+              aria-pressed={hapticMode === 'balanced'}
+              onClick={() => {
+                setHapticMode('balanced');
+                setHapticModeState('balanced');
+              }}
+            >
+              Balanced
+            </button>
+          </div>
+          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
+            Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
+          </p>
+          <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}
+            >
+              Test vibration
+            </button>
+          </div>
+        </section>
+
         <section className="account-panel__card" aria-labelledby="account-menu-icon">
           <p className="account-panel__eyebrow">Menu Icon</p>
           <h3 id="account-menu-icon">Display Preferences</h3>
@@ -466,6 +532,18 @@ export function MyAccountPanel({
               {cacheClearing ? 'Clearing…' : 'Clear cache & refresh'}
             </button>
             {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
+          </div>
+          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
+            Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
+          </p>
+          <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}
+            >
+              Test vibration
+            </button>
           </div>
         </section>
 

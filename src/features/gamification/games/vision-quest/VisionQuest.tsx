@@ -16,6 +16,7 @@ import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
 import { playTone, playChime } from '../../../../utils/audioUtils';
+import { triggerCompletionHaptic } from '../../../../utils/completionHaptics';
 import './visionQuest.css';
 
 const playButtonClick = () => {
@@ -152,6 +153,7 @@ export function VisionQuest({ session, onClose, onComplete }: VisionQuestProps) 
     
     // Show celebration after a brief delay
     setTimeout(() => {
+      triggerCompletionHaptic('medium', { channel: 'gamification', minIntervalMs: 3000 });
       setShowCelebration(true);
     }, 800);
   }, [gameSession, userId]);

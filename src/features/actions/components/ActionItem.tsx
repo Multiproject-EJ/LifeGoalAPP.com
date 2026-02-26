@@ -13,6 +13,7 @@ export interface ActionItemProps {
   onOpenDetail?: () => void;
   isSelected?: boolean;
   isJustCompleted?: boolean;
+  completionFeedbackClassName?: string;
   isDragging?: boolean;
   isDragOver?: boolean;
   onDragStart?: () => void;
@@ -29,6 +30,7 @@ export function ActionItem({
   onOpenDetail,
   isSelected = false,
   isJustCompleted = false,
+  completionFeedbackClassName = '',
   isDragging = false,
   isDragOver = false,
   onDragStart,
@@ -136,7 +138,7 @@ export function ActionItem({
     'action-item',
     timeRemaining.isExpiringSoon && showTimer ? 'action-item--expiring-soon' : '',
     isSelected ? 'action-item--selected' : '',
-    isJustCompleted ? 'action-item--just-completed' : '',
+    isJustCompleted ? `action-item--just-completed ${completionFeedbackClassName}` : '',
     isDragging ? 'action-item--dragging' : '',
     isDragOver ? 'action-item--drag-over' : '',
     isLinkedToProject ? 'action-item--project-linked' : '',

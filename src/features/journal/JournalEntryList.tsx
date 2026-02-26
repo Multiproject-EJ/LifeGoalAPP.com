@@ -10,6 +10,8 @@ type JournalEntryListProps = {
   entries: JournalEntry[];
   filteredEntries: JournalEntry[];
   selectedEntryId: string | null;
+  justSavedEntryId?: string | null;
+  completionFeedbackById?: Record<string, string>;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   selectedTag: string | null;
@@ -47,6 +49,8 @@ export function JournalEntryList({
   entries,
   filteredEntries,
   selectedEntryId,
+  justSavedEntryId = null,
+  completionFeedbackById = {},
   searchQuery,
   onSearchChange,
   selectedTag,
@@ -163,7 +167,7 @@ export function JournalEntryList({
                       <li key={entry.id}>
                         <button
                           type="button"
-                          className={`journal-list__item ${isActive ? 'journal-list__item--active' : ''}`}
+                          className={`journal-list__item ${isActive ? 'journal-list__item--active' : ''} ${justSavedEntryId === entry.id ? `journal-item--just-completed ${completionFeedbackById[entry.id] ?? ''}` : ''}`}
                           onClick={() => onSelectEntry(entry.id)}
                           disabled={disabled}
                         >
@@ -204,7 +208,7 @@ export function JournalEntryList({
                 <li key={entry.id}>
                   <button
                     type="button"
-                    className={`journal-list__item ${isActive ? 'journal-list__item--active' : ''}`}
+                    className={`journal-list__item ${isActive ? 'journal-list__item--active' : ''} ${justSavedEntryId === entry.id ? `journal-item--just-completed ${completionFeedbackById[entry.id] ?? ''}` : ''}`}
                     onClick={() => onSelectEntry(entry.id)}
                     disabled={disabled}
                   >
