@@ -249,3 +249,43 @@
     font-size: 1.5rem;
   }
 }
+
+/* Dark-glass hardening for settings folders/workspace snapshot (analysis pass 9) */
+[data-theme='dark-glass'] .settings-folder-button,
+[data-theme='dark-glass'] .settings-folder-popup,
+[data-theme='dark-glass'] .settings-folder-popup__header,
+[data-theme='dark-glass'] .workspace-snapshot,
+[data-theme='dark-glass'] .workspace-snapshot__stat,
+[data-theme='dark-glass'] .workspace-snapshot__hint {
+  background: color-mix(in srgb, var(--color-surface-primary, rgba(26, 31, 46, 0.9)) 88%, transparent);
+  border-color: var(--color-border-primary, rgba(148, 163, 184, 0.25));
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .settings-folder-button__icon {
+  background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 88%, transparent);
+}
+
+[data-theme='dark-glass'] .settings-folder-button__title,
+[data-theme='dark-glass'] .settings-folder-popup__title,
+[data-theme='dark-glass'] .workspace-snapshot__header h3 {
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .settings-folder-button__description,
+[data-theme='dark-glass'] .settings-folder-button__count,
+[data-theme='dark-glass'] .settings-folder-button__arrow,
+[data-theme='dark-glass'] .workspace-snapshot__header p,
+[data-theme='dark-glass'] .workspace-snapshot__stat-label,
+[data-theme='dark-glass'] .workspace-snapshot__hint {
+  color: var(--color-text-secondary, #cbd5e1);
+}
+
+[data-theme='dark-glass'] .settings-folder-button:hover,
+[data-theme='dark-glass'] .settings-folder-popup__close:hover {
+  background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 92%, transparent);
+}
+
+[data-theme='dark-glass'] .settings-folder-popup__close {
+  color: var(--color-text-primary, #f1f5f9);
+}

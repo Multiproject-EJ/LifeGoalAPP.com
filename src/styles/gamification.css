@@ -2464,3 +2464,83 @@
   border: 1px solid rgba(148, 163, 184, 0.28);
   background: rgba(255, 255, 255, 0.6);
 }
+
+/* Dark-glass hardening for gamification surfaces (analysis pass 8) */
+[data-theme='dark-glass'] .achievement-toast,
+[data-theme='dark-glass'] .achievement-toast--level_up,
+[data-theme='dark-glass'] .achievement-toast--achievement_unlock,
+[data-theme='dark-glass'] .achievement-toast--streak_milestone,
+[data-theme='dark-glass'] .score-tab__reward-card,
+[data-theme='dark-glass'] .score-tab__risk-guardrail,
+[data-theme='dark-glass'] .score-tab__reward-history {
+  background: color-mix(in srgb, var(--color-surface-primary) 90%, transparent);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .score-tab__category-pill,
+[data-theme='dark-glass'] .score-tab__reward-redeem,
+[data-theme='dark-glass'] .score-tab__reward-category {
+  background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .score-tab__risk-header,
+[data-theme='dark-glass'] .score-tab__risk-guardrail span,
+[data-theme='dark-glass'] .score-tab__reward-submit,
+[data-theme='dark-glass'] .score-tab__reward-history {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .score-tab__risk-header span,
+[data-theme='dark-glass'] .score-tab__risk-reasons,
+[data-theme='dark-glass'] .score-tab__risk-guardrail small,
+[data-theme='dark-glass'] .score-tab__reward-description,
+[data-theme='dark-glass'] .score-tab__reward-meta,
+[data-theme='dark-glass'] .score-tab__reward-history li {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .score-tab__risk-card--green {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme='dark-glass'] .score-tab__risk-card--yellow {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+[data-theme='dark-glass'] .score-tab__risk-card--red {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+/* Dark-glass hardening for contract-result + history chips (analysis pass 11) */
+[data-theme='dark-glass'] .contract-result-modal__body,
+[data-theme='dark-glass'] .contract-result-modal__support-hint,
+[data-theme='dark-glass'] .contract-result-modal__cancel-button,
+[data-theme='dark-glass'] .contract-history-card__reward-tier {
+  color: var(--color-text-secondary, #cbd5e1);
+}
+
+[data-theme='dark-glass'] .contract-result-modal__bonus,
+[data-theme='dark-glass'] .contract-result-modal__stake-forfeited,
+[data-theme='dark-glass'] .contract-result-modal__option-button,
+[data-theme='dark-glass'] .contract-result-modal__availability-chip,
+[data-theme='dark-glass'] .contract-history-card__reward-tier {
+  background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 86%, transparent);
+  border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.35));
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme='dark-glass'] .contract-result-modal__option-button:hover {
+  background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 94%, transparent);
+  border-color: var(--color-border-glow, rgba(56, 189, 248, 0.6));
+}
+
+[data-theme='dark-glass'] .contract-result-modal__bonus-text {
+  color: #86efac;
+}
+
+[data-theme='dark-glass'] .contract-result-modal__stake-text {
+  color: #fde68a;
+}

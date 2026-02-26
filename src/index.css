@@ -3184,6 +3184,89 @@ html.platform-ipad .workspace-shell__menu-edge {
   cursor: pointer;
 }
 
+/* Dark-theme hardening: prevent bright panels / dark text leaks */
+[data-theme='dark-glass'] .workspace-main__mobile-cta {
+  background: color-mix(in srgb, var(--color-surface-primary) 92%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.42);
+}
+
+[data-theme='dark-glass'] .workspace-link-callout {
+  background: color-mix(in srgb, var(--color-surface-secondary) 72%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .workspace-link-callout__text,
+[data-theme='dark-glass'] .workspace-stage__placeholder-content p,
+[data-theme='dark-glass'] .workspace-stage__placeholder-list,
+[data-theme='dark-glass'] .workspace-stage__placeholder-hint,
+[data-theme='dark-glass'] .workspace-actions-placeholder p,
+[data-theme='dark-glass'] .goal-workspace__entry-title,
+[data-theme='dark-glass'] .goal-workspace__entry-copy,
+[data-theme='dark-glass'] .goal-form__field,
+[data-theme='dark-glass'] .goal-form__hint {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .workspace-stage__placeholder-content,
+[data-theme='dark-glass'] .workspace-actions-placeholder,
+[data-theme='dark-glass'] .goal-workspace,
+[data-theme='dark-glass'] .goal-workspace__entry-card,
+[data-theme='dark-glass'] .goal-workspace__entry-card--accent,
+[data-theme='dark-glass'] .goal-form {
+  background: color-mix(in srgb, var(--color-surface-primary) 86%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .workspace-stage__placeholder-list li {
+  background: color-mix(in srgb, var(--color-surface-secondary) 78%, transparent);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .supabase-auth__field,
+[data-theme='dark-glass'] .supabase-auth__mode--active {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .supabase-auth__field input,
+[data-theme='dark-glass'] .goal-form__field input,
+[data-theme='dark-glass'] .goal-form__field textarea,
+[data-theme='dark-glass'] .goal-form__field select,
+[data-theme='dark-glass'] .supabase-auth__action--google {
+  background: color-mix(in srgb, var(--color-surface-primary) 90%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .supabase-auth__field input::placeholder {
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark-glass'] .supabase-auth__action--google:not(:disabled):hover {
+  background: color-mix(in srgb, var(--color-surface-secondary) 88%, transparent);
+}
+
+[data-theme='dark-glass'] .goal-workspace__status--warning {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+[data-theme='dark-glass'] .goal-workspace__status--info {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+[data-theme='dark-glass'] .goal-workspace__status--error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+[data-theme='dark-glass'] .goal-workspace__status--success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
 .goal-list__wheel-chip:hover {
   border-color: rgba(79, 70, 229, 0.45);
   color: #312e81;
@@ -23729,4 +23812,486 @@ html.platform-ipad .workspace-shell__menu-edge {
 .journal-gratitude-today p {
   margin: 0;
   color: var(--color-text-secondary, #334155);
+}
+
+/* ============================================
+   Dark-theme tab-by-tab hardening (menus/submenus)
+   ============================================ */
+[data-theme='dark-glass'] .workspace-stage,
+[data-theme='dark-glass'] .workspace-stage--vision-board,
+[data-theme='dark-glass'] .app--vision-board .workspace-stage--vision-board {
+  background-color: color-mix(in srgb, var(--color-surface-primary) 82%, transparent);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .workspace-stage__header p,
+[data-theme='dark-glass'] .workspace-onboarding-hint {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .workspace-onboarding-hint {
+  background: color-mix(in srgb, var(--color-surface-secondary) 78%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .goal-list,
+[data-theme='dark-glass'] .goal-list__search input {
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .goal-list__meta,
+[data-theme='dark-glass'] .goal-list__search,
+[data-theme='dark-glass'] .goal-list__nav-position {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .goal-list__filter,
+[data-theme='dark-glass'] .goal-list__wheel-chip,
+[data-theme='dark-glass'] .goal-list__nav-button {
+  background: color-mix(in srgb, var(--color-surface-secondary) 82%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .goal-list__filter:hover,
+[data-theme='dark-glass'] .goal-list__filter:focus-visible,
+[data-theme='dark-glass'] .goal-list__wheel-chip:hover,
+[data-theme='dark-glass'] .goal-list__nav-button:hover {
+  background: color-mix(in srgb, var(--color-surface-secondary) 92%, transparent);
+  border-color: var(--color-border-glow);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .goal-list__filter-count {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .goal-list__filter--active,
+[data-theme='dark-glass'] .goal-list__wheel-chip--active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(168, 85, 247, 0.2));
+  color: var(--color-text-primary);
+  border-color: var(--color-border-glow);
+}
+
+[data-theme='dark-glass'] .supabase-auth__divider {
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark-glass'] .supabase-auth__divider::before,
+[data-theme='dark-glass'] .supabase-auth__divider::after {
+  background: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .supabase-auth__mode {
+  background: color-mix(in srgb, var(--color-surface-secondary) 78%, transparent);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .supabase-auth__mode--active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(168, 85, 247, 0.2));
+  border-color: var(--color-border-glow);
+}
+
+/* Journal gratitude tab hardening for dark theme */
+[data-theme='dark-glass'] .journal-gratitude-coach,
+[data-theme='dark-glass'] .journal-gratitude-weekly,
+[data-theme='dark-glass'] .journal-gratitude-lookback,
+[data-theme='dark-glass'] .journal-gratitude-today {
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .journal-gratitude__item,
+[data-theme='dark-glass'] .journal-gratitude-weekly__readiness,
+[data-theme='dark-glass'] .journal-gratitude-weekly__draft {
+  background: color-mix(in srgb, var(--color-surface-secondary) 82%, transparent);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .journal-gratitude__item input,
+[data-theme='dark-glass'] .journal-gratitude__item textarea,
+[data-theme='dark-glass'] .journal-gratitude-weekly__theme,
+[data-theme='dark-glass'] .journal-gratitude-weekly__coach-help,
+[data-theme='dark-glass'] .journal-gratitude-weekly__copy,
+[data-theme='dark-glass'] .journal-gratitude-weekly__coach,
+[data-theme='dark-glass'] .journal-gratitude-lookback__open {
+  background: color-mix(in srgb, var(--color-surface-primary) 90%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .journal-gratitude__item input::placeholder,
+[data-theme='dark-glass'] .journal-gratitude__item textarea::placeholder,
+[data-theme='dark-glass'] .journal-gratitude__header p,
+[data-theme='dark-glass'] .journal-gratitude-weekly__label,
+[data-theme='dark-glass'] .journal-gratitude-lookback__date {
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark-glass'] .journal-gratitude-coach p,
+[data-theme='dark-glass'] .journal-gratitude__prompt,
+[data-theme='dark-glass'] .journal-gratitude-weekly__stat,
+[data-theme='dark-glass'] .journal-gratitude-lookback__content,
+[data-theme='dark-glass'] .journal-gratitude-today p {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .journal-gratitude-coach__eyebrow,
+[data-theme='dark-glass'] .journal-gratitude-weekly__eyebrow,
+[data-theme='dark-glass'] .journal-gratitude-lookback__eyebrow,
+[data-theme='dark-glass'] .journal-gratitude-today__eyebrow,
+[data-theme='dark-glass'] .journal-gratitude-coach__score {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .journal-gratitude-coach__warning,
+[data-theme='dark-glass'] .journal-gratitude-weekly__theme--warning {
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(217, 119, 6, 0.24);
+}
+
+[data-theme='dark-glass'] .journal-gratitude__toggle {
+  background: color-mix(in srgb, var(--color-surface-secondary) 72%, transparent);
+}
+
+/* Journal detail/editor/problem-mode hardening for dark theme (analysis pass 2) */
+[data-theme='dark-glass'] .journal-detail__actions button {
+  background: color-mix(in srgb, var(--color-surface-secondary) 75%, transparent);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .journal-editor__panel,
+[data-theme='dark-glass'] .journal-editor--fullscreen,
+[data-theme='dark-glass'] .journal-editor--fullscreen .journal-editor__header {
+  background: color-mix(in srgb, var(--color-surface-primary) 92%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .journal-editor__tags li,
+[data-theme='dark-glass'] .journal-editor__cancel,
+[data-theme='dark-glass'] .journal-editor__prompt-button,
+[data-theme='dark-glass'] .journal-deep-mode__focus-button {
+  background: color-mix(in srgb, var(--color-surface-secondary) 82%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .journal-secret__timer-option {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .journal-problem-mode__section,
+[data-theme='dark-glass'] .journal-detail__problem-section,
+[data-theme='dark-glass'] .journal-problem-mode__textarea:read-only {
+  background: color-mix(in srgb, var(--color-surface-secondary) 82%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .journal-problem-mode__section-title,
+[data-theme='dark-glass'] .journal-detail__problem-notice p,
+[data-theme='dark-glass'] .journal-detail__problem-section h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .journal-problem-mode__section-description {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .journal-problem-mode__textarea {
+  background: color-mix(in srgb, var(--color-surface-primary) 90%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .journal-detail__problem-notice {
+  background: rgba(14, 165, 233, 0.2);
+  border-left-color: rgba(56, 189, 248, 0.75);
+}
+
+/* Habits tab hardening for dark theme (analysis pass 3) */
+[data-theme='dark-glass'] .habit-tracker {
+  background: color-mix(in srgb, var(--color-surface-primary) 84%, transparent);
+  border: 1px solid var(--color-border-primary);
+  box-shadow: 0 14px 32px rgba(2, 6, 23, 0.45);
+}
+
+[data-theme='dark-glass'] .habit-tracker__header p,
+[data-theme='dark-glass'] .habit-tracker__empty p {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .habit-tracker__legacy-toggle,
+[data-theme='dark-glass'] .habit-checklist-card__refresh {
+  background: color-mix(in srgb, var(--color-surface-secondary) 86%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+  box-shadow: 0 8px 16px rgba(2, 6, 23, 0.3);
+}
+
+[data-theme='dark-glass'] .habit-tracker__empty,
+[data-theme='dark-glass'] .habit-checklist-card,
+[data-theme='dark-glass'] .habit-checklist-card__board,
+[data-theme='dark-glass'] .habit-checklist-card__board-body,
+[data-theme='dark-glass'] .habit-day-nav--compact {
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .habit-checklist-card__board-head,
+[data-theme='dark-glass'] .habit-checklist-card--glass .habit-checklist-card__board-head {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(30, 41, 59, 0.45));
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .habit-checklist-card__date,
+[data-theme='dark-glass'] .habit-checklist-card__date-year,
+[data-theme='dark-glass'] .habit-checklist-card__date-text,
+[data-theme='dark-glass'] .habit-checklist-card__time,
+[data-theme='dark-glass'] .habit-checklist-card__intentions-button--seen {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .habit-intentions-modal__card {
+  background: color-mix(in srgb, var(--color-surface-primary) 90%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .habit-intentions-modal__eyebrow,
+[data-theme='dark-glass'] .habit-intentions-modal__title,
+[data-theme='dark-glass'] .habit-intentions-modal__action-reward {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .habit-intentions-modal__close,
+[data-theme='dark-glass'] .habit-intentions-modal__body,
+[data-theme='dark-glass'] .habit-intentions-modal__action-button,
+[data-theme='dark-glass'] .habit-intentions-modal__action-check {
+  background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .habit-intentions-modal__body {
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+}
+
+[data-theme='dark-glass'] .habit-intentions-modal__error {
+  color: #fca5a5;
+}
+
+/* Account/settings hardening for dark theme (analysis pass 4) */
+[data-theme='dark-glass'] .account-panel__actions,
+[data-theme='dark-glass'] .connection-test__auth,
+[data-theme='dark-glass'] .holiday-preferences__item {
+  background: color-mix(in srgb, var(--color-surface-primary) 86%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .account-panel__details dt,
+[data-theme='dark-glass'] .connection-test__timestamp,
+[data-theme='dark-glass'] .status-muted {
+  color: var(--color-text-muted);
+}
+
+[data-theme='dark-glass'] .account-panel__toggle-input {
+  background: rgba(71, 85, 105, 0.7);
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+[data-theme='dark-glass'] .account-panel__toggle-input:hover {
+  background: rgba(100, 116, 139, 0.78);
+}
+
+[data-theme='dark-glass'] .account-panel__toggle-input::before {
+  background: rgba(226, 232, 240, 0.95);
+}
+
+[data-theme='dark-glass'] .connection-test__result,
+[data-theme='dark-glass'] .connection-test__error,
+[data-theme='dark-glass'] .connection-test__note {
+  background: color-mix(in srgb, var(--color-surface-secondary) 80%, transparent);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .connection-test__result h4,
+[data-theme='dark-glass'] .connection-test__result h5,
+[data-theme='dark-glass'] .connection-test__error,
+[data-theme='dark-glass'] .connection-test__matrix td {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .connection-test__error pre {
+  background: color-mix(in srgb, var(--color-surface-primary) 82%, transparent);
+  color: var(--color-text-secondary);
+}
+
+/* Mobile overlays hardening for dark theme (analysis pass 5) */
+[data-theme='dark-glass'] .mobile-menu-overlay__strength-close,
+[data-theme='dark-glass'] .mobile-menu-overlay__close,
+[data-theme='dark-glass'] .mobile-menu-overlay__settings-row,
+[data-theme='dark-glass'] .mobile-menu-overlay__account-button,
+[data-theme='dark-glass'] .mobile-menu-overlay__item button {
+  background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-dashboard,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-metric,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-highlight {
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-ring {
+  box-shadow: inset 0 0 0 8px rgba(15, 23, 42, 0.72);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-ring::after {
+  background: color-mix(in srgb, var(--color-surface-secondary) 92%, transparent);
+  box-shadow: inset 0 1px 4px rgba(2, 6, 23, 0.45);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-ring-value,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-title,
+[data-theme='dark-glass'] .mobile-menu-overlay__strength-title,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-metric-value,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-track-labels,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-button {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-eyebrow,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-subtitle,
+[data-theme='dark-glass'] .mobile-menu-overlay__strength-eyebrow,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-metric-label,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-metric-note {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-button:hover,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-button:focus-visible,
+[data-theme='dark-glass'] .mobile-menu-overlay__account-button:hover,
+[data-theme='dark-glass'] .mobile-menu-overlay__close:hover,
+[data-theme='dark-glass'] .mobile-menu-overlay__strength-close:hover,
+[data-theme='dark-glass'] .mobile-menu-overlay__strength-close:focus-visible {
+  background: color-mix(in srgb, var(--color-surface-secondary) 94%, transparent);
+}
+
+/* Remaining modal/popover hardening for dark theme (analysis pass 6) */
+[data-theme='dark-glass'] .auth-overlay__dialog,
+[data-theme='dark-glass'] .auth-overlay__dialog--habits,
+[data-theme='dark-glass'] .habits-modal__content,
+[data-theme='dark-glass'] .habit-vision-modal__content,
+[data-theme='dark-glass'] .mobile-menu-overlay__strength-panel,
+[data-theme='dark-glass'] .mobile-menu-overlay__hold-panel,
+[data-theme='dark-glass'] .balance-panel__summary,
+[data-theme='dark-glass'] .push-test-panel,
+[data-theme='dark-glass'] .push-test-panel__section,
+[data-theme='dark-glass'] .push-test-panel__subscription-info,
+[data-theme='dark-glass'] .push-test-panel__prefs-display {
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__hold-close,
+[data-theme='dark-glass'] .habit-vision-modal__close,
+[data-theme='dark-glass'] .push-test-panel__status-box {
+  background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__hold-title,
+[data-theme='dark-glass'] .mobile-menu-overlay__hold-task,
+[data-theme='dark-glass'] .habit-vision-modal__caption,
+[data-theme='dark-glass'] .balance-panel__score-value,
+[data-theme='dark-glass'] .balance-panel__status h3,
+[data-theme='dark-glass'] .balance-panel__trend-value,
+[data-theme='dark-glass'] .balance-panel__axis-header h4,
+[data-theme='dark-glass'] .balance-panel__axis-score,
+[data-theme='dark-glass'] .balance-panel__focus h3,
+[data-theme='dark-glass'] .push-test-panel__section h4,
+[data-theme='dark-glass'] .push-test-panel__subscription-info h5 {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__hold-eyebrow,
+[data-theme='dark-glass'] .mobile-menu-overlay__hold-note,
+[data-theme='dark-glass'] .balance-panel__score-label,
+[data-theme='dark-glass'] .balance-panel__score-detail,
+[data-theme='dark-glass'] .balance-panel__status p,
+[data-theme='dark-glass'] .balance-panel__trend-title,
+[data-theme='dark-glass'] .balance-panel__trend-caption,
+[data-theme='dark-glass'] .balance-panel__axis-header p,
+[data-theme='dark-glass'] .balance-panel__axis-score small,
+[data-theme='dark-glass'] .balance-panel__focus p,
+[data-theme='dark-glass'] .push-test-panel__status-box p:last-child {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .balance-panel__status,
+[data-theme='dark-glass'] .balance-panel__trend,
+[data-theme='dark-glass'] .balance-panel__axis,
+[data-theme='dark-glass'] .balance-panel__focus,
+[data-theme='dark-glass'] .push-test-panel__health,
+[data-theme='dark-glass'] .push-test-panel__status-box--success,
+[data-theme='dark-glass'] .push-test-panel__status-box--error,
+[data-theme='dark-glass'] .push-test-panel__status-box--info {
+  background: color-mix(in srgb, var(--color-surface-secondary) 82%, transparent);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .balance-panel__axis-bar {
+  background: rgba(148, 163, 184, 0.28);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__hold-action:disabled {
+  background: rgba(71, 85, 105, 0.7);
+}
+
+/* Final compact/responsive + reminder prefs hardening (analysis pass 7) */
+[data-theme='dark-glass'] .push-test-panel__prefs-display,
+[data-theme='dark-glass'] .per-habit-prefs__item,
+[data-theme='dark-glass'] .reminder-action-debug__list {
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme='dark-glass'] .per-habit-prefs__title,
+[data-theme='dark-glass'] .per-habit-prefs__toggle-text,
+[data-theme='dark-glass'] .per-habit-prefs__time-text,
+[data-theme='dark-glass'] .reminder-action-debug__count {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .per-habit-prefs__time-input {
+  background: color-mix(in srgb, var(--color-surface-secondary) 86%, transparent);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__helper-close,
+[data-theme='dark-glass'] .auth-overlay__close {
+  background: color-mix(in srgb, var(--color-surface-secondary) 82%, transparent);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__helper-close:hover,
+[data-theme='dark-glass'] .mobile-menu-overlay__helper-close:focus-visible,
+[data-theme='dark-glass'] .auth-overlay__close:hover,
+[data-theme='dark-glass'] .auth-overlay__close:focus-visible {
+  background: color-mix(in srgb, var(--color-surface-secondary) 92%, transparent);
 }
