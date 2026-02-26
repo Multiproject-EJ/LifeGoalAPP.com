@@ -29,6 +29,7 @@ import { awardZenTokens } from '../../services/zenGarden';
 import { getGratitudeCoachFeedback, type GratitudeCoachResult } from './gratitudeCoach';
 import { buildGratitudeWeeklySummary, buildThankYouDraft, type GratitudeWeeklySummary } from './gratitudeInsights';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import type { TimerLaunchContext } from '../timer/timerSession';
 
@@ -202,6 +203,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [celebrationType, setCelebrationType] = useState<'journal' | 'action' | 'breathing' | 'levelup'>('journal');
   const [justSavedEntryId, setJustSavedEntryId] = useState<string | null>(null);
+  const [entryFeedbackById, setEntryFeedbackById] = useState<Record<string, string>>({});
   const [gratitudeCoach, setGratitudeCoach] = useState<GratitudeCoachResult | null>(null);
   const [gratitudeWeeklySummary, setGratitudeWeeklySummary] = useState<GratitudeWeeklySummary | null>(null);
   const [thankYouDraft, setThankYouDraft] = useState<string | null>(null);
@@ -779,7 +781,14 @@ ${thankYouDraft}`,
           }
 
           // 1. Immediately add instant feedback (pop/glow)
+          const feedbackClassName = draft.type === 'gratitude'
+            ? 'journal-item--feedback-gratitude'
+            : 'journal-item--feedback-reflective';
           setJustSavedEntryId(saved.id);
+          setEntryFeedbackById((current) => ({ ...current, [saved.id]: feedbackClassName }));
+          if (draft.type === 'gratitude') {
+            triggerCompletionHaptic('medium', { channel: 'journal', minIntervalMs: 1800 });
+          }
 
           // 2. After pop animation completes, trigger celebration
           setTimeout(() => {
@@ -791,6 +800,11 @@ ${thankYouDraft}`,
           // 3. Clean up instant feedback class
           setTimeout(() => {
             setJustSavedEntryId(null);
+            setEntryFeedbackById((current) => {
+              const next = { ...current };
+              delete next[saved.id];
+              return next;
+            });
           }, 600);
         }
 
@@ -1067,6 +1081,8 @@ ${thankYouDraft}`,
                 entries={entries}
                 filteredEntries={filteredEntries}
                 selectedEntryId={selectedEntryId}
+                justSavedEntryId={justSavedEntryId}
+                completionFeedbackById={entryFeedbackById}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 selectedTag={selectedTag}

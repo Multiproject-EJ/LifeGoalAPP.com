@@ -17,6 +17,7 @@ import { ActionDetailModal } from './components/ActionDetailModal';
 import { ActionFilters, type FilterOption } from './components/ActionFilters';
 import { DEMO_USER_ID } from '../../services/demoData';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import projectsIcon from '../../assets/Projects.webp';
 import timerIcon from '../../assets/Timer.webp';
 import taskIcon from '../../assets/Task.webp';
@@ -75,6 +76,7 @@ export function ActionsTab({
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [celebrationType, setCelebrationType] = useState<'action' | 'journal' | 'breathing' | 'levelup'>('action');
   const [justCompletedActionId, setJustCompletedActionId] = useState<string | null>(null);
+  const [actionFeedbackById, setActionFeedbackById] = useState<Record<string, string>>({});
   const [lastDeletedAction, setLastDeletedAction] = useState<Action | null>(null);
   const [lastCompletedAction, setLastCompletedAction] = useState<Action | null>(null);
   const [activeView, setActiveView] = useState<'launcher' | 'tasks'>(isMobileView ? 'launcher' : 'tasks');
@@ -186,7 +188,14 @@ export function ActionsTab({
       setLastCompletedAction(action);
       
       // 1. Immediately add instant feedback (pop/glow)
+      const feedbackClassName = shouldAwardClearBonus(action, actions)
+        ? 'action-item--feedback-bonus'
+        : 'action-item--feedback-standard';
       setJustCompletedActionId(actionId);
+      setActionFeedbackById((current) => ({ ...current, [actionId]: feedbackClassName }));
+      if (feedbackClassName === 'action-item--feedback-bonus') {
+        triggerCompletionHaptic('medium', { channel: 'action', minIntervalMs: 1400 });
+      }
       
       // Check if we should award clear all bonus
       if (shouldAwardClearBonus(action, actions)) {
@@ -209,6 +218,11 @@ export function ActionsTab({
       // 3. Clean up instant feedback class
       setTimeout(() => {
         setJustCompletedActionId(null);
+        setActionFeedbackById((current) => {
+          const next = { ...current };
+          delete next[actionId];
+          return next;
+        });
       }, 600);
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Failed to complete action' });
@@ -568,6 +582,7 @@ export function ActionsTab({
           selectedIndex={selectedIndex}
           selectedIds={selectedIds}
           justCompletedActionId={justCompletedActionId}
+          completionFeedbackById={actionFeedbackById}
           showPointsBadges={showPointsBadges}
           onStartTimer={handleLaunchActionTimer}
         />

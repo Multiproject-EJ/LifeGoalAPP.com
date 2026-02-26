@@ -15,6 +15,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { ZEN_TOKEN_REWARDS } from '../../constants/economy';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
 import { TrainingTab } from '../training';
 import './BreathingSpace.css';
@@ -109,6 +110,7 @@ export function BreathingSpace({
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [celebrationType, setCelebrationType] = useState<'breathing' | 'levelup'>('breathing');
   const [justCompletedSession, setJustCompletedSession] = useState(false);
+  const [sessionFeedbackClassName, setSessionFeedbackClassName] = useState('');
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   const handleMobileTabChange = (tab: MobileTab) => {
@@ -225,7 +227,9 @@ export function BreathingSpace({
         const xpAmount = XP_REWARDS.BREATHING_SESSION;
 
         // 1. Immediately add instant feedback (pop/glow)
+        setSessionFeedbackClassName('breathing-item--feedback-reset');
         setJustCompletedSession(true);
+        // Keep short breathing completions visual-only to avoid haptic fatigue.
 
         // 2. After pop animation completes, trigger celebration
         setTimeout(() => {
@@ -237,6 +241,7 @@ export function BreathingSpace({
         // 3. Clean up instant feedback class
         setTimeout(() => {
           setJustCompletedSession(false);
+          setSessionFeedbackClassName('');
         }, 600);
 
         const zenTokenAmount = ZEN_TOKEN_REWARDS.BREATHING_SESSION;
@@ -297,7 +302,11 @@ export function BreathingSpace({
           : XP_REWARDS.MEDITATION_SESSION;
 
         // 1. Immediately add instant feedback (pop/glow)
+        setSessionFeedbackClassName(isLongSession ? 'breathing-item--feedback-deep' : 'breathing-item--feedback-reset');
         setJustCompletedSession(true);
+        if (isLongSession) {
+          triggerCompletionHaptic('medium', { channel: 'breathing', minIntervalMs: 2500 });
+        }
 
         // 2. After pop animation completes, trigger celebration
         setTimeout(() => {
@@ -309,6 +318,7 @@ export function BreathingSpace({
         // 3. Clean up instant feedback class
         setTimeout(() => {
           setJustCompletedSession(false);
+          setSessionFeedbackClassName('');
         }, 600);
 
         const zenTokenAmount = isLongSession
@@ -360,7 +370,7 @@ export function BreathingSpace({
 
   return (
     <div
-      className="breathing-space"
+      className={`breathing-space ${justCompletedSession ? `breathing-item--just-completed ${sessionFeedbackClassName}` : ""}`.trim()}
       data-mobile-tab={activeMobileTab ?? 'none'}
       data-mobile-category={activeMobileCategory}
     >

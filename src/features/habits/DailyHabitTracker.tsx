@@ -82,6 +82,13 @@ import {
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
+import {
+  getHabitFeedbackClassName,
+  getHabitFeedbackType,
+  triggerHabitHapticFeedback,
+  type HabitFeedbackType,
+} from '../../utils/habitFeedback';
 import visionStarButtonLarge from '../../assets/VisionStarBig.webp';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
@@ -484,6 +491,7 @@ export function DailyHabitTracker({
   const [celebrationType, setCelebrationType] = useState<'habit' | 'journal' | 'action' | 'breathing' | 'levelup' | 'vision'>('habit');
   const [celebrationOrigin, setCelebrationOrigin] = useState<{ x: number; y: number } | null>(null);
   const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
+  const [habitFeedbackById, setHabitFeedbackById] = useState<Record<string, HabitFeedbackType>>({});
   const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
   const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
   const [visionStarSchedule, setVisionStarSchedule] = useState<VisionStarDailySchedule>({
@@ -1522,6 +1530,7 @@ export function DailyHabitTracker({
     }
 
     triggerVisionClaimFlight();
+    triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 2200 });
     setCelebrationType('vision');
     setCelebrationXP(visionReward?.xpAwarded ?? 0);
     setShowCelebration(true);
@@ -2685,9 +2694,13 @@ export function DailyHabitTracker({
             effectivePrice && XP_TO_GOLD_RATIO > 0
               ? Math.round(effectivePrice / XP_TO_GOLD_RATIO)
               : null;
+          const projectedStreak = (habitInsights[habit.id]?.currentStreak ?? 0) + 1;
+          const feedbackType = getHabitFeedbackType(projectedStreak);
 
-          // 1. Immediately add instant feedback (pop/glow)
+          // 1. Immediately add instant feedback (pop/glow + typed visual style)
           setJustCompletedHabitId(habit.id);
+          setHabitFeedbackById((current) => ({ ...current, [habit.id]: feedbackType }));
+          triggerHabitHapticFeedback(feedbackType);
 
           // 2. After pop animation completes, trigger celebration
           setTimeout(() => {
@@ -2699,7 +2712,12 @@ export function DailyHabitTracker({
           // 3. Clean up instant feedback class
           setTimeout(() => {
             setJustCompletedHabitId(null);
-          }, 320);
+            setHabitFeedbackById((current) => {
+              const next = { ...current };
+              delete next[habit.id];
+              return next;
+            });
+          }, 500);
 
           await earnXP(xpAmount, 'habit_complete', habit.id);
           if (effectivePriceXpAmount) {
@@ -2736,7 +2754,6 @@ export function DailyHabitTracker({
             schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
             target_num: habit.target_num ?? null,
           } as unknown as HabitV2Row);
-          const projectedStreak = (habitInsights[habit.id]?.currentStreak ?? 0) + 1;
           if (
             projectedStreak >= 7 &&
             (currentState.review_reason === 'redesign' || currentState.review_reason === 'replace')
@@ -2862,8 +2879,12 @@ export function DailyHabitTracker({
         const now = new Date();
         const baseXP = now.getHours() < 9 ? XP_REWARDS.HABIT_COMPLETE_EARLY : XP_REWARDS.HABIT_COMPLETE;
         const xpAmount = Math.round(baseXP * 0.7);
+        const projectedStreak = (habitInsights[habit.id]?.currentStreak ?? 0) + 1;
+        const feedbackType = getHabitFeedbackType(projectedStreak);
 
         setJustCompletedHabitId(habit.id);
+        setHabitFeedbackById((current) => ({ ...current, [habit.id]: feedbackType }));
+        triggerHabitHapticFeedback(feedbackType);
 
         setTimeout(() => {
           setCelebrationType('habit');
@@ -2873,7 +2894,12 @@ export function DailyHabitTracker({
 
         setTimeout(() => {
           setJustCompletedHabitId(null);
-        }, 320);
+          setHabitFeedbackById((current) => {
+            const next = { ...current };
+            delete next[habit.id];
+            return next;
+          });
+        }, 500);
 
         await earnXP(xpAmount, 'habit_complete', habit.id);
         await recordActivity();
@@ -2996,7 +3022,12 @@ export function DailyHabitTracker({
           Math.round(baseXP * PROGRESS_STATE_EFFECTS[progressState].xpMultiplier * stageMultiplier),
         );
 
+        const projectedStreak = (habitInsights[habit.id]?.currentStreak ?? 0) + 1;
+        const feedbackType = getHabitFeedbackType(projectedStreak);
+
         setJustCompletedHabitId(habit.id);
+        setHabitFeedbackById((current) => ({ ...current, [habit.id]: feedbackType }));
+        triggerHabitHapticFeedback(feedbackType);
         setTimeout(() => {
           setCelebrationType('habit');
           setCelebrationXP(xpAmount);
@@ -3005,7 +3036,12 @@ export function DailyHabitTracker({
 
         setTimeout(() => {
           setJustCompletedHabitId(null);
-        }, 320);
+          setHabitFeedbackById((current) => {
+            const next = { ...current };
+            delete next[habit.id];
+            return next;
+          });
+        }, 500);
 
         await earnXP(xpAmount, 'habit_complete', habit.id);
         await recordActivity();
@@ -4166,6 +4202,7 @@ export function DailyHabitTracker({
             const detailPanelId = `habit-details-${habit.id}`;
             const isExpanded = Boolean(expandedHabits[habit.id]);
             const isJustCompleted = justCompletedHabitId === habit.id;
+            const feedbackClassName = isJustCompleted ? getHabitFeedbackClassName(habitFeedbackById[habit.id] ?? 'quick-win') : '';
             const linkedVisionImage = visionImagesByHabit.get(habit.id);
             const isOfferHabit = isTimeLimitedOfferActive && offerHabitIds.has(habit.id);
             const offerPrice = offerPriceByHabitId(habit.id);
@@ -4192,7 +4229,7 @@ export function DailyHabitTracker({
                 key={habit.id}
                 className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
                   isCompleted ? 'habit-checklist__item--completed' : ''
-                } ${isJustCompleted ? 'habit-item--just-completed' : ''} ${
+                } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
                   isOfferHabit ? 'habit-checklist__item--offer' : ''
                 }`}
               >
@@ -6358,8 +6395,9 @@ export function DailyHabitTracker({
               const doneIshDays = successSnapshot?.doneIshCount ?? 0;
               const scheduledDays = successSnapshot?.scheduledCount ?? 0;
               const isJustCompleted = justCompletedHabitId === habit.id;
+              const feedbackClassName = isJustCompleted ? getHabitFeedbackClassName(habitFeedbackById[habit.id] ?? 'quick-win') : '';
               return (
-                <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? 'habit-item--just-completed' : ''}`}>
+                <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''}`}>
                   {shouldShowHabitPoints ? (
                     <PointsBadge
                       value={habitGoldLabel}

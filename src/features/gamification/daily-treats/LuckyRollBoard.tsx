@@ -13,6 +13,7 @@ import { LuckyRollCelebration } from './LuckyRollCelebration';
 import { LevelWorldsHub } from '../level-worlds/LevelWorldsHub';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
+import { triggerCompletionHaptic } from '../../../utils/completionHaptics';
 import './luckyRollBoard.css';
 
 interface LuckyRollBoardProps {
@@ -241,6 +242,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
         // Check for streak milestone (5+ consecutive positives)
         if (consecutivePositives >= 4 && isPositive) {
           // Show streak badge
+          triggerCompletionHaptic('strong', { channel: 'gamification', minIntervalMs: 3200 });
           setShowCelebration(true);
           sounds.playStreakActive();
           
@@ -249,6 +251,9 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           }, 1200);
         } else {
           // Show regular celebration
+          if (effect.celebrationType === 'medium' || effect.celebrationType === 'big') {
+            triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 2600 });
+          }
           setShowCelebration(true);
           
           if (effect.celebrationType === 'small') {

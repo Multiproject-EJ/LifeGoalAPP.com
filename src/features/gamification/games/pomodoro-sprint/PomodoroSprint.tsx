@@ -15,6 +15,7 @@ import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
 import { playTone, playChime } from '../../../../utils/audioUtils';
+import { triggerCompletionHaptic } from '../../../../utils/completionHaptics';
 import './pomodoroSprint.css';
 
 // Sound implementations
@@ -228,6 +229,7 @@ export function PomodoroSprint({ session, onClose, onComplete }: PomodoroSprintP
 
   const handleComplete = useCallback(() => {
     playButtonClick();
+    triggerCompletionHaptic('strong', { channel: 'gamification', minIntervalMs: 3000 });
     setShowCelebration(true);
     
     setTimeout(() => {

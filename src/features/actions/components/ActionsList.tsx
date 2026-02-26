@@ -13,6 +13,7 @@ export interface ActionsListProps {
   selectedIndex?: number;
   selectedIds?: Set<string>;
   justCompletedActionId?: string | null;
+  completionFeedbackById?: Record<string, string>;
   showPointsBadges?: boolean;
   onStartTimer?: (action: Action) => void;
 }
@@ -58,6 +59,7 @@ export function ActionsList({
   selectedIndex = -1,
   selectedIds = new Set(),
   justCompletedActionId = null,
+  completionFeedbackById = {},
   showPointsBadges = false,
   onStartTimer,
 }: ActionsListProps) {
@@ -177,6 +179,7 @@ export function ActionsList({
                 onOpenDetail={onOpenDetail ? () => onOpenDetail(action) : undefined}
                 isSelected={isSelected}
                 isJustCompleted={justCompletedActionId === action.id}
+                completionFeedbackClassName={completionFeedbackById[action.id] ?? ''}
                 isDragging={isDragging}
                 isDragOver={isDragOver}
                 onDragStart={() => handleDragStart(category, action.id)}

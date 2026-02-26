@@ -16,6 +16,7 @@ import {
 import timerIcon from '../../assets/Timer.webp';
 import './TimerTab.css';
 import { SessionPlanner } from './SessionPlanner';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 
 type TimerTabProps = {
   onNavigateToActions?: () => void;
@@ -326,8 +327,8 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
       return;
     }
 
-    if (preferences.completionProfile === 'vibrate' && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate?.([180, 90, 220]);
+    if (preferences.completionProfile === 'vibrate') {
+      triggerCompletionHaptic('medium', { channel: 'timer', minIntervalMs: 2500 });
       return;
     }
 
