@@ -29,6 +29,7 @@ import {
   type DoneIshConfig,
   DEFAULT_DONEISH_CONFIG,
 } from './progressGrading';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 // Check if habit suggestions feature is enabled via environment variable
 const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
@@ -39,6 +40,8 @@ type HabitsModuleProps = {
 };
 
 export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) {
+  const isMobileLayout = useMediaQuery('(max-width: 768px)');
+  const [mobileHabitPanel, setMobileHabitPanel] = useState<'menu' | 'create' | 'manage' | 'coach'>('menu');
   const [showDevNotes, setShowDevNotes] = useState(false);
   const [habits, setHabits] = useState<HabitV2Row[]>([]);
   const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
@@ -1028,6 +1031,111 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     setWizardInitialDraft(draft);
     setShowWizard(true);
   };
+
+  if (isMobileLayout) {
+    return (
+      <div className="habits-module-container habits-module-container--mobile">
+        <div className="habits-module-hero">
+          <h1 className="habits-module-hero__title">Habits</h1>
+          <p className="habits-module-hero__subtitle">A focused mobile flow for creating, improving, and coaching habits.</p>
+        </div>
+
+        <div className="habits-mobile-nav" role="tablist" aria-label="Habits mobile sections">
+          <button type="button" className={`habits-mobile-nav__button ${mobileHabitPanel === 'menu' ? 'is-active' : ''}`} onClick={() => setMobileHabitPanel('menu')}>Overview</button>
+          <button type="button" className={`habits-mobile-nav__button ${mobileHabitPanel === 'create' ? 'is-active' : ''}`} onClick={() => setMobileHabitPanel('create')}>Add / Create</button>
+          <button type="button" className={`habits-mobile-nav__button ${mobileHabitPanel === 'manage' ? 'is-active' : ''}`} onClick={() => setMobileHabitPanel('manage')}>Improve Existing</button>
+          <button type="button" className={`habits-mobile-nav__button ${mobileHabitPanel === 'coach' ? 'is-active' : ''}`} onClick={() => setMobileHabitPanel('coach')}>Guided Coaching</button>
+        </div>
+
+        {mobileHabitPanel === 'menu' && (
+          <div className="habits-module-card habits-mobile-card">
+            <h2>Choose what to do</h2>
+            <p>Use the tabs above to create a new habit, adjust existing habits with a clean list, or review coaching suggestions.</p>
+          </div>
+        )}
+
+        {mobileHabitPanel === 'create' && !showWizard && (
+          <div className="habits-module-card habits-mobile-card">
+            <div className="habits-mobile-card__header">
+              <h2>Create habits</h2>
+              <button
+                onClick={() => {
+                  setWizardInitialDraft(undefined);
+                  setShowWizard(true);
+                }}
+                className="habits-mobile-card__cta"
+              >
+                + New habit
+              </button>
+            </div>
+            <div className="habits-mobile-template-list">
+              {templates.slice(0, 8).map((template) => (
+                <button key={`${template.emoji}-${template.title}`} type="button" className="habits-mobile-template-list__item" onClick={() => handleTemplateClick(template)}>
+                  <span>{template.emoji}</span>
+                  <span>{template.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {mobileHabitPanel === 'manage' && (
+          <div className="habits-module-card habits-mobile-card">
+            <h2>Habit list</h2>
+            <ul className="habits-mobile-list">
+              {habits.map((habit) => {
+                const isDone = todayLogs.some((log) => log.habit_id === habit.id);
+                return (
+                  <li key={habit.id} className="habits-mobile-list__item">
+                    <div className="habits-mobile-list__line">
+                      <span className="habits-mobile-list__title">{habit.emoji ? `${habit.emoji} ` : ''}{habit.title}</span>
+                      <span className="habits-mobile-list__status">{isDone ? 'Done' : 'Pending'}</span>
+                    </div>
+                    <div className="habits-mobile-list__actions">
+                      <button type="button" onClick={() => handleEditHabit(habit)}>Edit</button>
+                      {!isDone ? <button type="button" onClick={() => handleMarkHabitDone(habit.id, habit.type)}>Log</button> : null}
+                      <button type="button" onClick={() => handleArchiveHabit(habit.id)}>Archive</button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {mobileHabitPanel === 'coach' && (
+          <div className="habits-module-card habits-mobile-card">
+            <h2>Guided coaching</h2>
+            <p>Review the latest AI-guided improvement notes for each habit and tune difficulty as needed.</p>
+            <button type="button" className="habits-mobile-card__cta" onClick={() => setShowAdherence((current) => !current)}>
+              {showAdherence ? 'Hide adherence insights' : 'Show adherence insights'}
+            </button>
+            <ul className="habits-mobile-coach-list">
+              {habits.slice(0, 10).map((habit) => {
+                const suggestion = performanceSuggestions[habit.id];
+                return (
+                  <li key={habit.id}>
+                    <strong>{habit.title}</strong>
+                    <p>{suggestion?.rationale || 'Keep logging this habit to unlock coaching suggestions.'}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {showWizard && (
+          <HabitWizard
+            onCancel={handleCancelWizard}
+            onCompleteDraft={handleCompleteDraft}
+            initialDraft={wizardInitialDraft}
+          />
+        )}
+
+        {showAdherence && <HabitsInsights session={session} habits={habits} />}
+      </div>
+    );
+  }
 
   return (
     <div className="habits-module-container">

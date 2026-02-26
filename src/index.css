@@ -20583,6 +20583,22 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
 }
 
+
+.journal-mode-selector__mobile {
+  width: 100%;
+}
+
+.journal-mode-selector__mobile-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.12));
+  background: var(--color-surface-primary, #fff);
+  color: var(--color-text-primary, #0f172a);
+  padding: 0.65rem 0.8rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 @media (max-width: 960px) {
   .journal__header {
     flex-direction: column;
@@ -20604,6 +20620,47 @@ html.platform-ipad .workspace-shell__menu-edge {
   .journal-mode-selector__label {
     padding: 0.4rem 0.65rem;
     font-size: 0.8rem;
+  }
+
+  .journal__header-actions {
+    gap: 0.6rem;
+  }
+
+  .journal__new {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .journal-list__filters {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .journal-list__filter {
+    flex: 1 1 auto;
+  }
+
+  .journal-list__view-toggle {
+    gap: 0.35rem;
+  }
+
+  .journal-list__view-btn {
+    min-height: 2.25rem;
+    padding-inline: 0.5rem;
+  }
+
+  .journal-list__date-heading {
+    align-items: flex-start;
+  }
+
+  .journal-detail__actions {
+    width: 100%;
+  }
+
+  .journal-detail__actions button {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
   }
 }
 
@@ -21552,6 +21609,56 @@ html.platform-ipad .workspace-shell__menu-edge {
     width: 100%;
     max-height: 100vh;
     border-radius: 0;
+  }
+}
+
+
+
+@media (max-width: 768px) {
+  .journal {
+    padding: 1rem;
+    border-radius: 20px;
+    overflow-x: clip;
+  }
+
+  .journal-mode-selector {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .journal-mode-selector__option {
+    flex: 0 0 auto;
+  }
+
+  .journal-list,
+  .journal-detail {
+    border-radius: 16px;
+    padding: 0.9rem;
+  }
+
+  .journal-list__item,
+  .journal-detail__chips button,
+  .journal-detail__tags li {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  .journal-list__item strong,
+  .journal-detail h2,
+  .journal-detail h3,
+  .journal-detail p {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .journal-detail__header,
+  .journal-detail__actions,
+  .journal-list__item-meta,
+  .journal-list__date-heading {
+    flex-wrap: wrap;
   }
 }
 
