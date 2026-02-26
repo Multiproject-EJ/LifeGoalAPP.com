@@ -602,7 +602,9 @@ export function ScoreTab({
               onNavigateToGarage?.();
             }}
           >
-            <span className="score-tab__hub-visual" aria-hidden="true">🚀</span>
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src="/icons/Scoreshop_garage.webp" alt="" />
+            </span>
             <span className="score-tab__hub-title">Garage</span>
           </button>
         </div>
