@@ -491,6 +491,7 @@ export function DailyHabitTracker({
     windows: [],
   });
   const [visionStarCountdown, setVisionStarCountdown] = useState(0);
+  const [nextVisionDropCountdown, setNextVisionDropCountdown] = useState(0);
   const [timeLimitedOffer, setTimeLimitedOffer] = useState<{
     date: string;
     nextHabitId: string | null;
@@ -662,6 +663,13 @@ export function DailyHabitTracker({
     [nowTimestamp, visionStarSchedule.windows],
   );
   const isVisionStarWindowActive = Boolean(isViewingToday && !hasClaimedVisionStar && activeVisionStarWindow);
+  const nextVisionWindowStart = useMemo(
+    () =>
+      visionStarSchedule.windows
+        .filter((window) => window.windowStart > nowTimestamp)
+        .sort((a, b) => a.windowStart - b.windowStart)[0] ?? null,
+    [nowTimestamp, visionStarSchedule.windows],
+  );
   const isTimeLimitedOfferActive =
     isViewingToday &&
     timeLimitedOffer.windowStart !== null &&
@@ -1090,6 +1098,23 @@ export function DailyHabitTracker({
     const interval = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(interval);
   }, [activeVisionStarWindow, hasClaimedVisionStar, isViewingToday]);
+
+  useEffect(() => {
+    if (!nextVisionWindowStart || hasClaimedVisionStar || !isViewingToday || activeVisionStarWindow) {
+      setNextVisionDropCountdown(0);
+      return undefined;
+    }
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((nextVisionWindowStart.windowStart - now) / 1000));
+      setNextVisionDropCountdown(remaining);
+    };
+
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(interval);
+  }, [activeVisionStarWindow, hasClaimedVisionStar, isViewingToday, nextVisionWindowStart]);
 
   useEffect(() => {
     const windowStart = timeLimitedOffer.windowStart;
@@ -1628,13 +1653,10 @@ export function DailyHabitTracker({
   const visionStarCountdownLabel = `${Math.floor(visionStarCountdown / 60)}:${String(
     visionStarCountdown % 60,
   ).padStart(2, '0')}`;
-  const nextVisionWindowStart = useMemo(
-    () =>
-      visionStarSchedule.windows
-        .filter((window) => window.windowStart > nowTimestamp)
-        .sort((a, b) => a.windowStart - b.windowStart)[0] ?? null,
-    [nowTimestamp, visionStarSchedule.windows],
-  );
+  const nextVisionDropCountdownLabel = `${Math.floor(nextVisionDropCountdown / 60)}:${String(
+    nextVisionDropCountdown % 60,
+  ).padStart(2, '0')}`;
+  const nextVisionDropMinutesLabel = Math.max(1, Math.ceil(nextVisionDropCountdown / 60));
   const visionStarSubtitle = hasClaimedVisionStar
     ? 'Claimed for today'
     : activeVisionStarWindow
@@ -3572,7 +3594,7 @@ export function DailyHabitTracker({
                 </div>
               </>
             )}
-            {!hasClaimedVisionStar ? (
+            {!hasClaimedVisionStar && activeVisionStarWindow ? (
               <div className="habit-day-nav__vision-row">
                 <button
                   type="button"
@@ -3597,6 +3619,7 @@ export function DailyHabitTracker({
                       {activeVisionStarWindow?.isSpecial ? 'Special vision star' : 'Vision star'}
                     </span>
                     <span className="habit-day-nav__vision-subtitle">{visionStarSubtitle}</span>
+                    <span className="habit-day-nav__vision-timer-pill">Expires in {visionStarCountdownLabel}</span>
                   </span>
                 </button>
               </div>
@@ -3623,6 +3646,14 @@ export function DailyHabitTracker({
                   src={visionRewardForDay.imageUrl}
                   alt={visionRewardForDay.caption ? `Vision board: ${visionRewardForDay.caption}` : 'Vision board inspiration'}
                 />
+              ) : !hasClaimedVisionStar && nextVisionWindowStart ? (
+                <div className="habit-day-nav__bonus-opportunity">
+                  <span className="habit-day-nav__bonus-opportunity-title">Next vision star drop</span>
+                  <span className="habit-day-nav__bonus-opportunity-line">
+                    In about {nextVisionDropMinutesLabel} minute{nextVisionDropMinutesLabel === 1 ? '' : 's'} you can fix a habit and earn hearts.
+                  </span>
+                  <span className="habit-day-nav__bonus-opportunity-timer">⏳ {nextVisionDropCountdownLabel}</span>
+                </div>
               ) : (
                 <span
                   className={`habit-day-nav__bonus-placeholder ${

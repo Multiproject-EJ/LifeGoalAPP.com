@@ -5105,6 +5105,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-day-nav--compact .habit-day-nav__vision-button-image {
   width: 100%;
+  transform: scale(1.7);
 }
 
 .habit-day-nav__vision-button-image--burst {
@@ -5219,6 +5220,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.85rem;
   color: #f8fafc;
   text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.habit-day-nav__vision-timer-pill {
+  margin-top: 0.2rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.56);
+  color: #f8fafc;
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  font-weight: 700;
 }
 
 .habit-day-nav--compact .habit-day-nav__vision-subtitle {
@@ -5356,6 +5368,39 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.68rem;
   font-weight: 700;
   color: #0f172a;
+}
+
+.habit-day-nav__bonus-opportunity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  text-align: center;
+  max-width: 100%;
+}
+
+.habit-day-nav__bonus-opportunity-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0369a1;
+}
+
+.habit-day-nav__bonus-opportunity-line {
+  font-size: 0.72rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.habit-day-nav__bonus-opportunity-timer {
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.14);
+  color: #0f172a;
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 .habit-day-nav__fade {
