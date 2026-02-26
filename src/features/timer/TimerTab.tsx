@@ -13,6 +13,7 @@ import {
   type TimerSourceType,
   writeTimerSession,
 } from './timerSession';
+import timerIcon from '../../assets/Timer.webp';
 import './TimerTab.css';
 
 type TimerTabProps = {
@@ -545,6 +546,7 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
       </header>
 
       <section className="timer-tab__main-card" aria-label="Timer session">
+        <img src={timerIcon} alt="" className="timer-tab__hero-image" aria-hidden="true" />
         <div className="timer-tab__clock">{formatClock(session.remainingSeconds)}</div>
         <div className="timer-tab__progress-track" aria-hidden="true">
           <div className="timer-tab__progress-fill" style={{ width: `${progress}%` }} />

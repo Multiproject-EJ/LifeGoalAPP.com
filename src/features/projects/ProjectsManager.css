@@ -46,6 +46,15 @@
   font-size: 0.875rem;
 }
 
+
+.projects-manager__hero-image {
+  width: min(100%, 11.5rem);
+  display: block;
+  margin-top: 0.5rem;
+  object-fit: contain;
+  pointer-events: none;
+}
+
 .projects-manager__new-button {
   background: var(--primary-color, #6366f1);
   color: white;

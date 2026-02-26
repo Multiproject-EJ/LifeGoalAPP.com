@@ -64,6 +64,15 @@
   padding: 1rem;
 }
 
+
+.timer-tab__hero-image {
+  width: min(100%, 16rem);
+  display: block;
+  margin: 0 auto 0.45rem;
+  object-fit: contain;
+  pointer-events: none;
+}
+
 .timer-tab__clock {
   font-size: clamp(2.2rem, 10vw, 3.3rem);
   font-weight: 800;

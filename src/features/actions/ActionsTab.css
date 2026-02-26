@@ -318,6 +318,19 @@
   min-width: 0;
   position: relative;
   border-radius: 10px;
+  padding-top: 1.75rem;
+}
+
+.actions-tab__quick-add-task-image {
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(4.25rem, 22vw, 6.5rem);
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .actions-tab__quick-add-input-shell::before,
@@ -1179,6 +1192,20 @@
   background: transparent;
   box-shadow: none;
   border: none;
+}
+
+[data-theme='dark-glass'] .actions-tab--launcher .actions-tab__launcher-button,
+[data-theme='midnight-purple'] .actions-tab--launcher .actions-tab__launcher-button,
+[data-theme='flow-night'] .actions-tab--launcher .actions-tab__launcher-button,
+[data-theme='bio-night'] .actions-tab--launcher .actions-tab__launcher-button,
+[data-theme='dark-glass'] .actions-tab--launcher .actions-tab__launcher-button--primary,
+[data-theme='midnight-purple'] .actions-tab--launcher .actions-tab__launcher-button--primary,
+[data-theme='flow-night'] .actions-tab--launcher .actions-tab__launcher-button--primary,
+[data-theme='bio-night'] .actions-tab--launcher .actions-tab__launcher-button--primary {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.62);
+  box-shadow: none;
+  color: var(--color-text-primary, #f8fafc);
 }
 
 [data-theme='dark-glass'] .action-item,
