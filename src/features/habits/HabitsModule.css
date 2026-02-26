@@ -60,3 +60,120 @@
     padding: 1rem !important;
   }
 }
+
+.habits-mobile-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.habits-mobile-nav__button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.habits-mobile-nav__button.is-active {
+  background: #e0e7ff;
+  border-color: #818cf8;
+  color: #3730a3;
+}
+
+.habits-mobile-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.habits-mobile-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.habits-mobile-card__cta {
+  border: 1px solid #818cf8;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-weight: 600;
+}
+
+.habits-mobile-template-list,
+.habits-mobile-list,
+.habits-mobile-coach-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.habits-mobile-template-list__item,
+.habits-mobile-list__item {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.75rem;
+}
+
+.habits-mobile-template-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.habits-mobile-list__line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.habits-mobile-list__title {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.habits-mobile-list__status {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.habits-mobile-list__actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.habits-mobile-list__actions button {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.55rem;
+}
+
+.habits-mobile-coach-list li {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.7rem;
+  background: #f8fafc;
+}
+
+.habits-mobile-coach-list p {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: #475569;
+}

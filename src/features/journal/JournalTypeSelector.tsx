@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import type { JournalType } from './Journal';
 
 type JournalTypeSelectorProps = {
@@ -26,6 +27,27 @@ const JOURNAL_MODE_OPTIONS: JournalModeOption[] = [
 
 export function JournalTypeSelector({ journalType, onChange }: JournalTypeSelectorProps) {
   const groupId = useId();
+  const isMobile = useMediaQuery('(max-width: 640px)');
+
+  if (isMobile) {
+    return (
+      <label className="journal-mode-selector__mobile">
+        <span className="sr-only">Journal mode</span>
+        <select
+          className="journal-mode-selector__mobile-select"
+          value={journalType}
+          onChange={(event) => onChange(event.target.value as JournalType)}
+          aria-label="Journal mode"
+        >
+          {JOURNAL_MODE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+  }
   
   return (
     <div className="journal-mode-selector" role="radiogroup" aria-label="Journal mode">
