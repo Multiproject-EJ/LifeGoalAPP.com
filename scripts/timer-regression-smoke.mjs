@@ -2,29 +2,49 @@ import { readFile } from 'node:fs/promises';
 
 const checks = [
   {
-    name: 'TimerTab reduced-motion guard function exists',
+    name: 'TimerTab exposes session-plan mode toggle',
     file: 'src/features/timer/TimerTab.tsx',
-    pattern: /function prefersReducedMotion\(\): boolean \{/m,
+    pattern: /timerMode\s*===\s*'session-plan'/m,
   },
   {
-    name: 'TimerTab completion celebration gate uses reduced-motion guard',
+    name: 'TimerTab renders SessionPlanner with analytics refresh callback',
     file: 'src/features/timer/TimerTab.tsx',
-    pattern: /const shouldAnimateCelebration = !prefersReducedMotion\(\);/m,
+    pattern: /<SessionPlanner[\s\S]*onSourceAnalyticsUpdated=\{refreshSourceAnalytics\}/m,
   },
   {
-    name: 'TimerTab CSS includes reduced-motion media query for celebration',
-    file: 'src/features/timer/TimerTab.css',
-    pattern: /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.timer-tab__celebration-dot\s*\{\s*animation:\s*none;/m,
+    name: 'SessionPlanner stores plan state in localStorage',
+    file: 'src/features/timer/SessionPlanner.tsx',
+    pattern: /const STORAGE_KEY = 'lifegoal_timer_session_plan_v1';/m,
   },
   {
-    name: 'Footer alert CSS includes reduced-motion media query',
-    file: 'src/index.css',
-    pattern: /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.mobile-footer-nav__button--timer-alert\s*\{\s*animation:\s*none;/m,
+    name: 'SessionPlanner stores custom templates in localStorage',
+    file: 'src/features/timer/SessionPlanner.tsx',
+    pattern: /const CUSTOM_TEMPLATE_STORAGE_KEY = 'lifegoal_timer_session_custom_templates_v1';/m,
   },
   {
-    name: 'App alert-state vibration cue remains present',
-    file: 'src/App.tsx',
-    pattern: /navigator\.vibrate\?\.\(\[200, 100, 260, 100, 200\]\);/m,
+    name: 'SessionPlanner stores recent session history in localStorage',
+    file: 'src/features/timer/SessionPlanner.tsx',
+    pattern: /const SESSION_HISTORY_STORAGE_KEY = 'lifegoal_timer_session_history_v1';/m,
+  },
+  {
+    name: 'SessionPlanner includes built-in quick templates',
+    file: 'src/features/timer/SessionPlanner.tsx',
+    pattern: /id:\s*'pomodoro-classic'[\s\S]*id:\s*'study-sprint'[\s\S]*id:\s*'deep-work-90'/m,
+  },
+  {
+    name: 'SessionPlanner records completion telemetry event',
+    file: 'src/features/timer/SessionPlanner.tsx',
+    pattern: /type:\s*'session_plan_completed'/m,
+  },
+  {
+    name: 'SessionPlanner records analytics contribution on completion',
+    file: 'src/features/timer/SessionPlanner.tsx',
+    pattern: /recordTimerSourceAnalytics\(sourceType,\s*focusActualSeconds\)/m,
+  },
+  {
+    name: 'Timer telemetry type includes session planner template/history events',
+    file: 'src/features/timer/timerSession.ts',
+    pattern: /'session_plan_template_applied'[\s\S]*'session_plan_custom_template_saved'[\s\S]*'session_plan_history_cleared'/m,
   },
 ];
 

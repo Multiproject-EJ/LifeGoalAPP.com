@@ -49,7 +49,16 @@ export type TimerTelemetryEventType =
   | 'preset_saved'
   | 'preset_removed'
   | 'theme_changed'
-  | 'completion_profile_changed';
+  | 'completion_profile_changed'
+  | 'session_plan_started'
+  | 'session_plan_paused'
+  | 'session_plan_resumed'
+  | 'session_plan_reset'
+  | 'session_plan_completed'
+  | 'session_plan_template_applied'
+  | 'session_plan_custom_template_saved'
+  | 'session_plan_custom_template_deleted'
+  | 'session_plan_history_cleared';
 
 export type TimerTelemetryEvent = {
   type: TimerTelemetryEventType;

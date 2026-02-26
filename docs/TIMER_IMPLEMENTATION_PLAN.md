@@ -57,10 +57,55 @@ A beautiful, minimal, low-friction timer that can be started in 1 tap, but still
 - [x] Saved personal presets and default source type.
 - [x] Session analytics (time focused by source type).
 
+### Phase 5 — Work/Study Session Planner + visual controls (next)
+- [x] Add timer mode toggle in `TimerTab`: `Quick timer | Session plan`.
+- [x] Add session-plan builder with ordered segments:
+  - [x] Segment types: `focus task` and `break`.
+  - [x] Per-segment fields: label, planned minutes, optional notes.
+  - [x] Add/remove/reorder segment controls optimized for mobile touch.
+- [x] Add guided sequence runtime:
+  - [x] Start/pause/resume at plan level.
+  - [x] Next/skip/extend-segment controls.
+  - [x] Optional auto-start next segment after break.
+- [x] Add plan tracking data model in timer local storage:
+  - [x] Plan metadata (`planId`, `createdAt`, `mode`).
+  - [x] Segment runtime stats (`startedAt`, `endedAt`, `actualSeconds`, `status`).
+  - [x] Compatibility fallback for existing quick-timer sessions.
+- [x] Add session summary UX at plan completion:
+  - [x] Planned vs actual focus duration.
+  - [x] Segment completion ratio.
+  - [x] Optional reflection note CTA.
+- [x] Add visual duration controls beyond numeric input:
+  - [x] Minutes slider with snap points for common durations.
+  - [x] Keep preset chips + +/- minute fine adjustments.
+  - [x] Evaluate dial/radial control as optional enhancement behind feature flag (initial dial-style control shipped behind local feature flag).
+- [x] Extend timer telemetry for session-plan lifecycle and segment outcomes.
+- [x] Expand QA checklist for session-plan flows and interactive duration controls (`npm run check:timer-regression`).
+
 ## AI-agent substep policy
 The implementing agent may introduce additional sub-steps whenever hidden complexity appears (state migration, UX edge cases, telemetry, accessibility, stale recovery). New sub-steps should be appended under the active phase and marked as done/next.
 
 ## Current status board
+- **Done**: Phase 5 Steps A–D shipped (mode toggle, planner runtime, summaries, slider controls, templates, history, telemetry).
+- **Done**: Initial radial/dial-style duration control shipped behind feature flag in quick timer + session segments.
+- **Next**: End-to-end auth-gated automation for planner lifecycle.
+- **Next**: Broader device QA for slider/dial accessibility combinations.
 - **Next**: Expand optional automation from smoke checks into end-to-end auth-gated flow coverage.
 - **Next**: Broader device QA passes for launcher/analytics/theme combinations.
 - **Later**: future timer enhancements based on usage data.
+
+
+## MVP1 readiness
+- **Status**: ✅ Ready to use as MVP1.
+- **Included in MVP1**:
+  - Quick timer + presets + slider + dial + +/- controls.
+  - Session planner mode (focus/break segments, reorder, duplicate, notes, templates, custom templates).
+  - Runtime controls (start/pause/resume/skip/extend/reset + optional auto-start next).
+  - Completion summary (planned vs actual, ratio, delta) + reflection + copy summary action.
+  - Persistence (plan state, custom templates, recent history).
+  - Telemetry + source analytics integration + regression smoke checks.
+
+## Future backlog (post-MVP1)
+- End-to-end auth-gated automation for planner lifecycle (beyond smoke checks).
+- Broader device QA matrix (accessibility, dial/slider behavior, launcher/theme combinations).
+- Optional additional dial polish and advanced radial interactions (haptics/gesture refinements).
