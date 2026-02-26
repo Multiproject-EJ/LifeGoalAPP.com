@@ -1,19 +1,24 @@
 import { useMemo, useState } from 'react';
 import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
 import { LIFE_WHEEL_CATEGORIES } from '../features/checkins/LifeWheelCheckins';
+import type { GoalRecommendedAction } from '../features/goals/executionTypes';
+import type { GoalHealthResult } from '../features/goals/goalHealth';
 import type { Database } from '../lib/database.types';
 import { GoalEditDialog } from './GoalEditDialog';
 
 type CategoryInfoCardProps = {
   categoryKey: LifeWheelCategoryKey | null;
   onAddGoal: () => void;
+  onUsePrompt: (prompt: string) => void;
   goals: Database['public']['Tables']['goals']['Row'][];
+  goalHealthById?: Record<string, GoalHealthResult>;
   stepsByGoal: Record<string, Database['public']['Tables']['life_goal_steps']['Row'][]>;
   isLoading: boolean;
   onUpdateGoal: (
     goalId: string,
     payload: Database['public']['Tables']['goals']['Update'],
   ) => Promise<void>;
+  onApplyRecommendedAction?: (goalId: string, action: GoalRecommendedAction) => Promise<void>;
 };
 
 const CATEGORY_INFO: Record<
@@ -107,16 +112,30 @@ const CATEGORY_INFO: Record<
   },
 };
 
+function formatHealthLabel(healthState: GoalHealthResult['healthState']): string {
+  if (healthState === 'on_track') return 'On track';
+  if (healthState === 'caution') return 'Caution';
+  return 'At risk';
+}
+
+function formatActionLabel(action: GoalHealthResult['recommendedNextAction']): string {
+  return action.split('_').join(' ');
+}
+
 export function CategoryInfoCard({
   categoryKey,
   onAddGoal,
+  onUsePrompt,
   goals,
+  goalHealthById = {},
   stepsByGoal,
   isLoading,
   onUpdateGoal,
+  onApplyRecommendedAction,
 }: CategoryInfoCardProps) {
   const [editingGoal, setEditingGoal] = useState<Database['public']['Tables']['goals']['Row'] | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const allSteps = useMemo(() => Object.values(stepsByGoal).flat(), [stepsByGoal]);
 
   if (!categoryKey) {
     return (
@@ -131,7 +150,6 @@ export function CategoryInfoCard({
   const info = CATEGORY_INFO[categoryKey];
   const categoryLabel =
     LIFE_WHEEL_CATEGORIES.find((category) => category.key === categoryKey)?.label ?? info.title;
-  const allSteps = useMemo(() => Object.values(stepsByGoal).flat(), [stepsByGoal]);
 
   const handleOpenDialog = (goal: Database['public']['Tables']['goals']['Row']) => {
     setEditingGoal(goal);
@@ -153,6 +171,20 @@ export function CategoryInfoCard({
       <p className="category-info-card__description">{info.description}</p>
 
       <div className="category-info-card__section">
+        <h4>Prompt ideas</h4>
+        <ul className="category-info-card__list category-info-card__list--subgoals">
+          {info.examples.map((example) => (
+            <li key={example} className="category-info-card__subgoal">
+              <span>{example}</span>
+              <button type="button" className="category-info-card__goal-meta" onClick={() => onUsePrompt(example)}>
+                Use prompt
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="category-info-card__section">
         <h4>Main goals</h4>
         {isLoading ? (
           <p className="category-info-card__empty">Loading goals...</p>
@@ -160,18 +192,39 @@ export function CategoryInfoCard({
           <p className="category-info-card__empty">No main goals yet for {categoryLabel}.</p>
         ) : (
           <ul className="category-info-card__list">
-            {goals.map((goal) => (
-              <li key={goal.id}>
-                <button
-                  type="button"
-                  className="category-info-card__goal"
-                  onClick={() => handleOpenDialog(goal)}
-                >
-                  <span>{goal.title}</span>
-                  <span className="category-info-card__goal-meta">View & edit</span>
-                </button>
-              </li>
-            ))}
+            {goals.map((goal) => {
+              const health = goalHealthById[goal.id];
+              return (
+                <li key={goal.id}>
+                  <div className="category-info-card__goal">
+                    <span>{goal.title}</span>
+                    <button
+                      type="button"
+                      className="category-info-card__goal-meta"
+                      onClick={() => handleOpenDialog(goal)}
+                    >
+                      View & edit
+                    </button>
+                    {health ? (
+                      <>
+                        <span className="category-info-card__goal-meta">
+                          Health: {formatHealthLabel(health.healthState)} · Next: {formatActionLabel(health.recommendedNextAction)}
+                        </span>
+                        {health.recommendedNextAction !== 'keep_plan' && onApplyRecommendedAction ? (
+                          <button
+                            type="button"
+                            className="category-info-card__goal-meta"
+                            onClick={() => void onApplyRecommendedAction(goal.id, health.recommendedNextAction)}
+                          >
+                            Apply: {formatActionLabel(health.recommendedNextAction)}
+                          </button>
+                        ) : null}
+                      </>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -189,9 +242,9 @@ export function CategoryInfoCard({
               return (
                 <li key={step.id} className="category-info-card__subgoal">
                   <span>{step.title}</span>
-                  {parentGoal && (
+                  {parentGoal ? (
                     <span className="category-info-card__goal-meta">Main goal: {parentGoal.title}</span>
-                  )}
+                  ) : null}
                 </li>
               );
             })}
@@ -203,14 +256,14 @@ export function CategoryInfoCard({
         Add Goal to {info.title}
       </button>
 
-      {editingGoal && (
+      {editingGoal ? (
         <GoalEditDialog
           goal={editingGoal}
           isOpen={isDialogOpen}
           onClose={handleCloseDialog}
           onSave={onUpdateGoal}
         />
-      )}
+      ) : null}
     </div>
   );
 }

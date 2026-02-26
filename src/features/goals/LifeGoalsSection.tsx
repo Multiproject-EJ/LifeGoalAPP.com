@@ -4,8 +4,11 @@ import { InteractiveLifeWheel } from '../../components/InteractiveLifeWheel';
 import { CategoryInfoCard } from '../../components/CategoryInfoCard';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import type { GoalRecommendedAction } from './executionTypes';
+import type { GoalHealthResult } from './goalHealth';
 import { insertGoal, updateGoal, fetchGoals } from '../../services/goals';
 import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
+import { applyGoalAdaptation, evaluateGoalHealthFromSignals, recordGoalHealthSnapshot } from '../../services/goalExecution';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from '../../hooks/useMediaQuery';
 import type { Database } from '../../lib/database.types';
 
@@ -27,6 +30,8 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   const [goalStats, setGoalStats] = useState<
     Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>
   >({});
+  const [goalHealthById, setGoalHealthById] = useState<Record<string, GoalHealthResult>>({});
+  const [dialogPromptTitle, setDialogPromptTitle] = useState<string | null>(null);
   const isMobile = useMediaQuery(WORKSPACE_MOBILE_MEDIA_QUERY);
 
   const activeCategoryLabel = useMemo(() => {
@@ -42,11 +47,13 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
     setSelectedCategory(categoryKey);
   };
 
-  const handleAddGoal = () => {
+  const handleAddGoal = (promptTitle?: string) => {
+    setDialogPromptTitle(promptTitle?.trim() ? promptTitle.trim() : null);
     setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
+    setDialogPromptTitle(null);
     setIsDialogOpen(false);
   };
 
@@ -207,10 +214,21 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
         }, {});
 
         setStepsByGoal(nextStepsByGoal);
+
+        const nextHealthById = filteredGoals.reduce<Record<string, GoalHealthResult>>((acc, goal) => {
+          const steps = nextStepsByGoal[goal.id] ?? [];
+          const health = evaluateGoalHealthFromSignals(goal, steps);
+          acc[goal.id] = health;
+          void recordGoalHealthSnapshot(goal, health);
+          return acc;
+        }, {});
+
+        setGoalHealthById(nextHealthById);
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : 'Failed to load goals for this life area.');
         setCategoryGoals([]);
         setStepsByGoal({});
+        setGoalHealthById({});
       } finally {
         setLoadingGoals(false);
       }
@@ -226,6 +244,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
     if (!selectedCategory) {
       setCategoryGoals([]);
       setStepsByGoal({});
+      setGoalHealthById({});
       return;
     }
 
@@ -254,6 +273,39 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
     [loadCategoryGoals, refreshGoalStats, selectedCategory]
   );
 
+
+  const handleApplyRecommendedAction = useCallback(
+    async (goalId: string, action: GoalRecommendedAction) => {
+      const goal = categoryGoals.find((item) => item.id === goalId);
+      if (!goal) {
+        return;
+      }
+
+      setErrorMessage(null);
+      setSuccessMessage(null);
+
+      const { error } = await applyGoalAdaptation({
+        goal,
+        action,
+        source: 'manual',
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      setSuccessMessage('Adaptation applied successfully.');
+      setTimeout(() => setSuccessMessage(null), 3000);
+
+      await refreshGoalStats();
+      if (selectedCategory) {
+        await loadCategoryGoals(selectedCategory);
+      }
+    },
+    [categoryGoals, loadCategoryGoals, refreshGoalStats, selectedCategory],
+  );
+
   return (
     <section className={`life-goals-section ${isMobile ? 'life-goals-section--mobile' : ''}`}>
       <header className="life-goals-section__header">
@@ -266,7 +318,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
               create detailed life goals with steps, timing, and notifications.
             </p>
           </div>
-          <button className="life-goals-section__cta" type="button" onClick={handleAddGoal}>
+          <button className="life-goals-section__cta" type="button" onClick={() => handleAddGoal()}>
             Add a life goal
           </button>
         </div>
@@ -293,7 +345,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
                 Tap any slice to browse goal prompts for that area. Badges show main goals and sub goals.
               </p>
             </div>
-            <button type="button" className="life-goals-section__icon-button" onClick={handleAddGoal}>
+            <button type="button" className="life-goals-section__icon-button" onClick={() => handleAddGoal()}>
               +
             </button>
           </div>
@@ -306,14 +358,17 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
           </div>
         </div>
         <div className="life-goals-section__info">
-          <CategoryInfoCard
-            categoryKey={selectedCategory}
-            onAddGoal={handleAddGoal}
-            goals={categoryGoals}
-            stepsByGoal={stepsByGoal}
-            isLoading={loadingGoals}
-            onUpdateGoal={handleUpdateGoal}
-          />
+            <CategoryInfoCard
+              categoryKey={selectedCategory}
+              onAddGoal={handleAddGoal}
+              onUsePrompt={handleAddGoal}
+              goals={categoryGoals}
+              goalHealthById={goalHealthById}
+              stepsByGoal={stepsByGoal}
+              isLoading={loadingGoals}
+              onUpdateGoal={handleUpdateGoal}
+              onApplyRecommendedAction={handleApplyRecommendedAction}
+            />
         </div>
       </div>
 
@@ -323,6 +378,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
         onClose={handleCloseDialog}
         onSave={handleSaveGoal}
         initialCategory={selectedCategory}
+        initialPromptTitle={dialogPromptTitle}
       />
     </section>
   );
