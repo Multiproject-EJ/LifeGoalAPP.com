@@ -1,3 +1,6 @@
 export * from './GoalWorkspace';
 export * from './GoalReflectionJournal';
 export * from './LifeGoalsSection';
+export * from './planQuality';
+export * from './goalHealth';
+export * from './executionTypes';

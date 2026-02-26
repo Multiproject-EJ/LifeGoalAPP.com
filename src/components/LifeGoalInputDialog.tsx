@@ -65,6 +65,7 @@ type LifeGoalInputDialogProps = {
   onClose: () => void;
   onSave: (data: LifeGoalFormData) => Promise<void>;
   initialCategory: LifeWheelCategoryKey | null;
+  initialPromptTitle?: string | null;
   coachingMode?: 'slice' | 'guided';
 };
 
@@ -74,6 +75,7 @@ export function LifeGoalInputDialog({
   onClose,
   onSave,
   initialCategory,
+  initialPromptTitle = null,
   coachingMode = 'slice',
 }: LifeGoalInputDialogProps) {
   // Initialize AI goal suggestion hook for generating goal recommendations
@@ -168,6 +170,42 @@ export function LifeGoalInputDialog({
     },
     [session?.user?.id],
   );
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setFormData((current) => ({
+      ...current,
+      title: initialPromptTitle?.trim() ?? '',
+      description: '',
+      lifeWheelCategory: initialCategory || current.lifeWheelCategory || 'health_fitness',
+      startDate: '',
+      targetDate: '',
+      estimatedDurationDays: '',
+      timingNotes: '',
+      statusTag: DEFAULT_GOAL_STATUS,
+      steps: [],
+      alerts: [],
+    }));
+    setCurrentStep({
+      title: '',
+      description: '',
+      dueDate: '',
+      substeps: [],
+    });
+    setCurrentSubstep('');
+    setCurrentAlert({
+      alertType: 'reminder',
+      alertTime: '',
+      title: '',
+      message: '',
+      repeatPattern: 'once',
+      enabled: true,
+    });
+    setActiveTab('basic');
+  }, [initialCategory, initialPromptTitle, isOpen]);
 
   useEffect(() => {
     if (!isOpen || !session?.user?.id) {
