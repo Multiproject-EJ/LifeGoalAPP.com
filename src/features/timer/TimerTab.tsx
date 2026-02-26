@@ -15,6 +15,7 @@ import {
 } from './timerSession';
 import timerIcon from '../../assets/Timer.webp';
 import './TimerTab.css';
+import { SessionPlanner } from './SessionPlanner';
 
 type TimerTabProps = {
   onNavigateToActions?: () => void;
@@ -46,6 +47,7 @@ type TimerPreferences = {
 };
 
 const TIMER_PRESETS_MINUTES = [5, 10, 15, 25, 45, 60];
+const ENABLE_TIMER_DIAL = true;
 const MIN_DURATION_MINUTES = 1;
 const MAX_DURATION_MINUTES = 180;
 const ZEN_REWARD_BY_MINUTES = 1;
@@ -209,6 +211,7 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
   const [sourceAnalytics, setSourceAnalytics] = useState<TimerSourceAnalytics[]>(() => readTimerSourceAnalytics());
   const [customMinutesInput, setCustomMinutesInput] = useState('25');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [timerMode, setTimerMode] = useState<'quick' | 'session-plan'>('quick');
   const recordedCompletionRef = useRef<number | null>(null);
 
   const selectedSource = useMemo(
@@ -518,6 +521,10 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
     [sourceAnalytics],
   );
 
+  const refreshSourceAnalytics = useCallback(() => {
+    setSourceAnalytics(readTimerSourceAnalytics());
+  }, []);
+
   const sourceLabelByType = useMemo(
     () => new Map(SOURCE_OPTIONS.map((option) => [option.value, option.label])),
     [],
@@ -545,7 +552,25 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
         </div>
       </header>
 
-      <section className="timer-tab__main-card" aria-label="Timer session">
+      <section className="timer-tab__mode-toggle" aria-label="Timer mode">
+        <button
+          type="button"
+          className={`timer-tab__chip ${timerMode === 'quick' ? 'timer-tab__chip--active' : ''}`}
+          onClick={() => setTimerMode('quick')}
+        >
+          Quick timer
+        </button>
+        <button
+          type="button"
+          className={`timer-tab__chip ${timerMode === 'session-plan' ? 'timer-tab__chip--active' : ''}`}
+          onClick={() => setTimerMode('session-plan')}
+        >
+          Session plan
+        </button>
+      </section>
+
+      {timerMode === 'quick' ? (
+      <><section className="timer-tab__main-card" aria-label="Timer session">
         <img src={timerIcon} alt="" className="timer-tab__hero-image" aria-hidden="true" />
         <div className="timer-tab__clock">{formatClock(session.remainingSeconds)}</div>
         <div className="timer-tab__progress-track" aria-hidden="true">
@@ -573,6 +598,53 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
 
       <section className="timer-tab__setup" aria-label="Timer setup">
         <h3>Quick duration</h3>
+        <div className="timer-tab__duration-adjust">
+          <button
+            type="button"
+            className="timer-tab__btn"
+            onClick={() => applyDurationMinutes(Math.round(session.durationSeconds / 60) - 1)}
+            aria-label="Decrease quick timer by one minute"
+          >
+            −1m
+          </button>
+          <input
+            type="range"
+            min={MIN_DURATION_MINUTES}
+            max={MAX_DURATION_MINUTES}
+            step={1}
+            value={Math.round(session.durationSeconds / 60)}
+            onChange={(event) => applyDurationMinutes(Number(event.target.value))}
+            className="timer-tab__range"
+            aria-label="Quick timer minutes slider"
+          />
+          <button
+            type="button"
+            className="timer-tab__btn"
+            onClick={() => applyDurationMinutes(Math.round(session.durationSeconds / 60) + 1)}
+            aria-label="Increase quick timer by one minute"
+          >
+            +1m
+          </button>
+        </div>
+        <small className="timer-tab__hint">{Math.round(session.durationSeconds / 60)} minutes selected</small>
+        {ENABLE_TIMER_DIAL && (
+          <label className="timer-tab__field">
+            Dial duration
+            <div className="timer-tab__dial-wrap">
+              <input
+                type="range"
+                min={MIN_DURATION_MINUTES}
+                max={MAX_DURATION_MINUTES}
+                step={1}
+                value={Math.round(session.durationSeconds / 60)}
+                onChange={(event) => applyDurationMinutes(Number(event.target.value))}
+                className="timer-tab__dial"
+                aria-label="Dial timer minutes"
+              />
+              <span className="timer-tab__dial-value">{Math.round(session.durationSeconds / 60)}m</span>
+            </div>
+          </label>
+        )}
         <div className="timer-tab__preset-grid">
           {TIMER_PRESETS_MINUTES.map((minutes) => (
             <button
@@ -787,7 +859,14 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
             <small className="timer-tab__hint">Complete a timer to start source analytics.</small>
           )}
         </div>
-      </section>
+      </section></>
+      ) : (
+        <SessionPlanner
+          sourceLabel={selectedSource.label}
+          sourceType={session.sourceType}
+          onSourceAnalyticsUpdated={refreshSourceAnalytics}
+        />
+      )}
     </div>
   );
 }

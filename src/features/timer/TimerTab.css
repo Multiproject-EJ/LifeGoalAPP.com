@@ -334,3 +334,98 @@
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
+
+.timer-tab__mode-toggle {
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
+.timer-tab__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.timer-tab__plan-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.timer-tab__plan-item {
+  border: 1px solid color-mix(in srgb, var(--text-primary, #0f172a) 14%, transparent);
+  border-radius: 12px;
+  padding: 0.6rem;
+  background: color-mix(in srgb, var(--surface-primary, #fff) 94%, transparent);
+  display: grid;
+  gap: 0.45rem;
+}
+
+.timer-tab__plan-item--active {
+  border-color: var(--timer-source-active-border);
+  background: var(--timer-source-active-bg);
+}
+
+.timer-tab__plan-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.timer-tab__input--minutes {
+  max-width: 90px;
+}
+
+.timer-tab__input--textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.timer-tab__duration-adjust {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.timer-tab__range {
+  flex: 1;
+  accent-color: #3b82f6;
+}
+
+.timer-tab__template-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 760px) {
+  .timer-tab__template-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.timer-tab__dial-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.timer-tab__dial {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, color-mix(in srgb, #3b82f6 22%, transparent) 0 46%, transparent 47% 100%);
+  border: 1px solid color-mix(in srgb, var(--text-primary, #0f172a) 18%, transparent);
+  accent-color: #3b82f6;
+}
+
+.timer-tab__dial-value {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #64748b);
+  font-weight: 600;
+}
