@@ -11,6 +11,7 @@ import { ProjectTimeline } from './components/ProjectTimeline';
 import type { Project, ProjectStatus, CreateProjectInput, TaskStatus, ProjectTaskItem } from '../../types/actions';
 import type { TimerLaunchContext } from '../timer/timerSession';
 import { PROJECT_STATUS_CONFIG } from '../../types/actions';
+import projectsIcon from '../../assets/Projects.webp';
 import './ProjectsManager.css';
 
 interface ProjectsManagerProps {
@@ -150,6 +151,7 @@ export function ProjectsManager({ session, onNavigateToActions, onNavigateToTime
           <p className="projects-manager__subtitle">
             Manage your multi-step initiatives and track progress
           </p>
+          <img src={projectsIcon} alt="" className="projects-manager__hero-image" aria-hidden="true" />
         </div>
         <div className="projects-manager__header-actions">
           {onNavigateToActions && (

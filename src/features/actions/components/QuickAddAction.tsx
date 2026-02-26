@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ActionCategory, CreateActionInput, Project } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG } from '../../../types/actions';
+import taskIcon from '../../../assets/Task.webp';
 
 export interface QuickAddActionProps {
   onAdd: (input: CreateActionInput) => Promise<void>;
@@ -58,6 +59,12 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
     <section className="actions-tab__quick-add" aria-label="Add new action">
       <div className="actions-tab__quick-add-input-row">
         <div className="actions-tab__quick-add-input-shell">
+          <img
+            src={taskIcon}
+            alt=""
+            className="actions-tab__quick-add-task-image"
+            aria-hidden="true"
+          />
           <input
             type="text"
             className={`actions-tab__quick-add-input ${hasTitle ? '' : 'actions-tab__quick-add-input--pulse'}`}
