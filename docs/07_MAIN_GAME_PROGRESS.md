@@ -1,4 +1,20 @@
 Date: 2026-02-27
+Slice: M7O.7 — Scope entry bootstrap to legacy level-worlds redirect source
+Summary:
+- Restricted auto-open bootstrap in `App.tsx` to require both `openIslandRun=1` and `openIslandRunSource=level-worlds`.
+- Updated `/level-worlds.html` redirect shim to set `openIslandRunSource=level-worlds` so intentional entry still works.
+- Removes accidental Level Worlds modal activation on unrelated login URLs that might include stale/partial params.
+Files changed:
+- public/level-worlds.html
+- src/App.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.8 add entry-source analytics on redirect handoff to confirm scoped trigger behavior.
+
+Date: 2026-02-27
 Slice: M7O.6 — Baseline alert thresholds + low-volume guardrail
 Summary:
 - Added shared default hydration alert thresholds in runtime telemetry constants (`fallbackRatio24h`, `failureCount24h`, `minHydrationEvents24h`).

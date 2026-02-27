@@ -384,9 +384,10 @@ export default function App() {
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
-  const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(
-    () => new URLSearchParams(window.location.search).get('openIslandRun') === '1',
-  );
+  const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('openIslandRun') === '1' && params.get('openIslandRunSource') === 'level-worlds';
+  });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
@@ -3599,6 +3600,7 @@ export default function App() {
     if (params.get('openIslandRun') !== '1') return;
 
     params.delete('openIslandRun');
+    params.delete('openIslandRunSource');
     const nextSearch = params.toString();
     const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
     window.history.replaceState(window.history.state, '', nextUrl);

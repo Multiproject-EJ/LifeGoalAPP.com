@@ -8,6 +8,7 @@
       (function redirectToIslandRunSurface() {
         const params = new URLSearchParams(window.location.search);
         params.set('openIslandRun', '1');
+        params.set('openIslandRunSource', 'level-worlds');
         const nextUrl = `/${params.toString() ? `?${params.toString()}` : ''}`;
         window.location.replace(nextUrl);
       })();

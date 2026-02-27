@@ -184,6 +184,7 @@ Trigger when account is new/onboarding incomplete.
 - First-run gate and daily marker actions should wait for runtime-state hydration completion to avoid pre-hydration false positives or duplicate grants.
 - `/level-worlds.html` should route into the active Island Run app surface (not legacy static arc map) so migration slices are user-visible.
 - Entry-point auto-open flags (e.g., `openIslandRun=1`) should be consumed once and removed from URL to avoid repeated modal re-entry loops.
+- Auto-open bootstrap should validate an explicit entry source marker to avoid unintended activation on unrelated login URLs.
 - Entry bootstrap intent must be handed off to in-app routing state before URL-flag cleanup so Level Worlds/Island Run opens reliably.
 - External `openIslandRun` entry should route directly to `LevelWorldsHub`/Island Run surface (avoid Lucky Roll intermediary hops).
 - `LevelWorldsHub` should default to Island Run surface; legacy board should only be reachable via explicit temporary opt-out flag if needed.
