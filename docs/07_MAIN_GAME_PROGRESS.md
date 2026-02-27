@@ -1,4 +1,20 @@
 Date: 2026-02-27
+Slice: M7O.8 — Entry crash containment for Level Worlds bootstrap
+Summary:
+- Added `SafeErrorBoundary` and wrapped Level Worlds auto-open entry modal in `App.tsx` to prevent full-app blank screens when Level Worlds throws at bootstrap.
+- Added fallback UX that closes the failed entry surface and returns control to the app shell.
+- Kept source-scoped bootstrap behavior while isolating runtime failures from app-wide rendering.
+Files changed:
+- src/components/SafeErrorBoundary.tsx
+- src/App.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.9 instrument captured Level Worlds entry errors with dedicated telemetry for root-cause triage.
+
+Date: 2026-02-27
 Slice: M7O.7 — Scope entry bootstrap to legacy level-worlds redirect source
 Summary:
 - Restricted auto-open bootstrap in `App.tsx` to require both `openIslandRun=1` and `openIslandRunSource=level-worlds`.

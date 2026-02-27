@@ -61,6 +61,7 @@ import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
+import { SafeErrorBoundary } from './components/SafeErrorBoundary';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
@@ -3615,10 +3616,28 @@ export default function App() {
   };
 
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
-    <LevelWorldsHub
-      session={activeSession}
-      onClose={() => setShowLevelWorldsFromEntry(false)}
-    />
+    <SafeErrorBoundary
+      fallback={(
+        <div className="daily-treats-modal" role="dialog" aria-modal="true" aria-label="Island Run unavailable">
+          <div className="daily-treats-modal__backdrop" onClick={() => setShowLevelWorldsFromEntry(false)} />
+          <div className="daily-treats-modal__container">
+            <h2>Island Run is temporarily unavailable</h2>
+            <p>We closed the game surface to keep the app usable. Please retry from the Game Board.</p>
+            <button type="button" className="quick-gains-modal__action" onClick={() => setShowLevelWorldsFromEntry(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      onError={(error) => {
+        console.error('Level Worlds entry crashed:', error);
+      }}
+    >
+      <LevelWorldsHub
+        session={activeSession}
+        onClose={() => setShowLevelWorldsFromEntry(false)}
+      />
+    </SafeErrorBoundary>
   ) : null;
 
   const luckyRollModal = showLuckyRoll && activeSession ? (
