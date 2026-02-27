@@ -54,6 +54,8 @@ const DEFAULT_HABIT_ENVIRONMENT = 'In my workspace, with my laptop and a clear m
 export type DemoProfile = {
   displayName: string;
   onboardingComplete: boolean;
+  islandRunFirstRunClaimed: boolean;
+  dailyHeartsClaimedDayKey: string | null;
   aiCoachAccess: AiCoachDataAccess;
 };
 
@@ -155,6 +157,8 @@ const defaultState: DemoState = {
   profile: {
     displayName: DEMO_USER_NAME,
     onboardingComplete: false,
+    islandRunFirstRunClaimed: false,
+    dailyHeartsClaimedDayKey: null,
     aiCoachAccess: DEFAULT_AI_COACH_ACCESS,
   },
   goals: [

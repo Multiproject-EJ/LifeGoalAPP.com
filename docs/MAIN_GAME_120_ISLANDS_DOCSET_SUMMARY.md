@@ -1,5 +1,8 @@
 # MAIN GAME 120 ISLANDS — Docset Summary
 
+> ⚠️ **Status update (2026-02-27):** This summary is now secondary.
+> Use **[`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)** as the single source of truth.
+
 This file summarizes the canonical docset referenced by `00_MAIN_GAME_120_ISLANDS_INDEX.md`.
 
 ## Entrypoint

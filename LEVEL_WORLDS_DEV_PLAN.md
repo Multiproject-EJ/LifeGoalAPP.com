@@ -1,5 +1,9 @@
 # LEVEL WORLDS DEV PLAN — Campaign Mode for HabitGame
 
+> ⚠️ **Status update (2026-02-27):** Use this as implementation detail only.
+> Canonical main-loop direction is now maintained in:
+> **[`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)**.
+
 Version: 1.0
 Status: Phase 1 — Foundation (In Progress)
 Parent System: HabitGame Daily Treats → Level Worlds Campaign

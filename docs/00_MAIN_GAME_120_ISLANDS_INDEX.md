@@ -1,5 +1,11 @@
 # HABITGAME — MAIN GAME 120 ISLANDS (INDEX)
 
+> ⚠️ **Status update (2026-02-27):** This file is now secondary context.
+> The canonical main-game implementation source is:
+> **[`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)**.
+>
+> If any direction here conflicts with the canonical file, follow the canonical file.
+
 Owner: EJ  
 Product: habitgame.app / lifegoalapp.com  
 Platform: Mobile-first PWA  

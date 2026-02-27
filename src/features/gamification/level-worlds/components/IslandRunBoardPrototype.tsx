@@ -2,11 +2,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
-  STOP_TILES,
   TILE_ANCHORS,
   TOKEN_START_TILE_INDEX,
+  OUTER_STOP_ANCHORS,
   type TileAnchor,
 } from '../services/islandBoardLayout';
+import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
+import { generateIslandStopPlan } from '../services/islandRunStops';
+import { planDailyHeartReward } from '../services/islandRunDailyRewards';
+import { recordTelemetryEvent } from '../../../../services/telemetry';
+import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
+import {
+  persistIslandRunRuntimeStatePatch,
+  readIslandRunRuntimeState,
+} from '../services/islandRunRuntimeState';
 
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
@@ -23,33 +32,23 @@ interface ActiveEgg {
   hatchAtMs: number;
 }
 
+type StopProgressState = 'pending' | 'active' | 'completed' | 'locked';
+
+type OrbitStopVisual = {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  state: StopProgressState | 'shop';
+  icon: string;
+  labelOffsetY: number;
+  stopId?: string;
+};
+
 const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
   back: '#50a5ff',
   mid: '#ffe066',
   front: '#ff4ff5',
-};
-
-const STOP_COPY: Record<string, { title: string; description: string }> = {
-  hatchery: {
-    title: '🥚 Hatchery Stop',
-    description: 'Set one egg and track stage progression over time (prototype scaffold).',
-  },
-  minigame: {
-    title: '🎮 Minigame Stop',
-    description: 'Stub: launch minigame entry flow here.',
-  },
-  market: {
-    title: '🛒 Market Stop',
-    description: 'Stub: spend island currency on offers here.',
-  },
-  utility: {
-    title: '🧰 Utility Stop',
-    description: 'Stub: utility interactions go here.',
-  },
-  boss: {
-    title: '👑 Boss Stop',
-    description: 'Stub: boss trial UI will open from here.',
-  },
 };
 
 function toScreen(anchor: TileAnchor, width: number, height: number) {
@@ -65,18 +64,44 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function getStopIcon(kind: string, stopId: string) {
+  if (stopId === 'boss') return '👑';
+  if (stopId === 'hatchery') return '🥚';
+
+  switch (kind) {
+    case 'habit_action':
+      return '✅';
+    case 'checkin_reflection':
+      return '🧭';
+    case 'utility_support':
+      return '🧰';
+    case 'event_challenge':
+      return '⚡';
+    case 'mini_game':
+      return '🎮';
+    default:
+      return '📍';
+  }
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
 interface IslandRunBoardPrototypeProps {
   session: Session;
 }
 
 export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProps) {
+  const { client } = useSupabaseAuth();
   const boardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
   const [activeScene, setActiveScene] = useState<(typeof ISLAND_SCENES)[number]>(1);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
 
-  const [hearts, setHearts] = useState(30);
+  const [hearts, setHearts] = useState(5);
+  const [dicePool, setDicePool] = useState(() => convertHeartToDicePool(1));
   const [tokenIndex, setTokenIndex] = useState(TOKEN_START_TILE_INDEX);
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
@@ -93,8 +118,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [isDisplayNameLoopCompleted, setIsDisplayNameLoopCompleted] = useState(false);
   const [showEncounterModal, setShowEncounterModal] = useState(false);
   const [encounterResolved, setEncounterResolved] = useState(false);
+  const [coins, setCoins] = useState(0);
+  const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
+  const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
+  const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
+  const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
 
   const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
+  const dailyRewardPlan = planDailyHeartReward(session.user.id);
+  const runtimeState = readIslandRunRuntimeState(session);
+  const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
+  const isFirstRunClaimed = runtimeState.firstRunClaimed;
 
   useEffect(() => {
     const defaultName =
@@ -118,6 +152,24 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setIsDisplayNameLoopCompleted(false);
     }
   }, [onboardingStorageKey]);
+
+  useEffect(() => {
+    if (isOnboardingComplete) return;
+
+    if (!isFirstRunClaimed) {
+      setShowFirstRunCelebration(true);
+      setFirstRunStep('celebration');
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'onboarding_completed',
+        metadata: { stage: 'island_run_first_run_started', island: islandNumber },
+      });
+    }
+  }, [isFirstRunClaimed, isOnboardingComplete, islandNumber, session.user.id]);
+
+  useEffect(() => {
+    setDailyHeartsClaimed(runtimeState.dailyHeartsClaimedDayKey === dailyRewardPlan.dayKey);
+  }, [dailyRewardPlan.dayKey, runtimeState.dailyHeartsClaimedDayKey]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -195,14 +247,100 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
   }, [boardSize, showDebug]);
 
+  const islandStopPlan = useMemo(() => generateIslandStopPlan(islandNumber), [islandNumber]);
+
+  const [completedStops, setCompletedStops] = useState<string[]>([]);
+
+  const stopStateMap = useMemo(() => {
+    const map = new Map<string, StopProgressState>();
+    const nonBossStops = islandStopPlan.filter((stop) => stop.stopId !== 'boss');
+    const allNonBossCompleted = nonBossStops.every((stop) => completedStops.includes(stop.stopId));
+
+    for (const stop of islandStopPlan) {
+      if (completedStops.includes(stop.stopId)) {
+        map.set(stop.stopId, 'completed');
+        continue;
+      }
+
+      if (stop.stopId === 'boss') {
+        map.set(stop.stopId, allNonBossCompleted ? 'active' : 'locked');
+        continue;
+      }
+
+      map.set(stop.stopId, 'active');
+    }
+
+    return map;
+  }, [completedStops, islandStopPlan]);
+
   const stopMap = useMemo(() => {
     const map = new Map<number, string>();
-    STOP_TILES.forEach((stop) => map.set(stop.tileIndex, stop.stopId.replace('stop_', '')));
+    islandStopPlan.forEach((stop) => map.set(stop.tileIndex, stop.stopId));
     return map;
-  }, []);
+  }, [islandStopPlan]);
 
   const tokenPosition = toScreen(TILE_ANCHORS[tokenIndex], boardSize.width, boardSize.height);
-  const activeStop = activeStopId ? STOP_COPY[activeStopId] : null;
+  const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
+
+  const orbitStopVisuals = useMemo<OrbitStopVisual[]>(() => {
+    const orderedAnchors = OUTER_STOP_ANCHORS.filter((anchor) => anchor.id !== 'shop');
+
+    const planVisuals = islandStopPlan.map((stop, index) => {
+      const anchor = orderedAnchors[index] ?? orderedAnchors[orderedAnchors.length - 1];
+      const position = toScreen({
+        id: `orbit_${anchor.id}`,
+        x: anchor.x,
+        y: anchor.y,
+        zBand: 'front',
+        tangentDeg: 0,
+        scale: 1,
+      }, boardSize.width, boardSize.height);
+
+      const horizontalPadding = 44;
+      const verticalPadding = 44;
+      const labelOffsetY = index % 2 === 0 ? -38 : 38;
+
+      return {
+        id: stop.stopId,
+        label: stop.title.replace(/^\S+\s/, ''),
+        x: clamp(position.x, horizontalPadding, boardSize.width - horizontalPadding),
+        y: clamp(position.y, verticalPadding, boardSize.height - verticalPadding),
+        state: stopStateMap.get(stop.stopId) ?? 'active',
+        icon: getStopIcon(stop.kind, stop.stopId),
+        labelOffsetY,
+        stopId: stop.stopId,
+      } satisfies OrbitStopVisual;
+    });
+
+    const shopAnchor = OUTER_STOP_ANCHORS.find((anchor) => anchor.id === 'shop');
+    const shopPosition = shopAnchor
+      ? toScreen(
+          {
+            id: 'orbit_shop',
+            x: shopAnchor.x,
+            y: shopAnchor.y,
+            zBand: 'front',
+            tangentDeg: 0,
+            scale: 1,
+          },
+          boardSize.width,
+          boardSize.height,
+        )
+      : { x: boardSize.width * 0.14, y: boardSize.height * 0.5 };
+
+    return [
+      ...planVisuals,
+      {
+        id: 'shop',
+        label: 'Shop',
+        x: clamp(shopPosition.x, 44, boardSize.width - 44),
+        y: clamp(shopPosition.y, 44, boardSize.height - 44),
+        state: 'shop',
+        icon: '🛒',
+        labelOffsetY: -38,
+      },
+    ];
+  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap]);
 
   const eggStage = useMemo(() => {
     if (!activeEgg) return 0;
@@ -234,13 +372,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setLandingText('Island expired. Traveling to next island...');
 
     const timeout = window.setTimeout(() => {
-      setIslandNumber((value) => value + 1);
+      setIslandNumber((value) => {
+        const nextIsland = value + 1;
+        setDicePool(convertHeartToDicePool(nextIsland));
+        return nextIsland;
+      });
       setTokenIndex(TOKEN_START_TILE_INDEX);
-      setHearts(30);
+      setHearts(5);
       setRollValue(null);
       setActiveStopId(null);
       setShowEncounterModal(false);
       setEncounterResolved(false);
+      setCompletedStops([]);
       setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
       setLandingText('Arrived at next island. Ready to roll. Egg progress carried over (prototype).');
       setShowTravelOverlay(false);
@@ -250,15 +393,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   }, [timeLeftSec, showTravelOverlay]);
 
   const timerDisplay = formatClock(timeLeftSec);
+  const dicePerHeart = getDicePerHeartForIsland(islandNumber);
 
   const handleRoll = async () => {
-    if (isRolling || hearts < 1) {
+    if (showFirstRunCelebration) return;
+
+    if (isRolling) {
+      return;
+    }
+
+    if (dicePool < 1) {
+      if (hearts < 1) {
+        return;
+      }
+
+      setHearts((current) => Math.max(0, current - 1));
+      setDicePool((current) => current + convertHeartToDicePool(islandNumber));
+      setLandingText(`Converted 1 heart into ${convertHeartToDicePool(islandNumber)} dice rolls.`);
       return;
     }
 
     setIsRolling(true);
     setActiveStopId(null);
-    setHearts((current) => Math.max(0, current - 1));
+    setDicePool((current) => Math.max(0, current - 1));
 
     const nextRoll = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
     setRollValue(nextRoll);
@@ -273,8 +430,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
     const landedStop = stopMap.get(currentIndex);
     if (landedStop) {
-      setLandingText(`Landed on STOP: ${landedStop.toUpperCase()} (#${currentIndex})`);
-      setActiveStopId(landedStop);
+      const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
+      const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
+      const state = stopStateMap.get(landedStop) ?? 'active';
+
+      if (state === 'locked') {
+        setLandingText(`Boss stop locked: complete all 5 stops before boss.`);
+        setActiveStopId(null);
+      } else {
+        setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
+        setActiveStopId(landedStop);
+      }
+
       setShowEncounterModal(false);
       setEncounterResolved(false);
     } else if (currentIndex === ENCOUNTER_TILE_INDEX) {
@@ -345,18 +512,141 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setLandingText('Encounter resolved: +1 heart reward (prototype).');
   };
 
+  const handleCompleteActiveStop = () => {
+    if (!activeStopId) return;
+
+    if (activeStopId === 'boss') {
+      setLandingText('Boss stop complete! Island clear. Next island unlocked.');
+      setCompletedStops((current) => (current.includes('boss') ? current : [...current, 'boss']));
+      setShowTravelOverlay(true);
+      window.setTimeout(() => {
+        setShowTravelOverlay(false);
+        setIslandNumber((value) => {
+          const nextIsland = value + 1;
+          setDicePool(convertHeartToDicePool(nextIsland));
+          return nextIsland;
+        });
+        setTokenIndex(TOKEN_START_TILE_INDEX);
+        setHearts(5);
+        setRollValue(null);
+        setActiveStopId(null);
+        setEncounterResolved(false);
+        setCompletedStops([]);
+        setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
+      }, 1400);
+      return;
+    }
+
+    setCompletedStops((current) => (current.includes(activeStopId) ? current : [...current, activeStopId]));
+    setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
+    setActiveStopId(null);
+  };
+
+  const markOnboardingComplete = async () => {
+    if (isOnboardingComplete && isFirstRunClaimed) return true;
+
+    const result = await persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        onboardingComplete: true,
+        firstRunClaimed: true,
+      },
+    });
+
+    if (!result.ok) {
+      setLandingText(`Could not complete first-run setup: ${result.errorMessage}`);
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleClaimDailyHearts = async (source: 'spin_of_the_day' | 'daily_hatch') => {
+    if (dailyHeartsClaimed || dailyRewardPlan.source !== source) return;
+
+    const result = await persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        dailyHeartsClaimedDayKey: dailyRewardPlan.dayKey,
+      },
+    });
+
+    if (!result.ok) {
+      setLandingText(`Could not claim daily hearts: ${result.errorMessage}`);
+      return;
+    }
+
+    setHearts((current) => current + dailyRewardPlan.hearts);
+    setDailyHeartsClaimed(true);
+    setLandingText(`Morning reward claimed from ${source === 'spin_of_the_day' ? 'Spin of the Day' : 'Daily Hatch'}: +${dailyRewardPlan.hearts} hearts.`);
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        source,
+        hearts: dailyRewardPlan.hearts,
+        day_key: dailyRewardPlan.dayKey,
+        stage: 'island_run_daily_hearts_claimed',
+      },
+    });
+  };
+
+  const handleClaimFirstRunRewards = async () => {
+    if (firstRunStep === 'celebration') {
+      setHearts((current) => current + 5);
+      setCoins((current) => current + 250);
+      setDicePool((current) => current + convertHeartToDicePool(islandNumber));
+      setLandingText('Starter claim complete: +5 hearts, +250 coins, +1 heart worth of dice.');
+      setFirstRunStep('launch');
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'onboarding_completed',
+        metadata: {
+          stage: 'island_run_first_run_rewards_claimed',
+          island: islandNumber,
+          rewards: { hearts: 5, coins: 250, dice_bonus: convertHeartToDicePool(islandNumber) },
+        },
+      });
+      return;
+    }
+
+    setIsPersistingFirstRunCompletion(true);
+    const completionSaved = await markOnboardingComplete();
+    setIsPersistingFirstRunCompletion(false);
+    if (!completionSaved) return;
+
+    setShowFirstRunCelebration(false);
+    setLandingText('Island Run started. Reach each stop and unlock the boss.');
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'onboarding_completed',
+      metadata: { stage: 'island_run_first_run_launch_confirmed', island: islandNumber },
+    });
+  };
+
   return (
     <section className="island-run-prototype">
       <header className="island-run-prototype__header">
         <h2>🏝️ Island Run • M1-M5A Prototype</h2>
         <div className="island-run-prototype__status-row">
           <span>Hearts: <strong>{hearts}</strong></span>
+          <span>Dice: <strong>{dicePool}</strong></span>
+          <span>Coins: <strong>{coins}</strong></span>
           <span>Tile: <strong>{tokenIndex}</strong></span>
           <span>Island: <strong>{islandNumber}</strong></span>
           <span>Last roll: <strong>{rollValue ?? '-'}</strong></span>
           <span>Ends in: <strong>{timerDisplay}</strong></span>
         </div>
         <p className="island-run-prototype__landing">{landingText}</p>
+        <p className="island-run-prototype__landing">
+          Stop plan: {islandStopPlan.map((stop) => stop.title.split(' ').slice(1).join(' ') || stop.title).join(' → ')}
+        </p>
+        <p className="island-run-prototype__landing">
+          Stop states: {islandStopPlan.map((stop) => `${stop.stopId}:${stopStateMap.get(stop.stopId) ?? 'active'}`).join(' | ')}
+        </p>
         <div className="island-run-prototype__controls">
           {ISLAND_SCENES.map((sceneId) => (
             <button
@@ -375,11 +665,26 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             type="button"
             className="island-run-prototype__roll-btn"
             onClick={handleRoll}
-            disabled={isRolling || hearts < 1 || showTravelOverlay}
+            disabled={showFirstRunCelebration || isRolling || (dicePool < 1 && hearts < 1) || showTravelOverlay}
           >
-            {isRolling ? 'Rolling...' : 'Roll (1 heart)'}
+            {isRolling
+              ? 'Rolling...'
+              : dicePool > 0
+                ? 'Roll (1 dice)'
+                : `Convert 1 heart → ${dicePerHeart} dice`}
           </button>
-          {hearts < 1 && (
+          {dailyRewardPlan.source === 'spin_of_the_day' && (
+            <button
+              type="button"
+              className="island-run-prototype__booster-btn"
+              onClick={() => void handleClaimDailyHearts('spin_of_the_day')}
+              disabled={dailyHeartsClaimed}
+            >
+              {dailyHeartsClaimed ? 'Spin reward claimed' : `Spin of the Day (+${dailyRewardPlan.hearts} hearts)`}
+            </button>
+          )}
+
+          {hearts < 1 && dicePool < 1 && (
             <button
               type="button"
               className="island-run-prototype__booster-btn"
@@ -397,6 +702,31 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       <div ref={boardRef} className={`island-run-board island-run-board--scene-${activeScene}`}>
         <canvas ref={canvasRef} className="island-run-board__path" />
+
+        <div className="island-run-board__lap-label">17-tile lap</div>
+
+        <div className="island-run-board__orbit-stops">
+          {orbitStopVisuals.map((stopVisual) => (
+            <button
+              key={stopVisual.id}
+              type="button"
+              className={`island-orbit-stop island-orbit-stop--${stopVisual.state} island-orbit-stop--scene-${activeScene}`}
+              style={{ left: stopVisual.x, top: stopVisual.y }}
+              onClick={() => {
+                if (stopVisual.stopId) setActiveStopId(stopVisual.stopId);
+              }}
+              disabled={!stopVisual.stopId}
+            >
+              <span className="island-orbit-stop__icon" aria-hidden="true">{stopVisual.icon}</span>
+              <span
+                className="island-orbit-stop__label"
+                style={{ transform: `translate(-50%, calc(-50% + ${stopVisual.labelOffsetY}px))` }}
+              >
+                {stopVisual.label}
+              </span>
+            </button>
+          ))}
+        </div>
 
         <div className="island-run-board__tiles">
           {TILE_ANCHORS.map((anchor, index) => {
@@ -463,6 +793,44 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         )}
       </div>
 
+
+      {showFirstRunCelebration && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="First run celebration">
+            {firstRunStep === 'celebration' ? (
+              <>
+                <h3>🎉 Welcome to Island Run</h3>
+                <p>Claim your starter gifts to begin your first island.</p>
+                <p><strong>Starter gifts:</strong> 💎 1 equivalent + 🪙 250 + ❤️ 5</p>
+                <p>✨ 🎊 ✨</p>
+                <button
+                  type="button"
+                  className="supabase-auth__action"
+                  onClick={() => void handleClaimFirstRunRewards()}
+                  disabled={isPersistingFirstRunCompletion}
+                >
+                  Claim starter gifts
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>🚀 Launch sequence ready</h3>
+                <p>Your ship is landing on Island 1. Your player piece deploys at the first stop.</p>
+                <p>Tip: spend dice to move tile-to-tile and complete all stops before boss.</p>
+                <button
+                  type="button"
+                  className="supabase-auth__action"
+                  onClick={() => void handleClaimFirstRunRewards()}
+                  disabled={isPersistingFirstRunCompletion}
+                >
+                  {isPersistingFirstRunCompletion ? 'Saving profile...' : 'Start Island Run'}
+                </button>
+              </>
+            )}
+          </section>
+        </div>
+      )}
+
       {showTravelOverlay && (
         <div className="island-travel-overlay" role="status" aria-live="polite">
           <div className="island-travel-overlay__card">
@@ -476,6 +844,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           <section className="island-stop-modal" role="dialog" aria-modal="true" aria-label={activeStop.title}>
             <h3>{activeStop.title}</h3>
             <p>{activeStop.description}</p>
+            <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p>
+            {activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
 
             {activeStopId === 'hatchery' && (
               <div className="island-hatchery-card">
@@ -503,6 +873,26 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </div>
             )}
 
+            {activeStopId === 'hatchery' && dailyRewardPlan.source === 'daily_hatch' ? (
+              <button
+                type="button"
+                onClick={() => void handleClaimDailyHearts('daily_hatch')}
+                disabled={dailyHeartsClaimed}
+              >
+                {dailyHeartsClaimed ? 'Daily hatch hearts claimed' : `Claim Daily Hatch (+${dailyRewardPlan.hearts} hearts)`}
+              </button>
+            ) : null}
+
+            {activeStop.stopId !== 'hatchery' ? (
+              <button type="button" onClick={handleCompleteActiveStop}>
+                Complete Stop
+              </button>
+            ) : null}
+            {activeStop.stopId === 'hatchery' ? (
+              <button type="button" onClick={handleCompleteActiveStop}>
+                Complete Hatchery Stop
+              </button>
+            ) : null}
             <button type="button" onClick={() => setActiveStopId(null)}>Close</button>
           </section>
         </div>

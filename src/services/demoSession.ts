@@ -12,7 +12,9 @@ export function createDemoSession(): Session {
     user_metadata: {
       full_name: profile.displayName,
       onboarding_complete: profile.onboardingComplete,
+      island_run_first_run_claimed: profile.islandRunFirstRunClaimed,
       ai_coach_access: profile.aiCoachAccess,
+      island_run_daily_hearts_daykey: profile.dailyHeartsClaimedDayKey,
     },
     aud: 'authenticated',
     confirmation_sent_at: isoNow,
@@ -33,7 +35,9 @@ export function createDemoSession(): Session {
     raw_user_meta_data: {
       full_name: profile.displayName,
       onboarding_complete: profile.onboardingComplete,
+      island_run_first_run_claimed: profile.islandRunFirstRunClaimed,
       ai_coach_access: profile.aiCoachAccess,
+      island_run_daily_hearts_daykey: profile.dailyHeartsClaimedDayKey,
     },
   } as unknown as User;
 
