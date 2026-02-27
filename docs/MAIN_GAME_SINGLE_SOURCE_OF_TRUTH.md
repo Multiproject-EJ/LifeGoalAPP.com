@@ -185,7 +185,7 @@ Trigger when account is new/onboarding incomplete.
 - `/level-worlds.html` should route into the active Island Run app surface (not legacy static arc map) so migration slices are user-visible.
 - Entry-point auto-open flags (e.g., `openIslandRun=1`) should be consumed once and removed from URL to avoid repeated modal re-entry loops.
 - Auto-open bootstrap should validate an explicit entry source marker to avoid unintended activation on unrelated login URLs.
-- Bootstrap source markers should be time-bound (short TTL) to avoid stale URL parameters triggering unintended post-login modal opens.
+- Bootstrap params should be consumed/cleaned on first paint so auth redirects do not retain stale entry flags into normal app sessions.
 - Entry bootstrap intent must be handed off to in-app routing state before URL-flag cleanup so Level Worlds/Island Run opens reliably.
 - External `openIslandRun` entry should route directly to `LevelWorldsHub`/Island Run surface (avoid Lucky Roll intermediary hops).
 - `LevelWorldsHub` should default to Island Run surface; legacy board should only be reachable via explicit temporary opt-out flag if needed.

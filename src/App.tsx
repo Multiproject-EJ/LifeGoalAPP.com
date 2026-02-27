@@ -386,16 +386,11 @@ export default function App() {
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
   const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('openIslandRun') !== '1' || params.get('openIslandRunSource') !== 'level-worlds') {
-      return false;
-    }
-
-    const rawTs = params.get('openIslandRunTs');
-    const ts = rawTs ? Number.parseInt(rawTs, 10) : Number.NaN;
-    if (Number.isNaN(ts)) return false;
-
-    const ENTRY_WINDOW_MS = 5 * 60 * 1000;
-    return Date.now() - ts <= ENTRY_WINDOW_MS;
+    return (
+      window.location.pathname === '/' &&
+      params.get('openIslandRun') === '1' &&
+      params.get('openIslandRunSource') === 'level-worlds'
+    );
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
@@ -3600,20 +3595,22 @@ export default function App() {
   ) : null;
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('openIslandRun') && !params.has('openIslandRunSource')) return;
+
+    params.delete('openIslandRun');
+    params.delete('openIslandRunSource');
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
+    window.history.replaceState(window.history.state, '', nextUrl);
+  }, []);
+
+  useEffect(() => {
     if (!shouldAutoOpenIslandRun || !activeSession) return;
 
     setShowLevelWorldsFromEntry(true);
     setShouldAutoOpenIslandRun(false);
 
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('openIslandRun') !== '1') return;
-
-    params.delete('openIslandRun');
-    params.delete('openIslandRunSource');
-    params.delete('openIslandRunTs');
-    const nextSearch = params.toString();
-    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
-    window.history.replaceState(window.history.state, '', nextUrl);
   }, [activeSession, shouldAutoOpenIslandRun]);
 
   const handleRewardModalClose = (closeModal: () => void) => {

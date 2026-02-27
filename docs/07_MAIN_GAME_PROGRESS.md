@@ -1,18 +1,31 @@
 Date: 2026-02-27
-Slice: M7O.8 — Time-bound entry bootstrap marker to prevent stale auto-open
+Slice: M7O.9 — Incident debug ledger for login blank-screen regression
 Summary:
-- Added `openIslandRunTs` marker to `/level-worlds.html` redirect so bootstrap intent carries a timestamp.
-- Updated `App.tsx` auto-open gating to require source marker + fresh timestamp window (5 minutes) before opening `LevelWorldsHub`.
-- Cleans up `openIslandRunTs` with other one-time URL flags after consumption.
+- Added `docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md` as an append-only incident ledger for this recurring blank-screen issue.
+- Documented suspect code zones, attempted fixes, ranked hypotheses, reproducible debug protocol, and gated decision rule.
+- Establishes an evidence-first debugging workflow to avoid repeated blind patch loops.
 Files changed:
-- public/level-worlds.html
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7O.10 execute repro protocol with instrumentation and collect concrete failure evidence before further routing changes.
+
+Date: 2026-02-27
+Slice: M7O.8 — Consume entry bootstrap flags on first paint to avoid login-path side effects
+Summary:
+- Added first-paint URL cleanup in `App.tsx` that removes `openIslandRun`/`openIslandRunSource` immediately when present.
+- Scoped bootstrap detection to root path (`/`) + explicit source marker to reduce unintended activation after auth/login redirects.
+- Kept intentional `/level-worlds.html` entry behavior while preventing stale bootstrap params from lingering through auth transitions.
+Files changed:
 - src/App.tsx
 - docs/07_MAIN_GAME_PROGRESS.md
 - docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
 Testing:
 - npm run build
 Next:
-- M7O.9 add explicit auth-callback-safe bootstrap sequencing test coverage.
+- M7O.9 add integration coverage for bootstrap-param consume path across auth redirect scenarios.
 
 Date: 2026-02-27
 Slice: M7O.7 — Scope entry bootstrap to legacy level-worlds redirect source
