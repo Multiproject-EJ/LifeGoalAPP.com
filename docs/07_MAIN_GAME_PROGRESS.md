@@ -1,3 +1,292 @@
+Date: 2026-02-27
+Slice: M7M — Supabase-ready game-state store write path (with fallback)
+Summary:
+- Extended Island Run game-state store with a Supabase upsert write path targeting `island_run_runtime_state` (user_id keyed record).
+- Kept local storage persistence as fallback so prototype behavior remains stable when table/backend is unavailable.
+- Wired runtime backend persistence to use store write result and surface errors when Supabase write path fails.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7N add explicit read hydration from Supabase game-state table and phase out metadata fallback.
+
+Date: 2026-02-27
+Slice: M7L — Remove temporary metadata parity bridge for runtime markers
+Summary:
+- Updated Island Run runtime-state backend to persist runtime markers only in dedicated game-state storage service.
+- Removed temporary auth-metadata write-through for first-run/daily marker fields while keeping onboarding completion metadata writes.
+- Preserved runtime state read fallback behavior from metadata when no local game-state record exists.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7M implement Supabase-backed Island Run game-state table/API backend and replace browser storage store.
+
+Date: 2026-02-27
+Slice: M7K — Dedicated Island Run game-state storage backend (selector default)
+Summary:
+- Added `islandRunGameStateStore` as dedicated runtime marker storage for Island Run (first-run claim + daily hearts day key).
+- Updated runtime-state backend selector default to use game-state storage backend instead of auth-metadata-only backend.
+- Kept temporary auth metadata parity write-through in backend persistence while migration completes.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7L replace temporary metadata parity bridge with dedicated Supabase game-state table/API and read path hydration.
+
+Date: 2026-02-27
+Slice: M7J — Runtime-state backend selector (table/API swap-ready)
+Summary:
+- Added `islandRunRuntimeStateBackend` with a formal backend interface and selector for runtime marker read/write.
+- Moved auth-metadata runtime marker logic behind backend implementation so prototype components remain backend-agnostic.
+- Kept current behavior unchanged while enabling future dedicated game-state table/API backend replacement with minimal surface changes.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7K implement dedicated Island Run game-state table backend and switch selector default from auth metadata.
+
+Date: 2026-02-27
+Slice: M7I — Runtime-state service boundary for Island Run markers
+Summary:
+- Added `islandRunRuntimeState` service to centralize read/write of Island Run runtime markers (first-run claim + daily hearts day key).
+- Refactored Island Run prototype to use runtime-state service functions instead of reading/writing metadata fields inline.
+- Kept current persistence backend unchanged (auth metadata + demo parity) while establishing a clean migration boundary for future game-state table/API work.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7J swap runtime-state backend from auth metadata to dedicated Island Run game-state storage.
+
+Date: 2026-02-27
+Slice: M7H — First-run claim marker moved to profile metadata
+Summary:
+- Replaced localStorage-based first-run claim marker usage with profile metadata field `island_run_first_run_claimed`.
+- Updated shared Island Run profile persistence helper to write first-run claim state and kept demo parity mapping.
+- Extended demo profile/session shape to expose first-run claim metadata in demo mode.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/services/islandRunProfile.ts
+- src/services/demoData.ts
+- src/services/demoSession.ts
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7I migrate Island Run runtime markers from auth metadata into dedicated game-state table/API boundary.
+
+Date: 2026-02-27
+Slice: M7G — Shared Island Run profile metadata persistence helper
+Summary:
+- Added shared `persistIslandRunProfileMetadata` helper to centralize Island Run profile metadata writes for both live Supabase users and demo users.
+- Refactored onboarding-complete persistence and daily-hearts claim persistence in the prototype to use the shared helper.
+- Reduced duplicated `auth.updateUser` / demo profile branching in `IslandRunBoardPrototype` and standardized error handling paths.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunProfile.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7H move first-run claim marker + daily-hearts claim marker into server-backed game-state table (not auth metadata) for cleaner domain boundaries.
+
+Date: 2026-02-27
+Slice: M7F — Server-backed daily hearts claim persistence
+Summary:
+- Replaced local-only daily hearts claim persistence with profile-backed state using `island_run_daily_hearts_daykey` metadata.
+- Added demo parity by storing daily hearts claim day key in demo profile and exposing it in demo session metadata.
+- Added claim telemetry (`economy_earn`) for daily hearts with source/day key payload.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/services/demoData.ts
+- src/services/demoSession.ts
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7G move daily-hearts metadata updates into shared reward/profile write service to reduce duplicated auth.updateUser calls.
+
+Date: 2026-02-27
+Slice: M7E — Morning hearts guarantee (spin/day hatch split)
+Summary:
+- Added deterministic daily reward planner that guarantees 1-3 hearts each UTC day for each user.
+- Routed daily reward source to either Spin of the Day or Daily Hatch (one source per day), with one-time claim persisted in localStorage.
+- Wired Island Run prototype UI to claim daily hearts from the correct source and reflect claim status.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunDailyRewards.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7F move daily reward claim persistence from localStorage to server-backed state for cross-device parity.
+
+Date: 2026-02-27
+Slice: M7D — Scene-aware stop markers + collision-safe label rules
+Summary:
+- Upgraded outer-orbit stop markers from text chips to icon-centric markers with per-stop icon mapping (hatchery/boss/dynamic kinds/shop).
+- Added scene-aware visual treatment hooks for marker icons and introduced collision-safe label offsets (alternating top/bottom) with viewport clamp.
+- Added responsive label behavior to hide orbit labels on smaller viewports to reduce overlap while keeping icon markers interactive.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7E add richer stop art assets and tuned anchor sets per island scene pack.
+
+Date: 2026-02-27
+Slice: M7C — Canonical anchored stop placement for outer orbit markers
+Summary:
+- Replaced computed arc stop-marker positioning with canonical board anchor coordinates for stable placement across viewport sizes.
+- Added explicit `OUTER_STOP_ANCHORS` in board layout service to define Hatchery/3 dynamic stops/Boss and Shop marker positions.
+- Kept tile-triggered gameplay logic unchanged while using anchored visuals to match intended outside-of-loop stop arrangement.
+Files changed:
+- src/features/gamification/level-worlds/services/islandBoardLayout.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7D replace text chips with scene-aware stop art assets and collision-safe label rules.
+
+Date: 2026-02-27
+Slice: M7B — 17-tile lap readability + outer-orbit stop markers (incl. shop)
+Summary:
+- Improved board readability so the 17-tile lap is visually explicit in the prototype (center lap label + stronger foreground layering).
+- Added outer-orbit stop markers around the loop and included a Shop marker as a dedicated outside-of-loop destination marker.
+- Kept gameplay triggers tile-based while making orbit markers clickable shortcuts for stop modal inspection during prototype balancing.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7C replace placeholder stop chips with art/anchors tied to final island scene composition system.
+
+Date: 2026-02-27
+Slice: M7A — Persist first-run completion to profile metadata (Supabase + demo parity)
+Summary:
+- Added first-run launch persistence so Island Run writes `onboarding_complete: true` when first-run launch is confirmed.
+- Implemented environment parity: demo sessions update local demo profile, while live sessions update Supabase auth metadata.
+- Added guarded failure handling so first-run modal stays open if persistence fails, with actionable landing text for retry.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7B move first-run profile persistence into shared onboarding completion utility (reduce duplicated updateUser paths).
+
+Date: 2026-02-27
+Slice: M6F — Metadata-gated first-run flow + telemetry milestones
+Summary:
+- Integrated first-run Island Run gate with real onboarding metadata (`onboarding_complete`) so celebration flow is skipped for already-onboarded users.
+- Added telemetry milestones for first-run flow start, reward claim, and launch confirmation (tracked via `onboarding_completed` with stage metadata).
+- Kept one-time local claim marker behavior and starter rewards while adding metadata-driven guardrails.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7A connect first-run completion to persisted profile/onboarding state write path (Supabase + demo parity).
+
+Date: 2026-02-27
+Slice: M6E — First-run gate + celebration claim sequence (prototype)
+Summary:
+- Added first-run Island Run celebration gate in the prototype using a per-user localStorage claim marker.
+- Added two-step first-run flow: starter gift claim then launch step.
+- Wired starter grants in prototype state (+5 hearts, +250 coins, +1-heart equivalent dice boost) and blocked rolling until launch step is completed.
+- Added prototype coin HUD readout for first-run reward visibility.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M6F integrate first-run gate with real onboarding metadata + telemetry events.
+
+Date: 2026-02-27
+Slice: M6D — Stop progression states + boss unlock gating (prototype)
+Summary:
+- Added stop progression state model in Island Run prototype (`active`, `completed`, `locked`) derived from generated stop plans.
+- Added boss gating rule: boss stop remains locked until all non-boss stops are completed.
+- Added stop completion actions in stop modal and island-complete transition path when boss is completed.
+- Exposed stop-state summary in HUD for QA visibility and balancing verification.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M6E first-run game onboarding gate + celebration claim sequence wiring.
+
+Date: 2026-02-27
+Slice: M6C — Dynamic stop orchestration prototype
+Summary:
+- Added deterministic island stop generation service with fixed Hatchery/Boss stops and 3 weighted dynamic stops.
+- Enforced rule that every island plan includes at least one real-life behavior stop (habit/action or check-in/reflection).
+- Wired Island Run prototype to render and resolve active stop content from generated stop plans instead of static stop copy.
+- Added stop-plan visibility in prototype HUD to help QA and balancing checks per island.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunStops.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M6D stop objective state progression (pending/in-progress/completed) + boss unlock gating.
+
+Date: 2026-02-27
+Slice: M6B — Hearts-to-dice starter economy prototype wiring
+Summary:
+- Added Island Run economy helper service with deterministic heart-to-dice conversion tiers.
+- Updated Island Run board prototype to use dice pool for rolls and convert hearts into dice when empty.
+- Set starter prototype economy baseline to 5 hearts and 20 dice per heart at island 1 (with scaling tiers at higher islands).
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEconomy.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M6C stop orchestration rules (5 stops + boss) with dynamic stop pool constraints.
+
 # PROGRESS LOG — HabitGame Main Loop
 
 Date: 2026-02-24

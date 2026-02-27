@@ -1,4 +1,11 @@
 # DEVPLAN — Lucky Roll & HabitGame Core Games System
+
+> ⚠️ **Status update (2026-02-27):** Legacy framing.
+> The active canonical direction for the main game loop is now Island Run:
+> **[`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)**.
+>
+> Lucky Roll-first assumptions and Pomodoro mini-game assumptions in this file are superseded where they conflict.
+
 Version: 1.0 (Final)
 Status: Living Document
 Parent System: HabitGame Daily Treats → Middle Card Slot

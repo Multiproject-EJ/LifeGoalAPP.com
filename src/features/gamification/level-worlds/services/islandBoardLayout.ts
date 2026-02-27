@@ -14,6 +14,13 @@ export interface StopTile {
   tileIndex: number;
 }
 
+
+export interface OrbitStopAnchor {
+  id: 'hatchery' | 'stopA' | 'stopB' | 'stopC' | 'boss' | 'shop';
+  x: number;
+  y: number;
+}
+
 export const CANONICAL_BOARD_SIZE = {
   width: 1000,
   height: 1000,
@@ -48,3 +55,13 @@ export const STOP_TILES: StopTile[] = [
 ];
 
 export const TOKEN_START_TILE_INDEX = 0;
+
+
+export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
+  { id: 'hatchery', x: 200, y: 130 },
+  { id: 'stopA', x: 500, y: 85 },
+  { id: 'stopB', x: 790, y: 160 },
+  { id: 'stopC', x: 890, y: 500 },
+  { id: 'boss', x: 540, y: 905 },
+  { id: 'shop', x: 120, y: 500 },
+];

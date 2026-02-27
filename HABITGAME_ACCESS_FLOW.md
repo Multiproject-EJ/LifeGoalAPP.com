@@ -1,5 +1,9 @@
 # HabitGame Core Games — User Access Flow
 
+> ⚠️ **Status update (2026-02-27):** This file contains legacy Lucky Roll-first flow details.
+> Canonical gameplay flow now lives in:
+> **[`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)**.
+
 ## Overview
 
 This document explains how users access and navigate the 5-game HabitGame system integrated into the Daily Treats feature.
