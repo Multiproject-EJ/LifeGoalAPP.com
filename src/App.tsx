@@ -2214,6 +2214,24 @@ export default function App() {
   const shouldShowWorkspaceSetup =
     showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('openIslandRun') && !params.has('openIslandRunSource')) return;
+
+    params.delete('openIslandRun');
+    params.delete('openIslandRunSource');
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
+    window.history.replaceState(window.history.state, '', nextUrl);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAutoOpenIslandRun || !activeSession) return;
+
+    setShowLevelWorldsFromEntry(true);
+    setShouldAutoOpenIslandRun(false);
+  }, [activeSession, shouldAutoOpenIslandRun]);
+
   const handleCloseWorkspaceSetup = () => {
     setShowWorkspaceSetup(false);
     setWorkspaceSetupDismissed(true);
@@ -3595,24 +3613,6 @@ export default function App() {
     </div>
   ) : null;
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has('openIslandRun') && !params.has('openIslandRunSource')) return;
-
-    params.delete('openIslandRun');
-    params.delete('openIslandRunSource');
-    const nextSearch = params.toString();
-    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
-    window.history.replaceState(window.history.state, '', nextUrl);
-  }, []);
-
-  useEffect(() => {
-    if (!shouldAutoOpenIslandRun || !activeSession) return;
-
-    setShowLevelWorldsFromEntry(true);
-    setShouldAutoOpenIslandRun(false);
-
-  }, [activeSession, shouldAutoOpenIslandRun]);
 
   const handleRewardModalClose = (closeModal: () => void) => {
     closeModal();

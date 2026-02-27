@@ -1,8 +1,8 @@
 # Island Run login blank-screen debug log
 
-Status: **Open**
+Status: **Mitigated (awaiting prod verification)**
 Owner: Island Run migration track (M7O+)
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 
 ## 1) Problem statement
 After login, some sessions show a blank screen instead of the normal app/home surface.
@@ -38,14 +38,15 @@ High-risk files:
 | 2026-02-27 | First-paint bootstrap param cleanup | Remove stale params before auth transitions | ⚠️ Inconclusive | Better safety posture; needs explicit repro verification |
 | 2026-02-27 | Runtime hydration telemetry + dedupe + fallback messaging | Observe hydration/fallback behavior | ✅ Instrumentation improved | May help diagnosis, not necessarily root-cause fix |
 | 2026-02-28 | Add `RecoverableErrorBoundary` around `LevelWorldsHub` entry modal in `App.tsx` | Prevent full-app blank screen if Level Worlds/Island Run subtree throws during post-login mount | ✅ Mitigation added (pending prod repro) | Modal now auto-closes on render failure and logs a structured console error |
+| 2026-03-01 | Move `openIslandRun` effects above first top-level auth return in `App.tsx` | Fix hook-order crash after login | ✅ Fixed in code (pending prod verification) | Root cause: hooks were declared after `if (shouldRequireAuthentication && isMobileExperience) return ...`, causing React #310 when auth state flipped |
 
 Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
 
 ---
 
 ## 5) Current hypotheses (ranked)
-1. **Bootstrap URL param + auth redirect interaction**
-   - `openIslandRun*` params may still influence render timing around login transition in unexpected route states.
+1. **[Confirmed] Hook-order mismatch in `App.tsx` around auth gate return and late `openIslandRun` effects**
+   - Fixed by moving those effects above the first top-level early return.
 2. **Modal-first render path collision**
    - `showLevelWorldsFromEntry` modal path may conflict with other startup overlays/session initialization.
 3. **Hydration + entry sequencing race**
@@ -70,6 +71,7 @@ Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
 ## 7) Experiment queue
 - [x] Add temporary guarded debug logging around startup bootstrap + auth redirect state (dev-only).
 - [x] Verify whether blank screen reproduces when `LevelWorldsHub` subtree is isolated behind an error boundary; keep app usable if subtree throws.
+- [x] Validate hook-order hypothesis from prod console stack (`React #310`) against `App.tsx` hook placement.
 - [ ] Validate login flow with and without `/level-worlds.html` entry source.
 - [ ] Verify whether blank screen reproduces when all `openIslandRun*` handling is hard-disabled.
 - [ ] If yes, pivot focus from routing to post-login app init overlays.
@@ -82,3 +84,10 @@ No further routing/hydration code changes should be merged for this incident unl
 - observed evidence,
 - hypothesis-to-change mapping,
 - post-change verification result.
+
+
+## 9) Evidence captured (prod console)
+- `Uncaught Error: Minified React error #310` on login transition, stack points to `useEffect` call path.
+- React #310 corresponds to hook order mismatch (`Rendered more hooks than during the previous render`).
+- This matched `App.tsx` structure where new `openIslandRun` effects were placed after a top-level auth-gate early return, so unauthenticated render skipped those hooks but authenticated render executed them.
+
