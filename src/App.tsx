@@ -61,6 +61,7 @@ import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
+import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
 import { collectDailyHearts, hasCollectedDailyHeartsToday } from './services/dailyTreats';
@@ -382,6 +383,11 @@ export default function App() {
   const [quickGainsHabitText, setQuickGainsHabitText] = useState('');
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
+  const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
+  const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('openIslandRun') === '1' && params.get('openIslandRunSource') === 'level-worlds';
+  });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
@@ -3584,6 +3590,22 @@ export default function App() {
     </div>
   ) : null;
 
+  useEffect(() => {
+    if (!shouldAutoOpenIslandRun || !activeSession) return;
+
+    setShowLevelWorldsFromEntry(true);
+    setShouldAutoOpenIslandRun(false);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('openIslandRun') !== '1') return;
+
+    params.delete('openIslandRun');
+    params.delete('openIslandRunSource');
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
+    window.history.replaceState(window.history.state, '', nextUrl);
+  }, [activeSession, shouldAutoOpenIslandRun]);
+
   const handleRewardModalClose = (closeModal: () => void) => {
     closeModal();
     if (reopenGameOverlayOnRewardClose) {
@@ -3591,6 +3613,13 @@ export default function App() {
       setReopenGameOverlayOnRewardClose(false);
     }
   };
+
+  const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
+    <LevelWorldsHub
+      session={activeSession}
+      onClose={() => setShowLevelWorldsFromEntry(false)}
+    />
+  ) : null;
 
   const luckyRollModal = showLuckyRoll && activeSession ? (
     <LuckyRollBoard
@@ -3649,6 +3678,7 @@ export default function App() {
         )}
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
+        {levelWorldsEntryModal}
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
@@ -3922,6 +3952,7 @@ export default function App() {
 
       {mobileMenuOverlay}
       {mobileGamificationOverlay}
+      {levelWorldsEntryModal}
 
       {/* Game Board Overlay */}
       <GameBoardOverlay

@@ -55,7 +55,9 @@ export type TelemetryEventType =
   | 'gratitude_entry_flagged'
   | 'gratitude_thank_you_draft_copied'
   | 'gratitude_thank_you_draft_refine_requested'
-  | 'gratitude_warning_coach_opened';
+  | 'gratitude_warning_coach_opened'
+  | 'runtime_state_hydrated'
+  | 'runtime_state_hydration_failed';
 
 export type TelemetryEventMetadata = Json;
 
