@@ -1,4 +1,245 @@
 Date: 2026-02-27
+Slice: M7O.6 — Baseline alert thresholds + low-volume guardrail
+Summary:
+- Added shared default hydration alert thresholds in runtime telemetry constants (`fallbackRatio24h`, `failureCount24h`, `minHydrationEvents24h`).
+- Updated SQL alert seed query to require minimum hydration volume before triggering fallback-ratio alerts (reduces low-traffic false positives).
+- Updated telemetry playbook with explicit default threshold values and code/SQL alignment notes.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts
+- docs/09_ISLAND_RUN_RUNTIME_HYDRATION_ALERT_QUERIES.sql
+- docs/08_ISLAND_RUN_RUNTIME_HYDRATION_TELEMETRY_PLAYBOOK.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.7 wire threshold values into ops dashboard config and runbook ownership.
+
+Date: 2026-02-27
+Slice: M7O.5 — Backend alert query seeds for hydration fallback monitoring
+Summary:
+- Added SQL query seeds for hydration source distribution, fallback ratio, and failure trend monitoring.
+- Added starter alert query logic for 24h fallback ratio/failure thresholds to accelerate ops rollout checks.
+- Unified hydration source typing by reusing shared `IslandRunRuntimeHydrationSource` in game-state store type alias.
+Files changed:
+- docs/09_ISLAND_RUN_RUNTIME_HYDRATION_ALERT_QUERIES.sql
+- docs/08_ISLAND_RUN_RUNTIME_HYDRATION_TELEMETRY_PLAYBOOK.md
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.6 validate alert thresholds against production baseline and wire dashboards.
+
+Date: 2026-02-27
+Slice: M7O.4 — Hydration telemetry emission guardrails (dedupe)
+Summary:
+- Added client-side dedupe guard for runtime hydration telemetry to avoid repeated high-volume emits on repeated mounts.
+- Dedupe key scopes by user/event/source/day (UTC) using sessionStorage so rollout dashboards retain signal quality.
+- Kept hydration logic behavior unchanged; guard only impacts telemetry emission frequency.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/08_ISLAND_RUN_RUNTIME_HYDRATION_TELEMETRY_PLAYBOOK.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.5 align backend alert thresholds with deduped client emission semantics.
+
+Date: 2026-02-27
+Slice: M7O.3 — Runtime hydration telemetry playbook + constantized stage/source contract
+Summary:
+- Added `docs/08_ISLAND_RUN_RUNTIME_HYDRATION_TELEMETRY_PLAYBOOK.md` with event taxonomy, source meanings, and monitoring guidance.
+- Added shared Island Run runtime telemetry constants/type to avoid hard-coded hydration stage/source strings drifting across files.
+- Refactored Island Run prototype/runtime-state boundary typings to consume shared hydration source type/constants.
+Files changed:
+- docs/08_ISLAND_RUN_RUNTIME_HYDRATION_TELEMETRY_PLAYBOOK.md
+- src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.4 wire hydration-source observability into backend analytics queries/alerts.
+
+Date: 2026-02-27
+Slice: M7O.2 — Dedicated telemetry event taxonomy for runtime hydration lifecycle
+Summary:
+- Added dedicated telemetry event types for runtime hydration lifecycle (`runtime_state_hydrated`, `runtime_state_hydration_failed`) instead of overloading `onboarding_completed`.
+- Updated Island Run hydration telemetry emissions to use dedicated event types while preserving existing stage/source/error metadata.
+- Improves analytics clarity and avoids semantic ambiguity in onboarding funnels.
+Files changed:
+- src/services/telemetry.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.3 add telemetry query playbook/dashboard doc for fallback rate monitoring.
+
+Date: 2026-02-27
+Slice: M7O.1 — Hydration fallback UX + unexpected failure telemetry
+Summary:
+- Added lightweight UX messaging in Island Run prototype when runtime-state hydration falls back from table reads.
+- Added telemetry for unexpected hydration exceptions (`stage: island_run_runtime_state_hydration_failed_unexpected`) with error metadata.
+- Preserved table-first behavior and hydration guardrails while improving rollout diagnosability from client signals.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.2 align telemetry taxonomy for hydration lifecycle events (dedicated event type/stage map).
+
+Date: 2026-02-27
+Slice: M7O — Runtime-state hydration observability baseline
+Summary:
+- Added runtime-state hydration source reporting (`table` vs explicit fallback reasons) in the Island Run game-state store/runtime-state service boundary.
+- Added `hydrateIslandRunRuntimeStateWithSource` API and backend passthrough so callers can observe hydration provenance without changing persistence behavior.
+- Emitted hydration telemetry from `IslandRunBoardPrototype` (`stage: island_run_runtime_state_hydrated`) with source metadata for migration monitoring.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O.1 add backend-facing dashboards/alerts for hydration fallback rate spikes.
+
+Date: 2026-02-27
+Slice: M7N.7 — Make Island Run prototype the default Level Worlds surface
+Summary:
+- Switched `LevelWorldsHub` to default to `IslandRunBoardPrototype` instead of requiring `?islandRunDev=1`.
+- Added explicit opt-out behavior (`?islandRunDev=0`) for temporary fallback access to legacy board UI.
+- Aligns live user entry with migration intent so users no longer land on old 1/7 arc board by default.
+Files changed:
+- src/features/gamification/level-worlds/LevelWorldsHub.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O remove legacy board code path after final validation window.
+
+Date: 2026-02-27
+Slice: M7N.6 — Remove obsolete Lucky Roll bridge prop after direct entry routing
+Summary:
+- Removed `openLevelWorldsOnMount` from `LuckyRollBoard` now that `openIslandRun` routes directly to `LevelWorldsHub` from `App.tsx`.
+- Deleted corresponding reactive open-on-prop effect and reverted Lucky Roll Level Worlds state initialization to internal default.
+- Reduced entry-path complexity and eliminated dead migration bridge code.
+Files changed:
+- src/features/gamification/daily-treats/LuckyRollBoard.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7O begin formal deprecation of remaining legacy `/level-worlds.html` shim once app-native routes are finalized.
+
+Date: 2026-02-27
+Slice: M7N.5 — Direct Level Worlds entry routing (skip Lucky Roll intermediary)
+Summary:
+- Updated `openIslandRun` bootstrap flow to open `LevelWorldsHub` directly from `App.tsx` instead of first opening `LuckyRollBoard`.
+- Preserved one-time URL flag consumption (`openIslandRun`) while reducing modal-chain complexity and improving entry reliability.
+- Kept existing Lucky Roll gameplay entry behavior unchanged for in-app usage.
+Files changed:
+- src/App.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+Testing:
+- npm run build
+Next:
+- M7O consolidate legacy entrypoints and remove obsolete bridge props/routes.
+
+Date: 2026-02-27
+Slice: M7N.4 — Fix lost Level Worlds auto-open intent
+Summary:
+- Fixed a regression where `openIslandRun` was consumed before `LuckyRollBoard` received the `openLevelWorldsOnMount` intent, which could prevent Level Worlds from opening.
+- Added dedicated `openLevelWorldsFromEntry` handoff state in `App.tsx` so entry intent survives URL-flag cleanup.
+- Added reactive prop sync in `LuckyRollBoard` so late-arriving `openLevelWorldsOnMount` still opens Level Worlds hub.
+Files changed:
+- src/App.tsx
+- src/features/gamification/daily-treats/LuckyRollBoard.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7O continue runtime-state observability and remove remaining legacy route assumptions.
+
+Date: 2026-02-27
+Slice: M7N.3 — One-time `/level-worlds.html` auto-open consumption
+Summary:
+- Fixed repeat auto-open behavior after `/level-worlds.html` redirect by consuming `openIslandRun=1` only once per page load.
+- Removed `openIslandRun` query param from URL after auto-open using `history.replaceState` to prevent repeated modal re-open on later renders.
+- Preserved `islandRunDev=1` and other query params while cleaning only the bootstrap flag.
+Files changed:
+- src/App.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7O continue runtime-state observability and legacy entrypoint retirement.
+
+Date: 2026-02-27
+Slice: M7N.2 — Activate Island Run surface for `/level-worlds.html`
+Summary:
+- Replaced legacy static `/level-worlds.html` 1/7 arc map with a redirect shim into the app runtime (`openIslandRun=1`) so users land on the current Island Run implementation.
+- Added app bootstrap handling to auto-open Lucky Roll -> Level Worlds hub when `openIslandRun=1` is present.
+- Added Lucky Roll prop-based auto-open path for Level Worlds so `islandRunDev=1` links now surface the 17-tile prototype instead of legacy dots UI.
+Files changed:
+- public/level-worlds.html
+- src/App.tsx
+- src/features/gamification/daily-treats/LuckyRollBoard.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7O add runtime-state hydration observability + routing cleanup to retire remaining legacy entry points.
+
+Date: 2026-02-27
+Slice: M7N.1 — Runtime hydration guardrails + stale-merge prevention
+Summary:
+- Prevented first-run modal/telemetry false positives by waiting for runtime-state hydration completion before evaluating first-run gate conditions.
+- Blocked daily-hearts claim actions until runtime-state hydration completes to avoid pre-hydration duplicate grants.
+- Updated runtime-state patch persistence to merge against hydrated table-first state (when available) instead of local-only reads to reduce stale overwrite risk.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7O add explicit runtime-state hydration observability (success/fallback/error telemetry) and API contract hardening.
+
+Date: 2026-02-27
+Slice: M7N — Supabase runtime-state read hydration (table-first)
+Summary:
+- Added explicit runtime-state hydration reads from `island_run_runtime_state` so first-run and daily-hearts markers prefer table/API data when available.
+- Phased out auth-metadata fallback for runtime marker reads by defaulting to dedicated game-state storage fallback (`localStorage` + safe defaults).
+- Kept non-breaking behavior for demo/no-Supabase environments and runtime-table read failures by retaining local fallback state.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7O align server/API contracts and telemetry for runtime-state hydration/error observability.
+
+Date: 2026-02-27
 Slice: M7M — Supabase-ready game-state store write path (with fallback)
 Summary:
 - Extended Island Run game-state store with a Supabase upsert write path targeting `island_run_runtime_state` (user_id keyed record).

@@ -11,8 +11,14 @@ import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/is
 import { generateIslandStopPlan } from '../services/islandRunStops';
 import { planDailyHeartReward } from '../services/islandRunDailyRewards';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
+import {
+  ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
+  ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
+  shouldEmitIslandRunRuntimeHydrationTelemetry,
+} from '../services/islandRunRuntimeTelemetry';
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
 import {
+  hydrateIslandRunRuntimeStateWithSource,
   persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
 } from '../services/islandRunRuntimeState';
@@ -123,10 +129,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
+  const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
 
   const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
-  const runtimeState = readIslandRunRuntimeState(session);
+  const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
 
@@ -137,6 +144,66 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       'Game of Life Player';
     setBoosterName(defaultName);
   }, [session.user.email, session.user.user_metadata]);
+
+
+  useEffect(() => {
+    let isActive = true;
+
+    setHasHydratedRuntimeState(false);
+    setRuntimeState(readIslandRunRuntimeState(session));
+
+    void hydrateIslandRunRuntimeStateWithSource({ session, client })
+      .then((hydrationResult) => {
+        if (!isActive) return;
+        setRuntimeState(hydrationResult.state);
+
+        if (hydrationResult.source !== 'table') {
+          setLandingText('Using local runtime fallback while server runtime state is unavailable.');
+        }
+
+        if (shouldEmitIslandRunRuntimeHydrationTelemetry({
+          userId: session.user.id,
+          eventType: 'runtime_state_hydrated',
+          source: hydrationResult.source,
+        })) {
+          void recordTelemetryEvent({
+            userId: session.user.id,
+            eventType: 'runtime_state_hydrated',
+            metadata: {
+              stage: ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
+              source: hydrationResult.source,
+            },
+          });
+        }
+      })
+      .catch((error: unknown) => {
+        if (isActive) {
+          setLandingText('Using local runtime fallback while runtime hydration failed unexpectedly.');
+        }
+
+        if (shouldEmitIslandRunRuntimeHydrationTelemetry({
+          userId: session.user.id,
+          eventType: 'runtime_state_hydration_failed',
+        })) {
+          void recordTelemetryEvent({
+            userId: session.user.id,
+            eventType: 'runtime_state_hydration_failed',
+            metadata: {
+              stage: ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
+              error_message: error instanceof Error ? error.message : 'unknown_error',
+            },
+          });
+        }
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setHasHydratedRuntimeState(true);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [client, session.user.id]);
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem(onboardingStorageKey);
@@ -154,7 +221,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   }, [onboardingStorageKey]);
 
   useEffect(() => {
-    if (isOnboardingComplete) return;
+    if (!hasHydratedRuntimeState || isOnboardingComplete) return;
 
     if (!isFirstRunClaimed) {
       setShowFirstRunCelebration(true);
@@ -165,7 +232,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         metadata: { stage: 'island_run_first_run_started', island: islandNumber },
       });
     }
-  }, [isFirstRunClaimed, isOnboardingComplete, islandNumber, session.user.id]);
+  }, [hasHydratedRuntimeState, isFirstRunClaimed, isOnboardingComplete, islandNumber, session.user.id]);
 
   useEffect(() => {
     setDailyHeartsClaimed(runtimeState.dailyHeartsClaimedDayKey === dailyRewardPlan.dayKey);
@@ -559,11 +626,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return false;
     }
 
+    setRuntimeState((current) => ({
+      ...current,
+      firstRunClaimed: true,
+    }));
+
     return true;
   };
 
   const handleClaimDailyHearts = async (source: 'spin_of_the_day' | 'daily_hatch') => {
-    if (dailyHeartsClaimed || dailyRewardPlan.source !== source) return;
+    if (!hasHydratedRuntimeState || dailyHeartsClaimed || dailyRewardPlan.source !== source) return;
 
     const result = await persistIslandRunRuntimeStatePatch({
       session,
@@ -578,6 +650,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return;
     }
 
+    setRuntimeState((current) => ({
+      ...current,
+      dailyHeartsClaimedDayKey: dailyRewardPlan.dayKey,
+    }));
     setHearts((current) => current + dailyRewardPlan.hearts);
     setDailyHeartsClaimed(true);
     setLandingText(`Morning reward claimed from ${source === 'spin_of_the_day' ? 'Spin of the Day' : 'Daily Hatch'}: +${dailyRewardPlan.hearts} hearts.`);
@@ -678,7 +754,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               type="button"
               className="island-run-prototype__booster-btn"
               onClick={() => void handleClaimDailyHearts('spin_of_the_day')}
-              disabled={dailyHeartsClaimed}
+              disabled={!hasHydratedRuntimeState || dailyHeartsClaimed}
             >
               {dailyHeartsClaimed ? 'Spin reward claimed' : `Spin of the Day (+${dailyRewardPlan.hearts} hearts)`}
             </button>
@@ -877,7 +953,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <button
                 type="button"
                 onClick={() => void handleClaimDailyHearts('daily_hatch')}
-                disabled={dailyHeartsClaimed}
+                disabled={!hasHydratedRuntimeState || dailyHeartsClaimed}
               >
                 {dailyHeartsClaimed ? 'Daily hatch hearts claimed' : `Claim Daily Hatch (+${dailyRewardPlan.hearts} hearts)`}
               </button>

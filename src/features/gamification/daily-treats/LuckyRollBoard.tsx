@@ -68,6 +68,8 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     }
   }, [currencyBalance.dice, gameState, userId]);
   
+
+
   // Save state whenever it changes
   useEffect(() => {
     saveState(userId, gameState);

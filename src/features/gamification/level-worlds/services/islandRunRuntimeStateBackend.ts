@@ -1,13 +1,24 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
+import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import {
+  hydrateIslandRunGameStateRecord,
+  hydrateIslandRunGameStateRecordWithSource,
   readIslandRunGameStateRecord,
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 
 export interface IslandRunRuntimeStateBackend {
   read(session: Session): IslandRunRuntimeState;
+  hydrate(options: { session: Session; client: SupabaseClient | null }): Promise<IslandRunRuntimeState>;
+  hydrateWithSource(options: {
+    session: Session;
+    client: SupabaseClient | null;
+  }): Promise<{
+    state: IslandRunRuntimeState;
+    source: IslandRunRuntimeHydrationSource;
+  }>;
   persistPatch(options: {
     session: Session;
     client: SupabaseClient | null;
@@ -24,8 +35,17 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
     return readIslandRunGameStateRecord(session);
   },
 
+  async hydrate({ session, client }) {
+    return hydrateIslandRunGameStateRecord({ session, client });
+  },
+
+  async hydrateWithSource({ session, client }) {
+    const result = await hydrateIslandRunGameStateRecordWithSource({ session, client });
+    return { state: result.record, source: result.source };
+  },
+
   async persistPatch({ session, client, patch }) {
-    const current = readIslandRunGameStateRecord(session);
+    const current = await hydrateIslandRunGameStateRecord({ session, client });
     const nextState: IslandRunRuntimeState = {
       firstRunClaimed: typeof patch.firstRunClaimed === 'boolean' ? patch.firstRunClaimed : current.firstRunClaimed,
       dailyHeartsClaimedDayKey:
