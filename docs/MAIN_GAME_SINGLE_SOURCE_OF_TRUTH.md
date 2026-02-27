@@ -173,13 +173,30 @@ Trigger when account is new/onboarding incomplete.
 - Use a backend selector in the runtime-state service so table/API backend can replace auth-metadata backend without component changes.
 - Default runtime backend now uses dedicated Island Run game-state storage service; runtime markers are no longer mirrored to auth metadata.
 - Runtime game-state store now attempts Supabase table upserts (`island_run_runtime_state`) with local storage fallback during rollout.
+- Runtime marker reads now explicitly hydrate from `island_run_runtime_state` (table/API first), with local storage + safe defaults fallback when Supabase or table access is unavailable.
+- Hydration reads should expose source metadata (`table` vs fallback reason) and emit telemetry so fallback rates can be monitored during rollout.
+- Use dedicated telemetry event types for runtime hydration lifecycle (do not overload onboarding events for hydration observability).
+- Maintain a living hydration telemetry playbook (event taxonomy, source definitions, dashboard queries) to support rollout monitoring decisions.
+- Runtime hydration telemetry emission should be deduped client-side (scoped by user/event/source/day) to limit noise while preserving rollout signal quality.
+- Provide maintained backend SQL query seeds/alerts for hydration fallback and failure rates so ops can detect regressions quickly.
+- Alert thresholds should include a minimum hydration-volume guardrail before fallback-ratio alerts fire (to avoid low-traffic false positives).
+- Client should surface a non-blocking fallback indicator when hydration is not table-backed and emit explicit telemetry for unexpected hydration failures.
+- First-run gate and daily marker actions should wait for runtime-state hydration completion to avoid pre-hydration false positives or duplicate grants.
+- `/level-worlds.html` should route into the active Island Run app surface (not legacy static arc map) so migration slices are user-visible.
+- Entry-point auto-open flags (e.g., `openIslandRun=1`) should be consumed once and removed from URL to avoid repeated modal re-entry loops.
+- Auto-open bootstrap should validate an explicit entry source marker to avoid unintended activation on unrelated login URLs.
+- Bootstrap params should be consumed/cleaned on first paint so auth redirects do not retain stale entry flags into normal app sessions.
+- Entry bootstrap intent must be handed off to in-app routing state before URL-flag cleanup so Level Worlds/Island Run opens reliably.
+- External `openIslandRun` entry should route directly to `LevelWorldsHub`/Island Run surface (avoid Lucky Roll intermediary hops).
+- `LevelWorldsHub` should default to Island Run surface; legacy board should only be reachable via explicit temporary opt-out flag if needed.
+- Remove temporary Lucky Roll bridge props once direct Level Worlds entry routing is active to keep migration surface minimal.
 
 ### Track B — Island Run economy migration
 - Replace pack-first play dependency with heart->dice conversion for Island Run sessions.
 - Use deterministic conversion (`1 heart = 20 dice` starter) and progression scaling by island.
 - Keep rewards + telemetry in existing economy channels.
 - Add a daily morning hearts guarantee: award 1-3 hearts via either Spin of the Day or Daily Hatch (one source per day, deterministic plan).
-- Persist daily-hearts claim state in profile metadata (or demo profile parity) for cross-device consistency.
+- Persist daily-hearts claim marker in Island Run runtime-state storage (`island_run_runtime_state`) with demo/local fallback parity.
 - Use a shared Island Run profile metadata persistence helper to avoid duplicated auth update flows.
 
 ### Track C — Stop orchestration
