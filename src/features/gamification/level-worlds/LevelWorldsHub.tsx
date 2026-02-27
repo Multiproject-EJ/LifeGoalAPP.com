@@ -40,7 +40,8 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
   const [showVisionQuest, setShowVisionQuest] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
 
-  const isIslandRunPrototype = new URLSearchParams(window.location.search).get('islandRunDev') === '1';
+  const islandRunDevParam = new URLSearchParams(window.location.search).get('islandRunDev');
+  const isIslandRunPrototype = islandRunDevParam !== '0';
 
   const handleNodeClick = useCallback((node: WorldNode) => {
     if (node.status === 'active') {
