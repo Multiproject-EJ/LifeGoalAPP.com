@@ -54,6 +54,7 @@ import { MobileFooterNav } from './components/MobileFooterNav';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
+import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
 import { PointsBadge } from './components/PointsBadge';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
 import { useTheme } from './contexts/ThemeContext';
@@ -3622,10 +3623,18 @@ export default function App() {
   };
 
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
-    <LevelWorldsHub
-      session={activeSession}
-      onClose={() => setShowLevelWorldsFromEntry(false)}
-    />
+    <RecoverableErrorBoundary
+      fallback={null}
+      onError={(error) => {
+        console.error('[LevelWorldsEntryModal] render failed; closing modal to keep app usable.', error);
+        setShowLevelWorldsFromEntry(false);
+      }}
+    >
+      <LevelWorldsHub
+        session={activeSession}
+        onClose={() => setShowLevelWorldsFromEntry(false)}
+      />
+    </RecoverableErrorBoundary>
   ) : null;
 
   const luckyRollModal = showLuckyRoll && activeSession ? (

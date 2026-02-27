@@ -2,7 +2,7 @@
 
 Status: **Open**
 Owner: Island Run migration track (M7O+)
-Last updated: 2026-02-27
+Last updated: 2026-02-28
 
 ## 1) Problem statement
 After login, some sessions show a blank screen instead of the normal app/home surface.
@@ -37,6 +37,7 @@ High-risk files:
 | 2026-02-27 | Source-gated bootstrap (`openIslandRunSource=level-worlds`) | Limit accidental activation | ⚠️ Inconclusive | Reported issue persisted in some login paths |
 | 2026-02-27 | First-paint bootstrap param cleanup | Remove stale params before auth transitions | ⚠️ Inconclusive | Better safety posture; needs explicit repro verification |
 | 2026-02-27 | Runtime hydration telemetry + dedupe + fallback messaging | Observe hydration/fallback behavior | ✅ Instrumentation improved | May help diagnosis, not necessarily root-cause fix |
+| 2026-02-28 | Add `RecoverableErrorBoundary` around `LevelWorldsHub` entry modal in `App.tsx` | Prevent full-app blank screen if Level Worlds/Island Run subtree throws during post-login mount | ✅ Mitigation added (pending prod repro) | Modal now auto-closes on render failure and logs a structured console error |
 
 Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
 
@@ -51,6 +52,8 @@ Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
    - Level Worlds/Island Run mounts before required app/session state settles, leading to a blank/blocked render state.
 4. **Non-visual runtime failure hidden by broad fallbacks**
    - Error path may be swallowed, producing apparent blank screen without obvious fatal logs.
+5. **Uncaught render error inside Level Worlds subtree can blank the whole app**
+   - Since `LevelWorldsHub` can mount during bootstrap entry, an unhandled render error in Island Run path can take down the root tree.
 
 ---
 
@@ -65,7 +68,8 @@ Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
 ---
 
 ## 7) Experiment queue
-- [ ] Add temporary guarded debug logging around startup bootstrap + auth redirect state (dev-only).
+- [x] Add temporary guarded debug logging around startup bootstrap + auth redirect state (dev-only).
+- [x] Verify whether blank screen reproduces when `LevelWorldsHub` subtree is isolated behind an error boundary; keep app usable if subtree throws.
 - [ ] Validate login flow with and without `/level-worlds.html` entry source.
 - [ ] Verify whether blank screen reproduces when all `openIslandRun*` handling is hard-disabled.
 - [ ] If yes, pivot focus from routing to post-login app init overlays.
