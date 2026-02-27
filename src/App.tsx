@@ -61,7 +61,6 @@ import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
-import { SafeErrorBoundary } from './components/SafeErrorBoundary';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
@@ -387,7 +386,16 @@ export default function App() {
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
   const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('openIslandRun') === '1' && params.get('openIslandRunSource') === 'level-worlds';
+    if (params.get('openIslandRun') !== '1' || params.get('openIslandRunSource') !== 'level-worlds') {
+      return false;
+    }
+
+    const rawTs = params.get('openIslandRunTs');
+    const ts = rawTs ? Number.parseInt(rawTs, 10) : Number.NaN;
+    if (Number.isNaN(ts)) return false;
+
+    const ENTRY_WINDOW_MS = 5 * 60 * 1000;
+    return Date.now() - ts <= ENTRY_WINDOW_MS;
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
@@ -3602,6 +3610,7 @@ export default function App() {
 
     params.delete('openIslandRun');
     params.delete('openIslandRunSource');
+    params.delete('openIslandRunTs');
     const nextSearch = params.toString();
     const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
     window.history.replaceState(window.history.state, '', nextUrl);
@@ -3616,28 +3625,10 @@ export default function App() {
   };
 
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
-    <SafeErrorBoundary
-      fallback={(
-        <div className="daily-treats-modal" role="dialog" aria-modal="true" aria-label="Island Run unavailable">
-          <div className="daily-treats-modal__backdrop" onClick={() => setShowLevelWorldsFromEntry(false)} />
-          <div className="daily-treats-modal__container">
-            <h2>Island Run is temporarily unavailable</h2>
-            <p>We closed the game surface to keep the app usable. Please retry from the Game Board.</p>
-            <button type="button" className="quick-gains-modal__action" onClick={() => setShowLevelWorldsFromEntry(false)}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-      onError={(error) => {
-        console.error('Level Worlds entry crashed:', error);
-      }}
-    >
-      <LevelWorldsHub
-        session={activeSession}
-        onClose={() => setShowLevelWorldsFromEntry(false)}
-      />
-    </SafeErrorBoundary>
+    <LevelWorldsHub
+      session={activeSession}
+      onClose={() => setShowLevelWorldsFromEntry(false)}
+    />
   ) : null;
 
   const luckyRollModal = showLuckyRoll && activeSession ? (
