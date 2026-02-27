@@ -1,5 +1,6 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { isDemoSession } from '../../../../services/demoSession';
+import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 
 export interface IslandRunGameStateRecord {
   firstRunClaimed: boolean;
@@ -12,14 +13,25 @@ function getStorageKey(userId: string) {
   return `island_run_runtime_state_${userId}`;
 }
 
-export function readIslandRunGameStateRecord(session: Session): IslandRunGameStateRecord {
-  const fallback: IslandRunGameStateRecord = {
-    firstRunClaimed: Boolean(session.user.user_metadata?.island_run_first_run_claimed),
-    dailyHeartsClaimedDayKey:
-      typeof session.user.user_metadata?.island_run_daily_hearts_daykey === 'string'
-        ? session.user.user_metadata.island_run_daily_hearts_daykey
-        : null,
+function getDefaultRecord(): IslandRunGameStateRecord {
+  return {
+    firstRunClaimed: false,
+    dailyHeartsClaimedDayKey: null,
   };
+}
+
+function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunGameStateRecord): IslandRunGameStateRecord {
+  return {
+    firstRunClaimed: typeof value.firstRunClaimed === 'boolean' ? value.firstRunClaimed : fallback.firstRunClaimed,
+    dailyHeartsClaimedDayKey:
+      typeof value.dailyHeartsClaimedDayKey === 'string' || value.dailyHeartsClaimedDayKey === null
+        ? value.dailyHeartsClaimedDayKey
+        : fallback.dailyHeartsClaimedDayKey,
+  };
+}
+
+export function readIslandRunGameStateRecord(session: Session): IslandRunGameStateRecord {
+  const fallback = getDefaultRecord();
 
   if (typeof window === 'undefined') return fallback;
 
@@ -27,16 +39,64 @@ export function readIslandRunGameStateRecord(session: Session): IslandRunGameSta
     const raw = window.localStorage.getItem(getStorageKey(session.user.id));
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as Partial<IslandRunGameStateRecord>;
-    return {
-      firstRunClaimed: typeof parsed.firstRunClaimed === 'boolean' ? parsed.firstRunClaimed : fallback.firstRunClaimed,
-      dailyHeartsClaimedDayKey:
-        typeof parsed.dailyHeartsClaimedDayKey === 'string' || parsed.dailyHeartsClaimedDayKey === null
-          ? parsed.dailyHeartsClaimedDayKey
-          : fallback.dailyHeartsClaimedDayKey,
-    };
+    return toRecord(parsed, fallback);
   } catch {
     return fallback;
   }
+}
+
+export type IslandRunGameStateHydrationSource = IslandRunRuntimeHydrationSource;
+
+export async function hydrateIslandRunGameStateRecordWithSource(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<{ record: IslandRunGameStateRecord; source: IslandRunGameStateHydrationSource }> {
+  const { session, client } = options;
+  const fallback = readIslandRunGameStateRecord(session);
+
+  if (isDemoSession(session) || !client) {
+    return { record: fallback, source: 'fallback_demo_or_no_client' };
+  }
+
+  const { data, error } = await client
+    .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
+    .select('first_run_claimed,daily_hearts_claimed_day_key')
+    .eq('user_id', session.user.id)
+    .maybeSingle();
+
+  if (error) {
+    return { record: fallback, source: 'fallback_query_error' };
+  }
+
+  if (!data) {
+    return { record: fallback, source: 'fallback_no_row' };
+  }
+
+  const hydratedRecord = toRecord(
+    {
+      firstRunClaimed: data.first_run_claimed,
+      dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
+    },
+    fallback,
+  );
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(hydratedRecord));
+    } catch {
+      // ignore local persistence failures in prototype mode
+    }
+  }
+
+  return { record: hydratedRecord, source: 'table' };
+}
+
+export async function hydrateIslandRunGameStateRecord(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<IslandRunGameStateRecord> {
+  const result = await hydrateIslandRunGameStateRecordWithSource(options);
+  return result.record;
 }
 
 export async function writeIslandRunGameStateRecord(options: {

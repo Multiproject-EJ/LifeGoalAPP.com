@@ -54,6 +54,7 @@ import { MobileFooterNav } from './components/MobileFooterNav';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
+import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
 import { PointsBadge } from './components/PointsBadge';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
 import { useTheme } from './contexts/ThemeContext';
@@ -61,6 +62,7 @@ import { useGamification } from './hooks/useGamification';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
+import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
 import { collectDailyHearts, hasCollectedDailyHeartsToday } from './services/dailyTreats';
@@ -382,6 +384,15 @@ export default function App() {
   const [quickGainsHabitText, setQuickGainsHabitText] = useState('');
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
+  const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
+  const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return (
+      window.location.pathname === '/' &&
+      params.get('openIslandRun') === '1' &&
+      params.get('openIslandRunSource') === 'level-worlds'
+    );
+  });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
@@ -2203,6 +2214,24 @@ export default function App() {
   const shouldShowWorkspaceSetup =
     showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('openIslandRun') && !params.has('openIslandRunSource')) return;
+
+    params.delete('openIslandRun');
+    params.delete('openIslandRunSource');
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
+    window.history.replaceState(window.history.state, '', nextUrl);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAutoOpenIslandRun || !activeSession) return;
+
+    setShowLevelWorldsFromEntry(true);
+    setShouldAutoOpenIslandRun(false);
+  }, [activeSession, shouldAutoOpenIslandRun]);
+
   const handleCloseWorkspaceSetup = () => {
     setShowWorkspaceSetup(false);
     setWorkspaceSetupDismissed(true);
@@ -3584,6 +3613,7 @@ export default function App() {
     </div>
   ) : null;
 
+
   const handleRewardModalClose = (closeModal: () => void) => {
     closeModal();
     if (reopenGameOverlayOnRewardClose) {
@@ -3591,6 +3621,21 @@ export default function App() {
       setReopenGameOverlayOnRewardClose(false);
     }
   };
+
+  const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
+    <RecoverableErrorBoundary
+      fallback={null}
+      onError={(error) => {
+        console.error('[LevelWorldsEntryModal] render failed; closing modal to keep app usable.', error);
+        setShowLevelWorldsFromEntry(false);
+      }}
+    >
+      <LevelWorldsHub
+        session={activeSession}
+        onClose={() => setShowLevelWorldsFromEntry(false)}
+      />
+    </RecoverableErrorBoundary>
+  ) : null;
 
   const luckyRollModal = showLuckyRoll && activeSession ? (
     <LuckyRollBoard
@@ -3649,6 +3694,7 @@ export default function App() {
         )}
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
+        {levelWorldsEntryModal}
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
@@ -3922,6 +3968,7 @@ export default function App() {
 
       {mobileMenuOverlay}
       {mobileGamificationOverlay}
+      {levelWorldsEntryModal}
 
       {/* Game Board Overlay */}
       <GameBoardOverlay
