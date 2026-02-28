@@ -951,6 +951,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      island_run_runtime_state: {
+        Row: {
+          user_id: string;
+          first_run_claimed: boolean;
+          daily_hearts_claimed_day_key: string | null;
+          current_island_number: number;
+          boss_trial_resolved_island_number: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          first_run_claimed?: boolean;
+          daily_hearts_claimed_day_key?: string | null;
+          current_island_number?: number;
+          boss_trial_resolved_island_number?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          first_run_claimed?: boolean;
+          daily_hearts_claimed_day_key?: string | null;
+          current_island_number?: number;
+          boss_trial_resolved_island_number?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       commitment_contracts: {
         Row: {
           id: string;

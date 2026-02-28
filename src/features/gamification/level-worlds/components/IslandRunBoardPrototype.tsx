@@ -23,6 +23,8 @@ import {
   readIslandRunRuntimeState,
 } from '../services/islandRunRuntimeState';
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
+import { awardHearts, logGameSession } from '../../../../services/gameRewards';
+import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
@@ -30,6 +32,8 @@ const ROLL_MAX = 3;
 const DEV_ISLAND_DURATION_SEC = 45;
 const DEV_EGG_DURATION_SEC = 40;
 const ENCOUNTER_TILE_INDEX = 6;
+const BOSS_TRIAL_REWARD_HEARTS = 2;
+const BOSS_TRIAL_REWARD_COINS = 120;
 
 type EggTier = 'common' | 'rare' | 'mythic';
 
@@ -104,6 +108,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const boardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
+  const showQaHooks = useMemo(() => new URLSearchParams(window.location.search).get('islandRunQa') === '1', []);
   const [activeScene, setActiveScene] = useState<(typeof ISLAND_SCENES)[number]>(1);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
 
@@ -125,6 +130,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [isDisplayNameLoopCompleted, setIsDisplayNameLoopCompleted] = useState(false);
   const [showEncounterModal, setShowEncounterModal] = useState(false);
   const [encounterResolved, setEncounterResolved] = useState(false);
+  const [bossTrialResolved, setBossTrialResolved] = useState(false);
+  const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
   const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
@@ -137,6 +144,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      return;
+    }
+
+    const persistedIsland = runtimeState.currentIslandNumber;
+    setIslandNumber((current) => (current === persistedIsland ? current : persistedIsland));
+    setDicePool(convertHeartToDicePool(persistedIsland));
+    setBossTrialResolved(runtimeState.bossTrialResolvedIslandNumber === persistedIsland);
+  }, [hasHydratedRuntimeState, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber]);
 
   useEffect(() => {
     logIslandRunEntryDebug('island_run_board_mount', {
@@ -461,11 +479,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setLandingText('Island expired. Traveling to next island...');
 
     const timeout = window.setTimeout(() => {
-      setIslandNumber((value) => {
-        const nextIsland = value + 1;
-        setDicePool(convertHeartToDicePool(nextIsland));
-        return nextIsland;
-      });
+      const nextIsland = islandNumber + 1;
+      setIslandNumber(nextIsland);
+      setDicePool(convertHeartToDicePool(nextIsland));
       setTokenIndex(TOKEN_START_TILE_INDEX);
       setHearts(5);
       setRollValue(null);
@@ -473,13 +489,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setShowEncounterModal(false);
       setEncounterResolved(false);
       setCompletedStops([]);
+      setBossTrialResolved(false);
+      setBossRewardSummary(null);
       setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
       setLandingText('Arrived at next island. Ready to roll. Egg progress carried over (prototype).');
       setShowTravelOverlay(false);
+
+      void persistIslandRunRuntimeStatePatch({
+        session,
+        client,
+        patch: {
+          currentIslandNumber: nextIsland,
+          bossTrialResolvedIslandNumber: null,
+        },
+      });
+      setRuntimeState((current) => ({
+        ...current,
+        currentIslandNumber: nextIsland,
+        bossTrialResolvedIslandNumber: null,
+      }));
     }, 1800);
 
     return () => window.clearTimeout(timeout);
-  }, [timeLeftSec, showTravelOverlay]);
+  }, [client, islandNumber, session, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = formatClock(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
@@ -601,27 +633,127 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setLandingText('Encounter resolved: +1 heart reward (prototype).');
   };
 
+  const handleResolveBossTrial = () => {
+    if (bossTrialResolved) {
+      return;
+    }
+
+    awardHearts(session.user.id, BOSS_TRIAL_REWARD_HEARTS, 'shooter_blitz', 'Island Run boss trial resolved');
+    awardGold(session.user.id, BOSS_TRIAL_REWARD_COINS, 'shooter_blitz', 'Island Run boss trial resolved');
+
+    logGameSession(session.user.id, {
+      gameId: 'shooter_blitz',
+      action: 'reward',
+      timestamp: new Date().toISOString(),
+      metadata: {
+        stage: 'island_run_boss_trial_resolved',
+        reward_hearts: BOSS_TRIAL_REWARD_HEARTS,
+        reward_coins: BOSS_TRIAL_REWARD_COINS,
+        island_number: islandNumber,
+      },
+    });
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_boss_trial_resolved',
+        source: 'shooter_blitz',
+        hearts: BOSS_TRIAL_REWARD_HEARTS,
+        coins: BOSS_TRIAL_REWARD_COINS,
+        island_number: islandNumber,
+      },
+    });
+
+    setBossTrialResolved(true);
+    setHearts((current) => current + BOSS_TRIAL_REWARD_HEARTS);
+    setCoins((current) => current + BOSS_TRIAL_REWARD_COINS);
+
+    const rewardText = `Boss challenge resolved: +${BOSS_TRIAL_REWARD_HEARTS} hearts, +${BOSS_TRIAL_REWARD_COINS} coins.`;
+    setBossRewardSummary(rewardText);
+    setLandingText(`${rewardText} Claim island clear to travel.`);
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        currentIslandNumber: islandNumber,
+        bossTrialResolvedIslandNumber: islandNumber,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      currentIslandNumber: islandNumber,
+      bossTrialResolvedIslandNumber: islandNumber,
+    }));
+  };
+
   const handleCompleteActiveStop = () => {
     if (!activeStopId) return;
 
     if (activeStopId === 'boss') {
+      if (!bossTrialResolved) {
+        setLandingText('Boss challenge is still pending. Resolve the boss trial before clearing the island.');
+        return;
+      }
+
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
       setCompletedStops((current) => (current.includes('boss') ? current : [...current, 'boss']));
+
+      logGameSession(session.user.id, {
+        gameId: 'shooter_blitz',
+        action: 'complete',
+        timestamp: new Date().toISOString(),
+        metadata: {
+          stage: 'island_run_boss_island_cleared',
+          island_number: islandNumber,
+          rewards_granted: {
+            hearts: BOSS_TRIAL_REWARD_HEARTS,
+            coins: BOSS_TRIAL_REWARD_COINS,
+          },
+        },
+      });
+
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: {
+          stage: 'island_run_boss_island_cleared',
+          source: 'shooter_blitz',
+          island_number: islandNumber,
+          boss_trial_resolved: true,
+        },
+      });
+
       setShowTravelOverlay(true);
       window.setTimeout(() => {
+        const nextIsland = islandNumber + 1;
         setShowTravelOverlay(false);
-        setIslandNumber((value) => {
-          const nextIsland = value + 1;
-          setDicePool(convertHeartToDicePool(nextIsland));
-          return nextIsland;
-        });
+        setIslandNumber(nextIsland);
+        setDicePool(convertHeartToDicePool(nextIsland));
         setTokenIndex(TOKEN_START_TILE_INDEX);
         setHearts(5);
         setRollValue(null);
         setActiveStopId(null);
         setEncounterResolved(false);
         setCompletedStops([]);
+        setBossTrialResolved(false);
+        setBossRewardSummary(null);
         setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
+
+        void persistIslandRunRuntimeStatePatch({
+          session,
+          client,
+          patch: {
+            currentIslandNumber: nextIsland,
+            bossTrialResolvedIslandNumber: null,
+          },
+        });
+        setRuntimeState((current) => ({
+          ...current,
+          currentIslandNumber: nextIsland,
+          bossTrialResolvedIslandNumber: null,
+        }));
       }, 1400);
       return;
     }
@@ -692,6 +824,73 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
+  const handleQaMarkBossResolved = () => {
+    setBossTrialResolved(true);
+    setBossRewardSummary(`QA marker set for island ${islandNumber}.`);
+    setLandingText(`QA: boss marker set for island ${islandNumber}.`);
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        currentIslandNumber: islandNumber,
+        bossTrialResolvedIslandNumber: islandNumber,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      currentIslandNumber: islandNumber,
+      bossTrialResolvedIslandNumber: islandNumber,
+    }));
+  };
+
+  const handleQaAdvanceIsland = () => {
+    const nextIsland = islandNumber + 1;
+    setIslandNumber(nextIsland);
+    setDicePool(convertHeartToDicePool(nextIsland));
+    setTokenIndex(TOKEN_START_TILE_INDEX);
+    setBossTrialResolved(false);
+    setBossRewardSummary(null);
+    setLandingText(`QA: advanced to island ${nextIsland}.`);
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        currentIslandNumber: nextIsland,
+        bossTrialResolvedIslandNumber: null,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      currentIslandNumber: nextIsland,
+      bossTrialResolvedIslandNumber: null,
+    }));
+  };
+
+  const handleQaResetProgression = () => {
+    setIslandNumber(1);
+    setDicePool(convertHeartToDicePool(1));
+    setTokenIndex(TOKEN_START_TILE_INDEX);
+    setBossTrialResolved(false);
+    setBossRewardSummary(null);
+    setLandingText('QA: progression markers reset to island 1.');
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        currentIslandNumber: 1,
+        bossTrialResolvedIslandNumber: null,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      currentIslandNumber: 1,
+      bossTrialResolvedIslandNumber: null,
+    }));
+  };
+
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
       setHearts((current) => current + 5);
@@ -728,7 +927,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   return (
     <section className="island-run-prototype">
       <header className="island-run-prototype__header">
-        <h2>🏝️ Island Run • M1-M5A Prototype</h2>
+        <h2>🏝️ Island Run • M7F Regression QA Hooks</h2>
         <div className="island-run-prototype__status-row">
           <span>Hearts: <strong>{hearts}</strong></span>
           <span>Dice: <strong>{dicePool}</strong></span>
@@ -771,6 +970,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 ? 'Roll (1 dice)'
                 : `Convert 1 heart → ${dicePerHeart} dice`}
           </button>
+
+          {(showDebug || showQaHooks) && (
+            <>
+              <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaMarkBossResolved}>
+                QA: Mark boss resolved
+              </button>
+              <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaAdvanceIsland}>
+                QA: Advance island
+              </button>
+              <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaResetProgression}>
+                QA: Reset progression
+              </button>
+            </>
+          )}
           {dailyRewardPlan.source === 'spin_of_the_day' && (
             <button
               type="button"
@@ -981,7 +1194,23 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </button>
             ) : null}
 
-            {activeStop.stopId !== 'hatchery' ? (
+            {activeStop.stopId === 'boss' ? (
+              <div className="island-hatchery-card">
+                <p>
+                  Trial objective: lock focus for one short burst, then confirm mission integrity.
+                </p>
+                <p>
+                  {bossTrialResolved
+                    ? `Reward granted. ${bossRewardSummary ?? ''}`
+                    : `Resolve to earn +${BOSS_TRIAL_REWARD_HEARTS} hearts and +${BOSS_TRIAL_REWARD_COINS} coins.`}
+                </p>
+                {!bossTrialResolved ? (
+                  <button type="button" onClick={handleResolveBossTrial}>Resolve Boss Trial</button>
+                ) : null}
+              </div>
+            ) : null}
+
+            {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' ? (
               <button type="button" onClick={handleCompleteActiveStop}>
                 Complete Stop
               </button>
@@ -989,6 +1218,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             {activeStop.stopId === 'hatchery' ? (
               <button type="button" onClick={handleCompleteActiveStop}>
                 Complete Hatchery Stop
+              </button>
+            ) : null}
+            {activeStop.stopId === 'boss' ? (
+              <button type="button" onClick={handleCompleteActiveStop} disabled={!bossTrialResolved}>
+                Claim Island Clear
               </button>
             ) : null}
             <button type="button" onClick={() => setActiveStopId(null)}>Close</button>

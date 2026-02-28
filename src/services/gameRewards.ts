@@ -4,7 +4,11 @@ import {
   MYSTERY_BOX_DICE_TIERS,
   MYSTERY_BOX_TOKEN_TIERS,
 } from '../constants/economy';
-import { normalizeHabitGameId, type HabitGameId } from '../types/habitGames';
+import {
+  normalizeHabitGameId,
+  type HabitGameId,
+  type LegacyHabitGameId,
+} from '../types/habitGames';
 
 const STORAGE_KEY_CURRENCIES = 'gol_game_currencies';
 const STORAGE_KEY_EVENTS = 'gol_game_events_log';
@@ -17,12 +21,13 @@ const RANDOM_BUFFER = new Uint32Array(1);
 export type GameSource =
   | 'lucky_roll'
   | 'task_tower'
-  | 'pomodoro_sprint' // legacy source (deprecating)
   | 'shooter_blitz'
   | 'vision_quest'
   | 'wheel_of_wins'
   | 'dice_packs'
   | 'daily_treats';
+
+type LegacyGameSource = 'pomodoro_sprint';
 
 export interface GameRewardEvent {
   id: string;
@@ -57,26 +62,42 @@ export interface LegacyAliasSunsetReadiness {
 }
 
 
-const LEGACY_GAME_SOURCE_ALIASES: Partial<Record<GameSource, GameSource>> = {
+export interface LegacyAliasSunsetRollup {
+  scannedUserCount: number;
+  usersWithLegacyAliases: string[];
+  totalLegacyRewardSourceRows: number;
+  totalLegacySessionGameIdRows: number;
+  hasLegacyAliases: boolean;
+  scannedAt: string;
+}
+
+
+const LEGACY_GAME_SOURCE_ALIASES: Record<LegacyGameSource, GameSource> = {
   pomodoro_sprint: 'shooter_blitz',
 };
 
-function normalizeGameSource(source: GameSource): GameSource {
-  return LEGACY_GAME_SOURCE_ALIASES[source] ?? source;
+type StoredRewardEvent = Omit<GameRewardEvent, 'source'> & { source: GameSource | LegacyGameSource };
+type StoredSessionEvent = Omit<GameSessionEvent, 'gameId'> & { gameId: HabitGameId | LegacyHabitGameId };
+
+function normalizeGameSource(source: GameSource | LegacyGameSource): GameSource {
+  if (source === 'pomodoro_sprint') {
+    return LEGACY_GAME_SOURCE_ALIASES.pomodoro_sprint;
+  }
+  return source;
 }
 
-function normalizeGameId(gameId: HabitGameId): HabitGameId {
+function normalizeGameId(gameId: HabitGameId | LegacyHabitGameId): HabitGameId {
   return normalizeHabitGameId(gameId);
 }
 
-function normalizeRewardEvent(event: GameRewardEvent): GameRewardEvent {
+function normalizeRewardEvent(event: StoredRewardEvent): GameRewardEvent {
   return {
     ...event,
     source: normalizeGameSource(event.source),
   };
 }
 
-function normalizeSessionEvent(event: GameSessionEvent): GameSessionEvent {
+function normalizeSessionEvent(event: StoredSessionEvent): GameSessionEvent {
   return {
     ...event,
     gameId: normalizeGameId(event.gameId),
@@ -421,7 +442,7 @@ export function getRewardHistory(userId: string, limit?: number): GameRewardEven
     const stored = safeLocalStorage.getItem(STORAGE_KEY_EVENTS);
     if (!stored) return [];
 
-    const events: GameRewardEvent[] = JSON.parse(stored);
+    const events: StoredRewardEvent[] = JSON.parse(stored) as StoredRewardEvent[];
     let hasLegacyAliases = false;
 
     const normalizedEvents = events.map((event) => {
@@ -517,7 +538,7 @@ export function getGameSessionHistory(userId: string, limit?: number): GameSessi
     const stored = safeLocalStorage.getItem(`${STORAGE_KEY_SESSIONS}_${userId}`);
     if (!stored) return [];
 
-    const sessions: GameSessionEvent[] = JSON.parse(stored) as GameSessionEvent[];
+    const sessions: StoredSessionEvent[] = JSON.parse(stored) as StoredSessionEvent[];
     let hasLegacyAliases = false;
 
     const normalizedSessions = sessions.map((session) => {
@@ -544,6 +565,46 @@ export function getGameSessionHistory(userId: string, limit?: number): GameSessi
 }
 
 
+
+export function getLegacyAliasSunsetRollup(userIds: readonly string[]): LegacyAliasSunsetRollup {
+  const scannedAt = new Date().toISOString();
+  const uniqueUserIds = Array.from(new Set(userIds.filter((userId) => userId.trim().length > 0)));
+
+  if (uniqueUserIds.length === 0) {
+    return {
+      scannedUserCount: 0,
+      usersWithLegacyAliases: [],
+      totalLegacyRewardSourceRows: 0,
+      totalLegacySessionGameIdRows: 0,
+      hasLegacyAliases: false,
+      scannedAt,
+    };
+  }
+
+  const summaries = uniqueUserIds.map((userId) => getLegacyAliasSunsetReadiness(userId));
+  const usersWithLegacyAliases = summaries
+    .filter((summary) => summary.hasLegacyAliases)
+    .map((summary) => summary.userId);
+
+  const totalLegacyRewardSourceRows = summaries.reduce((sum, summary) => {
+    return sum + summary.legacyRewardSourceRows;
+  }, 0);
+
+  const totalLegacySessionGameIdRows = summaries.reduce((sum, summary) => {
+    return sum + summary.legacySessionGameIdRows;
+  }, 0);
+
+  return {
+    scannedUserCount: uniqueUserIds.length,
+    usersWithLegacyAliases,
+    totalLegacyRewardSourceRows,
+    totalLegacySessionGameIdRows,
+    hasLegacyAliases: usersWithLegacyAliases.length > 0,
+    scannedAt,
+  };
+}
+
+
 export function getLegacyAliasSunsetReadiness(userId: string): LegacyAliasSunsetReadiness {
   const summary: LegacyAliasSunsetReadiness = {
     userId,
@@ -560,7 +621,7 @@ export function getLegacyAliasSunsetReadiness(userId: string): LegacyAliasSunset
   try {
     const rewardStored = safeLocalStorage.getItem(STORAGE_KEY_EVENTS);
     if (rewardStored) {
-      const rewardEvents: GameRewardEvent[] = JSON.parse(rewardStored) as GameRewardEvent[];
+      const rewardEvents: StoredRewardEvent[] = JSON.parse(rewardStored) as StoredRewardEvent[];
       summary.legacyRewardSourceRows = rewardEvents.reduce((count, event) => {
         return normalizeGameSource(event.source) !== event.source ? count + 1 : count;
       }, 0);
@@ -572,7 +633,7 @@ export function getLegacyAliasSunsetReadiness(userId: string): LegacyAliasSunset
   try {
     const sessionStored = safeLocalStorage.getItem(`${STORAGE_KEY_SESSIONS}_${userId}`);
     if (sessionStored) {
-      const sessions: GameSessionEvent[] = JSON.parse(sessionStored) as GameSessionEvent[];
+      const sessions: StoredSessionEvent[] = JSON.parse(sessionStored) as StoredSessionEvent[];
       summary.legacySessionGameIdRows = sessions.reduce((count, session) => {
         return normalizeGameId(session.gameId) !== session.gameId ? count + 1 : count;
       }, 0);

@@ -174,6 +174,7 @@ Trigger when account is new/onboarding incomplete.
 - Default runtime backend now uses dedicated Island Run game-state storage service; runtime markers are no longer mirrored to auth metadata.
 - Runtime game-state store now attempts Supabase table upserts (`island_run_runtime_state`) with local storage fallback during rollout.
 - Runtime marker reads now explicitly hydrate from `island_run_runtime_state` (table/API first), with local storage + safe defaults fallback when Supabase or table access is unavailable.
+- Progression markers (`currentIslandNumber`, `bossTrialResolvedIslandNumber`) are now part of the runtime-state contract and must remain table-first with demo/local fallback parity.
 - Hydration reads should expose source metadata (`table` vs fallback reason) and emit telemetry so fallback rates can be monitored during rollout.
 - Use dedicated telemetry event types for runtime hydration lifecycle (do not overload onboarding events for hydration observability).
 - Maintain a living hydration telemetry playbook (event taxonomy, source definitions, dashboard queries) to support rollout monitoring decisions.

@@ -6,6 +6,8 @@ import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 export interface IslandRunGameStateRecord {
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
+  currentIslandNumber: number;
+  bossTrialResolvedIslandNumber: number | null;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -18,6 +20,8 @@ function getDefaultRecord(): IslandRunGameStateRecord {
   return {
     firstRunClaimed: false,
     dailyHeartsClaimedDayKey: null,
+    currentIslandNumber: 1,
+    bossTrialResolvedIslandNumber: null,
   };
 }
 
@@ -28,6 +32,16 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.dailyHeartsClaimedDayKey === 'string' || value.dailyHeartsClaimedDayKey === null
         ? value.dailyHeartsClaimedDayKey
         : fallback.dailyHeartsClaimedDayKey,
+    currentIslandNumber:
+      typeof value.currentIslandNumber === 'number' && Number.isFinite(value.currentIslandNumber)
+        ? Math.max(1, Math.floor(value.currentIslandNumber))
+        : fallback.currentIslandNumber,
+    bossTrialResolvedIslandNumber:
+      typeof value.bossTrialResolvedIslandNumber === 'number' && Number.isFinite(value.bossTrialResolvedIslandNumber)
+        ? Math.max(1, Math.floor(value.bossTrialResolvedIslandNumber))
+        : value.bossTrialResolvedIslandNumber === null
+          ? null
+          : fallback.bossTrialResolvedIslandNumber,
   };
 }
 
@@ -59,6 +73,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     logIslandRunEntryDebug('runtime_state_hydrate_skipped_remote', {
       userId: session.user.id,
       reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
+      fallbackCurrentIslandNumber: fallback.currentIslandNumber,
+      fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
     return { record: fallback, source: 'fallback_demo_or_no_client' };
   }
@@ -66,11 +82,13 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   logIslandRunEntryDebug('runtime_state_hydrate_query_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
+    fallbackCurrentIslandNumber: fallback.currentIslandNumber,
+    fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
   });
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -79,6 +97,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       userId: session.user.id,
       message: error.message,
       code: error.code ?? null,
+      fallbackCurrentIslandNumber: fallback.currentIslandNumber,
+      fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
     return { record: fallback, source: 'fallback_query_error' };
   }
@@ -86,6 +106,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   if (!data) {
     logIslandRunEntryDebug('runtime_state_hydrate_no_row', {
       userId: session.user.id,
+      fallbackCurrentIslandNumber: fallback.currentIslandNumber,
+      fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
     return { record: fallback, source: 'fallback_no_row' };
   }
@@ -94,6 +116,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     {
       firstRunClaimed: data.first_run_claimed,
       dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
+      currentIslandNumber: data.current_island_number,
+      bossTrialResolvedIslandNumber: data.boss_trial_resolved_island_number,
     },
     fallback,
   );
@@ -109,6 +133,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   logIslandRunEntryDebug('runtime_state_hydrate_query_success', {
     userId: session.user.id,
     source: 'table',
+    currentIslandNumber: hydratedRecord.currentIslandNumber,
+    bossTrialResolvedIslandNumber: hydratedRecord.bossTrialResolvedIslandNumber,
   });
 
   return { record: hydratedRecord, source: 'table' };
@@ -141,6 +167,8 @@ export async function writeIslandRunGameStateRecord(options: {
     logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
       userId: session.user.id,
       reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
+      currentIslandNumber: record.currentIslandNumber,
+      bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
     });
     return { ok: true };
   }
@@ -148,6 +176,8 @@ export async function writeIslandRunGameStateRecord(options: {
   logIslandRunEntryDebug('runtime_state_persist_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
+    currentIslandNumber: record.currentIslandNumber,
+    bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
   });
 
   const { error } = await client.from(ISLAND_RUN_RUNTIME_STATE_TABLE).upsert(
@@ -155,6 +185,8 @@ export async function writeIslandRunGameStateRecord(options: {
       user_id: session.user.id,
       first_run_claimed: record.firstRunClaimed,
       daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
+      current_island_number: record.currentIslandNumber,
+      boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },
@@ -165,12 +197,16 @@ export async function writeIslandRunGameStateRecord(options: {
       userId: session.user.id,
       message: error.message,
       code: error.code ?? null,
+      currentIslandNumber: record.currentIslandNumber,
+      bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
     });
     return { ok: false, errorMessage: error.message };
   }
 
   logIslandRunEntryDebug('runtime_state_persist_success', {
     userId: session.user.id,
+    currentIslandNumber: record.currentIslandNumber,
+    bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
   });
 
   return { ok: true };

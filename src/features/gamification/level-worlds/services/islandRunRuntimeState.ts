@@ -5,6 +5,8 @@ import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetr
 export interface IslandRunRuntimeState {
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
+  currentIslandNumber: number;
+  bossTrialResolvedIslandNumber: number | null;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -37,6 +39,8 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     firstRunClaimed?: boolean;
     dailyHeartsClaimedDayKey?: string | null;
     onboardingComplete?: boolean;
+    currentIslandNumber?: number;
+    bossTrialResolvedIslandNumber?: number | null;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;
