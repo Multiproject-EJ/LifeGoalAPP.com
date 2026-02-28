@@ -22,6 +22,7 @@ import {
   persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
 } from '../services/islandRunRuntimeState';
+import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
@@ -138,6 +139,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
 
   useEffect(() => {
+    logIslandRunEntryDebug('island_run_board_mount', {
+      userId: session.user.id,
+    });
+
+    return () => {
+      logIslandRunEntryDebug('island_run_board_unmount', {
+        userId: session.user.id,
+      });
+    };
+  }, [session.user.id]);
+
+  useEffect(() => {
     const defaultName =
       (typeof session.user.user_metadata?.full_name === 'string' && session.user.user_metadata.full_name.trim()) ||
       session.user.email ||
@@ -156,6 +169,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       .then((hydrationResult) => {
         if (!isActive) return;
         setRuntimeState(hydrationResult.state);
+
+        logIslandRunEntryDebug('island_run_runtime_hydration_result', {
+          userId: session.user.id,
+          source: hydrationResult.source,
+        });
 
         if (hydrationResult.source !== 'table') {
           setLandingText('Using local runtime fallback while server runtime state is unavailable.');
@@ -177,6 +195,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         }
       })
       .catch((error: unknown) => {
+        logIslandRunEntryDebug('island_run_runtime_hydration_error', {
+          userId: session.user.id,
+          errorMessage: error instanceof Error ? error.message : 'unknown_error',
+        });
         if (isActive) {
           setLandingText('Using local runtime fallback while runtime hydration failed unexpectedly.');
         }

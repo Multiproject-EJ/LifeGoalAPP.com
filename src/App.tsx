@@ -63,6 +63,10 @@ import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
+import {
+  isIslandRunEntryDebugEnabled,
+  logIslandRunEntryDebug,
+} from './features/gamification/level-worlds/services/islandRunEntryDebug';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
 import { collectDailyHearts, hasCollectedDailyHeartsToday } from './services/dailyTreats';
@@ -2215,22 +2219,53 @@ export default function App() {
     showWorkspaceSetup && !shouldRequireAuthentication && isConfigured && Boolean(supabaseSession);
 
   useEffect(() => {
+    if (!isIslandRunEntryDebugEnabled()) return;
+
+    logIslandRunEntryDebug('first_paint_snapshot', {
+      hasOpenIslandRun: new URLSearchParams(window.location.search).has('openIslandRun'),
+      hasOpenIslandRunSource: new URLSearchParams(window.location.search).has('openIslandRunSource'),
+      shouldAutoOpenIslandRun,
+    });
+  }, [logIslandRunEntryDebug, shouldAutoOpenIslandRun]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (!params.has('openIslandRun') && !params.has('openIslandRunSource')) return;
+
+    logIslandRunEntryDebug('consume_bootstrap_params_start', {
+      openIslandRun: params.get('openIslandRun'),
+      openIslandRunSource: params.get('openIslandRunSource'),
+    });
 
     params.delete('openIslandRun');
     params.delete('openIslandRunSource');
     const nextSearch = params.toString();
     const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
     window.history.replaceState(window.history.state, '', nextUrl);
-  }, []);
+    logIslandRunEntryDebug('consume_bootstrap_params_done', {
+      nextUrl,
+    });
+  }, [logIslandRunEntryDebug]);
 
   useEffect(() => {
+    logIslandRunEntryDebug('auto_open_effect_check', {
+      shouldAutoOpenIslandRun,
+      hasActiveSession: Boolean(activeSession),
+    });
+
     if (!shouldAutoOpenIslandRun || !activeSession) return;
 
     setShowLevelWorldsFromEntry(true);
     setShouldAutoOpenIslandRun(false);
-  }, [activeSession, shouldAutoOpenIslandRun]);
+    logIslandRunEntryDebug('auto_open_triggered');
+  }, [activeSession, logIslandRunEntryDebug, shouldAutoOpenIslandRun]);
+
+  useEffect(() => {
+    logIslandRunEntryDebug('entry_modal_state_changed', {
+      showLevelWorldsFromEntry,
+      hasActiveSession: Boolean(activeSession),
+    });
+  }, [activeSession, logIslandRunEntryDebug, showLevelWorldsFromEntry]);
 
   const handleCloseWorkspaceSetup = () => {
     setShowWorkspaceSetup(false);

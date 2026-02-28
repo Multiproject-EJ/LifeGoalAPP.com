@@ -6,7 +6,7 @@ import { loadCurrencyBalance, deductDice } from '../../../services/gameRewards';
 import { resolveTileEffect, getGoldBalance, type TileEffectResult } from './luckyRollTileEffects';
 
 import { TaskTower } from '../games/task-tower/TaskTower';
-import { PomodoroSprint } from '../games/pomodoro-sprint/PomodoroSprint';
+import { ShooterBlitz } from '../games/shooter-blitz/ShooterBlitz';
 import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
 import { VisionQuest } from '../games/vision-quest/VisionQuest';
 import { LuckyRollCelebration } from './LuckyRollCelebration';
@@ -40,7 +40,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [showCelebration, setShowCelebration] = useState(false);
 
   const [showTaskTower, setShowTaskTower] = useState(false);
-  const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
+  const [showShooterBlitz, setShowShooterBlitz] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
   const [showVisionQuest, setShowVisionQuest] = useState(false);
   const [showLevelWorlds, setShowLevelWorlds] = useState(false);
@@ -277,8 +277,8 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           case 'task_tower':
             setShowTaskTower(true);
             break;
-          case 'pomodoro_sprint':
-            setShowPomodoroSprint(true);
+          case 'shooter_blitz':
+            setShowShooterBlitz(true);
             break;
           case 'vision_quest':
             setShowVisionQuest(true);
@@ -529,7 +529,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
-          onComplete={(rewards) => {
+          onComplete={() => {
             setShowTaskTower(false);
             // Rewards are already delivered by TaskTower
             // Just refresh currency balance display
@@ -539,19 +539,19 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
         />
       )}
       
-      {/* Pomodoro Sprint mini-game */}
-      {showPomodoroSprint && (
-        <PomodoroSprint
+      {/* Shooter Blitz mini-game */}
+      {showShooterBlitz && (
+        <ShooterBlitz
           session={session}
           onClose={() => {
-            setShowPomodoroSprint(false);
+            setShowShooterBlitz(false);
             // Refresh currency balance
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
-          onComplete={(rewards) => {
-            setShowPomodoroSprint(false);
-            // Rewards are already delivered by PomodoroSprint
+          onComplete={() => {
+            setShowShooterBlitz(false);
+            // Rewards are already delivered by ShooterBlitz
             // Just refresh currency balance display
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
@@ -568,7 +568,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
-          onComplete={(rewards) => {
+          onComplete={() => {
             setShowWheelOfWins(false);
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
@@ -585,7 +585,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));
           }}
-          onComplete={(rewards) => {
+          onComplete={() => {
             setShowVisionQuest(false);
             refreshCurrencyBalance();
             setGoldBalance(getGoldBalance(userId));

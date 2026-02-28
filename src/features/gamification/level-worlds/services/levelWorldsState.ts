@@ -6,6 +6,52 @@ import { generateBoard } from './levelWorldsGenerator';
 
 const STORAGE_KEY_PREFIX = 'levelWorlds_';
 
+function normalizeLegacyMiniGameIds(state: LevelWorldsState): LevelWorldsState {
+  let hasChanges = false;
+
+  const boards = state.boards.map((board) => {
+    let boardChanged = false;
+    const nodes = board.nodes.map((node) => {
+      if (node.objective.type !== 'mini_game') {
+        return node;
+      }
+
+      if ((node.objective as { game?: string }).game !== 'pomodoro_sprint') {
+        return node;
+      }
+
+      hasChanges = true;
+      boardChanged = true;
+
+      const nextLabel = node.label.replace(/pomodoro sprint/gi, 'Shooter Blitz');
+      const nextDescription = node.description.replace(/pomodoro sprint/gi, 'Shooter Blitz');
+      const nextEmoji = node.emoji === '🍅' ? '🚀' : node.emoji;
+
+      return {
+        ...node,
+        label: nextLabel,
+        description: nextDescription,
+        emoji: nextEmoji,
+        objective: {
+          ...node.objective,
+          game: 'shooter_blitz' as const,
+        },
+      };
+    });
+
+    return boardChanged ? { ...board, nodes } : board;
+  });
+
+  if (!hasChanges) {
+    return state;
+  }
+
+  return {
+    ...state,
+    boards,
+  };
+}
+
 /**
  * Load Level Worlds state from localStorage
  * Initializes with first board if no state exists
@@ -17,7 +63,13 @@ export function loadState(userId: string): LevelWorldsState {
     
     if (stored) {
       const state = JSON.parse(stored) as LevelWorldsState;
-      return state;
+      const normalizedState = normalizeLegacyMiniGameIds(state);
+
+      if (normalizedState !== state) {
+        saveState(userId, normalizedState);
+      }
+
+      return normalizedState;
     }
     
     // Initialize with first board

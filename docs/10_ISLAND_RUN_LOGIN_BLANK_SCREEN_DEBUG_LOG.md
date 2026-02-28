@@ -39,6 +39,13 @@ High-risk files:
 | 2026-02-27 | Runtime hydration telemetry + dedupe + fallback messaging | Observe hydration/fallback behavior | ✅ Instrumentation improved | May help diagnosis, not necessarily root-cause fix |
 | 2026-02-28 | Add `RecoverableErrorBoundary` around `LevelWorldsHub` entry modal in `App.tsx` | Prevent full-app blank screen if Level Worlds/Island Run subtree throws during post-login mount | ✅ Mitigation added (pending prod repro) | Modal now auto-closes on render failure and logs a structured console error |
 | 2026-03-01 | Move `openIslandRun` effects above first top-level auth return in `App.tsx` | Fix hook-order crash after login | ✅ Fixed in code (pending prod verification) | Root cause: hooks were declared after `if (shouldRequireAuthentication && isMobileExperience) return ...`, causing React #310 when auth state flipped |
+| 2026-03-01 | Add `islandRunEntryDebug=1` structured startup instrumentation in `App.tsx` | Collect reproducible login-path evidence before additional routing changes | ✅ Added (awaiting repro captures) | Logs first-paint URL flags, bootstrap cleanup, auto-open checks, and `showLevelWorldsFromEntry` transitions via `[IslandRunEntryDebug]` console events |
+| 2026-03-01 | Extend `islandRunEntryDebug=1` instrumentation to `LevelWorldsHub` + `IslandRunBoardPrototype` | Capture concrete evidence for whether Level Worlds/Island Run mount, plus hydration source/error context | ✅ Added (awaiting repro captures) | Adds mount/unmount and hydration outcome snapshots so repro logs can satisfy protocol step #5 without speculative inference |
+| 2026-03-01 | Add debug event buffering + runtime-state query/persist stage logs | Make repro evidence exportable and correlate UI mount sequence with Supabase table read/write outcomes | ✅ Added (awaiting repro captures) | `window.__islandRunEntryDebugDump()` now returns buffered events; includes query/persist start/success/error/no-row events under `islandRunEntryDebug=1` |
+| 2026-03-01 | Add one-call evidence exporter (`window.__islandRunEntryDebugEvidence()`) | Reduce manual copy errors by bundling event timeline + relevant network resource timing in one payload | ✅ Added (awaiting repro captures) | Evidence payload includes location, buffered events, and filtered Supabase/runtime-state resource entries when debug flag is enabled |
+| 2026-03-01 | Add global error/rejection capture into debug evidence stream | Ensure blank-screen repro exports include top-level runtime failures, not only sequencing/network signals | ✅ Added (awaiting repro captures) | `window_error` + `window_unhandled_rejection` events now append to debug buffer when `islandRunEntryDebug=1` is enabled |
+| 2026-03-01 | Add lifecycle breadcrumbs + manual marker helper in debug stream | Improve reproducibility by marking user-driven checkpoints and visibility/page transitions during login repro | ✅ Added (awaiting repro captures) | Adds `document_visibility_change`/`window_pageshow`/`window_pagehide` and `window.__islandRunEntryDebugMark(...)`; helper/listener install now explicitly debug-gated |
+| 2026-03-01 | Add guided repro run/checkpoint helper APIs | Standardize evidence capture semantics across engineers and reduce free-form marker drift | ✅ Added (awaiting repro captures) | Adds `window.__islandRunEntryDebugStartRun(...)` and `window.__islandRunEntryDebugMarkCheckpoint(...)` with canonical checkpoint labels for login-flow incidents |
 
 Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
 
@@ -61,7 +68,7 @@ Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
 ## 6) Repro protocol (must follow before new fix)
 1. Record exact URL at login start and after auth redirect.
 2. Record whether `openIslandRun` and `openIslandRunSource` exist at first paint.
-3. Capture console errors/warnings and stack traces.
+3. Capture console errors/warnings and stack traces (and export `window.__islandRunEntryDebugEvidence()` output including `window_error` / `window_unhandled_rejection` and lifecycle events; start each repro via `window.__islandRunEntryDebugStartRun(...)` and place canonical checkpoints with `window.__islandRunEntryDebugMarkCheckpoint(...)`).
 4. Capture whether `showLevelWorldsFromEntry` becomes true.
 5. Capture whether `LevelWorldsHub` or `IslandRunBoardPrototype` mounts.
 6. Only then propose a code change.
@@ -72,7 +79,7 @@ Legend: ✅ verified good, ⚠️ attempted/inconclusive, ❌ regressed.
 - [x] Add temporary guarded debug logging around startup bootstrap + auth redirect state (dev-only).
 - [x] Verify whether blank screen reproduces when `LevelWorldsHub` subtree is isolated behind an error boundary; keep app usable if subtree throws.
 - [x] Validate hook-order hypothesis from prod console stack (`React #310`) against `App.tsx` hook placement.
-- [ ] Validate login flow with and without `/level-worlds.html` entry source.
+- [ ] Validate login flow with and without `/level-worlds.html` entry source using `?islandRunEntryDebug=1`, and attach console/network captures plus `window.__islandRunEntryDebugEvidence()` output (including mount + runtime query/persist events and network timing entries).
 - [ ] Verify whether blank screen reproduces when all `openIslandRun*` handling is hard-disabled.
 - [ ] If yes, pivot focus from routing to post-login app init overlays.
 

@@ -123,8 +123,8 @@ function formatMiniGameName(game: string): string {
   switch (game) {
     case 'task_tower':
       return 'Task Tower';
-    case 'pomodoro_sprint':
-      return 'Pomodoro Sprint';
+    case 'shooter_blitz':
+      return 'Shooter Blitz';
     case 'vision_quest':
       return 'Vision Quest';
     case 'wheel_of_wins':

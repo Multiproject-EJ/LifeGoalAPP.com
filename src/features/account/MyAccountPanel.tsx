@@ -16,6 +16,7 @@ import type { WorkspaceStats } from '../../services/workspaceStats';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
 import { generateInitials } from '../../utils/initials';
 import { getHapticMode, setHapticMode, triggerCompletionHaptic, type HapticMode } from '../../utils/completionHaptics';
+import { getLegacyAliasSunsetReadiness, type LegacyAliasSunsetReadiness } from '../../services/gameRewards';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -63,6 +64,7 @@ export function MyAccountPanel({
   const [hapticMode, setHapticModeState] = useState<HapticMode>('balanced');
   const [onboardingSnapshot, setOnboardingSnapshot] = useState<string | null>(null);
   const [dayZeroStored, setDayZeroStored] = useState(false);
+  const [legacyAliasReadiness, setLegacyAliasReadiness] = useState<LegacyAliasSunsetReadiness | null>(null);
   
   const user = session.user;
   const displayName =
@@ -159,6 +161,11 @@ export function MyAccountPanel({
     } finally {
       setSavingPreference(false);
     }
+  };
+
+
+  const handleRunLegacyAliasScan = () => {
+    setLegacyAliasReadiness(getLegacyAliasSunsetReadiness(session.user.id));
   };
 
   const handleClearAppCache = async () => {
@@ -545,6 +552,44 @@ export function MyAccountPanel({
               Test vibration
             </button>
           </div>
+        </section>
+
+
+        <section className="account-panel__card" aria-labelledby="account-legacy-alias-readiness">
+          <p className="account-panel__eyebrow">Migration diagnostics</p>
+          <h3 id="account-legacy-alias-readiness">Legacy alias sunset readiness</h3>
+          <p className="account-panel__hint">
+            Scan local reward/session history for remaining <code>pomodoro_sprint</code> rows before removing legacy aliases.
+          </p>
+          <div className="account-panel__actions-row">
+            <button
+              type="button"
+              className="btn"
+              onClick={handleRunLegacyAliasScan}
+            >
+              Run legacy alias scan
+            </button>
+          </div>
+          {legacyAliasReadiness ? (
+            <dl className="account-panel__details" style={{ marginTop: '0.75rem' }}>
+              <div>
+                <dt>Legacy reward rows</dt>
+                <dd>{legacyAliasReadiness.legacyRewardSourceRows}</dd>
+              </div>
+              <div>
+                <dt>Legacy session rows</dt>
+                <dd>{legacyAliasReadiness.legacySessionGameIdRows}</dd>
+              </div>
+              <div>
+                <dt>Ready to sunset</dt>
+                <dd>{legacyAliasReadiness.hasLegacyAliases ? 'No' : 'Yes'}</dd>
+              </div>
+              <div>
+                <dt>Scanned at</dt>
+                <dd>{formatDate(legacyAliasReadiness.scannedAt, { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+              </div>
+            </dl>
+          ) : null}
         </section>
 
         <ReminderAnalyticsDashboard session={session} />
