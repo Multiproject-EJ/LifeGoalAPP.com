@@ -1,4 +1,190 @@
 Date: 2026-03-01
+Slice: M8I — Market status coverage assertion helper
+Summary:
+- Added `window.__islandRunMarketDebugAssertStatusCoverage(expectedStatuses?, limit?)` to return pass/fail Market marker status coverage reports.
+- Helper evaluates expected statuses against compact exported marker rows and returns coverage/missing metadata with baseline context.
+- Updated QA checklist with exact assertion-helper commands and expected report shape for deterministic coverage checks.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8J add Market marker helper section to inline dev controls/readme for faster operator discovery.
+
+Date: 2026-03-01
+Slice: M8H — Market marker reset helper for clean-slate QA sequencing
+Summary:
+- Added `window.__islandRunMarketDebugResetState()` (debug/QA gated) to clear Market local owned/feedback state and establish a new marker export baseline timestamp for the session.
+- Updated Market marker export helper to respect baseline filtering and expose baseline metadata (`baselineApplied`, `baselineIso`) in snapshot output.
+- Added QA checklist steps for reset-helper verification and post-reset clean-slate export expectations.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8I add compact Market marker assertion helper for expected status coverage checks.
+
+Date: 2026-03-01
+Slice: M8G — Compact Market marker export helper
+Summary:
+- Added `window.__islandRunMarketDebugExportMarkers(limit?)` in `IslandRunBoardPrototype` (debug/QA gated) to return compact snapshots of recent `island_run_market_purchase` events.
+- Snapshot rows normalize key marker fields (`status`, `bundle`, cost/reward, coin deltas, owned snapshot flags, timestamp`) for copy/paste QA triage.
+- Updated QA checklist with exact helper commands and expected output shape for compact marker exports.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8H add Market marker reset helper for deterministic clean-slate QA sequencing.
+
+Date: 2026-03-01
+Slice: M8F — Dev-only deterministic helper for `already_owned` marker verification
+Summary:
+- Added dev-only QA controls in `IslandRunBoardPrototype` to emit deterministic Market `already_owned` marker paths for both dice and heart bundles.
+- Helper path pre-sets owned-state context and emits `island_run_market_purchase` debug/telemetry payloads without relying on repurchase timing.
+- Updated QA checklist with explicit M8F helper steps and expected evidence additions for both bundle types.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8G add dedicated Market marker export helper for compact QA evidence snapshots.
+
+Date: 2026-03-01
+Slice: M8E — Market marker QA checklist commands
+Summary:
+- Added a dedicated Market QA checklist section with explicit console extraction commands for `island_run_market_purchase` evidence events.
+- Documented marker verification steps/fields for `attempt`, `insufficient_coins`, `success`, and `already_owned` statuses plus owned-state payload context.
+- Kept runtime behavior unchanged (docs-only slice) while making Market marker triage repeatable for QA handoffs.
+Files changed:
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8F add dev-only Market marker QA helper for deterministic `already_owned` verification.
+
+Date: 2026-03-01
+Slice: M8D — Market repurchase-block telemetry/debug marker path
+Summary:
+- Added explicit `already_owned` Market purchase marker emission when users attempt to buy a bundle they already own in the current island session.
+- Extended Market marker payload context to include owned-state snapshot fields (`owned_dice_bundle`, `owned_heart_bundle`) for debug/telemetry triage.
+- Preserved no-repurchase UX and existing Market progression flow while making repurchase-block outcomes observable.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8E add Market QA checklist section with explicit `already_owned` marker verification commands.
+
+Date: 2026-03-01
+Slice: M8C — Market owned-state scaffold with no-repurchase UX
+Summary:
+- Added Market prototype owned-state tracking (`dice_bundle`, `heart_bundle`) in `IslandRunBoardPrototype`.
+- Market purchase buttons now transition to owned/disabled state after a successful buy and display owned labels/context, preventing repurchase in the same island session.
+- Preserved existing Market progression flow by resetting owned-state on market stop completion / island travel while keeping non-Market stop behavior unchanged.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8D add Market owned-state telemetry/debug markers (`already_owned` path + owned-state snapshot payloads).
+
+Date: 2026-03-01
+Slice: M8B — Market purchase telemetry + debug markers
+Summary:
+- Added explicit Market purchase marker emission in `IslandRunBoardPrototype` for `attempt`, `insufficient_coins`, and `success` outcomes.
+- Wired markers to both `logIslandRunEntryDebug('island_run_market_purchase', ...)` and `recordTelemetryEvent(..., eventType: 'economy_earn')` with bundle/cost/reward/coin-balance context.
+- Preserved Market modal and stop progression behavior from M8A while making purchase-path observability deterministic for QA triage.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8C add Market prototype inventory slot scaffold (owned-item state + disabled repurchase UX).
+
+Date: 2026-03-01
+Slice: M8A — Market stop prototype purchase modal stub
+Summary:
+- Added a dedicated Market stop prototype modal in `IslandRunBoardPrototype` so Market interactions are now separated from generic stop handling.
+- Added mock purchase actions (`Dice Bundle`, `Heart Bundle`) with visible feedback and starter coin-cost checks while preserving existing non-Market stop flows.
+- Kept stop-completion flow intact; Market can still be completed explicitly after trying purchases.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8B add Market stop telemetry + purchase event debug markers for prototype buy attempts/success.
+
+Date: 2026-03-01
+Slice: M7N — Run-filter resolution metadata for progression helpers
+Summary:
+- Added explicit run-filter resolution metadata to progression bundle/filter helper outputs: `filterApplied` and `filterMatched`.
+- Kept existing helper signatures and assertion pass/fail behavior unchanged while making matched vs unmatched ref outcomes explicit.
+- Updated progression QA checklist with exact commands to verify `filterApplied`/`filterMatched` for no-ref, matched-ref, and unmatched-ref paths.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M8A add Market stop interaction stub + prototype purchase modal wiring in Island Run board flow.
+
+Date: 2026-03-01
+Slice: M7M.1 — Scope normalization follow-up for unmatched run refs
+Summary:
+- Tightened `scope` derivation in progression filter/export helpers so `run_filtered` is emitted only when a provided ref resolves to a matched repro run window.
+- Restored summary helper `summaryLine` format to preserve existing output string behavior while keeping new `scope` metadata available as a separate field.
+- Updated QA checklist scope spot-check commands with matched vs unmatched run-ref expectations.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7N add explicit run-filter resolution metadata (`filterApplied` + `filterMatched`) to filter/bundle helper outputs.
+
+Date: 2026-03-01
+Slice: M7M — Explicit scope metadata for progression helper outputs
+Summary:
+- Added normalized `scope` metadata (`full_buffer` | `run_filtered`) to progression assertion report/summary models so helper outputs carry explicit evidence scope context.
+- Updated progression summary/filter/bundle helpers to emit `scope` consistently while preserving existing call signatures and assertion pass/fail behavior.
+- Expanded the progression QA checklist with exact scope-verification console commands for unfiltered and filtered helper paths.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7N add explicit run-filter resolution metadata (`filterApplied` + `filterMatched`) to filter/bundle helper outputs.
+
+Date: 2026-03-01
 Slice: M7L — Filter-aware export bundle support
 Summary:
 - Extended `window.__islandRunEntryDebugExportProgressionBundle(mode, ref?)` to optionally accept a run reference (`runId` or scenario label) while preserving the original one-argument call signature.
