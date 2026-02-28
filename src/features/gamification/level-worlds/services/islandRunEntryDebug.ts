@@ -49,16 +49,20 @@ type IslandRunProgressionAssertionCheck = {
   matchedEventIndex?: number;
 };
 
+type IslandRunProgressionAssertionScope = 'full_buffer' | 'run_filtered';
+
 type IslandRunProgressionAssertionReport = {
   passed: boolean;
   generatedAt: string;
   mode: 'table' | 'fallback';
+  scope: IslandRunProgressionAssertionScope;
   checks: IslandRunProgressionAssertionCheck[];
 };
 
 type IslandRunProgressionAssertionSummary = {
   passed: boolean;
   mode: 'table' | 'fallback';
+  scope: IslandRunProgressionAssertionScope;
   generatedAt: string;
   totalChecks: number;
   passedChecks: number;
@@ -68,9 +72,12 @@ type IslandRunProgressionAssertionSummary = {
 
 type IslandRunProgressionAssertionExportBundle = {
   mode: 'table' | 'fallback';
+  scope: IslandRunProgressionAssertionScope;
   summary: IslandRunProgressionAssertionSummary;
   evidence: IslandRunEntryDebugEvidence;
   runFilterRef?: string;
+  filterApplied: boolean;
+  filterMatched: boolean;
   matchedRunId?: string;
   matchedScenario?: string;
   filteredEventCount?: number;
@@ -78,9 +85,12 @@ type IslandRunProgressionAssertionExportBundle = {
 
 type IslandRunProgressionRunFilterResult = {
   ref?: string;
+  filterApplied: boolean;
+  filterMatched: boolean;
   matchedRunId?: string;
   matchedScenario?: string;
   mode: 'table' | 'fallback';
+  scope: IslandRunProgressionAssertionScope;
   eventCount: number;
   events: IslandRunEntryDebugEntry[];
   report: IslandRunProgressionAssertionReport;
@@ -244,6 +254,7 @@ function findNextEventIndex(
 function assertProgressionSequence(
   events: IslandRunEntryDebugEntry[],
   mode: 'table' | 'fallback' = 'table',
+  scope: IslandRunProgressionAssertionScope = 'full_buffer',
 ): IslandRunProgressionAssertionReport {
   const checks: IslandRunProgressionAssertionCheck[] = [];
   let cursor = 0;
@@ -316,6 +327,7 @@ function assertProgressionSequence(
     passed: checks.every((check) => check.passed),
     generatedAt: new Date().toISOString(),
     mode,
+    scope,
     checks,
   };
 }
@@ -329,6 +341,7 @@ function summarizeProgressionAssertionReport(
   return {
     passed: report.passed,
     mode: report.mode,
+    scope: report.scope,
     generatedAt: report.generatedAt,
     totalChecks: report.checks.length,
     passedChecks,
@@ -492,10 +505,10 @@ function installDebugWindowHelpers() {
     });
   };
   window.__islandRunEntryDebugAssertProgressionSequence = (mode = 'table') => {
-    return assertProgressionSequence(readDebugBuffer(), mode);
+    return assertProgressionSequence(readDebugBuffer(), mode, 'full_buffer');
   };
   window.__islandRunEntryDebugAssertProgressionSummary = (mode = 'table') => {
-    const report = assertProgressionSequence(readDebugBuffer(), mode);
+    const report = assertProgressionSequence(readDebugBuffer(), mode, 'full_buffer');
     const summary = summarizeProgressionAssertionReport(report);
     console.info('[IslandRunEntryDebugAssertionSummary]', summary.summaryLine, summary);
     return summary;
@@ -503,18 +516,26 @@ function installDebugWindowHelpers() {
   window.__islandRunEntryDebugExportProgressionBundle = (mode = 'table', ref) => {
     const buffer = readDebugBuffer();
     const runScoped = filterProgressionRunEvents(buffer, ref);
-    const scopedEvents = typeof ref === 'string' && ref.trim() ? runScoped.filteredEvents : undefined;
-    const report = assertProgressionSequence(scopedEvents ?? buffer, mode);
+    const hasRunFilterRef = typeof ref === 'string' && ref.trim().length > 0;
+    const hasMatchedRunWindow = Boolean(runScoped.matchedRunId || runScoped.matchedScenario);
+    const filterApplied = hasRunFilterRef;
+    const filterMatched = hasRunFilterRef && hasMatchedRunWindow;
+    const scope: IslandRunProgressionAssertionScope = filterMatched ? 'run_filtered' : 'full_buffer';
+    const scopedEvents = scope === 'run_filtered' ? runScoped.filteredEvents : undefined;
+    const report = assertProgressionSequence(scopedEvents ?? buffer, mode, scope);
     const summary = summarizeProgressionAssertionReport(report);
     const evidence = collectDebugEvidence();
     const bundle: IslandRunProgressionAssertionExportBundle = {
       mode,
+      scope,
       summary,
       evidence: {
         ...evidence,
         events: scopedEvents ?? evidence.events,
       },
       runFilterRef: ref,
+      filterApplied,
+      filterMatched,
       matchedRunId: runScoped.matchedRunId,
       matchedScenario: runScoped.matchedScenario,
       filteredEventCount: scopedEvents?.length,
@@ -522,7 +543,10 @@ function installDebugWindowHelpers() {
 
     console.info('[IslandRunEntryDebugProgressionBundle]', {
       mode,
+      scope,
       runFilterRef: ref,
+      filterApplied,
+      filterMatched,
       matchedRunId: runScoped.matchedRunId,
       matchedScenario: runScoped.matchedScenario,
       summaryLine: summary.summaryLine,
@@ -536,13 +560,21 @@ function installDebugWindowHelpers() {
   window.__islandRunEntryDebugFilterProgressionRun = (ref, mode = 'table') => {
     const buffer = readDebugBuffer();
     const { filteredEvents, matchedRunId, matchedScenario } = filterProgressionRunEvents(buffer, ref);
-    const report = assertProgressionSequence(filteredEvents, mode);
+    const hasRunFilterRef = typeof ref === 'string' && ref.trim().length > 0;
+    const hasMatchedRunWindow = Boolean(matchedRunId || matchedScenario);
+    const filterApplied = hasRunFilterRef;
+    const filterMatched = hasRunFilterRef && hasMatchedRunWindow;
+    const scope: IslandRunProgressionAssertionScope = filterMatched ? 'run_filtered' : 'full_buffer';
+    const report = assertProgressionSequence(filteredEvents, mode, scope);
 
     const result: IslandRunProgressionRunFilterResult = {
       ref,
+      filterApplied,
+      filterMatched,
       matchedRunId,
       matchedScenario,
       mode,
+      scope,
       eventCount: filteredEvents.length,
       events: filteredEvents,
       report,
@@ -551,6 +583,9 @@ function installDebugWindowHelpers() {
     console.info('[IslandRunEntryDebugProgressionRunFilter]', {
       ref,
       mode,
+      scope,
+      filterApplied,
+      filterMatched,
       matchedRunId,
       matchedScenario,
       eventCount: filteredEvents.length,

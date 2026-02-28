@@ -71,8 +71,8 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [🟡] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped)
 - [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
 - [🟡] M6: Encounter tile (easy) + rewards (M6A prototype shipped in dev mode)
-- [🟡] M7: Boss stop (trial) + rewards (M7A resolve + reward feedback shipped; M7B telemetry/reward contract wiring shipped; M7C refresh persistence markers shipped; M7D table-first persistence wiring shipped; M7E debug evidence marker payloads shipped; M7F deterministic QA hooks/checklist shipped; M7G assertion harness shipped; M7H preset modes shipped; M7I summary helper shipped; M7J export bundle helper shipped; M7K run-scoped filter helper shipped; M7L filter-aware export bundle shipped)
-- [ ] M8: Market stop + purchases
+- [🟡] M7: Boss stop (trial) + rewards (M7A resolve + reward feedback shipped; M7B telemetry/reward contract wiring shipped; M7C refresh persistence markers shipped; M7D table-first persistence wiring shipped; M7E debug evidence marker payloads shipped; M7F deterministic QA hooks/checklist shipped; M7G assertion harness shipped; M7H preset modes shipped; M7I summary helper shipped; M7J export bundle helper shipped; M7K run-scoped filter helper shipped; M7L filter-aware export bundle shipped; M7M explicit scope metadata shipped; M7M.1 unmatched-ref scope normalization shipped; M7N filter-resolution metadata shipped)
+- [🟡] M8: Market stop + purchases (M8A market stop prototype purchase modal stub shipped; M8B market telemetry/debug markers shipped; M8C owned-state no-repurchase UX shipped; M8D repurchase-block telemetry/debug markers shipped; M8E market QA checklist commands shipped; M8F deterministic QA helper shipped; M8G marker export helper shipped; M8H marker reset helper shipped; M8I status assertion helper shipped)
 - [ ] M9: Home island + hatchery slots + always collect
 - [ ] M10: Audio + haptics system integrated
 - [ ] M11: Minigame framework + first minigame stub
@@ -83,10 +83,10 @@ Support shipped:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M7M: Add explicit `scope` metadata to progression bundle/report helpers  
-**Files to touch:** `src/features/gamification/level-worlds/services/islandRunEntryDebug.ts`, `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md`, `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
-**Acceptance criteria:** summary/filter/bundle outputs include normalized `scope` (`full_buffer` vs `run_filtered`) for unambiguous triage exports without changing existing assertions  
-**How to test:** run helpers with/without run filter refs and verify `scope` fields and counts align with the selected mode
+**Objective:** M8J: Add in-UI discoverability note for Market debug helpers in QA mode  
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
+**Acceptance criteria:** QA/debug mode surfaces a compact helper hint block listing Market debug helper commands without affecting non-debug runtime behavior  
+**How to test:** open Island Run in QA/debug mode and verify helper hint text appears; verify normal mode behavior remains unchanged
 
 ---
 

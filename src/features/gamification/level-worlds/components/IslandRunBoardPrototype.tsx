@@ -34,6 +34,9 @@ const DEV_EGG_DURATION_SEC = 40;
 const ENCOUNTER_TILE_INDEX = 6;
 const BOSS_TRIAL_REWARD_HEARTS = 2;
 const BOSS_TRIAL_REWARD_COINS = 120;
+const MARKET_DICE_BUNDLE_COST = 30;
+const MARKET_DICE_BUNDLE_REWARD = 6;
+const MARKET_HEART_BUNDLE_COST = 40;
 
 type EggTier = 'common' | 'rare' | 'mythic';
 
@@ -44,6 +47,56 @@ interface ActiveEgg {
 }
 
 type StopProgressState = 'pending' | 'active' | 'completed' | 'locked';
+
+
+
+type IslandRunMarketPurchaseStatus = 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
+
+type IslandRunMarketStatusCoverageReport = {
+  generatedAt: string;
+  passed: boolean;
+  expectedStatuses: IslandRunMarketPurchaseStatus[];
+  coveredStatuses: IslandRunMarketPurchaseStatus[];
+  missingStatuses: IslandRunMarketPurchaseStatus[];
+  markerCount: number;
+  baselineApplied: boolean;
+  baselineIso?: string;
+};
+
+type IslandRunMarketPurchaseSnapshotRow = {
+  status?: 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
+  bundle?: 'dice_bundle' | 'heart_bundle';
+  costCoins?: number;
+  rewardDice?: number;
+  rewardHearts?: number;
+  coinsBefore?: number;
+  coinsAfter?: number;
+  ownedDiceBundle?: boolean;
+  ownedHeartBundle?: boolean;
+  timestamp: string;
+};
+
+declare global {
+  interface Window {
+    __islandRunMarketDebugExportMarkers?: (limit?: number) => {
+      generatedAt: string;
+      totalMarkers: number;
+      baselineApplied: boolean;
+      baselineIso?: string;
+      rows: IslandRunMarketPurchaseSnapshotRow[];
+    };
+    __islandRunMarketDebugResetState?: () => {
+      resetAt: string;
+      baselineApplied: boolean;
+      ownedBundles: string[];
+      feedbackCleared: boolean;
+    };
+    __islandRunMarketDebugAssertStatusCoverage?: (
+      expectedStatuses?: IslandRunMarketPurchaseStatus[],
+      limit?: number,
+    ) => IslandRunMarketStatusCoverageReport;
+  }
+}
 
 type OrbitStopVisual = {
   id: string;
@@ -133,6 +186,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [bossTrialResolved, setBossTrialResolved] = useState(false);
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
+  const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
+  const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle', boolean>>({
+    dice_bundle: false,
+    heart_bundle: false,
+  });
+  const [marketMarkerBaselineMs, setMarketMarkerBaselineMs] = useState<number | null>(null);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
   const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
@@ -175,6 +234,114 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       'Game of Life Player';
     setBoosterName(defaultName);
   }, [session.user.email, session.user.user_metadata]);
+
+  useEffect(() => {
+    if (activeStopId === 'market') {
+      setMarketPurchaseFeedback('Prototype inventory ready.');
+    }
+  }, [activeStopId]);
+
+  useEffect(() => {
+    if (!showDebug && !showQaHooks) {
+      return;
+    }
+
+    window.__islandRunMarketDebugExportMarkers = (limit = 12) => {
+      const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 12;
+      const evidence = window.__islandRunEntryDebugEvidence?.();
+      const events = evidence?.events ?? [];
+
+      const filteredEvents = events.filter((event) => {
+        if (event.stage !== 'island_run_market_purchase') {
+          return false;
+        }
+
+        if (!marketMarkerBaselineMs) {
+          return true;
+        }
+
+        const eventMs = Date.parse(event.timestamp);
+        return Number.isFinite(eventMs) && eventMs >= marketMarkerBaselineMs;
+      });
+
+      const rows = filteredEvents.slice(-safeLimit).map((event) => ({
+        status: event.payload?.status as IslandRunMarketPurchaseSnapshotRow['status'],
+        bundle: event.payload?.bundle as IslandRunMarketPurchaseSnapshotRow['bundle'],
+        costCoins: event.payload?.costCoins as number | undefined,
+        rewardDice: event.payload?.rewardDice as number | undefined,
+        rewardHearts: event.payload?.rewardHearts as number | undefined,
+        coinsBefore: event.payload?.coinsBefore as number | undefined,
+        coinsAfter: event.payload?.coinsAfter as number | undefined,
+        ownedDiceBundle: event.payload?.ownedDiceBundle as boolean | undefined,
+        ownedHeartBundle: event.payload?.ownedHeartBundle as boolean | undefined,
+        timestamp: event.timestamp,
+      }));
+
+      const snapshot = {
+        generatedAt: new Date().toISOString(),
+        totalMarkers: rows.length,
+        baselineApplied: Boolean(marketMarkerBaselineMs),
+        baselineIso: marketMarkerBaselineMs ? new Date(marketMarkerBaselineMs).toISOString() : undefined,
+        rows,
+      };
+
+      console.info('[IslandRunMarketDebugMarkers]', snapshot);
+      return snapshot;
+    };
+
+    window.__islandRunMarketDebugAssertStatusCoverage = (expectedStatuses, limit = 32) => {
+      const normalizedExpected = (Array.isArray(expectedStatuses) && expectedStatuses.length
+        ? expectedStatuses
+        : ['attempt', 'insufficient_coins', 'success', 'already_owned']) as IslandRunMarketPurchaseStatus[];
+      const snapshot = window.__islandRunMarketDebugExportMarkers?.(limit);
+      const coveredStatuses = Array.from(
+        new Set(snapshot?.rows.map((row) => row.status).filter((status): status is IslandRunMarketPurchaseStatus => Boolean(status))),
+      );
+      const missingStatuses = normalizedExpected.filter((status) => !coveredStatuses.includes(status));
+
+      const report: IslandRunMarketStatusCoverageReport = {
+        generatedAt: new Date().toISOString(),
+        passed: missingStatuses.length === 0,
+        expectedStatuses: normalizedExpected,
+        coveredStatuses,
+        missingStatuses,
+        markerCount: snapshot?.rows.length ?? 0,
+        baselineApplied: snapshot?.baselineApplied ?? false,
+        baselineIso: snapshot?.baselineIso,
+      };
+
+      console.info('[IslandRunMarketStatusCoverage]', report.passed ? 'PASS' : 'FAIL', report);
+      return report;
+    };
+
+    window.__islandRunMarketDebugResetState = () => {
+      const resetAt = new Date().toISOString();
+      const resetMs = Date.parse(resetAt);
+
+      setMarketPurchaseFeedback(null);
+      setMarketOwnedBundles({
+        dice_bundle: false,
+        heart_bundle: false,
+      });
+      setMarketMarkerBaselineMs(resetMs);
+
+      const result = {
+        resetAt,
+        baselineApplied: true,
+        ownedBundles: [],
+        feedbackCleared: true,
+      };
+
+      console.info('[IslandRunMarketDebugReset]', result);
+      return result;
+    };
+
+    return () => {
+      delete window.__islandRunMarketDebugExportMarkers;
+      delete window.__islandRunMarketDebugResetState;
+      delete window.__islandRunMarketDebugAssertStatusCoverage;
+    };
+  }, [marketMarkerBaselineMs, showDebug, showQaHooks]);
 
 
   useEffect(() => {
@@ -688,6 +855,181 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }));
   };
 
+  const emitMarketPurchaseMarker = (payload: {
+    bundle: 'dice_bundle' | 'heart_bundle';
+    status: 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
+    costCoins: number;
+    rewardDice?: number;
+    rewardHearts?: number;
+    coinsBefore: number;
+    coinsAfter: number;
+    ownedDiceBundle?: boolean;
+    ownedHeartBundle?: boolean;
+  }) => {
+    logIslandRunEntryDebug('island_run_market_purchase', {
+      islandNumber,
+      ...payload,
+    });
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_market_purchase',
+        island_number: islandNumber,
+        bundle: payload.bundle,
+        status: payload.status,
+        cost_coins: payload.costCoins,
+        reward_dice: payload.rewardDice ?? 0,
+        reward_hearts: payload.rewardHearts ?? 0,
+        coins_before: payload.coinsBefore,
+        coins_after: payload.coinsAfter,
+        owned_dice_bundle: payload.ownedDiceBundle,
+        owned_heart_bundle: payload.ownedHeartBundle,
+      },
+    });
+  };
+
+  const handleQaTriggerMarketAlreadyOwnedMarker = (bundle: 'dice_bundle' | 'heart_bundle' = 'dice_bundle') => {
+    const costCoins = bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_COST : MARKET_HEART_BUNDLE_COST;
+    const rewardDice = bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_REWARD : undefined;
+    const rewardHearts = bundle === 'heart_bundle' ? 1 : undefined;
+
+    setActiveStopId('market');
+    setMarketOwnedBundles((current) => ({
+      ...current,
+      [bundle]: true,
+    }));
+
+    emitMarketPurchaseMarker({
+      bundle,
+      status: 'already_owned',
+      costCoins,
+      rewardDice,
+      rewardHearts,
+      coinsBefore: coins,
+      coinsAfter: coins,
+      ownedDiceBundle: bundle === 'dice_bundle' ? true : marketOwnedBundles.dice_bundle,
+      ownedHeartBundle: bundle === 'heart_bundle' ? true : marketOwnedBundles.heart_bundle,
+    });
+
+    const message =
+      bundle === 'dice_bundle'
+        ? 'QA marker: Dice Bundle already owned path emitted.'
+        : 'QA marker: Heart Bundle already owned path emitted.';
+
+    setMarketPurchaseFeedback(message);
+    setLandingText(message);
+  };
+
+  const handleMarketPrototypePurchase = (bundle: 'dice_bundle' | 'heart_bundle') => {
+    if (marketOwnedBundles[bundle]) {
+      emitMarketPurchaseMarker({
+        bundle,
+        status: 'already_owned',
+        costCoins: bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_COST : MARKET_HEART_BUNDLE_COST,
+        rewardDice: bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_REWARD : undefined,
+        rewardHearts: bundle === 'heart_bundle' ? 1 : undefined,
+        coinsBefore: coins,
+        coinsAfter: coins,
+        ownedDiceBundle: marketOwnedBundles.dice_bundle,
+        ownedHeartBundle: marketOwnedBundles.heart_bundle,
+      });
+
+      const ownedMessage =
+        bundle === 'dice_bundle'
+          ? 'Dice Bundle already owned for this island run.'
+          : 'Heart Bundle already owned for this island run.';
+      setMarketPurchaseFeedback(ownedMessage);
+      setLandingText(ownedMessage);
+      return;
+    }
+    if (bundle === 'dice_bundle') {
+      emitMarketPurchaseMarker({
+        bundle,
+        status: 'attempt',
+        costCoins: MARKET_DICE_BUNDLE_COST,
+        rewardDice: MARKET_DICE_BUNDLE_REWARD,
+        coinsBefore: coins,
+        coinsAfter: coins,
+      });
+
+      if (coins < MARKET_DICE_BUNDLE_COST) {
+        const message = `Not enough coins for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
+        emitMarketPurchaseMarker({
+          bundle,
+          status: 'insufficient_coins',
+          costCoins: MARKET_DICE_BUNDLE_COST,
+          rewardDice: MARKET_DICE_BUNDLE_REWARD,
+          coinsBefore: coins,
+          coinsAfter: coins,
+        });
+        setMarketPurchaseFeedback(message);
+        setLandingText(message);
+        return;
+      }
+
+      setCoins((current) => current - MARKET_DICE_BUNDLE_COST);
+      setDicePool((current) => current + MARKET_DICE_BUNDLE_REWARD);
+
+      emitMarketPurchaseMarker({
+        bundle,
+        status: 'success',
+        costCoins: MARKET_DICE_BUNDLE_COST,
+        rewardDice: MARKET_DICE_BUNDLE_REWARD,
+        coinsBefore: coins,
+        coinsAfter: coins - MARKET_DICE_BUNDLE_COST,
+      });
+
+      const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} coins, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
+      setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
+      setMarketPurchaseFeedback(message);
+      setLandingText(message);
+      return;
+    }
+
+    emitMarketPurchaseMarker({
+      bundle,
+      status: 'attempt',
+      costCoins: MARKET_HEART_BUNDLE_COST,
+      rewardHearts: 1,
+      coinsBefore: coins,
+      coinsAfter: coins,
+    });
+
+    if (coins < MARKET_HEART_BUNDLE_COST) {
+      const message = `Not enough coins for Heart Bundle (${MARKET_HEART_BUNDLE_COST} required).`;
+      emitMarketPurchaseMarker({
+        bundle,
+        status: 'insufficient_coins',
+        costCoins: MARKET_HEART_BUNDLE_COST,
+        rewardHearts: 1,
+        coinsBefore: coins,
+        coinsAfter: coins,
+      });
+      setMarketPurchaseFeedback(message);
+      setLandingText(message);
+      return;
+    }
+
+    setCoins((current) => current - MARKET_HEART_BUNDLE_COST);
+    setHearts((current) => current + 1);
+
+    emitMarketPurchaseMarker({
+      bundle,
+      status: 'success',
+      costCoins: MARKET_HEART_BUNDLE_COST,
+      rewardHearts: 1,
+      coinsBefore: coins,
+      coinsAfter: coins - MARKET_HEART_BUNDLE_COST,
+    });
+
+    const message = `Purchased Heart Bundle: -${MARKET_HEART_BUNDLE_COST} coins, +1 heart.`;
+    setMarketOwnedBundles((current) => ({ ...current, heart_bundle: true }));
+    setMarketPurchaseFeedback(message);
+    setLandingText(message);
+  };
+
   const handleCompleteActiveStop = () => {
     if (!activeStopId) return;
 
@@ -739,6 +1081,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         setCompletedStops([]);
         setBossTrialResolved(false);
         setBossRewardSummary(null);
+        setMarketPurchaseFeedback(null);
+        setMarketOwnedBundles({
+          dice_bundle: false,
+          heart_bundle: false,
+        });
         setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
 
         void persistIslandRunRuntimeStatePatch({
@@ -760,6 +1107,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
     setCompletedStops((current) => (current.includes(activeStopId) ? current : [...current, activeStopId]));
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
+    if (activeStopId === 'market') {
+      setMarketPurchaseFeedback(null);
+      setMarketOwnedBundles({
+        dice_bundle: false,
+        heart_bundle: false,
+      });
+    }
     setActiveStopId(null);
   };
 
@@ -982,6 +1336,27 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaResetProgression}>
                 QA: Reset progression
               </button>
+              <button
+                type="button"
+                className="island-run-prototype__debug-btn"
+                onClick={() => handleQaTriggerMarketAlreadyOwnedMarker('dice_bundle')}
+              >
+                QA: Market already-owned (dice)
+              </button>
+              <button
+                type="button"
+                className="island-run-prototype__debug-btn"
+                onClick={() => handleQaTriggerMarketAlreadyOwnedMarker('heart_bundle')}
+              >
+                QA: Market already-owned (heart)
+              </button>
+              <button
+                type="button"
+                className="island-run-prototype__debug-btn"
+                onClick={() => window.__islandRunMarketDebugResetState?.()}
+              >
+                QA: Market reset marker baseline
+              </button>
             </>
           )}
           {dailyRewardPlan.source === 'spin_of_the_day' && (
@@ -1150,7 +1525,55 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>
       )}
 
-      {activeStop && (
+      {activeStop?.stopId === 'market' && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--market" role="dialog" aria-modal="true" aria-label="Market stop prototype">
+            <h3>🛒 Market Stop</h3>
+            <p>Prototype purchase modal: preview starter store actions before the full Market slice.</p>
+            <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p>
+            <div className="island-hatchery-card">
+              <p>Available prototype offers:</p>
+              <div className="island-hatchery-card__actions">
+                <button
+                  type="button"
+                  onClick={() => handleMarketPrototypePurchase('dice_bundle')}
+                  disabled={marketOwnedBundles.dice_bundle}
+                >
+                  {marketOwnedBundles.dice_bundle
+                    ? 'Dice Bundle Owned'
+                    : `Buy Dice Bundle (-${MARKET_DICE_BUNDLE_COST} coins, +${MARKET_DICE_BUNDLE_REWARD} dice)`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMarketPrototypePurchase('heart_bundle')}
+                  disabled={marketOwnedBundles.heart_bundle}
+                >
+                  {marketOwnedBundles.heart_bundle
+                    ? 'Heart Bundle Owned'
+                    : `Buy Heart Bundle (-${MARKET_HEART_BUNDLE_COST} coins, +1 heart)`}
+                </button>
+              </div>
+            </div>
+            <p>Coins balance: <strong>{coins}</strong></p>
+            <p>Owned bundles: <strong>{[marketOwnedBundles.dice_bundle ? 'dice' : null, marketOwnedBundles.heart_bundle ? 'heart' : null].filter(Boolean).join(', ') || 'none'}</strong></p>
+            {marketPurchaseFeedback ? <p>{marketPurchaseFeedback}</p> : null}
+            <button type="button" onClick={handleCompleteActiveStop}>
+              Complete Market Stop
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMarketPurchaseFeedback(null);
+                setActiveStopId(null);
+              }}
+            >
+              Close
+            </button>
+          </section>
+        </div>
+      )}
+
+      {activeStop && activeStop.stopId !== 'market' && (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal" role="dialog" aria-modal="true" aria-label={activeStop.title}>
             <h3>{activeStop.title}</h3>
@@ -1229,6 +1652,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           </section>
         </div>
       )}
+
 
       {showEncounterModal && (
         <div className="island-stop-modal-backdrop" role="presentation">
