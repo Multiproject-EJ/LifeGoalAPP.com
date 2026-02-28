@@ -26,6 +26,8 @@ export interface IslandRunRuntimeStateBackend {
       firstRunClaimed?: boolean;
       dailyHeartsClaimedDayKey?: string | null;
       onboardingComplete?: boolean;
+      currentIslandNumber?: number;
+      bossTrialResolvedIslandNumber?: number | null;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -52,6 +54,16 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.dailyHeartsClaimedDayKey === 'string' || patch.dailyHeartsClaimedDayKey === null
           ? patch.dailyHeartsClaimedDayKey
           : current.dailyHeartsClaimedDayKey,
+      currentIslandNumber:
+        typeof patch.currentIslandNumber === 'number' && Number.isFinite(patch.currentIslandNumber)
+          ? Math.max(1, Math.floor(patch.currentIslandNumber))
+          : current.currentIslandNumber,
+      bossTrialResolvedIslandNumber:
+        typeof patch.bossTrialResolvedIslandNumber === 'number' && Number.isFinite(patch.bossTrialResolvedIslandNumber)
+          ? Math.max(1, Math.floor(patch.bossTrialResolvedIslandNumber))
+          : patch.bossTrialResolvedIslandNumber === null
+            ? null
+            : current.bossTrialResolvedIslandNumber,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

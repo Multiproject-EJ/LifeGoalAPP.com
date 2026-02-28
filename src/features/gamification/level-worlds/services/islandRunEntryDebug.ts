@@ -42,6 +42,50 @@ type IslandRunEntryDebugEvidence = {
   network: IslandRunEntryDebugNetworkEntry[];
 };
 
+type IslandRunProgressionAssertionCheck = {
+  name: string;
+  passed: boolean;
+  detail: string;
+  matchedEventIndex?: number;
+};
+
+type IslandRunProgressionAssertionReport = {
+  passed: boolean;
+  generatedAt: string;
+  mode: 'table' | 'fallback';
+  checks: IslandRunProgressionAssertionCheck[];
+};
+
+type IslandRunProgressionAssertionSummary = {
+  passed: boolean;
+  mode: 'table' | 'fallback';
+  generatedAt: string;
+  totalChecks: number;
+  passedChecks: number;
+  failedChecks: string[];
+  summaryLine: string;
+};
+
+type IslandRunProgressionAssertionExportBundle = {
+  mode: 'table' | 'fallback';
+  summary: IslandRunProgressionAssertionSummary;
+  evidence: IslandRunEntryDebugEvidence;
+  runFilterRef?: string;
+  matchedRunId?: string;
+  matchedScenario?: string;
+  filteredEventCount?: number;
+};
+
+type IslandRunProgressionRunFilterResult = {
+  ref?: string;
+  matchedRunId?: string;
+  matchedScenario?: string;
+  mode: 'table' | 'fallback';
+  eventCount: number;
+  events: IslandRunEntryDebugEntry[];
+  report: IslandRunProgressionAssertionReport;
+};
+
 declare global {
   interface Window {
     __islandRunEntryDebugDump?: () => IslandRunEntryDebugEntry[];
@@ -53,6 +97,20 @@ declare global {
       checkpoint: IslandRunEntryCheckpoint,
       payload?: IslandRunEntryDebugPayload,
     ) => void;
+    __islandRunEntryDebugAssertProgressionSequence?: (
+      mode?: 'table' | 'fallback',
+    ) => IslandRunProgressionAssertionReport;
+    __islandRunEntryDebugAssertProgressionSummary?: (
+      mode?: 'table' | 'fallback',
+    ) => IslandRunProgressionAssertionSummary;
+    __islandRunEntryDebugExportProgressionBundle?: (
+      mode?: 'table' | 'fallback',
+      ref?: string,
+    ) => IslandRunProgressionAssertionExportBundle;
+    __islandRunEntryDebugFilterProgressionRun?: (
+      ref?: string,
+      mode?: 'table' | 'fallback',
+    ) => IslandRunProgressionRunFilterResult;
     __islandRunEntryDebugListenersInstalled?: boolean;
   }
 }
@@ -169,6 +227,187 @@ export function logIslandRunEntryDebug(stage: string, payload?: IslandRunEntryDe
   });
 }
 
+function findNextEventIndex(
+  events: IslandRunEntryDebugEntry[],
+  startIndex: number,
+  predicate: (event: IslandRunEntryDebugEntry) => boolean,
+): number {
+  for (let index = Math.max(0, startIndex); index < events.length; index += 1) {
+    if (predicate(events[index])) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+function assertProgressionSequence(
+  events: IslandRunEntryDebugEntry[],
+  mode: 'table' | 'fallback' = 'table',
+): IslandRunProgressionAssertionReport {
+  const checks: IslandRunProgressionAssertionCheck[] = [];
+  let cursor = 0;
+
+  const expect = (
+    name: string,
+    predicate: (event: IslandRunEntryDebugEntry) => boolean,
+    detail: string,
+  ) => {
+    const matchedEventIndex = findNextEventIndex(events, cursor, predicate);
+    const passed = matchedEventIndex >= 0;
+
+    checks.push({
+      name,
+      passed,
+      detail,
+      matchedEventIndex: passed ? matchedEventIndex : undefined,
+    });
+
+    if (passed) {
+      cursor = matchedEventIndex + 1;
+    }
+  };
+
+  expect(
+    'baseline_reset_persist',
+    (event) =>
+      event.stage === 'runtime_state_persist_success' &&
+      event.payload?.currentIslandNumber === 1 &&
+      event.payload?.bossTrialResolvedIslandNumber === null,
+    'Expected persist success with island=1 and boss marker null.',
+  );
+
+  expect(
+    'boss_marker_persist',
+    (event) =>
+      event.stage === 'runtime_state_persist_success' &&
+      event.payload?.currentIslandNumber === 1 &&
+      event.payload?.bossTrialResolvedIslandNumber === 1,
+    'Expected persist success with island=1 and boss marker=1.',
+  );
+
+  expect(
+    'advance_island_persist',
+    (event) =>
+      event.stage === 'runtime_state_persist_success' &&
+      event.payload?.currentIslandNumber === 2 &&
+      event.payload?.bossTrialResolvedIslandNumber === null,
+    'Expected persist success with island=2 and boss marker null.',
+  );
+
+  expect(
+    'refresh_hydration_marker_state',
+    (event) =>
+      mode === 'table'
+        ? event.stage === 'runtime_state_hydrate_query_success' &&
+          event.payload?.currentIslandNumber === 2 &&
+          event.payload?.bossTrialResolvedIslandNumber === null
+        : (event.stage === 'runtime_state_hydrate_skipped_remote' ||
+            event.stage === 'runtime_state_hydrate_query_error' ||
+            event.stage === 'runtime_state_hydrate_no_row') &&
+          event.payload?.fallbackCurrentIslandNumber === 2 &&
+          event.payload?.fallbackBossTrialResolvedIslandNumber === null,
+    mode === 'table'
+      ? 'Expected table hydration success with island=2 and boss marker null after refresh.'
+      : 'Expected fallback hydration event with fallback island=2 and fallback boss marker null after refresh.',
+  );
+
+  return {
+    passed: checks.every((check) => check.passed),
+    generatedAt: new Date().toISOString(),
+    mode,
+    checks,
+  };
+}
+
+function summarizeProgressionAssertionReport(
+  report: IslandRunProgressionAssertionReport,
+): IslandRunProgressionAssertionSummary {
+  const failedChecks = report.checks.filter((check) => !check.passed).map((check) => check.name);
+  const passedChecks = report.checks.length - failedChecks.length;
+
+  return {
+    passed: report.passed,
+    mode: report.mode,
+    generatedAt: report.generatedAt,
+    totalChecks: report.checks.length,
+    passedChecks,
+    failedChecks,
+    summaryLine: report.passed
+      ? `PASS [${report.mode}] ${passedChecks}/${report.checks.length} checks`
+      : `FAIL [${report.mode}] ${passedChecks}/${report.checks.length} checks | failed: ${failedChecks.join(', ')}`,
+  };
+}
+
+function isProgressionRelevantEvent(event: IslandRunEntryDebugEntry) {
+  return event.stage.startsWith('runtime_state_');
+}
+
+function findRunWindow(events: IslandRunEntryDebugEntry[], ref?: string) {
+  const defaultWindow = {
+    startIndex: 0,
+    endIndex: events.length,
+    matchedRunId: undefined as string | undefined,
+    matchedScenario: undefined as string | undefined,
+  };
+
+  const normalizedRef = typeof ref === 'string' ? ref.trim() : '';
+  if (!normalizedRef) {
+    return defaultWindow;
+  }
+
+  let startIndex = -1;
+  let matchedRunId: string | undefined;
+  let matchedScenario: string | undefined;
+
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index];
+    if (event.stage !== 'repro_run_started') continue;
+
+    const runId = typeof event.payload?.runId === 'string' ? event.payload.runId : undefined;
+    const scenario = typeof event.payload?.scenario === 'string' ? event.payload.scenario : undefined;
+
+    if (runId === normalizedRef || scenario === normalizedRef) {
+      startIndex = index;
+      matchedRunId = runId;
+      matchedScenario = scenario;
+      break;
+    }
+  }
+
+  if (startIndex < 0) {
+    return defaultWindow;
+  }
+
+  let endIndex = events.length;
+  for (let index = startIndex + 1; index < events.length; index += 1) {
+    if (events[index].stage === 'repro_run_started') {
+      endIndex = index;
+      break;
+    }
+  }
+
+  return {
+    startIndex,
+    endIndex,
+    matchedRunId,
+    matchedScenario,
+  };
+}
+
+function filterProgressionRunEvents(events: IslandRunEntryDebugEntry[], ref?: string) {
+  const runWindow = findRunWindow(events, ref);
+
+  const filteredEvents = events
+    .slice(runWindow.startIndex, runWindow.endIndex)
+    .filter((event) => isProgressionRelevantEvent(event));
+
+  return {
+    ...runWindow,
+    filteredEvents,
+  };
+}
+
 function installGlobalDebugListeners() {
   if (typeof window === 'undefined') return;
   if (window.__islandRunEntryDebugListenersInstalled) return;
@@ -218,7 +457,15 @@ function installGlobalDebugListeners() {
 function installDebugWindowHelpers() {
   if (typeof window === 'undefined') return;
   if (!isIslandRunEntryDebugEnabled()) return;
-  if (window.__islandRunEntryDebugDump && window.__islandRunEntryDebugClear && window.__islandRunEntryDebugEvidence) {
+  if (
+    window.__islandRunEntryDebugDump &&
+    window.__islandRunEntryDebugClear &&
+    window.__islandRunEntryDebugEvidence &&
+    window.__islandRunEntryDebugAssertProgressionSequence &&
+    window.__islandRunEntryDebugAssertProgressionSummary &&
+    window.__islandRunEntryDebugExportProgressionBundle &&
+    window.__islandRunEntryDebugFilterProgressionRun
+  ) {
     return;
   }
 
@@ -243,6 +490,74 @@ function installDebugWindowHelpers() {
       checkpoint,
       ...payload,
     });
+  };
+  window.__islandRunEntryDebugAssertProgressionSequence = (mode = 'table') => {
+    return assertProgressionSequence(readDebugBuffer(), mode);
+  };
+  window.__islandRunEntryDebugAssertProgressionSummary = (mode = 'table') => {
+    const report = assertProgressionSequence(readDebugBuffer(), mode);
+    const summary = summarizeProgressionAssertionReport(report);
+    console.info('[IslandRunEntryDebugAssertionSummary]', summary.summaryLine, summary);
+    return summary;
+  };
+  window.__islandRunEntryDebugExportProgressionBundle = (mode = 'table', ref) => {
+    const buffer = readDebugBuffer();
+    const runScoped = filterProgressionRunEvents(buffer, ref);
+    const scopedEvents = typeof ref === 'string' && ref.trim() ? runScoped.filteredEvents : undefined;
+    const report = assertProgressionSequence(scopedEvents ?? buffer, mode);
+    const summary = summarizeProgressionAssertionReport(report);
+    const evidence = collectDebugEvidence();
+    const bundle: IslandRunProgressionAssertionExportBundle = {
+      mode,
+      summary,
+      evidence: {
+        ...evidence,
+        events: scopedEvents ?? evidence.events,
+      },
+      runFilterRef: ref,
+      matchedRunId: runScoped.matchedRunId,
+      matchedScenario: runScoped.matchedScenario,
+      filteredEventCount: scopedEvents?.length,
+    };
+
+    console.info('[IslandRunEntryDebugProgressionBundle]', {
+      mode,
+      runFilterRef: ref,
+      matchedRunId: runScoped.matchedRunId,
+      matchedScenario: runScoped.matchedScenario,
+      summaryLine: summary.summaryLine,
+      generatedAt: evidence.generatedAt,
+      eventCount: bundle.evidence.events.length,
+      networkCount: evidence.network.length,
+    });
+
+    return bundle;
+  };
+  window.__islandRunEntryDebugFilterProgressionRun = (ref, mode = 'table') => {
+    const buffer = readDebugBuffer();
+    const { filteredEvents, matchedRunId, matchedScenario } = filterProgressionRunEvents(buffer, ref);
+    const report = assertProgressionSequence(filteredEvents, mode);
+
+    const result: IslandRunProgressionRunFilterResult = {
+      ref,
+      matchedRunId,
+      matchedScenario,
+      mode,
+      eventCount: filteredEvents.length,
+      events: filteredEvents,
+      report,
+    };
+
+    console.info('[IslandRunEntryDebugProgressionRunFilter]', {
+      ref,
+      mode,
+      matchedRunId,
+      matchedScenario,
+      eventCount: filteredEvents.length,
+      passed: report.passed,
+    });
+
+    return result;
   };
 
   logIslandRunEntryDebug('debug_helpers_installed', {

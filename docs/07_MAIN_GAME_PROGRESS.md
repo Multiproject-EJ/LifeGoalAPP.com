@@ -1,4 +1,231 @@
 Date: 2026-03-01
+Slice: M7L — Filter-aware export bundle support
+Summary:
+- Extended `window.__islandRunEntryDebugExportProgressionBundle(mode, ref?)` to optionally accept a run reference (`runId` or scenario label) while preserving the original one-argument call signature.
+- When `ref` is provided, the bundle now scopes `evidence.events` to run-window progression events and returns filter metadata (`runFilterRef`, `matchedRunId`, `matchedScenario`, `filteredEventCount`) for explicit triage context.
+- Updated progression QA checklist with side-by-side no-filter vs filtered bundle examples and expected metadata keys.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7M add normalized `scope` metadata across summary/filter/bundle outputs for unambiguous export interpretation.
+
+Date: 2026-03-01
+Slice: M7K — Run-scoped progression debug filter helper
+Summary:
+- Added `window.__islandRunEntryDebugFilterProgressionRun(ref, mode)` to isolate progression-relevant runtime-state events for a single repro run.
+- Helper accepts either `runId` or scenario label, scopes to the matching `repro_run_started` window, and returns assertion-compatible output (`events` + `report`) for deterministic per-run triage.
+- Updated progression QA checklist with run-start + run-filter examples and expected output keys.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7L add optional run-filter support to export bundle helper so one call can produce scoped summary+evidence payloads.
+
+Date: 2026-03-01
+Slice: M7J — QA export bundle helper for progression runs
+Summary:
+- Added `window.__islandRunEntryDebugExportProgressionBundle(mode)` to return both progression assertion summary and latest debug evidence in a single payload.
+- Bundle helper reuses the existing assertion + summary paths and appends `collectDebugEvidence()` output so triage exports include both verdict and supporting events/network context.
+- Updated progression QA checklist with explicit table/fallback bundle helper commands and expected output keys.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7K add run-scoped progression debug filter helper so exported assertions can be narrowed to a single repro run.
+
+Date: 2026-03-01
+Slice: M7I — Console-friendly progression assertion summary helper
+Summary:
+- Added `window.__islandRunEntryDebugAssertProgressionSummary(mode)` to print and return a compact pass/fail summary for progression assertions.
+- Summary helper reuses the existing structured assertion report path and returns failed check names, counts, and a single-line `summaryLine` for fast triage copy/paste.
+- Updated progression QA checklist with table/fallback summary helper commands and expected output shape.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7J add progression QA export bundle helper that returns assertion summary + evidence snapshot in one call.
+
+Date: 2026-03-01
+Slice: M7H — Parameterized assertion presets for table vs fallback environments
+Summary:
+- Updated progression assertion helper to accept mode presets: `window.__islandRunEntryDebugAssertProgressionSequence('table' | 'fallback')`.
+- Table mode now requires `runtime_state_hydrate_query_success` marker evidence, while fallback mode requires fallback hydration stages with fallback marker payloads.
+- Updated QA checklist docs with explicit invocation/examples for both presets so environment-specific verification is unambiguous.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7I add compact summary printer helper for assertion reports (single-line pass/fail + failed check names) to speed console triage.
+
+Date: 2026-03-01
+Slice: M7G — Dev-only automated assertion harness for progression-marker debug stages
+Summary:
+- Added `window.__islandRunEntryDebugAssertProgressionSequence()` in `islandRunEntryDebug` to deterministically validate reset→resolve→advance→refresh progression-marker evidence stages.
+- Assertion report returns per-check pass/fail + matched event indices, reducing manual interpretation drift in QA triage.
+- Updated progression QA checklist with an explicit final assertion-helper step and expected success shape.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7H add optional parameterized assertion presets (table-success vs fallback-mode) to support environment-specific verification without editing helper code.
+
+Date: 2026-03-01
+Slice: M7F — Progression-marker regression checklist + deterministic QA hooks
+Summary:
+- Added deterministic QA hook controls in `IslandRunBoardPrototype` (`QA: Mark boss resolved`, `QA: Advance island`, `QA: Reset progression`) behind debug/dev conditions to make marker-transition verification repeatable.
+- Added dedicated QA checklist doc (`docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md`) that maps each transition step to expected debug evidence payload keys.
+- Keeps production gameplay behavior unchanged while reducing ambiguity in progression-marker regression triage and manual verification runs.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+- npm run dev -- --host 0.0.0.0 --port 4173 (manual QA hooks verification)
+Next:
+- M7G add minimal automated assertion harness (dev-only) that validates expected progression-marker stage payloads from debug buffer.
+
+Date: 2026-03-01
+Slice: M7E — Progression-marker debug evidence instrumentation pass
+Summary:
+- Extended runtime-state debug events in `islandRunGameStateStore` to include progression marker payloads (`currentIslandNumber`, `bossTrialResolvedIslandNumber`) across hydrate/persist success, error, and fallback stages.
+- Added fallback marker snapshots to hydration skip/no-row/error stages so exported evidence shows both attempted table state and active local fallback context.
+- Keeps runtime behavior unchanged while making `window.__islandRunEntryDebugEvidence()` materially more actionable for progression persistence regressions.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7F add targeted regression checklist/assertions around progression marker transitions (boss resolve, boss clear, timer-expiry advance) for repeatable QA runs.
+
+Date: 2026-03-01
+Slice: M7D — Table-first persistence for Island Run progression markers
+Summary:
+- Added Supabase migration `0167_island_run_runtime_state_progression_markers.sql` to create/harden `island_run_runtime_state` with progression marker columns (`current_island_number`, `boss_trial_resolved_island_number`) and RLS policies.
+- Updated runtime-state game-store table read/write paths to include progression marker columns in table selects/upserts, aligning M7C marker persistence with table-first behavior.
+- Updated `database.types.ts` and product spec notes so typed Supabase contracts explicitly include Island Run runtime-state progression fields.
+Files changed:
+- supabase/migrations/0167_island_run_runtime_state_progression_markers.sql
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/lib/database.types.ts
+- docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M7E wire operator/debug evidence capture to show progression-marker hydration/persist values for fast regression triage.
+
+Date: 2026-03-01
+Slice: M7C — Persist boss-clear progression runtime markers
+Summary:
+- Extended Island Run runtime-state schema with `currentIslandNumber` and `bossTrialResolvedIslandNumber` so boss progression survives refresh.
+- Wired `IslandRunBoardPrototype` to hydrate island/boss marker state from runtime-state and persist marker updates on boss resolve + island advance paths.
+- Keeps existing M7A/M7B gameplay + telemetry behavior while preventing refresh resets from dropping boss progression context.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+- npm run dev -- --host 0.0.0.0 --port 4173 (manual refresh/persistence verification)
+Next:
+- M7D align persisted progression markers with table-first runtime-state columns/migration so cross-device continuity matches local refresh continuity.
+
+Date: 2026-03-01
+Slice: M7B — Boss stop telemetry + reward contract wiring
+Summary:
+- Wired boss trial rewards into shared reward/session rails by logging `awardHearts(..., 'shooter_blitz', ...)`, `awardGold(..., 'shooter_blitz', ...)`, and `logGameSession(...)` during boss resolve/clear.
+- Added explicit telemetry payloads for `island_run_boss_trial_resolved` and `island_run_boss_island_cleared` using `economy_earn` so operator analytics can audit reward/clear stages.
+- Preserved M7A gameplay gating behavior (boss clear still blocked until trial resolve) while adding instrumentation-only follow-through.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+- npm run dev -- --host 0.0.0.0 --port 4173 (manual boss-stop telemetry wiring verification)
+Next:
+- M7C persist per-island boss-clear progression/runtime markers so travel + unlock state survive refresh/session changes.
+
+Date: 2026-03-01
+Slice: M7A — Boss stop reward prototype (challenge resolve + clear gating)
+Summary:
+- Added a dedicated boss-stop challenge stub in `IslandRunBoardPrototype` with explicit resolve action before island clear can be claimed.
+- Boss resolve now grants prototype reward feedback (`+2 hearts`, `+120 coins`) and surfaces a clear confirmation message before travel.
+- Kept non-boss stop behavior unchanged (existing hatchery/encounter/standard stop completion flows preserved).
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+- npm run dev -- --host 0.0.0.0 --port 4173 (manual boss-stop flow verification)
+Next:
+- M7B wire boss-stop resolve + island-clear events into telemetry/reward logging contract for auditability.
+
+Date: 2026-03-01
+Slice: M7P.15 — Fleet-level legacy alias rollout gate helper
+Summary:
+- Added `getLegacyAliasSunsetRollup(userIds)` in `gameRewards` to aggregate per-user sunset scans into a single go/no-go payload.
+- Rollup reports scanned user count, total legacy reward/session rows, and explicit `usersWithLegacyAliases` for targeted cleanup follow-up.
+- Keeps existing runtime behavior unchanged while making staged alias-removal decisions scriptable across multiple operator-selected accounts.
+Files changed:
+- src/services/gameRewards.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.16 wire rollup summary into the operator diagnostics surface (or scripted export path) to capture baseline evidence before deleting residual legacy-read scaffolding.
+
+Date: 2026-03-01
+Slice: M7P.14 — Canonical-only game/source unions with legacy-read compatibility
+Summary:
+- Removed `pomodoro_sprint` from canonical game/source unions (`HabitGameId`, `GameSource`, `EconomySourceKey`) so new compile-time call sites only emit `shooter_blitz`.
+- Preserved non-breaking compatibility for existing persisted legacy rows by widening storage-read normalizers in `gameRewards` to accept legacy aliases and self-heal to canonical IDs.
+- Dropped legacy-only metadata/economy labels tied to `pomodoro_sprint` while keeping the sunset-readiness scanner intact for operator verification.
+Files changed:
+- src/types/habitGames.ts
+- src/services/gameRewards.ts
+- src/constants/economy.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.15 remove now-unused legacy scanner UI/actions after at-scale diagnostics confirm zero legacy alias rows for target accounts.
+
+Date: 2026-03-01
 Slice: M7P.13 — Operator/dev diagnostics wiring for alias sunset readiness
 Summary:
 - Wired legacy alias readiness into an operator-facing diagnostics surface inside Account → Developer & Analytics Tools.

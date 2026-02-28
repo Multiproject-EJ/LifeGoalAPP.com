@@ -10,7 +10,6 @@ export type EconomySourceKey =
   | 'power_ups'
   | 'lucky_roll'
   | 'task_tower'
-  | 'pomodoro_sprint' // legacy source (deprecating)
   | 'shooter_blitz'
   | 'vision_quest'
   | 'wheel_of_wins'
@@ -55,7 +54,6 @@ export const ECONOMY_MATRIX = {
     power_ups: 'Power-up bonuses (XP multipliers, boosts)',
     lucky_roll: 'Lucky Roll board tile rewards',
     task_tower: 'Task Tower line clear rewards',
-    pomodoro_sprint: 'Pomodoro Sprint completion rewards (legacy)',
     shooter_blitz: 'Shooter Blitz mission completion rewards',
     vision_quest: 'Vision Quest passive multipliers',
     wheel_of_wins: 'Wheel of Wins spin prizes',

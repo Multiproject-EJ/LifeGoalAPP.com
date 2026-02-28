@@ -2,18 +2,21 @@
 export type HabitGameId =
   | 'lucky_roll'
   | 'task_tower'
-  | 'pomodoro_sprint' // legacy id (deprecating)
   | 'shooter_blitz'
   | 'vision_quest'
   | 'wheel_of_wins';
 
+export type LegacyHabitGameId = 'pomodoro_sprint';
 
-export const LEGACY_HABIT_GAME_ID_ALIASES: Partial<Record<HabitGameId, HabitGameId>> = {
+export const LEGACY_HABIT_GAME_ID_ALIASES: Record<LegacyHabitGameId, HabitGameId> = {
   pomodoro_sprint: 'shooter_blitz',
 };
 
-export function normalizeHabitGameId(gameId: HabitGameId): HabitGameId {
-  return LEGACY_HABIT_GAME_ID_ALIASES[gameId] ?? gameId;
+export function normalizeHabitGameId(gameId: HabitGameId | LegacyHabitGameId): HabitGameId {
+  if (gameId === 'pomodoro_sprint') {
+    return LEGACY_HABIT_GAME_ID_ALIASES.pomodoro_sprint;
+  }
+  return gameId;
 }
 
 /** Mini-game token types */
@@ -22,7 +25,6 @@ export type GameTokenType = 'tower' | 'focus' | 'vision' | 'spin';
 /** Maps game ID to its token type */
 export const GAME_TOKEN_MAP: Record<Exclude<HabitGameId, 'lucky_roll'>, GameTokenType> = {
   task_tower: 'tower',
-  pomodoro_sprint: 'focus',
   shooter_blitz: 'focus',
   vision_quest: 'vision',
   wheel_of_wins: 'spin',
@@ -49,13 +51,6 @@ export const HABIT_GAME_META: Record<HabitGameId, {
     emotion: 'Relief',
     description: 'Clear your mental clutter by completing tasks.',
     colorAccent: '#27ae60',
-  },
-  pomodoro_sprint: {
-    label: 'Pomodoro Sprint (Legacy)',
-    emoji: '🍅',
-    emotion: 'Pride',
-    description: 'Legacy focus mode session.',
-    colorAccent: '#6c5ce7',
   },
   shooter_blitz: {
     label: 'Shooter Blitz',
