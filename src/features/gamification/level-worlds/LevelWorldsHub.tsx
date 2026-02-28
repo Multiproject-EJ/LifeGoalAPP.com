@@ -1,7 +1,7 @@
 // LevelWorldsHub Component
 // Main entry point for Level Worlds campaign mode
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useLevelWorlds } from './hooks/useLevelWorlds';
 import { useWorldProgress } from './hooks/useWorldProgress';
@@ -10,10 +10,11 @@ import { NodeDetailSheet } from './components/NodeDetailSheet';
 import { BoardCompleteOverlay } from './components/BoardCompleteOverlay';
 import { IslandRunBoardPrototype } from './components/IslandRunBoardPrototype';
 import type { WorldNode } from './types/levelWorlds';
+import { logIslandRunEntryDebug } from './services/islandRunEntryDebug';
 
 // Import mini-games
 import { TaskTower } from '../games/task-tower/TaskTower';
-import { PomodoroSprint } from '../games/pomodoro-sprint/PomodoroSprint';
+import { ShooterBlitz } from '../games/shooter-blitz/ShooterBlitz';
 import { VisionQuest } from '../games/vision-quest/VisionQuest';
 import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
 
@@ -36,12 +37,26 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
 
   // Mini-game states
   const [showTaskTower, setShowTaskTower] = useState(false);
-  const [showPomodoroSprint, setShowPomodoroSprint] = useState(false);
+  const [showShooterBlitz, setShowShooterBlitz] = useState(false);
   const [showVisionQuest, setShowVisionQuest] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
 
   const islandRunDevParam = new URLSearchParams(window.location.search).get('islandRunDev');
   const isIslandRunPrototype = islandRunDevParam !== '0';
+
+
+  useEffect(() => {
+    logIslandRunEntryDebug('level_worlds_hub_mount', {
+      userId,
+      isIslandRunPrototype,
+    });
+
+    return () => {
+      logIslandRunEntryDebug('level_worlds_hub_unmount', {
+        userId,
+      });
+    };
+  }, [isIslandRunPrototype, userId]);
 
   const handleNodeClick = useCallback((node: WorldNode) => {
     if (node.status === 'active') {
@@ -62,8 +77,8 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
         case 'task_tower':
           setShowTaskTower(true);
           break;
-        case 'pomodoro_sprint':
-          setShowPomodoroSprint(true);
+        case 'shooter_blitz':
+          setShowShooterBlitz(true);
           break;
         case 'vision_quest':
           setShowVisionQuest(true);
@@ -92,7 +107,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
   const handleMiniGameComplete = useCallback(async () => {
     // Close all mini-games
     setShowTaskTower(false);
-    setShowPomodoroSprint(false);
+    setShowShooterBlitz(false);
     setShowVisionQuest(false);
     setShowWheelOfWins(false);
 
@@ -130,9 +145,9 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
     );
   }
 
-  if (showPomodoroSprint) {
+  if (showShooterBlitz) {
     return (
-      <PomodoroSprint
+      <ShooterBlitz
         session={session}
         onClose={handleMiniGameComplete}
         onComplete={handleMiniGameComplete}

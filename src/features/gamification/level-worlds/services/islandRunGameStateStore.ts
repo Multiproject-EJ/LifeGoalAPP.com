@@ -1,6 +1,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { isDemoSession } from '../../../../services/demoSession';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
+import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
 export interface IslandRunGameStateRecord {
   firstRunClaimed: boolean;
@@ -55,8 +56,17 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   const fallback = readIslandRunGameStateRecord(session);
 
   if (isDemoSession(session) || !client) {
+    logIslandRunEntryDebug('runtime_state_hydrate_skipped_remote', {
+      userId: session.user.id,
+      reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
+    });
     return { record: fallback, source: 'fallback_demo_or_no_client' };
   }
+
+  logIslandRunEntryDebug('runtime_state_hydrate_query_start', {
+    userId: session.user.id,
+    table: ISLAND_RUN_RUNTIME_STATE_TABLE,
+  });
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
@@ -65,10 +75,18 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     .maybeSingle();
 
   if (error) {
+    logIslandRunEntryDebug('runtime_state_hydrate_query_error', {
+      userId: session.user.id,
+      message: error.message,
+      code: error.code ?? null,
+    });
     return { record: fallback, source: 'fallback_query_error' };
   }
 
   if (!data) {
+    logIslandRunEntryDebug('runtime_state_hydrate_no_row', {
+      userId: session.user.id,
+    });
     return { record: fallback, source: 'fallback_no_row' };
   }
 
@@ -87,6 +105,11 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       // ignore local persistence failures in prototype mode
     }
   }
+
+  logIslandRunEntryDebug('runtime_state_hydrate_query_success', {
+    userId: session.user.id,
+    source: 'table',
+  });
 
   return { record: hydratedRecord, source: 'table' };
 }
@@ -115,8 +138,17 @@ export async function writeIslandRunGameStateRecord(options: {
   }
 
   if (isDemoSession(session) || !client) {
+    logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
+      userId: session.user.id,
+      reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
+    });
     return { ok: true };
   }
+
+  logIslandRunEntryDebug('runtime_state_persist_start', {
+    userId: session.user.id,
+    table: ISLAND_RUN_RUNTIME_STATE_TABLE,
+  });
 
   const { error } = await client.from(ISLAND_RUN_RUNTIME_STATE_TABLE).upsert(
     {
@@ -129,8 +161,18 @@ export async function writeIslandRunGameStateRecord(options: {
   );
 
   if (error) {
+    logIslandRunEntryDebug('runtime_state_persist_error', {
+      userId: session.user.id,
+      message: error.message,
+      code: error.code ?? null,
+    });
     return { ok: false, errorMessage: error.message };
   }
 
+  logIslandRunEntryDebug('runtime_state_persist_success', {
+    userId: session.user.id,
+  });
+
   return { ok: true };
 }
+

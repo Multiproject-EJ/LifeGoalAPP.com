@@ -4,7 +4,7 @@
 export type WorldTheme = 'forest' | 'ocean' | 'cosmic' | 'desert' | 'mountain' | 'village';
 
 export type NodeType = 
-  | 'mini_game'      // Play a mini-game (Task Tower, Pomodoro, etc.)
+  | 'mini_game'      // Play a mini-game (Task Tower, Shooter Blitz, etc.)
   | 'habit'          // Complete habits
   | 'goal'           // Make goal progress
   | 'personality'    // Personality micro-test or reflection
@@ -13,7 +13,7 @@ export type NodeType =
 
 export type NodeStatus = 'locked' | 'active' | 'completed';
 
-export type MiniGameType = 'task_tower' | 'pomodoro_sprint' | 'vision_quest' | 'wheel_of_wins';
+export type MiniGameType = 'task_tower' | 'shooter_blitz' | 'vision_quest' | 'wheel_of_wins';
 
 export interface WorldNode {
   id: string;

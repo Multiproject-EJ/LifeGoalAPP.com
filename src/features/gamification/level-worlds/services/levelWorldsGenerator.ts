@@ -263,7 +263,7 @@ function generateObjective(type: NodeType, level: number, index: number, totalNo
   switch (type) {
     case 'mini_game': {
       // Rotate through mini-games
-      const games: MiniGameType[] = ['task_tower', 'pomodoro_sprint', 'vision_quest', 'wheel_of_wins'];
+      const games: MiniGameType[] = ['task_tower', 'shooter_blitz', 'vision_quest', 'wheel_of_wins'];
       const gameIndex = (level + index) % games.length;
       return { type: 'mini_game', game: games[gameIndex] };
     }

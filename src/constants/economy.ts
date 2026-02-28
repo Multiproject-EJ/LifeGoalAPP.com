@@ -10,7 +10,8 @@ export type EconomySourceKey =
   | 'power_ups'
   | 'lucky_roll'
   | 'task_tower'
-  | 'pomodoro_sprint'
+  | 'pomodoro_sprint' // legacy source (deprecating)
+  | 'shooter_blitz'
   | 'vision_quest'
   | 'wheel_of_wins'
   | 'dice_packs';
@@ -54,7 +55,8 @@ export const ECONOMY_MATRIX = {
     power_ups: 'Power-up bonuses (XP multipliers, boosts)',
     lucky_roll: 'Lucky Roll board tile rewards',
     task_tower: 'Task Tower line clear rewards',
-    pomodoro_sprint: 'Pomodoro Sprint completion rewards',
+    pomodoro_sprint: 'Pomodoro Sprint completion rewards (legacy)',
+    shooter_blitz: 'Shooter Blitz mission completion rewards',
     vision_quest: 'Vision Quest passive multipliers',
     wheel_of_wins: 'Wheel of Wins spin prizes',
     dice_packs: 'Dice pack purchases with hearts',
@@ -78,7 +80,7 @@ export const ECONOMY_MATRIX = {
     dice: {
       label: 'Dice',
       description: 'Rolling currency for the Lucky Roll board. Purchased with hearts via dice packs.',
-      earnedFrom: ['dice_packs', 'lucky_roll', 'task_tower', 'pomodoro_sprint'],
+      earnedFrom: ['dice_packs', 'lucky_roll', 'task_tower', 'shooter_blitz'],
     },
     game_tokens: {
       label: 'Game Tokens',

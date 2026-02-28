@@ -1,0 +1,85 @@
+.shooter-blitz.game-board {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(5, 11, 24, 0.72);
+}
+
+.shooter-blitz__panel {
+  width: min(640px, 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(91, 140, 255, 0.35);
+  background: linear-gradient(180deg, #0f172a, #0b1222);
+  color: #e5edff;
+  padding: 1.25rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.38);
+}
+
+.shooter-blitz__header h2 {
+  margin: 0;
+}
+
+.shooter-blitz__header p,
+.shooter-blitz__setup p,
+.shooter-blitz__active p {
+  margin-top: 0.5rem;
+  opacity: 0.9;
+}
+
+.shooter-blitz__reward-copy {
+  margin-bottom: 0.4rem;
+}
+
+.shooter-blitz__reward-row {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  flex-wrap: wrap;
+}
+
+.shooter-blitz__reward-row span {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(120, 162, 255, 0.18);
+  border: 1px solid rgba(132, 177, 255, 0.35);
+  font-size: 0.88rem;
+}
+
+.shooter-blitz__phase {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: #9bc4ff;
+}
+
+.shooter-blitz__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.shooter-blitz__progress-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(146, 180, 255, 0.2);
+  border: 1px solid rgba(146, 180, 255, 0.35);
+}
+
+.shooter-blitz__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3ea2ff, #74f0cd);
+  transition: width 180ms ease;
+}
+
+.shooter-blitz__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}

@@ -18,7 +18,7 @@ export interface BoardTile {
     min: number;
     max: number;
   };
-  miniGame?: 'task_tower' | 'pomodoro_sprint' | 'vision_quest' | 'wheel_of_wins';
+  miniGame?: 'task_tower' | 'shooter_blitz' | 'vision_quest' | 'wheel_of_wins';
   zoneLabel?: string;     // life wheel zone name (for V1 integration G.1)
 }
 

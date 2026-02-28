@@ -1,3 +1,313 @@
+Date: 2026-03-01
+Slice: M7P.13 — Operator/dev diagnostics wiring for alias sunset readiness
+Summary:
+- Wired legacy alias readiness into an operator-facing diagnostics surface inside Account → Developer & Analytics Tools.
+- Added a “Run legacy alias scan” action that calls `getLegacyAliasSunsetReadiness(userId)` and displays reward/session legacy row counts plus readiness status.
+- Enables baseline capture of real user/device alias counts before removing `pomodoro_sprint` compatibility entries.
+Files changed:
+- src/features/account/MyAccountPanel.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+- npm run dev -- --host 0.0.0.0 --port 4173 (manual visual verification)
+Next:
+- M7P.14 begin staged legacy alias removal (types/economy/source unions) once baseline scans show zero active legacy rows.
+
+Date: 2026-03-01
+Slice: M7P.12 — Legacy alias sunset-readiness scanner
+Summary:
+- Added `getLegacyAliasSunsetReadiness(userId)` in `gameRewards` to report legacy `pomodoro_sprint` usage counts in reward/session storage.
+- The scanner returns per-user legacy row counts and an aggregate readiness boolean (`hasLegacyAliases`) to support telemetry-backed alias-removal decisions.
+- Keeps runtime behavior unchanged while making the alias sunset checklist measurable instead of manual.
+Files changed:
+- src/services/gameRewards.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.13 wire the sunset-readiness summary into an operator/dev diagnostics surface and collect baseline counts before removing legacy aliases.
+
+Date: 2026-03-01
+Slice: M7P.11 — Self-healing legacy alias cleanup in history storage
+Summary:
+- Updated reward/session history readers in `gameRewards` to perform in-place cleanup of legacy `pomodoro_sprint` rows when encountered.
+- When legacy aliases are found, normalized events are now persisted back to localStorage, reducing repeated legacy drift and preparing for eventual alias sunset.
+- Kept write-path compatibility unchanged while adding shared event/session normalizers for cleaner canonicalization logic.
+Files changed:
+- src/services/gameRewards.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.12 draft and execute telemetry-backed criteria to safely remove legacy alias types/entries.
+
+Date: 2026-03-01
+Slice: M7P.10 — Centralized legacy game-id alias contract
+Summary:
+- Added shared legacy game-id alias contract in `types/habitGames.ts` via `LEGACY_HABIT_GAME_ID_ALIASES` and `normalizeHabitGameId(...)`.
+- Updated reward/session history service to consume the shared normalizer, removing duplicated legacy game-id alias logic from `gameRewards.ts`.
+- Keeps current compatibility behavior unchanged while tightening a single-source path for future `pomodoro_sprint` sunset steps.
+Files changed:
+- src/types/habitGames.ts
+- src/services/gameRewards.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.11 define and execute final `pomodoro_sprint` alias removal checklist once telemetry confirms no active legacy writes.
+
+Date: 2026-03-01
+Slice: M7P.9 — Legacy alias normalization in reward/session history rails
+Summary:
+- Added centralized legacy alias normalization in `gameRewards` so any incoming `pomodoro_sprint` source/game IDs are canonicalized to `shooter_blitz` before persistence.
+- Updated history readers (`getRewardHistory`, `getGameSessionHistory`) to normalize existing legacy rows on read, preventing mixed legacy/current identifiers in analytics/UI consumers.
+- Keeps compatibility safe for old callers while tightening post-migration data consistency without removing legacy type aliases yet.
+Files changed:
+- src/services/gameRewards.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.10 evaluate formal sunset plan for `pomodoro_sprint` type/economy aliases after compatibility window and telemetry review.
+
+Date: 2026-03-01
+Slice: M7P.8 — Legacy Pomodoro stale-reference hardening pass
+Summary:
+- Extended Level Worlds legacy normalization so persisted `pomodoro_sprint` nodes now migrate not only objective IDs to `shooter_blitz`, but also stale node copy (`label`, `description`) and tomato emoji to shooter-aligned values.
+- Keeps migration non-breaking for old localStorage boards while preventing mixed legacy naming in post-migration UI surfaces.
+- Preserves the same load-time compatibility strategy: normalize once during `loadState(...)`, then persist upgraded state back to storage.
+Files changed:
+- src/features/gamification/level-worlds/services/levelWorldsState.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.9 audit remaining legacy `pomodoro_sprint` mentions in shared type/economy copy and decide whether to keep compatibility aliases or formally sunset them.
+
+Date: 2026-03-01
+Slice: M7P.7 — Shooter Blitz UX polish pass
+Summary:
+- Added mission-phase status messaging and a visible progress bar so Shooter Blitz runs communicate pacing and completion readiness more clearly.
+- Added reward pill chips in the mission setup panel to make coin/dice/token payouts scannable before mission start.
+- Kept gameplay/reward/session callback contracts unchanged (`onClose`, `onComplete`, existing reward grants + session events) while polishing presentation only.
+Files changed:
+- src/features/gamification/games/shooter-blitz/ShooterBlitz.tsx
+- src/features/gamification/games/shooter-blitz/shooterBlitz.css
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+- npm run dev -- --host 0.0.0.0 --port 4173 (visual verification)
+Next:
+- M7P.8 run a post-migration stale-reference audit for `pomodoro_sprint` and narrow remaining legacy-only copy where safe.
+
+Date: 2026-03-01
+Slice: M7P.6 — Retire standalone Pomodoro Sprint runtime surface
+Summary:
+- Removed unused standalone Pomodoro Sprint component/runtime files now that Lucky Roll and Level Worlds both route mini-game tiles to Shooter Blitz.
+- Added dedicated `shooterBlitz.css` and renamed Shooter Blitz CSS classes away from Pomodoro-prefixed class names.
+- Updated economy source matrix to include Shooter Blitz as an earn source and mark Pomodoro copy as legacy-only.
+Files changed:
+- src/features/gamification/games/shooter-blitz/ShooterBlitz.tsx
+- src/features/gamification/games/shooter-blitz/shooterBlitz.css
+- src/features/gamification/games/pomodoro-sprint/PomodoroSprint.tsx (deleted)
+- src/features/gamification/games/pomodoro-sprint/pomodoroSprintState.ts (deleted)
+- src/features/gamification/games/pomodoro-sprint/pomodoroSprintTypes.ts (deleted)
+- src/features/gamification/games/pomodoro-sprint/pomodoroSprint.css (deleted)
+- src/constants/economy.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.7 run a quick UX polish pass on Shooter Blitz visuals/controls now that legacy Pomodoro styling debt is removed.
+
+Date: 2026-03-01
+Slice: M7P.5 — Lucky Roll mini-game tiles switched from Pomodoro Sprint to Shooter Blitz
+Summary:
+- Replaced Lucky Roll mini-game routing from `pomodoro_sprint` to `shooter_blitz` so both Level Worlds and Lucky Roll launch the same shooter replacement surface.
+- Updated Lucky Roll board tile generation/types so mini-game tile metadata now emits/accepts `shooter_blitz` identifiers.
+- Updated Lucky Roll UI labels/comments and launch state wiring to open `ShooterBlitz` instead of `PomodoroSprint` while preserving reward refresh flow.
+Files changed:
+- src/features/gamification/daily-treats/LuckyRollBoard.tsx
+- src/features/gamification/daily-treats/luckyRollState.ts
+- src/features/gamification/daily-treats/luckyRollTypes.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.6 evaluate removal/deprecation path for the standalone Pomodoro Sprint component files and legacy economy copy.
+
+Date: 2026-03-01
+Slice: M7P.4 — Legacy Pomodoro board-state migration to Shooter Blitz objective IDs
+Summary:
+- Added Level Worlds state-load normalization that migrates persisted legacy mini-game objectives from `pomodoro_sprint` to `shooter_blitz`.
+- Migration runs during `loadState(...)`, returns normalized in-memory state, and persists upgraded state back to localStorage to avoid repeated remapping.
+- Prevents stale pre-migration boards from failing Shooter Blitz routing expectations after the mini-game ID transition.
+Files changed:
+- src/features/gamification/level-worlds/services/levelWorldsState.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.5 complete Pomodoro runtime deprecation review and remove no-longer-referenced Pomodoro code paths where safe.
+
+Date: 2026-03-01
+Slice: M7P.3 — First-class `shooter_blitz` identifiers in reward/session rails
+Summary:
+- Promoted `shooter_blitz` to first-class game/source identifiers in shared reward/session typing (`HabitGameId`, `GameSource`) while keeping `pomodoro_sprint` as explicitly legacy for compatibility.
+- Updated `ShooterBlitz` reward grants and session logs to emit `shooter_blitz` IDs instead of legacy `pomodoro_sprint` values.
+- Updated shared game metadata/token/reward-priority config to include Shooter Blitz as the active pride/focus mini-game entry.
+Files changed:
+- src/features/gamification/games/shooter-blitz/ShooterBlitz.tsx
+- src/types/habitGames.ts
+- src/services/gameRewards.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.4 remove or retire remaining Pomodoro Sprint runtime route/surface paths after compatibility review.
+
+Date: 2026-03-01
+Slice: M7P.2 — Shooter Blitz reward/session parity pass
+Summary:
+- Upgraded `ShooterBlitz` from placeholder interaction to a rewarding mini-game loop with completion grant values (coins/dice/token).
+- Added session logging parity (`enter`/`complete`/`exit`) through existing game reward/session telemetry rails so Shooter Blitz runs are observable.
+- Added mission reward messaging and completion haptic feedback to align with existing mini-game UX expectations.
+Files changed:
+- src/features/gamification/games/shooter-blitz/ShooterBlitz.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+- npm run dev -- --host 0.0.0.0 --port 4173 (visual verification)
+Next:
+- M7P.3 migrate legacy `pomodoro_sprint` identifiers in reward/session type unions to a first-class `shooter_blitz` ID.
+
+Date: 2026-03-01
+Slice: M7P.1 — Replace Pomodoro Sprint node route with Shooter Blitz mini-game surface
+Summary:
+- Added new `ShooterBlitz` mini-game surface for Level Worlds mini-game nodes with a simple mission loop (start, hit targets, complete/abort).
+- Replaced `pomodoro_sprint` routing in `LevelWorldsHub` with `shooter_blitz` so mini-game node launches now align with Island Run shooter replacement direction.
+- Updated Level Worlds mini-game typing/objective labeling and board generator mini-game pool to emit `shooter_blitz` instead of `pomodoro_sprint`.
+Files changed:
+- src/features/gamification/games/shooter-blitz/ShooterBlitz.tsx
+- src/features/gamification/level-worlds/LevelWorldsHub.tsx
+- src/features/gamification/level-worlds/types/levelWorlds.ts
+- src/features/gamification/level-worlds/hooks/useNodeObjectives.ts
+- src/features/gamification/level-worlds/services/levelWorldsGenerator.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7P.2 wire Shooter Blitz rewards/telemetry parity and replace remaining Pomodoro-specific naming/assets.
+
+Date: 2026-03-01
+Slice: M7O.16 — Guided repro run/checkpoint helpers for consistent evidence capture
+Summary:
+- Added structured repro helper APIs in Island Run debug tooling: `__islandRunEntryDebugStartRun(scenario)` and `__islandRunEntryDebugMarkCheckpoint(checkpoint, payload?)`.
+- Standardized checkpoint vocabulary for login incident captures (`login_click`, `post_redirect_paint`, `session_established`, `island_run_entry_visible`, `blank_screen_observed`, `recovered`).
+- Keeps debug-only behavior gated by `?islandRunEntryDebug=1` while reducing analyst variance in evidence traces.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+Testing:
+- npm run build
+Next:
+- M7O.17 execute two guided repro runs using run/checkpoint helpers and append evidence payloads + conclusions to incident ledger.
+
+Date: 2026-03-01
+Slice: M7O.15 — Lifecycle + manual marker support for repro evidence capture
+Summary:
+- Updated `islandRunEntryDebug` to install helpers/listeners only when `?islandRunEntryDebug=1` is active, keeping non-debug sessions untouched.
+- Added lifecycle breadcrumbs (`document_visibility_change`, `window_pageshow`, `window_pagehide`) and evidence metadata (`visibilityState`) to better explain apparent blank-screen windows.
+- Added `window.__islandRunEntryDebugMark(label, payload?)` for reproducible manual checkpoints during repro runs (e.g., pre-login click, post-redirect paint).
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+Testing:
+- npm run build
+Next:
+- M7O.16 run guided repro captures using `__islandRunEntryDebugMark(...)` and append resulting evidence payloads to incident log.
+
+Date: 2026-03-01
+Slice: M7O.14 — Capture global runtime failures in debug evidence stream
+Summary:
+- Extended `islandRunEntryDebug` to capture `window.error` and `unhandledrejection` events into the same buffered evidence stream.
+- Global listeners install once and remain gated by `?islandRunEntryDebug=1`, so non-debug sessions remain unchanged.
+- This makes blank-screen repro evidence include top-level runtime exceptions alongside bootstrap/mount/network diagnostics.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+Testing:
+- npm run build
+Next:
+- M7O.15 execute repro sessions and append captured `window.__islandRunEntryDebugEvidence()` payloads (including any `window_error` / `window_unhandled_rejection` events) to incident ledger.
+
+Date: 2026-03-01
+Slice: M7O.13 — One-call debug evidence export (events + relevant network resources)
+Summary:
+- Extended the `islandRunEntryDebug` helper with `window.__islandRunEntryDebugEvidence()` to return a single structured evidence payload.
+- Evidence payload now bundles location snapshot, buffered Island Run entry events, and filtered resource timing rows relevant to Supabase/runtime-state calls.
+- Keeps debug-only behavior behind `?islandRunEntryDebug=1`; no gameplay or routing contract changes.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+Testing:
+- npm run build
+Next:
+- M7O.14 execute repro runs and paste `window.__islandRunEntryDebugEvidence()` output snapshots for both login paths into the incident ledger.
+
+Date: 2026-03-01
+Slice: M7O.12 — Debug evidence buffering + runtime-state network stage logs
+Summary:
+- Extended Island Run entry debug helper to persist an in-session event buffer and expose `window.__islandRunEntryDebugDump()` / `window.__islandRunEntryDebugClear()` for reproducible evidence export.
+- Added runtime-state table query/persist stage logs in `islandRunGameStateStore` (query start/success/error/no-row, persist start/success/error, remote-skip reasons) under the same `islandRunEntryDebug=1` flag.
+- Keeps product behavior unchanged while enabling concrete protocol evidence that links mount sequencing to runtime-state API outcomes.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+Testing:
+- npm run build
+Next:
+- M7O.13 run two login repro passes and paste `window.__islandRunEntryDebugDump()` output + network panel evidence into the incident ledger.
+
+Date: 2026-03-01
+Slice: M7O.11 — Mount-level evidence instrumentation for login blank-screen repro
+Summary:
+- Added shared `islandRunEntryDebug` helper for consistent opt-in debug detection/logging across Island Run entry surfaces.
+- Added `[IslandRunEntryDebug]` mount/unmount instrumentation in `LevelWorldsHub` and `IslandRunBoardPrototype` to explicitly capture protocol step #5 (whether those trees mount).
+- Added hydration result/error debug snapshots in `IslandRunBoardPrototype` to correlate runtime-state source/failure with entry sequencing evidence.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunEntryDebug.ts
+- src/features/gamification/level-worlds/LevelWorldsHub.tsx
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/App.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+Testing:
+- npm run build
+Next:
+- M7O.12 execute the full login repro protocol and paste captured console/network evidence for both direct app login and `/level-worlds.html` sourced login.
+
+Date: 2026-03-01
+Slice: M7O.10 — Login repro instrumentation for Island Run entry bootstrap
+Summary:
+- Added opt-in dev instrumentation in `App.tsx` (`?islandRunEntryDebug=1`) to capture first-paint URL flags, bootstrap param consumption, and modal auto-open sequencing.
+- Instrumentation emits structured `[IslandRunEntryDebug]` console snapshots aligned to the incident repro protocol (`openIslandRun*` presence, `shouldAutoOpenIslandRun`, and `showLevelWorldsFromEntry` transitions).
+- Kept runtime behavior unchanged for non-debug sessions; this slice is diagnostics-only to support evidence-first regression verification.
+Files changed:
+- src/App.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/10_ISLAND_RUN_LOGIN_BLANK_SCREEN_DEBUG_LOG.md
+Testing:
+- npm run build
+Next:
+- M7O.11 run login-path repro pass (with and without `/level-worlds.html` source) and attach captured console/network evidence before any further bootstrap behavior changes.
+
 Date: 2026-02-27
 Slice: M7O.9 — Incident debug ledger for login blank-screen regression
 Summary:

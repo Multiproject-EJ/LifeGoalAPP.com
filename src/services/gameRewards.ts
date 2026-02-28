@@ -4,7 +4,7 @@ import {
   MYSTERY_BOX_DICE_TIERS,
   MYSTERY_BOX_TOKEN_TIERS,
 } from '../constants/economy';
-import type { HabitGameId } from '../types/habitGames';
+import { normalizeHabitGameId, type HabitGameId } from '../types/habitGames';
 
 const STORAGE_KEY_CURRENCIES = 'gol_game_currencies';
 const STORAGE_KEY_EVENTS = 'gol_game_events_log';
@@ -14,7 +14,15 @@ const MAX_SESSIONS = 200;
 
 const RANDOM_BUFFER = new Uint32Array(1);
 
-export type GameSource = 'lucky_roll' | 'task_tower' | 'pomodoro_sprint' | 'vision_quest' | 'wheel_of_wins' | 'dice_packs' | 'daily_treats';
+export type GameSource =
+  | 'lucky_roll'
+  | 'task_tower'
+  | 'pomodoro_sprint' // legacy source (deprecating)
+  | 'shooter_blitz'
+  | 'vision_quest'
+  | 'wheel_of_wins'
+  | 'dice_packs'
+  | 'daily_treats';
 
 export interface GameRewardEvent {
   id: string;
@@ -37,6 +45,42 @@ export interface GameSessionEvent {
   action: 'enter' | 'exit' | 'complete' | 'reward';
   timestamp: string;
   metadata?: Record<string, unknown>;
+}
+
+
+export interface LegacyAliasSunsetReadiness {
+  userId: string;
+  legacyRewardSourceRows: number;
+  legacySessionGameIdRows: number;
+  hasLegacyAliases: boolean;
+  scannedAt: string;
+}
+
+
+const LEGACY_GAME_SOURCE_ALIASES: Partial<Record<GameSource, GameSource>> = {
+  pomodoro_sprint: 'shooter_blitz',
+};
+
+function normalizeGameSource(source: GameSource): GameSource {
+  return LEGACY_GAME_SOURCE_ALIASES[source] ?? source;
+}
+
+function normalizeGameId(gameId: HabitGameId): HabitGameId {
+  return normalizeHabitGameId(gameId);
+}
+
+function normalizeRewardEvent(event: GameRewardEvent): GameRewardEvent {
+  return {
+    ...event,
+    source: normalizeGameSource(event.source),
+  };
+}
+
+function normalizeSessionEvent(event: GameSessionEvent): GameSessionEvent {
+  return {
+    ...event,
+    gameId: normalizeGameId(event.gameId),
+  };
 }
 
 const getSecureRandomFloat = (): number => {
@@ -355,7 +399,9 @@ export function logRewardEvent(event: GameRewardEvent): void {
     const stored = safeLocalStorage.getItem(STORAGE_KEY_EVENTS);
     const events: GameRewardEvent[] = stored ? JSON.parse(stored) : [];
 
-    events.push(event);
+    const normalizedEvent = normalizeRewardEvent(event);
+
+    events.push(normalizedEvent);
 
     // Keep last MAX_EVENTS events
     if (events.length > MAX_EVENTS) {
@@ -376,7 +422,21 @@ export function getRewardHistory(userId: string, limit?: number): GameRewardEven
     if (!stored) return [];
 
     const events: GameRewardEvent[] = JSON.parse(stored);
-    const userEvents = events.filter((e) => e.userId === userId);
+    let hasLegacyAliases = false;
+
+    const normalizedEvents = events.map((event) => {
+      const normalizedEvent = normalizeRewardEvent(event);
+      if (normalizedEvent.source !== event.source) {
+        hasLegacyAliases = true;
+      }
+      return normalizedEvent;
+    });
+
+    if (hasLegacyAliases) {
+      safeLocalStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(normalizedEvents));
+    }
+
+    const userEvents = normalizedEvents.filter((event) => event.userId === userId);
 
     if (limit) {
       return userEvents.slice(-limit);
@@ -435,7 +495,9 @@ export function logGameSession(userId: string, event: GameSessionEvent): void {
     const stored = safeLocalStorage.getItem(`${STORAGE_KEY_SESSIONS}_${userId}`);
     const sessions: GameSessionEvent[] = stored ? JSON.parse(stored) : [];
 
-    sessions.push(event);
+    const normalizedEvent = normalizeSessionEvent(event);
+
+    sessions.push(normalizedEvent);
 
     // Keep last MAX_SESSIONS events
     if (sessions.length > MAX_SESSIONS) {
@@ -455,15 +517,72 @@ export function getGameSessionHistory(userId: string, limit?: number): GameSessi
     const stored = safeLocalStorage.getItem(`${STORAGE_KEY_SESSIONS}_${userId}`);
     if (!stored) return [];
 
-    const sessions: GameSessionEvent[] = JSON.parse(stored);
+    const sessions: GameSessionEvent[] = JSON.parse(stored) as GameSessionEvent[];
+    let hasLegacyAliases = false;
 
-    if (limit) {
-      return sessions.slice(-limit);
+    const normalizedSessions = sessions.map((session) => {
+      const normalizedSession = normalizeSessionEvent(session);
+      if (normalizedSession.gameId !== session.gameId) {
+        hasLegacyAliases = true;
+      }
+      return normalizedSession;
+    });
+
+    if (hasLegacyAliases) {
+      safeLocalStorage.setItem(`${STORAGE_KEY_SESSIONS}_${userId}`, JSON.stringify(normalizedSessions));
     }
 
-    return sessions;
+    if (limit) {
+      return normalizedSessions.slice(-limit);
+    }
+
+    return normalizedSessions;
   } catch (error) {
     console.warn('Failed to get game session history:', error);
     return [];
   }
+}
+
+
+export function getLegacyAliasSunsetReadiness(userId: string): LegacyAliasSunsetReadiness {
+  const summary: LegacyAliasSunsetReadiness = {
+    userId,
+    legacyRewardSourceRows: 0,
+    legacySessionGameIdRows: 0,
+    hasLegacyAliases: false,
+    scannedAt: new Date().toISOString(),
+  };
+
+  if (!safeLocalStorage) {
+    return summary;
+  }
+
+  try {
+    const rewardStored = safeLocalStorage.getItem(STORAGE_KEY_EVENTS);
+    if (rewardStored) {
+      const rewardEvents: GameRewardEvent[] = JSON.parse(rewardStored) as GameRewardEvent[];
+      summary.legacyRewardSourceRows = rewardEvents.reduce((count, event) => {
+        return normalizeGameSource(event.source) !== event.source ? count + 1 : count;
+      }, 0);
+    }
+  } catch (error) {
+    console.warn('Failed to scan reward history for legacy aliases:', error);
+  }
+
+  try {
+    const sessionStored = safeLocalStorage.getItem(`${STORAGE_KEY_SESSIONS}_${userId}`);
+    if (sessionStored) {
+      const sessions: GameSessionEvent[] = JSON.parse(sessionStored) as GameSessionEvent[];
+      summary.legacySessionGameIdRows = sessions.reduce((count, session) => {
+        return normalizeGameId(session.gameId) !== session.gameId ? count + 1 : count;
+      }, 0);
+    }
+  } catch (error) {
+    console.warn('Failed to scan session history for legacy aliases:', error);
+  }
+
+  summary.hasLegacyAliases =
+    summary.legacyRewardSourceRows > 0 || summary.legacySessionGameIdRows > 0;
+
+  return summary;
 }

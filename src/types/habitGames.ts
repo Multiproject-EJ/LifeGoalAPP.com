@@ -1,5 +1,20 @@
 /** Game identifiers */
-export type HabitGameId = 'lucky_roll' | 'task_tower' | 'pomodoro_sprint' | 'vision_quest' | 'wheel_of_wins';
+export type HabitGameId =
+  | 'lucky_roll'
+  | 'task_tower'
+  | 'pomodoro_sprint' // legacy id (deprecating)
+  | 'shooter_blitz'
+  | 'vision_quest'
+  | 'wheel_of_wins';
+
+
+export const LEGACY_HABIT_GAME_ID_ALIASES: Partial<Record<HabitGameId, HabitGameId>> = {
+  pomodoro_sprint: 'shooter_blitz',
+};
+
+export function normalizeHabitGameId(gameId: HabitGameId): HabitGameId {
+  return LEGACY_HABIT_GAME_ID_ALIASES[gameId] ?? gameId;
+}
 
 /** Mini-game token types */
 export type GameTokenType = 'tower' | 'focus' | 'vision' | 'spin';
@@ -8,6 +23,7 @@ export type GameTokenType = 'tower' | 'focus' | 'vision' | 'spin';
 export const GAME_TOKEN_MAP: Record<Exclude<HabitGameId, 'lucky_roll'>, GameTokenType> = {
   task_tower: 'tower',
   pomodoro_sprint: 'focus',
+  shooter_blitz: 'focus',
   vision_quest: 'vision',
   wheel_of_wins: 'spin',
 };
@@ -35,11 +51,18 @@ export const HABIT_GAME_META: Record<HabitGameId, {
     colorAccent: '#27ae60',
   },
   pomodoro_sprint: {
-    label: 'Pomodoro Sprint',
+    label: 'Pomodoro Sprint (Legacy)',
     emoji: '🍅',
     emotion: 'Pride',
-    description: 'Enter deep focus mode and earn the best rewards.',
+    description: 'Legacy focus mode session.',
     colorAccent: '#6c5ce7',
+  },
+  shooter_blitz: {
+    label: 'Shooter Blitz',
+    emoji: '🚀',
+    emotion: 'Pride',
+    description: 'Clear hostile drones to protect your island route.',
+    colorAccent: '#5b8cff',
   },
   vision_quest: {
     label: 'Vision Quest',
@@ -60,7 +83,7 @@ export const HABIT_GAME_META: Record<HabitGameId, {
 /** Reward priority hierarchy (constitutional — do not change order) */
 export const REWARD_HIERARCHY: HabitGameId[] = [
   'vision_quest',      // 1. Meaning (most valuable)
-  'pomodoro_sprint',   // 2. Pride
+  'shooter_blitz',     // 2. Pride
   'task_tower',        // 3. Relief
   'lucky_roll',        // 4. Anticipation
   'wheel_of_wins',     // 5. Excitement (least valuable per unit)

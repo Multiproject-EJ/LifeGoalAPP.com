@@ -24,11 +24,11 @@ export function generateDefaultBoard(): BoardTile[] {
   const board: BoardTile[] = [];
   
   // Define mini-game tiles first (from dev plan)
-  const miniGameTiles: Record<number, { game: 'task_tower' | 'pomodoro_sprint' | 'vision_quest' | 'wheel_of_wins' }> = {
+  const miniGameTiles: Record<number, { game: 'task_tower' | 'shooter_blitz' | 'vision_quest' | 'wheel_of_wins' }> = {
     7: { game: 'task_tower' },
     22: { game: 'task_tower' },
-    12: { game: 'pomodoro_sprint' },
-    27: { game: 'pomodoro_sprint' },
+    12: { game: 'shooter_blitz' },
+    27: { game: 'shooter_blitz' },
     15: { game: 'vision_quest' },
     20: { game: 'wheel_of_wins' }
   };
@@ -48,9 +48,9 @@ export function generateDefaultBoard(): BoardTile[] {
           label = 'Task Tower';
           emoji = '🏗️';
           break;
-        case 'pomodoro_sprint':
-          label = 'Pomodoro Sprint';
-          emoji = '⏰';
+        case 'shooter_blitz':
+          label = 'Shooter Blitz';
+          emoji = '🚀';
           break;
         case 'vision_quest':
           label = 'Vision Quest';
