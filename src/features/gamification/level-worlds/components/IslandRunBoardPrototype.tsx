@@ -680,6 +680,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
       setLandingText('Arrived at next island. Ready to roll. Egg progress carried over (prototype).');
       setShowTravelOverlay(false);
+      // M10D: island travel complete sound + haptic
+      playIslandRunSound('island_travel_complete');
+      triggerIslandRunHaptic('island_travel_complete');
 
       void persistIslandRunRuntimeStatePatch({
         session,
@@ -1209,6 +1212,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         dice_bundle: false,
         heart_bundle: false,
       });
+      // M10D: market stop completion sound + haptic
+      playIslandRunSound('market_stop_complete');
+      triggerIslandRunHaptic('market_stop_complete');
     }
     setActiveStopId(null);
   };

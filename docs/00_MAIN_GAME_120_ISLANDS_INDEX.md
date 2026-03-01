@@ -74,7 +74,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [🟡] M7: Boss stop (trial) + rewards (M7A resolve + reward feedback shipped; M7B telemetry/reward contract wiring shipped; M7C refresh persistence markers shipped; M7D table-first persistence wiring shipped; M7E debug evidence marker payloads shipped; M7F deterministic QA hooks/checklist shipped; M7G assertion harness shipped; M7H preset modes shipped; M7I summary helper shipped; M7J export bundle helper shipped; M7K run-scoped filter helper shipped; M7L filter-aware export bundle shipped; M7M explicit scope metadata shipped; M7M.1 unmatched-ref scope normalization shipped; M7N filter-resolution metadata shipped)
 - [🟡] M8: Market stop + purchases (M8A market stop prototype purchase modal stub shipped; M8B market telemetry/debug markers shipped; M8C owned-state no-repurchase UX shipped; M8D repurchase-block telemetry/debug markers shipped; M8E market QA checklist commands shipped; M8F deterministic QA helper shipped; M8G marker export helper shipped; M8H marker reset helper shipped; M8I status assertion helper shipped; M8J in-UI helper hint shipped)
 - [🟡] M9: Home island + hatchery slots + always collect (M9A home hatchery summary panel scaffold shipped; M9B slot/ready status row copy scaffold shipped; M9C action-hint row copy scaffold shipped; M9D progression-hint row copy scaffold shipped; M9E Home Island slot/ready values driven from real egg state shipped; M9F Set egg + Open egg actions wired in Home Island panel with audio/haptic + stage progress indicator shipped; M9G Home Island hatchery telemetry + QA shipped — home_egg_set/home_egg_open telemetry + debug markers + QA checklist section 14)
-- [🟡] M10: Audio + haptics system integrated (M10A audio/haptic service foundation shipped; 4 sound events + 4 haptic events wired; HUD audio toggle added; M10B hatchery + market audio/haptic events shipped — 6 new sound events + 3 haptic events; M10C boss + encounter audio/haptic events shipped — 5 new sound events + 3 haptic events)
+- [✅] M10: Audio + haptics system integrated (M10A audio/haptic service foundation shipped; 4 sound events + 4 haptic events wired; HUD audio toggle added; M10B hatchery + market audio/haptic events shipped — 6 new sound events + 3 haptic events; M10C boss + encounter audio/haptic events shipped — 5 new sound events + 3 haptic events; M10D market stop completion + island travel completion audio/haptic wired; M10E audio/haptic QA coverage checklist shipped — all audio/haptic events fully wired (M10A–M10E))
 - [ ] M11: Minigame framework + first minigame stub
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 
@@ -88,10 +88,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M10D — Wire remaining audio/haptic triggers for market stop completion and island travel completion events  
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
-**Acceptance criteria:** market stop completion and island travel completion events emit audio + haptic triggers  
-**How to test:** trigger market stop completion and island travel in Island Run prototype and verify audio/haptic fire
+**Objective:** M11A — Minigame framework scaffold: define the IslandRunMinigame interface, entry/exit contract, reward passthrough shape, and how Island Run triggers a minigame from a stop modal  
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/` (new minigame service file if needed), `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
+**Acceptance criteria:** IslandRunMinigame interface defined; entry/exit/reward contract documented; Island Run stop modal can trigger a minigame stub via the framework; no gameplay behavior broken  
+**How to test:** land on minigame stop in Island Run prototype and confirm the framework entry point triggers correctly
 
 ---
 

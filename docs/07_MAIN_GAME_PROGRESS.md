@@ -1,4 +1,38 @@
 Date: 2026-03-01
+Slice: M10E — Audio/haptics QA coverage checklist
+Summary:
+- Added section 15 to docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md covering market stop completion and island travel completion audio/haptic spot-checks.
+- Documented full M10A–M10D audio/haptic event coverage table in QA checklist for reference.
+- Added audio toggle verification steps to confirm haptic/sound gating works correctly.
+Files changed:
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M11A: Minigame framework scaffold
+
+Date: 2026-03-01
+Slice: M10D — Wire market stop completion and island travel completion audio/haptics
+Summary:
+- Added `market_stop_complete` and `island_travel_complete` to IslandRunSoundEvent and IslandRunHapticEvent type unions in islandRunAudio.ts.
+- Added haptic patterns: market_stop_complete [20, 30, 20]; island_travel_complete [30, 50, 30, 50, 30].
+- Added sound asset map entries for both new events.
+- Wired market_stop_complete sound + haptic in handleCompleteActiveStop for market stop branch.
+- Wired island_travel_complete sound + haptic at the point where island travel resolves (new island state committed).
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunAudio.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M10E: Audio/haptics QA coverage checklist
+
+
+Date: 2026-03-01
 Slice: M9G — Home Island hatchery telemetry + QA
 Summary:
 - Added `recordTelemetryEvent` (`economy_earn`) for `home_egg_set` and `home_egg_open` in Home Island panel handlers.

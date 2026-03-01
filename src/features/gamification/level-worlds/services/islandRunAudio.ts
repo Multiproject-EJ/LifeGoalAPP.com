@@ -33,7 +33,10 @@ export type IslandRunSoundEvent =
   | 'boss_island_clear'
   // M10C: encounter events
   | 'encounter_trigger'
-  | 'encounter_resolve';
+  | 'encounter_resolve'
+  // M10D: stop completion + travel completion
+  | 'market_stop_complete'
+  | 'island_travel_complete';
 
 export type IslandRunHapticEvent =
   | 'roll'
@@ -47,7 +50,10 @@ export type IslandRunHapticEvent =
   // M10C: boss + encounter haptics
   | 'boss_trial_resolve'
   | 'boss_island_clear'
-  | 'encounter_resolve';
+  | 'encounter_resolve'
+  // M10D: stop completion + travel completion
+  | 'market_stop_complete'
+  | 'island_travel_complete';
 
 // ─── Preference helpers ────────────────────────────────────────────────────────
 
@@ -86,6 +92,9 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   boss_trial_resolve: [50, 30, 50],
   boss_island_clear: [30, 40, 30, 40, 30],
   encounter_resolve: [20, 30, 20],
+  // M10D
+  market_stop_complete: [20, 30, 20],
+  island_travel_complete: [30, 50, 30, 50, 30],
 };
 
 // ─── Sound event map (placeholder — no files needed yet) ──────────────────────
@@ -109,6 +118,9 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, string> = {
   boss_island_clear: '/assets/audio/sfx/sfx_island_clear.mp3',
   encounter_trigger: '/assets/audio/sfx/sfx_encounter_trigger.mp3',
   encounter_resolve: '/assets/audio/sfx/sfx_encounter_resolve.mp3',
+  // M10D
+  market_stop_complete: '/assets/audio/sfx/sfx_market_complete.mp3',
+  island_travel_complete: '/assets/audio/sfx/sfx_island_travel_complete.mp3',
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
