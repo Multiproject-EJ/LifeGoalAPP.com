@@ -1281,23 +1281,48 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   return (
     <section className="island-run-prototype">
       <header className="island-run-prototype__header">
-        <h2>🏝️ Island Run • M7F Regression QA Hooks</h2>
-        <div className="island-run-prototype__status-row">
-          <span>Hearts: <strong>{hearts}</strong></span>
-          <span>Dice: <strong>{dicePool}</strong></span>
-          <span>Coins: <strong>{coins}</strong></span>
-          <span>Tile: <strong>{tokenIndex}</strong></span>
-          <span>Island: <strong>{islandNumber}</strong></span>
-          <span>Last roll: <strong>{rollValue ?? '-'}</strong></span>
-          <span>Ends in: <strong>{timerDisplay}</strong></span>
+        <h2 className="island-run-prototype__title">🏝️ Island Run • M7F Regression QA Hooks</h2>
+        <div className="island-run-prototype__hud-grid">
+          <div className="island-run-prototype__hud-section">
+            <p className="island-run-prototype__hud-label">Run status</p>
+            <div className="island-run-prototype__status-row">
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">Hearts: <strong>{hearts}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{coins}</strong></span>
+              <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
+              <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
+              <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">Ends in: <strong>{timerDisplay}</strong></span>
+            </div>
+          </div>
+          <div className="island-run-prototype__hud-section island-run-prototype__hud-section--landing">
+            <p className="island-run-prototype__hud-label">Live feed</p>
+            <p className="island-run-prototype__landing island-run-prototype__landing--info">{landingText}</p>
+            <p className="island-run-prototype__landing island-run-prototype__landing--plan">
+              Stop plan: {islandStopPlan.map((stop) => stop.title.split(' ').slice(1).join(' ') || stop.title).join(' → ')}
+            </p>
+            <p className="island-run-prototype__landing island-run-prototype__landing--states">
+              Stop states: {islandStopPlan.map((stop) => `${stop.stopId}:${stopStateMap.get(stop.stopId) ?? 'active'}`).join(' | ')}
+            </p>
+          </div>
         </div>
-        <p className="island-run-prototype__landing">{landingText}</p>
-        <p className="island-run-prototype__landing">
-          Stop plan: {islandStopPlan.map((stop) => stop.title.split(' ').slice(1).join(' ') || stop.title).join(' → ')}
-        </p>
-        <p className="island-run-prototype__landing">
-          Stop states: {islandStopPlan.map((stop) => `${stop.stopId}:${stopStateMap.get(stop.stopId) ?? 'active'}`).join(' | ')}
-        </p>
+        <div className="island-run-prototype__home-panel" role="group" aria-label="Home hatchery prototype summary">
+          <p className="island-run-prototype__landing" role="note">
+            <strong>Home Island Hatchery (M9A prototype):</strong> always available, supports one home egg slot (v1), and ready home eggs
+            can be collected anytime without landing movement.
+          </p>
+          <p className="island-run-prototype__landing island-run-prototype__landing--success" role="status">
+            Home hatchery status (M9B prototype): slot usage <strong>0/1</strong> (available) · ready home eggs <strong>0</strong>.
+          </p>
+          <p className="island-run-prototype__landing island-run-prototype__landing--info" role="note">
+            Home hatchery actions (M9C prototype): if the slot is empty, set one egg; if an egg is ready (stage 4), open/collect immediately from
+            Home Island without tile movement.
+          </p>
+          <p className="island-run-prototype__landing island-run-prototype__landing--warn" role="note">
+            Home hatchery progression (M9D prototype): island eggs that become ready but uncollected can carry as dormant eggs, and dormant/home eggs
+            are opened from hatchery surfaces when available.
+          </p>
+        </div>
         <div className="island-run-prototype__controls">
           {ISLAND_SCENES.map((sceneId) => (
             <button
@@ -1314,7 +1339,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           </button>
           <button
             type="button"
-            className="island-run-prototype__roll-btn"
+            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${dicePool > 0 ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
             onClick={handleRoll}
             disabled={showFirstRunCelebration || isRolling || (dicePool < 1 && hearts < 1) || showTravelOverlay}
           >
@@ -1326,7 +1351,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           </button>
 
           {(showDebug || showQaHooks) && (
-            <>
+            <div className="island-run-prototype__qa-controls" role="group" aria-label="QA and debug controls">
+              <p className="island-run-prototype__qa-label">QA / Debug tools</p>
               <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaMarkBossResolved}>
                 QA: Mark boss resolved
               </button>
@@ -1357,7 +1383,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               >
                 QA: Market reset marker baseline
               </button>
-            </>
+              <p className="island-run-prototype__landing island-run-prototype__qa-note" role="note">
+                Market debug helpers: <code>window.__islandRunMarketDebugExportMarkers()</code> ·{' '}
+                <code>window.__islandRunMarketDebugResetState()</code> ·{' '}
+                <code>window.__islandRunMarketDebugAssertStatusCoverage()</code>
+              </p>
+            </div>
           )}
           {dailyRewardPlan.source === 'spin_of_the_day' && (
             <button
@@ -1386,7 +1417,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>
       </header>
 
-      <div ref={boardRef} className={`island-run-board island-run-board--scene-${activeScene}`}>
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--scene-${activeScene}`}>
         <canvas ref={canvasRef} className="island-run-board__path" />
 
         <div className="island-run-board__lap-label">17-tile lap</div>
@@ -1396,7 +1427,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <button
               key={stopVisual.id}
               type="button"
-              className={`island-orbit-stop island-orbit-stop--${stopVisual.state} island-orbit-stop--scene-${activeScene}`}
+              className={`island-orbit-stop island-orbit-stop--${stopVisual.state} island-orbit-stop--scene-${activeScene} ${
+                stopVisual.stopId && stopVisual.stopId === activeStopId ? 'island-orbit-stop--selected' : ''
+              }`}
               style={{ left: stopVisual.x, top: stopVisual.y }}
               onClick={() => {
                 if (stopVisual.stopId) setActiveStopId(stopVisual.stopId);
@@ -1407,6 +1440,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <span
                 className="island-orbit-stop__label"
                 style={{ transform: `translate(-50%, calc(-50% + ${stopVisual.labelOffsetY}px))` }}
+                title={stopVisual.label}
               >
                 {stopVisual.label}
               </span>
@@ -1423,15 +1457,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             return (
               <div
                 key={anchor.id}
-                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''}`}
+                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${
+                  index === tokenIndex ? 'island-tile--token-current' : ''
+                }`}
                 style={{
                   left: position.x,
                   top: position.y,
                   transform: `translate(-50%, -50%) scale(${anchor.scale})`,
                 }}
               >
-                <span>{isEncounter ? '⚔️' : index + 1}</span>
-                {showDebug && <small>{anchor.id}</small>}
+                <span className="island-tile__value">{isEncounter ? '⚔️' : index + 1}</span>
+                {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
               </div>
             );
           })}
@@ -1482,35 +1518,45 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       {showFirstRunCelebration && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="First run celebration">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="First run celebration">
             {firstRunStep === 'celebration' ? (
               <>
-                <h3>🎉 Welcome to Island Run</h3>
-                <p>Claim your starter gifts to begin your first island.</p>
-                <p><strong>Starter gifts:</strong> 💎 1 equivalent + 🪙 250 + ❤️ 5</p>
-                <p>✨ 🎊 ✨</p>
-                <button
-                  type="button"
-                  className="supabase-auth__action"
-                  onClick={() => void handleClaimFirstRunRewards()}
-                  disabled={isPersistingFirstRunCompletion}
-                >
-                  Claim starter gifts
-                </button>
+                <div className="island-stop-modal__context">
+                  <p className="island-stop-modal__eyebrow">First-run setup</p>
+                  <h3 className="island-stop-modal__title">🎉 Welcome to Island Run</h3>
+                  <p className="island-stop-modal__copy">Claim your starter gifts to begin your first island.</p>
+                  <p><strong>Starter gifts:</strong> 💎 1 equivalent + 🪙 250 + ❤️ 5</p>
+                  <p>✨ 🎊 ✨</p>
+                </div>
+                <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
+                  <button
+                    type="button"
+                    className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action"
+                    onClick={() => void handleClaimFirstRunRewards()}
+                    disabled={isPersistingFirstRunCompletion}
+                  >
+                    Claim starter gifts
+                  </button>
+                </div>
               </>
             ) : (
               <>
-                <h3>🚀 Launch sequence ready</h3>
-                <p>Your ship is landing on Island 1. Your player piece deploys at the first stop.</p>
-                <p>Tip: spend dice to move tile-to-tile and complete all stops before boss.</p>
-                <button
-                  type="button"
-                  className="supabase-auth__action"
-                  onClick={() => void handleClaimFirstRunRewards()}
-                  disabled={isPersistingFirstRunCompletion}
-                >
-                  {isPersistingFirstRunCompletion ? 'Saving profile...' : 'Start Island Run'}
-                </button>
+                <div className="island-stop-modal__context">
+                  <p className="island-stop-modal__eyebrow">Launch confirmation</p>
+                  <h3 className="island-stop-modal__title">🚀 Launch sequence ready</h3>
+                  <p className="island-stop-modal__copy">Your ship is landing on Island 1. Your player piece deploys at the first stop.</p>
+                  <p className="island-stop-modal__copy">Tip: spend dice to move tile-to-tile and complete all stops before boss.</p>
+                </div>
+                <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
+                  <button
+                    type="button"
+                    className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action"
+                    onClick={() => void handleClaimFirstRunRewards()}
+                    disabled={isPersistingFirstRunCompletion}
+                  >
+                    {isPersistingFirstRunCompletion ? 'Saving profile...' : 'Start Island Run'}
+                  </button>
+                </div>
               </>
             )}
           </section>
@@ -1520,15 +1566,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       {showTravelOverlay && (
         <div className="island-travel-overlay" role="status" aria-live="polite">
           <div className="island-travel-overlay__card">
-            <p>✈️ Traveling to Island {islandNumber + 1}...</p>
+            <p className="island-travel-overlay__eyebrow">Island transfer</p>
+            <p className="island-travel-overlay__title island-travel-overlay__title--headline">✈️ Traveling to Island {islandNumber + 1}...</p>
+            <p className="island-travel-overlay__subtitle island-travel-overlay__copy island-travel-overlay__copy--long">Preparing route, rewards, and stop plan.</p>
           </div>
         </div>
       )}
 
       {activeStop?.stopId === 'market' && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--market" role="dialog" aria-modal="true" aria-label="Market stop prototype">
-            <h3>🛒 Market Stop</h3>
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--market" role="dialog" aria-modal="true" aria-label="Market stop prototype">
+            <h3 className="island-stop-modal__title">🛒 Market Stop</h3>
             <p>Prototype purchase modal: preview starter store actions before the full Market slice.</p>
             <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p>
             <div className="island-hatchery-card">
@@ -1557,26 +1605,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <p>Coins balance: <strong>{coins}</strong></p>
             <p>Owned bundles: <strong>{[marketOwnedBundles.dice_bundle ? 'dice' : null, marketOwnedBundles.heart_bundle ? 'heart' : null].filter(Boolean).join(', ') || 'none'}</strong></p>
             {marketPurchaseFeedback ? <p>{marketPurchaseFeedback}</p> : null}
-            <button type="button" onClick={handleCompleteActiveStop}>
-              Complete Market Stop
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMarketPurchaseFeedback(null);
-                setActiveStopId(null);
-              }}
-            >
-              Close
-            </button>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced">
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
+                Complete Market Stop
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => {
+                  setMarketPurchaseFeedback(null);
+                  setActiveStopId(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
           </section>
         </div>
       )}
 
       {activeStop && activeStop.stopId !== 'market' && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal" role="dialog" aria-modal="true" aria-label={activeStop.title}>
-            <h3>{activeStop.title}</h3>
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label={activeStop.title}>
+            <h3 className="island-stop-modal__title">{activeStop.title}</h3>
             <p>{activeStop.description}</p>
             <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p>
             {activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
@@ -1633,22 +1684,31 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </div>
             ) : null}
 
-            {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' ? (
-              <button type="button" onClick={handleCompleteActiveStop}>
-                Complete Stop
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced">
+              {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' ? (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
+                  Complete Stop
+                </button>
+              ) : null}
+              {activeStop.stopId === 'hatchery' ? (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
+                  Complete Hatchery Stop
+                </button>
+              ) : null}
+              {activeStop.stopId === 'boss' ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={handleCompleteActiveStop}
+                  disabled={!bossTrialResolved}
+                >
+                  Claim Island Clear
+                </button>
+              ) : null}
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
+                Close
               </button>
-            ) : null}
-            {activeStop.stopId === 'hatchery' ? (
-              <button type="button" onClick={handleCompleteActiveStop}>
-                Complete Hatchery Stop
-              </button>
-            ) : null}
-            {activeStop.stopId === 'boss' ? (
-              <button type="button" onClick={handleCompleteActiveStop} disabled={!bossTrialResolved}>
-                Claim Island Clear
-              </button>
-            ) : null}
-            <button type="button" onClick={() => setActiveStopId(null)}>Close</button>
+            </div>
           </section>
         </div>
       )}
@@ -1656,23 +1716,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       {showEncounterModal && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
-            <h3>⚔️ Encounter Tile</h3>
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
+            <h3 className="island-stop-modal__title">⚔️ Encounter Tile</h3>
             <p>Easy challenge stub: steady your path and claim a small reward.</p>
             <div className="island-hatchery-card">
               <p>{encounterResolved ? 'Reward granted: +1 heart.' : 'Resolve this encounter to gain +1 heart.'}</p>
             </div>
-            {!encounterResolved ? (
-              <button type="button" onClick={handleResolveEncounter}>Resolve Encounter</button>
-            ) : null}
-            <button type="button" onClick={() => setShowEncounterModal(false)}>Close</button>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced">
+              {!encounterResolved ? (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleResolveEncounter}>
+                  Resolve Encounter
+                </button>
+              ) : null}
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setShowEncounterModal(false)}>
+                Close
+              </button>
+            </div>
           </section>
         </div>
       )}
 
       {showOnboardingBooster && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="Game of Life onboarding booster">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="Game of Life onboarding booster">
             <div className="gol-onboarding__header-row">
               <span className="gol-onboarding__step">Loop 1 of 21</span>
               <button type="button" className="gol-onboarding__close" onClick={() => setShowOnboardingBooster(false)}>

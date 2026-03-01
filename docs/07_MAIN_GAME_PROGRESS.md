@@ -1,4 +1,445 @@
 Date: 2026-03-01
+Slice: M12W — Twenty-third visual polish pass for overlay CTA spacing consistency
+Summary:
+- Added explicit balanced CTA/action-row classing so onboarding CTA and stop-modal action rows share a consistent spacing rhythm.
+- Added balanced row sizing/alignment rules to reduce visual jump between one-button CTA areas and multi-button action rows.
+- Kept all changes presentation-only and preserved gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12X apply twenty-fourth visual polish pass to overlay action-row alignment (single vs multi-button row balance).
+
+Date: 2026-03-01
+Slice: M12V — Twenty-second visual polish pass for modal headline spacing consistency
+Summary:
+- Added explicit headline class usage in overlay markup for onboarding/market/stop/encounter titles and travel headline text.
+- Tuned eyebrow→title and title→body spacing rules so headline stacks feel consistently balanced across modal/travel overlays.
+- Kept all changes presentation-only and preserved gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12W apply twenty-third visual polish pass to overlay CTA spacing consistency (button row rhythm under varied copy lengths).
+
+Date: 2026-03-01
+Slice: M12U — Twenty-first visual polish pass for long-copy readability wrap rhythm
+Summary:
+- Added a dedicated long-copy modal variant so overlay paragraph lines keep a stable readable measure (`ch`-bounded line length) on mobile.
+- Applied pretty-wrap/overflow wrapping rules for modal and travel helper copy to reduce awkward breaks in longer text scenarios.
+- Added explicit long-copy classing in overlay markup while preserving gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12V apply twenty-second visual polish pass to modal headline spacing consistency (eyebrow/title/body vertical rhythm).
+
+Date: 2026-03-01
+Slice: M12T — Twentieth visual polish pass for overlay copy-hierarchy contrast
+Summary:
+- Increased contrast separation between overlay eyebrow/title/body layers so headline priority reads faster on mobile.
+- Tuned travel overlay text hierarchy similarly (eyebrow de-emphasis, title emphasis, helper-copy softening) for consistent scan order.
+- Added lightweight semantic copy classes in onboarding/travel markup to keep hierarchy styling explicit without changing behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12U apply twenty-first visual polish pass to modal readability under long-copy scenarios (line-length + wrap rhythm).
+
+Date: 2026-03-01
+Slice: M12S — Nineteenth visual polish pass for overlay density balance
+Summary:
+- Added a dedicated dense-overlay variant to keep onboarding/stop/encounter modal content compact while preserving readability.
+- Tightened context/action spacing rhythm in dense overlays (copy block + CTA divider spacing) for better mobile density balance.
+- Slightly reduced travel card padding to harmonize overlay density with the updated modal rhythm, with no behavior/signature changes.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12T apply twentieth visual polish pass to overlay copy hierarchy contrast (eyebrow/title/body priority).
+
+Date: 2026-03-01
+Slice: M12R — Eighteenth visual polish pass for overlay interaction affordance accessibility
+Summary:
+- Added explicit action-affordance classing for overlay buttons to unify focus/tap behavior across onboarding and stop modals.
+- Improved accessible interaction feedback with visible focus rings and touch-target clarity (tap highlight + larger action heights).
+- Added active-state feedback for overlay actions while preserving existing gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12S apply nineteenth visual polish pass to overlay density balance (compact copy blocks + action spacing harmony).
+
+Date: 2026-03-01
+Slice: M12Q — Seventeenth visual polish pass for overlay action-emphasis states
+Summary:
+- Added explicit action-state styling for onboarding CTA and stop-modal buttons so default/hover/focus/disabled feedback is more consistent.
+- Tuned hover/focus emphasis with subtle lift/shadow and clearer border/brightness feedback to reinforce action affordance.
+- Kept runtime behavior/signatures unchanged and limited this slice to presentation-only interaction feedback polish.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12R apply eighteenth visual polish pass to overlay interaction affordance accessibility (focus ring + tap clarity).
+
+Date: 2026-03-01
+Slice: M12P — Sixteenth visual polish pass for overlay CTA/context separation
+Summary:
+- Introduced explicit onboarding overlay structure (`context` + `cta` blocks) so guidance copy and primary action are visually separated.
+- Added CTA-divider styling and full-width onboarding action treatment to reinforce action focus after context copy.
+- Kept copy/content and gameplay behavior/signatures unchanged; this slice is presentation-only.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12Q apply seventeenth visual polish pass to overlay action emphasis states (default/hover/disabled clarity).
+
+Date: 2026-03-01
+Slice: M12O — Fifteenth visual polish pass for onboarding/travel overlay clarity
+Summary:
+- Added lightweight overlay eyebrow labels to onboarding and travel overlays so headline/context hierarchy is easier to scan at a glance.
+- Kept onboarding and travel messaging content unchanged while improving visual parsing between context label, headline, and helper copy.
+- Preserved gameplay behavior/signatures and kept the slice presentation-only.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12P apply sixteenth visual polish pass to overlay CTA/context separation (actions vs guidance emphasis).
+
+Date: 2026-03-01
+Slice: M12N — Fourteenth visual polish pass for modal-body readability rhythm
+Summary:
+- Tightened stop-modal body rhythm with refined title/body typography sizing and line-height to improve title/body scanability on mobile.
+- Refined modal action-row spacing with a subtle divider and tighter gap so action areas read as a distinct, predictable section.
+- Tuned travel overlay copy rhythm (title/subtitle spacing + line-height) for clearer quick-read feedback while preserving gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12O apply fifteenth visual polish pass to onboarding/travel overlay clarity (headline + helper-copy hierarchy).
+
+Date: 2026-03-01
+Slice: M12M — Thirteenth visual polish pass for button hierarchy consistency
+Summary:
+- Added an explicit roll CTA class so the primary gameplay action keeps stronger size/weight hierarchy versus secondary controls.
+- Rebalanced button typography/sizing rhythm across scene/debug/booster controls, QA debug buttons, and modal action buttons for more consistent hierarchy.
+- Kept all changes presentation-only and preserved gameplay behavior/signatures while tightening control density on mobile.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12N apply fourteenth visual polish pass to modal-body readability and spacing rhythm (title/body/list scanability).
+
+Date: 2026-03-01
+Slice: M12L — Twelfth visual polish pass for micro-typography and spacing consistency
+Summary:
+- Added a dedicated prototype title style and tuned text rhythm (font-size/line-height/letter-spacing) across HUD labels and landing text for cleaner mobile scanability.
+- Tightened spacing consistency across HUD cards, status chips, controls wrap, and Home panel to align chip/label/button rhythm.
+- Harmonized control typography sizing (scene/debug/roll/booster + QA note/label) so text hierarchy feels more consistent without changing gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12M apply thirteenth visual polish pass to button hierarchy consistency (primary/secondary/debug sizing + rhythm).
+
+Date: 2026-03-01
+Slice: M12K — Eleventh visual polish pass for stop/tile readability contrast
+Summary:
+- Strengthened stop-label readability across scene variants with darker label surfaces, clearer border contrast, and slightly heavier shadow separation.
+- Added explicit tile value and anchor-id text styling hooks to improve number/debug-id legibility against tile gradients.
+- Slightly rebalanced back/front tile contrast filters so mid-board tile values remain easier to parse on mobile without changing gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12L apply twelfth visual polish pass to micro-typography and spacing consistency (chip/label/button rhythm).
+
+Date: 2026-03-01
+Slice: M12J — Tenth visual polish pass for board focal hierarchy
+Summary:
+- Added an explicit board focus treatment layer so the board center reads as the main focal zone with softer edge falloff.
+- Rebalanced board edge shading/highlight intensity to reduce edge noise while keeping depth cues from the framed board treatment.
+- Slightly tuned center lap-chip surface contrast so it remains legible without overpowering stop/tile visuals.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12K apply eleventh visual polish pass to stop/tile readability contrast (mid-board clarity under all scenes).
+
+Date: 2026-03-01
+Slice: M12I — Ninth visual polish pass for board chrome/background framing
+Summary:
+- Refined board container framing with cleaner edge chrome (subtle border/glass insets + deeper external shadow) so the playfield reads as a distinct, polished surface.
+- Added non-interactive board overlay layers (top highlight + bottom vignette + inner edge shading) to improve depth balance without affecting gameplay interactions.
+- Slightly tuned per-scene board gradients to keep center readability while preserving stop/tile/token and movement behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12J apply tenth visual polish pass to board focal hierarchy (center emphasis + edge falloff balance).
+
+Date: 2026-03-01
+Slice: M12H — Eighth visual polish pass for debug/QA control de-emphasis
+Summary:
+- Grouped QA/debug controls into a dedicated tools container with a compact label so these controls are clearly separated from primary gameplay actions.
+- Visually de-emphasized debug buttons (muted surface/border/weight) while preserving existing QA/debug gating and behavior.
+- Kept Market debug helper hint available in QA mode and restyled it as a lower-priority QA note.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12I apply ninth visual polish pass to board chrome/background framing (container edges + depth balance).
+
+Date: 2026-03-01
+Slice: M12G — Seventh visual polish pass for control-state emphasis
+Summary:
+- Promoted the roll control as a clear primary CTA with dedicated visual treatment when dice are available.
+- Added a distinct convert-state style for the roll button when the action shifts to heart-to-dice conversion.
+- Strengthened disabled-state clarity across gameplay/modal actions (lower emphasis, no glow, explicit not-allowed cursor) while preserving existing behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12H apply eighth visual polish pass to debug/QA control de-emphasis in normal flow.
+
+Date: 2026-03-01
+Slice: M12F — Sixth visual polish pass for semantic color-token consistency
+Summary:
+- Added semantic color-token styling for key run-status chips (hearts/dice/coins/timer) to improve at-a-glance parsing.
+- Added semantic landing-text variants (`info`, `plan`, `states`, `success`, `warn`) so status and guidance copy uses clearer visual meaning.
+- Kept all changes presentation-only and preserved existing gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12G apply seventh visual polish pass to control-state emphasis (primary roll CTA + disabled clarity).
+
+Date: 2026-03-01
+Slice: M12E — Fifth visual polish pass for HUD density/scanability
+Summary:
+- Grouped header HUD into two compact sections (`Run status` and `Live feed`) to reduce scan noise and improve information hierarchy on mobile.
+- Added explicit HUD section labels and panel containers so status chips and landing text are easier to parse at a glance.
+- Tuned status-chip and landing-text readability (contrast/spacing/line-height) while preserving gameplay behavior and signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12F apply sixth visual polish pass to color-token consistency and semantic emphasis (success/warn/info tones).
+
+Date: 2026-03-01
+Slice: M12D — Fourth visual polish pass for modal surfaces and CTA hierarchy
+Summary:
+- Refined travel and stop modal surfaces with stronger backdrop/contrast, improved spacing rhythm, and clearer modal title/body hierarchy.
+- Added explicit modal action-row styling with primary/secondary CTA variants and updated modal button group markup for clearer action emphasis on mobile.
+- Enhanced travel overlay card messaging hierarchy with title/subtitle structure while preserving existing travel timing and gameplay behavior.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12E apply fifth visual polish pass to HUD density/scanability (status row + landing text grouping).
+
+Date: 2026-03-01
+Slice: M12C — Third visual polish pass for motion/feedback styling
+Summary:
+- Added stronger active-stop feedback with subtle pulse animation and selected-stop highlight styling for clearer focus during stop interactions.
+- Added current-token tile emphasis (`island-tile--token-current`) and tuned token motion/shadow styling for clearer movement feedback.
+- Added reduced-motion guardrails for motion polish effects while preserving gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12D apply fourth visual polish pass to modal surfaces and CTA hierarchy (travel + stop modals).
+
+Date: 2026-03-01
+Slice: M12B — Second visual polish pass for board/chip readability
+Summary:
+- Improved board readability by increasing contrast/weight of the center lap chip and stop labels.
+- Enhanced tile-chip legibility with stronger chip surface contrast, clearer number rendering, and refined depth/shadow treatment.
+- Updated mobile behavior to keep compact stop labels visible (truncated) instead of fully hiding them, improving on-board orientation on phone screens.
+Files changed:
+- src/features/gamification/level-worlds/LevelWorlds.css
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12C apply third visual polish pass to motion/feedback styling (token + active stop emphasis).
+
+Date: 2026-03-01
+Slice: M12A — First visual polish pass for Island Run header/controls
+Summary:
+- Refined Island Run prototype header styling with improved hierarchy: larger title treatment, stronger panel surface, and clearer status-chip grouping.
+- Added a dedicated Home hatchery summary panel container and tuned copy/readability spacing so informational rows are easier to scan on mobile.
+- Updated control-button typography/spacing and landing text rhythm to move prototype UI toward production polish without changing gameplay logic.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12B apply second visual polish pass to board/chip readability (tile labels + stop labels + contrast).
+
+Date: 2026-03-01
+Slice: M9D — Home Island progression-hint row scaffold
+Summary:
+- Added a compact Home Island progression-hint row clarifying dormant/home egg flow behavior in prototype copy.
+- Hint explains that ready uncollected island eggs can carry as dormant eggs and that dormant/home eggs are opened from hatchery surfaces when available.
+- Updated index planning to make visual polish expectations explicit for MVP quality (`M12 is mandatory before MVP sign-off`) and set next slice to M12A visual polish pass.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12A apply first visual polish pass to Island Run header/controls (spacing + typography + hierarchy).
+
+Date: 2026-03-01
+Slice: M9C — Home Island action-hint row scaffold
+Summary:
+- Added a compact Home Island action-hint row in the Island Run header that explains set/open behavior in prototype copy.
+- Action hint clarifies that home eggs can be set when slot is empty and opened immediately from Home Island when ready, without movement requirements.
+- Updated index planning to include an explicit UI beautification milestone track (M12) so roadmap now captures production polish work beyond prototype scaffolds.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M9D add Home Island panel progression-hint row (dormant/home egg flow copy scaffold).
+
+Date: 2026-03-01
+Slice: M9B — Home Island slot/ready status row scaffold
+Summary:
+- Added a dedicated Home Island status row in the Island Run prototype header with explicit slot usage and ready-egg status copy.
+- Status copy is intentionally scaffold-only (`0/1` slot usage, `0` ready eggs) to improve panel clarity without introducing new runtime state wiring in this slice.
+- Preserved existing roll/stop/travel gameplay behavior and QA/debug helper behavior.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M9C add Home Island panel action-hint row (set/open behavior copy scaffold).
+
+Date: 2026-03-01
+Slice: M9A — Home Island hatchery summary panel scaffold
+Summary:
+- Added a lightweight Home Island Hatchery summary note in the Island Run prototype header that states always-available behavior.
+- Summary copy explicitly documents v1 expectations (single home egg slot and collect-anytime once ready) without adding new gameplay state changes.
+- Preserved existing roll/stop/travel behavior and QA/debug controls; this slice is display-copy scaffold only.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M9B add Home Island panel state row for slot/ready status (copy-only scaffold).
+
+Date: 2026-03-01
+Slice: M8J — In-UI Market debug helper discoverability note
+Summary:
+- Added a compact QA/debug-only helper hint note in the Island Run prototype controls to surface Market debug helper console commands in-product.
+- Helper note lists export/reset/status-coverage helper calls and is gated behind existing `showDebug || showQaHooks` conditions, keeping non-debug runtime behavior unchanged.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M9A scaffold Home Island prototype panel with always-collect hatchery summary copy.
+
+Date: 2026-03-01
 Slice: M8I — Market status coverage assertion helper
 Summary:
 - Added `window.__islandRunMarketDebugAssertStatusCoverage(expectedStatuses?, limit?)` to return pass/fail Market marker status coverage reports.
