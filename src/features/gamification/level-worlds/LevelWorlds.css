@@ -1276,6 +1276,14 @@
   align-items: stretch;
 }
 
+/* M12Y: vertically anchor all action-row variants at the top so position is
+   independent of body-copy length — applies to both cta and actions rows */
+.island-stop-modal__cta--anchored,
+.island-stop-modal__actions--anchored {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
 .island-stop-modal__actions--aligned {
   justify-content: center;
 }
@@ -1456,6 +1464,55 @@
 
 .island-stop-modal--onboarding {
   width: min(520px, 100%);
+}
+
+/* M12Z: market modal width matches onboarding for consistent overlay sizing */
+.island-stop-modal--market {
+  width: min(480px, 100%);
+}
+
+/* M12Z: bare h3/title in non-context stop modals (market, encounter) get consistent
+   bottom spacing so body copy gap matches the context-block rhythm */
+.island-stop-modal--market .island-stop-modal__title,
+.island-stop-modal--market h3,
+.island-stop-modal:not(:has(.island-stop-modal__context)) .island-stop-modal__title,
+.island-stop-modal:not(:has(.island-stop-modal__context)) h3 {
+  padding-bottom: 0.06rem;
+}
+
+/* M12Z: hatchery-card buttons inside stop modals inherit consistent sizing/weight */
+.island-stop-modal .island-hatchery-card button:not(.island-stop-modal__btn) {
+  min-height: 40px;
+  font-size: 0.8rem;
+  font-weight: 640;
+}
+
+/* M12Z: audio toggle button in HUD — compact icon-only chip style */
+.island-run-prototype__audio-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(163, 231, 255, 0.38);
+  background: rgba(127, 201, 233, 0.16);
+  color: #d5f8ff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.island-run-prototype__audio-toggle:hover:not(:disabled) {
+  background: rgba(127, 201, 233, 0.28);
+  border-color: rgba(163, 231, 255, 0.56);
+}
+
+.island-run-prototype__audio-toggle:focus-visible {
+  outline: 2px solid rgba(170, 236, 255, 0.96);
+  outline-offset: 2px;
 }
 
 

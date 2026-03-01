@@ -1,4 +1,54 @@
 Date: 2026-03-01
+Slice: M10A — Audio + Haptics system foundation
+Summary:
+- Created `islandRunAudio.ts` service with typed `IslandRunSoundEvent` and `IslandRunHapticEvent` event IDs, `playIslandRunSound`, `triggerIslandRunHaptic`, `getIslandRunAudioEnabled`, and `setIslandRunAudioEnabled` exports.
+- Wired roll sound + haptic, token_move sound, stop_land sound + haptic, island_travel sound + haptic, and reward_claim haptic at all correct call sites in `IslandRunBoardPrototype.tsx`.
+- Added compact 🔊/🔇 audio toggle button to Island Run HUD, persisting the `islandRunAudioEnabled` preference to localStorage.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunAudio.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M10B: Wire audio/haptic triggers for hatchery events (egg set, egg ready, egg open) and market events (purchase attempt, purchase success, insufficient coins).
+
+Date: 2026-03-01
+Slice: M12Z — Final visual polish cohesion audit (MVP polish gate completion)
+Summary:
+- Added `island-stop-modal--market` CSS rule to match onboarding modal max-width (480px) for consistent overlay sizing.
+- Added `island-stop-modal--market h3` padding-bottom and `:not(:has(.island-stop-modal__context))` fallback rules to ensure bare-title modals have the same title-to-body spacing as context-block modals.
+- Added `island-stop-modal .island-hatchery-card button` sizing rule so hatchery card buttons not using `__btn` class still meet minimum touch-target and weight standards.
+- Added audio toggle button CSS (`.island-run-prototype__audio-toggle`) to design system so the M10A HUD control matches the M12 chip/button visual rhythm.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M10A: Audio + Haptics system foundation (audio service creation, 4 sound + 4 haptic events, HUD toggle).
+
+Date: 2026-03-01
+Slice: M12Y — Twenty-fifth visual polish pass for overlay action-row vertical anchoring
+Summary:
+- Added `island-stop-modal__cta--anchored` and `island-stop-modal__actions--anchored` CSS modifier (align-self: flex-start + margin-top: auto) to pin action rows to their natural top-of-area anchor regardless of how long body copy grows.
+- Applied `--anchored` to all five CTA/action-row containers across onboarding, market, stop, and encounter modal variants.
+- Kept all changes presentation-only and preserved gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12Z: final visual polish cohesion audit pass (MVP polish gate completion).
+
+Date: 2026-03-01
 Slice: M12X — Twenty-fourth visual polish pass for overlay action-row alignment
 Summary:
 - Added a dedicated aligned action-row class to market/stop/encounter modal action rows so alignment behavior is explicitly shared.
