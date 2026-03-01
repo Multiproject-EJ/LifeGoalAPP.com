@@ -1,4 +1,20 @@
 Date: 2026-03-01
+Slice: M12X — Twenty-fourth visual polish pass for overlay action-row alignment
+Summary:
+- Added a dedicated aligned action-row class to market/stop/encounter modal action rows so alignment behavior is explicitly shared.
+- Tuned balanced action-row layout rules so multi-button rows remain evenly distributed while single-button rows are width-capped and centered.
+- Kept all changes presentation-only and preserved gameplay behavior/signatures.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M12Y apply twenty-fifth visual polish pass to overlay action-row vertical anchoring (top/center alignment consistency across modal variants).
+
+Date: 2026-03-01
 Slice: M12W — Twenty-third visual polish pass for overlay CTA spacing consistency
 Summary:
 - Added explicit balanced CTA/action-row classing so onboarding CTA and stop-modal action rows share a consistent spacing rhythm.

@@ -1276,12 +1276,21 @@
   align-items: stretch;
 }
 
-.island-stop-modal__actions--balanced .island-stop-modal__btn {
+.island-stop-modal__actions--aligned {
+  justify-content: center;
+}
+
+.island-stop-modal__actions--aligned .island-stop-modal__btn {
   margin-top: 0;
+  flex: 1 1 152px;
+  max-width: 100%;
+}
+
+.island-stop-modal__actions--aligned .island-stop-modal__btn:only-child {
+  flex: 0 1 min(100%, 19rem);
 }
 
 .island-stop-modal__btn {
-  flex: 1 1 152px;
   min-height: 42px;
   font-size: 0.82rem;
   font-weight: 660;

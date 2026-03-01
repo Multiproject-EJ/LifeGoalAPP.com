@@ -1605,7 +1605,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <p>Coins balance: <strong>{coins}</strong></p>
             <p>Owned bundles: <strong>{[marketOwnedBundles.dice_bundle ? 'dice' : null, marketOwnedBundles.heart_bundle ? 'heart' : null].filter(Boolean).join(', ') || 'none'}</strong></p>
             {marketPurchaseFeedback ? <p>{marketPurchaseFeedback}</p> : null}
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced">
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned">
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                 Complete Market Stop
               </button>
@@ -1684,7 +1684,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </div>
             ) : null}
 
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced">
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned">
               {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
@@ -1722,7 +1722,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <div className="island-hatchery-card">
               <p>{encounterResolved ? 'Reward granted: +1 heart.' : 'Resolve this encounter to gain +1 heart.'}</p>
             </div>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced">
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned">
               {!encounterResolved ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleResolveEncounter}>
                   Resolve Encounter
