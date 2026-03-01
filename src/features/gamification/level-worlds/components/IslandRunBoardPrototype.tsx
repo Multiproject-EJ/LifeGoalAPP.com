@@ -785,16 +785,41 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');
     triggerIslandRunHaptic('egg_set');
+    // M9G: home_egg_set telemetry + debug marker (demo parity handled via existing recordTelemetryEvent demo-safe path)
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'home_egg_set',
+        tier,
+        source: 'home_hatchery',
+      },
+    });
+    logIslandRunEntryDebug('home_egg_set', { tier, source: 'home_hatchery' });
   };
 
   const handleOpenEgg = () => {
     if (!activeEgg || eggStage < 4) return;
+    // M9G: capture tier before clearing egg state so it is available for telemetry/debug payloads
+    const openedEgg = activeEgg;
     setActiveEgg(null);
     setHearts((current) => current + 1);
     // M10B: egg_open sound + haptic
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
     setLandingText('Egg opened! +1 heart reward (prototype).');
+    // M9G: home_egg_open telemetry + debug marker (demo parity handled via existing recordTelemetryEvent demo-safe path)
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'home_egg_open',
+        tier: openedEgg.tier,
+        source: 'home_hatchery',
+        heartsAwarded: 1,
+      },
+    });
+    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsAwarded: 1 });
   };
 
   const handleClaimOnboardingBooster = () => {

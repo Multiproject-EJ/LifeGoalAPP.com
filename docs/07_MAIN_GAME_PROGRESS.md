@@ -1,4 +1,22 @@
 Date: 2026-03-01
+Slice: M9G — Home Island hatchery telemetry + QA
+Summary:
+- Added `recordTelemetryEvent` (`economy_earn`) for `home_egg_set` and `home_egg_open` in Home Island panel handlers.
+- Added `logIslandRunEntryDebug` debug markers for `home_egg_set` and `home_egg_open` for evidence-buffer triage.
+- Captured `activeEgg.tier` into a local variable before clearing egg state in `handleOpenEgg` so tier is available in telemetry/debug payloads.
+- Demo parity confirmed: telemetry fires in demo sessions via existing `recordTelemetryEvent` demo-safe path.
+- Added section 14 to `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md` with console extraction commands for home hatchery event verification.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M10D: Wire remaining audio/haptic triggers (market stop completion, island travel completion) and any uncovered sound events
+
+Date: 2026-03-01
 Slice: M9F — Home Island set/open egg actions wired to hatchery service
 Summary:
 - Added "Set egg" button in Home Island panel (visible when slot is empty); triggers `egg_set` sound + haptic and updates slot to 1/1.

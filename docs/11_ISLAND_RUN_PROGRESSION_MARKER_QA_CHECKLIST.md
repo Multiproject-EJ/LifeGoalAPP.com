@@ -283,3 +283,41 @@ Expected output shape:
 
 Tip:
 - Run `window.__islandRunMarketDebugResetState()` first for clean-slate status coverage checks in deterministic QA runs.
+
+## 14) Home Island hatchery event verification (M9G)
+
+**Setup:**
+```
+/level-worlds.html?islandRunDev=1&islandRunEntryDebug=1&islandRunQa=1
+```
+
+**A) Trigger home egg set**
+1. In the Home Island panel (top of the Island Run HUD), confirm the slot shows `0/1` (available).
+2. Click **Set egg** button.
+3. Confirm slot updates to `1/1` and the hatching stage indicator appears.
+
+**B) Verify home_egg_set telemetry via debug evidence**
+```js
+window.__islandRunEntryDebugEvidence().events
+  .filter(e => e.stage === 'home_egg_set')
+  .map(e => ({ tier: e.payload?.tier, source: e.payload?.source }))
+```
+Expected:
+- At least one entry with `source: 'home_hatchery'` and `tier` matching the egg type set.
+
+**C) Wait for egg to reach stage 4 (or use dev fast-hatch if available) then open**
+1. Confirm Home Island panel shows "Open egg 🥚" button.
+2. Click **Open egg 🥚**.
+3. Confirm hearts counter increments by 1 and landing text shows "Egg opened! +1 heart reward".
+
+**D) Verify home_egg_open telemetry via debug evidence**
+```js
+window.__islandRunEntryDebugEvidence().events
+  .filter(e => e.stage === 'home_egg_open')
+  .map(e => ({ tier: e.payload?.tier, source: e.payload?.source, heartsAwarded: e.payload?.heartsAwarded }))
+```
+Expected:
+- At least one entry with `source: 'home_hatchery'`, correct `tier`, and `heartsAwarded: 1`.
+
+**E) Demo parity note**
+- Telemetry fires in both live and demo sessions via the shared `recordTelemetryEvent` path.
