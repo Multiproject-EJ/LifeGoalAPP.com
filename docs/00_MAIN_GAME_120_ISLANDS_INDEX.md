@@ -76,7 +76,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [🟡] M9: Home island + hatchery slots + always collect (M9A home hatchery summary panel scaffold shipped; M9B slot/ready status row copy scaffold shipped; M9C action-hint row copy scaffold shipped; M9D progression-hint row copy scaffold shipped)
 - [ ] M10: Audio + haptics system integrated
 - [ ] M11: Minigame framework + first minigame stub
-- [🟡] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A header/control polish shipped; M12B board/chip readability polish shipped; M12C motion/feedback polish shipped; M12D modal/CTA polish shipped; M12E HUD scanability polish shipped; M12F semantic color-token polish shipped; M12G control-state emphasis polish shipped; M12H debug/QA de-emphasis polish shipped; M12I board chrome/background framing polish shipped; M12J board focal hierarchy polish shipped; M12K stop/tile readability contrast polish shipped; M12L micro-typography/spacing consistency polish shipped; M12M button hierarchy consistency polish shipped; M12N modal-body readability rhythm polish shipped; M12O onboarding/travel overlay clarity polish shipped; M12P overlay CTA/context separation polish shipped; M12Q overlay action-emphasis state polish shipped; M12R overlay interaction affordance accessibility polish shipped; M12S overlay density balance polish shipped; M12T overlay copy-hierarchy contrast polish shipped; M12U long-copy readability wrap-rhythm polish shipped; M12V headline-spacing consistency polish shipped; M12W overlay CTA-spacing consistency polish shipped)
+- [🟡] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A header/control polish shipped; M12B board/chip readability polish shipped; M12C motion/feedback polish shipped; M12D modal/CTA polish shipped; M12E HUD scanability polish shipped; M12F semantic color-token polish shipped; M12G control-state emphasis polish shipped; M12H debug/QA de-emphasis polish shipped; M12I board chrome/background framing polish shipped; M12J board focal hierarchy polish shipped; M12K stop/tile readability contrast polish shipped; M12L micro-typography/spacing consistency polish shipped; M12M button hierarchy consistency polish shipped; M12N modal-body readability rhythm polish shipped; M12O onboarding/travel overlay clarity polish shipped; M12P overlay CTA/context separation polish shipped; M12Q overlay action-emphasis state polish shipped; M12R overlay interaction affordance accessibility polish shipped; M12S overlay density balance polish shipped; M12T overlay copy-hierarchy contrast polish shipped; M12U long-copy readability wrap-rhythm polish shipped; M12V headline-spacing consistency polish shipped; M12W overlay CTA-spacing consistency polish shipped; M12X overlay action-row alignment polish shipped)
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -88,10 +88,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M12X: Apply twenty-fourth visual polish pass to overlay action-row alignment (single vs multi-button row balance)  
+**Objective:** M12Y: Apply twenty-fifth visual polish pass to overlay action-row vertical anchoring (top/center alignment consistency across modal variants)  
 **Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`, `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
-**Acceptance criteria:** overlay action rows feel consistently aligned whether they contain one or multiple buttons while preserving gameplay behavior/signatures  
-**How to test:** open Island Run view in normal mode and trigger onboarding/market/stop/encounter overlays to compare action-row alignment; verify roll/stop/travel behavior is unchanged
+**Acceptance criteria:** overlay CTA/action rows keep consistent vertical anchor behavior across onboarding/market/stop/encounter modal variants while preserving gameplay behavior/signatures  
+**How to test:** open Island Run view in normal mode and trigger onboarding/market/stop/encounter overlays, comparing action-row vertical anchoring under short vs long body copy; verify roll/stop/travel behavior is unchanged
 
 ---
 
