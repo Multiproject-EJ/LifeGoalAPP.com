@@ -72,21 +72,26 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
 - [🟡] M6: Encounter tile (easy) + rewards (M6A prototype shipped in dev mode)
 - [🟡] M7: Boss stop (trial) + rewards (M7A resolve + reward feedback shipped; M7B telemetry/reward contract wiring shipped; M7C refresh persistence markers shipped; M7D table-first persistence wiring shipped; M7E debug evidence marker payloads shipped; M7F deterministic QA hooks/checklist shipped; M7G assertion harness shipped; M7H preset modes shipped; M7I summary helper shipped; M7J export bundle helper shipped; M7K run-scoped filter helper shipped; M7L filter-aware export bundle shipped; M7M explicit scope metadata shipped; M7M.1 unmatched-ref scope normalization shipped; M7N filter-resolution metadata shipped)
-- [🟡] M8: Market stop + purchases (M8A market stop prototype purchase modal stub shipped; M8B market telemetry/debug markers shipped; M8C owned-state no-repurchase UX shipped; M8D repurchase-block telemetry/debug markers shipped; M8E market QA checklist commands shipped; M8F deterministic QA helper shipped; M8G marker export helper shipped; M8H marker reset helper shipped; M8I status assertion helper shipped)
-- [ ] M9: Home island + hatchery slots + always collect
+- [🟡] M8: Market stop + purchases (M8A market stop prototype purchase modal stub shipped; M8B market telemetry/debug markers shipped; M8C owned-state no-repurchase UX shipped; M8D repurchase-block telemetry/debug markers shipped; M8E market QA checklist commands shipped; M8F deterministic QA helper shipped; M8G marker export helper shipped; M8H marker reset helper shipped; M8I status assertion helper shipped; M8J in-UI helper hint shipped)
+- [🟡] M9: Home island + hatchery slots + always collect (M9A home hatchery summary panel scaffold shipped; M9B slot/ready status row copy scaffold shipped; M9C action-hint row copy scaffold shipped; M9D progression-hint row copy scaffold shipped)
 - [ ] M10: Audio + haptics system integrated
 - [ ] M11: Minigame framework + first minigame stub
+- [🟡] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A header/control polish shipped; M12B board/chip readability polish shipped; M12C motion/feedback polish shipped; M12D modal/CTA polish shipped; M12E HUD scanability polish shipped; M12F semantic color-token polish shipped; M12G control-state emphasis polish shipped; M12H debug/QA de-emphasis polish shipped; M12I board chrome/background framing polish shipped; M12J board focal hierarchy polish shipped; M12K stop/tile readability contrast polish shipped; M12L micro-typography/spacing consistency polish shipped; M12M button hierarchy consistency polish shipped; M12N modal-body readability rhythm polish shipped; M12O onboarding/travel overlay clarity polish shipped; M12P overlay CTA/context separation polish shipped; M12Q overlay action-emphasis state polish shipped; M12R overlay interaction affordance accessibility polish shipped; M12S overlay density balance polish shipped; M12T overlay copy-hierarchy contrast polish shipped; M12U long-copy readability wrap-rhythm polish shipped; M12V headline-spacing consistency polish shipped; M12W overlay CTA-spacing consistency polish shipped)
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
 
+Quality direction:
+- Add explicit UI beautification track (M12) so prototype scaffolds are followed by production-grade visual/interaction polish before MVP handoff.
+- M12 is mandatory before MVP sign-off: target production-level visual quality (layout rhythm, typography scale, spacing consistency, control styling, motion feel).
+
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M8J: Add in-UI discoverability note for Market debug helpers in QA mode  
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
-**Acceptance criteria:** QA/debug mode surfaces a compact helper hint block listing Market debug helper commands without affecting non-debug runtime behavior  
-**How to test:** open Island Run in QA/debug mode and verify helper hint text appears; verify normal mode behavior remains unchanged
+**Objective:** M12X: Apply twenty-fourth visual polish pass to overlay action-row alignment (single vs multi-button row balance)  
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`, `docs/07_MAIN_GAME_PROGRESS.md`, `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`  
+**Acceptance criteria:** overlay action rows feel consistently aligned whether they contain one or multiple buttons while preserving gameplay behavior/signatures  
+**How to test:** open Island Run view in normal mode and trigger onboarding/market/stop/encounter overlays to compare action-row alignment; verify roll/stop/travel behavior is unchanged
 
 ---
 
