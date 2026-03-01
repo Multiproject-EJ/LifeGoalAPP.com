@@ -1,4 +1,33 @@
 Date: 2026-03-01
+Batch: B3+B4+B5 — M3 Stop Modals + M4 Timer/Travel + M5 Egg System
+Summary:
+- B3-1: Hatchery stop egg tier costs (Common free, Rare 50c, Mythic 150c); Mythic gated to seasonal/rare islands
+- B3-2: Minigame stop — real ShooterBlitz trigger via showShooterBlitzFromStop state
+- B3-3: Market stop interaction gate (marketInteracted); Leave Market button added
+- B3-4: Utility stop real content (heart top-up, dice refill, intention input)
+- B3-5: Boss challenge library (10 challenges); getBossReward() scaled rewards; island clear celebration overlay
+- B4-1: Production timer — ISLAND_DURATION_SEC=72h; devTimer=1 param for 45s dev mode; HH:MM format
+- B4-2: Expiry detection on hydration boot; timer tick still drives travel on expiry
+- B4-3: performIslandTravel() helper centralizes all travel reset state; both travel paths use it
+- B4-4: dayIndex useEffect debug log; confirmed wired into generateTileMap()
+- B5-1: IslandRunGameStateRecord extended with egg fields; Supabase read/write updated
+- B5-2: IslandRunRuntimeState + backend patch extended with egg fields
+- B5-3: handleSetEgg persists to Supabase; handleOpenEgg tier rewards + persist clear; hydration restores egg
+- B5-4: Dormant egg carryover on travel; egg resets only when no active egg
+- B5-5: Migration 0168 for egg state columns
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/LevelWorlds.css
+- supabase/migrations/0168_island_run_egg_state_columns.sql (new)
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing: npm run build
+Next: B6–B9 (M6–M9)
+Milestones closed: M3 ✅ M4 ✅ M5 ✅
+
+Date: 2026-03-01
 Batch: B1+B2 — M1 Board Foundation + M2 Movement Polish
 Summary:
 - B1-1: LevelWorldsHub production board renderer promoted; isIslandRunPrototype defaults true; legacy WorldBoard unreachable unless ?islandRunDev=0

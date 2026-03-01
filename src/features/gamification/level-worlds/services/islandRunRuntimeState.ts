@@ -7,6 +7,10 @@ export interface IslandRunRuntimeState {
   dailyHeartsClaimedDayKey: string | null;
   currentIslandNumber: number;
   bossTrialResolvedIslandNumber: number | null;
+  activeEggTier: 'common' | 'rare' | 'mythic' | null;
+  activeEggSetAtMs: number | null;
+  activeEggHatchDurationMs: number | null;
+  activeEggIsDormant: boolean;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -41,6 +45,10 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     onboardingComplete?: boolean;
     currentIslandNumber?: number;
     bossTrialResolvedIslandNumber?: number | null;
+    activeEggTier?: 'common' | 'rare' | 'mythic' | null;
+    activeEggSetAtMs?: number | null;
+    activeEggHatchDurationMs?: number | null;
+    activeEggIsDormant?: boolean;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

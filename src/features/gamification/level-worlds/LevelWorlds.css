@@ -1599,3 +1599,51 @@
 .island-tile--micro { border-color: rgba(200, 160, 255, 0.5); }
 .island-tile--event { border-color: rgba(255, 220, 50, 0.6); }
 .island-tile--encounter { border-color: rgba(255, 80, 80, 0.8); }
+
+
+/* B3-5: Island clear celebration */
+.island-clear-celebration {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 200;
+}
+.island-clear-celebration__card {
+  background: linear-gradient(160deg, rgba(10, 30, 50, 0.97), rgba(5, 18, 32, 0.95));
+  border: 1px solid rgba(145, 206, 230, 0.5);
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #d8f5ff;
+  max-width: 340px;
+  width: calc(100% - 3rem);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.island-clear-celebration__eyebrow {
+  font-size: 0.78rem;
+  color: #7ecfff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.4rem;
+}
+.island-clear-celebration__title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 0.8rem;
+  color: #fff;
+}
+
+/* B5-4: Dormant egg badge */
+.island-run-prototype__dormant-badge {
+  display: inline-block;
+  background: rgba(60, 30, 90, 0.5);
+  border: 1px solid rgba(180, 100, 255, 0.4);
+  color: #d4aaff;
+  font-size: 0.78rem;
+  border-radius: 8px;
+  padding: 0.15rem 0.5rem;
+  margin-top: 0.3rem;
+}
