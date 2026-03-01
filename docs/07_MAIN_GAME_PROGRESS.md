@@ -1,4 +1,25 @@
 Date: 2026-03-01
+Batch: B1+B2 — M1 Board Foundation + M2 Movement Polish
+Summary:
+- B1-1: LevelWorldsHub production board renderer promoted; isIslandRunPrototype defaults true; legacy WorldBoard unreachable unless ?islandRunDev=0
+- B1-2: New islandBoardTileMap.ts service with generateTileMap() returning 17 typed tiles per island run
+- B1-3: IslandRunBoardPrototype wired to tileMap; tile type icons on board; encounter gated by rarity+dayIndex
+- B1-4: HUD header cleaned; LEVEL X/120 chip; production 72h timer with HH:MM format
+- B2-1: Spin token mechanic; spinTokens state; handleSpin handler; HUD Spin button
+- B2-2: CSS out-cubic token transition; squash/stretch landing keyframe; zBand drop shadow variants
+- B2-3: resolveTileLanding() for currency/chest/hazard/egg_shard/micro/event; awardGold for coin tiles
+- B2-4: QA acceptance — all acceptance criteria for M1+M2 verified
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorldsHub.tsx
+- src/features/gamification/level-worlds/services/islandBoardTileMap.ts (new)
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing: npm run build
+Next: B3–B9 (M3–M9)
+Milestones closed: M1 ✅ M2 ✅
+
+Date: 2026-03-01
 Slice: M10E — Audio/haptics QA coverage checklist
 Summary:
 - Added section 15 to docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md covering market stop completion and island travel completion audio/haptic spot-checks.
