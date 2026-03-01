@@ -8,6 +8,10 @@ export interface IslandRunGameStateRecord {
   dailyHeartsClaimedDayKey: string | null;
   currentIslandNumber: number;
   bossTrialResolvedIslandNumber: number | null;
+  activeEggTier: 'common' | 'rare' | 'mythic' | null;
+  activeEggSetAtMs: number | null;
+  activeEggHatchDurationMs: number | null;
+  activeEggIsDormant: boolean;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -22,10 +26,17 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     dailyHeartsClaimedDayKey: null,
     currentIslandNumber: 1,
     bossTrialResolvedIslandNumber: null,
+    activeEggTier: null,
+    activeEggSetAtMs: null,
+    activeEggHatchDurationMs: null,
+    activeEggIsDormant: false,
   };
 }
 
 function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunGameStateRecord): IslandRunGameStateRecord {
+  const eggTierRaw = value.activeEggTier;
+  const activeEggTier: 'common' | 'rare' | 'mythic' | null =
+    eggTierRaw === 'common' || eggTierRaw === 'rare' || eggTierRaw === 'mythic' ? eggTierRaw : fallback.activeEggTier;
   return {
     firstRunClaimed: typeof value.firstRunClaimed === 'boolean' ? value.firstRunClaimed : fallback.firstRunClaimed,
     dailyHeartsClaimedDayKey:
@@ -42,6 +53,20 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
         : value.bossTrialResolvedIslandNumber === null
           ? null
           : fallback.bossTrialResolvedIslandNumber,
+    activeEggTier,
+    activeEggSetAtMs:
+      typeof value.activeEggSetAtMs === 'number' && Number.isFinite(value.activeEggSetAtMs)
+        ? value.activeEggSetAtMs
+        : value.activeEggSetAtMs === null
+          ? null
+          : fallback.activeEggSetAtMs,
+    activeEggHatchDurationMs:
+      typeof value.activeEggHatchDurationMs === 'number' && Number.isFinite(value.activeEggHatchDurationMs)
+        ? value.activeEggHatchDurationMs
+        : value.activeEggHatchDurationMs === null
+          ? null
+          : fallback.activeEggHatchDurationMs,
+    activeEggIsDormant: typeof value.activeEggIsDormant === 'boolean' ? value.activeEggIsDormant : fallback.activeEggIsDormant,
   };
 }
 
@@ -88,7 +113,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -118,6 +143,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
       currentIslandNumber: data.current_island_number,
       bossTrialResolvedIslandNumber: data.boss_trial_resolved_island_number,
+      activeEggTier: data.active_egg_tier,
+      activeEggSetAtMs: data.active_egg_set_at_ms,
+      activeEggHatchDurationMs: data.active_egg_hatch_duration_ms,
+      activeEggIsDormant: data.active_egg_is_dormant,
     },
     fallback,
   );
@@ -187,6 +216,10 @@ export async function writeIslandRunGameStateRecord(options: {
       daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
       current_island_number: record.currentIslandNumber,
       boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,
+      active_egg_tier: record.activeEggTier,
+      active_egg_set_at_ms: record.activeEggSetAtMs,
+      active_egg_hatch_duration_ms: record.activeEggHatchDurationMs,
+      active_egg_is_dormant: record.activeEggIsDormant,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },

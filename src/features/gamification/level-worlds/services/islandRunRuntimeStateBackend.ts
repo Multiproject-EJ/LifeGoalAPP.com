@@ -28,6 +28,10 @@ export interface IslandRunRuntimeStateBackend {
       onboardingComplete?: boolean;
       currentIslandNumber?: number;
       bossTrialResolvedIslandNumber?: number | null;
+      activeEggTier?: 'common' | 'rare' | 'mythic' | null;
+      activeEggSetAtMs?: number | null;
+      activeEggHatchDurationMs?: number | null;
+      activeEggIsDormant?: boolean;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -64,6 +68,26 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
           : patch.bossTrialResolvedIslandNumber === null
             ? null
             : current.bossTrialResolvedIslandNumber,
+      activeEggTier:
+        patch.activeEggTier === null || patch.activeEggTier === 'common' || patch.activeEggTier === 'rare' || patch.activeEggTier === 'mythic'
+          ? patch.activeEggTier
+          : 'activeEggTier' in patch
+            ? null
+            : current.activeEggTier,
+      activeEggSetAtMs:
+        typeof patch.activeEggSetAtMs === 'number' && Number.isFinite(patch.activeEggSetAtMs)
+          ? patch.activeEggSetAtMs
+          : patch.activeEggSetAtMs === null
+            ? null
+            : current.activeEggSetAtMs,
+      activeEggHatchDurationMs:
+        typeof patch.activeEggHatchDurationMs === 'number' && Number.isFinite(patch.activeEggHatchDurationMs)
+          ? patch.activeEggHatchDurationMs
+          : patch.activeEggHatchDurationMs === null
+            ? null
+            : current.activeEggHatchDurationMs,
+      activeEggIsDormant:
+        typeof patch.activeEggIsDormant === 'boolean' ? patch.activeEggIsDormant : current.activeEggIsDormant,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

@@ -32,20 +32,26 @@ import {
   getIslandRunAudioEnabled,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
+import { ShooterBlitz } from '../../games/shooter-blitz/ShooterBlitz';
 
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
-// Production island duration: 72 hours. Dev uses shorter duration.
-const ISLAND_DURATION_SEC = 72 * 60 * 60;
-const DEV_ISLAND_DURATION_SEC = 45;
-const EFFECTIVE_ISLAND_DURATION_SEC = import.meta.env?.DEV ? DEV_ISLAND_DURATION_SEC : ISLAND_DURATION_SEC;
-const DEV_EGG_DURATION_SEC = 40;
+// Production island duration: 72 hours. Use ?devTimer=1 for 45s dev mode.
+const IS_DEV_TIMER = typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('devTimer') === '1';
+const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
+// Egg hatch durations
+const EGG_HATCH_MS_COMMON = IS_DEV_TIMER ? 15_000 : 24 * 60 * 60 * 1000;
+const EGG_HATCH_MS_RARE   = IS_DEV_TIMER ? 20_000 : 36 * 60 * 60 * 1000;
+const EGG_HATCH_MS_MYTHIC = IS_DEV_TIMER ? 30_000 : 48 * 60 * 60 * 1000;
+// Egg tier costs
+const EGG_COST_COMMON = 0;
+const EGG_COST_RARE = 50;
+const EGG_COST_MYTHIC = 150;
 const ENCOUNTER_TILE_INDEX = 6;
-const BOSS_TRIAL_REWARD_HEARTS = 2;
-const BOSS_TRIAL_REWARD_COINS = 120;
 const MARKET_DICE_BUNDLE_COST = 30;
 const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
@@ -56,6 +62,29 @@ interface ActiveEgg {
   tier: EggTier;
   setAtMs: number;
   hatchAtMs: number;
+  isDormant?: boolean;
+}
+
+const BOSS_CHALLENGES = [
+  "Commit to your #1 habit for this island cycle.",
+  "Reflect: what did you accomplish this cycle?",
+  "Set one clear goal for your next island.",
+  "Name someone you want to support this week.",
+  "Complete one thing you've been procrastinating.",
+  "Write down 3 wins from this island run.",
+  "Identify your biggest distraction and block it for 1 hour.",
+  "Do something kind for yourself or someone else today.",
+  "Review your top life goal — are your actions aligned?",
+  "Plan tomorrow morning: name your first task when you wake up.",
+];
+
+function getBossReward(islandNumber: number): { hearts: number; coins: number; spinTokens: number } {
+  const tier = Math.floor((islandNumber - 1) / 10);
+  return {
+    hearts: 2 + tier,
+    coins: 120 + tier * 40,
+    spinTokens: tier >= 2 ? 1 : 0,
+  };
 }
 
 type StopProgressState = 'pending' | 'active' | 'completed' | 'locked';
@@ -194,7 +223,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
-  const [timeLeftSec, setTimeLeftSec] = useState(EFFECTIVE_ISLAND_DURATION_SEC);
+  const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
   const [nowMs, setNowMs] = useState(Date.now());
@@ -230,6 +259,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // B2-2: token landing animation state
   const [isTokenLanding, setIsTokenLanding] = useState(false);
 
+  // B3-2: ShooterBlitz from minigame stop
+  const [showShooterBlitzFromStop, setShowShooterBlitzFromStop] = useState(false);
+
+  // B3-3: market interaction gate
+  const [marketInteracted, setMarketInteracted] = useState(false);
+
+  // B3-4: utility stop state
+  const [utilityInteracted, setUtilityInteracted] = useState(false);
+  const [islandIntention, setIslandIntention] = useState('');
+
+  // B3-5: island clear celebration
+  const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
+  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; heartsEarned: number; coinsEarned: number; stopsCleared: number } | null>(null);
+
   const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
@@ -245,7 +288,24 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIslandNumber((current) => (current === persistedIsland ? current : persistedIsland));
     setDicePool(convertHeartToDicePool(persistedIsland));
     setBossTrialResolved(runtimeState.bossTrialResolvedIslandNumber === persistedIsland);
-  }, [hasHydratedRuntimeState, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber]);
+
+    // B4-2: Expiry detection on hydration
+    const elapsedSec = Math.round((Date.now() - islandStartedAtMs) / 1000);
+    if (elapsedSec >= ISLAND_DURATION_SEC && !showTravelOverlay) {
+      setShowTravelOverlay(true);
+      setLandingText('Island expired on load. Traveling to next island...');
+    }
+
+    // B5-3: Restore egg state from runtime state
+    if (runtimeState.activeEggTier && runtimeState.activeEggSetAtMs && runtimeState.activeEggHatchDurationMs) {
+      setActiveEgg({
+        tier: runtimeState.activeEggTier,
+        setAtMs: runtimeState.activeEggSetAtMs,
+        hatchAtMs: runtimeState.activeEggSetAtMs + runtimeState.activeEggHatchDurationMs,
+        isDormant: runtimeState.activeEggIsDormant,
+      });
+    }
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber]);
 
   useEffect(() => {
     logIslandRunEntryDebug('island_run_board_mount', {
@@ -270,6 +330,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   useEffect(() => {
     if (activeStopId === 'market') {
       setMarketPurchaseFeedback('Prototype inventory ready.');
+      setMarketInteracted(false);
     }
   }, [activeStopId]);
 
@@ -553,6 +614,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
   }, [boardSize, showDebug]);
 
+  // B3-5: island clear celebration auto-dismiss
+  useEffect(() => {
+    if (showIslandClearCelebration) {
+      const t = window.setTimeout(() => setShowIslandClearCelebration(false), 4000);
+      return () => window.clearTimeout(t);
+    }
+  }, [showIslandClearCelebration]);
+
   const islandStopPlan = useMemo(() => generateIslandStopPlan(islandNumber), [islandNumber]);
 
   // B1-3: dayIndex computed from island start time
@@ -565,6 +634,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   useEffect(() => {
     const rarity = getIslandRarity(islandNumber);
     setTileMap(generateTileMap(islandNumber, rarity, 'forest', dayIndex));
+  }, [islandNumber, dayIndex]);
+
+  // B4-4: log dayIndex changes for debug
+  useEffect(() => {
+    logIslandRunEntryDebug('island_day_index', { islandNumber, dayIndex });
   }, [islandNumber, dayIndex]);
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
@@ -701,41 +775,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     playIslandRunSound('island_travel');
     triggerIslandRunHaptic('island_travel');
 
+    // B4-2: When timer hits 0 it triggers showTravelOverlay, which then triggers performIslandTravel below
     const timeout = window.setTimeout(() => {
       const nextIsland = islandNumber + 1;
-      setIslandNumber(nextIsland);
-      setDicePool(convertHeartToDicePool(nextIsland));
-      setTokenIndex(TOKEN_START_TILE_INDEX);
-      setHearts(5);
-      setRollValue(null);
-      setActiveStopId(null);
-      setShowEncounterModal(false);
-      setEncounterResolved(false);
-      setCompletedStops([]);
-      setBossTrialResolved(false);
-      setBossRewardSummary(null);
-      setTimeLeftSec(EFFECTIVE_ISLAND_DURATION_SEC);
-      setIslandStartedAtMs(Date.now());
-      setSpinTokens(0);
-      setLandingText('Arrived at next island. Ready to roll. Egg progress carried over (prototype).');
+      performIslandTravel(nextIsland);
       setShowTravelOverlay(false);
-      // M10D: island travel complete sound + haptic
-      playIslandRunSound('island_travel_complete');
-      triggerIslandRunHaptic('island_travel_complete');
-
-      void persistIslandRunRuntimeStatePatch({
-        session,
-        client,
-        patch: {
-          currentIslandNumber: nextIsland,
-          bossTrialResolvedIslandNumber: null,
-        },
-      });
-      setRuntimeState((current) => ({
-        ...current,
-        currentIslandNumber: nextIsland,
-        bossTrialResolvedIslandNumber: null,
-      }));
     }, 1800);
 
     return () => window.clearTimeout(timeout);
@@ -932,12 +976,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIsRolling(false);
   };
 
-  const handleSetEgg = (tier: EggTier) => {    const start = Date.now();
-    setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + DEV_EGG_DURATION_SEC * 1000 });
+  const handleSetEgg = (tier: EggTier) => {
+    const start = Date.now();
+    const hatchDurationMs = tier === 'mythic' ? EGG_HATCH_MS_MYTHIC : tier === 'rare' ? EGG_HATCH_MS_RARE : EGG_HATCH_MS_COMMON;
+    setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + hatchDurationMs });
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');
     triggerIslandRunHaptic('egg_set');
-    // M9G: home_egg_set telemetry + debug marker (demo parity handled via existing recordTelemetryEvent demo-safe path)
+    // M9G: home_egg_set telemetry + debug marker
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -948,6 +994,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     });
     logIslandRunEntryDebug('home_egg_set', { tier, source: 'home_hatchery' });
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        activeEggTier: tier,
+        activeEggSetAtMs: start,
+        activeEggHatchDurationMs: hatchDurationMs,
+        activeEggIsDormant: false,
+      },
+    });
   };
 
   const handleOpenEgg = () => {
@@ -955,12 +1011,30 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // M9G: capture tier before clearing egg state so it is available for telemetry/debug payloads
     const openedEgg = activeEgg;
     setActiveEgg(null);
-    setHearts((current) => current + 1);
+    // B5-3: tier-appropriate rewards
+    let heartsAwarded = 0;
+    let feedbackMsg = '';
+    if (openedEgg.tier === 'common') {
+      setHearts((current) => current + 1);
+      heartsAwarded = 1;
+      feedbackMsg = '+1 heart';
+    } else if (openedEgg.tier === 'rare') {
+      setHearts((current) => current + 2);
+      setDicePool((d) => d + 6);
+      heartsAwarded = 2;
+      feedbackMsg = '+2 hearts, +6 dice';
+    } else {
+      setHearts((current) => current + 3);
+      setCoins((c) => c + 100);
+      setSpinTokens((t) => t + 1);
+      heartsAwarded = 3;
+      feedbackMsg = '+3 hearts, +100 coins, +1 spin';
+    }
     // M10B: egg_open sound + haptic
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
-    setLandingText('Egg opened! +1 heart reward (prototype).');
-    // M9G: home_egg_open telemetry + debug marker (demo parity handled via existing recordTelemetryEvent demo-safe path)
+    setLandingText(`Egg opened! ${feedbackMsg}`);
+    // M9G: home_egg_open telemetry + debug marker
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -968,10 +1042,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         stage: 'home_egg_open',
         tier: openedEgg.tier,
         source: 'home_hatchery',
-        heartsAwarded: 1,
+        heartsAwarded,
       },
     });
-    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsAwarded: 1 });
+    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsAwarded });
+    // B5-3: persist cleared egg state
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { activeEggTier: null, activeEggSetAtMs: null, activeEggHatchDurationMs: null, activeEggIsDormant: false },
+    });
   };
 
   const handleClaimOnboardingBooster = () => {
@@ -1032,8 +1112,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return;
     }
 
-    awardHearts(session.user.id, BOSS_TRIAL_REWARD_HEARTS, 'shooter_blitz', 'Island Run boss trial resolved');
-    awardGold(session.user.id, BOSS_TRIAL_REWARD_COINS, 'shooter_blitz', 'Island Run boss trial resolved');
+    const bossReward = getBossReward(islandNumber);
+
+    awardHearts(session.user.id, bossReward.hearts, 'shooter_blitz', 'Island Run boss trial resolved');
+    awardGold(session.user.id, bossReward.coins, 'shooter_blitz', 'Island Run boss trial resolved');
 
     logGameSession(session.user.id, {
       gameId: 'shooter_blitz',
@@ -1041,8 +1123,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       timestamp: new Date().toISOString(),
       metadata: {
         stage: 'island_run_boss_trial_resolved',
-        reward_hearts: BOSS_TRIAL_REWARD_HEARTS,
-        reward_coins: BOSS_TRIAL_REWARD_COINS,
+        reward_hearts: bossReward.hearts,
+        reward_coins: bossReward.coins,
         island_number: islandNumber,
       },
     });
@@ -1053,20 +1135,23 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       metadata: {
         stage: 'island_run_boss_trial_resolved',
         source: 'shooter_blitz',
-        hearts: BOSS_TRIAL_REWARD_HEARTS,
-        coins: BOSS_TRIAL_REWARD_COINS,
+        hearts: bossReward.hearts,
+        coins: bossReward.coins,
         island_number: islandNumber,
       },
     });
 
     setBossTrialResolved(true);
-    setHearts((current) => current + BOSS_TRIAL_REWARD_HEARTS);
-    setCoins((current) => current + BOSS_TRIAL_REWARD_COINS);
+    setHearts((current) => current + bossReward.hearts);
+    setCoins((current) => current + bossReward.coins);
+    if (bossReward.spinTokens > 0) {
+      setSpinTokens((t) => t + bossReward.spinTokens);
+    }
     // M10C: boss_trial_resolve sound + haptic
     playIslandRunSound('boss_trial_resolve');
     triggerIslandRunHaptic('boss_trial_resolve');
 
-    const rewardText = `Boss challenge resolved: +${BOSS_TRIAL_REWARD_HEARTS} hearts, +${BOSS_TRIAL_REWARD_COINS} coins.`;
+    const rewardText = `Boss challenge resolved: +${bossReward.hearts} hearts, +${bossReward.coins} coins${bossReward.spinTokens > 0 ? `, +${bossReward.spinTokens} spin` : ''}.`;
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Claim island clear to travel.`);
 
@@ -1172,6 +1257,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           : 'Heart Bundle already owned for this island run.';
       setMarketPurchaseFeedback(ownedMessage);
       setLandingText(ownedMessage);
+      setMarketInteracted(true);
       return;
     }
     if (bundle === 'dice_bundle') {
@@ -1200,6 +1286,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         playIslandRunSound('market_insufficient_coins');
         setMarketPurchaseFeedback(message);
         setLandingText(message);
+        setMarketInteracted(true);
         return;
       }
 
@@ -1222,6 +1309,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
       setMarketPurchaseFeedback(message);
       setLandingText(message);
+      setMarketInteracted(true);
       return;
     }
 
@@ -1250,6 +1338,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       playIslandRunSound('market_insufficient_coins');
       setMarketPurchaseFeedback(message);
       setLandingText(message);
+      setMarketInteracted(true);
       return;
     }
 
@@ -1272,6 +1361,53 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setMarketOwnedBundles((current) => ({ ...current, heart_bundle: true }));
     setMarketPurchaseFeedback(message);
     setLandingText(message);
+    setMarketInteracted(true);
+  };
+
+  // B4-3: performIslandTravel — centralizes all travel reset state
+  const performIslandTravel = (nextIsland: number) => {
+    // B5-4: Carry over dormant eggs — if egg is hatchable (stage 4) but not opened, mark dormant
+    if (activeEgg && eggStage >= 4) {
+      setActiveEgg((egg) => egg ? { ...egg, isDormant: true } : null);
+      void persistIslandRunRuntimeStatePatch({ session, client, patch: { activeEggIsDormant: true } });
+    } else if (!activeEgg) {
+      // no egg to carry
+    }
+    setIslandNumber(nextIsland);
+    setDicePool(convertHeartToDicePool(nextIsland));
+    setTokenIndex(TOKEN_START_TILE_INDEX);
+    setHearts(5);
+    setRollValue(null);
+    setActiveStopId(null);
+    setShowEncounterModal(false);
+    setEncounterResolved(false);
+    setCompletedStops([]);
+    setBossTrialResolved(false);
+    setBossRewardSummary(null);
+    setSpinTokens(0);
+    setMarketInteracted(false);
+    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false });
+    setTimeLeftSec(ISLAND_DURATION_SEC);
+    setIslandStartedAtMs(Date.now());
+    setUtilityInteracted(false);
+    setIslandIntention('');
+    setShowIslandClearCelebration(false);
+    setIslandClearStats(null);
+    setLandingText('Arrived at new island. Ready to roll!');
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null },
+    });
+    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null }));
+    // M10D: island travel complete sound + haptic
+    playIslandRunSound('island_travel_complete');
+    triggerIslandRunHaptic('island_travel_complete');
+  };
+
+  // B3-2: handleCompleteStopById helper
+  const handleCompleteStopById = (stopId: string) => {
+    setCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
   };
 
   const handleCompleteActiveStop = () => {
@@ -1283,6 +1419,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         return;
       }
 
+      const bossReward = getBossReward(islandNumber);
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
       setCompletedStops((current) => (current.includes('boss') ? current : [...current, 'boss']));
 
@@ -1294,8 +1431,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           stage: 'island_run_boss_island_cleared',
           island_number: islandNumber,
           rewards_granted: {
-            hearts: BOSS_TRIAL_REWARD_HEARTS,
-            coins: BOSS_TRIAL_REWARD_COINS,
+            hearts: bossReward.hearts,
+            coins: bossReward.coins,
           },
         },
       });
@@ -1315,42 +1452,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       playIslandRunSound('boss_island_clear');
       triggerIslandRunHaptic('boss_island_clear');
 
+      // B3-5: island clear celebration
+      setShowIslandClearCelebration(true);
+      setIslandClearStats({
+        islandNumber,
+        heartsEarned: bossReward.hearts,
+        coinsEarned: bossReward.coins,
+        stopsCleared: completedStops.length + 1,
+      });
+
       setShowTravelOverlay(true);
       window.setTimeout(() => {
         const nextIsland = islandNumber + 1;
         setShowTravelOverlay(false);
-        setIslandNumber(nextIsland);
-        setDicePool(convertHeartToDicePool(nextIsland));
-        setTokenIndex(TOKEN_START_TILE_INDEX);
-        setHearts(5);
-        setRollValue(null);
-        setActiveStopId(null);
-        setEncounterResolved(false);
-        setCompletedStops([]);
-        setBossTrialResolved(false);
-        setBossRewardSummary(null);
-        setMarketPurchaseFeedback(null);
-        setMarketOwnedBundles({
-          dice_bundle: false,
-          heart_bundle: false,
-        });
-        setTimeLeftSec(EFFECTIVE_ISLAND_DURATION_SEC);
-        setIslandStartedAtMs(Date.now());
-        setSpinTokens(0);
-
-        void persistIslandRunRuntimeStatePatch({
-          session,
-          client,
-          patch: {
-            currentIslandNumber: nextIsland,
-            bossTrialResolvedIslandNumber: null,
-          },
-        });
-        setRuntimeState((current) => ({
-          ...current,
-          currentIslandNumber: nextIsland,
-          bossTrialResolvedIslandNumber: null,
-        }));
+        performIslandTravel(nextIsland);
       }, 1400);
       return;
     }
@@ -1600,6 +1715,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
                 🥚 Stage {eggStage} — hatching…
               </span>
+            )}
+            {activeEgg?.isDormant && (
+              <span className="island-run-prototype__dormant-badge">💤 Dormant — open anytime</span>
             )}
           </div>
         </div>
@@ -1914,19 +2032,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <p>Coins balance: <strong>{coins}</strong></p>
             <p>Owned bundles: <strong>{[marketOwnedBundles.dice_bundle ? 'dice' : null, marketOwnedBundles.heart_bundle ? 'heart' : null].filter(Boolean).join(', ') || 'none'}</strong></p>
             {marketPurchaseFeedback ? <p>{marketPurchaseFeedback}</p> : null}
+            {!marketInteracted && <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Browse the market to complete this stop.</p>}
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop} disabled={!marketInteracted}>
                 Complete Market Stop
               </button>
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => {
-                  setMarketPurchaseFeedback(null);
-                  setActiveStopId(null);
-                }}
+                onClick={() => setActiveStopId(null)}
               >
-                Close
+                Leave Market
               </button>
             </div>
           </section>
@@ -1947,9 +2063,31 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   <>
                     <p>No active island egg. Set one:</p>
                     <div className="island-hatchery-card__actions">
-                      <button type="button" onClick={() => handleSetEgg('common')}>Set Common Egg</button>
-                      <button type="button" onClick={() => handleSetEgg('rare')}>Set Rare Egg</button>
-                      <button type="button" onClick={() => handleSetEgg('mythic')}>Set Mythic Egg</button>
+                      <button type="button" onClick={() => handleSetEgg('common')}>
+                        Set Common Egg (Free)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCoins((c) => c - EGG_COST_RARE); handleSetEgg('rare'); }}
+                        disabled={coins < EGG_COST_RARE}
+                        style={coins < EGG_COST_RARE ? { opacity: 0.5 } : undefined}
+                      >
+                        Set Rare Egg ({EGG_COST_RARE} coins)
+                      </button>
+                      {getIslandRarity(islandNumber) !== 'normal' ? (
+                        <button
+                          type="button"
+                          onClick={() => { setCoins((c) => c - EGG_COST_MYTHIC); handleSetEgg('mythic'); }}
+                          disabled={coins < EGG_COST_MYTHIC}
+                          style={coins < EGG_COST_MYTHIC ? { opacity: 0.5 } : undefined}
+                        >
+                          Set Mythic Egg ({EGG_COST_MYTHIC} coins)
+                        </button>
+                      ) : (
+                        <button type="button" disabled style={{ opacity: 0.4 }}>
+                          🔒 Rare islands only
+                        </button>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -1964,6 +2102,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     </div>
                   </>
                 )}
+                <p style={{ fontSize: '0.82rem', opacity: 0.7, marginTop: '0.5rem' }}>💡 Set an egg before leaving to earn rewards over time!</p>
               </div>
             )}
 
@@ -1977,15 +2116,79 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </button>
             ) : null}
 
+            {activeStopId === 'minigame' && (
+              <div className="island-hatchery-card">
+                <p>Launch the minigame to complete this stop and earn rewards.</p>
+                <div className="island-hatchery-card__actions">
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                    onClick={() => {
+                      setShowShooterBlitzFromStop(true);
+                      setActiveStopId(null);
+                    }}
+                  >
+                    ▶ Launch Minigame
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeStopId === 'utility' && (
+              <div className="island-hatchery-card">
+                <p>💚 Heart Top-Up: Spend 50 coins for +1 heart</p>
+                <button
+                  type="button"
+                  disabled={coins < 50}
+                  onClick={() => {
+                    setCoins((c) => c - 50);
+                    setHearts((h) => h + 1);
+                    setUtilityInteracted(true);
+                    handleCompleteActiveStop();
+                  }}
+                >
+                  Top Up Heart (50 coins)
+                </button>
+                <p>🎲 Dice Refill: Spend 30 coins for +10 dice</p>
+                <button
+                  type="button"
+                  disabled={coins < 30}
+                  onClick={() => {
+                    setCoins((c) => c - 30);
+                    setDicePool((d) => d + 10);
+                    setUtilityInteracted(true);
+                    handleCompleteActiveStop();
+                  }}
+                >
+                  Refill Dice (30 coins)
+                </button>
+                <p>📝 Intention</p>
+                <input
+                  type="text"
+                  value={islandIntention}
+                  onChange={(e) => setIslandIntention(e.target.value)}
+                  placeholder="Set your intention for this island..."
+                  style={{ width: '100%', marginBottom: '0.4rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUtilityInteracted(true);
+                    handleCompleteActiveStop();
+                  }}
+                >
+                  Save &amp; Complete
+                </button>
+              </div>
+            )}
+
             {activeStop.stopId === 'boss' ? (
               <div className="island-hatchery-card">
-                <p>
-                  Trial objective: lock focus for one short burst, then confirm mission integrity.
-                </p>
+                <p><strong>Challenge:</strong> {BOSS_CHALLENGES[(islandNumber - 1) % BOSS_CHALLENGES.length]}</p>
                 <p>
                   {bossTrialResolved
                     ? `Reward granted. ${bossRewardSummary ?? ''}`
-                    : `Resolve to earn +${BOSS_TRIAL_REWARD_HEARTS} hearts and +${BOSS_TRIAL_REWARD_COINS} coins.`}
+                    : `Resolve to earn +${getBossReward(islandNumber).hearts} hearts and +${getBossReward(islandNumber).coins} coins${getBossReward(islandNumber).spinTokens > 0 ? ` and +${getBossReward(islandNumber).spinTokens} spin` : ''}.`}
                 </p>
                 {!bossTrialResolved ? (
                   <button type="button" onClick={handleResolveBossTrial}>Resolve Boss Trial</button>
@@ -1994,7 +2197,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             ) : null}
 
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' ? (
+              {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' && activeStop.stopId !== 'utility' ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
                 </button>
@@ -2081,6 +2284,31 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </div>
           </section>
         </div>
+      )}
+
+      {showIslandClearCelebration && islandClearStats && (
+        <div className="island-clear-celebration" role="status" aria-live="polite">
+          <div className="island-clear-celebration__card">
+            <p className="island-clear-celebration__eyebrow">Island Cleared!</p>
+            <p className="island-clear-celebration__title">🏆 Island {islandClearStats.islandNumber} Complete!</p>
+            <p>❤️ +{islandClearStats.heartsEarned} hearts · 🪙 +{islandClearStats.coinsEarned} coins</p>
+            <p>✅ {islandClearStats.stopsCleared} stops cleared</p>
+          </div>
+        </div>
+      )}
+
+      {showShooterBlitzFromStop && (
+        <ShooterBlitz
+          session={session}
+          onClose={() => {
+            setShowShooterBlitzFromStop(false);
+            handleCompleteStopById('minigame');
+          }}
+          onComplete={() => {
+            setShowShooterBlitzFromStop(false);
+            handleCompleteStopById('minigame');
+          }}
+        />
       )}
     </section>
   );
