@@ -321,3 +321,53 @@ Expected:
 
 **E) Demo parity note**
 - Telemetry fires in both live and demo sessions via the shared `recordTelemetryEvent` path.
+
+## 15) Audio/haptic event coverage spot-check (M10D/M10E)
+
+**Setup:**
+```
+/level-worlds.html?islandRunDev=1&islandRunEntryDebug=1&islandRunQa=1
+```
+
+**A) Market stop completion audio**
+1. Open the Market Stop modal (land on market stop or open via QA controls).
+2. Click **Complete Market Stop**.
+3. Confirm market stop is marked completed.
+4. Expected: `market_stop_complete` sound and haptic fire on completion.
+
+**B) Island travel completion audio**
+1. Complete all 5 stops including boss (or use QA advance shortcut).
+2. Trigger island travel (confirm travel overlay appears).
+3. Wait for travel to complete / click through travel overlay.
+4. Confirm new island loads and island number increments.
+5. Expected: `island_travel_complete` sound and haptic fire on arrival at new island.
+
+**C) Audio toggle verification**
+1. Click the 🔇 audio toggle to disable audio.
+2. Trigger any stop completion.
+3. Expected: no sound or haptic fires while disabled.
+4. Re-enable with 🔊 toggle — confirm events fire again.
+
+**D) Coverage summary**
+All Island Run audio/haptic events (M10A–M10D) now covered:
+
+| Event | Sound | Haptic | Slice |
+|-------|-------|--------|-------|
+| roll | ✅ | ✅ | M10A |
+| token_move | ✅ | — | M10A |
+| stop_land | ✅ | ✅ | M10A |
+| island_travel (departure) | ✅ | ✅ | M10A |
+| reward_claim | — | ✅ | M10A |
+| egg_set | ✅ | ✅ | M10B |
+| egg_ready | ✅ | — | M10B |
+| egg_open | ✅ | ✅ | M10B |
+| market_purchase_attempt | ✅ | — | M10B |
+| market_purchase_success | ✅ | ✅ | M10B |
+| market_insufficient_coins | ✅ | — | M10B |
+| boss_trial_start | ✅ | — | M10C |
+| boss_trial_resolve | ✅ | ✅ | M10C |
+| boss_island_clear | ✅ | ✅ | M10C |
+| encounter_trigger | ✅ | — | M10C |
+| encounter_resolve | ✅ | ✅ | M10C |
+| market_stop_complete | ✅ | ✅ | M10D |
+| island_travel_complete (arrival) | ✅ | ✅ | M10D |
