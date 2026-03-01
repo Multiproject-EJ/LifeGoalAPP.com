@@ -42,6 +42,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
 
   const islandRunDevParam = new URLSearchParams(window.location.search).get('islandRunDev');
+  // Island Run is the production surface. Legacy WorldBoard only renders if ?islandRunDev=0 is set.
   const isIslandRunPrototype = islandRunDevParam !== '0';
 
 
@@ -175,6 +176,12 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
     );
   }
 
+  // Production path: Island Run is the primary surface.
+  if (isIslandRunPrototype) {
+    return <IslandRunBoardPrototype session={session} />;
+  }
+
+  // LEGACY — unreachable in production (only rendered when ?islandRunDev=0 is set)
   return (
     <div className="level-worlds-hub">
       <div className="level-worlds-header">
@@ -201,9 +208,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
       </div>
 
       <div className="level-worlds-content">
-        {isIslandRunPrototype ? (
-          <IslandRunBoardPrototype session={session} />
-        ) : currentBoard ? (
+        {currentBoard ? (
           <WorldBoard
             board={currentBoard}
             userId={userId}
@@ -216,6 +221,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
         )}
       </div>
 
+      {/* LEGACY — unreachable in production */}
       {selectedNode && (
         <NodeDetailSheet
           node={selectedNode}
@@ -225,6 +231,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
         />
       )}
 
+      {/* LEGACY — unreachable in production */}
       {showBoardComplete && completedBoard && (
         <BoardCompleteOverlay
           board={completedBoard}

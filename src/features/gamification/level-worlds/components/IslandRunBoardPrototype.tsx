@@ -7,6 +7,7 @@ import {
   OUTER_STOP_ANCHORS,
   type TileAnchor,
 } from '../services/islandBoardLayout';
+import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
 import { planDailyHeartReward } from '../services/islandRunDailyRewards';
@@ -35,7 +36,12 @@ import {
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
+const SPIN_MIN = 1;
+const SPIN_MAX = 5;
+// Production island duration: 72 hours. Dev uses shorter duration.
+const ISLAND_DURATION_SEC = 72 * 60 * 60;
 const DEV_ISLAND_DURATION_SEC = 45;
+const EFFECTIVE_ISLAND_DURATION_SEC = import.meta.env?.DEV ? DEV_ISLAND_DURATION_SEC : ISLAND_DURATION_SEC;
 const DEV_EGG_DURATION_SEC = 40;
 const ENCOUNTER_TILE_INDEX = 6;
 const BOSS_TRIAL_REWARD_HEARTS = 2;
@@ -158,6 +164,15 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+const TILE_TYPE_ICONS: Record<string, string> = {
+  currency: '💰',
+  chest: '🎁',
+  event: '⚡',
+  hazard: '☠️',
+  egg_shard: '🧩',
+  micro: '✨',
+};
+
 interface IslandRunBoardPrototypeProps {
   session: Session;
 }
@@ -179,7 +194,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
-  const [timeLeftSec, setTimeLeftSec] = useState(DEV_ISLAND_DURATION_SEC);
+  const [timeLeftSec, setTimeLeftSec] = useState(EFFECTIVE_ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
   const [nowMs, setNowMs] = useState(Date.now());
@@ -204,6 +219,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(() => getIslandRunAudioEnabled());
+
+  // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
+  const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
+  const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0));
+
+  // B2-1: spin token state
+  const [spinTokens, setSpinTokens] = useState(0);
+
+  // B2-2: token landing animation state
+  const [isTokenLanding, setIsTokenLanding] = useState(false);
 
   const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
@@ -530,6 +555,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const islandStopPlan = useMemo(() => generateIslandStopPlan(islandNumber), [islandNumber]);
 
+  // B1-3: dayIndex computed from island start time
+  const dayIndex = useMemo(
+    () => Math.floor((nowMs - islandStartedAtMs) / (24 * 60 * 60 * 1000)),
+    [nowMs, islandStartedAtMs],
+  );
+
+  // B1-3: regenerate tileMap whenever islandNumber or dayIndex changes
+  useEffect(() => {
+    const rarity = getIslandRarity(islandNumber);
+    setTileMap(generateTileMap(islandNumber, rarity, 'forest', dayIndex));
+  }, [islandNumber, dayIndex]);
+
   const [completedStops, setCompletedStops] = useState<string[]>([]);
 
   const stopStateMap = useMemo(() => {
@@ -677,7 +714,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setCompletedStops([]);
       setBossTrialResolved(false);
       setBossRewardSummary(null);
-      setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
+      setTimeLeftSec(EFFECTIVE_ISLAND_DURATION_SEC);
+      setIslandStartedAtMs(Date.now());
+      setSpinTokens(0);
       setLandingText('Arrived at next island. Ready to roll. Egg progress carried over (prototype).');
       setShowTravelOverlay(false);
       // M10D: island travel complete sound + haptic
@@ -702,7 +741,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     return () => window.clearTimeout(timeout);
   }, [client, islandNumber, session, showTravelOverlay, timeLeftSec]);
 
-  const timerDisplay = formatClock(timeLeftSec);
+  const timerDisplay = timeLeftSec >= 3600
+    ? `${String(Math.floor(timeLeftSec / 3600)).padStart(2, '0')}:${String(Math.floor((timeLeftSec % 3600) / 60)).padStart(2, '0')}`
+    : formatClock(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
 
   const handleRoll = async () => {
@@ -767,23 +808,131 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       setShowEncounterModal(false);
       setEncounterResolved(false);
-    } else if (currentIndex === ENCOUNTER_TILE_INDEX) {
+    } else if (tileMap[currentIndex]?.tileType === 'encounter') {
       setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
       setShowEncounterModal(true);
       setEncounterResolved(false);
       // M10C: encounter_trigger sound when encounter modal opens
       playIslandRunSound('encounter_trigger');
     } else {
-      setLandingText(`Landed on tile #${currentIndex}`);
+      resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
       setShowEncounterModal(false);
       setEncounterResolved(false);
     }
 
+    // B2-2: trigger landing animation
+    setIsTokenLanding(true);
+    window.setTimeout(() => setIsTokenLanding(false), 400);
+
     setIsRolling(false);
   };
 
-  const handleSetEgg = (tier: EggTier) => {
-    const start = Date.now();
+  // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
+  const resolveTileLanding = (tileType: string) => {
+    const EVENT_MESSAGES = [
+      '⚡ Island event!',
+      '⚡ Something stirs...',
+      '⚡ A challenge echoes...',
+      '⚡ The island pulses.',
+      '⚡ Fortune favors the bold.',
+    ];
+
+    switch (tileType) {
+      case 'currency':
+        setCoins((c) => c + 15);
+        void awardGold(session.user.id, 15, 'shooter_blitz', 'island_run_tile_currency');
+        setLandingText('💰 Currency tile! +15 coins');
+        break;
+      case 'chest':
+        setCoins((c) => c + 30);
+        setDicePool((d) => d + 5);
+        void awardGold(session.user.id, 30, 'shooter_blitz', 'island_run_tile_chest');
+        setLandingText('🎁 Treasure chest! +30 coins, +5 dice');
+        break;
+      case 'hazard':
+        setCoins((c) => Math.max(0, c - 10));
+        setLandingText('☠️ Hazard! -10 coins');
+        break;
+      case 'egg_shard':
+        setDicePool((d) => d + 2);
+        setLandingText('🧩 Egg Shard! +2 dice');
+        break;
+      case 'micro':
+        setDicePool((d) => d + 3);
+        setLandingText('✨ Micro reward! +3 dice');
+        break;
+      case 'event':
+        setLandingText(EVENT_MESSAGES[(islandNumber + tokenIndex) % EVENT_MESSAGES.length]);
+        break;
+      default:
+        setLandingText(`Landed on tile #${tokenIndex}`);
+        break;
+    }
+  };
+
+  // B2-1: handleSpin — costs 1 spin token, rolls SPIN_MIN–SPIN_MAX
+  const handleSpin = async () => {
+    if (isRolling || spinTokens < 1) return;
+
+    setIsRolling(true);
+    setActiveStopId(null);
+    setSpinTokens((s) => Math.max(0, s - 1));
+
+    playIslandRunSound('roll');
+    triggerIslandRunHaptic('roll');
+
+    const nextRoll = Math.floor(Math.random() * (SPIN_MAX - SPIN_MIN + 1)) + SPIN_MIN;
+    setRollValue(nextRoll);
+    setLandingText(`Spinning ${nextRoll}...`);
+
+    let currentIndex = tokenIndex;
+    for (let step = 0; step < nextRoll; step += 1) {
+      currentIndex = (currentIndex + 1) % TILE_ANCHORS.length;
+      setTokenIndex(currentIndex);
+      playIslandRunSound('token_move');
+      await wait(240);
+    }
+
+    const landedStop = stopMap.get(currentIndex);
+    if (landedStop) {
+      const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
+      const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
+      const state = stopStateMap.get(landedStop) ?? 'active';
+
+      if (state === 'locked') {
+        setLandingText(`Boss stop locked: complete all 5 stops before boss.`);
+        setActiveStopId(null);
+      } else {
+        setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
+        setActiveStopId(landedStop);
+        playIslandRunSound('stop_land');
+        triggerIslandRunHaptic('stop_land');
+        if (landedStop === 'boss') {
+          playIslandRunSound('boss_trial_start');
+        }
+      }
+
+      setShowEncounterModal(false);
+      setEncounterResolved(false);
+    } else if (tileMap[currentIndex]?.tileType === 'encounter') {
+      setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
+      setShowEncounterModal(true);
+      setEncounterResolved(false);
+      playIslandRunSound('encounter_trigger');
+    } else {
+      resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
+      setShowEncounterModal(false);
+      setEncounterResolved(false);
+    }
+
+    // B2-2: trigger landing animation
+    setIsTokenLanding(true);
+    window.setTimeout(() => setIsTokenLanding(false), 400);
+
+    setIsRolling(false);
+  };
+
+  const handleSetEgg = (tier: EggTier) => {    const start = Date.now();
     setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + DEV_EGG_DURATION_SEC * 1000 });
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');
@@ -1185,7 +1334,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           dice_bundle: false,
           heart_bundle: false,
         });
-        setTimeLeftSec(DEV_ISLAND_DURATION_SEC);
+        setTimeLeftSec(EFFECTIVE_ISLAND_DURATION_SEC);
+        setIslandStartedAtMs(Date.now());
+        setSpinTokens(0);
 
         void persistIslandRunRuntimeStatePatch({
           session,
@@ -1385,7 +1536,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   return (
     <section className="island-run-prototype">
       <header className="island-run-prototype__header">
-        <h2 className="island-run-prototype__title">🏝️ Island Run • M7F Regression QA Hooks</h2>
+        <h2 className="island-run-prototype__title">🏝️ Island Run</h2>
         <div className="island-run-prototype__hud-grid">
           <div className="island-run-prototype__hud-section">
             <p className="island-run-prototype__hud-label">Run status</p>
@@ -1393,10 +1544,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">Hearts: <strong>{hearts}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{coins}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">LEVEL <strong>{islandNumber}</strong> / 120</span>
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">Ends in: <strong>{timerDisplay}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">Spins: <strong>{spinTokens}</strong></span>
             </div>
           </div>
           <div className="island-run-prototype__hud-section island-run-prototype__hud-section--landing">
@@ -1490,6 +1643,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 ? 'Roll (1 dice)'
                 : `Convert 1 heart → ${dicePerHeart} dice`}
           </button>
+
+          {spinTokens > 0 && (
+            <button
+              type="button"
+              className="island-run-prototype__spin-btn"
+              onClick={() => void handleSpin()}
+              disabled={isRolling}
+            >
+              🌀 Spin
+            </button>
+          )}
 
           {(showDebug || showQaHooks) && (
             <div className="island-run-prototype__qa-controls" role="group" aria-label="QA and debug controls">
@@ -1593,12 +1757,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           {TILE_ANCHORS.map((anchor, index) => {
             const position = toScreen(anchor, boardSize.width, boardSize.height);
             const isStop = stopMap.has(index);
-            const isEncounter = index === ENCOUNTER_TILE_INDEX;
+            const tileType = tileMap[index]?.tileType;
+            const isEncounter = tileType === 'encounter';
+            const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
 
             return (
               <div
                 key={anchor.id}
-                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${
+                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${tileTypeClass} ${
                   index === tokenIndex ? 'island-tile--token-current' : ''
                 }`}
                 style={{
@@ -1607,14 +1773,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   transform: `translate(-50%, -50%) scale(${anchor.scale})`,
                 }}
               >
-                <span className="island-tile__value">{isEncounter ? '⚔️' : index + 1}</span>
+                <span className="island-tile__value">
+                  {isEncounter ? '⚔️' : !isStop && tileType && TILE_TYPE_ICONS[tileType] ? TILE_TYPE_ICONS[tileType] : index + 1}
+                </span>
                 {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
               </div>
             );
           })}
 
           <div
-            className={`island-token ${isRolling ? 'island-token--moving' : ''}`}
+            className={`island-token ${isRolling ? 'island-token--moving' : ''} ${isTokenLanding ? 'island-token--landing' : ''} ${`island-token--zband-${TILE_ANCHORS[tokenIndex]?.zBand ?? 'mid'}`}`}
             style={{
               left: tokenPosition.x,
               top: tokenPosition.y,
