@@ -25,6 +25,12 @@ import {
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
+import {
+  playIslandRunSound,
+  triggerIslandRunHaptic,
+  getIslandRunAudioEnabled,
+  setIslandRunAudioEnabled,
+} from '../services/islandRunAudio';
 
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
@@ -197,6 +203,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(() => getIslandRunAudioEnabled());
 
   const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
@@ -644,6 +651,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
     setShowTravelOverlay(true);
     setLandingText('Island expired. Traveling to next island...');
+    // M10A: island_travel sound + haptic on travel start
+    playIslandRunSound('island_travel');
+    triggerIslandRunHaptic('island_travel');
 
     const timeout = window.setTimeout(() => {
       const nextIsland = islandNumber + 1;
@@ -705,6 +715,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setActiveStopId(null);
     setDicePool((current) => Math.max(0, current - 1));
 
+    // M10A: roll sound + haptic
+    playIslandRunSound('roll');
+    triggerIslandRunHaptic('roll');
+
     const nextRoll = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
     setRollValue(nextRoll);
     setLandingText(`Rolling ${nextRoll}...`);
@@ -713,6 +727,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     for (let step = 0; step < nextRoll; step += 1) {
       currentIndex = (currentIndex + 1) % TILE_ANCHORS.length;
       setTokenIndex(currentIndex);
+      // M10A: token_move sound on each hop
+      playIslandRunSound('token_move');
       await wait(240);
     }
 
@@ -728,6 +744,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       } else {
         setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
         setActiveStopId(landedStop);
+        // M10A: stop_land sound + haptic
+        playIslandRunSound('stop_land');
+        triggerIslandRunHaptic('stop_land');
       }
 
       setShowEncounterModal(false);
@@ -797,6 +816,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (encounterResolved) return;
     setEncounterResolved(true);
     setHearts((current) => current + 1);
+    // M10A: reward_claim haptic on encounter reward
+    triggerIslandRunHaptic('reward_claim');
     setLandingText('Encounter resolved: +1 heart reward (prototype).');
   };
 
@@ -835,6 +856,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setBossTrialResolved(true);
     setHearts((current) => current + BOSS_TRIAL_REWARD_HEARTS);
     setCoins((current) => current + BOSS_TRIAL_REWARD_COINS);
+    // M10A: reward_claim haptic on boss trial reward
+    triggerIslandRunHaptic('reward_claim');
 
     const rewardText = `Boss challenge resolved: +${BOSS_TRIAL_REWARD_HEARTS} hearts, +${BOSS_TRIAL_REWARD_COINS} coins.`;
     setBossRewardSummary(rewardText);
@@ -1164,6 +1187,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }));
     setHearts((current) => current + dailyRewardPlan.hearts);
     setDailyHeartsClaimed(true);
+    // M10A: reward_claim haptic on daily hearts claimed
+    triggerIslandRunHaptic('reward_claim');
     setLandingText(`Morning reward claimed from ${source === 'spin_of_the_day' ? 'Spin of the Day' : 'Daily Hatch'}: +${dailyRewardPlan.hearts} hearts.`);
 
     void recordTelemetryEvent({
@@ -1336,6 +1361,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           ))}
           <button type="button" className="island-run-prototype__debug-btn" onClick={() => setShowDebug((value) => !value)}>
             {showDebug ? 'Hide' : 'Show'} anchor/depth debug
+          </button>
+          {/* M10A: audio toggle — persists to localStorage */}
+          <button
+            type="button"
+            className="island-run-prototype__audio-toggle"
+            aria-label={audioEnabled ? 'Mute audio and haptics' : 'Unmute audio and haptics'}
+            aria-pressed={audioEnabled}
+            onClick={() => {
+              const next = !audioEnabled;
+              setAudioEnabled(next);
+              setIslandRunAudioEnabled(next);
+            }}
+          >
+            {audioEnabled ? '🔊' : '🔇'}
           </button>
           <button
             type="button"
@@ -1528,7 +1567,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   <p><strong>Starter gifts:</strong> 💎 1 equivalent + 🪙 250 + ❤️ 5</p>
                   <p>✨ 🎊 ✨</p>
                 </div>
-                <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
+                <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
                   <button
                     type="button"
                     className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action"
@@ -1547,7 +1586,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   <p className="island-stop-modal__copy">Your ship is landing on Island 1. Your player piece deploys at the first stop.</p>
                   <p className="island-stop-modal__copy">Tip: spend dice to move tile-to-tile and complete all stops before boss.</p>
                 </div>
-                <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
+                <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
                   <button
                     type="button"
                     className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action"
@@ -1605,7 +1644,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <p>Coins balance: <strong>{coins}</strong></p>
             <p>Owned bundles: <strong>{[marketOwnedBundles.dice_bundle ? 'dice' : null, marketOwnedBundles.heart_bundle ? 'heart' : null].filter(Boolean).join(', ') || 'none'}</strong></p>
             {marketPurchaseFeedback ? <p>{marketPurchaseFeedback}</p> : null}
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned">
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                 Complete Market Stop
               </button>
@@ -1684,7 +1723,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </div>
             ) : null}
 
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned">
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
@@ -1722,7 +1761,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <div className="island-hatchery-card">
               <p>{encounterResolved ? 'Reward granted: +1 heart.' : 'Resolve this encounter to gain +1 heart.'}</p>
             </div>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned">
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {!encounterResolved ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleResolveEncounter}>
                   Resolve Encounter
