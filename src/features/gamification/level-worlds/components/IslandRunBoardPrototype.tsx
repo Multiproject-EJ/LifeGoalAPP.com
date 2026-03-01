@@ -632,6 +632,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
 
+  // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
+  const prevEggStageRef = useRef(0);
+  useEffect(() => {
+    if (eggStage === 4 && prevEggStageRef.current < 4) {
+      playIslandRunSound('egg_ready');
+    }
+    prevEggStageRef.current = eggStage;
+  }, [eggStage]);
+
   useEffect(() => {
     if (showTravelOverlay) {
       return;
@@ -747,6 +756,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         // M10A: stop_land sound + haptic
         playIslandRunSound('stop_land');
         triggerIslandRunHaptic('stop_land');
+        // M10C: boss_trial_start sound when boss modal opens
+        if (landedStop === 'boss') {
+          playIslandRunSound('boss_trial_start');
+        }
       }
 
       setShowEncounterModal(false);
@@ -755,6 +768,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
       setShowEncounterModal(true);
       setEncounterResolved(false);
+      // M10C: encounter_trigger sound when encounter modal opens
+      playIslandRunSound('encounter_trigger');
     } else {
       setLandingText(`Landed on tile #${currentIndex}`);
       setShowEncounterModal(false);
@@ -767,6 +782,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const handleSetEgg = (tier: EggTier) => {
     const start = Date.now();
     setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + DEV_EGG_DURATION_SEC * 1000 });
+    // M10B: egg_set sound + haptic
+    playIslandRunSound('egg_set');
+    triggerIslandRunHaptic('egg_set');
+  };
+
+  const handleOpenEgg = () => {
+    if (!activeEgg || eggStage < 4) return;
+    setActiveEgg(null);
+    setHearts((current) => current + 1);
+    // M10B: egg_open sound + haptic
+    playIslandRunSound('egg_open');
+    triggerIslandRunHaptic('egg_open');
+    setLandingText('Egg opened! +1 heart reward (prototype).');
   };
 
   const handleClaimOnboardingBooster = () => {
@@ -816,8 +844,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (encounterResolved) return;
     setEncounterResolved(true);
     setHearts((current) => current + 1);
-    // M10A: reward_claim haptic on encounter reward
-    triggerIslandRunHaptic('reward_claim');
+    // M10C: encounter_resolve sound + haptic
+    playIslandRunSound('encounter_resolve');
+    triggerIslandRunHaptic('encounter_resolve');
     setLandingText('Encounter resolved: +1 heart reward (prototype).');
   };
 
@@ -856,8 +885,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setBossTrialResolved(true);
     setHearts((current) => current + BOSS_TRIAL_REWARD_HEARTS);
     setCoins((current) => current + BOSS_TRIAL_REWARD_COINS);
-    // M10A: reward_claim haptic on boss trial reward
-    triggerIslandRunHaptic('reward_claim');
+    // M10C: boss_trial_resolve sound + haptic
+    playIslandRunSound('boss_trial_resolve');
+    triggerIslandRunHaptic('boss_trial_resolve');
 
     const rewardText = `Boss challenge resolved: +${BOSS_TRIAL_REWARD_HEARTS} hearts, +${BOSS_TRIAL_REWARD_COINS} coins.`;
     setBossRewardSummary(rewardText);
@@ -968,6 +998,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return;
     }
     if (bundle === 'dice_bundle') {
+      // M10B: market_purchase_attempt sound on purchase tap
+      playIslandRunSound('market_purchase_attempt');
       emitMarketPurchaseMarker({
         bundle,
         status: 'attempt',
@@ -987,6 +1019,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           coinsBefore: coins,
           coinsAfter: coins,
         });
+        // M10B: market_insufficient_coins sound on failure
+        playIslandRunSound('market_insufficient_coins');
         setMarketPurchaseFeedback(message);
         setLandingText(message);
         return;
@@ -1004,6 +1038,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         coinsAfter: coins - MARKET_DICE_BUNDLE_COST,
       });
 
+      // M10B: market_purchase_success sound + haptic
+      playIslandRunSound('market_purchase_success');
+      triggerIslandRunHaptic('market_purchase_success');
       const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} coins, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
       setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
       setMarketPurchaseFeedback(message);
@@ -1011,6 +1048,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return;
     }
 
+    // M10B: market_purchase_attempt sound on purchase tap
+    playIslandRunSound('market_purchase_attempt');
     emitMarketPurchaseMarker({
       bundle,
       status: 'attempt',
@@ -1030,6 +1069,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         coinsBefore: coins,
         coinsAfter: coins,
       });
+      // M10B: market_insufficient_coins sound on failure
+      playIslandRunSound('market_insufficient_coins');
       setMarketPurchaseFeedback(message);
       setLandingText(message);
       return;
@@ -1047,6 +1088,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       coinsAfter: coins - MARKET_HEART_BUNDLE_COST,
     });
 
+    // M10B: market_purchase_success sound + haptic
+    playIslandRunSound('market_purchase_success');
+    triggerIslandRunHaptic('market_purchase_success');
     const message = `Purchased Heart Bundle: -${MARKET_HEART_BUNDLE_COST} coins, +1 heart.`;
     setMarketOwnedBundles((current) => ({ ...current, heart_bundle: true }));
     setMarketPurchaseFeedback(message);
@@ -1089,6 +1133,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           boss_trial_resolved: true,
         },
       });
+
+      // M10C: boss_island_clear sound + haptic
+      playIslandRunSound('boss_island_clear');
+      triggerIslandRunHaptic('boss_island_clear');
 
       setShowTravelOverlay(true);
       window.setTimeout(() => {
@@ -1337,7 +1385,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             can be collected anytime without landing movement.
           </p>
           <p className="island-run-prototype__landing island-run-prototype__landing--success" role="status">
-            Home hatchery status (M9B prototype): slot usage <strong>0/1</strong> (available) · ready home eggs <strong>0</strong>.
+            Home hatchery status (M9B prototype): slot usage <strong>{activeEgg ? '1/1' : '0/1'}</strong> ({activeEgg ? 'occupied' : 'available'}) · ready home eggs <strong>{eggStage >= 4 ? 1 : 0}</strong>.
           </p>
           <p className="island-run-prototype__landing island-run-prototype__landing--info" role="note">
             Home hatchery actions (M9C prototype): if the slot is empty, set one egg; if an egg is ready (stage 4), open/collect immediately from
@@ -1347,6 +1395,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             Home hatchery progression (M9D prototype): island eggs that become ready but uncollected can carry as dormant eggs, and dormant/home eggs
             are opened from hatchery surfaces when available.
           </p>
+          {/* M9F: Home Island egg actions */}
+          <div className="island-hatchery-card__actions">
+            {!activeEgg && (
+              <button
+                type="button"
+                onClick={() => {
+                  handleSetEgg('common');
+                }}
+              >
+                Set egg
+              </button>
+            )}
+            {activeEgg && eggStage >= 4 && (
+              <button type="button" onClick={handleOpenEgg}>
+                Open egg 🥚
+              </button>
+            )}
+            {activeEgg && eggStage < 4 && (
+              <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
+                🥚 Stage {eggStage} — hatching…
+              </span>
+            )}
+          </div>
         </div>
         <div className="island-run-prototype__controls">
           {ISLAND_SCENES.map((sceneId) => (
@@ -1688,7 +1759,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     <p>Stage: <strong>{eggStage} / 4</strong></p>
                     <p>{eggStage >= 4 ? 'Ready to open (prototype).' : `Hatches in ${formatClock(eggRemainingSec)}`}</p>
                     <div className="island-hatchery-card__actions">
-                      <button type="button" onClick={() => setActiveEgg(null)}>
+                      <button type="button" onClick={() => eggStage >= 4 ? handleOpenEgg() : setActiveEgg(null)}>
                         {eggStage >= 4 ? 'Open Egg (stub)' : 'Clear Egg (dev)'}
                       </button>
                     </div>

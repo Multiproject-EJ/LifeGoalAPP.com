@@ -18,13 +18,36 @@ export type IslandRunSoundEvent =
   | 'roll'
   | 'token_move'
   | 'stop_land'
-  | 'island_travel';
+  | 'island_travel'
+  // M10B: hatchery events
+  | 'egg_set'
+  | 'egg_ready'
+  | 'egg_open'
+  // M10B: market events
+  | 'market_purchase_attempt'
+  | 'market_purchase_success'
+  | 'market_insufficient_coins'
+  // M10C: boss events
+  | 'boss_trial_start'
+  | 'boss_trial_resolve'
+  | 'boss_island_clear'
+  // M10C: encounter events
+  | 'encounter_trigger'
+  | 'encounter_resolve';
 
 export type IslandRunHapticEvent =
   | 'roll'
   | 'stop_land'
   | 'island_travel'
-  | 'reward_claim';
+  | 'reward_claim'
+  // M10B: hatchery + market haptics
+  | 'egg_set'
+  | 'egg_open'
+  | 'market_purchase_success'
+  // M10C: boss + encounter haptics
+  | 'boss_trial_resolve'
+  | 'boss_island_clear'
+  | 'encounter_resolve';
 
 // ─── Preference helpers ────────────────────────────────────────────────────────
 
@@ -55,6 +78,14 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   stop_land: [20, 40, 20],
   island_travel: [30, 50, 30],
   reward_claim: [20, 30, 20, 30, 20],
+  // M10B
+  egg_set: [25],
+  egg_open: [20, 40, 20, 40, 20],
+  market_purchase_success: [20, 40, 20],
+  // M10C
+  boss_trial_resolve: [50, 30, 50],
+  boss_island_clear: [30, 40, 30, 40, 30],
+  encounter_resolve: [20, 30, 20],
 };
 
 // ─── Sound event map (placeholder — no files needed yet) ──────────────────────
@@ -65,6 +96,19 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, string> = {
   token_move: '/assets/audio/sfx/sfx_tile_land.mp3',
   stop_land: '/assets/audio/sfx/sfx_tile_land.mp3',
   island_travel: '/assets/audio/sfx/sfx_spin.mp3',
+  // M10B
+  egg_set: '/assets/audio/sfx/sfx_egg_set.mp3',
+  egg_ready: '/assets/audio/sfx/sfx_egg_ready.mp3',
+  egg_open: '/assets/audio/sfx/sfx_egg_open.mp3',
+  market_purchase_attempt: '/assets/audio/sfx/sfx_market_attempt.mp3',
+  market_purchase_success: '/assets/audio/sfx/sfx_market_success.mp3',
+  market_insufficient_coins: '/assets/audio/sfx/sfx_market_fail.mp3',
+  // M10C
+  boss_trial_start: '/assets/audio/sfx/sfx_boss_start.mp3',
+  boss_trial_resolve: '/assets/audio/sfx/sfx_boss_resolve.mp3',
+  boss_island_clear: '/assets/audio/sfx/sfx_island_clear.mp3',
+  encounter_trigger: '/assets/audio/sfx/sfx_encounter_trigger.mp3',
+  encounter_resolve: '/assets/audio/sfx/sfx_encounter_resolve.mp3',
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────

@@ -1,4 +1,67 @@
 Date: 2026-03-01
+Slice: M9F — Home Island set/open egg actions wired to hatchery service
+Summary:
+- Added "Set egg" button in Home Island panel (visible when slot is empty); triggers `egg_set` sound + haptic and updates slot to 1/1.
+- Added "Open egg" button in Home Island panel (visible when egg is at stage 4 / ready); triggers `egg_open` sound + haptic, clears egg, grants +1 heart.
+- Added stage progress indicator ("🥚 Stage X — hatching…") shown when egg is hatching (stages 1–3), replacing the open button.
+- Wired hatchery stop modal Open Egg button to reuse `handleOpenEgg` handler for consistent behavior.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M9G: Home Island hatchery telemetry + QA
+
+Date: 2026-03-01
+Slice: M9E — Home Island hatchery slot real runtime state wiring
+Summary:
+- Replaced hardcoded `0/1` slot usage in Home Island panel with `activeEgg ? '1/1' : '0/1'` derived from real in-memory state.
+- Replaced hardcoded `0` ready eggs count with `eggStage >= 4 ? 1 : 0` derived from real egg progress state.
+- Status row is now reactive — updates automatically as egg state changes (egg set, hatches to ready, egg opened).
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M9F: Wire Set egg + Open egg actions in Home Island panel
+
+Date: 2026-03-01
+Slice: M10C — Wire audio/haptic triggers for boss and encounter events
+Summary:
+- Added 5 new sound events to `IslandRunSoundEvent`: `boss_trial_start`, `boss_trial_resolve`, `boss_island_clear`, `encounter_trigger`, `encounter_resolve`.
+- Added 3 new haptic events to `IslandRunHapticEvent`: `boss_trial_resolve`, `boss_island_clear`, `encounter_resolve` (with distinct vibration patterns).
+- Wired `boss_trial_start` sound when boss stop modal opens; `boss_trial_resolve` sound + haptic in `handleResolveBossTrial` (replaces prior `reward_claim`); `boss_island_clear` sound + haptic in `handleCompleteActiveStop` on boss clear; `encounter_trigger` sound when encounter modal opens; `encounter_resolve` sound + haptic in `handleResolveEncounter` (replaces prior `reward_claim`).
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunAudio.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M9E: Home Island hatchery slot real runtime state wiring
+
+Date: 2026-03-01
+Slice: M10B — Wire audio/haptic triggers for hatchery and market events
+Summary:
+- Added 6 new sound events to `IslandRunSoundEvent`: `egg_set`, `egg_ready`, `egg_open`, `market_purchase_attempt`, `market_purchase_success`, `market_insufficient_coins`.
+- Added 3 new haptic events to `IslandRunHapticEvent`: `egg_set`, `egg_open`, `market_purchase_success` (with distinct vibration patterns).
+- Wired `egg_set` sound + haptic in `handleSetEgg`; `egg_ready` sound via `useEffect` detecting stage 4 transition via `prevEggStageRef`; added `handleOpenEgg` with `egg_open` sound + haptic + +1 heart reward; `market_purchase_attempt` sound on purchase tap; `market_insufficient_coins` sound on failure; `market_purchase_success` sound + haptic on success — for both dice and heart bundles.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunAudio.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+Next:
+- M10C: Wire audio/haptic triggers for boss and encounter events
+
+Date: 2026-03-01
 Slice: M10A — Audio + Haptics system foundation
 Summary:
 - Created `islandRunAudio.ts` service with typed `IslandRunSoundEvent` and `IslandRunHapticEvent` event IDs, `playIslandRunSound`, `triggerIslandRunHaptic`, `getIslandRunAudioEnabled`, and `setIslandRunAudioEnabled` exports.
