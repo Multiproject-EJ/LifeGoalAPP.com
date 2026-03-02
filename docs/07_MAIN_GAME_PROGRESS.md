@@ -2631,3 +2631,155 @@ needs to be added to the catalog type when implemented.
   reward calculation).
 - Only equipped/owned items apply. No equip slot limit defined for v0 — all owned
   items' effects are active simultaneously.
+
+---
+
+## Home Island v0 & Equipment Integration
+
+### The GameBoardOverlay IS Home Island v0
+
+The existing `src/components/GameBoardOverlay.tsx` serves as the Home Island hub overlay. No new component is needed for v0.
+
+#### Layout (confirmed by code audit)
+
+| Element | What it does | Status |
+|---|---|---|
+| Background | Island `.webp` art layered over existing black transparent backdrop. Black bg stays — island art may not be full-screen. | Add: use one of the 7 existing island background `.webp` files as static placeholder |
+| Top bar | Player level + momentum bar | ✅ Exists |
+| Left circle ① | Spin & Win → opens Daily Spin Wheel | ✅ Working |
+| Left circle ② (middle) | **Home Egg Hatchery** — repurposed from `onDailyHatchClick` / `CountdownCalendarModal` | To wire: repurpose to open Home Hatchery UI |
+| Left circle ③ | Hearts / Lucky Roll board | ✅ Working |
+| Right ① BANK | Opens Score Tab → bank tab | ✅ Working (bug fixed in separate PR) |
+| Right ② Diamonds | Opens Score Tab → garage tab | ✅ Working (bug fixed in separate PR) |
+| Right ③ Gold/Coins | Opens Score Tab → shop tab | ✅ Working (bug fixed in separate PR) |
+| PLAY button | Launches Island Run board (`/level-worlds.html`) | ✅ Working |
+
+#### Background implementation note (for future agent)
+- Keep `game-board-overlay__backdrop` (black transparent layer) as-is.
+- Add island `.webp` as a `background-image` on `game-board-overlay__content` or a new inner wrapper.
+- Use one of the 7 existing island background webp files already in the repo as a placeholder.
+- Island art is intentionally not full-screen; black shows around edges — this is by design.
+
+#### Home Egg Hatchery wiring note (for future agent)
+- `onDailyHatchClick` currently opens `CountdownCalendarModal` (`setShowCalendarPlaceholder(true)`).
+- Repurpose this to open the Home Island Hatchery panel (wired to the existing home hatchery logic in `IslandRunBoardPrototype.tsx` M9A–M9G).
+- `CountdownCalendarModal` / calendar placeholder is considered outdated and can be removed once the hatchery is wired.
+
+---
+
+### Equipment & Customization → In-Game Effects (locked v0 design)
+
+The existing `src/features/avatar/avatarItemCatalog.ts` is the single source of truth for all equipment items. Items are synced across three surfaces via the same ownership state:
+
+1. **In-app Equipment & Customization tab** (cosmetic display, existing)
+2. **In-app Score Tab / Shop** (purchasable with Points, existing)
+3. **In-game shop** (new game-specific UI, purchasable with Coins/Diamonds — to be built)
+
+**Ultra-rare boss drop items** (`unlockCondition: 'boss_drop'`) can be awarded approximately 2 times per year as a special boss victory reward. This field needs to be added to the catalog type when implemented.
+
+#### In-game effects by category (v0 locked)
+
+| Category | Item example | Game effect |
+|---|---|---|
+| 🛠️ Tools | Scholar's Telescope | Reveal next tile type before rolling |
+| 🛠️ Tools | Logic Engine | +1 to dice roll range (rolls 1–4 instead of 1–3) |
+| 🛠️ Tools | Research Flask | Double island mini-game tickets earned for one session |
+| 🍀 Charms | Phoenix Feather | 1 free boss retry per island (no heart cost) |
+| 🍀 Charms | Lion's Mane Talisman | +10% coin reward from all tile landings |
+| 🍀 Charms | Gladiator's Coin | +1 heart awarded on boss victory |
+| 👗 Garments | War Boots | Timer countdown displays 10% more generously |
+| 👗 Garments | Battle Crown | +15% XP from all boss defeats |
+
+#### Implementation note (for future agent)
+- Effects are NOT yet implemented in code — this is the design spec.
+- When implementing, read the player's owned items from the avatar inventory and apply effects at the relevant game event points (roll resolution, boss resolution, tile reward calculation).
+- Only owned items apply. No equip slot limit in v0 — all owned items' effects are active simultaneously.
+
+---
+
+## In-Game Onboarding & Continuous Improvement
+
+### Core design principle
+> Onboarding is a **saviour, not a task list**. It appears when the player needs resources and rewards completing real-life actions with in-game currency. It never feels like forced setup.
+
+---
+
+### When onboarding triggers (in-game)
+
+| Trigger | What happens |
+|---|---|
+| First ever session (new account, no PWA onboarding done) | Automatic first-run celebration → guided island onboarding pop-up |
+| PWA onboarding already completed before entering game | Skip game onboarding entirely → auto-award the same reward |
+| `dicePool < 1` AND `hearts < 1` (established player) | Continuous improvement pop-up appears as saviour: 1 habit suggestion from AI engine |
+| Mini-game tickets = 0 AND Step 3 is unlocked | Soft nudge: "Do a habit to earn tickets" |
+
+---
+
+### Skip logic (no redundant onboarding)
+- If the player has **already completed PWA onboarding** (habits set up, goals set, profile done) → skip game onboarding entirely → award the same reward automatically.
+- Check against `isOnboardingComplete` flag (already exists in `IslandRunBoardPrototype.tsx`).
+- Only trigger game onboarding if: account is new OR no habits exist yet OR PWA onboarding is not complete.
+
+---
+
+### In-game onboarding — custom UI (NOT the PWA onboarding UI)
+- **Separate component** — does NOT reuse `GameOfLifeOnboarding.tsx` or `DayZeroOnboarding.tsx` UI.
+- Game-native design: in-game pop-ups, island-themed visuals, matching game UI language and colour palette.
+- Reuses **logic only** from existing systems:
+  - Habit creation: `habitAiSuggestions.ts` → `generateHabitSuggestion()`
+  - Habit saving: `createHabitV2()`
+- Steps feel like "island quests", not task forms. Example copy:
+  - "Before you can roll again, your island needs a champion habit 🏝️"
+  - "Pick one life area to protect"
+  - "What's the smallest thing you can do today?"
+  - → Claim reward → back to rolling
+
+### Reward on completion (same whether done in-game or in PWA)
+- **+5 hearts + 250 coins** (already implemented in `IslandRunBoardPrototype.tsx` first-run flow)
+- If completed in PWA before entering game → reward claimed automatically on first game session open
+
+---
+
+### Continuous Improvement (replaces onboarding for established players)
+
+**Same trigger** (`dicePool < 1 && hearts < 1`) but now surfaces the **intelligent habit suggestion system** instead of onboarding.
+
+#### How it works
+1. Reads from `suggestionsEngine.ts` → `buildAllSuggestions()` — classifies every habit as `underperforming / stable / progressing`
+2. In-game pop-up surfaces **1 specific habit suggestion** (highest-priority underperforming habit)
+3. Player taps "Fix it" → opens the habit adjustment wizard (in-game styled, not full PWA UI)
+4. Completing/applying the suggestion → **reward: +2–3 hearts + mini-game tickets**
+5. Player returns to rolling
+
+#### The retention loop
+```
+Out of hearts
+  → game surfaces: "Your morning walk habit has been struggling"
+  → player adjusts it (AI-suggested easier version)
+  → earns hearts
+  → keeps playing
+  → real-life habit improves
+```
+
+This is the core differentiator: game difficulty and resource economy are tied to real-life behaviour.
+
+#### Intelligence systems already built (just needs wiring)
+
+| What's needed | Already exists |
+|---|---|
+| Classify which habits need attention | `src/features/habits/performanceClassifier.ts` + `buildAllSuggestions()` in `suggestionsEngine.ts` |
+| Generate warm AI explanation copy | `buildEnhancedRationale()` in `src/features/habits/aiRationale.ts` |
+| Apply the suggestion | `saveAndApplySuggestion()` in `src/services/habitAdjustments.ts` |
+| Adherence data (7-day / 30-day) | `buildAdherenceSnapshots()` in `src/services/adherenceMetrics.ts` |
+| Habit AI creation | `generateHabitSuggestion()` in `src/services/habitAiSuggestions.ts` |
+
+---
+
+### Summary table
+
+| Phase | Trigger | What shows | Reward |
+|---|---|---|---|
+| First run (new account) | Auto on first game open | Island-themed onboarding pop-up (custom game UI, habit setup) | +5 hearts + 250 coins |
+| Already onboarded in PWA | Auto on first game open | Skip → auto-claim reward | +5 hearts + 250 coins |
+| Out of hearts/dice (established player) | `dicePool < 1 && hearts < 1` | Continuous improvement pop-up: 1 AI habit suggestion | +2–3 hearts + tickets |
+| Out of tickets (established player) | `tickets < 1 && Step 3 unlocked` | Soft nudge: "complete a habit today to earn tickets" | +tickets |
