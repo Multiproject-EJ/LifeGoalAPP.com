@@ -2492,3 +2492,66 @@ Next:
   - Don't do habits → fewer hearts → game harder → motivation to return to habits.
 - This is the core differentiator from Monopoly GO: game difficulty and resource economy
   are tied to real-life behaviour, not just time or cash.
+
+---
+
+## Island Completion, Player Profile & Island Upgrades
+
+### Island completion is permanent
+
+- Completion states: not completed → partial → boss defeated → completed (100%).
+- **100% completion is permanent forever** — it never resets across cycles/loops.
+- `cycle_index` exists only as an analytics counter (how many full loops the player has
+  done); it does NOT reset island completion states.
+
+### Completed islands stay fully playable
+
+"Completed" does NOT mean locked or dead. On every revisit to a completed island the
+player can still:
+
+- ✅ Roll dice on the ring (earn mini-game tickets + tile rewards)
+- ✅ Visit and play the mini-game stop (spend tickets, earn coins/diamonds/hearts)
+- ✅ Fight the boss again (repeatable; awards coins/diamonds each time)
+- ✅ Earn currency for the global shop (coins/diamonds remain valuable indefinitely)
+- ✅ Earn XP toward player level-up
+- ✅ Interact with any island upgrades they have purchased
+
+What the player CANNOT do again on a completed island:
+
+- ❌ Set a new egg (one-time per island; Home Island is the repeatable exception because it
+  functions as a persistent hub that supports continuous egg cycles)
+- ❌ Re-collect one-time step rewards
+
+### Player Profile / Player Score (new system)
+
+Each player has a persistent profile (keyed by Supabase auth user ID / player ID)
+tracking:
+
+| Field | Source |
+| --- | --- |
+| Game level | XP earned from all game actions (boss defeats, mini-game sub-levels, tile rewards) |
+| Habit status | Pulled from the real PWA outside the game (streak, completion rate, active habits count) |
+| Islands completed (100%) | Count of permanently completed islands |
+| Bosses defeated | Cumulative total (including repeat fights) |
+| Mini-game personal best sub-levels | Per mini-game high-water mark |
+| Lifetime coins/diamonds earned | Economy stats |
+
+- Player ID is visible in the game as a profile card / HUD element.
+- Player profile is the foundation for future async multiplayer (targeting other players'
+  islands).
+
+### Island Upgrades (keeps completed islands alive long-term)
+
+- Once an island is 100% completed it becomes **eligible for upgrades**.
+- Upgrades are purchased with coins/diamonds earned from gameplay (acts as a meaningful
+  currency sink).
+- **Upgrades are permanent (Option A)**: buy once, benefit forever on every revisit.
+- Example upgrade categories:
+  - **Buildings** (functional): e.g. lighthouse = extra daily hearts, market stall = shop
+    discount, workshop = faster home egg hatch
+  - **Decorations** (cosmetic): personalise the island visually
+  - **Capacity upgrades**: better chest odds, more tile reward slots
+- When a player visits an upgraded completed island on a later loop, upgrades provide
+  **passive bonuses** for that island's duration.
+- This creates a long-term meta-game ("which islands do I want to invest in?") and ties
+  naturally into the Home Island hub.
