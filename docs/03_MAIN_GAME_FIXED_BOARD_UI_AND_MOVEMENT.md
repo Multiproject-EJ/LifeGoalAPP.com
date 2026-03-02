@@ -141,7 +141,6 @@ Stops are outer POIs — they exist around the island perimeter and are not posi
 
 ---
 
-
 1) Background image (island art)
 2) Board path layer (ring trail around pond)
 3) Tile glow/base layer (17 anchors)
