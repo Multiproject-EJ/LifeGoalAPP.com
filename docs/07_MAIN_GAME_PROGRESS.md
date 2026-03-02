@@ -1,3 +1,159 @@
+# MAIN GAME PROGRESS — HabitGame Island Run
+
+> This document is the canonical progress log and design reference for the HabitGame main loop.
+> For the full island index see `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
+> For the QA checklist see `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md`.
+
+---
+
+## Canonical Game Loop (120 islands)
+
+The following bullets define the **intended canonical design** and supersede any earlier or
+conflicting description in the progress log entries below.
+
+- **120 islands = 120 levels.** Islands are played in a fixed linear sequence
+  (1 → 2 → … → 120 → 1 → …); the cycle index increments on each full lap.
+- **Each island has a 17-tile board.** Tiles are a mix of currency, chest, hazard,
+  egg_shard, encounter/event, and stop tiles.
+- **Each island has exactly 5 main steps/stops (Step 1–Step 5). The Boss is always Step 5.**
+  Stop tiles are at fixed positions (e.g. tiles 0, 4, 8, 12, 16).
+- **Step 1 must be completed before the player can roll dice** on a new island.
+  This is the onboarding/orientation gate for each island.
+- **Steps 2–4 vary per island** and commonly include mini-games, LifeGoal app actions
+  (habits, goals, journal, check-ins), and utility actions (heart top-up, dice refill).
+- **Shop is NOT one of the 5 steps.** The Shop is always accessible via a persistent
+  button/tab. After the boss (Step 5) is defeated, additional shop item tiers are unlocked.
+  Egg selling in the shop is only enabled once an egg has hatched.
+- **Eggs are tied to the island they were started on.** The player may start one egg per
+  island. If the player is forced to travel before the egg hatches or is sold, the egg
+  remains behind on that island. The player cannot travel back; on a later cycle they
+  revisit the same island and may collect/sell the hatched egg, providing a second-pass
+  advantage.
+- **Island travel is forced by a 2–3 day real-time timer** (production). The timer is
+  based on a `started_at`/`expires_at` timestamp pair. On expiry the player advances to
+  the next island and all per-island progress is frozen/committed before the new island
+  starts. State must be persisted across sessions (Supabase).
+
+---
+
+## Data Model & Persistence Requirements
+
+The following fields **must** be persisted (at minimum) in the Supabase game-state record.
+Currently only a subset of these is fully persisted; gaps are noted in the "Known repo
+reality" section.
+
+| Field | Description |
+|---|---|
+| `island_number` | Current island/level pointer (1–120) |
+| `cycle_index` | Full-lap counter (how many times the player has completed all 120 islands) |
+| `token_index` | Current tile index on the 17-tile board (0–16) |
+| `island_started_at` | ISO timestamp when the current island was entered |
+| `island_expires_at` | ISO timestamp when the island timer expires and travel is forced |
+| `hearts` | Current heart count |
+| `dice` | Current dice count |
+| `coins` | Current coin count |
+| `steps_completed` | Per-island bitmask or array of which of steps 1–5 have been completed |
+| `per_island_egg` | Per-island egg ledger: one entry per island, each with `tier`, `set_at`, `hatch_at`, `sold_at`/`collected_at`, and status |
+| `shop_unlocks` | Global shop unlock state; which tiers are unlocked (post-boss unlocks) |
+| `telemetry_markers` | Existing telemetry/debug event markers (keep as-is) |
+
+---
+
+## Known Repo Reality (as of 2026-03-02)
+
+This section documents the **current implementation state** relative to the canonical design
+so future developers have an accurate baseline.
+
+- **`IslandRunBoardPrototype.tsx`** (`src/features/gamification/level-worlds/components/`)
+  is the current primary implementation surface for the island run game loop.  All board
+  rendering, tile resolution, stop modals, egg state, travel logic, and HUD live here.
+
+- **`LevelWorldsHub.tsx`** (`src/features/gamification/level-worlds/`) routes between the
+  legacy Level Worlds / `WorldBoard` flow and the Island Run prototype depending on the
+  `islandRunPrototype` query param (default `true`; pass `islandRunDev=0` to reach the
+  legacy board).
+
+- **Persisted runtime markers (currently wired to Supabase):**
+  `island_number`, `token_index`, `hearts`, `dice`, `coins`, `island_started_at`,
+  `island_expires_at`, `egg_tier`, `egg_set_at`, `egg_hatch_at` (single global egg slot).
+  Telemetry events are also written.
+
+- **Not yet persisted:** Per-island egg ledger. The current implementation uses a single
+  global `activeEgg` slot that carries across island travel (dormant egg carryover).
+  Canonical design requires a separate ledger entry per island so eggs left behind on
+  a prior island can be collected on a later cycle.
+
+- **Market/Shop is currently modeled as a stop** (Stop 3 / tile 8 in the prototype stop
+  plan). Per canonical design the shop should be separated from the 5-step plan and
+  exposed as a persistent button always accessible from the HUD, with unlocks gated on
+  boss completion.
+
+- **Egg currently behaves as a single global `activeEgg` slot** and is carried forward
+  (dormant) on island travel. Canonical design requires per-island egg tracking so the
+  egg stays behind when the player travels and is recoverable on a later cycle.
+
+- **Step 1 enforcement before dice** is not yet implemented. The player can roll at any
+  time. Canonical design requires Step 1 completion as a gate before the first dice roll
+  on each new island.
+
+---
+
+## Next Milestones
+
+These milestones pick up after the current M1–M10 work (board foundation, movement, stop
+modals, timer/travel, egg system, economy, encounter, home panel, audio/haptics) and drive
+toward production readiness.
+
+- **M11 — Per-island egg ledger (Supabase).** Implement a `per_island_eggs` table/jsonb
+  ledger with one entry per island.  Replace the single global `activeEgg` slot.  Eggs
+  left behind on travel are preserved; player can collect/sell on revisit (cycle index
+  check).
+- **M12 — Shop separation & unlock tiers.** Separate the Shop from the 5-stop plan.
+  Add a persistent HUD Shop button always accessible.  Gate additional item tiers on
+  boss (Step 5) completion.  Enable egg-selling only after an egg has hatched.
+- **M13 — Step/stop enforcement UI.** Enforce Step 1 completion as a gate before the
+  first dice roll on each new island.  Wire step progression tracking (steps 1–5) into
+  the stop completion flow and persist per-island step state.
+- **M14 — Real-time island timer (2–3 days).** Replace dev 45 s / 72 h static durations
+  with a configurable `ISLAND_DURATION_DAYS` (default 2–3 days) derived from
+  `started_at`/`expires_at`.  Handle hydration expiry (island already expired when app
+  opens) and surface accurate time-remaining in the HUD.
+- **M15 — Tile map service & per-tile resolution.** Extend `islandBoardTileMap.ts` to
+  produce fully-typed per-tile payloads (currency amount, chest tier, hazard type,
+  event/encounter pool) and wire them into `resolveTileLanding()` for realistic outcomes.
+- **M16 — Mini-game integration into stop completion.** Wire real mini-games (e.g.
+  ShooterBlitz) into step/stop completion results so stop success/fail outcomes gate
+  progression and award canonical rewards.
+- **M17 — 120-island cap & cycle loop.** Implement modulo-120 island number capping,
+  cycle index increment on full-lap completion, and any cycle-dependent unlock logic
+  (e.g. unlocking higher egg tiers on cycle 2+).
+
+---
+
+## Definition of Done (Main Game MVP)
+
+The main game is considered **production-ready** when all of the following are true:
+
+1. All 120 islands are reachable, each with a generated 17-tile board.
+2. Step 1 is enforced as a gate before dice rolling on every new island.
+3. Steps 2–4 vary per island and include at least one wired mini-game and one
+   LifeGoal app action (habit/goal/journal/check-in).
+4. Boss (Step 5) is implemented and awards canonical rewards on victory.
+5. Shop is a persistent HUD button (not a stop), with post-boss tier unlocks and
+   egg-selling enabled after hatch.
+6. Per-island egg ledger is persisted in Supabase; eggs left behind are recoverable
+   on the correct revisit cycle.
+7. Real-time island timer (2–3 days) is implemented; expiry forces travel; hydration
+   handles already-expired state correctly.
+8. All game state (island pointer, timer, token, steps, eggs, shop unlocks, hearts,
+   dice, coins) is fully persisted and restored across sessions.
+9. 120-island loop/cycle logic is implemented with cycle index tracking.
+10. Audio, haptics, and QA checklist pass for all core interaction events.
+
+---
+
+## Progress Log (newest first)
+
 Date: 2026-03-01
 Batch: B3+B4+B5 — M3 Stop Modals + M4 Timer/Travel + M5 Egg System
 Summary:
