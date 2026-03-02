@@ -60,8 +60,10 @@
 
 ## 3. Island Run (Production Prototype)
 
-> Island Run is the **current production surface** for the main game. It is a 72-hour time-limited
-> loop with a fixed 17-tile board that reuses board geometry across all 120 islands (art only changes).
+> Island Run is the **current production surface** for the main game. It is a time-limited loop
+> (**48 h for normal islands, 72 h for special islands**) with a fixed 17-tile board that reuses
+> board geometry across all 120 islands (art only changes).  See `docs/07_MAIN_GAME_PROGRESS.md`
+> for canonical timer and special-island rules.
 >
 > Spec overview: [`docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md`](./03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md)  
 > Component: [`src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`](../src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx)
@@ -71,12 +73,12 @@
 #### Board + Movement
 - [x] Fixed 17-tile anchor layout with `zBand` (back / mid / front), `tangentDeg`, and `scale` per anchor  
   → [`src/features/gamification/level-worlds/services/islandBoardLayout.ts`](../src/features/gamification/level-worlds/services/islandBoardLayout.ts)
-- [x] 5 canonical stop positions: `stop_hatchery` (tile 0), `stop_minigame` (tile 4), `stop_market` (tile 8), `stop_utility` (tile 12), `stop_boss` (tile 16)
+- [x] 5 outer stop POIs (Steps 1–5) accessible from the board; the 17-tile ring is for movement and resource earning. **Stops are not tiles on the ring** — they are POIs around the island unlocked by completing prior steps. Boss is always Step 5; Step 1 gates dice. Current implementation uses ring tile indices (0, 4, 8, 12, 16) as stop trigger points — to be refactored to the canonical outer-POI model; see `docs/07_MAIN_GAME_PROGRESS.md`.
 - [x] Token movement: dice roll (1–3 tiles, costs 1 heart) and spin move (1–5 tiles, costs 1 spin token), modulo-17 wraparound
 - [x] Per-island tile-type map (`generateTileMap`) — deterministic seeded assignment of `currency / chest / event / hazard / egg_shard / micro / encounter / stop` to non-stop tiles  
   → [`src/features/gamification/level-worlds/services/islandBoardTileMap.ts`](../src/features/gamification/level-worlds/services/islandBoardTileMap.ts)
-- [x] Island rarity schedule — `normal` (default), `seasonal` (every 5th island), `rare` (every 10th island) via `getIslandRarity`
-- [x] Encounter tile logic — spawns at tile 6 when rarity is `rare` OR `dayIndex >= 2` (time-based unlock)
+- [x] Island type schedule — `normal` (default) and `special`; the canonical 20 special islands are: **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120** (see `docs/07_MAIN_GAME_PROGRESS.md`). *(The legacy every-5th = seasonal / every-10th = rare heuristic is deprecated and must not be used.)*
+- [x] Encounter tile logic — spawns at tile 6 when island is special OR `dayIndex >= 2` (time-based unlock)
 
 #### Stop Plan + Stops
 - [x] Dynamic stop plan generator (`generateIslandStopPlan`) — 3 dynamic stop slots drawn from seeded pool; ensures at least one real-life behaviour stop per island  
@@ -112,7 +114,7 @@
 - [x] First-run heart claim and daily claim deduplication (`dailyHeartsClaimedDayKey`)
 
 #### Island Timer + Travel
-- [x] 72-hour island expiry (dev: 45 s with `?devTimer=1`)
+- [x] Island expiry timer: **48 h** for normal islands, **72 h** for special islands (dev: 45 s with `?devTimer=1`); on resume the player advances at most **one** island regardless of elapsed time (Catch-up Rule A)
 - [x] Travel overlay on island expiry: advances `currentIslandNumber`, resets per-run state (hearts, currency, token index, stops), handles dormant egg
 - [x] Three expiry check points: on mount, on re-enter, on 30-second tick
 
@@ -182,7 +184,7 @@
 
 #### Progression / Meta
 - [ ] **Unlock gating across 120 islands** — no "world map" view showing which islands are completed vs locked; all islands are procedurally accessible
-- [ ] **Seasonal / event islands** — rarity schedule (every 5th = seasonal, every 10th = rare) has no content differentiation yet
+- [ ] **Special islands** — canonical list of 20 special islands (5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120) has no content differentiation yet; existing implementation uses the deprecated every-5th/every-10th heuristic and must be updated
 - [ ] **Cross-island carry-over rewards** — dormant egg carryover is wired, but coin/item carry-over rules, streak bonuses, and island completion medals are not implemented
 - [ ] **Notifications** — no push notification for egg-ready, island expiry warning, or daily heart availability tied to Island Run
 

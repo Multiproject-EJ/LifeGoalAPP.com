@@ -5,10 +5,16 @@
 Only the background image changes.
 
 The board layer includes:
-- 17 tile anchors (positions)
-- 5 stop anchors (subset of tile anchors)
+- 17 tile anchors (movement ring positions)
+- Stop trigger tiles on the ring that provide access to the 5 outer stop POIs
 - token path animation between anchors
 - touch hitboxes
+
+> **Canonical rule:** The 17-tile ring is for movement and resource earning only.
+> The **5 steps/stops (Steps 1–5)** are **outer POIs** positioned around the island,
+> outside the ring.  A "stop trigger tile" on the ring, when landed on, opens the
+> corresponding outer stop.  Steps are unlocked sequentially; **Step 1 gates dice**.
+> The **Boss is always Step 5**.  See `docs/07_MAIN_GAME_PROGRESS.md` for full rules.
 
 ---
 
@@ -80,7 +86,7 @@ Purpose:
 Create a single file that exports:
 
 - `TILE_ANCHORS: {id, x, y}[]` length 17
-- `STOP_TILES: { stopId, tileIndex }[]` (5 entries)
+- `STOP_TRIGGER_TILES: { stopId, tileIndex }[]` (up to 5 entries — ring tiles that open the corresponding outer stop POI when landed on)
 - `TOKEN_START_TILE_INDEX` (0)
 
 Extend anchor schema to:
@@ -89,18 +95,53 @@ Extend anchor schema to:
 - `tangentDeg`: orientation of tile ring/path direction for effects and token facing
 - `scale`: slight perspective compensation (e.g., far side 0.92, near side 1.08)
 
-Example stop mapping:
-- stop_hatchery -> tile 0
-- stop_minigame -> tile 4
-- stop_market -> tile 8
-- stop_utility -> tile 12
-- stop_boss -> tile 16
+Example stop trigger tile mapping (indices are illustrative; adjust once and lock):
+- stop_hatchery trigger → tile 0
+- stop_minigame trigger → tile 4
+- stop_market trigger → tile 8
+- stop_utility trigger → tile 12
+- stop_boss trigger → tile 16
+
+> **Note:** These tile indices mark where landing triggers the corresponding **outer stop POI**;
+> the stop itself is not located on the ring.  Landing on a stop trigger tile opens the stop
+> UI panel without consuming the tile as a separate board position.
 
 (Exact indices can be adjusted once and then never changed.)
 
 ---
 
-## Rendering Layers (mobile)
+## Stop Unlock & Access Mechanics
+
+Stops are outer POIs — they exist around the island perimeter and are not positions on the
+17-tile movement ring.
+
+### How stops become accessible
+1. **Step 1 (Hatchery / onboarding stop)** is unlocked at the start of each new island,
+   before the player rolls their first dice.  The player must complete Step 1 to unlock dice
+   rolling for the rest of the island.
+2. **Steps 2–4** become accessible once the island is entered; they do not require completing
+   previous steps (unless a specific island design gates them — which is declared per island).
+3. **Step 5 (Boss)** is always accessible after the island is entered; completing it marks the
+   island as "boss defeated".
+
+### How stops are opened from the board
+- Five tiles on the 17-tile ring are designated **stop trigger tiles**.
+- When the player's token lands on a stop trigger tile, the corresponding outer stop POI panel
+  opens automatically.
+- Stop trigger tiles are visually distinct from regular resource tiles (different icon/color).
+- Landing on a stop trigger tile does **not** consume the tile as a resource tile; the stop
+  interaction replaces the tile landing event.
+
+### Visiting stops outside of landing
+- Once a stop has been unlocked (see above), the player may **re-visit it at any time** by
+  tapping its outer POI icon in the board UI — they do not need to land on the trigger tile
+  again.
+- This allows, for example, opening a hatched egg at the hatchery stop without needing to
+  roll back to that tile.
+
+---
+
+
 1) Background image (island art)
 2) Board path layer (ring trail around pond)
 3) Tile glow/base layer (17 anchors)
