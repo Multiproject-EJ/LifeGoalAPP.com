@@ -23,11 +23,12 @@ If you want server-driven schedule; otherwise ship `islands.json`.
 ```sql
 create table if not exists island_definitions (
   island_number int primary key,
-  rarity text not null check (rarity in ('normal','seasonal','rare')),
+  is_special boolean not null default false, -- true for the 20 canonical special islands
+  rarity text not null check (rarity in ('normal','special')),
   theme_id text not null,
   background_id int null,
   custom_background_url text null,
-  duration_hours int not null default 72,
+  duration_hours int not null default 48, -- 48h for normal islands; 72h for special islands
   created_at timestamptz not null default now()
 );
 ```
@@ -43,8 +44,10 @@ create table if not exists user_island_state (
   started_at timestamptz not null,
   expires_at timestamptz not null,
   token_tile_index int not null default 0, -- 0..16
-  hearts int not null default 30,
-  currency int not null default 0,
+  hearts int not null default 30,         -- app-wide persistent energy
+  coins int not null default 0,           -- app-wide persistent currency
+  diamonds int not null default 0,        -- app-wide premium currency (1 diamond = 1,000 coins)
+  island_mini_game_currency int not null default 0, -- temporary; zeroed on island travel
   spin_tokens int not null default 0,
   stop_completion jsonb not null default '{}'::jsonb,
   last_tick_at timestamptz not null default now(),
@@ -148,9 +151,9 @@ Repeat similarly for other tables.
 ## v1 vs v2
 
 v1:
-- island definitions can be JSON in repo
+- island definitions can be JSON in repo; must include `is_special` flag (true for the 20 canonical special islands: 5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120) and set `duration_hours` to 48 (normal) or 72 (special)
 - only user_* tables in Supabase
 
 v2:
 - server-driven island schedule
-- seasonal overrides
+- special island content overrides (see canonical list in `docs/07_MAIN_GAME_PROGRESS.md`)

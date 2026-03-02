@@ -12,11 +12,11 @@ Platform: Mobile-first PWA
 Build Mode: AI agent slices
 
 ## What this system is
-A time-limited Island Run loop (72h default) with:
+A time-limited Island Run loop (**48 h for normal islands / 72 h for special islands**; Catch-up Rule A on resume) with:
 - Fixed board coordinates reused across all islands (art swaps only)
 - 17 tile anchors on a pond loop
 - Token movement (Hearts = Dice)
-- 5 Stops per island (Stop 5 is Boss)
+- 5 Stops per island as **outer POIs** (Step 1 gates dice; Stop 5 is Boss); stops are not tiles on the ring — see `docs/07_MAIN_GAME_PROGRESS.md` for canonical rules
 - Hatchery + Egg lifecycle + Dormant egg carryover
 - Home Island always-collect hatchery
 - Encounter tile (easy bonus challenge)
@@ -96,11 +96,11 @@ Quality direction:
 ---
 
 # Notes / Decisions Locked
-- Board + stop + tile positions are fixed across all islands (art only changes)
+- Board tile positions are fixed across all islands (art only changes); stops are outer POIs accessible via stop trigger tiles on the ring
 - 17 tile anchors (±1 tolerated later, but v1 = 17)
 - Board visual style: **3D-hybrid** (2D art + pseudo-3D board layer + depth/occlusion masks)
 - Movement: 1 Heart = 1 dice roll (1–3 tiles). Occasional Spin Move (1–5 tiles).
 - Stops: 1 Hatchery, 2 Minigame, 3 Market, 4 Utility (stub), 5 Boss
 - Encounter tile: easy bonus challenge, not boss
-- Hatchery spawn varies by island rarity (Normal/Seasonal/Rare)
-- Eggs: Common/Rare/Mythic, 4 stages, dormant carryover
+- Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer *(legacy every-5th/every-10th heuristic is deprecated)*
+- Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are collectible on revisit. **Home Island eggs are repeatable** (not subject to the one-time rule). Dormant/hatched-but-unclaimed eggs can exist across multiple islands simultaneously.
