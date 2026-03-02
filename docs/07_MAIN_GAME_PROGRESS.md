@@ -2357,3 +2357,138 @@ Testing:
 - manual dev verification at /level-worlds.html?islandRunDev=1&debugBoard=1
 Next:
 - M7A boss stop reward prototype behavior.
+
+---
+
+## Canonical Design Additions (Topics 1 & 2)
+
+> The rules below are locked design decisions and form part of the single source of truth
+> for `docs/07_MAIN_GAME_PROGRESS.md`.  They supersede any earlier or conflicting
+> description elsewhere in this document or in other docs under `docs/`.
+
+---
+
+### Global Mini-Game Calendar & Island Ticket Loop
+
+#### Schedule cadence
+
+- There are **5–10 mini-games** total.
+- Only **one mini-game is active per player at a time**, tied to their current island timer
+  (these durations match the island timer values defined in the island progression rules):
+  - Normal island: active mini-game lasts **48 h** (same as island duration).
+  - Special island: active mini-game lasts **72 h** (same as island duration).
+- Schedule rotates **automatically** with equal weight across all mini-games by default.
+- Analytics track which mini-game is played most vs least; rotation weights can be tuned
+  over time based on data.
+- Different players can be on different active mini-games simultaneously (the "corridor"
+  overlap effect is expected and acceptable).
+- If a player hasn't logged in for **3+ days**, they are guaranteed to land on a new island
+  with a fresh mini-game on next open.
+- Sub-level progress within a mini-game **persists across sessions** within the active
+  window; resets when the island changes.
+- Async multiplayer (attacking other players' snapshots) is noted as a future optional
+  layer — not in scope now.
+
+#### Mini-game stop placement (harmonised rule)
+
+- If the **egg is NOT Step 1** → mini-game is **Step 1**.
+- If the **egg IS Step 1** → mini-game is **Step 2**.
+- Mini-game stop is always an **outer POI** (not a ring tile).
+- Once accessible (after Step 1 completed), the mini-game stop can be visited **anytime**
+  without re-landing on a tile.
+
+#### Island mini-game ticket loop (Monopoly GO style)
+
+1. Player rolls dice on the 17-tile ring.
+2. Landing on certain tiles awards **island mini-game tickets** (temporary, island-scoped).
+3. Completing LifeGoal actions (habits, journal entries, check-ins, goals) **also awards
+   tickets** for the current island — even outside the game.
+4. Player taps the mini-game stop (outer POI) and spends tickets to play.
+5. Each ticket = one "go" or action in the mini-game.
+6. Mini-game sessions award back **coins / diamonds / hearts** as rewards (blind-box style).
+7. **All unspent tickets are lost when moving to the next island.**
+
+#### Step unlocker tile
+
+- There is one special **"step unlocker tile"** on the 17-tile ring — visually larger and
+  distinct from other tiles.
+- Flow:
+  1. Player arrives on island → **Step 1 is automatically active** (no landing needed).
+  2. Player completes **Step 1 challenge**.
+  3. Completing Step 1 **activates the unlocker tile** (it glows/lights up).
+  4. Player lands on the unlocker tile → player avatar visually moves from Step 1 to Step 2
+     on the outer POI path → **Step 2 is now unlocked**.
+  5. Unlocker tile **deactivates** — player must now complete Step 2's challenge.
+  6. Completing Step 2 **reactivates** the unlocker tile.
+  7. Player lands again → Step 3 unlocked. Repeat through Step 4 → Step 5 (Boss).
+  8. The **path between outer step nodes glows** when the next transition is ready (visual
+     affordance).
+- The unlocker tile **randomly spawns a 3-D gift** 20 % of the time.
+  - When landed on, the gift yields a blind-box reward.
+  - Gift and unlocker can co-exist: landing resolves the gift reward **and** advances the
+    step if the unlocker is active.
+
+#### Double dice micro-tiles
+
+- Each of the 17 main tiles has **2 smaller "dice circle" micro-tiles** on top of it.
+- Rolling dice advances the player through micro-tiles; every 2 micro-tiles = 1 full main
+  tile advance.
+- This effectively makes movement feel like **34 micro-steps** across 17 main tiles.
+- Visual: two small circles sit on/above each main tile.
+- Purpose: makes dice rolls feel more frequent and satisfying without changing core board
+  size.
+
+---
+
+### Boss Variety Model (Step 5)
+
+#### Boss type assignment
+
+- Boss is always **Step 5**.
+- Boss type is **fixed per island** (deterministic, seeded by island number).
+- Boss type never changes between cycles — if Island 34 has a fight boss, it always has a
+  fight boss.
+- Split: approximately **75 % milestone bosses / 25 % fight bosses** across the 120 islands.
+
+#### Milestone boss
+
+- Player must reach a **required sub-level** in the currently active mini-game to pass.
+- Required sub-level **scales with island number** (e.g. early islands: sub-level 3;
+  mid islands: sub-level 5; late islands: sub-level 7+).
+
+#### Fight boss
+
+- A **dedicated separate boss mini-game** (not the active calendar mini-game).
+- Example formats: shooter, flappy-bird style, "reach the finish line", "shoot down the boss".
+- Also scales in difficulty with island number.
+- **Hearts = lives**: each attempt costs 1 heart; fail = lose a heart.
+- **Instant retry** as long as the player has hearts.
+
+#### Heart economy (cross-system, scales with island number)
+
+| Heart source | Notes |
+| --- | --- |
+| Daily treat (PWA push/notification) | Gifted daily, outside the game; **amount scales with island number** (higher island = more daily hearts) |
+| In-app LifeGoal actions | Completing habits, journal entries, check-ins awards a **limited daily heart budget** (daily cap; tied to actual real-life activity that day) |
+| Micro-transaction (Stripe) | Buy hearts instantly with real cash if player doesn't want to wait |
+| Board rewards / blind-box | Can be awarded as part of tile landing rewards or egg rewards |
+| Hearts never reset | Hearts are global, persistent, earned and spent |
+
+#### Scaling rationale
+
+- As island number increases → daily gifted hearts increase → matches the fact that bosses
+  get harder.
+- Keeps the game fair without being pay-to-win: consistent habit completion = enough hearts
+  to progress.
+
+#### Core retention loop (real app integration)
+
+- The main game reads from the real app's activity (habits completed, journals written,
+  check-ins done) to determine daily heart awards.
+- Daily cap prevents farming — tied to realistic daily habit completion.
+- The daily treat (PWA notification) is the delivery mechanism for the base daily heart gift.
+- Loop:
+  - Do your habits → earn hearts → play more / attempt boss more → progress in game.
+  - Don't do habits → fewer hearts → game harder → motivation to return to habits.
+- This is the core differentiator from Monopoly GO: game difficulty and resource economy
+  are tied to real-life behaviour, not just time or cash.
