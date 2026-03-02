@@ -3760,17 +3760,20 @@ export default function App() {
             setShowGameBoardOverlay(false);
             setReopenGameOverlayOnRewardClose(false);
             setScoreTabActiveTab('bank');
-            setShowMobileGamification(true);
+            setShowMobileHome(false);
+            setActiveWorkspaceNav('score');
           }}
           onDiamondClick={() => {
             setShowGameBoardOverlay(false);
             setScoreTabActiveTab('garage');
-            setShowMobileGamification(true);
+            setShowMobileHome(false);
+            setActiveWorkspaceNav('score');
           }}
           onGoldClick={() => {
             setShowGameBoardOverlay(false);
             setScoreTabActiveTab('shop');
-            setShowMobileGamification(true);
+            setShowMobileHome(false);
+            setActiveWorkspaceNav('score');
           }}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
@@ -4036,17 +4039,17 @@ export default function App() {
           setShowGameBoardOverlay(false);
           setReopenGameOverlayOnRewardClose(false);
           setScoreTabActiveTab('bank');
-          setShowMobileGamification(true);
+          setActiveWorkspaceNav('score');
         }}
         onDiamondClick={() => {
           setShowGameBoardOverlay(false);
           setScoreTabActiveTab('garage');
-          setShowMobileGamification(true);
+          setActiveWorkspaceNav('score');
         }}
         onGoldClick={() => {
           setShowGameBoardOverlay(false);
           setScoreTabActiveTab('shop');
-          setShowMobileGamification(true);
+          setActiveWorkspaceNav('score');
         }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profilePlaystyleLabel={playstyleLabel ?? undefined}
