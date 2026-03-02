@@ -2555,3 +2555,79 @@ tracking:
   **passive bonuses** for that island's duration.
 - This creates a long-term meta-game ("which islands do I want to invest in?") and ties
   naturally into the Home Island hub.
+
+---
+
+## Topic 4: Home Island v0 & Equipment Integration
+
+### Home Island v0 — `GameBoardOverlay.tsx` IS the Home Island
+
+The existing `src/components/GameBoardOverlay.tsx` is repurposed as the Home Island hub
+overlay. No new component needed for v0.
+
+**Layout (confirmed by code audit):**
+
+| Element | What it does | Status |
+|---|---|---|
+| Background | Island `.webp` art layered over existing black transparent backdrop. Black bg stays — island art may not be full-screen. | **Add: use one of the 7 existing island background `.webp` files as static placeholder** |
+| Top bar | Player level + momentum bar | ✅ Exists |
+| Left circle ① | Spin & Win → opens Daily Spin Wheel | ✅ Working |
+| Left circle ② (middle) | **Home Egg Hatchery** — repurposed from `onDailyHatchClick` / `CountdownCalendarModal` | **To wire: repurpose to open Home Hatchery UI** |
+| Left circle ③ | Hearts / Lucky Roll board | ✅ Working |
+| Right ① BANK | Opens Score Tab → bank tab | ✅ Fixed (was opening `mobileGamificationOverlay` instead) |
+| Right ② Diamonds | Opens Score Tab → garage tab | ✅ Fixed (was opening `mobileGamificationOverlay` instead) |
+| Right ③ Gold/Coins | Opens Score Tab → shop tab | ✅ Fixed (was opening `mobileGamificationOverlay` instead) |
+| PLAY button | Launches Island Run board (`/level-worlds.html`) | ✅ Working |
+
+**Background implementation note for future agent:**
+- Keep `game-board-overlay__backdrop` (black transparent layer) as-is.
+- Add island `.webp` as a `background-image` on `game-board-overlay__content` or a new
+  inner wrapper.
+- Use one of the 7 existing island background webp files already in the repo as a
+  placeholder (pick whichever looks most "home island"-like).
+- Island art is intentionally not full-screen; black shows around edges — this is by
+  design.
+
+**Home Egg Hatchery wiring note for future agent:**
+- `onDailyHatchClick` currently opens `CountdownCalendarModal`
+  (`setShowCalendarPlaceholder(true)`).
+- Repurpose this to open the Home Island Hatchery panel (wired to the existing home
+  hatchery logic in `IslandRunBoardPrototype.tsx` M9A–M9G).
+- The `CountdownCalendarModal` / calendar placeholder is considered outdated and can be
+  removed once the hatchery is wired.
+
+---
+
+### Equipment & Customization → In-game Effects (locked v0 design)
+
+The existing `src/features/avatar/avatarItemCatalog.ts` is the single source of truth
+for all equipment items. Items are synced across three surfaces (same ownership state):
+
+1. **In-app Equipment & Customization tab** (cosmetic display, existing)
+2. **In-app Score Tab / Shop** (purchasable with Points, existing)
+3. **In-game shop** (new game-specific UI, purchasable with Coins/Diamonds — to be built)
+
+**Item rarity:** Ultra-rare boss drop items (`unlockCondition: 'boss_drop'`) can be
+awarded approximately 2 times per year as a special boss victory reward. This field
+needs to be added to the catalog type when implemented.
+
+**In-game effects by category (v0 locked suggestions):**
+
+| Category | Item example | Game effect |
+|---|---|---|
+| 🛠️ Tools | Telescope (Scholar's Telescope) | Reveal next tile type before rolling |
+| 🛠️ Tools | Logic Engine | +1 to dice roll range (rolls 1–4 instead of 1–3) |
+| 🛠️ Tools | Research Flask | Double island mini-game tickets earned for one session |
+| 🍀 Charms | Phoenix Feather | 1 free boss retry per island (no heart cost) |
+| 🍀 Charms | Lion's Mane Talisman | +10% coin reward from all tile landings |
+| 🍀 Charms | Gladiator's Coin | +1 heart awarded on boss victory |
+| 👗 Garments | War Boots | Timer countdown displays 10% more generously |
+| 👗 Garments | Battle Crown | +15% XP from all boss defeats |
+
+**Implementation note for future agent:**
+- Effects are NOT yet implemented in code — this is the design spec.
+- When implementing, read the player's owned items from the avatar inventory and apply
+  effects at the relevant game event points (roll resolution, boss resolution, tile
+  reward calculation).
+- Only equipped/owned items apply. No equip slot limit defined for v0 — all owned
+  items' effects are active simultaneously.
