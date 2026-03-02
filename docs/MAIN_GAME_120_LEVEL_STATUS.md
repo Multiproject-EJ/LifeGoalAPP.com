@@ -1,0 +1,238 @@
+# Main Game 120-Level Status Report
+
+> **Purpose:** Concise scan of what is built, what is in progress, and what is missing for the
+> 120-level main game — covering both the legacy Level Worlds campaign surface and the current
+> Island Run prototype that has replaced it as the production path.
+>
+> **Last updated:** 2026-03-02  
+> **Canonical product source:** [`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)  
+> **Progress log (append-only):** [`docs/07_MAIN_GAME_PROGRESS.md`](./07_MAIN_GAME_PROGRESS.md)
+
+---
+
+## 1. Entry Surface
+
+| Query param | Renders |
+|---|---|
+| _(none / any value except `0`)_ | `IslandRunBoardPrototype` — **production path** |
+| `?islandRunDev=0` | Legacy `WorldBoard` campaign — unreachable in production |
+
+**Source:** [`src/features/gamification/level-worlds/LevelWorldsHub.tsx`](../src/features/gamification/level-worlds/LevelWorldsHub.tsx)
+
+---
+
+## 2. Level Worlds Campaign Mode (Legacy `WorldBoard`)
+
+> This surface is **deprecated as the primary loop** (see canonical doc). It is kept in the repo
+> for reference and is only reachable via `?islandRunDev=0`.
+
+### 2a. What Is Built
+
+- [x] Procedural board generator — rotates across 6 themes (forest / ocean / cosmic / desert / mountain / village), scales node count by level, selects node types (habit / mini-game / goal / personality / journal / boss)  
+  → [`src/features/gamification/level-worlds/services/levelWorldsGenerator.ts`](../src/features/gamification/level-worlds/services/levelWorldsGenerator.ts)
+- [x] Board state persistence via `localStorage` with serialised `LevelWorldsState`  
+  → [`src/features/gamification/level-worlds/services/levelWorldsState.ts`](../src/features/gamification/level-worlds/services/levelWorldsState.ts)
+- [x] `useLevelWorlds` hook — loads state, exposes `completeNode` / `completeBoard`, auto-generates the next board after completion  
+  → [`src/features/gamification/level-worlds/hooks/useLevelWorlds.ts`](../src/features/gamification/level-worlds/hooks/useLevelWorlds.ts)
+- [x] `useWorldProgress` hook — derives current level + completed-board counts from state  
+  → [`src/features/gamification/level-worlds/hooks/useWorldProgress.ts`](../src/features/gamification/level-worlds/hooks/useWorldProgress.ts)
+- [x] `WorldBoard` / `WorldNode` / `WorldPath` UI components (winding path, node icons, status colours)  
+  → [`src/features/gamification/level-worlds/components/WorldBoard.tsx`](../src/features/gamification/level-worlds/components/WorldBoard.tsx)
+- [x] `NodeDetailSheet` — side sheet with objective details and action buttons  
+  → [`src/features/gamification/level-worlds/components/NodeDetailSheet.tsx`](../src/features/gamification/level-worlds/components/NodeDetailSheet.tsx)
+- [x] `BoardCompleteOverlay` — celebration overlay on board completion  
+  → [`src/features/gamification/level-worlds/components/BoardCompleteOverlay.tsx`](../src/features/gamification/level-worlds/components/BoardCompleteOverlay.tsx)
+- [x] Reward service — node rewards + board completion rewards, `awardNodeReward` / `awardBoardCompletionReward` wired  
+  → [`src/features/gamification/level-worlds/services/levelWorldsRewards.ts`](../src/features/gamification/level-worlds/services/levelWorldsRewards.ts)
+- [x] Mini-game launching from node objectives (`TaskTower`, `ShooterBlitz`, `VisionQuest`, `WheelOfWins`)  
+  → [`src/features/gamification/level-worlds/LevelWorldsHub.tsx`](../src/features/gamification/level-worlds/LevelWorldsHub.tsx)
+
+### 2b. What Is Missing / Not Wired
+
+- [ ] **No backend persistence** — all board + node progress lives only in `localStorage`; there is no Supabase table for `world_boards` progress
+- [ ] **Node objective verification is passive** — habit / goal / journal / personality nodes show an instruction message and require the user to act elsewhere; there is no real-time cross-feature completion check
+- [ ] **Level cap / 120-level progression gating** — generator can produce unlimited boards; there is no concept of "level 120 = game complete"
+- [ ] **Balancing / difficulty curve beyond node count** — no scaling of required completions, reward multipliers, or unlock rules across 120 levels
+- [ ] **Analytics / telemetry** — no events fired for node completion, board completion, or mini-game launches from this surface
+- [ ] **Tests** — no automated tests for generator, state service, or hooks
+
+---
+
+## 3. Island Run (Production Prototype)
+
+> Island Run is the **current production surface** for the main game. It is a 72-hour time-limited
+> loop with a fixed 17-tile board that reuses board geometry across all 120 islands (art only changes).
+>
+> Spec overview: [`docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md`](./03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md)  
+> Component: [`src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`](../src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx)
+
+### 3a. What Is Built ✅
+
+#### Board + Movement
+- [x] Fixed 17-tile anchor layout with `zBand` (back / mid / front), `tangentDeg`, and `scale` per anchor  
+  → [`src/features/gamification/level-worlds/services/islandBoardLayout.ts`](../src/features/gamification/level-worlds/services/islandBoardLayout.ts)
+- [x] 5 canonical stop positions: `stop_hatchery` (tile 0), `stop_minigame` (tile 4), `stop_market` (tile 8), `stop_utility` (tile 12), `stop_boss` (tile 16)
+- [x] Token movement: dice roll (1–3 tiles, costs 1 heart) and spin move (1–5 tiles, costs 1 spin token), modulo-17 wraparound
+- [x] Per-island tile-type map (`generateTileMap`) — deterministic seeded assignment of `currency / chest / event / hazard / egg_shard / micro / encounter / stop` to non-stop tiles  
+  → [`src/features/gamification/level-worlds/services/islandBoardTileMap.ts`](../src/features/gamification/level-worlds/services/islandBoardTileMap.ts)
+- [x] Island rarity schedule — `normal` (default), `seasonal` (every 5th island), `rare` (every 10th island) via `getIslandRarity`
+- [x] Encounter tile logic — spawns at tile 6 when rarity is `rare` OR `dayIndex >= 2` (time-based unlock)
+
+#### Stop Plan + Stops
+- [x] Dynamic stop plan generator (`generateIslandStopPlan`) — 3 dynamic stop slots drawn from seeded pool; ensures at least one real-life behaviour stop per island  
+  → [`src/features/gamification/level-worlds/services/islandRunStops.ts`](../src/features/gamification/level-worlds/services/islandRunStops.ts)
+- [x] Hatchery stop — set egg (common free / rare 50c / mythic 150c), stage progress display, dormant carryover on island travel
+- [x] Market stop prototype — dice bundle (30c → +6 dice) and heart bundle (40c) purchase modals; owned-state no-repurchase guard; repurchase-block telemetry
+- [x] Boss stop trial — 10-prompt challenge pool; scaled reward by island tier (`hearts + coins + spinTokens`); resolve + reward feedback
+- [x] Encounter tile — stub award (+coins) wired, telemetry fired on trigger and resolve
+- [x] Utility stop — stub modal (copy scaffold only, no real objective)
+- [x] Minigame stop — stub modal (no framework yet; `ShooterBlitz` can be triggered directly from the board as a placeholder)
+
+#### Egg / Hatchery System
+- [x] Three egg tiers: common (0c, 24h hatch), rare (50c, 36h), mythic (150c, 48h); dev-timer mode (15/20/30s)
+- [x] Egg stage progression indicator in hatchery stop
+- [x] Dormant egg carryover: egg converts to dormant on island travel if not yet collected
+- [x] Home island hatchery summary panel scaffold (M9A–M9G)  
+  → referenced in `IslandRunBoardPrototype.tsx`
+
+#### Runtime State / Persistence
+- [x] `IslandRunRuntimeState` interface — `firstRunClaimed`, `dailyHeartsClaimedDayKey`, `currentIslandNumber`, `bossTrialResolvedIslandNumber`, `activeEgg*`  
+  → [`src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`](../src/features/gamification/level-worlds/services/islandRunRuntimeState.ts)
+- [x] Dual-layer persistence: `localStorage` (fast read on boot) + Supabase `island_run_runtime_state` table upsert  
+  → [`src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`](../src/features/gamification/level-worlds/services/islandRunGameStateStore.ts)
+- [x] Runtime hydration with source tracking (`table` / `fallback_no_row` / `fallback_query_error` / `fallback_demo_or_no_client`)  
+  → [`src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`](../src/features/gamification/level-worlds/services/islandRunRuntimeState.ts)
+- [x] `persistIslandRunRuntimeStatePatch` — partial upsert for targeted field updates
+
+#### Economy
+- [x] Heart → dice pool conversion (`convertHeartToDicePool`, `getDicePerHeartForIsland`) scaling by island number  
+  → [`src/features/gamification/level-worlds/services/islandRunEconomy.ts`](../src/features/gamification/level-worlds/services/islandRunEconomy.ts)
+- [x] Daily heart reward plan (`planDailyHeartReward`)  
+  → [`src/features/gamification/level-worlds/services/islandRunDailyRewards.ts`](../src/features/gamification/level-worlds/services/islandRunDailyRewards.ts)
+- [x] First-run heart claim and daily claim deduplication (`dailyHeartsClaimedDayKey`)
+
+#### Island Timer + Travel
+- [x] 72-hour island expiry (dev: 45 s with `?devTimer=1`)
+- [x] Travel overlay on island expiry: advances `currentIslandNumber`, resets per-run state (hearts, currency, token index, stops), handles dormant egg
+- [x] Three expiry check points: on mount, on re-enter, on 30-second tick
+
+#### Audio / Haptics
+- [x] `islandRunAudio.ts` — typed `IslandRunSoundEvent` (17 events) and `IslandRunHapticEvent` (14 events) with full haptic pattern map  
+  → [`src/features/gamification/level-worlds/services/islandRunAudio.ts`](../src/features/gamification/level-worlds/services/islandRunAudio.ts)
+- [x] `playIslandRunSound` + `triggerIslandRunHaptic` wired at: roll, token move, stop land, island travel, egg set/open, market purchase, boss trial, encounter trigger/resolve (M10A–M10E)
+- [x] HUD audio toggle (`islandRunAudioEnabled` localStorage pref)
+- [x] **Sound playback is a placeholder** — asset paths mapped in `SOUND_ASSET_MAP` but no `.mp3` files exist yet
+
+#### Telemetry + Debug
+- [x] `islandRunRuntimeTelemetry.ts` — `ISLAND_RUN_RUNTIME_HYDRATION_STAGE` / `ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE` markers
+- [x] `islandRunEntryDebug.ts` — `logIslandRunEntryDebug` emits to console / Supabase debug table in dev mode
+- [x] M7B–M7N telemetry / reward-contract / filter / export helpers for boss stop
+- [x] M8B–M8J market telemetry / QA checklist / deterministic QA helpers
+- [x] M9G home hatchery telemetry markers
+
+#### Visual Polish (M12)
+- [x] M12A–M12Z visual/interaction polish pass completed; M12 MVP gate signed off  
+  → milestone log in [`docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`](./00_MAIN_GAME_120_ISLANDS_INDEX.md)
+
+---
+
+### 3b. What Is In Progress 🟡
+
+- [~] **M1 hybrid 3D board renderer** — core ring/anchor layout shipped in dev prototype; foreground depth-mask layer and pseudo-3D occlusion not yet implemented
+- [~] **M2 token animation** — basic hop loop shipped; 60 fps easing, squash/stretch micro-animation, and dynamic shadow by `zBand` not yet production-grade
+- [~] **M3 stop modals** — stub modals wired; utility stop has no real objective behind it; minigame stop shows only placeholder copy
+- [~] **M4 travel overlay** — dev simulation working; production-grade "next island" art swap and visual continuity not yet polished
+- [~] **M5 hatchery egg stages** — scaffold shipped; stage progress indicator present; full stage-unlock animation and dormant visual not yet production-grade
+- [~] **M6 encounter tile** — stub award wired; encounter content (mini-challenge, real reward table, rarity weighting) not yet implemented
+- [~] **M7 boss stop** — resolve + reward + telemetry + persistence markers shipped (M7A–M7N); real-life habit/action verification behind boss not yet wired
+- [~] **M8 market stop** — purchase modals + telemetry + QA helpers shipped (M8A–M8J); market item catalogue is hard-coded to two bundles; dynamic item pool and island-specific market content not yet built
+- [~] **M9 home island hatchery** — summary panel scaffold and slot/action rows shipped (M9A–M9G); home island as a distinct persistent surface (separate from run islands) not yet fully built
+
+---
+
+### 3c. What Is Missing ❌
+
+#### Game Completeness
+- [ ] **Data-driven tile map per island** — `generateTileMap` uses seeded random but all 120 islands share the same pool; no per-island theme content, named events, or curated tile sequences
+- [ ] **Real stop objectives** — stop modals show static copy; no wiring to live habit completion, real check-in data, or goal progress for habit/action/check-in stops
+- [ ] **Progression gating** — islands 2–120 are accessible by incrementing `currentIslandNumber`; there is no gate that requires clearing all stops (incl. boss) before advancing
+- [ ] **Minigame framework (M11)** — no `IslandRunMinigame` interface, entry/exit contract, or reward-passthrough shape; `ShooterBlitz` is launched ad-hoc rather than via a framework  
+  → Next slice: **M11A**
+- [ ] **120-level narrative / world differentiation** — no per-island copy, art, named events, or difficulty ramp across the full 120-island arc
+- [ ] **Boss real-life objective verification** — boss challenge prompts are flavour text only; no backend check that the player actually completed a habit/goal before claiming the boss reward
+
+#### Assets
+- [ ] **Island background art** — no `bg_<id>.webp` files in `/public/assets/islands/backgrounds/`; placeholder colour fills used in prototype
+- [ ] **Depth mask art** — no `depth_mask_<id>.png` per island for foreground occlusion (3D-hybrid illusion)
+- [ ] **Audio files** — 17 sound events mapped to `/assets/audio/sfx/sfx_*.mp3` paths; none of those files exist; all `playIslandRunSound` calls are currently no-ops
+- [ ] **Token / tile / stop art** — custom spaceship token, tile disc art, and stop icon art not yet present
+
+#### Backend / Data
+- [ ] **Full per-run state persistence** — in-flight state (current token index, per-stop completion flags, current hearts/coins/spin tokens) is held in React `useState` and lost on page reload; only `currentIslandNumber`, `bossTrialResolvedIslandNumber`, and egg state are persisted to Supabase
+- [ ] **`island_run_runtime_state` migration** — table schema needs to be confirmed applied (migration file lives in `sql/` or `supabase/`); no automated migration CI check
+- [ ] **Backend tables for stop objectives** — no Supabase tables for stop-level completion records, encounter outcomes, or market purchase history beyond the prototype markers
+- [ ] **RLS policies** — `island_run_runtime_state` RLS is specified in docs but needs explicit verification against the live schema
+- [ ] **Analytics / telemetry backend** — debug markers log to console or a local debug table; no production analytics pipeline (event schema, BigQuery/Amplitude/PostHog routing)
+
+#### Quality / Testing
+- [ ] **Automated tests** — no unit tests for `generateTileMap`, `generateIslandStopPlan`, economy helpers, runtime state hydration, or any Island Run component
+- [ ] **QA checklist automation** — acceptance tests in `docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md` and `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md` are manual-only
+- [ ] **Cross-device / accessibility testing** — no recorded test results for 360 × 780 viewport, safe-area notches, or keyboard navigation
+- [ ] **Balancing** — no economy simulation; heart drain rate, coin earn rate, encounter frequency, and egg hatch costs have not been validated against a 72-hour play session
+
+#### Progression / Meta
+- [ ] **Unlock gating across 120 islands** — no "world map" view showing which islands are completed vs locked; all islands are procedurally accessible
+- [ ] **Seasonal / event islands** — rarity schedule (every 5th = seasonal, every 10th = rare) has no content differentiation yet
+- [ ] **Cross-island carry-over rewards** — dormant egg carryover is wired, but coin/item carry-over rules, streak bonuses, and island completion medals are not implemented
+- [ ] **Notifications** — no push notification for egg-ready, island expiry warning, or daily heart availability tied to Island Run
+
+---
+
+## 4. Next Slices
+
+> Ordered by priority to reach a shippable 120-level campaign. Slice IDs follow existing `M*` naming.
+
+| # | Slice ID | Goal | Key files |
+|---|---|---|---|
+| 1 | **M11A** | Minigame framework scaffold — define `IslandRunMinigame` interface, entry/exit/reward contract, wire stop modal to stub launcher | `IslandRunBoardPrototype.tsx`, new `islandRunMinigameService.ts` |
+| 2 | **M11B** | First real minigame wired through the M11A framework (e.g. `ShooterBlitz` → minigame stop) | `IslandRunBoardPrototype.tsx`, `ShooterBlitz` |
+| 3 | **M3B** | Utility stop — real objective (e.g. shield / recovery action) wired and clearable | `IslandRunBoardPrototype.tsx`, `islandRunStops.ts` |
+| 4 | **M6B** | Encounter tile — real mini-challenge content, reward table, and rarity weight | `IslandRunBoardPrototype.tsx`, `islandBoardTileMap.ts` |
+| 5 | **M13A** | Full per-run state persistence — persist token index, stop flags, hearts, coins, spin tokens to Supabase on every mutation | `islandRunRuntimeState.ts`, `islandRunGameStateStore.ts`, new migration |
+| 6 | **M14A** | Island background art pipeline — add 3 placeholder `bg_*.webp` + `depth_mask_*.png` for islands 1–3; wire into `IslandRunBoardPrototype` renderer | `public/assets/islands/`, `IslandRunBoardPrototype.tsx` |
+| 7 | **M15A** | Audio files — add 4 core SFX (`sfx_dice_roll`, `sfx_tile_land`, `sfx_boss_resolve`, `sfx_island_clear`); activate `playIslandRunSound` for those events | `public/assets/audio/sfx/`, `islandRunAudio.ts` |
+| 8 | **M16A** | Real stop objectives for habit / check-in stops — query live habit completion data; unlock stop clear only when criteria met | `islandRunStops.ts`, habits feature API |
+| 9 | **M17A** | 120-island progression gate — require all 5 stops + boss cleared before `currentIslandNumber` increments; add island-completion record to Supabase | `IslandRunBoardPrototype.tsx`, `islandRunGameStateStore.ts` |
+| 10 | **M18A** | Test suite — unit tests for `generateTileMap`, `generateIslandStopPlan`, economy helpers, and runtime state hydration | new `*.test.ts` files alongside service files |
+
+---
+
+## 5. File Reference Index
+
+| Path | What it does |
+|---|---|
+| `src/features/gamification/level-worlds/LevelWorldsHub.tsx` | Entry point — switches between `IslandRunBoardPrototype` (production) and legacy `WorldBoard` |
+| `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` | Main Island Run game loop component |
+| `src/features/gamification/level-worlds/components/WorldBoard.tsx` | Legacy campaign board (deprecated primary loop) |
+| `src/features/gamification/level-worlds/services/islandBoardLayout.ts` | Fixed 17-anchor coordinates, stop tile assignments, `zBand` / `tangentDeg` / `scale` |
+| `src/features/gamification/level-worlds/services/islandBoardTileMap.ts` | `generateTileMap` — 17-tile type assignment per island |
+| `src/features/gamification/level-worlds/services/islandRunStops.ts` | `generateIslandStopPlan` — dynamic stop pool with behaviour-stop constraint |
+| `src/features/gamification/level-worlds/services/islandRunEconomy.ts` | Heart → dice conversion, `getDicePerHeartForIsland` |
+| `src/features/gamification/level-worlds/services/islandRunDailyRewards.ts` | `planDailyHeartReward` — daily heart grant schedule |
+| `src/features/gamification/level-worlds/services/islandRunAudio.ts` | Sound event + haptic event types, `playIslandRunSound`, `triggerIslandRunHaptic` |
+| `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts` | `IslandRunRuntimeState` interface, `hydrateIslandRunRuntimeStateWithSource`, `persistIslandRunRuntimeStatePatch` |
+| `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts` | Backend implementation (localStorage + Supabase dual layer) |
+| `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts` | `IslandRunGameStateRecord` — read / hydrate / write helpers |
+| `src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts` | Hydration stage markers + telemetry helpers |
+| `src/features/gamification/level-worlds/services/islandRunEntryDebug.ts` | `logIslandRunEntryDebug` — dev-mode console + debug-table logger |
+| `src/features/gamification/level-worlds/services/levelWorldsGenerator.ts` | Legacy campaign board generator |
+| `src/features/gamification/level-worlds/services/levelWorldsState.ts` | Legacy campaign state (localStorage) |
+| `src/features/gamification/level-worlds/hooks/useLevelWorlds.ts` | Legacy campaign React hook |
+| `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md` | Milestone tracker + current Next Slice |
+| `docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md` | Board spec: coordinates, rendering layers, movement algorithm, QA checklist |
+| `docs/04_MAIN_GAME_EGGS_HATCHERY_HOME.md` | Egg lifecycle spec |
+| `docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md` | Audio/haptics standards + minigame template |
+| `docs/07_MAIN_GAME_PROGRESS.md` | Append-only agent progress log |
+| `docs/08_ISLAND_RUN_RUNTIME_HYDRATION_TELEMETRY_PLAYBOOK.md` | Hydration + telemetry playbook |
+| `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md` | Manual QA checklist for progression markers |
+| `docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md` | Canonical product direction doc (supersedes older index files) |
