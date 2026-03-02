@@ -1,6 +1,9 @@
 # MAIN GAME PROGRESS — HabitGame Island Run
 
-> This document is the canonical progress log and design reference for the HabitGame main loop.
+> **This document is the single source of truth** for canonical main-game rules and
+> design.  All other docs under `docs/` are implementation references; if they conflict
+> with anything here, this file wins.  See [Other docs and precedence](#other-docs-and-precedence).
+>
 > For the full island index see `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
 > For the QA checklist see `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md`.
 
@@ -8,31 +11,102 @@
 
 ## Canonical Game Loop (120 islands)
 
-The following bullets define the **intended canonical design** and supersede any earlier or
+The following rules define the **intended canonical design** and supersede any earlier or
 conflicting description in the progress log entries below.
+
+### Island progression
 
 - **120 islands = 120 levels.** Islands are played in a fixed linear sequence
   (1 → 2 → … → 120 → 1 → …); the cycle index increments on each full lap.
-- **Each island has a 17-tile board.** Tiles are a mix of currency, chest, hazard,
-  egg_shard, encounter/event, and stop tiles.
-- **Each island has exactly 5 main steps/stops (Step 1–Step 5). The Boss is always Step 5.**
-  Stop tiles are at fixed positions (e.g. tiles 0, 4, 8, 12, 16).
+  **The player progresses through islands in a fixed sequence and cannot skip or
+  select specific islands.**
+- **Each island has a 17-tile loop board** (Monopoly GO style) arranged around a pond.
+  Tiles are a mix of currency, chest, hazard, egg_shard, encounter/event, and stop tiles.
+- **Each island has exactly 5 required steps/stops** placed outside the 17-tile ring.
+  **The Boss is always Step 5.**  Stop tiles on the board lead to these steps.
 - **Step 1 must be completed before the player can roll dice** on a new island.
   This is the onboarding/orientation gate for each island.
 - **Steps 2–4 vary per island** and commonly include mini-games, LifeGoal app actions
   (habits, goals, journal, check-ins), and utility actions (heart top-up, dice refill).
+- **Island completion states:** not completed → partial → boss defeated → completed
+  (everything collected/claimed).
+
+### Shop
+
 - **Shop is NOT one of the 5 steps.** The Shop is always accessible via a persistent
-  button/tab. After the boss (Step 5) is defeated, additional shop item tiers are unlocked.
-  Egg selling in the shop is only enabled once an egg has hatched.
-- **Eggs are tied to the island they were started on.** The player may start one egg per
-  island. If the player is forced to travel before the egg hatches or is sold, the egg
-  remains behind on that island. The player cannot travel back; on a later cycle they
-  revisit the same island and may collect/sell the hatched egg, providing a second-pass
-  advantage.
-- **Island travel is forced by a 2–3 day real-time timer** (production). The timer is
-  based on a `started_at`/`expires_at` timestamp pair. On expiry the player advances to
-  the next island and all per-island progress is frozen/committed before the new island
-  starts. State must be persisted across sessions (Supabase).
+  button/tab, independent of island progress.
+- After the boss (Step 5) is defeated, additional shop item tiers are unlocked.
+- Egg selling in the shop is only enabled once an egg has hatched.
+- The shop uses app-wide currencies (Coins, Diamonds, Hearts).
+
+### Currencies
+
+- **App-wide (persistent across all islands):**
+  - **Coins** — general currency; primary tile and stop reward.
+  - **Diamonds** — premium currency; 1 diamond = 1,000 coins.
+  - **Hearts** — play energy; never reset; spent for dice conversion and sometimes for
+    boss-attempt lives.  Starter conversion rate: **1 heart = 20 dice rolls** (scales
+    to 30–50+ at later islands).
+- **Island / mini-game currency (temporary):**
+  - Earned on the board and via LifeGoal actions while on the active island.
+  - Can only be spent within the currently active mini-game to buy a "go"/action.
+  - **Lost when the player travels to a new island.**
+- Rewards (tiles, stops, bosses, eggs) may award any of the above currencies; reward
+  contents are revealed blind-box style.
+
+### Eggs
+
+- **One egg per island (one-time, permanent).** Each island has exactly one egg slot
+  across **all cycles**.  Once an egg on that island has been sold or collected,
+  **that island never provides a new egg again** — even when the player loops back
+  on cycle 2+.
+- Eggs have variety (color/tier) that affects hatch time and reward size.
+- The egg timer starts when the island is **first visited**.  If the egg is not
+  opened/sold before the island timer expires, the egg is left behind on that island.
+  The player cannot travel back; on a later cycle they revisit the island and may
+  collect/sell the already-hatched egg (second-pass advantage).
+
+### Island timers
+
+- The timer starts when the island is **first visited**.
+- **Normal islands: 2 days.  Special islands: 3 days.**
+- Timer expiry advances the player only when the **app is opened** (no background
+  auto-advance).
+- **Catch-up Rule A:** on resume, the player advances at most **one** island if the
+  current island's timer has expired, regardless of how much real time has elapsed.
+  (Named "Rule A" to distinguish it from potential future catch-up rules; no other
+  catch-up rules are defined at this time.)
+
+### Special islands
+
+- There are **20 special islands** distributed within the 1–120 range.
+- **Island 120 is always a special island.**
+- At least one early island (**island 4 or 5**) is special, to introduce the concept.
+- Special islands have higher rewards, harder bosses, and a **3-day timer** (vs 2 days
+  for normal islands).
+
+### Global mini-game calendar
+
+- There are **5–10 mini-games**; only **one is globally active** at a time (the same
+  active mini-game applies to all players).
+- Each island's main mini-game maps to the currently active global mini-game.
+- Mini-game entry becomes available after the relevant step unlocks it; the player can
+  play anytime once unlocked, consuming earned island/mini-game currency (tickets).
+- **Boss variety:** some bosses require reaching a sub-level in the current mini-game;
+  approximately **25%** of bosses use alternate boss-game patterns for variety.
+
+### Home Island (v0)
+
+- Treat Home Island as a **UI hub / player menu overlay** using a chosen island
+  background; it is not part of the 1–120 linear sequence.
+- Used for managing equipment (e.g., shield), upgrades, and repeatable systems.
+- Home hatchery is noted but not fully designed; keep it lightweight in v0.
+
+### Timer / travel persistence
+
+- The timer is based on a `started_at`/`expires_at` timestamp pair stored in Supabase.
+- On expiry, the player advances to the next island; all per-island progress is
+  frozen/committed before the new island starts.
 
 ---
 
@@ -52,10 +126,34 @@ reality" section.
 | `hearts` | Current heart count |
 | `dice` | Current dice count |
 | `coins` | Current coin count |
+| `diamonds` | Current diamond count (1 diamond = 1,000 coins) |
+| `island_mini_game_currency` | Temporary per-island/mini-game currency balance (zeroed on island travel) |
 | `steps_completed` | Per-island bitmask or array of which of steps 1–5 have been completed |
 | `per_island_egg` | Per-island egg ledger: one entry per island, each with `tier`, `set_at`, `hatch_at`, `sold_at`/`collected_at`, and status |
 | `shop_unlocks` | Global shop unlock state; which tiers are unlocked (post-boss unlocks) |
 | `telemetry_markers` | Existing telemetry/debug event markers (keep as-is) |
+
+---
+
+## Other docs and precedence
+
+`docs/07_MAIN_GAME_PROGRESS.md` (this file) is the **authoritative single source of
+truth** for canonical main-game rules.  If any other document under `docs/` conflicts
+with the rules stated here, **this file wins**.
+
+The following docs provide implementation detail and context but are **not** canonical
+overrides:
+
+| Doc | Role |
+|---|---|
+| [`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md) | Earlier product-direction lock and economy rules — reference only; superseded here |
+| [`docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`](./00_MAIN_GAME_120_ISLANDS_INDEX.md) | Island-system index, milestone tracker, and agent prompt entrypoint |
+| [`docs/01_MAIN_GAME_AGENT_PROTOCOL.md`](./01_MAIN_GAME_AGENT_PROTOCOL.md) | AI agent execution rules and progress handoff format |
+| [`docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md`](./02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md) | Database tables, migrations, and RLS policies |
+| [`docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md`](./03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md) | Board renderer, tile coordinates, token movement, and QA |
+| [`docs/04_MAIN_GAME_EGGS_HATCHERY_HOME.md`](./04_MAIN_GAME_EGGS_HATCHERY_HOME.md) | Egg lifecycle, stages, dormant carryover, hatchery rules |
+| [`docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md`](./05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md) | Audio/haptics map, asset naming, and mini-game dev-plan template |
+| [`docs/MAIN_GAME_120_ISLANDS_DOCSET_SUMMARY.md`](./MAIN_GAME_120_ISLANDS_DOCSET_SUMMARY.md) | High-level docset summary for external context |
 
 ---
 
