@@ -4,6 +4,7 @@ import boardMatchbar from '../assets/IMG_8562.webp';
 import boardIconsRight1 from '../assets/board_icons_right1.webp';
 import boardIconsRight2 from '../assets/board_icons_right2.webp';
 import boardIconsRight3 from '../assets/board_icons_right3.webp';
+import islandScenePlaceholder from '../assets/HalloweenNight.webp';
 import '../styles/game-board-overlay.css';
 
 type GameBoardOverlayProps = {
@@ -86,6 +87,14 @@ export function GameBoardOverlay({
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
       <div className="game-board-overlay__content">
+        {/* Island background scene — placeholder art, swap for island-specific webp when available */}
+        <div className="game-board-overlay__island-scene" aria-hidden="true">
+          <img
+            src={islandScenePlaceholder}
+            alt=""
+            className="game-board-overlay__island-scene-img"
+          />
+        </div>
         {/* Top Bar - Now the matchbar at full width */}
         <div 
           className={`game-board-overlay__topbar ${onTopbarClick ? 'game-board-overlay__topbar--clickable' : ''}`}

@@ -4032,8 +4032,7 @@ export default function App() {
         }}
         onDailyHatchClick={() => {
           setShowGameBoardOverlay(false);
-          setReopenGameOverlayOnRewardClose(true);
-          setShowCalendarPlaceholder(true);
+          window.location.href = '/level-worlds.html?level=1&openHatchery=1';
         }}
         onBankClick={() => {
           setShowGameBoardOverlay(false);

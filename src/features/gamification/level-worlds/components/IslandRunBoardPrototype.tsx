@@ -42,6 +42,8 @@ const SPIN_MAX = 5;
 // Production island duration: 72 hours. Use ?devTimer=1 for 45s dev mode.
 const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
+const OPEN_HATCHERY_ON_LOAD = typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('openHatchery') === '1';
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 // Egg hatch durations
 const EGG_HATCH_MS_COMMON = IS_DEV_TIMER ? 15_000 : 24 * 60 * 60 * 1000;
@@ -306,6 +308,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       });
     }
   }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if (OPEN_HATCHERY_ON_LOAD) {
+      setActiveStopId('hatchery');
+      // Clean the URL param without a reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete('openHatchery');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [hasHydratedRuntimeState]);
 
   useEffect(() => {
     logIslandRunEntryDebug('island_run_board_mount', {
