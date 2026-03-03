@@ -2934,3 +2934,33 @@ Testing:
 - Roll, Spin, audio toggle, Stop 1 message always visible regardless of panel state
 Next:
 - M11D: completedStops Supabase persistence
+
+---
+
+Date: 2026-03-03
+Slice: M14 — Shop separation: persistent HUD button, post-boss Tier 2 unlock, egg-selling after hatch
+Summary:
+- Removed `market` stop from `generateIslandStopPlan()` in `islandRunStops.ts`; 5 stops are now hatchery/minigame/utility/dynamic/boss (tiles 0/4/8/12/16); added `'dynamic'` to the stopId union type; market code in the board component kept inert
+- Added persistent "🛍️ Shop" HUD button to `island-run-prototype__always-controls` bar — always visible; tapping opens the shop modal via new `showShopModal` state
+- Refactored market modal: renders when `showShopModal || activeStop?.stopId === 'market'`; "Complete Market Stop" button only shown on stop path; close button collapses both paths
+- Added Tier 1 section (Dice Bundle, Heart Bundle — always available) and Tier 2 section (Heart Boost Bundle: 80 coins → +3 hearts; gated behind `bossTrialResolved` with visible 🔒/🔓 indicator)
+- Added `handleHeartBoostPurchase` handler with sound/haptic integration
+- Added `handleSellEgg` function: awards flat coins (common=20, rare=50, mythic=120) via `awardGold`, clears `activeEgg`, emits telemetry; only callable when `eggStage >= 4`
+- Added "Sell Egg" button in hatchery stop modal and home hatchery panel — hidden when `eggStage < 4`
+- Added `island-run-prototype__shop-btn` CSS class (pill badge, gold palette, matches HUD controls style)
+- Fixed pre-existing TS error: added `dice?: number` to `IslandRunMinigameReward` in `islandRunMinigameTypes.ts` to match usage in board component
+Files changed:
+- `src/features/gamification/level-worlds/services/islandRunStops.ts`
+- `src/features/gamification/level-worlds/services/islandRunMinigameTypes.ts`
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+- `src/features/gamification/level-worlds/LevelWorlds.css`
+- `docs/07_MAIN_GAME_PROGRESS.md`
+- `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`
+Testing:
+- `npm run build` passes with no TypeScript errors
+- `generateIslandStopPlan()` returns hatchery/minigame/utility/dynamic/boss — no market stop
+- HUD "🛍️ Shop" button always visible on board; tapping opens shop modal
+- Shop Tier 1 items always visible; Tier 2 (Heart Boost Bundle) locked until boss defeated
+- "Sell Egg" button visible in hatchery only at stage 4; clears egg, awards coins
+Next:
+- M15 — Real 48h/72h island timer via started_at/expires_at stored in Supabase (replaces dev ISLAND_DURATION_SEC constant with server timestamp pair)

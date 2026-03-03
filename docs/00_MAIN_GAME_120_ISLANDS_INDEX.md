@@ -78,7 +78,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M11: Minigame framework + first minigame stub (M11A minigame framework scaffold shipped — IslandRunMinigame interface, ISLAND_RUN_MINIGAME_REGISTRY, resolveMinigameForStop; stop CTA routed via registry; M11B minigame launcher + reward passthrough shipped; M11C per-island stop enforcement shipped — Step 1 gate, HUD progress chip, boss lock visual, completedStops localStorage persistence)
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
-- [🟡] M13: Per-island egg ledger (Supabase) — migration 0169, PerIslandEggEntry/PerIslandEggsLedger types, perIslandEggs in state + patch, key-level merge, handleSetEgg/handleOpenEgg wired, islandEggSlotUsed guard, hydration restores from ledger
+- [🟡] M14: Shop separation — market removed from stop plan; persistent HUD 🛍️ Shop button always visible; post-boss Tier 2 shop unlock (Heart Boost Bundle); egg-selling after hatch (stage 4)
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -90,10 +90,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M14 — Shop separation: persistent HUD Shop button, post-boss unlock tiers, egg-selling enabled after hatch  
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/`  
-**Acceptance criteria:** Shop is always accessible via a persistent HUD button independent of island steps; post-boss defeat unlocks additional shop tiers; egg selling in the shop is enabled only after the egg has hatched  
-**How to test:** Open Island Run, confirm shop button is always visible; defeat boss, confirm new shop tiers appear; set egg, wait for hatch, confirm sell option available in shop
+**Objective:** M15 — Real 48h/72h island timer via started_at/expires_at stored in Supabase (replaces dev ISLAND_DURATION_SEC constant with server timestamp pair)  
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `supabase/migrations/`  
+**Acceptance criteria:** island timer reads `started_at` and `expires_at` from Supabase; normal islands use 48h, special islands use 72h; dev override (`?devTimer=1`) still works; `ISLAND_DURATION_SEC` constant removed or only used as fallback  
+**How to test:** start island, check Supabase `island_run_runtime_state` has `started_at` and `expires_at` columns; timer on board matches server-side expiry
 
 ---
 
