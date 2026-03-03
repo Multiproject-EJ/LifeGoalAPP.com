@@ -50,6 +50,14 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
 const OPEN_HATCHERY_ON_LOAD = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('openHatchery') === '1';
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
+
+// M15C: Special islands get 72h timer; normal islands get 48h timer
+const SPECIAL_ISLAND_NUMBERS = new Set([5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120]);
+
+function getIslandDurationMs(islandNum: number): number {
+  if (IS_DEV_TIMER) return 45_000;
+  return SPECIAL_ISLAND_NUMBERS.has(islandNum) ? 72 * 60 * 60 * 1000 : 48 * 60 * 60 * 1000;
+}
 // Egg hatch durations
 const EGG_HATCH_MS_COMMON = IS_DEV_TIMER ? 15_000 : 24 * 60 * 60 * 1000;
 const EGG_HATCH_MS_RARE   = IS_DEV_TIMER ? 20_000 : 36 * 60 * 60 * 1000;
@@ -263,6 +271,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
+  const [islandExpiresAtMs, setIslandExpiresAtMs] = useState<number>(() => Date.now() + getIslandDurationMs(1));
   const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0));
 
   // B2-1: spin token state
@@ -304,11 +313,23 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setDicePool(convertHeartToDicePool(persistedIsland));
     setBossTrialResolved(runtimeState.bossTrialResolvedIslandNumber === persistedIsland);
 
-    // B4-2: Expiry detection on hydration
-    const elapsedSec = Math.round((Date.now() - islandStartedAtMs) / 1000);
-    if (elapsedSec >= ISLAND_DURATION_SEC && !showTravelOverlay) {
-      setShowTravelOverlay(true);
-      setLandingText('Island expired on load. Traveling to next island...');
+    // M15E: Restore timer from persisted islandExpiresAtMs or apply Catch-up Rule A
+    const persistedExpiresAtMs = runtimeState.islandExpiresAtMs;
+    if (persistedExpiresAtMs > 0 && persistedExpiresAtMs > Date.now()) {
+      // Timer still running — restore from persisted state
+      setIslandStartedAtMs(runtimeState.islandStartedAtMs);
+      setIslandExpiresAtMs(persistedExpiresAtMs);
+      setTimeLeftSec(Math.ceil((persistedExpiresAtMs - Date.now()) / 1000));
+    } else if (persistedExpiresAtMs > 0 && !showTravelOverlay) {
+      // Catch-up Rule A: timer already expired — advance exactly one island
+      performIslandTravel(persistedIsland + 1);
+    } else if (!showTravelOverlay) {
+      // No timer stored (legacy/first-run) — initialize from current island
+      const nowMs = Date.now();
+      const durationMs = getIslandDurationMs(persistedIsland);
+      setIslandStartedAtMs(nowMs);
+      setIslandExpiresAtMs(nowMs + durationMs);
+      setTimeLeftSec(Math.ceil(durationMs / 1000));
     }
 
     // B5-3: Restore egg state from runtime state
@@ -331,7 +352,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         isDormant: runtimeState.activeEggIsDormant,
       });
     }
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs]);
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -803,11 +824,27 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
 
     const timer = window.setInterval(() => {
-      setTimeLeftSec((current) => Math.max(0, current - 1));
+      setTimeLeftSec(Math.max(0, Math.ceil((islandExpiresAtMs - Date.now()) / 1000)));
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [showTravelOverlay, islandNumber]);
+  }, [showTravelOverlay, islandNumber, islandExpiresAtMs]);
+
+  // M15G: Write summary to global key so App.tsx overlay can read islandExpiresAtMs
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const summary = {
+        islandStartedAtMs,
+        islandExpiresAtMs,
+        activeEggSetAtMs: activeEgg?.setAtMs ?? null,
+        activeEggHatchDurationMs: activeEgg ? activeEgg.hatchAtMs - activeEgg.setAtMs : null,
+      };
+      window.localStorage.setItem('lifegoal_island_run_runtime_state', JSON.stringify(summary));
+    } catch {
+      // ignore storage errors
+    }
+  }, [islandStartedAtMs, islandExpiresAtMs, activeEgg]);
 
   useEffect(() => {
     if (timeLeftSec > 0 || showTravelOverlay) {
@@ -1144,32 +1181,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }));
   };
 
-  // M14: sell a ready egg (stage 4) for a flat coin reward
-  const handleSellEgg = () => {
-    if (!activeEgg || eggStage < 4) return;
-    const soldEgg = activeEgg;
-    const sellCoins = getEggSellCoins(soldEgg.tier);
-    setActiveEgg(null);
-    setCoins((c) => c + sellCoins);
-    void awardGold(session.user.id, sellCoins, 'shooter_blitz', 'island_run_egg_sell');
-    setLandingText(`Egg sold! +${sellCoins} coins.`);
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'island_run_egg_sell',
-        tier: soldEgg.tier,
-        coins_awarded: sellCoins,
-      },
-    });
-    logIslandRunEntryDebug('island_run_egg_sell', { tier: soldEgg.tier, coinsAwarded: sellCoins });
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: { activeEggTier: null, activeEggSetAtMs: null, activeEggHatchDurationMs: null, activeEggIsDormant: false },
-    });
-  };
-
   const handleClaimOnboardingBooster = () => {
     const trimmedName = boosterName.trim();
     if (!trimmedName) {
@@ -1486,19 +1497,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketInteracted(true);
       return;
     }
-    if (coins < MARKET_HEART_BOOST_BUNDLE_COST) {
+    if (coins < HEART_BOOST_BUNDLE_COST) {
       playIslandRunSound('market_insufficient_coins');
-      setMarketPurchaseFeedback(`Not enough coins for Heart Boost Bundle (${MARKET_HEART_BOOST_BUNDLE_COST} required).`);
+      setMarketPurchaseFeedback(`Not enough coins for Heart Boost Bundle (${HEART_BOOST_BUNDLE_COST} required).`);
       setMarketInteracted(true);
       return;
     }
     playIslandRunSound('market_purchase_attempt');
-    setCoins((c) => c - MARKET_HEART_BOOST_BUNDLE_COST);
-    setHearts((h) => h + MARKET_HEART_BOOST_BUNDLE_REWARD);
+    setCoins((c) => c - HEART_BOOST_BUNDLE_COST);
+    setHearts((h) => h + 3);
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     setMarketOwnedBundles((current) => ({ ...current, heart_boost_bundle: true }));
-    const message = `Purchased Heart Boost Bundle: -${MARKET_HEART_BOOST_BUNDLE_COST} coins, +${MARKET_HEART_BOOST_BUNDLE_REWARD} hearts.`;
+    const message = `Purchased Heart Boost Bundle: -${HEART_BOOST_BUNDLE_COST} coins, +3 hearts.`;
     setMarketPurchaseFeedback(message);
     setLandingText(message);
     setMarketInteracted(true);
@@ -1531,8 +1542,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setSpinTokens(0);
     setMarketInteracted(false);
     setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
-    setTimeLeftSec(ISLAND_DURATION_SEC);
-    setIslandStartedAtMs(Date.now());
+    const nowMs = Date.now();
+    const durationMs = getIslandDurationMs(nextIsland);
+    const expiresAtMs = nowMs + durationMs;
+    setTimeLeftSec(Math.ceil(durationMs / 1000));
+    setIslandStartedAtMs(nowMs);
+    setIslandExpiresAtMs(expiresAtMs);
     setUtilityInteracted(false);
     setIslandIntention('');
     setShowIslandClearCelebration(false);
@@ -1541,9 +1556,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
-      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null },
+      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs },
     });
-    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null }));
+    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs }));
     // M10D: island travel complete sound + haptic
     playIslandRunSound('island_travel_complete');
     triggerIslandRunHaptic('island_travel_complete');
@@ -1852,7 +1867,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             className="island-run-prototype__shop-btn"
             aria-label="Open shop"
             onClick={() => {
-              setShowShopModal(true);
+              setShowShopPanel(true);
               setMarketPurchaseFeedback('Prototype inventory ready.');
               setMarketInteracted(false);
             }}
@@ -1956,7 +1971,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             )}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleSellEgg}>
-                Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
+                Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} coins)
               </button>
             )}
             {activeEgg && eggStage < 4 && (
@@ -2266,7 +2281,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       </button>
                       {eggStage >= 4 && (
                         <button type="button" onClick={handleSellEgg}>
-                          Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
+                          Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} coins)
                         </button>
                       )}
                     </div>

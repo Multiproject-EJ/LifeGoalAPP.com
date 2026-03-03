@@ -90,7 +90,7 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M15 — Real island timer via Supabase `started_at`/`expires_at` — replace the `ISLAND_DURATION_SEC` dev constant with actual Supabase timestamps stored per-island run; timer counts down to `expires_at`; island expiry triggers automatic travel overlay  
+**Objective:** [✅] M15: Real island timer shipped — 48h/72h + Catch-up Rule A + expiry persistence  
 **Files to touch:** `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `supabase/migrations/`  
 **Acceptance criteria:** island start time written to Supabase on first visit; `expires_at` = `started_at` + 72h (normal) or 48h (special island); timer counts down from `expires_at`; on expiry, travel overlay fires and island advances  
 **How to test:** start an island run, check Supabase for `started_at`/`expires_at` row; confirm countdown matches; use `?devTimer=1` to verify short-timer still works
