@@ -4,6 +4,9 @@ import boardMatchbar from '../assets/IMG_8562.webp';
 import boardIconsRight1 from '../assets/board_icons_right1.webp';
 import boardIconsRight2 from '../assets/board_icons_right2.webp';
 import boardIconsRight3 from '../assets/board_icons_right3.webp';
+import spinWheelImg from '../assets/Daily_treats_spinnwheel.webp';
+import heartsImg from '../assets/Daily_treats_hearts.webp';
+import hatchImg from '../assets/Daily_treat_calendar_closed.webp';
 import islandScenePlaceholder from '../assets/HalloweenNight.webp';
 import '../styles/game-board-overlay.css';
 
@@ -147,7 +150,12 @@ export function GameBoardOverlay({
                 onClick={onSpinWinClick}
                 aria-label="Open Spin & Win"
               >
-                <div className="game-board-overlay__icon-placeholder">
+                <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
+                  <img
+                    src={spinWheelImg}
+                    alt=""
+                    className="game-board-overlay__icon-asset-img"
+                  />
                   <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
                     {spinsRemaining}
                   </span>
@@ -162,7 +170,13 @@ export function GameBoardOverlay({
                 onClick={onHeartsGameplayClick}
                 aria-label="Open Hearts gameplay"
               >
-                <div className="game-board-overlay__icon-placeholder" />
+                <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
+                  <img
+                    src={heartsImg}
+                    alt=""
+                    className="game-board-overlay__icon-asset-img"
+                  />
+                </div>
               </button>
               <span className="game-board-overlay__icon-timer">2h 15m</span>
             </div>
@@ -173,7 +187,13 @@ export function GameBoardOverlay({
                 onClick={onDailyHatchClick}
                 aria-label="Open Daily Hatch calendar"
               >
-                <div className="game-board-overlay__icon-placeholder" />
+                <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
+                  <img
+                    src={hatchImg}
+                    alt=""
+                    className="game-board-overlay__icon-asset-img"
+                  />
+                </div>
               </button>
               <span className="game-board-overlay__icon-timer">45m</span>
             </div>
