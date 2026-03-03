@@ -61,6 +61,18 @@ const ENCOUNTER_TILE_INDEX = 6;
 const MARKET_DICE_BUNDLE_COST = 30;
 const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
+const MARKET_HEART_BOOST_BUNDLE_COST = 80;
+const MARKET_HEART_BOOST_BUNDLE_REWARD = 3;
+// Egg sell rewards (flat coin award on sell at stage 4)
+const EGG_SELL_COINS_COMMON = 20;
+const EGG_SELL_COINS_RARE = 50;
+const EGG_SELL_COINS_MYTHIC = 120;
+
+function getEggSellCoins(tier: EggTier): number {
+  if (tier === 'mythic') return EGG_SELL_COINS_MYTHIC;
+  if (tier === 'rare') return EGG_SELL_COINS_RARE;
+  return EGG_SELL_COINS_COMMON;
+}
 
 type EggTier = 'common' | 'rare' | 'mythic';
 
@@ -244,9 +256,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
-  const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle', boolean>>({
+  const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle' | 'heart_boost_bundle', boolean>>({
     dice_bundle: false,
     heart_bundle: false,
+    heart_boost_bundle: false,
   });
   const [marketMarkerBaselineMs, setMarketMarkerBaselineMs] = useState<number | null>(null);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
@@ -271,6 +284,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
+
+  // M14: persistent HUD shop modal
+  const [showShopModal, setShowShopModal] = useState(false);
 
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
@@ -433,8 +449,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketOwnedBundles({
         dice_bundle: false,
         heart_bundle: false,
+        heart_boost_bundle: false,
       });
-      setMarketMarkerBaselineMs(resetMs);
 
       const result = {
         resetAt,
@@ -1119,6 +1135,32 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
+  // M14: sell a ready egg (stage 4) for a flat coin reward
+  const handleSellEgg = () => {
+    if (!activeEgg || eggStage < 4) return;
+    const soldEgg = activeEgg;
+    const sellCoins = getEggSellCoins(soldEgg.tier);
+    setActiveEgg(null);
+    setCoins((c) => c + sellCoins);
+    void awardGold(session.user.id, sellCoins, 'shooter_blitz', 'island_run_egg_sell');
+    setLandingText(`Egg sold! +${sellCoins} coins.`);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_egg_sell',
+        tier: soldEgg.tier,
+        coins_awarded: sellCoins,
+      },
+    });
+    logIslandRunEntryDebug('island_run_egg_sell', { tier: soldEgg.tier, coinsAwarded: sellCoins });
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { activeEggTier: null, activeEggSetAtMs: null, activeEggHatchDurationMs: null, activeEggIsDormant: false },
+    });
+  };
+
   const handleClaimOnboardingBooster = () => {
     const trimmedName = boosterName.trim();
     if (!trimmedName) {
@@ -1429,7 +1471,30 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setMarketInteracted(true);
   };
 
-  // B4-3: performIslandTravel — centralizes all travel reset state
+  // M14: Tier 2 Heart Boost Bundle purchase (available only after boss defeated)
+  const handleHeartBoostPurchase = () => {
+    if (marketOwnedBundles.heart_boost_bundle) {
+      setMarketPurchaseFeedback('Heart Boost Bundle already owned for this island run.');
+      setMarketInteracted(true);
+      return;
+    }
+    if (coins < MARKET_HEART_BOOST_BUNDLE_COST) {
+      playIslandRunSound('market_insufficient_coins');
+      setMarketPurchaseFeedback(`Not enough coins for Heart Boost Bundle (${MARKET_HEART_BOOST_BUNDLE_COST} required).`);
+      setMarketInteracted(true);
+      return;
+    }
+    playIslandRunSound('market_purchase_attempt');
+    setCoins((c) => c - MARKET_HEART_BOOST_BUNDLE_COST);
+    setHearts((h) => h + MARKET_HEART_BOOST_BUNDLE_REWARD);
+    playIslandRunSound('market_purchase_success');
+    triggerIslandRunHaptic('market_purchase_success');
+    setMarketOwnedBundles((current) => ({ ...current, heart_boost_bundle: true }));
+    const message = `Purchased Heart Boost Bundle: -${MARKET_HEART_BOOST_BUNDLE_COST} coins, +${MARKET_HEART_BOOST_BUNDLE_REWARD} hearts.`;
+    setMarketPurchaseFeedback(message);
+    setLandingText(message);
+    setMarketInteracted(true);
+  };
   const performIslandTravel = (nextIsland: number) => {
     // M11C: clear completed stops for the old island before travelling
     try {
@@ -1457,7 +1522,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setBossRewardSummary(null);
     setSpinTokens(0);
     setMarketInteracted(false);
-    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false });
+    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
     setTimeLeftSec(ISLAND_DURATION_SEC);
     setIslandStartedAtMs(Date.now());
     setUtilityInteracted(false);
@@ -1548,8 +1613,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketOwnedBundles({
         dice_bundle: false,
         heart_bundle: false,
+        heart_boost_bundle: false,
       });
-      // M10D: market stop completion sound + haptic
       playIslandRunSound('market_stop_complete');
       triggerIslandRunHaptic('market_stop_complete');
     }
@@ -1771,6 +1836,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           >
             {audioEnabled ? '🔊' : '🔇'}
           </button>
+          {/* M14: persistent HUD Shop button */}
+          <button
+            type="button"
+            className="island-run-prototype__shop-btn"
+            aria-label="Open shop"
+            onClick={() => {
+              setShowShopModal(true);
+              setMarketPurchaseFeedback('Prototype inventory ready.');
+              setMarketInteracted(false);
+            }}
+          >
+            🛍️ Shop
+          </button>
           {(() => {
             const step1Stop = islandStopPlan[0];
             const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
@@ -1852,6 +1930,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleOpenEgg}>
                 Open egg 🥚
+              </button>
+            )}
+            {activeEgg && eggStage >= 4 && (
+              <button type="button" onClick={handleSellEgg}>
+                Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
               </button>
             )}
             {activeEgg && eggStage < 4 && (
@@ -2107,14 +2190,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>
       )}
 
-      {activeStop?.stopId === 'market' && (
+      {(showShopModal || activeStop?.stopId === 'market') && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--market" role="dialog" aria-modal="true" aria-label="Market stop prototype">
-            <h3 className="island-stop-modal__title">🛒 Market Stop</h3>
-            <p>Prototype purchase modal: preview starter store actions before the full Market slice.</p>
-            <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p>
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--market" role="dialog" aria-modal="true" aria-label="Shop">
+            <h3 className="island-stop-modal__title">🛍️ Shop</h3>
+            <p>Purchase bundles to boost your island run.</p>
+            {/* Tier 1 — always available */}
             <div className="island-hatchery-card">
-              <p>Available prototype offers:</p>
+              <p><strong>Tier 1</strong></p>
               <div className="island-hatchery-card__actions">
                 <button
                   type="button"
@@ -2136,20 +2219,41 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 </button>
               </div>
             </div>
+            {/* Tier 2 — unlocked after boss defeated */}
+            <div className="island-hatchery-card">
+              <p><strong>Tier 2</strong> {bossTrialResolved ? '🔓 Unlocked' : '🔒 Defeat the boss to unlock'}</p>
+              <div className="island-hatchery-card__actions">
+                <button
+                  type="button"
+                  onClick={handleHeartBoostPurchase}
+                  disabled={!bossTrialResolved || marketOwnedBundles.heart_boost_bundle}
+                  style={!bossTrialResolved ? { opacity: 0.5 } : undefined}
+                >
+                  {marketOwnedBundles.heart_boost_bundle
+                    ? 'Heart Boost Bundle Owned'
+                    : bossTrialResolved
+                      ? `Buy Heart Boost Bundle (-${MARKET_HEART_BOOST_BUNDLE_COST} coins, +${MARKET_HEART_BOOST_BUNDLE_REWARD} hearts)`
+                      : `🔒 Heart Boost Bundle (-${MARKET_HEART_BOOST_BUNDLE_COST} coins, +${MARKET_HEART_BOOST_BUNDLE_REWARD} hearts)`}
+                </button>
+              </div>
+            </div>
             <p>Coins balance: <strong>{coins}</strong></p>
-            <p>Owned bundles: <strong>{[marketOwnedBundles.dice_bundle ? 'dice' : null, marketOwnedBundles.heart_bundle ? 'heart' : null].filter(Boolean).join(', ') || 'none'}</strong></p>
             {marketPurchaseFeedback ? <p>{marketPurchaseFeedback}</p> : null}
-            {!marketInteracted && <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Browse the market to complete this stop.</p>}
+            {activeStop?.stopId === 'market' && !marketInteracted && (
+              <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Browse the market to complete this stop.</p>
+            )}
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop} disabled={!marketInteracted}>
-                Complete Market Stop
-              </button>
+              {activeStop?.stopId === 'market' && (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop} disabled={!marketInteracted}>
+                  Complete Market Stop
+                </button>
+              )}
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setActiveStopId(null)}
+                onClick={() => { setShowShopModal(false); if (activeStop?.stopId === 'market') setActiveStopId(null); }}
               >
-                Leave Market
+                Close
               </button>
             </div>
           </section>
@@ -2206,6 +2310,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       <button type="button" onClick={() => eggStage >= 4 ? handleOpenEgg() : setActiveEgg(null)}>
                         {eggStage >= 4 ? 'Open Egg (stub)' : 'Clear Egg (dev)'}
                       </button>
+                      {eggStage >= 4 && (
+                        <button type="button" onClick={handleSellEgg}>
+                          Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
+                        </button>
+                      )}
                     </div>
                   </>
                 )}

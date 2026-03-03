@@ -4,6 +4,7 @@
  */
 export interface IslandRunMinigameReward {
   coins?: number;
+  dice?: number;
   hearts?: number;
   spinTokens?: number;
   diamonds?: number;

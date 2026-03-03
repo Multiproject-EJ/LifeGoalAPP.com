@@ -78,6 +78,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M11: Minigame framework + first minigame stub (M11A minigame framework scaffold shipped — IslandRunMinigame interface, ISLAND_RUN_MINIGAME_REGISTRY, resolveMinigameForStop; stop CTA routed via registry; M11B minigame launcher + reward passthrough shipped; M11C per-island stop enforcement shipped — Step 1 gate, HUD progress chip, boss lock visual, completedStops localStorage persistence)
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
+- [🟡] M14: Shop separation — market removed from stop plan; persistent HUD 🛍️ Shop button always visible; post-boss Tier 2 shop unlock (Heart Boost Bundle); egg-selling after hatch (stage 4)
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -89,10 +90,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M13 — Per-island egg ledger: implement a `per_island_eggs` Supabase table/jsonb ledger with one entry per island, replace the single global `activeEgg` slot, and preserve eggs left behind on island travel so they are collectible on revisit  
-**Files to touch:** `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `supabase/migrations/`  
-**Acceptance criteria:** each island stores its own egg entry; `activeEgg` is replaced by a per-island lookup; eggs not collected before island travel are preserved and retrievable when that island is revisited; migration + RLS policy added  
-**How to test:** set egg on island 1, travel to island 2, travel back to island 1, confirm egg is still present and collectible
+**Objective:** M15 — Real 48h/72h island timer via started_at/expires_at stored in Supabase (replaces dev ISLAND_DURATION_SEC constant with server timestamp pair)  
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `supabase/migrations/`  
+**Acceptance criteria:** island timer reads `started_at` and `expires_at` from Supabase; normal islands use 48h, special islands use 72h; dev override (`?devTimer=1`) still works; `ISLAND_DURATION_SEC` constant removed or only used as fallback  
+**How to test:** start island, check Supabase `island_run_runtime_state` has `started_at` and `expires_at` columns; timer on board matches server-side expiry
 
 ---
 
