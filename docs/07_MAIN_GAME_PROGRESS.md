@@ -253,6 +253,36 @@ The main game is considered **production-ready** when all of the following are t
 ## Progress Log (newest first)
 
 Date: 2026-03-03
+Slice: M13 — Per-island egg ledger (Supabase)
+Summary:
+- Added `per_island_eggs` JSONB column to `island_run_runtime_state` via migration 0169
+- Added PerIslandEggEntry, PerIslandEggStatus, PerIslandEggsLedger types to islandRunGameStateStore.ts
+- Added perIslandEggs to IslandRunRuntimeState and persistence patch type
+- Read/write perIslandEggs in islandRunGameStateStore (Supabase upsert + localStorage fallback)
+- Patch merge in islandRunRuntimeStateBackend merges at key level (preserves other islands' entries)
+- handleSetEgg writes ledger entry for current island number on egg set
+- handleOpenEgg marks ledger entry as 'collected' on open; clears global activeEgg slot
+- islandEggSlotUsed computed from ledger; hatchery stop 'Set egg' button hidden when slot used
+- On hydration: if ledger entry is incubating/ready for current island, restore activeEgg from it
+- Global activeEgg slot retained for backward compat; new eggs tracked in per-island ledger
+- Fixed pre-existing build error: added dice? to IslandRunMinigameReward in islandRunMinigameTypes.ts
+Files changed:
+- supabase/migrations/0169_island_run_per_island_eggs.sql (new)
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/services/islandRunMinigameTypes.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M14: Shop separation — persistent HUD Shop button, post-boss unlock tiers, egg-selling after hatch
+
+
+Date: 2026-03-03
 Slice: M11B — ShooterBlitz onComplete reward passthrough + dead stub cleanup
 Summary:
 - Verified and ensured onComplete reward fields (coins, dice, hearts, spinTokens) from ShooterBlitz are applied to board in-memory state before handleCompleteStopById('minigame') is called

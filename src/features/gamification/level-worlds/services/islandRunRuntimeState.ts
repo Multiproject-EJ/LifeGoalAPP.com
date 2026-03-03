@@ -1,6 +1,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { getIslandRunRuntimeStateBackend } from './islandRunRuntimeStateBackend';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
+import type { PerIslandEggsLedger } from './islandRunGameStateStore';
 
 export interface IslandRunRuntimeState {
   firstRunClaimed: boolean;
@@ -11,6 +12,7 @@ export interface IslandRunRuntimeState {
   activeEggSetAtMs: number | null;
   activeEggHatchDurationMs: number | null;
   activeEggIsDormant: boolean;
+  perIslandEggs: PerIslandEggsLedger;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -49,6 +51,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     activeEggSetAtMs?: number | null;
     activeEggHatchDurationMs?: number | null;
     activeEggIsDormant?: boolean;
+    perIslandEggs?: PerIslandEggsLedger;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

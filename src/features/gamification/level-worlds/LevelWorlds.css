@@ -1536,6 +1536,35 @@
 
 
 
+/* M14: HUD Shop button */
+.island-run-prototype__shop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.18rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 210, 120, 0.45);
+  background: rgba(160, 100, 20, 0.22);
+  color: #ffe9a0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.island-run-prototype__shop-btn:hover:not(:disabled) {
+  background: rgba(160, 100, 20, 0.38);
+  border-color: rgba(255, 210, 120, 0.7);
+}
+
+.island-run-prototype__shop-btn:focus-visible {
+  outline: 2px solid rgba(255, 220, 120, 0.96);
+  outline-offset: 2px;
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   .island-orbit-stop--active,
   .island-token--moving {

@@ -23,6 +23,7 @@ import {
   persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
 } from '../services/islandRunRuntimeState';
+import type { PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -247,9 +248,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
-  const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle', boolean>>({
+  const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle' | 'heart_boost_bundle', boolean>>({
     dice_bundle: false,
     heart_bundle: false,
+    heart_boost_bundle: false,
   });
   const [marketMarkerBaselineMs, setMarketMarkerBaselineMs] = useState<number | null>(null);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
@@ -310,7 +312,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
 
     // B5-3: Restore egg state from runtime state
-    if (runtimeState.activeEggTier && runtimeState.activeEggSetAtMs && runtimeState.activeEggHatchDurationMs) {
+    // M13: prefer per-island ledger for current island if entry is incubating/ready
+    const islandKey = String(persistedIsland);
+    const ledgerEntry = runtimeState.perIslandEggs?.[islandKey];
+    if (ledgerEntry && (ledgerEntry.status === 'incubating' || ledgerEntry.status === 'ready')) {
+      setActiveEgg({
+        tier: ledgerEntry.tier,
+        setAtMs: ledgerEntry.setAtMs,
+        hatchAtMs: ledgerEntry.hatchAtMs,
+        isDormant: runtimeState.activeEggIsDormant,
+      });
+    } else if (!ledgerEntry && runtimeState.activeEggTier && runtimeState.activeEggSetAtMs && runtimeState.activeEggHatchDurationMs) {
+      // Fallback to global slot for backward compat
       setActiveEgg({
         tier: runtimeState.activeEggTier,
         setAtMs: runtimeState.activeEggSetAtMs,
@@ -318,7 +331,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         isDormant: runtimeState.activeEggIsDormant,
       });
     }
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber]);
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -439,8 +452,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketOwnedBundles({
         dice_bundle: false,
         heart_bundle: false,
+        heart_boost_bundle: false,
       });
-      setMarketMarkerBaselineMs(resetMs);
 
       const result = {
         resetAt,
@@ -767,6 +780,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     return Math.min(4, Math.max(1, Math.ceil(progress * 4)));
   }, [activeEgg, nowMs]);
 
+  // M13: per-island egg slot usage check
+  const islandEggSlotUsed = useMemo(() => {
+    const entry = runtimeState.perIslandEggs?.[String(islandNumber)];
+    return entry?.status === 'collected' || entry?.status === 'sold';
+  }, [runtimeState.perIslandEggs, islandNumber]);
+
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
 
   // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
@@ -1036,6 +1055,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     });
     logIslandRunEntryDebug('home_egg_set', { tier, source: 'home_hatchery' });
+    // M13: write ledger entry for current island
+    const islandKey = String(islandNumber);
+    const ledgerEntry: PerIslandEggEntry = {
+      tier,
+      setAtMs: start,
+      hatchAtMs: start + hatchDurationMs,
+      status: 'incubating',
+    };
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -1044,8 +1071,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         activeEggSetAtMs: start,
         activeEggHatchDurationMs: hatchDurationMs,
         activeEggIsDormant: false,
+        perIslandEggs: { [islandKey]: ledgerEntry },
       },
     });
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: ledgerEntry },
+    }));
   };
 
   const handleOpenEgg = () => {
@@ -1088,7 +1120,49 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     });
     logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsAwarded });
-    // B5-3: persist cleared egg state
+    // B5-3: persist cleared egg state; M13: update ledger entry to 'collected'
+    const islandKey = String(islandNumber);
+    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    // Create a collected entry from the ledger (or synthesize one from the global slot for backward compat)
+    const collectedEntry: PerIslandEggEntry = existingEntry
+      ? { ...existingEntry, status: 'collected' }
+      : { tier: openedEgg.tier, setAtMs: openedEgg.setAtMs, hatchAtMs: openedEgg.hatchAtMs, status: 'collected' };
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        activeEggIsDormant: false,
+        perIslandEggs: { [islandKey]: collectedEntry },
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: collectedEntry },
+    }));
+  };
+
+  // M14: sell a ready egg (stage 4) for a flat coin reward
+  const handleSellEgg = () => {
+    if (!activeEgg || eggStage < 4) return;
+    const soldEgg = activeEgg;
+    const sellCoins = getEggSellCoins(soldEgg.tier);
+    setActiveEgg(null);
+    setCoins((c) => c + sellCoins);
+    void awardGold(session.user.id, sellCoins, 'shooter_blitz', 'island_run_egg_sell');
+    setLandingText(`Egg sold! +${sellCoins} coins.`);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_egg_sell',
+        tier: soldEgg.tier,
+        coins_awarded: sellCoins,
+      },
+    });
+    logIslandRunEntryDebug('island_run_egg_sell', { tier: soldEgg.tier, coinsAwarded: sellCoins });
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -1405,7 +1479,30 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setMarketInteracted(true);
   };
 
-  // B4-3: performIslandTravel — centralizes all travel reset state
+  // M14: Tier 2 Heart Boost Bundle purchase (available only after boss defeated)
+  const handleHeartBoostPurchase = () => {
+    if (marketOwnedBundles.heart_boost_bundle) {
+      setMarketPurchaseFeedback('Heart Boost Bundle already owned for this island run.');
+      setMarketInteracted(true);
+      return;
+    }
+    if (coins < MARKET_HEART_BOOST_BUNDLE_COST) {
+      playIslandRunSound('market_insufficient_coins');
+      setMarketPurchaseFeedback(`Not enough coins for Heart Boost Bundle (${MARKET_HEART_BOOST_BUNDLE_COST} required).`);
+      setMarketInteracted(true);
+      return;
+    }
+    playIslandRunSound('market_purchase_attempt');
+    setCoins((c) => c - MARKET_HEART_BOOST_BUNDLE_COST);
+    setHearts((h) => h + MARKET_HEART_BOOST_BUNDLE_REWARD);
+    playIslandRunSound('market_purchase_success');
+    triggerIslandRunHaptic('market_purchase_success');
+    setMarketOwnedBundles((current) => ({ ...current, heart_boost_bundle: true }));
+    const message = `Purchased Heart Boost Bundle: -${MARKET_HEART_BOOST_BUNDLE_COST} coins, +${MARKET_HEART_BOOST_BUNDLE_REWARD} hearts.`;
+    setMarketPurchaseFeedback(message);
+    setLandingText(message);
+    setMarketInteracted(true);
+  };
   const performIslandTravel = (nextIsland: number) => {
     // M11C: clear completed stops for the old island before travelling
     try {
@@ -1433,7 +1530,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setBossRewardSummary(null);
     setSpinTokens(0);
     setMarketInteracted(false);
-    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false });
+    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
     setTimeLeftSec(ISLAND_DURATION_SEC);
     setIslandStartedAtMs(Date.now());
     setUtilityInteracted(false);
@@ -1749,6 +1846,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           >
             {audioEnabled ? '🔊' : '🔇'}
           </button>
+          {/* M14: persistent HUD Shop button */}
+          <button
+            type="button"
+            className="island-run-prototype__shop-btn"
+            aria-label="Open shop"
+            onClick={() => {
+              setShowShopModal(true);
+              setMarketPurchaseFeedback('Prototype inventory ready.');
+              setMarketInteracted(false);
+            }}
+          >
+            🛍️ Shop
+          </button>
           {(() => {
             const step1Stop = islandStopPlan[0];
             const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
@@ -1825,7 +1935,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           </p>
           {/* M9F: Home Island egg actions */}
           <div className="island-hatchery-card__actions">
-            {!activeEgg && (
+            {islandEggSlotUsed ? (
+              <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
+                🥚 Egg already collected on this island.
+              </span>
+            ) : !activeEgg ? (
               <button
                 type="button"
                 onClick={() => {
@@ -1834,10 +1948,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               >
                 Set egg
               </button>
-            )}
+            ) : null}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleOpenEgg}>
                 Open egg 🥚
+              </button>
+            )}
+            {activeEgg && eggStage >= 4 && (
+              <button type="button" onClick={handleSellEgg}>
+                Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
               </button>
             )}
             {activeEgg && eggStage < 4 && (
@@ -2103,7 +2222,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
             {activeStopId === 'hatchery' && (
               <div className="island-hatchery-card">
-                {!activeEgg ? (
+                {islandEggSlotUsed ? (
+                  <p>🥚 Egg already collected on this island.</p>
+                ) : !activeEgg ? (
                   <>
                     <p>No active island egg. Set one:</p>
                     <div className="island-hatchery-card__actions">
@@ -2143,6 +2264,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       <button type="button" onClick={() => eggStage >= 4 ? handleOpenEgg() : setActiveEgg(null)}>
                         {eggStage >= 4 ? 'Open Egg (stub)' : 'Clear Egg (dev)'}
                       </button>
+                      {eggStage >= 4 && (
+                        <button type="button" onClick={handleSellEgg}>
+                          Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
+                        </button>
+                      )}
                     </div>
                   </>
                 )}
