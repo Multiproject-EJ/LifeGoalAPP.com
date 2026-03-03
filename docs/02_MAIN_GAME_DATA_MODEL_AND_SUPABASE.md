@@ -148,6 +148,24 @@ Repeat similarly for other tables.
 
 ---
 
+## island_run_runtime_state columns (as of migration 0169)
+
+| Column | Type | Default | Description |
+|---|---|---|---|
+| `user_id` | uuid | — | PK, references auth.users |
+| `first_run_claimed` | boolean | false | Whether the first-run bonus has been claimed |
+| `daily_hearts_claimed_day_key` | text | null | Day key for the last daily hearts claim |
+| `current_island_number` | int | 1 | Current island the player is on |
+| `boss_trial_resolved_island_number` | int | null | Island where boss trial was resolved |
+| `active_egg_tier` | text | null | Global active egg tier (legacy; kept for backward compat) |
+| `active_egg_set_at_ms` | bigint | null | Global active egg set timestamp ms |
+| `active_egg_hatch_duration_ms` | bigint | null | Global active egg hatch duration ms |
+| `active_egg_is_dormant` | boolean | false | Whether the global active egg is dormant |
+| `per_island_eggs` | jsonb | `'{}'` | Per-island egg ledger. Key = island number as text. Value = `{tier, set_at_ms, hatch_at_ms, status: "incubating"\|"ready"\|"collected"\|"sold"}`. One entry per island; never overwritten once status is collected/sold. |
+| `updated_at` | timestamptz | now() | Last updated timestamp |
+
+---
+
 ## v1 vs v2
 
 v1:
