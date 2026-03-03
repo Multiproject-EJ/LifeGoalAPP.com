@@ -1181,32 +1181,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }));
   };
 
-  // M14: sell a ready egg (stage 4) for a flat coin reward
-  const handleSellEgg = () => {
-    if (!activeEgg || eggStage < 4) return;
-    const soldEgg = activeEgg;
-    const sellCoins = getEggSellCoins(soldEgg.tier);
-    setActiveEgg(null);
-    setCoins((c) => c + sellCoins);
-    void awardGold(session.user.id, sellCoins, 'shooter_blitz', 'island_run_egg_sell');
-    setLandingText(`Egg sold! +${sellCoins} coins.`);
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'island_run_egg_sell',
-        tier: soldEgg.tier,
-        coins_awarded: sellCoins,
-      },
-    });
-    logIslandRunEntryDebug('island_run_egg_sell', { tier: soldEgg.tier, coinsAwarded: sellCoins });
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: { activeEggTier: null, activeEggSetAtMs: null, activeEggHatchDurationMs: null, activeEggIsDormant: false },
-    });
-  };
-
   const handleClaimOnboardingBooster = () => {
     const trimmedName = boosterName.trim();
     if (!trimmedName) {
@@ -1523,19 +1497,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketInteracted(true);
       return;
     }
-    if (coins < MARKET_HEART_BOOST_BUNDLE_COST) {
+    if (coins < HEART_BOOST_BUNDLE_COST) {
       playIslandRunSound('market_insufficient_coins');
-      setMarketPurchaseFeedback(`Not enough coins for Heart Boost Bundle (${MARKET_HEART_BOOST_BUNDLE_COST} required).`);
+      setMarketPurchaseFeedback(`Not enough coins for Heart Boost Bundle (${HEART_BOOST_BUNDLE_COST} required).`);
       setMarketInteracted(true);
       return;
     }
     playIslandRunSound('market_purchase_attempt');
-    setCoins((c) => c - MARKET_HEART_BOOST_BUNDLE_COST);
-    setHearts((h) => h + MARKET_HEART_BOOST_BUNDLE_REWARD);
+    setCoins((c) => c - HEART_BOOST_BUNDLE_COST);
+    setHearts((h) => h + 3);
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     setMarketOwnedBundles((current) => ({ ...current, heart_boost_bundle: true }));
-    const message = `Purchased Heart Boost Bundle: -${MARKET_HEART_BOOST_BUNDLE_COST} coins, +${MARKET_HEART_BOOST_BUNDLE_REWARD} hearts.`;
+    const message = `Purchased Heart Boost Bundle: -${HEART_BOOST_BUNDLE_COST} coins, +3 hearts.`;
     setMarketPurchaseFeedback(message);
     setLandingText(message);
     setMarketInteracted(true);
@@ -1893,7 +1867,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             className="island-run-prototype__shop-btn"
             aria-label="Open shop"
             onClick={() => {
-              setShowShopModal(true);
+              setShowShopPanel(true);
               setMarketPurchaseFeedback('Prototype inventory ready.');
               setMarketInteracted(false);
             }}
@@ -1997,7 +1971,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             )}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleSellEgg}>
-                Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
+                Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} coins)
               </button>
             )}
             {activeEgg && eggStage < 4 && (
@@ -2307,7 +2281,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       </button>
                       {eggStage >= 4 && (
                         <button type="button" onClick={handleSellEgg}>
-                          Sell Egg (+{getEggSellCoins(activeEgg.tier)} coins)
+                          Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} coins)
                         </button>
                       )}
                     </div>
