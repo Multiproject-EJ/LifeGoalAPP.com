@@ -35,7 +35,6 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import {
   resolveMinigameForStop,
-  ISLAND_RUN_MINIGAME_REGISTRY,
   type IslandRunMinigameResult,
 } from '../services/islandRunMinigameService';
 
@@ -2411,22 +2410,26 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
             onComplete={(result) => {
-              setActiveLaunchedMinigameId(null);
               if (result.completed && result.reward) {
-                const { coins: rwCoins, hearts: rwHearts, spinTokens: rwSpinTokens } = result.reward;
-                if (rwCoins) setCoins((c) => c + rwCoins);
-                if (rwHearts) setHearts((h) => h + rwHearts);
-                if (rwSpinTokens) setSpinTokens((s) => s + rwSpinTokens);
+                const { coins: rewardCoins = 0, dice: rewardDice = 0, hearts: rewardHearts = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
+                if (rewardCoins > 0) {
+                  setCoins((c) => c + rewardCoins);
+                  void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_minigame_reward');
+                }
+                if (rewardDice > 0) setDicePool((d) => d + rewardDice);
+                if (rewardHearts > 0) setHearts((h) => h + rewardHearts);
+                if (rewardSpinTokens > 0) setSpinTokens((t) => t + rewardSpinTokens);
                 void recordTelemetryEvent({
                   userId: session.user.id,
                   eventType: 'economy_earn',
                   metadata: {
-                    stage: 'minigame_reward',
+                    stage: 'island_run_minigame_reward',
                     minigameId: activeLaunchedMinigameId,
                     reward: result.reward as Record<string, number>,
                   },
                 });
               }
+              setActiveLaunchedMinigameId(null);
               handleCompleteStopById('minigame');
             }}
           />
