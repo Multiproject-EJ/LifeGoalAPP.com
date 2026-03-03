@@ -252,6 +252,24 @@ The main game is considered **production-ready** when all of the following are t
 
 ## Progress Log (newest first)
 
+Date: 2026-03-03
+Slice: M11B — ShooterBlitz onComplete reward passthrough + dead stub cleanup
+Summary:
+- Verified and ensured onComplete reward fields (coins, dice, hearts, spinTokens) from ShooterBlitz are applied to board in-memory state before handleCompleteStopById('minigame') is called
+- Removed dead ISLAND_RUN_MINIGAME_REGISTRY stub from islandRunMinigameService.ts (superseded by islandRunMinigameRegistry.ts component registry)
+- Kept resolveMinigameForStop, IslandRunMinigameResult, IslandRunMinigameReward, IslandRunMinigameId exports intact
+- Updated 00_MAIN_GAME_120_ISLANDS_INDEX.md: M11 marked complete, Next Slice set to M13
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/services/islandRunMinigameService.ts
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M13: Per-island egg ledger (Supabase)
+
+
 Date: 2026-03-01
 Batch: B3+B4+B5 — M3 Stop Modals + M4 Timer/Travel + M5 Egg System
 Summary:
