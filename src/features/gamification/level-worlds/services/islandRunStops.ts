@@ -6,7 +6,7 @@ export type IslandDynamicStopKind =
   | 'mini_game';
 
 export interface IslandStopPlanEntry {
-  stopId: 'hatchery' | 'minigame' | 'market' | 'utility' | 'boss';
+  stopId: 'hatchery' | 'minigame' | 'utility' | 'dynamic' | 'boss';
   tileIndex: number;
   title: string;
   description: string;
@@ -73,7 +73,8 @@ function pickUniqueIndices(seedBase: number, count: number, max: number) {
 export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntry[] {
   const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
 
-  // Three dynamic stop slots map to stop ids minigame/market/utility on tiles 4/8/12.
+  // Three dynamic stop slots map to stop ids minigame/utility/dynamic on tiles 4/8/12;
+  // all three use dynamically selected content from DYNAMIC_STOP_POOL.
   const dynamicIndices = pickUniqueIndices(97 + safeIsland * 13, 3, DYNAMIC_STOP_POOL.length);
   let selected = dynamicIndices.map((idx) => DYNAMIC_STOP_POOL[idx]);
 
@@ -100,7 +101,7 @@ export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntr
       isBehaviorStop: selected[0].isBehaviorStop,
     },
     {
-      stopId: 'market',
+      stopId: 'utility',
       tileIndex: 8,
       title: selected[1].title,
       description: selected[1].description,
@@ -108,7 +109,7 @@ export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntr
       isBehaviorStop: selected[1].isBehaviorStop,
     },
     {
-      stopId: 'utility',
+      stopId: 'dynamic',
       tileIndex: 12,
       title: selected[2].title,
       description: selected[2].description,

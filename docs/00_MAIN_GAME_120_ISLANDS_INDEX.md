@@ -78,6 +78,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M11: Minigame framework + first minigame stub (M11A minigame framework scaffold shipped — IslandRunMinigame interface, ISLAND_RUN_MINIGAME_REGISTRY, resolveMinigameForStop; stop CTA routed via registry; M11B minigame launcher + reward passthrough shipped; M11C per-island stop enforcement shipped — Step 1 gate, HUD progress chip, boss lock visual, completedStops localStorage persistence)
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
+- [✅] M14: Shop separation & unlock tiers — market stop removed from stop plan; 5 stops are hatchery/minigame/utility/dynamic/boss; persistent 🛍️ Shop HUD button added; Tier 1 always available; Tier 2 (heart boost bundle) gated on bossTrialResolved; egg selling in shop when eggStage >= 4
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -89,10 +90,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M13 — Per-island egg ledger: implement a `per_island_eggs` Supabase table/jsonb ledger with one entry per island, replace the single global `activeEgg` slot, and preserve eggs left behind on island travel so they are collectible on revisit  
-**Files to touch:** `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `supabase/migrations/`  
-**Acceptance criteria:** each island stores its own egg entry; `activeEgg` is replaced by a per-island lookup; eggs not collected before island travel are preserved and retrievable when that island is revisited; migration + RLS policy added  
-**How to test:** set egg on island 1, travel to island 2, travel back to island 1, confirm egg is still present and collectible
+**Objective:** M15 — Real island timer via Supabase `started_at`/`expires_at` — replace the `ISLAND_DURATION_SEC` dev constant with actual Supabase timestamps stored per-island run; timer counts down to `expires_at`; island expiry triggers automatic travel overlay  
+**Files to touch:** `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `supabase/migrations/`  
+**Acceptance criteria:** island start time written to Supabase on first visit; `expires_at` = `started_at` + 72h (normal) or 48h (special island); timer counts down from `expires_at`; on expiry, travel overlay fires and island advances  
+**How to test:** start an island run, check Supabase for `started_at`/`expires_at` row; confirm countdown matches; use `?devTimer=1` to verify short-timer still works
 
 ---
 
@@ -101,7 +102,7 @@ Quality direction:
 - 17 tile anchors (±1 tolerated later, but v1 = 17)
 - Board visual style: **3D-hybrid** (2D art + pseudo-3D board layer + depth/occlusion masks)
 - Movement: 1 Heart = 1 dice roll (1–3 tiles). Occasional Spin Move (1–5 tiles).
-- Stops: 1 Hatchery, 2 Minigame, 3 Market, 4 Utility (stub), 5 Boss
+- Stops: 1 Hatchery, 2 Minigame, 3 Utility, 4 Dynamic, 5 Boss — **Shop is NOT a stop**; shop is a persistent HUD button always accessible
 - Encounter tile: easy bonus challenge, not boss
 - Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer *(legacy every-5th/every-10th heuristic is deprecated)*
 - Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are collectible on revisit. **Home Island eggs are repeatable** (not subject to the one-time rule). Dormant/hatched-but-unclaimed eggs can exist across multiple islands simultaneously.

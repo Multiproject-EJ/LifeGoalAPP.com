@@ -2904,3 +2904,31 @@ Testing:
 - Roll, Spin, audio toggle, Stop 1 message always visible regardless of panel state
 Next:
 - M11D: completedStops Supabase persistence
+
+---
+
+Date: 2026-03-03
+Slice: M14 — Shop separation & unlock tiers
+Summary:
+- Removed market stop from generateIslandStopPlan(); 5 stops are now: hatchery, minigame, utility, dynamic, boss.
+- Renamed IslandStopPlanEntry.stopId type: removed 'market', added 'dynamic'.
+- Added persistent 🛍️ Shop HUD button always accessible from the Island Run header.
+- Shop panel shows Tier 1 items (dice bundle, heart bundle) always; Tier 2 (heart boost bundle, 80 coins → +3 hearts) gated behind bossTrialResolved.
+- Egg selling available in shop when eggStage >= 4; rewards: common=20 coins, rare=50 coins, mythic=120 coins.
+- Market stop modal and related dead code paths (setActiveStopId('market'), market stop completion audio/haptic) removed.
+- Shop orbit visual removed from orbitStopVisuals (shop is now a HUD button, not a board orbit stop).
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunStops.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build passes (pre-existing IslandRunMinigameReward.dice TS error unrelated to M14)
+- Island orbit stops show only 5 stops (hatchery, minigame, utility, dynamic, boss) — no market
+- 🛍️ Shop button is visible in the HUD header at all times
+- Shop opens with Tier 1 items (dice bundle + heart bundle)
+- Tier 2 is locked before boss resolved, unlocked after
+- Egg sell appears only when eggStage >= 4
+Next:
+- M15: Real island timer — replace ISLAND_DURATION_SEC dev constant with Supabase started_at/expires_at timestamps
