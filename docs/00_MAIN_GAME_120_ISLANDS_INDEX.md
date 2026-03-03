@@ -75,7 +75,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [🟡] M8: Market stop + purchases (M8A market stop prototype purchase modal stub shipped; M8B market telemetry/debug markers shipped; M8C owned-state no-repurchase UX shipped; M8D repurchase-block telemetry/debug markers shipped; M8E market QA checklist commands shipped; M8F deterministic QA helper shipped; M8G marker export helper shipped; M8H marker reset helper shipped; M8I status assertion helper shipped; M8J in-UI helper hint shipped)
 - [🟡] M9: Home island + hatchery slots + always collect (M9A home hatchery summary panel scaffold shipped; M9B slot/ready status row copy scaffold shipped; M9C action-hint row copy scaffold shipped; M9D progression-hint row copy scaffold shipped; M9E Home Island slot/ready values driven from real egg state shipped; M9F Set egg + Open egg actions wired in Home Island panel with audio/haptic + stage progress indicator shipped; M9G Home Island hatchery telemetry + QA shipped — home_egg_set/home_egg_open telemetry + debug markers + QA checklist section 14)
 - [✅] M10: Audio + haptics system integrated (M10A audio/haptic service foundation shipped; 4 sound events + 4 haptic events wired; HUD audio toggle added; M10B hatchery + market audio/haptic events shipped — 6 new sound events + 3 haptic events; M10C boss + encounter audio/haptic events shipped — 5 new sound events + 3 haptic events; M10D market stop completion + island travel completion audio/haptic wired; M10E audio/haptic QA coverage checklist shipped — all audio/haptic events fully wired (M10A–M10E))
-- [✅] M11: Minigame framework + first minigame stub (M11A minigame framework scaffold shipped — IslandRunMinigame interface, ISLAND_RUN_MINIGAME_REGISTRY, resolveMinigameForStop; stop CTA routed via registry)
+- [🟡] M11: Minigame framework + first minigame stub (M11A minigame framework scaffold shipped — IslandRunMinigame interface, ISLAND_RUN_MINIGAME_REGISTRY, resolveMinigameForStop; stop CTA routed via registry; M11B minigame launcher + reward passthrough shipped; M11C per-island stop enforcement shipped — Step 1 gate, HUD progress chip, boss lock visual, completedStops localStorage persistence)
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 
 Support shipped:
@@ -88,10 +88,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M11C — Per-island stop enforcement: gate boss behind completing all non-boss stops  
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/islandRunStops.ts`  
-**Acceptance criteria:** boss stop is locked until all non-boss stops on the current island are completed; completing all non-boss stops unlocks the boss  
-**How to test:** land on boss stop without completing other stops — boss must be locked; complete all other stops, then land on boss — boss accessible
+**Objective:** M11D — completedStops Supabase persistence: add completed_stops column to island_run_runtime_state table and wire through read/write/hydrate  
+**Files to touch:** `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `sql/` (migration)  
+**Acceptance criteria:** completedStops is read from and written to Supabase island_run_runtime_state; localStorage is used as fallback when Supabase is unavailable  
+**How to test:** complete stops → refresh page → stops remain completed; complete stops → log out → log in → stops remain completed
 
 ---
 
