@@ -221,6 +221,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const showQaHooks = useMemo(() => new URLSearchParams(window.location.search).get('islandRunQa') === '1', []);
   const [activeScene, setActiveScene] = useState<(typeof ISLAND_SCENES)[number]>(1);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
+  const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
 
   const [hearts, setHearts] = useState(5);
   const [dicePool, setDicePool] = useState(() => convertHeartToDicePool(1));
@@ -1722,7 +1723,65 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   return (
     <section className="island-run-prototype">
       <header className="island-run-prototype__header">
-        <h2 className="island-run-prototype__title">🏝️ Island Run</h2>
+        <h2 className="island-run-prototype__title">
+          🏝️ Island Run
+          <button
+            type="button"
+            className="island-run-prototype__dev-toggle"
+            aria-expanded={isDevPanelOpen}
+            aria-controls="island-run-dev-panel"
+            onClick={() => setIsDevPanelOpen((v) => !v)}
+          >
+            {isDevPanelOpen ? '▲ Hide dev info' : '▼ Dev info'}
+          </button>
+        </h2>
+        <div className="island-run-prototype__always-controls">
+          <button
+            type="button"
+            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${dicePool > 0 ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+            onClick={handleRoll}
+            disabled={showFirstRunCelebration || isRolling || (dicePool < 1 && hearts < 1) || showTravelOverlay}
+          >
+            {isRolling
+              ? 'Rolling...'
+              : dicePool > 0
+                ? 'Roll (1 dice)'
+                : `Convert 1 heart → ${dicePerHeart} dice`}
+          </button>
+          {spinTokens > 0 && (
+            <button
+              type="button"
+              className="island-run-prototype__spin-btn"
+              onClick={() => void handleSpin()}
+              disabled={isRolling}
+            >
+              🌀 Spin
+            </button>
+          )}
+          {/* M10A: audio toggle — persists to localStorage */}
+          <button
+            type="button"
+            className="island-run-prototype__audio-toggle"
+            aria-label={audioEnabled ? 'Mute audio and haptics' : 'Unmute audio and haptics'}
+            aria-pressed={audioEnabled}
+            onClick={() => {
+              const next = !audioEnabled;
+              setAudioEnabled(next);
+              setIslandRunAudioEnabled(next);
+            }}
+          >
+            {audioEnabled ? '🔊' : '🔇'}
+          </button>
+          {(() => {
+            const step1Stop = islandStopPlan[0];
+            const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+            return !step1Complete ? (
+              <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>
+            ) : null;
+          })()}
+        </div>
+        {isDevPanelOpen && (
+          <div id="island-run-dev-panel">
         <div className="island-run-prototype__hud-grid">
           <div className="island-run-prototype__hud-section">
             <p className="island-run-prototype__hud-label">Run status</p>
@@ -1820,44 +1879,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           <button type="button" className="island-run-prototype__debug-btn" onClick={() => setShowDebug((value) => !value)}>
             {showDebug ? 'Hide' : 'Show'} anchor/depth debug
           </button>
-          {/* M10A: audio toggle — persists to localStorage */}
-          <button
-            type="button"
-            className="island-run-prototype__audio-toggle"
-            aria-label={audioEnabled ? 'Mute audio and haptics' : 'Unmute audio and haptics'}
-            aria-pressed={audioEnabled}
-            onClick={() => {
-              const next = !audioEnabled;
-              setAudioEnabled(next);
-              setIslandRunAudioEnabled(next);
-            }}
-          >
-            {audioEnabled ? '🔊' : '🔇'}
-          </button>
-          <button
-            type="button"
-            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${dicePool > 0 ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-            onClick={handleRoll}
-            disabled={showFirstRunCelebration || isRolling || (dicePool < 1 && hearts < 1) || showTravelOverlay}
-          >
-            {isRolling
-              ? 'Rolling...'
-              : dicePool > 0
-                ? 'Roll (1 dice)'
-                : `Convert 1 heart → ${dicePerHeart} dice`}
-          </button>
-
-          {spinTokens > 0 && (
-            <button
-              type="button"
-              className="island-run-prototype__spin-btn"
-              onClick={() => void handleSpin()}
-              disabled={isRolling}
-            >
-              🌀 Spin
-            </button>
-          )}
-
           {(showDebug || showQaHooks) && (
             <div className="island-run-prototype__qa-controls" role="group" aria-label="QA and debug controls">
               <p className="island-run-prototype__qa-label">QA / Debug tools</p>
@@ -1923,6 +1944,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </button>
           )}
         </div>
+          </div>
+        )}
       </header>
 
       <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--scene-${activeScene}`}>
