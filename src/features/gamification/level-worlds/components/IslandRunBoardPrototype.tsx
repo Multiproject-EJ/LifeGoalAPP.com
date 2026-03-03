@@ -23,6 +23,7 @@ import {
   persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
 } from '../services/islandRunRuntimeState';
+import type { PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -304,7 +305,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
 
     // B5-3: Restore egg state from runtime state
-    if (runtimeState.activeEggTier && runtimeState.activeEggSetAtMs && runtimeState.activeEggHatchDurationMs) {
+    // M13: prefer per-island ledger for current island if entry is incubating/ready
+    const islandKey = String(persistedIsland);
+    const ledgerEntry = runtimeState.perIslandEggs?.[islandKey];
+    if (ledgerEntry && (ledgerEntry.status === 'incubating' || ledgerEntry.status === 'ready')) {
+      setActiveEgg({
+        tier: ledgerEntry.tier,
+        setAtMs: ledgerEntry.setAtMs,
+        hatchAtMs: ledgerEntry.hatchAtMs,
+        isDormant: runtimeState.activeEggIsDormant,
+      });
+    } else if (!ledgerEntry && runtimeState.activeEggTier && runtimeState.activeEggSetAtMs && runtimeState.activeEggHatchDurationMs) {
+      // Fallback to global slot for backward compat
       setActiveEgg({
         tier: runtimeState.activeEggTier,
         setAtMs: runtimeState.activeEggSetAtMs,
@@ -312,7 +324,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         isDormant: runtimeState.activeEggIsDormant,
       });
     }
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber]);
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -790,6 +802,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     return Math.min(4, Math.max(1, Math.ceil(progress * 4)));
   }, [activeEgg, nowMs]);
 
+  // M13: per-island egg slot usage check
+  const islandEggSlotUsed = useMemo(() => {
+    const entry = runtimeState.perIslandEggs?.[String(islandNumber)];
+    return entry?.status === 'collected' || entry?.status === 'sold';
+  }, [runtimeState.perIslandEggs, islandNumber]);
+
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
 
   // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
@@ -1059,6 +1077,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     });
     logIslandRunEntryDebug('home_egg_set', { tier, source: 'home_hatchery' });
+    // M13: write ledger entry for current island
+    const islandKey = String(islandNumber);
+    const ledgerEntry: PerIslandEggEntry = {
+      tier,
+      setAtMs: start,
+      hatchAtMs: start + hatchDurationMs,
+      status: 'incubating',
+    };
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -1067,8 +1093,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         activeEggSetAtMs: start,
         activeEggHatchDurationMs: hatchDurationMs,
         activeEggIsDormant: false,
+        perIslandEggs: { [islandKey]: ledgerEntry },
       },
     });
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: ledgerEntry },
+    }));
   };
 
   const handleOpenEgg = () => {
@@ -1111,12 +1142,28 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     });
     logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsAwarded });
-    // B5-3: persist cleared egg state
+    // B5-3: persist cleared egg state; M13: update ledger entry to 'collected'
+    const islandKey = String(islandNumber);
+    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    // Create a collected entry from the ledger (or synthesize one from the global slot for backward compat)
+    const collectedEntry: PerIslandEggEntry = existingEntry
+      ? { ...existingEntry, status: 'collected' }
+      : { tier: openedEgg.tier, setAtMs: openedEgg.setAtMs, hatchAtMs: openedEgg.hatchAtMs, status: 'collected' };
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
-      patch: { activeEggTier: null, activeEggSetAtMs: null, activeEggHatchDurationMs: null, activeEggIsDormant: false },
+      patch: {
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        activeEggIsDormant: false,
+        perIslandEggs: { [islandKey]: collectedEntry },
+      },
     });
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: collectedEntry },
+    }));
   };
 
   const handleClaimOnboardingBooster = () => {
@@ -1839,7 +1886,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           </p>
           {/* M9F: Home Island egg actions */}
           <div className="island-hatchery-card__actions">
-            {!activeEgg && (
+            {islandEggSlotUsed ? (
+              <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
+                🥚 Egg already collected on this island.
+              </span>
+            ) : !activeEgg ? (
               <button
                 type="button"
                 onClick={() => {
@@ -1848,7 +1899,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               >
                 Set egg
               </button>
-            )}
+            ) : null}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleOpenEgg}>
                 Open egg 🥚
@@ -2166,7 +2217,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
             {activeStopId === 'hatchery' && (
               <div className="island-hatchery-card">
-                {!activeEgg ? (
+                {islandEggSlotUsed ? (
+                  <p>🥚 Egg already collected on this island.</p>
+                ) : !activeEgg ? (
                   <>
                     <p>No active island egg. Set one:</p>
                     <div className="island-hatchery-card__actions">
