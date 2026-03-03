@@ -2938,29 +2938,27 @@ Next:
 ---
 
 Date: 2026-03-03
-Slice: M14 — Shop separation: persistent HUD button, post-boss Tier 2 unlock, egg-selling after hatch
+Slice: M14 — Shop separation & unlock tiers
 Summary:
-- Removed `market` stop from `generateIslandStopPlan()` in `islandRunStops.ts`; 5 stops are now hatchery/minigame/utility/dynamic/boss (tiles 0/4/8/12/16); added `'dynamic'` to the stopId union type; market code in the board component kept inert
-- Added persistent "🛍️ Shop" HUD button to `island-run-prototype__always-controls` bar — always visible; tapping opens the shop modal via new `showShopModal` state
-- Refactored market modal: renders when `showShopModal || activeStop?.stopId === 'market'`; "Complete Market Stop" button only shown on stop path; close button collapses both paths
-- Added Tier 1 section (Dice Bundle, Heart Bundle — always available) and Tier 2 section (Heart Boost Bundle: 80 coins → +3 hearts; gated behind `bossTrialResolved` with visible 🔒/🔓 indicator)
-- Added `handleHeartBoostPurchase` handler with sound/haptic integration
-- Added `handleSellEgg` function: awards flat coins (common=20, rare=50, mythic=120) via `awardGold`, clears `activeEgg`, emits telemetry; only callable when `eggStage >= 4`
-- Added "Sell Egg" button in hatchery stop modal and home hatchery panel — hidden when `eggStage < 4`
-- Added `island-run-prototype__shop-btn` CSS class (pill badge, gold palette, matches HUD controls style)
-- Fixed pre-existing TS error: added `dice?: number` to `IslandRunMinigameReward` in `islandRunMinigameTypes.ts` to match usage in board component
+- Removed market stop from generateIslandStopPlan(); 5 stops are now: hatchery, minigame, utility, dynamic, boss.
+- Renamed IslandStopPlanEntry.stopId type: removed 'market', added 'dynamic'.
+- Added persistent 🛍️ Shop HUD button always accessible from the Island Run header.
+- Shop panel shows Tier 1 items (dice bundle, heart bundle) always; Tier 2 (heart boost bundle, 80 coins → +3 hearts) gated behind bossTrialResolved.
+- Egg selling available in shop when eggStage >= 4; rewards: common=20 coins, rare=50 coins, mythic=120 coins.
+- Market stop modal and related dead code paths (setActiveStopId('market'), market stop completion audio/haptic) removed.
+- Shop orbit visual removed from orbitStopVisuals (shop is now a HUD button, not a board orbit stop).
 Files changed:
-- `src/features/gamification/level-worlds/services/islandRunStops.ts`
-- `src/features/gamification/level-worlds/services/islandRunMinigameTypes.ts`
-- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
-- `src/features/gamification/level-worlds/LevelWorlds.css`
-- `docs/07_MAIN_GAME_PROGRESS.md`
-- `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`
+- src/features/gamification/level-worlds/services/islandRunStops.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
 Testing:
-- `npm run build` passes with no TypeScript errors
-- `generateIslandStopPlan()` returns hatchery/minigame/utility/dynamic/boss — no market stop
-- HUD "🛍️ Shop" button always visible on board; tapping opens shop modal
-- Shop Tier 1 items always visible; Tier 2 (Heart Boost Bundle) locked until boss defeated
-- "Sell Egg" button visible in hatchery only at stage 4; clears egg, awards coins
+- npm run build passes (pre-existing IslandRunMinigameReward.dice TS error unrelated to M14)
+- Island orbit stops show only 5 stops (hatchery, minigame, utility, dynamic, boss) — no market
+- 🛍️ Shop button is visible in the HUD header at all times
+- Shop opens with Tier 1 items (dice bundle + heart bundle)
+- Tier 2 is locked before boss resolved, unlocked after
+- Egg sell appears only when eggStage >= 4
 Next:
-- M15 — Real 48h/72h island timer via started_at/expires_at stored in Supabase (replaces dev ISLAND_DURATION_SEC constant with server timestamp pair)
+- M15: Real island timer — replace ISLAND_DURATION_SEC dev constant with Supabase started_at/expires_at timestamps

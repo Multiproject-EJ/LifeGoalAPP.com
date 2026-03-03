@@ -6,7 +6,7 @@ export type IslandDynamicStopKind =
   | 'mini_game';
 
 export interface IslandStopPlanEntry {
-  stopId: 'hatchery' | 'minigame' | 'market' | 'utility' | 'boss' | 'dynamic';
+  stopId: 'hatchery' | 'minigame' | 'utility' | 'dynamic' | 'boss';
   tileIndex: number;
   title: string;
   description: string;
@@ -73,8 +73,8 @@ function pickUniqueIndices(seedBase: number, count: number, max: number) {
 export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntry[] {
   const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
 
-  // Three dynamic stop slots map to stop ids minigame/utility/dynamic on tiles 4/8/12.
-  // Market is no longer a stop — it is accessible via the persistent HUD Shop button.
+  // Three dynamic stop slots map to stop ids minigame/utility/dynamic on tiles 4/8/12;
+  // all three use dynamically selected content from DYNAMIC_STOP_POOL.
   const dynamicIndices = pickUniqueIndices(97 + safeIsland * 13, 3, DYNAMIC_STOP_POOL.length);
   let selected = dynamicIndices.map((idx) => DYNAMIC_STOP_POOL[idx]);
 
