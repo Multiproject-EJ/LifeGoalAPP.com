@@ -2861,3 +2861,28 @@ Testing:
 - Travelling to new island clears old island's completedStops from localStorage
 Next:
 - M11D: completedStops Supabase persistence (add completed_stops column to island_run_runtime_state table; wire through readIslandRunGameStateRecord / writeIslandRunGameStateRecord / hydrateIslandRunGameStateRecordWithSource)
+
+---
+
+Date: 2026-03-03
+Slice: M13-UX-POLISH — Collapse dev/prototype info panel behind toggle; board as primary visual
+Summary:
+- Added isDevPanelOpen state (default false) to IslandRunBoardPrototype
+- Added "▼ Dev info / ▲ Hide dev info" toggle button next to h2 title
+- Wrapped entire HUD grid, Home Hatchery panel, and Controls section in {isDevPanelOpen && <div id="island-run-dev-panel">}
+- Added always-visible controls bar (island-run-prototype__always-controls) containing: Roll button, Spin button (when spinTokens > 0), audio toggle, Stop 1 enforcement message
+- Removed Roll/Spin/audio toggle from dev panel controls section (they are now in always-controls)
+- Added CSS classes: .island-run-prototype__dev-toggle and .island-run-prototype__always-controls to LevelWorlds.css
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build passes
+- On load: only board + always-visible controls shown; header HUD/dev info hidden
+- Clicking "▼ Dev info" expands full header panel
+- Clicking "▲ Hide dev info" collapses it again
+- Roll, Spin, audio toggle, Stop 1 message always visible regardless of panel state
+Next:
+- M11D: completedStops Supabase persistence
