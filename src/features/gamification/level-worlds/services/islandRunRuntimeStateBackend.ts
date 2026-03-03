@@ -34,6 +34,8 @@ export interface IslandRunRuntimeStateBackend {
       activeEggHatchDurationMs?: number | null;
       activeEggIsDormant?: boolean;
       perIslandEggs?: PerIslandEggsLedger;
+      islandStartedAtMs?: number;
+      islandExpiresAtMs?: number;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -93,6 +95,14 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       perIslandEggs: patch.perIslandEggs
         ? { ...current.perIslandEggs, ...patch.perIslandEggs }
         : current.perIslandEggs,
+      islandStartedAtMs:
+        typeof patch.islandStartedAtMs === 'number' && Number.isFinite(patch.islandStartedAtMs)
+          ? patch.islandStartedAtMs
+          : current.islandStartedAtMs,
+      islandExpiresAtMs:
+        typeof patch.islandExpiresAtMs === 'number' && Number.isFinite(patch.islandExpiresAtMs)
+          ? patch.islandExpiresAtMs
+          : current.islandExpiresAtMs,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

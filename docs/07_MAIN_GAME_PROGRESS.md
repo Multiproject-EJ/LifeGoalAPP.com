@@ -253,6 +253,33 @@ The main game is considered **production-ready** when all of the following are t
 ## Progress Log (newest first)
 
 Date: 2026-03-03
+Slice: M15 — Real island timer (48h/72h + Catch-up Rule A + expiry persistence)
+Summary:
+- Added islandStartedAtMs + islandExpiresAtMs to IslandRunRuntimeState, IslandRunGameStateRecord, and persistPatch contract
+- getIslandDurationMs() helper: 48h for normal islands, 72h for special islands, 45s for devTimer mode
+- performIslandTravel: sets and persists islandStartedAtMs + islandExpiresAtMs for each new island
+- Hydration boot: restores timer from islandExpiresAtMs; Catch-up Rule A fires one advance if already expired
+- Timer tick recomputed from islandExpiresAtMs on each second instead of simple decrement
+- App.tsx overlay timer reads islandExpiresAtMs directly (simpler, no start-offset arithmetic)
+- IslandRunBoardPrototype writes global summary key lifegoal_island_run_runtime_state for App.tsx overlay
+- Migration 0170: island_started_at_ms + island_expires_at_ms columns on island_run_runtime_state
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/App.tsx
+- supabase/migrations/0170_island_run_timer_columns.sql (new)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M16: Tile map service & per-tile resolution
+Milestones closed: M15 ✅
+
+
+Date: 2026-03-03
 Slice: M13 — Per-island egg ledger (Supabase)
 Summary:
 - Added `per_island_eggs` JSONB column to `island_run_runtime_state` via migration 0169

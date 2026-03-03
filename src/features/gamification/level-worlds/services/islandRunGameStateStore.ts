@@ -25,6 +25,8 @@ export interface IslandRunGameStateRecord {
   activeEggHatchDurationMs: number | null;
   activeEggIsDormant: boolean;
   perIslandEggs: PerIslandEggsLedger;
+  islandStartedAtMs: number;
+  islandExpiresAtMs: number;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -34,6 +36,7 @@ function getStorageKey(userId: string) {
 }
 
 function getDefaultRecord(): IslandRunGameStateRecord {
+  const nowMs = Date.now();
   return {
     firstRunClaimed: false,
     dailyHeartsClaimedDayKey: null,
@@ -44,6 +47,8 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     activeEggHatchDurationMs: null,
     activeEggIsDormant: false,
     perIslandEggs: {},
+    islandStartedAtMs: nowMs,
+    islandExpiresAtMs: nowMs + 48 * 60 * 60 * 1000,
   };
 }
 
@@ -84,6 +89,14 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
     perIslandEggs: value.perIslandEggs !== null && typeof value.perIslandEggs === 'object' && !Array.isArray(value.perIslandEggs)
       ? (value.perIslandEggs as PerIslandEggsLedger)
       : fallback.perIslandEggs,
+    islandStartedAtMs:
+      typeof value.islandStartedAtMs === 'number' && Number.isFinite(value.islandStartedAtMs)
+        ? value.islandStartedAtMs
+        : fallback.islandStartedAtMs,
+    islandExpiresAtMs:
+      typeof value.islandExpiresAtMs === 'number' && Number.isFinite(value.islandExpiresAtMs)
+        ? value.islandExpiresAtMs
+        : fallback.islandExpiresAtMs,
   };
 }
 
@@ -130,7 +143,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -165,6 +178,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       activeEggHatchDurationMs: data.active_egg_hatch_duration_ms,
       activeEggIsDormant: data.active_egg_is_dormant,
       perIslandEggs: data.per_island_eggs ?? {},
+      islandStartedAtMs: data.island_started_at_ms,
+      islandExpiresAtMs: data.island_expires_at_ms,
     },
     fallback,
   );
@@ -239,6 +254,8 @@ export async function writeIslandRunGameStateRecord(options: {
       active_egg_hatch_duration_ms: record.activeEggHatchDurationMs,
       active_egg_is_dormant: record.activeEggIsDormant,
       per_island_eggs: record.perIslandEggs,
+      island_started_at_ms: record.islandStartedAtMs,
+      island_expires_at_ms: record.islandExpiresAtMs,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },

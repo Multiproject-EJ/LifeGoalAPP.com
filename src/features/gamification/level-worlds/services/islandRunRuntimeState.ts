@@ -13,6 +13,8 @@ export interface IslandRunRuntimeState {
   activeEggHatchDurationMs: number | null;
   activeEggIsDormant: boolean;
   perIslandEggs: PerIslandEggsLedger;
+  islandStartedAtMs: number;
+  islandExpiresAtMs: number;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -52,6 +54,8 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     activeEggHatchDurationMs?: number | null;
     activeEggIsDormant?: boolean;
     perIslandEggs?: PerIslandEggsLedger;
+    islandStartedAtMs?: number;
+    islandExpiresAtMs?: number;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

@@ -414,16 +414,22 @@ export default function App() {
           setEggHatchResetAtMs(undefined);
           return;
         }
-        const state = JSON.parse(raw) as { islandStartedAtMs?: number; activeEggSetAtMs?: number; activeEggHatchDurationMs?: number };
-        const startMs = state?.islandStartedAtMs;
-        if (!startMs) {
-          setIslandTimeLabelForOverlay('—');
-          setHeartsResetAtMs(undefined);
-        } else {
+        const state = JSON.parse(raw) as { islandStartedAtMs?: number; islandExpiresAtMs?: number; activeEggSetAtMs?: number; activeEggHatchDurationMs?: number };
+        const expiresAtMs = state?.islandExpiresAtMs;
+        if (expiresAtMs) {
+          const remaining = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
+          setIslandTimeLabelForOverlay(formatCompactDuration(remaining));
+          setHeartsResetAtMs(expiresAtMs);
+        } else if (state?.islandStartedAtMs) {
+          // legacy fallback: re-derive from start time
+          const startMs = state.islandStartedAtMs;
           const elapsedSec = Math.floor((Date.now() - startMs) / 1000);
           const remaining = Math.max(0, ISLAND_DURATION_SEC_PROD - elapsedSec);
           setIslandTimeLabelForOverlay(formatCompactDuration(remaining));
           setHeartsResetAtMs(startMs + ISLAND_DURATION_SEC_PROD * 1000);
+        } else {
+          setIslandTimeLabelForOverlay('—');
+          setHeartsResetAtMs(undefined);
         }
         const { activeEggSetAtMs, activeEggHatchDurationMs } = state;
         if (activeEggSetAtMs && activeEggHatchDurationMs) {
