@@ -3,7 +3,7 @@
 > ⚠️ **Status update (2026-02-27):** This file is now secondary context.
 > The canonical main-game implementation source is:
 > **[`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)**.
->
+> 
 > If any direction here conflicts with the canonical file, follow the canonical file.
 
 Owner: EJ  
@@ -43,6 +43,8 @@ Use these exact files as the HabitGame Main Loop source set:
 - `docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md` (audio/haptics/assets + minigame template)
 - `docs/06_MAIN_GAME_NEXT_SLICE_PROMPT_TEMPLATE.md` (copy/paste prompt for next implementation slice)
 - `docs/07_MAIN_GAME_PROGRESS.md` (append-only progress log)
+- `docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md` (canonical mini-game roster, boss system, heart economy, player level)
+- `docs/13_COLLECTIBLE_PROGRESS_BAR.md` (canonical collectible progress bar design — shard sub-currency, milestone chain, HUD pill)
 
 Naming convention is intentional:
 - Numeric prefix controls read order and avoids ambiguity in generic prompts.
@@ -105,6 +107,6 @@ Quality direction:
 - Movement: 1 Heart = 1 dice roll (1–3 tiles). Occasional Spin Move (1–5 tiles).
 - Stops: 1 Hatchery, 2 Minigame, 3 Utility, 4 Dynamic, 5 Boss — **Shop is NOT a stop**; shop is a persistent HUD button always accessible
 - Encounter tile: easy bonus challenge, not boss
-- Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer *(legacy every-5th/every-10th heuristic is deprecated)*
-- Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are collectible on revisit. **Home Island eggs are repeatable** (not subject to the one-time rule). Dormant/hatched-but-unclaimed eggs can exist across multiple islands simultaneously.
-- Collectible Progress Bar: repeating escalating milestone chain; 7 era-specific collectibles (⚡🎳🌸💡🔷🌀🌈) + 🌟 Star Fragment for special islands; shards earned from egg_shard tiles (1–3 per landing); T1–T6 reward tiers (20→60→120→220→350→500 shards); T5+ intentionally hard to reach without micro-transactions; bar always visible at top of board and in Home Island overlay; canonical design in docs/13_COLLECTIBLE_PROGRESS_BAR.md
+- Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer
+- Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are recoverable on cycle revisit
+- Collectible Progress Bar: repeating escalating milestone chain; 7 era-specific collectibles (⚡🎳🌸💡🔷🌀🌈) + 🌟 Star Fragment for special islands; shards earned from egg_shard tiles, stops, bosses; blind-box claim; pill always visible in HUD; full design in docs/13_COLLECTIBLE_PROGRESS_BAR.md
