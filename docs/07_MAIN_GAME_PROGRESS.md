@@ -2802,3 +2802,36 @@ Testing:
 - npm run build
 Next:
 - M11B: Wire ShooterBlitz fully through the M11A framework — implement shooter_blitz launch() to open the component, pipe the real onComplete reward to the caller, and remove the setShowShooterBlitzFromStop bypass.
+
+---
+
+Date: 2026-03-03
+Slice: M11B — Minigame framework: IslandRunMinigame interface, entry/exit contract, reward passthrough
+Summary:
+- Introduced IslandRunMinigameProps, IslandRunMinigameReward, IslandRunMinigameResult interfaces in islandRunMinigameTypes.ts
+- Implemented islandRunMinigameRegistry.ts with registerMinigame/getMinigame/getAllMinigames
+- Built IslandRunMinigameLauncher component that resolves any registered minigame by ID
+- Adapted ShooterBlitz to accept onComplete callback (IslandRunMinigameProps compatible) while keeping onClose for backward compat; session now optional (falls back to SupabaseAuthProvider context)
+- Replaced ad-hoc showShooterBlitzFromStop in IslandRunBoardPrototype with activeLaunchedMinigameId + IslandRunMinigameLauncher
+- ShooterBlitzMinigameAdapter registered in LevelWorldsHub to bridge ShooterBlitz into the registry without changing its session requirement
+- Fixed: LevelWorldsHub now renders as a fixed full-screen overlay in App.tsx (z-index 9999, body scroll locked) — prevents island board being visible by scrolling in other tabs
+- Added back button (← Back) to LevelWorldsHub IslandRunBoardPrototype path
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunMinigameTypes.ts (new)
+- src/features/gamification/level-worlds/services/islandRunMinigameRegistry.ts (new)
+- src/features/gamification/level-worlds/components/IslandRunMinigameLauncher.tsx (new)
+- src/features/gamification/games/shooter-blitz/ShooterBlitz.tsx
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorldsHub.tsx
+- src/App.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build
+- Navigate to any app tab, scroll down — island board must NOT be visible
+- Click PLAY on GameBoardOverlay — island board opens as full screen
+- From island board, tap a minigame stop — ShooterBlitz launches via framework
+- Completing ShooterBlitz calls onComplete and awards rewards; abandoning calls onComplete({ completed: false })
+- Back button on LevelWorldsHub returns to main app
+Next:
+- M11C: per-island stop enforcement (gate boss behind completing all non-boss stops)

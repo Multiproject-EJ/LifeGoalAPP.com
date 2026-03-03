@@ -18,6 +18,20 @@ import { ShooterBlitz } from '../games/shooter-blitz/ShooterBlitz';
 import { VisionQuest } from '../games/vision-quest/VisionQuest';
 import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
 
+// Register minigames in the framework registry
+import { registerMinigame } from './services/islandRunMinigameRegistry';
+import type { IslandRunMinigameProps } from './services/islandRunMinigameTypes';
+
+function ShooterBlitzMinigameAdapter({ islandNumber, onComplete }: IslandRunMinigameProps) {
+  return (
+    <ShooterBlitz
+      islandNumber={islandNumber}
+      onComplete={onComplete}
+    />
+  );
+}
+registerMinigame({ id: 'shooter_blitz', label: 'Shooter Blitz', component: ShooterBlitzMinigameAdapter });
+
 import './LevelWorlds.css';
 
 interface LevelWorldsHubProps {
@@ -178,7 +192,30 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
 
   // Production path: Island Run is the primary surface.
   if (isIslandRunPrototype) {
-    return <IslandRunBoardPrototype session={session} />;
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <button
+          onClick={onClose}
+          aria-label="Back to main app"
+          style={{
+            position: 'absolute',
+            top: '0.75rem',
+            left: '0.75rem',
+            zIndex: 100,
+            background: 'rgba(0,0,0,0.55)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.25)',
+            borderRadius: '8px',
+            padding: '0.35rem 0.75rem',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+          }}
+        >
+          ← Back
+        </button>
+        <IslandRunBoardPrototype session={session} />
+      </div>
+    );
   }
 
   // LEGACY — unreachable in production (only rendered when ?islandRunDev=0 is set)
