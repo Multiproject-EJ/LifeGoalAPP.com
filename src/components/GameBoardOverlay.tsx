@@ -223,7 +223,7 @@ export function GameBoardOverlay({
                 type="button"
                 className="game-board-overlay__icon-button"
                 onClick={onDailyHatchClick}
-                aria-label="Open Daily Hatch calendar"
+                aria-label="Open Home Egg Hatchery"
               >
                 <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
                   <img
