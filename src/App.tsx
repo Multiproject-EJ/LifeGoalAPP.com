@@ -169,6 +169,24 @@ function formatTimerSeconds(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+const ISLAND_DURATION_SEC_PROD = 72 * 60 * 60;
+const ISLAND_RUN_RUNTIME_STATE_KEY = 'lifegoal_island_run_runtime_state';
+
+function formatCompactDuration(totalSec: number): string {
+  if (totalSec <= 0) return 'Ready';
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h >= 24) {
+    const d = Math.floor(h / 24);
+    const rh = h % 24;
+    return rh > 0 ? `${d}d ${rh}h` : `${d}d`;
+  }
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
@@ -377,6 +395,27 @@ export default function App() {
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
+  const [islandTimeLabelForOverlay, setIslandTimeLabelForOverlay] = useState('—');
+
+  useEffect(() => {
+    function computeLabel() {
+      try {
+        const raw = localStorage.getItem(ISLAND_RUN_RUNTIME_STATE_KEY);
+        if (!raw) { setIslandTimeLabelForOverlay('—'); return; }
+        const state = JSON.parse(raw) as { islandStartedAtMs?: number };
+        const startMs = state?.islandStartedAtMs;
+        if (!startMs) { setIslandTimeLabelForOverlay('—'); return; }
+        const elapsedSec = Math.floor((Date.now() - startMs) / 1000);
+        const remaining = Math.max(0, ISLAND_DURATION_SEC_PROD - elapsedSec);
+        setIslandTimeLabelForOverlay(formatCompactDuration(remaining));
+      } catch {
+        setIslandTimeLabelForOverlay('—');
+      }
+    }
+    computeLabel();
+    const id = window.setInterval(computeLabel, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [aiCoachStarterQuestion, setAiCoachStarterQuestion] = useState<string | undefined>(undefined);
@@ -3782,6 +3821,9 @@ export default function App() {
           diamondBalance={goldBreakdown.diamonds}
           goldBalance={goldBreakdown.goldRemainder}
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
+          islandTimeLabel={islandTimeLabelForOverlay}
+          heartsResetLabel="Next island"
+          eggHatchLabel="—"
         />
         {showAiCoachModal && (
           <AiCoach
@@ -4057,6 +4099,9 @@ export default function App() {
         diamondBalance={goldBreakdown.diamonds}
         goldBalance={goldBreakdown.goldRemainder}
         spinsRemaining={dailyTreatsInventory.spinsRemaining}
+        islandTimeLabel={islandTimeLabelForOverlay}
+        heartsResetLabel="Next island"
+        eggHatchLabel="—"
       />
 
       {isAuthOverlayVisible ? (

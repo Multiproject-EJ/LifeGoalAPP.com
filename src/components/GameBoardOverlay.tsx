@@ -28,6 +28,9 @@ type GameBoardOverlayProps = {
   diamondBalance?: number;
   goldBalance?: number;
   spinsRemaining?: number;
+  islandTimeLabel?: string;
+  heartsResetLabel?: string;
+  eggHatchLabel?: string;
 };
 
 export function GameBoardOverlay({
@@ -48,6 +51,9 @@ export function GameBoardOverlay({
   diamondBalance = 0,
   goldBalance = 0,
   spinsRemaining = 0,
+  islandTimeLabel = '—',
+  heartsResetLabel = '—',
+  eggHatchLabel = '—',
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -161,7 +167,7 @@ export function GameBoardOverlay({
                   </span>
                 </div>
               </button>
-              <span className="game-board-overlay__icon-timer">1d 23m</span>
+              <span className="game-board-overlay__icon-timer">{islandTimeLabel}</span>
             </div>
             <div className="game-board-overlay__icon-item">
               <button
@@ -178,7 +184,7 @@ export function GameBoardOverlay({
                   />
                 </div>
               </button>
-              <span className="game-board-overlay__icon-timer">2h 15m</span>
+              <span className="game-board-overlay__icon-timer">{heartsResetLabel}</span>
             </div>
             <div className="game-board-overlay__icon-item">
               <button
@@ -195,7 +201,7 @@ export function GameBoardOverlay({
                   />
                 </div>
               </button>
-              <span className="game-board-overlay__icon-timer">45m</span>
+              <span className="game-board-overlay__icon-timer">{eggHatchLabel}</span>
             </div>
           </div>
 
