@@ -10,6 +10,21 @@ import hatchImg from '../assets/Daily_treat_calendar_closed.webp';
 import islandScenePlaceholder from '../assets/HalloweenNight.webp';
 import '../styles/game-board-overlay.css';
 
+function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {
+  if (!resetAtMs) return '';
+  const remainingMs = resetAtMs - nowMs;
+  if (remainingMs <= 0) return 'Ready';
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -31,6 +46,9 @@ type GameBoardOverlayProps = {
   islandTimeLabel?: string;
   heartsResetLabel?: string;
   eggHatchLabel?: string;
+  spinWinResetAtMs?: number;
+  heartsResetAtMs?: number;
+  hatcheryResetAtMs?: number;
 };
 
 export function GameBoardOverlay({
@@ -54,9 +72,19 @@ export function GameBoardOverlay({
   islandTimeLabel = '—',
   heartsResetLabel = '—',
   eggHatchLabel = '—',
+  spinWinResetAtMs,
+  heartsResetAtMs,
+  hatcheryResetAtMs,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [nowMs, setNowMs] = useState(Date.now());
+
+  useEffect(() => {
+    if (spinWinResetAtMs === undefined && heartsResetAtMs === undefined && hatcheryResetAtMs === undefined) return;
+    const interval = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [spinWinResetAtMs, heartsResetAtMs, hatcheryResetAtMs]);
 
   useEffect(() => {
     if (isOpen) {
@@ -167,7 +195,9 @@ export function GameBoardOverlay({
                   </span>
                 </div>
               </button>
-              <span className="game-board-overlay__icon-timer">{islandTimeLabel}</span>
+              <span className="game-board-overlay__icon-timer">
+                {formatCountdown(spinWinResetAtMs, nowMs) || islandTimeLabel}
+              </span>
             </div>
             <div className="game-board-overlay__icon-item">
               <button
@@ -184,7 +214,9 @@ export function GameBoardOverlay({
                   />
                 </div>
               </button>
-              <span className="game-board-overlay__icon-timer">{heartsResetLabel}</span>
+              <span className="game-board-overlay__icon-timer">
+                {formatCountdown(heartsResetAtMs, nowMs) || heartsResetLabel}
+              </span>
             </div>
             <div className="game-board-overlay__icon-item">
               <button
@@ -201,7 +233,9 @@ export function GameBoardOverlay({
                   />
                 </div>
               </button>
-              <span className="game-board-overlay__icon-timer">{eggHatchLabel}</span>
+              <span className="game-board-overlay__icon-timer">
+                {formatCountdown(hatcheryResetAtMs, nowMs) || eggHatchLabel}
+              </span>
             </div>
           </div>
 
