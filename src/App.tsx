@@ -2331,6 +2331,17 @@ export default function App() {
     });
   }, [activeSession, logIslandRunEntryDebug, showLevelWorldsFromEntry]);
 
+  useEffect(() => {
+    if (showLevelWorldsFromEntry) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showLevelWorldsFromEntry]);
+
   const handleCloseWorkspaceSetup = () => {
     setShowWorkspaceSetup(false);
     setWorkspaceSetupDismissed(true);
@@ -3722,18 +3733,28 @@ export default function App() {
   };
 
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
-    <RecoverableErrorBoundary
-      fallback={null}
-      onError={(error) => {
-        console.error('[LevelWorldsEntryModal] render failed; closing modal to keep app usable.', error);
-        setShowLevelWorldsFromEntry(false);
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        overflow: 'hidden',
+        background: '#0a0f1e',
       }}
     >
-      <LevelWorldsHub
-        session={activeSession}
-        onClose={() => setShowLevelWorldsFromEntry(false)}
-      />
-    </RecoverableErrorBoundary>
+      <RecoverableErrorBoundary
+        fallback={null}
+        onError={(error) => {
+          console.error('[LevelWorldsEntryModal] render failed; closing modal to keep app usable.', error);
+          setShowLevelWorldsFromEntry(false);
+        }}
+      >
+        <LevelWorldsHub
+          session={activeSession}
+          onClose={() => setShowLevelWorldsFromEntry(false)}
+        />
+      </RecoverableErrorBoundary>
+    </div>
   ) : null;
 
   const luckyRollModal = showLuckyRoll && activeSession ? (

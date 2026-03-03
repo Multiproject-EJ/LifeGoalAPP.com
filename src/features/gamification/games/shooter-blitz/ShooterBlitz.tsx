@@ -3,12 +3,21 @@ import type { Session } from '@supabase/supabase-js';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { triggerCompletionHaptic } from '../../../../utils/completionHaptics';
+import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
+import type { IslandRunMinigameResult } from '../../level-worlds/services/islandRunMinigameTypes';
 import './shooterBlitz.css';
 
 interface ShooterBlitzProps {
-  session: Session;
-  onClose: () => void;
-  onComplete: () => void;
+  /** Session is optional — falls back to SupabaseAuthProvider context for framework launches */
+  session?: Session;
+  /** Called on exit/abort — backward compat; if omitted, onComplete({ completed: false }) is called */
+  onClose?: () => void;
+  /** Called on game end with result; callers may ignore the result arg (backward compat) */
+  onComplete: (result: IslandRunMinigameResult) => void;
+  /** Island number for difficulty scaling (IslandRunMinigameProps compat) */
+  islandNumber?: number;
+  /** Ticket budget (IslandRunMinigameProps compat) */
+  ticketBudget?: number;
 }
 
 const SHOOTER_TARGET_GOAL = 12;
@@ -25,21 +34,27 @@ const MISSION_PHASES = [
   { threshold: SHOOTER_TARGET_GOAL, label: 'Mission clear — extract now' },
 ] as const;
 
-export function ShooterBlitz({ session, onClose, onComplete }: ShooterBlitzProps) {
+export function ShooterBlitz({ session: sessionProp, onClose, onComplete }: ShooterBlitzProps) {
+  const { session: contextSession } = useSupabaseAuth();
+  const session = sessionProp ?? contextSession;
   const [isMissionStarted, setIsMissionStarted] = useState(false);
   const [targetsHit, setTargetsHit] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
 
-  const userId = session.user.id;
+  const userId = session?.user.id;
+
+  if (!userId) {
+    return null;
+  }
 
   const playerName = useMemo(() => {
-    const metadataName = session.user.user_metadata?.full_name;
+    const metadataName = session?.user.user_metadata?.full_name;
     if (typeof metadataName === 'string' && metadataName.trim().length > 0) {
       return metadataName.trim();
     }
 
-    return session.user.email ?? 'Pilot';
-  }, [session.user.email, session.user.user_metadata?.full_name]);
+    return session?.user.email ?? 'Pilot';
+  }, [session?.user.email, session?.user.user_metadata?.full_name]);
 
   const progressPercent = Math.round((targetsHit / SHOOTER_TARGET_GOAL) * 100);
 
@@ -80,7 +95,7 @@ export function ShooterBlitz({ session, onClose, onComplete }: ShooterBlitzProps
     });
 
     triggerCompletionHaptic('strong', { channel: 'gamification', minIntervalMs: 2500 });
-    onComplete();
+    onComplete({ completed: true, reward: { coins: SHOOTER_REWARDS.coins } });
   };
 
   const handleExit = () => {
@@ -93,7 +108,11 @@ export function ShooterBlitz({ session, onClose, onComplete }: ShooterBlitzProps
         started: isMissionStarted,
       },
     });
-    onClose();
+    if (onClose) {
+      onClose();
+    } else {
+      onComplete({ completed: false });
+    }
   };
 
   return (

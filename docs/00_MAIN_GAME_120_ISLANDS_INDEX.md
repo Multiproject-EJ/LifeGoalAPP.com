@@ -88,10 +88,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M11B — Wire ShooterBlitz fully through the M11A framework: implement shooter_blitz launch() to open the component, pipe the real onComplete reward to the caller, and remove the setShowShooterBlitzFromStop bypass  
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/islandRunMinigameService.ts`  
-**Acceptance criteria:** shooter_blitz launcher opens ShooterBlitz component, onComplete reward passthrough works, setShowShooterBlitzFromStop bypass removed  
-**How to test:** land on minigame stop, launch ShooterBlitz via framework, confirm rewards awarded on completion
+**Objective:** M11C — Per-island stop enforcement: gate boss behind completing all non-boss stops  
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/islandRunStops.ts`  
+**Acceptance criteria:** boss stop is locked until all non-boss stops on the current island are completed; completing all non-boss stops unlocks the boss  
+**How to test:** land on boss stop without completing other stops — boss must be locked; complete all other stops, then land on boss — boss accessible
 
 ---
 

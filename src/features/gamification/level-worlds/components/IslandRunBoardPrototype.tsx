@@ -32,7 +32,7 @@ import {
   getIslandRunAudioEnabled,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
-import { ShooterBlitz } from '../../games/shooter-blitz/ShooterBlitz';
+import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import {
   resolveMinigameForStop,
   ISLAND_RUN_MINIGAME_REGISTRY,
@@ -266,8 +266,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // B2-2: token landing animation state
   const [isTokenLanding, setIsTokenLanding] = useState(false);
 
-  // B3-2: ShooterBlitz from minigame stop
-  const [showShooterBlitzFromStop, setShowShooterBlitzFromStop] = useState(false);
+  // B3-2: minigame launcher state (M11B framework)
+  const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
 
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
@@ -2142,33 +2142,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                     onClick={() => {
-                      const minigameId = resolveMinigameForStop(islandNumber);
-                      const minigame = ISLAND_RUN_MINIGAME_REGISTRY[minigameId];
-                      minigame.launch({
-                        session,
-                        onComplete: (result: IslandRunMinigameResult) => {
-                          if (result.completed) {
-                            // Award rewards — destructure first so TS can narrow inside callbacks
-                            const { coins: rwCoins, dice: rwDice, hearts: rwHearts, spinTokens: rwSpin } = result.reward;
-                            if (rwCoins) setCoins((c) => c + rwCoins);
-                            if (rwDice) setDicePool((d) => d + rwDice);
-                            if (rwHearts) setHearts((h) => h + rwHearts);
-                            if (rwSpin) setSpinTokens((s) => s + rwSpin);
-                            // Mark stop completed
-                            setCompletedStops((prev) => {
-                              if (prev.includes('minigame')) return prev;
-                              return [...prev, 'minigame'];
-                            });
-                          }
-                          setActiveStopId(null);
-                        },
-                        onExit: () => {
-                          setActiveStopId(null);
-                        },
-                      });
-                      // Keep ShowShooterBlitzFromStop for backward compat — ShooterBlitz still has
-                      // its own open/close state; M11B will fully integrate it into the launcher
-                      setShowShooterBlitzFromStop(true);
+                      setActiveLaunchedMinigameId(resolveMinigameForStop(islandNumber));
+                      setActiveStopId(null);
                     }}
                   >
                     ▶ Launch Minigame
@@ -2340,18 +2315,32 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>
       )}
 
-      {showShooterBlitzFromStop && (
-        <ShooterBlitz
-          session={session}
-          onClose={() => {
-            setShowShooterBlitzFromStop(false);
-            handleCompleteStopById('minigame');
-          }}
-          onComplete={() => {
-            setShowShooterBlitzFromStop(false);
-            handleCompleteStopById('minigame');
-          }}
-        />
+      {activeLaunchedMinigameId && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9000, overflow: 'hidden' }}>
+          <IslandRunMinigameLauncher
+            minigameId={activeLaunchedMinigameId}
+            islandNumber={islandNumber}
+            onComplete={(result) => {
+              setActiveLaunchedMinigameId(null);
+              if (result.completed && result.reward) {
+                const { coins: rwCoins, hearts: rwHearts, spinTokens: rwSpinTokens } = result.reward;
+                if (rwCoins) setCoins((c) => c + rwCoins);
+                if (rwHearts) setHearts((h) => h + rwHearts);
+                if (rwSpinTokens) setSpinTokens((s) => s + rwSpinTokens);
+                void recordTelemetryEvent({
+                  userId: session.user.id,
+                  eventType: 'economy_earn',
+                  metadata: {
+                    stage: 'minigame_reward',
+                    minigameId: activeLaunchedMinigameId,
+                    reward: result.reward as Record<string, number>,
+                  },
+                });
+              }
+              handleCompleteStopById('minigame');
+            }}
+          />
+        </div>
       )}
     </section>
   );
