@@ -396,20 +396,45 @@ export default function App() {
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
   const [islandTimeLabelForOverlay, setIslandTimeLabelForOverlay] = useState('—');
+  const [heartsResetAtMs, setHeartsResetAtMs] = useState<number | undefined>(undefined);
+  const [eggHatchResetAtMs, setEggHatchResetAtMs] = useState<number | undefined>(undefined);
+  const spinWinResetAtMs = useMemo(() => {
+    const now = new Date();
+    const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    return tomorrow.getTime();
+  }, []);
 
   useEffect(() => {
     function computeLabel() {
       try {
         const raw = localStorage.getItem(ISLAND_RUN_RUNTIME_STATE_KEY);
-        if (!raw) { setIslandTimeLabelForOverlay('—'); return; }
-        const state = JSON.parse(raw) as { islandStartedAtMs?: number };
+        if (!raw) {
+          setIslandTimeLabelForOverlay('—');
+          setHeartsResetAtMs(undefined);
+          setEggHatchResetAtMs(undefined);
+          return;
+        }
+        const state = JSON.parse(raw) as { islandStartedAtMs?: number; activeEggSetAtMs?: number; activeEggHatchDurationMs?: number };
         const startMs = state?.islandStartedAtMs;
-        if (!startMs) { setIslandTimeLabelForOverlay('—'); return; }
-        const elapsedSec = Math.floor((Date.now() - startMs) / 1000);
-        const remaining = Math.max(0, ISLAND_DURATION_SEC_PROD - elapsedSec);
-        setIslandTimeLabelForOverlay(formatCompactDuration(remaining));
+        if (!startMs) {
+          setIslandTimeLabelForOverlay('—');
+          setHeartsResetAtMs(undefined);
+        } else {
+          const elapsedSec = Math.floor((Date.now() - startMs) / 1000);
+          const remaining = Math.max(0, ISLAND_DURATION_SEC_PROD - elapsedSec);
+          setIslandTimeLabelForOverlay(formatCompactDuration(remaining));
+          setHeartsResetAtMs(startMs + ISLAND_DURATION_SEC_PROD * 1000);
+        }
+        const { activeEggSetAtMs, activeEggHatchDurationMs } = state;
+        if (activeEggSetAtMs && activeEggHatchDurationMs) {
+          setEggHatchResetAtMs(activeEggSetAtMs + activeEggHatchDurationMs);
+        } else {
+          setEggHatchResetAtMs(undefined);
+        }
       } catch {
         setIslandTimeLabelForOverlay('—');
+        setHeartsResetAtMs(undefined);
+        setEggHatchResetAtMs(undefined);
       }
     }
     computeLabel();
@@ -3822,8 +3847,11 @@ export default function App() {
           goldBalance={goldBreakdown.goldRemainder}
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
           islandTimeLabel={islandTimeLabelForOverlay}
+          spinWinResetAtMs={spinWinResetAtMs}
+          heartsResetAtMs={heartsResetAtMs}
           heartsResetLabel="Next island"
-          eggHatchLabel="—"
+          hatcheryResetAtMs={eggHatchResetAtMs}
+          eggHatchLabel={eggHatchResetAtMs ? '—' : 'No egg'}
         />
         {showAiCoachModal && (
           <AiCoach
@@ -4100,8 +4128,11 @@ export default function App() {
         goldBalance={goldBreakdown.goldRemainder}
         spinsRemaining={dailyTreatsInventory.spinsRemaining}
         islandTimeLabel={islandTimeLabelForOverlay}
+        spinWinResetAtMs={spinWinResetAtMs}
+        heartsResetAtMs={heartsResetAtMs}
         heartsResetLabel="Next island"
-        eggHatchLabel="—"
+        hatcheryResetAtMs={eggHatchResetAtMs}
+        eggHatchLabel={eggHatchResetAtMs ? '—' : 'No egg'}
       />
 
       {isAuthOverlayVisible ? (
