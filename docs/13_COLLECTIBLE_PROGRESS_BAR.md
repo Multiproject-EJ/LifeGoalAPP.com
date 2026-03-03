@@ -1,24 +1,26 @@
-# COLLECTIBLE PROGRESS BAR — CANONICAL DESIGN
+# COLLECTIBLE PROGRESS BAR & SHARD ECONOMY — CANONICAL DESIGN
 
-> **Status:** Canonical. Authored 2026-03-03.
+> **Status:** Canonical. Updated 2026-03-03.
 > **This file wins** if any other doc under `docs/` conflicts on the topics covered here.
-> Supersedes any earlier stub references to the progress bar.
+> Supersedes any earlier stub references to the progress bar or shard system.
 
 ---
 
 ## 1. Overview
 
-The Collectible Progress Bar is a persistent HUD element that gives the player a **grind loop on every island**. It works like a milestone stamp-card: the player collects a themed sub-currency (shards) by landing on `egg_shard` tiles while rolling the 17-tile board, and spends those shards to unlock a cascade of rewards. Because the reward thresholds grow progressively harder (and the best rewards require more loops than casual play can reach), the bar is also the **primary monetisation lever** — players who run out of dice/hearts can use micro-transactions to keep grinding toward the higher-reward tiers.
+The Collectible Progress Bar is a persistent HUD element that gives the player a **grind loop on every island**. It works like a milestone stamp-card: the player collects a themed sub-currency (**shards**) by playing the board and completing actions, and spends those shards to unlock a cascade of rewards, gate premium eggs in the hatchery, buy items for their Home Island pets, and access special tiers in the Player Shop.
+
+Shards are **global and persistent** — they never reset on island travel. They are a lifetime-accumulating resource. This makes them a meaningful long-term progression currency that rewards consistent players.
 
 ---
 
-## 2. Collectible Sub-Currency
+## 2. Shard Sub-Currency
 
 ### 2a. One collectible type per mini-game era
 
-The sub-currency icon and name changes based on which mini-game era the current island belongs to (see `docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md` Section 1b for the era schedule).
+The shard icon and name changes based on which mini-game era the current island belongs to (see `docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md` Section 1b for the era schedule). The type of shard earned on a given island reflects the current era.
 
-| Mini-game era | Islands | Collectible name | Icon |
+| Mini-game era | Islands | Shard name | Icon |
 |---|---|---|---|
 | Shooter Blitz | 1–17 | Energy Cell | ⚡ |
 | Flick Bowl | 18–34 | Bowl Token | 🎳 |
@@ -30,37 +32,55 @@ The sub-currency icon and name changes based on which mini-game era the current 
 
 **Special / rare islands** use a unique collectible regardless of era:
 
-| Island type | Collectible name | Icon |
+| Island type | Shard name | Icon |
 |---|---|---|
 | Special island (one of the 20) | Star Fragment | 🌟 |
 
 > Special islands are: 5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120.
-> On a special island, **Star Fragments** replace the era collectible for the entire island session.
+> On a special island, **Star Fragments** replace the era shard for the entire island session.
+
+For simplicity in the data model, all shard types are stored as a single integer field `island_shards` (global, never zeroed). The era type is derived at display time from the current island number. The Player Shop and egg gating reference the same `island_shards` pool.
 
 ### 2b. How shards are earned
 
-- Landing on an `egg_shard` tile awards **1–3 shards** (randomised, seeded by island number + tile index + roll count).
-- The shard award is shown as a pop-up "+2 ⚡" animation above the tile on landing.
-- Shards are **temporary** — they are zeroed on island travel (same rule as `island_mini_game_currency` in the canonical data model).
-- Shards do **not** carry over to the next island, even as dormant. They are truly island-scoped.
+Shards are earned from multiple sources, scaled by island progress (higher islands = more shards per source):
+
+| Source | Amount | Notes |
+|---|---|---|
+| `egg_shard` tile landing | 1–3 shards | Randomised, seeded by island + tile + roll count. Pop-up "+2 ⚡" animation on landing. |
+| Stop completion (Stops 2–4) | 1–2 shards | Bonus for completing a utility, dynamic, or mini-game stop. Not Stop 1 or Boss. |
+| Boss win (Stop 5) | 3–8 shards | Scales with island tier (see Section 5 below). Special island boss = 2× multiplier. |
+| Daily habit completion (LifeGoal app) | 1 shard per habit | Up to 3 shards/day via this route. Encourages habit loop engagement. |
+| Encounter tile win | 1–2 shards | Bonus reward on top of regular encounter reward. |
+
+> **Anti-abuse:** shard awards from habit completion are capped at 3/day (UTC). The cap is enforced server-side in Supabase via the existing habit completion log.
+
+### 2c. Shard persistence
+
+- `island_shards` is a **global lifetime integer** — it only ever goes up (spending deducts).
+- It is stored in `island_run_runtime_state` in Supabase.
+- It is **never zeroed** on island travel.
+- `shard_tier_index` tracks which reward tier the player is currently on in the milestone chain (see Section 3).
+- `shard_claim_count` is a **lifetime count** of how many rewards have been claimed from the bar (used for analytics and unlock tracking — e.g. unlocking a new pet slot after 10 lifetime claims).
 
 ---
 
-## 3. Reward Tiers (Repeating Milestone Chain)
+## 3. Collectible Progress Bar (Milestone Chain)
 
 ### 3a. The chain model
 
-The bar uses a **repeating escalating milestone chain**:
+The bar is always visible at the top of the board HUD and on the Home Island overlay.
 
-1. The bar starts at 0 at the beginning of each island.
-2. The player grinds to hit tier thresholds in sequence: T1 → T2 → T3 → T4 → T5 → T6 → (repeat from T4+).
-3. When a threshold is hit, a **claim button** appears. The reward is **not auto-awarded** — the player must tap to claim.
-4. After claiming, the bar resets to 0 and the **next tier becomes active** (harder threshold, better reward).
-5. This chain repeats indefinitely within the island session — there is no hard cap on how many times a player can claim, but the thresholds grow progressively so the later tiers are out of reach for casual play without spending.
+1. The bar shows progress toward the **current active tier threshold**.
+2. The player earns shards from board play, stops, boss wins, habits, and encounters.
+3. When a threshold is hit, a **Claim** button appears. The reward is **not auto-awarded** — the player taps to claim (blind-box reveal).
+4. After claiming, `shard_tier_index` increments. The bar threshold advances to the next tier.
+5. The chain repeats indefinitely. Higher tiers have larger thresholds and better rewards.
+6. **Shards do not reset** — already-earned shards carry forward. The bar always shows progress from the current tier's baseline.
 
 ### 3b. Tier thresholds and reward sizes
 
-| Tier | Shards required | Reward size | Typical reward examples |
+| Tier | Cumulative shards | Reward size | Typical reward examples |
 |---|---|---|---|
 | T1 | 20 | Tiny | 10–30 coins, or 1 dice |
 | T2 | 60 | Small | 50–100 coins, or 2–3 dice, or 1 mini-game ticket |
@@ -68,86 +88,170 @@ The bar uses a **repeating escalating milestone chain**:
 | T4 | 220 | Medium | 1 diamond, or 2 hearts, or 5–10 dice, or 2 mini-game tickets |
 | T5 | 350 | Medium-Large | 2–3 diamonds, or 3 hearts, or 10–15 dice, or 3–5 mini-game tickets |
 | T6 | 500 | Large | 5 diamonds, or 5 hearts, or 20 dice, or 8–10 mini-game tickets |
-| T7+ | +150 per tier above T6 | Very Large (repeating) | Scales with tier: +1 diamond / +1 heart / +5 dice per extra tier |
+| T7+ | +150 per tier above T6 | Very Large (repeating) | Scales: +1 diamond / +1 heart / +5 dice per extra tier |
 
-> **Monetisation note:** T1–T3 are reachable in normal casual play (2–4 loops of the board). T4 requires focused play (~6–8 loops). T5–T6 require more loops than the average island timer + starting dice pool allows — this is intentional. Players who want T5+ rewards within one island session will need to purchase hearts/dice via micro-transaction to keep rolling. The rewards at T5+ are priced to be worth the spend.
+> **Monetisation note:** T1–T3 are reachable in normal casual play (2–4 board loops). T4 requires focused play (~6–8 loops). T5–T6 require more loops than the average island timer + starting dice pool allows. Players who want T5+ rewards within one island session will need to purchase hearts/dice to keep rolling. The rewards at T5+ are priced to be worth the spend.
 
-### 3c. Reward contents are randomised (blind-box style)
+### 3c. Reward contents — dynamic, progress-synced, addictive design
 
-Within each tier's reward size, the **specific reward** is chosen blind-box style at claim time:
+Within each tier's reward size, the **specific reward** is chosen dynamically at claim time. The reward pool is NOT static — it is weighted by the player's current game state to maximise engagement:
 
-- The player sees the tier icon + approximate size (e.g. "Medium reward 🎁") but not the exact contents until they tap Claim.
-- Reward pools per tier are seeded by `island_number + tier_index + claim_count` so outcomes are deterministic (reproducible for support) but feel random to the player.
-- App-wide currencies (coins, diamonds, hearts) and island-scoped currencies (dice, mini-game tickets) can both appear in reward pools.
+**Reward selection algorithm (priority order):**
 
----
+1. **Deficit detection (highest priority):** If the player is low on a critical resource (hearts < 3, dice < 5, coins < 200), weight that resource's reward pool ×3. This makes the game feel generous and responsive.
 
-## 4. UI Specification
+2. **Upcoming boss boost:** If the player is within 2 stops of the boss (tile index ≥ 14 or stepsCompleted ≥ 3), increase probability of heart rewards. Players feel the game is "helping" them reach the boss.
 
-### 4a. Progress bar component — visual design
+3. **Streak reward:** If the player has claimed 3+ consecutive tiers in the same island session, add a small bonus (e.g. +1 extra dice on top of any reward). Rewards streaky sessions.
 
-The bar is a **pill/capsule shaped component** inspired by Monopoly GO's island progress bar.
+4. **Era bonus:** Once per era (every 17 islands), T4+ rewards may include an era-exclusive cosmetic or pet item (see Section 4). This is a rare event (≈15% chance at T4, ≈35% at T5, ≈55% at T6).
 
-Layout (left to right inside the pill):
-```
-[ collectible icon ]  [ ████░░░░░░  X / threshold ]  [ reward tier icon 🎁 ]
-```
+5. **Baseline pool:** If no special condition applies, draw from the standard tier pool with uniform weighting.
 
-- **Left:** collectible icon (emoji or SVG — matches current era/island type)
-- **Center:** fill bar + fraction label (`X / threshold`, e.g. `"245 / 350"`)
-- **Right:** reward tier icon indicating the current active tier (small/medium/large gift icon, or the era icon for the upcoming reward type)
-- **Below the pill:** island countdown timer (e.g. `"22h 4m"`) — same timer as the existing HUD timer but repositioned to sit directly under the progress bar pill when the board is visible
-
-### 4b. Where the bar appears
-
-1. **Home Island overlay (existing position):** The bar is already stubbed in the UI. This PR adds the dynamic data (live shard count, threshold, tier, timer) to it.
-2. **Board view (new position):** When the player is actively on the island board, the progress bar pill is **always visible at the top of the board screen** (Option A — above the 17-tile ring, below the main HUD chips). It does not disappear during stop modals — it remains visible but non-interactive while a modal is open.
-
-### 4c. Claim interaction
-
-- When `shards >= threshold`, the pill **pulses** (CSS animation) and the right-side icon changes to a glowing "CLAIM" state.
-- Tapping the pill (or a dedicated Claim button) triggers the reward reveal modal (blind-box animation → reward contents shown).
-- After claiming, the bar animates back to 0 and shows the next tier's threshold.
+**Reward reveal UX:**
+- Player sees tier icon + size label ("🎁 Medium reward") before claiming.
+- On tap: animated box-open → contents revealed one by one with pop-up currency animations.
+- If reward includes a pet item or cosmetic: special "rare find" animation with distinct sound.
 
 ---
 
-## 5. Data Model additions required
+## 4. Shard Spending — The Player Shop & Hatchery
 
-The following fields must be added to the Supabase `island_run_runtime_state` table (migration to be created in **M16A**):
+Shards are the primary non-premium currency for gating *special* items. They are spent (deducted from `island_shards`) at point of purchase.
 
-| Field | Type | Description |
+### 4a. Hatchery — Egg Gating by Shard Cost
+
+Normal (Common) eggs are always free to set. Rare and Mythic eggs require shard spending:
+
+| Egg tier | Shard cost | Notes |
 |---|---|---|
-| `island_shards` | `integer` | Current shard count for the active island (zeroed on travel) |
-| `shard_tier_index` | `integer` | Which tier is currently active (0 = T1, 1 = T2, etc.) |
-| `shard_claim_count` | `integer` | How many times the player has claimed a reward on this island (used for reward seeding) |
+| Common | 0 shards | Always free. Available from the start. |
+| Rare | 150 shards | Unlocked at any island. Requires accumulated shard balance ≥ 150. |
+| Mythic | 500 shards | High-cost premium egg. Requires accumulated balance ≥ 500. Rare reward. |
 
-These fields are zeroed in `performIslandTravel()` alongside `island_mini_game_currency`.
+> **Special island bonus:** On a special island, Rare egg cost is reduced by 50% (75 shards) and Mythic by 25% (375 shards) — a limited-time incentive to play special islands hard.
 
-The `IslandRunRuntimeState` interface, `IslandRunGameStateRecord`, and `persistIslandRunRuntimeStatePatch` patch type must all be extended with these three fields.
+Setting a Rare or Mythic egg deducts the shard cost immediately from `island_shards`. If the player does not have enough shards, the "Set egg" button shows the cost and is disabled with a "Need X more shards" message.
+
+### 4b. Player Shop — Shard-Gated Items
+
+The Player Shop (accessible via the persistent 🛍️ HUD button, always available; with a separate 🐾 Pets tab once the first pet is unlocked) has a shard-spend section alongside the coin/diamond section.
+
+**Shard items in the Player Shop:**
+
+| Category | Item | Shard cost | Notes |
+|---|---|---|---|
+| Pet food | Basic treat (all pets) | 20 shards | Boosts pet happiness +1. |
+| Pet food | Premium treat | 60 shards | Boosts pet happiness +2 + small XP grant. |
+| Pet accessory | Ribbon / Hat / Cape | 80–150 shards | Cosmetic only. Equippable in the Pet panel. |
+| Pet upgrade | Pet level boost | 200 shards | Grants +1 pet level (see Section 5). |
+| Board cosmetic | Token skin (era-themed) | 250 shards | Replaces the board token sprite for the current era. |
+| Board cosmetic | Board border skin | 400 shards | Decorative ring around the 17-tile board. |
+| Boost | Extra dice roll (×5) | 30 shards | 5 bonus dice added to pool immediately. |
+| Boost | Heart top-up (×3) | 50 shards | 3 hearts added immediately. |
+
+> Shard-spend items in the shop do **not** require boss completion to unlock (unlike the coin/diamond tiers). They are always accessible once the player has enough shards.
+
+### 4c. Shop layout (canonical)
+
+The Player Shop has three tabs:
+1. **Coins tab** — items priced in coins (always available)
+2. **Premium tab** — items priced in diamonds; Tier 2+ unlocked after boss defeat
+3. **Shards tab** — items priced in shards; always visible; shows current shard balance at top
+
+The shop is always accessible via the persistent 🛍️ HUD button. It is **not** one of the 5 island stops.
+
+**The "Extra Stop" after boss defeat:**
+After the boss (Stop 5) is defeated, a special **post-boss bonus stop** becomes temporarily available — this is shown as a glowing ✨ button in the HUD (not on the board ring). It is a one-time bonus per island: the player can claim a post-boss reward (coins, dice, hearts) and the shop's Premium tab unlocks for that island. This is not a "sixth stop" in the data model — it is a flag `bossBonusClaimable: boolean` and is consumed once per island.
 
 ---
 
-## 6. Build Slices
+## 5. Home Island Pets System
 
-| Slice ID | What | Key files |
+The Home Island panel gains a **Pets section** (alongside the existing Hatchery section). Pets are a long-term cosmetic and gameplay companion system.
+
+### 5a. Pet slots
+
+- Players can collect up to **3 pets** on their Home Island.
+- **Slot 1** is available from the start (unlocks after the player claims their 1st lifetime shard bar reward).
+- **Slot 2** unlocks after 10 lifetime shard bar claims (`shard_claim_count ≥ 10`).
+- **Slot 3** unlocks after 30 lifetime shard bar claims (`shard_claim_count ≥ 30`).
+
+### 5b. How to get pets
+
+Pets are obtained from **Mythic egg hatches** (rare) and **era milestone drops** (see Section 3c reward pool). They cannot be directly purchased with any currency — they must be earned through gameplay. This makes them prestigious.
+
+A pet is associated with the era it was earned in (e.g. a Shooter Blitz era pet has a space/sci-fi theme; a Tap Garden era pet has a nature/floral theme).
+
+### 5c. Pet mechanics
+
+Each pet has:
+
+| Attribute | Description |
+|---|---|
+| Name | Player-assigned or default era name |
+| Level | 1–10. Increases with XP from treats and play time. |
+| Happiness | 0–5 stars. Decreases over time if not fed. Increases with treats. |
+| Rarity | Common / Rare / Legendary (matches the source egg tier) |
+| Era | Which mini-game era the pet came from (cosmetic flavour) |
+
+**Pet happiness effects (gameplay bonuses):**
+- 5 stars: +1 shard per `egg_shard` tile landing (passive bonus while on the board)
+- 3–4 stars: no bonus, no penalty
+- 1–2 stars: pet shows a sad indicator in the Home Island panel (cosmetic only, no gameplay penalty)
+- 0 stars: pet "sleeps" — no bonus and shown as resting in the Home panel
+
+Happiness decays at **1 star per 24 hours** without feeding. Players need to visit the app and feed pets to keep the happiness bonus active — this is a gentle daily engagement hook tied to the LifeGoal habit loop.
+
+### 5d. Pet display
+
+Pets are shown in the Home Island panel as small animated sprites (placeholder: emoji + name card in v0). Full sprite art is a future asset task. The panel shows:
+- Pet name + level + happiness stars
+- "Feed" button (spends shards) 
+- "Equip accessory" button (opens cosmetics from shop inventory)
+- "Pet" button (tap for a happiness animation, no cost, once per hour)
+
+---
+
+## 6. Shard Scaling by Island Progress
+
+To keep shards meaningful throughout all 120 islands, the earn rate scales with island number:
+
+| Island range | Shard multiplier | Notes |
 |---|---|---|
-| **M16A** | Data model — add `island_shards`, `shard_tier_index`, `shard_claim_count` to Supabase + state types | `islandRunGameStateStore.ts`, `islandRunRuntimeState.ts`, `islandRunRuntimeStateBackend.ts`, migration `0171_island_run_shard_fields.sql` |
-| **M16B** | Tile landing — award 1–3 shards on `egg_shard` tile landing; persist shard delta; show "+N ⚡" pop-up animation | `IslandRunBoardPrototype.tsx`, `islandBoardTileMap.ts` |
-| **M16C** | Progress bar component — `IslandShardProgressBar.tsx` pill component with fill, fraction, era icon, tier icon, claim pulse | new `IslandShardProgressBar.tsx`, `LevelWorlds.css` |
-| **M16D** | Board integration — mount `IslandShardProgressBar` at top of board view (always visible, Option A position) | `IslandRunBoardPrototype.tsx` |
-| **M16E** | Home Island integration — wire live shard/tier data into existing Home Island progress bar stub | `IslandRunBoardPrototype.tsx` |
-| **M16F** | Claim flow — reward tier resolution, blind-box reveal modal, bar reset + tier increment, persist | `IslandRunBoardPrototype.tsx`, new `islandShardRewards.ts` |
-| **M16G** | Timer relocation — move island countdown to sit directly below the progress bar pill in board view | `IslandRunBoardPrototype.tsx`, `LevelWorlds.css` |
-| **M16H** | Audio/haptics — shard earn pop sound, tier threshold reached chime, claim haptic | `islandRunAudio.ts`, `IslandRunBoardPrototype.tsx` |
-| **M16I** | QA + telemetry — telemetry events for shard_earn, tier_reached, reward_claimed; QA checklist section | `IslandRunBoardPrototype.tsx`, `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md` |
+| 1–20 | ×1.0 | Baseline |
+| 21–40 | ×1.2 | Slight boost |
+| 41–60 | ×1.5 | Mid-game boost |
+| 61–80 | ×1.8 | Late-game |
+| 81–100 | ×2.0 | Pre-endgame |
+| 101–120 | ×2.5 | Endgame — shards flow freely |
+
+The multiplier applies to all shard sources (tile, stop, boss, habit). It is floored to 1 minimum. The multiplier does **not** affect the shard cost of eggs or shop items — those are fixed. This means later-game players accumulate shards faster and can buy premium items more freely, which is intentional (late-game reward loop).
 
 ---
 
-## 7. Open Design Questions (to resolve before M16F)
+## 7. Data Model Fields
 
-These questions are noted but do not block M16A–M16E:
+| Field | Type | Persisted in | Notes |
+|---|---|---|---|
+| `island_shards` | `number` (integer) | `island_run_runtime_state` (Supabase + localStorage) | Global lifetime shard balance. Never zeroed. |
+| `shard_tier_index` | `number` (integer) | `island_run_runtime_state` | Current active tier in the milestone chain. Increments on each claim. Lifetime. |
+| `shard_claim_count` | `number` (integer) | `island_run_runtime_state` | Lifetime count of milestone claims. Used for pet slot unlock gates. |
 
-1. **Reward pool tables** — exact coin/diamond/heart/dice/ticket amounts per tier need to be specified in a reward config file (not hardcoded). To be designed in M16F devplan.
-2. **Special island multiplier** — do Star Fragment shards award the same 1–3 per tile, or is the rate higher on special islands? (Suggested: 2–5 on special islands.)
-3. **Cycle 2+ behaviour** — on revisit cycles, does the shard bar carry any bonus (e.g. +20% shard rate for islands where you previously completed T6)? Not designed yet.
-4. **Fight Boss islands** — on fight-boss islands, should the T6 reward always include a guaranteed heart (since boss fights cost hearts)? To be decided.
+These three fields are added in **M16A** (migration `0171_island_run_shard_fields.sql`).
+
+---
+
+## 8. Build Slices (M16A → M16I)
+
+| Slice | What gets built |
+|---|---|
+| M16A | Data model: `island_shards`, `shard_tier_index`, `shard_claim_count` fields in Supabase + all type interfaces. `performIslandTravel()` does NOT zero shards. |
+| M16B | Shard earn on `egg_shard` tile landing: pop-up animation, shard increment, persist. |
+| M16C | Shard earn from stop completion (Stops 2–4) and boss win (Stop 5). |
+| M16D | Collectible Progress Bar pill HUD component: tier progress bar, current tier label, shard count display. Always visible at top of board. |
+| M16E | Claim button + blind-box reward reveal: dynamic reward pool logic (deficit detection, boss proximity, streak, era bonus). |
+| M16F | Egg hatchery shard gating: Rare egg = 150 shards, Mythic = 500 shards. Cost display + disabled state when insufficient shards. |
+| M16G | Player Shop Shards tab: shard balance display, boost items (dice, hearts), pet food. |
+| M16H | Home Island Pets panel: pet slot display, feed action (shard spend), happiness decay + star display, pet level. |
+| M16I | Pet slot unlock gates via `shard_claim_count`; Slot 2 at ≥10 claims, Slot 3 at ≥30 claims. Post-boss bonus stop flag (`bossBonusClaimable`). 
