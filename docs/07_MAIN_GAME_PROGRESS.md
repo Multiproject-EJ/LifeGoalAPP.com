@@ -2835,3 +2835,29 @@ Testing:
 - Back button on LevelWorldsHub returns to main app
 Next:
 - M11C: per-island stop enforcement (gate boss behind completing all non-boss stops)
+
+---
+
+Date: 2026-03-03
+Slice: M11C — Per-island stop enforcement: Step 1 gate, stop progress HUD chip, boss lock visual, completedStops persistence
+Summary:
+- handleRoll() and handleSpin() now gate behind Stop 1 completion: if Step 1 is not yet done, roll is blocked and landingText shows "Complete Stop 1 first" message
+- HUD status row now renders a dynamic stop progress chip: "Complete Stop 1 to unlock dice 🔒" / "X/N stops done — unlock boss!" / "✅ All stops cleared"
+- Boss orbit stop now shows 🔒 icon (instead of 👑) when stopStateMap returns 'locked' (all non-boss stops not yet complete)
+- completedStops is now persisted per-island in localStorage under key island_run_stops_{userId}_island_{islandNumber}
+- completedStops is restored from localStorage on hydration and whenever islandNumber changes
+- performIslandTravel() clears the old island's localStorage key before travelling to the next island
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build passes
+- On new island: Roll / Spin shows "Complete Stop 1 first" message and does not advance token
+- After completing Stop 1: Roll / Spin works normally
+- Boss orbit stop shows 🔒 until all non-boss stops are completed
+- HUD chip shows correct progress state at each stage
+- completedStops survives page refresh (localStorage per-island key)
+- Travelling to new island clears old island's completedStops from localStorage
+Next:
+- M11D: completedStops Supabase persistence (add completed_stops column to island_run_runtime_state table; wire through readIslandRunGameStateRecord / writeIslandRunGameStateRecord / hydrateIslandRunGameStateRecordWithSource)

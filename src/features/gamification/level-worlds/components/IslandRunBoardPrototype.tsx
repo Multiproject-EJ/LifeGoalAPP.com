@@ -661,6 +661,37 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
 
+  // M11C: restore completedStops from localStorage when island or hydration state changes
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed)) {
+          setCompletedStops(parsed.filter((x): x is string => typeof x === 'string'));
+          return;
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+    setCompletedStops([]);
+  }, [hasHydratedRuntimeState, islandNumber, session.user.id]);
+
+  // M11C: persist completedStops to localStorage whenever it changes
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(completedStops));
+    } catch {
+      // ignore storage errors
+    }
+    // TODO M11D: persist completedStops to Supabase island_run_runtime_state
+  }, [completedStops, hasHydratedRuntimeState, islandNumber, session.user.id]);
+
   const stopStateMap = useMemo(() => {
     const map = new Map<string, StopProgressState>();
     const nonBossStops = islandStopPlan.filter((stop) => stop.stopId !== 'boss');
@@ -811,6 +842,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const handleRoll = async () => {
     if (showFirstRunCelebration) return;
 
+    // M11C: Step 1 enforcement — player must complete Stop 1 before rolling
+    const step1Stop = islandStopPlan[0];
+    const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+    if (!step1Complete) {
+      setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling dice.`);
+      return;
+    }
+
     if (isRolling) {
       return;
     }
@@ -934,6 +973,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // B2-1: handleSpin — costs 1 spin token, rolls SPIN_MIN–SPIN_MAX
   const handleSpin = async () => {
+    // M11C: Step 1 enforcement — player must complete Stop 1 before spinning
+    const step1Stop = islandStopPlan[0];
+    const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+    if (!step1Complete) {
+      setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling or spinning.`);
+      return;
+    }
+
     if (isRolling || spinTokens < 1) return;
 
     setIsRolling(true);
@@ -1384,6 +1431,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // B4-3: performIslandTravel — centralizes all travel reset state
   const performIslandTravel = (nextIsland: number) => {
+    // M11C: clear completed stops for the old island before travelling
+    try {
+      window.localStorage.removeItem(`island_run_stops_${session.user.id}_island_${islandNumber}`);
+    } catch {
+      // ignore storage errors
+    }
     // B5-4: Carry over dormant eggs — if egg is hatchable (stage 4) but not opened, mark dormant
     if (activeEgg && eggStage >= 4) {
       setActiveEgg((egg) => egg ? { ...egg, isDormant: true } : null);
@@ -1683,6 +1736,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">Ends in: <strong>{timerDisplay}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">Spins: <strong>{spinTokens}</strong></span>
+              {/* M11C: stop progress chip */}
+              {(() => {
+                const nonBossStops = islandStopPlan.filter((s) => s.stopId !== 'boss');
+                const completedNonBoss = nonBossStops.filter((s) => completedStops.includes(s.stopId)).length;
+                const step1Stop = islandStopPlan[0];
+                const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+                if (!step1Complete) {
+                  return <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>;
+                }
+                if (completedNonBoss < nonBossStops.length) {
+                  return <span className="island-run-prototype__stat-chip">{completedNonBoss}/{nonBossStops.length} stops done — unlock boss!</span>;
+                }
+                return <span className="island-run-prototype__stat-chip">✅ All stops cleared</span>;
+              })()}
             </div>
           </div>
           <div className="island-run-prototype__hud-section island-run-prototype__hud-section--landing">
@@ -1877,7 +1944,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               }}
               disabled={!stopVisual.stopId}
             >
-              <span className="island-orbit-stop__icon" aria-hidden="true">{stopVisual.icon}</span>
+              <span className="island-orbit-stop__icon" aria-hidden="true">{stopVisual.state === 'locked' ? '🔒' : stopVisual.icon}</span>
               <span
                 className="island-orbit-stop__label"
                 style={{ transform: `translate(-50%, calc(-50% + ${stopVisual.labelOffsetY}px))` }}
