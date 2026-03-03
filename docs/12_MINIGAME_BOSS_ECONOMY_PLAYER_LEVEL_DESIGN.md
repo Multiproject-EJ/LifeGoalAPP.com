@@ -429,6 +429,7 @@ All milestones listed. Priority order for MVP.
 
 | Priority | Slice | What | Key files |
 |---|---|---|---|
+| 0 | **M16 (Collectible Bar)** | Collectible Progress Bar — full shard system + pill HUD. See `docs/13_COLLECTIBLE_PROGRESS_BAR.md` for M16A–M16I slice breakdown | Multiple files — see doc |
 | 1 | **M11D** | `completedStops` Supabase persistence (gap from M11C) | `islandRunGameStateStore.ts`, migration |
 | 2 | **M16** | Per-tile resolution — fully typed tile payloads wired into `resolveTileLanding()` | `islandBoardTileMap.ts`, `IslandRunBoardPrototype.tsx` |
 | 3 | **M17** | 120-island cap + cycle loop — modulo-120, `cycle_index` increment | `islandRunGameStateStore.ts`, `IslandRunBoardPrototype.tsx`, migration |
