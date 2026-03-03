@@ -1,8 +1,22 @@
 # MINIGAME, BOSS, ECONOMY & PLAYER LEVEL — CANONICAL DESIGN
 
-> **Status:** Canonical. Authored 2026-03-03.  
-> **Supersedes:** Any earlier references to mini-game count, boss variety, heart economy, or player level in other docs.  
+> **Status:** Canonical. Authored 2026-03-03. Revised 2026-03-03 (post Q&A clarification session).
+> **Supersedes:** Any earlier references to mini-game count, boss variety, heart economy, player level, or Stop 1 design in other docs.
 > **This file wins** if any other doc under `docs/` conflicts on the topics covered here.
+> Referenced from `docs/07_MAIN_GAME_PROGRESS.md` (single source of truth) and `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
+
+---
+
+## 0. Key Design Principles (locked)
+
+Before any rules: these principles govern every design decision below.
+
+1. **Hearts = dice rolls.** Hearts are not mini-game tickets. 1 heart converts to dice rolls (conversion rate scales with player level). Hearts are the _primary play energy_ for rolling on the board.
+2. **Mini-game tickets (island currency) = entry to the mini-game stop (Stop 2).** Tickets are earned by landing on specific tiles on the 17-tile ring. Tickets are temporary — lost on island travel. Hearts and tickets are completely separate resources.
+3. **Stop 1 is a meaningful micro-action, not a passive confirm.** It always asks the player to do one small real-world or intentional action before the island "opens". The action type varies per island (seeded, unpredictable). This is the hook that makes the game feel alive and tied to real life.
+4. **Stops should feel surprising.** The player should never know exactly what they'll be asked to do. Variety > repetition.
+5. **Player level is slow, meaningful progression.** Levelling up gives real, visible benefits. The pace should feel earned — not too fast, not grindy.
+6. **Mini-games have internal reward ladders.** Each play session has progression within it (sub-levels, score tiers, combo chains). The more you play within a session, the better the rewards — as long as you have tickets to keep going.
 
 ---
 
@@ -10,32 +24,37 @@
 
 ### 1a. The 7 Regular Mini-Games
 
-Each regular mini-game is triggered from **Stop 2 (Minigame stop)** on any island.  
-Only **one mini-game is globally active** at a time — all players on all islands play the same game that week.  
-The global active mini-game rotates on a schedule (TBD by operator; suggest weekly rotation).
+Each regular mini-game is triggered from **Stop 2 (Mini-Game Stop)** on any island.
+Only **one mini-game is globally active** at a time — all players on all islands play the same game during that rotation period.
+The global active mini-game rotates on a schedule (operator-controlled; suggest 7–10 day rotation).
 
-| # | ID | Name | Summary |
-|---|---|---|---|
-| 1 | `shooter_blitz` | Shooter Blitz | Space shooter — tap/drag to aim, shoot incoming targets. Already built. |
-| 2 | `flick_bowl` | Flick Bowl | Flick a ball (tap + swipe) to knock down pins. 3 throws per round. Simple one-handed. |
-| 3 | `tap_garden` | Tap Garden | Tap blooming flowers before they wilt. Speed increases over time. Rewards based on combo chain. |
-| 4 | `word_spark` | Word Spark | Short 3–5 letter word from a scrambled set. One-handed, tap letters in sequence. 3 tries. |
-| 5 | `memory_tiles` | Memory Tiles | Flip and match pairs. 4×3 grid (12 tiles). 45s time limit. |
-| 6 | `balance_run` | Balance Run | Tilt/tap to keep a ball balanced on a moving platform. Survive as long as possible (30s target). |
-| 7 | `color_rush` | Color Rush | Tap falling color orbs that match the highlighted color. Miss = lose a life (3 lives). |
+The player enters by spending island mini-game currency (tickets). Each ticket = one "go" / attempt within the game.
+The more tickets spent in a session, the deeper into sub-levels they can go → better rewards.
+
+| # | ID | Name | Core mechanic | Internal reward ladder |
+|---|---|---|---|---|
+| 1 | `shooter_blitz` | Shooter Blitz | Space shooter — tap to shoot incoming targets. Already built. | Sub-levels: waves. Each wave = harder + bigger reward. |
+| 2 | `flick_bowl` | Flick Bowl | Swipe to flick a ball, knock down pins. 3 throws per ticket spent. | Sub-levels: lane difficulty. Strikes = bonus multiplier. |
+| 3 | `tap_garden` | Tap Garden | Tap blooming flowers before they wilt. Speed increases. | Sub-levels: rounds. Combo chain multiplier — keep tapping without miss for bigger payouts. |
+| 4 | `word_spark` | Word Spark | Tap letters to form a 3–5 letter word from a scrambled set. 3 tries per ticket. | Sub-levels: word length. Longer word = bigger reward. |
+| 5 | `memory_tiles` | Memory Tiles | Flip and match pairs on a 4×3 grid. 45s time limit. | Sub-levels: grid size grows (4×3 → 4×4 → 5×4). Faster clears = bonus coins. |
+| 6 | `drop_stack` | Drop Stack | Tetris-style — drop falling blocks to fill rows. One-handed (tap to place). | Sub-levels: speed increases per row cleared. Row clear combos give diamonds. |
+| 7 | `color_rush` | Color Rush | Tap falling color orbs matching the highlighted target color. Miss = lose a life (3 lives). | Sub-levels: speed ramps. Survival streaks award hearts. |
+
+> **Note on Drop Stack:** replaces Balance Run from the initial draft. Balance Run requires device tilt which is unreliable on PWA. Drop Stack is universally one-handed, works on any device, and has a proven internal reward ladder (Monopoly GO style Tetris/block games are exactly the reference).
 
 **Design rules for all 7:**
-- Duration: 20–60 seconds per attempt.
-- One-handed, tap/drag only. No precision tiny targets.
-- Entry cost: island mini-game currency (tickets earned on the board).
-- Reward output: `IslandRunMinigameReward` (coins, dice, hearts, spinTokens, diamonds, xp).
-- Each mini-game must implement `IslandRunMinigameProps` interface (already defined in `islandRunMinigameTypes.ts`).
+- Duration per ticket: 20–60 seconds.
+- One-handed, tap/drag only. No precision tiny targets. No tilt-required mechanics.
+- Entry cost: island mini-game tickets (temporary per-island currency).
+- Player can keep playing as long as they have tickets — each additional ticket spends to advance to the next sub-level.
+- Reward output per session: `IslandRunMinigameReward` (coins, dice, hearts, spinTokens, diamonds, xp). Rewards scale with sub-level reached.
+- Each mini-game must implement `IslandRunMinigameProps` interface (defined in `islandRunMinigameTypes.ts`).
 
-### 1b. Mini-Game Island Schedule (rotation)
+### 1b. Mini-Game Island Schedule (featured game for milestone boss checks)
 
-Mini-games rotate in a fixed repeating sequence across islands.  
-The player's **Stop 2** on each island always shows the currently globally active mini-game —  
-but the schedule below defines which mini-game is **featured** on each island for boss milestone checks:
+The player always plays the **globally active** mini-game at Stop 2.
+But each island has a **featured** mini-game that is used for milestone boss difficulty checks (see Section 2).
 
 | Islands | Featured Mini-Game |
 |---|---|
@@ -44,12 +63,16 @@ but the schedule below defines which mini-game is **featured** on each island fo
 | 35–51 | Tap Garden |
 | 52–68 | Word Spark |
 | 69–85 | Memory Tiles |
-| 86–102 | Balance Run |
+| 86–102 | Drop Stack |
 | 103–120 | Color Rush |
 
-> The featured mini-game on a given island is used for **milestone boss** checks (see Section 2).  
-> The globally active mini-game is what the player actually plays.  
-> If they differ, the boss checks against the **featured** game's sub-level threshold but the player plays the **active** game.
+### 1c. Ticket (Island Mini-Game Currency) Rules
+
+- Tickets are earned by landing on **ticket-tile** types on the 17-tile ring. Specific tile types award tickets (1–3 per landing, seeded per island).
+- Completing LifeGoal actions (habits, journals, check-ins, goals) **also awards tickets** while on the active island — even outside the game app.
+- Tickets have **no cap** within an island session.
+- **All unspent tickets are lost when the player travels to a new island.** No carry-forward.
+- Tickets are stored in `island_mini_game_currency` (already in the data model).
 
 ---
 
@@ -57,46 +80,60 @@ but the schedule below defines which mini-game is **featured** on each island fo
 
 ### 2a. Boss Type Distribution
 
-- **~75% of islands → Milestone Boss** (reaches sub-level in current/featured mini-game)
-- **~25% of islands → Fight Boss** (dedicated boss-game; a separate, harder game experience)
+- **~75% of islands → Milestone Boss** (player must reach a required sub-level in the featured mini-game)
+- **~25% of islands → Fight Boss** (dedicated boss-game — ShooterBlitz or Flappy Phoenix)
+- **Special islands (20 of 120) + Oracle-eligible islands** → some bosses are Oracle encounters (see 2b)
 
-Boss type is **fixed per island** and **deterministic** (seeded by island number).  
-Boss type never changes between cycles.
+Boss type is **fixed per island** and **deterministic** (seeded by island number). Never changes between cycles.
 
-**Fight Boss islands (approx. 25% = 30 islands distributed across 120):**  
-Islands: 5, 18, 30, 42, 48, 60, 66, 72, 84, 90, 96, 108, 114, 120  
-(exact list to be finalised; all 20 special islands are fight bosses or milestone bosses; island 120 is always a fight boss)
+**Fight Boss island list (30 islands, ~25% of 120):**
+Islands 5, 10, 18, 25, 30, 36, 42, 48, 54, 60, 65, 72, 78, 84, 90, 95, 96, 102, 108, 110, 114, 118, 120
+and 7 more to fill to 30 — exact list to be finalised in `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md` island detail sheet.
+
+Of the Fight Boss islands, approximately half use ShooterBlitz and half use Flappy Phoenix (alternating, seeded by island number).
+
+**Oracle Boss islands (~15 of the 75 milestone boss islands, i.e. ~12% of all islands):**
+Oracle is a sub-variant of Milestone Boss — reserved for islands where the milestone boss is the Oracle's challenge instead of a sub-level check.
+Fallback rule: if player has not completed onboarding, Oracle islands use ShooterBlitz instead.
 
 ### 2b. The 3 Boss Games
 
 #### Boss Game 1: ShooterBlitz (Fight Boss)
 - Already built (`ShooterBlitz` component).
-- Player must survive waves and reach a score threshold.
-- Difficulty scales with island number.
+- Player must survive waves and reach a score threshold before timer runs out.
+- Difficulty scales with island number (wave count, enemy speed, score threshold).
 - **Lives = Hearts**: each failed attempt costs 1 heart. Instant retry while hearts > 0.
 - Reward on win: hearts + coins + spinTokens (scaled by island tier).
+- Fight cost: 1 heart per attempt. Win reward always returns more hearts than spent (net positive for persistent players).
 
 #### Boss Game 2: Flappy Phoenix (Fight Boss)
-- Flappy-bird style. Tap to keep the phoenix flying between obstacles.
-- Obstacles speed up with island number.
-- **Lives = Hearts**: each crash costs 1 heart.
-- Survive for 30 seconds (or reach a distance threshold) to win.
-- Reward on win: hearts + coins + diamonds (scaled).
+- Flappy-bird style. Tap to keep the phoenix flying between increasingly narrow obstacle gaps.
+- Obstacles speed up with island number. Gap width narrows at higher islands.
+- **Lives = Hearts**: each crash costs 1 heart. Instant retry while hearts > 0.
+- Win condition: survive for 30 seconds (or reach a distance threshold, whichever is reached first).
+- Reward on win: hearts + coins + diamonds (scaled by island tier).
+- Not yet built — devplan: `docs/minigames/BOSS_FLAPPY_PHOENIX_DEVPLAN.md` (to be created in M20A).
 
-#### Boss Game 3: The Oracle (Milestone Boss + AI)
-- The Zen Master Oracle presents a challenge — riddle, philosophical question, or reflection prompt.
-- Challenge types rotate: riddles, "what would you do?" scenarios, mini philosophical puzzles, "finish the ancient proverb".
-- **Requires onboarding to be complete** — Oracle is gated if the player has not completed initial onboarding (so that habits/goals exist in the app).
-- AI-assisted: the Oracle can generate novel riddles/prompts using an AI call (with a static fallback pool of 50+ prompts for offline/cost-control).
-- For ~50% of Oracle encounters: **Habit verification gate** — before the Oracle reveals the answer/pass, the player must confirm they completed at least one tracked habit today (verified against the habit completion log). If no habits are logged today, a prompt appears: *"The Oracle asks — what did you do for yourself today? Complete a habit first."*  
-- For ~30% of Oracle encounters: **Badly-performing habit gate** — the system identifies the habit with the lowest completion rate over the last 7 days and presents it as the Oracle's challenge: *"The Oracle sees your struggle with [habit name]. Complete it today to pass."*
-- The player answers the riddle/question by selecting from 3 options (A/B/C) — one is correct.
-- Pass = correct answer + (if required) habit verified. Fail = lose 1 heart and retry.
-- Reward on pass: hearts + coins + xp + optional cosmetic unlock.
+#### Boss Game 3: The Oracle (Milestone Boss — Wisdom + Habit Gate)
+- The Oracle is a Zen-style character who presents a **wisdom challenge** — the player must answer correctly to pass.
+- **Challenge types** (rotate per island, seeded):
+  - Riddle (classic lateral thinking)
+  - Philosophical question ("what would you do if...?" )
+  - "Finish the ancient proverb" (select the correct ending from 3)
+  - Life reflection ("which of these is the wisest response to setback?")
+  - Mini vision board moment: "The Oracle asks: which of these images best represents your intention for this island?" (3 image options — no wrong answer, just forces a moment of reflection — always passes)
+- **3 answer options (A/B/C)**: one is correct (or for vision board type: all pass, but the selected image is stored as the island's "intention token").
+- **AI-assisted prompts**: Oracle challenges can be generated via an AI edge function. Static fallback pool of 60+ challenges required for offline/cost-control. Cache: same challenge per island per UTC day for all players.
+- **Habit gate (on ~50% of Oracle encounters):** After answering correctly, the Oracle asks: *"Before I let you pass — what did you do for yourself today?"* Player must confirm at least 1 habit was logged today. If yes → pass. If no → Oracle says *"Return when you have taken one step for yourself."* (Player is not blocked from retrying immediately after completing a habit.)
+- **Struggling habit gate (on ~30% of Oracle encounters):** The Oracle identifies the habit with the lowest 7-day completion rate and asks specifically about that habit: *"The Oracle sees your struggle with [habit]. Complete it today to pass."*
+- **Fail path**: wrong answer or unmet habit gate → lose 1 heart → retry immediately.
+- **Reward on pass**: hearts + coins + xp + 10% chance of cosmetic unlock (island theme element or avatar item).
+- **Onboarding requirement**: Oracle requires `onboarding_complete = true` AND at least 1 habit + 1 goal in the app. If not met → falls back to ShooterBlitz with tooltip: *"Complete your onboarding to unlock the Oracle."*
+- Not yet built — devplan: `docs/minigames/BOSS_ORACLE_DEVPLAN.md` (to be created in M20B).
 
 ### 2c. Boss Scaling by Island Number
 
-| Island range | Milestone boss sub-level required | Fight boss difficulty | Daily heart reward (base) |
+| Island range | Milestone boss sub-level required | Fight boss difficulty | Base daily hearts gift |
 |---|---|---|---|
 | 1–20 | Sub-level 3 | Easy | 2 hearts/day |
 | 21–40 | Sub-level 4 | Medium | 3 hearts/day |
@@ -104,243 +141,324 @@ Islands: 5, 18, 30, 42, 48, 60, 66, 72, 84, 90, 96, 108, 114, 120
 | 61–80 | Sub-level 6 | Hard | 5 hearts/day |
 | 81–100 | Sub-level 7 | Hard | 6 hearts/day |
 | 101–120 | Sub-level 8 | Very Hard | 7 hearts/day |
-|
+
 ---
 
 ## 3. Stop Objective Design (Stops 1–4)
 
-Stops should be **small, unpredictable, and not always the same type**.  
-The goal is that the player never knows exactly what a stop will ask for — keeps it fresh.
+**Core principle:** Stops should feel alive, slightly surprising, and tied to real-world action. The player should never know exactly what a stop will ask. Variety and unpredictability keep it fresh.
 
-### Stop 1 — Island Orientation (always the same type)
-- Always a simple onboarding action: read the island's "mission briefing" and tap Confirm.
-- Purpose: gates dice rolling until the player has acknowledged the island context.
-- No habit verification required.
+### Stop 1 — Island Gate (varied micro-action, seeded per island)
+
+Stop 1 is the **gate before the player can roll dice on a new island**.
+
+This is NOT a passive "tap Confirm to read a briefing". It is always a **meaningful micro-action** that is small, takes 5–30 seconds, and connects the player to their real life or to the island experience.
+
+**MVP v1 Stop 1 types (seeded per island, deterministic):**
+
+| Type ID | Name | What the player does | Notes |
+|---|---|---|---|
+| `set_egg` | Hatch an Egg | Tap to set the island egg in the hatchery. | Only shown if egg slot is empty. Falls back to `set_intention` if egg already set. |
+| `set_intention` | Set Today's Intention | Enter one sentence of intention for today (or confirm today's if already set in the Today tab). | Integrates with the Today tab intention feature. If intention already set today → auto-passes after player reads it. |
+| `spin_arrival` | Spin the Arrival Wheel | Spin a small arrival-reward wheel (3 outcomes: small coin bonus, extra ticket, nothing). | Pure delight — no fail state. Always passes after spin resolves. |
+| `quick_journal` | Quick Arrival Note | Type 1–3 sentences: "How are you feeling right now?" | Very short. No minimum length. Tap Submit → passes. |
+| `vision_pick` | Vision Board Moment | 3 images shown. Player taps the one that best represents their energy today. | No wrong answer. Always passes. Stores selection as "island intention token". |
+| `gratitude_flash` | Gratitude Flash | Name one thing you're grateful for right now (one sentence, or tap from 3 AI-suggested prompts). | No fail state. Always passes. |
+| `mini_webtoon` | Island Story Panel | A 2–3 panel mini comic / story panel introduces the island's theme. Tap through to pass. | Visual delight. No action required beyond tapping Next. Asset-heavy — add as art is available. |
+
+**Rules:**
+- Stop 1 type is fixed per island (seeded by island number) and never changes between cycles.
+- If the required action is already done today (e.g. intention set in Today tab), Stop 1 auto-passes with a confirmation screen: *"✓ Your intention is already set — the island is open."*
+- Stop 1 is always completable — there is no fail state for Stop 1. It should never block the player permanently.
+- **Future expansion:** This list will grow. New Stop 1 types can be added without changing the seeding logic — just extend the type pool and the island number → type mapping.
 
 ### Stop 2 — Mini-Game Stop
-- Entry point for the currently active global mini-game.
-- Cost: island mini-game currency (tickets).
-- Cleared when: player completes one round of the mini-game (any score).
 
-### Stop 3 — Utility Stop (varied objectives, one per island, seeded by island number)
+- Entry point to the currently globally active mini-game.
+- Cost per play: 1 island mini-game ticket.
+- Player can keep playing as long as they have tickets (each ticket = one more attempt / sub-level entry).
+- Cleared when: player completes at least one round (any score). Stop 2 completion does not require reaching a specific sub-level — just playing once.
+- The mini-game stop **stays open** after completion — player can keep spending tickets for rewards even after Stop 2 is cleared.
 
-The utility stop rotates through these objective types (deterministic, seeded):
+### Stop 3 — Utility Stop (seeded per island)
 
-| Objective type | What player does | Frequency |
+The utility stop asks for one small real-life action. Types rotate (seeded, so each island always has the same type):
+
+| Type | What player does | Notes |
 |---|---|---|
-| Journal entry | Write or record any journal entry today | 20% |
-| Mood check-in | Log today's mood (any value) | 15% |
-| Intention set | Type a one-sentence intention for the day | 15% |
-| Photo moment | Take or upload a photo of something that made you smile | 10% |
-| Gratitude note | Name one thing you're grateful for today | 15% |
-| Life Wheel update | Update any one spoke of the Life Wheel | 10% |
-| Rest declaration | Tap "I rested today" (no verification — honour system) | 15% |
+| Journal entry | Write any journal entry today (any length) | Checks if journal entry logged today |
+| Mood check-in | Log today's mood (any value, 1 tap) | Checks mood log for today |
+| Intention confirm | Confirm today's intention (or set one if not done) | Integrates with Today tab |
+| Gratitude note | Name one thing you're grateful for | No verification — honour system |
+| Life Wheel update | Update any one spoke | Checks if Life Wheel updated today |
+| Rest declaration | Tap "I rested today" | Honour system — no verification |
+| Habit check-in | Tap to review your habit list (not complete, just view) | Opens habit list; tap confirms review |
 
-All are **one simple action** — never "complete all your habits today".  
-The player taps once to confirm after doing the action.
+All types: one simple action, player taps once to confirm after doing it.
 
-### Stop 4 — Dynamic Stop (habit/goal/check-in, seeded by island number)
+### Stop 4 — Dynamic Stop (personalised, seeded per island + player data)
 
-The dynamic stop asks for **one small real-life completion**:
+The dynamic stop asks for one **real-life completion** — slightly more demanding than Stop 3.
 
-| Objective type | What is verified | Frequency |
+| Type | What is verified | Notes |
 |---|---|---|
-| Complete 1 habit | Any habit logged today (not a specific one) | 35% |
-| Complete a specific habit | The habit with the **most days missed recently** (personalised, or random if no data) | 20% |
-| Check in on a goal | Open and view any active goal in the app | 20% |
-| Log a workout / activity | Any activity log entry today | 15% |
-| Daily reflection | Complete the daily reflection if it exists | 10% |
-|
-**Anti-abuse rules for verified stops:**
-- Completions are checked against the habit log timestamp for **today (UTC day)**.
-- If the player completes a habit, then undoes it, then redoes it within a session: the **first completion timestamp is used** — it counts.
-- Backend records a `habit_completion_snapshot_at` when the player first passes a stop — undoing after passing does not revoke the stop.
-- There is no way to retroactively undo a habit that has already been used to pass a stop.
+| Complete any habit | Any habit logged today | 35% frequency |
+| Complete a specific struggling habit | The habit with lowest 7-day rate | 20% frequency; personalised |
+| Check in on a goal | Open and view any active goal | 20% frequency |
+| Log a workout / activity | Any activity entry today | 15% frequency |
+| Daily reflection | Complete the daily reflection | 10% frequency |
+
+**Anti-abuse rules:**
+- Completions checked against habit log timestamp for **today (UTC day)**.
+- First-completion-wins: if completed, then undone, then redone — first completion timestamp is used. It counts.
+- `habit_completion_snapshot_at` is recorded server-side when the player first passes Stop 4. Undoing the habit afterwards does not revoke the pass.
+- Daily cap for habit-awarded hearts enforced server-side (see Section 4).
 
 ---
 
 ## 4. Heart Economy — Full Specification
 
-Hearts are the core play energy resource. They are **global, persistent, never reset**.
+Hearts are the **primary play energy**. 1 heart converts to a set number of dice rolls (conversion rate scales with player level). Hearts are **global, persistent, never reset across sessions or islands**.
 
-### 4a. Heart Sources
+### 4a. Hearts vs. Dice vs. Tickets — Clarification
+
+| Resource | What it is | How earned | How spent | Lost on island travel? |
+|---|---|---|---|---|
+| **Hearts ❤️** | Play energy | Many sources (see 4b) | Converted to dice rolls (1 heart = N dice); also spent as lives in fight bosses | ❌ Never lost |
+| **Dice 🎲** | Roll tokens | Converted from hearts; some rewards | Roll on the 17-tile board (1 dice = 1 roll) | ❌ Never lost (they are a global pool) |
+| **Tickets 🎟️** | Mini-game entry tokens | Earned by landing on ticket tiles on the board; earned by completing LifeGoal app actions | Enter the mini-game stop (Stop 2) — 1 ticket per round | ✅ Lost on island travel |
+| **Coins 🪙** | General currency | Tiles, stops, bosses, eggs | Shop purchases | ❌ Never lost |
+| **Diamonds 💎** | Premium currency | Rare tiles, boss victories, special rewards | Shop (premium items) | ❌ Never lost |
+
+### 4b. Heart Sources
 
 | Source | Amount | Rules |
 |---|---|---|
-| Daily treat (PWA notification) | Scales with player level (see Section 5) | Once per UTC day. Delivered at ~8am local time via push. |
-| Passive renewal | 1 heart per 20 minutes (at Player Level 1) | Continuous passive regeneration. Rate scales with player level. Soft cap: does not accumulate beyond the daily renewal cap while offline (max 6 hours of offline accumulation). |
-| Real-life habit completion | Up to 3 hearts per day | Awarded when habits are logged in the LifeGoal app. Daily cap enforced. Rate: 1 heart per habit logged, max 3/day at Level 1. Scales with player level. |
-| Board tile rewards | 1–2 hearts occasionally | Random chest tile or event tile reward. No cap. |
-| Boss win reward | 2–4 hearts | Scales by island tier. No cap. |
-| Egg hatch reward | 1–2 hearts | Depends on egg tier. |
+| Passive renewal | 1 heart / 20 min (Level 1) | Computed on app open; soft cap = **player level heart cap** (see 4c). Not background — catches up on open. |
+| Daily treat (PWA notification) | Scales with island range (see 2c) | Once per UTC day. Delivered via push at ~8am local time. |
+| Real-life habit completion | 1 heart per habit logged, up to daily cap | Anti-abuse rules apply (see 4d). Daily cap scales with player level. |
+| Board tile rewards | 1–2 hearts | Chest tile or event tile landing. No cap. |
+| Boss win reward | 2–4 hearts | Scales by island tier (Section 2c). No cap. |
+| Egg hatch reward | 1–2 hearts | Depends on egg tier (Common 1, Rare 1–2, Mythic 2). |
 | Spin of the Day | 1–3 hearts | One spin per UTC day. |
-| Micro-transaction (Stripe) | Instant purchase | Buy hearts in packs. Pricing TBD. |
+| Stop rewards | 1–2 hearts occasionally | Some stops award hearts on completion. |
+| Micro-transaction (Stripe) | Pack purchase | Instant. Pricing TBD. Bypasses all caps. |
 
-### 4b. Passive Renewal Schedule (by Player Level)
+### 4c. Heart Cap System (Passive Renewal Hard Cap)
 
-| Player Level | Hearts per 20 min | Max offline accumulation |
+The heart cap is the **maximum number of hearts that passive renewal will fill up to**. It is **not** a global heart maximum — the player can hold more hearts than the cap (e.g. from boss wins or purchases). But passive renewal stops generating new hearts once the current heart count reaches the cap.
+
+**Example at Level 1:** Cap = 5. If player has 0 hearts → 1 heart every 20 min until they reach 5. Once at 5+, renewal pauses. If they spend 2 hearts rolling (now at 3), renewal resumes and generates 1 more heart every 20 min until they're back at 5.
+
+| Player Level | Heart renewal cap | Renewal rate |
 |---|---|---|
-| 1–5 | 1 heart / 20 min | 6 hours (18 hearts max) |
-| 6–15 | 1 heart / 18 min | 6 hours (~20 hearts max) |
-| 16–30 | 1 heart / 15 min | 6 hours (24 hearts max) |
-| 31–50 | 1 heart / 12 min | 6 hours (30 hearts max) |
-| 51+ | 1 heart / 10 min | 6 hours (36 hearts max) |
+| 1–3 | 5 hearts | 1 / 20 min |
+| 4–6 | 6 hearts | 1 / 20 min |
+| 7–10 | 7 hearts | 1 / 18 min |
+| 11–15 | 8 hearts | 1 / 18 min |
+| 16–20 | 10 hearts | 1 / 15 min |
+| 21–30 | 12 hearts | 1 / 15 min |
+| 31–40 | 15 hearts | 1 / 12 min |
+| 41–50 | 18 hearts | 1 / 12 min |
+| 51+ | 20 hearts | 1 / 10 min |
 
-**Implementation note:** Passive renewal is computed on app open from the last-seen timestamp. The system does not run in the background — it catches up on open, subject to the 6-hour cap.
+**Offline accumulation cap:** Even if the player is offline for many hours, passive renewal only accumulates up to **6 hours worth** of hearts at their current rate (or the heart cap, whichever is lower). This prevents massive offline heart stockpiling.
 
-### 4c. Habit → Heart Anti-Abuse Rules
+**Implementation:** On app open, compute `elapsed_ms` since `last_seen_at`. Cap at 6h. Compute `hearts_earned = floor(elapsed_ms / renewal_interval_ms)`. Add to hearts, but do not exceed the renewal cap (if current hearts < cap). Write `last_seen_at = now()` and persist.
 
-This is critical. Players must not be able to game the system by toggling habits.
+### 4d. Habit → Heart Anti-Abuse Rules
 
-1. **First-completion-wins rule**: When a habit is marked complete for the first time today (UTC), the heart award fires immediately and is recorded with a `heart_award_snapshot_at` timestamp.
-2. **Undo does not revoke**: If the player later marks the habit incomplete, the heart award is NOT reversed. The heart is already earned.
-3. **Re-complete does not re-award**: If the player marks it complete again after undoing, no second heart is awarded (de-duplicated by `habit_id + utc_day`).
-4. **Daily cap enforced server-side**: The daily heart cap from habits is validated against Supabase, not just localStorage. If the client claims more hearts than the cap, the server ignores the excess.
-5. **Cap resets at UTC midnight**.
-6. **Cap scales with player level** (see below).
+1. **First-completion-wins:** First time a habit is marked complete today (UTC) → heart fires immediately + `heart_award_snapshot_at` recorded.
+2. **Undo does not revoke:** Marking a habit incomplete after it was already used to award a heart does NOT reverse the heart award.
+3. **Re-complete does not re-award:** Marked incomplete + re-completed = no second award. De-duplicated by `habit_id + utc_day`.
+4. **Daily cap enforced server-side:** Validated against Supabase. Client cannot claim beyond cap.
+5. **Cap resets at UTC midnight.**
 
-### 4d. Habit Heart Awards by Player Level
+### 4e. Heart → Dice Conversion Rate (scales with island number)
 
-| Player Level | Max hearts/day from habits | Hearts per habit logged |
-|---|---|---|
-| 1–5 | 3 | 1 |
-| 6–15 | 4 | 1 |
-| 16–30 | 5 | 1 (or 2 on "comeback" habit — the one most recently missed) |
-| 31–50 | 6 | 1–2 |
-| 51+ | 8 | 1–2 |
+| Island range | 1 heart = N dice rolls |
+|---|---|
+| 1–20 | 20 dice |
+| 21–40 | 22 dice |
+| 41–60 | 25 dice |
+| 61–80 | 28 dice |
+| 81–100 | 32 dice |
+| 101–120 | 36 dice |
+|
+This means players at higher islands get more rolls per heart — rewarding long-term engagement.
 
 ---
 
 ## 5. Player Level System
 
-The player level is **separate from island number**. It is a global progression measure that reflects the player's long-term engagement across all activities.
+The player level is **separate from island number**. It reflects total long-term engagement across all activities — game and real-life habit completion combined.
 
-### 5a. What Player Level Does
+### 5a. What Player Level Unlocks (Level-Up Rewards)
 
-Player level controls:
-- Passive heart renewal rate (see Section 4b)
-- Daily treat hearts amount
-- Max hearts/day from habits
-- Shop prices (higher level = more expensive items, but also bigger bundles available)
-- Egg rewards (higher tier eggs become available at higher levels)
-- Visual flair (player avatar border, title badge, island board theme unlocks)
+Each level-up is a moment of celebration. Level-up rewards are assigned per level and visible to the player before they level up ("next level: +1 heart cap, unlock Rare eggs").
 
-### 5b. XP Sources
+| Level reached | Reward |
+|---|---|
+| 2 | +1 to heart renewal cap (now 6) |
+| 3 | Unlock: shop Tier 2 pricing tier |
+| 4 | +1 to heart renewal cap (now 7) |
+| 5 | Unlock: Rare eggs available at hatchery stop on any island |
+| 6 | Renewal rate increases to 1 / 18 min |
+| 7 | +1 to heart renewal cap (now 8) |
+| 8 | Unlock: daily habit heart cap +1 (now 4/day) |
+| 9 | Cosmetic: player level badge unlocked ("Island Wanderer") |
+| 10 | +2 to heart renewal cap (now 10); Renewal rate stays 1/18 min |
+| 11 | Unlock: shop Tier 3 |
+| 12 | Unlock: Mythic eggs available at hatchery stop (special islands only) |
+| 13 | Daily habit heart cap +1 (now 5/day) |
+| 14 | Cosmetic: player frame upgrade |
+| 15 | Renewal rate 1/15 min; +2 heart cap (now 12) |
+| 16 | Unlock: island upgrade system (completed islands can be upgraded with coins) |
+| 17 | Daily habit heart cap +1 (now 6/day) |
+| 18 | Cosmetic: island board theme unlock ("Volcanic") |
+| 19 | +3 heart cap (now 15) |
+| 20 | Milestone reward: 500 bonus coins + cosmetic badge ("Island Veteran") + renewal rate 1/12 min |
+| 25 | +3 heart cap (now 18); daily habit heart cap 7/day |
+| 30 | Milestone reward: 1 diamond + renewal rate 1/10 min; +2 heart cap (now 20) |
+| 35 | Cosmetic: island board theme unlock ("Arctic") |
+| 40 | Milestone reward: 2 diamonds + daily habit heart cap 8/day |
+| 50 | Milestone reward: 5 diamonds + cosmetic badge ("Island Master") + max renewal cap |
+
+> After Level 50: every 5 levels grants 1 diamond + cosmetic badge upgrade. Economy values plateau (already maxed by Level 50). Prestige is the main reward.
+
+### 5b. Player Level Visible in HUD
+
+- The player level is shown as a **small circle badge** in the Island Run HUD (always visible, not inside the dev panel).
+- Format: `Lv.7` (compact). Tapping it opens the player profile panel.
+- The profile panel shows: current level, XP bar (current/needed to next level), next level reward preview, total islands completed, total bosses defeated, total hearts earned lifetime.
+
+### 5c. XP Sources
 
 | Activity | XP awarded |
 |---|---|
-| Complete a habit (any) | 10 XP (max 50 XP/day from habits) |
+| Complete any habit (LifeGoal app) | 10 XP (max 50 XP/day from habits) |
 | Log a journal entry | 15 XP |
 | Complete a Life Wheel update | 20 XP |
-| Win a mini-game round | 25 XP |
-| Clear a boss (Step 5) | 50 XP |
+| Win a mini-game round (any sub-level) | 25 XP |
+| Clear a boss (Stop 5) | 50 XP |
 | Complete all 5 stops on an island | 75 XP |
-| Complete a full island (all stops + boss) before timer expires | 100 XP bonus |
-| Egg hatched | 10–30 XP (by tier) |
-| Daily login streak (each day) | 5 XP |
-| Island 120 completion (end of first cycle) | 500 XP bonus |
+| Full island clear (all stops + boss) before timer expires | +100 XP bonus |
+| Egg hatched (Common) | 10 XP |
+| Egg hatched (Rare) | 20 XP |
+| Egg hatched (Mythic) | 30 XP |
+| Daily login (any session) | 5 XP |
+| Island 120 first-cycle completion | 500 XP one-time bonus |
 
-### 5c. Level Thresholds (first 20 levels)
+### 5d. Level Thresholds (first 30 levels)
 
-| Level | Total XP required | XP to next level |
+XP is **total cumulative** — never resets.
+
+| Level | Total XP needed | XP gap to next level |
 |---|---|---|
-| 1 | 0 | 200 |
-| 2 | 200 | 300 |
-| 3 | 500 | 400 |
-| 4 | 900 | 500 |
-| 5 | 1,400 | 600 |
-| 6 | 2,000 | 750 |
-| 7 | 2,750 | 900 |
-| 8 | 3,650 | 1,050 |
-| 9 | 4,700 | 1,200 |
-| 10 | 5,900 | 1,400 |
-| 11 | 7,300 | 1,600 |
-| 12 | 8,900 | 1,800 |
-| 13 | 10,700 | 2,000 |
-| 14 | 12,700 | 2,250 |
-| 15 | 14,950 | 2,500 |
-| 16 | 17,450 | 2,750 |
-| 17 | 20,200 | 3,000 |
-| 18 | 23,200 | 3,300 |
-| 19 | 26,500 | 3,600 |
-| 20 | 30,100 | 4,000 |
+| 1 | 0 | 300 |
+| 2 | 300 | 400 |
+| 3 | 700 | 500 |
+| 4 | 1,200 | 600 |
+| 5 | 1,800 | 750 |
+| 6 | 2,550 | 900 |
+| 7 | 3,450 | 1,050 |
+| 8 | 4,500 | 1,200 |
+| 9 | 5,700 | 1,400 |
+| 10 | 7,100 | 1,600 |
+| 11 | 8,700 | 1,800 |
+| 12 | 10,500 | 2,000 |
+| 13 | 12,500 | 2,250 |
+| 14 | 14,750 | 2,500 |
+| 15 | 17,250 | 2,750 |
+| 16 | 20,000 | 3,000 |
+| 17 | 23,000 | 3,300 |
+| 18 | 26,300 | 3,600 |
+| 19 | 29,900 | 4,000 |
+| 20 | 33,900 | 4,500 |
+| 21 | 38,400 | 5,000 |
+| 22 | 43,400 | 5,500 |
+| 23 | 48,900 | 6,000 |
+| 24 | 54,900 | 6,500 |
+| 25 | 61,400 | 7,000 |
+| 26 | 68,400 | 7,500 |
+| 27 | 75,900 | 8,000 |
+| 28 | 83,900 | 8,500 |
+| 29 | 92,400 | 9,000 |
+| 30 | 101,400 | 10,000 |
 
-> After Level 20: each subsequent level requires ~10% more XP than the previous.  
-> There is no hard level cap — the system is designed for long-term progression.
+> After Level 30: each level requires ~10% more XP than the previous. No hard cap.
 
-### 5d. Data Model
+**Pace calibration:** A player completing 5 habits/day + 1 boss clear/day + 1 mini-game win/day earns roughly:
+- 50 XP (habits) + 50 XP (boss) + 25 XP (mini-game) + 5 XP (login) = ~130 XP/day.
+- Level 5 requires 1,800 XP total → ~14 days of active play.
+- Level 10 requires 7,100 XP total → ~55 days of active play.
+This is intentionally slow. Level-ups feel earned.
 
-Player level must be persisted in Supabase. New table or column additions needed:
+### 5e. Data Model Requirements
 
+```sql
+-- New columns on player profile or a new table:
+player_xp         INTEGER DEFAULT 0        -- total cumulative XP ever earned
+player_level      INTEGER DEFAULT 1        -- derived from player_xp; cached for performance
+xp_ledger         JSONB DEFAULT '[]'::jsonb -- append-only: [{source, amount, awarded_at, meta}]
+last_seen_at      TIMESTAMPTZ              -- for passive heart renewal computation (already exists as partial)
 ```
-player_xp: integer (total XP ever earned — level is derived, not stored)
-player_level: integer (derived from player_xp for display; can be cached)
-xp_ledger: jsonb array of { source, amount, awarded_at, meta } — append-only
-```
 
-Or as columns on an existing `profiles` or game-state table. Migration to be created in **M19A**.
-
-### 5e. Onboarding Gate for Oracle Boss
-
-The Oracle boss game (Boss Game 3) requires:
-1. `onboarding_complete = true` in user profile metadata.
-2. At least 1 habit exists in the user's habit list.
-3. At least 1 goal exists in the user's goal list.
-
-If these conditions are not met, the Oracle fight is replaced by a ShooterBlitz fight instead, with a tooltip: *"Complete your onboarding to unlock the Oracle."*
+Migration: `0171_island_run_player_level_xp.sql` — to be created in milestone M19A.
 
 ---
 
 ## 6. Cycle Loop (After Island 120)
 
-- After island 120 is completed, `cycle_index` increments from 0 → 1.
-- `island_number` resets to 1.
+- On island 120 completion: `cycle_index` increments (0 → 1 → 2 …).
+- `island_number` resets to 1 and the player begins the loop again.
 - **Difficulty does not increase** on cycle 2+.
-- **What does change on cycle 2+:**
-  - Previously left-behind eggs on islands are now collectible (second-pass advantage).
-  - Shop gains a "Cycle veteran" badge/cosmetic.
-  - Boss fights may have a small cosmetic difference (e.g., "Ancient" variant label).
-  - Player level continues to grow — no reset.
+- **What changes on cycle 2+:**
+  - Left-behind eggs from cycle 1 are now collectible (second-pass advantage — already in canonical design).
+  - Shop gains a "Cycle Veteran" cosmetic badge.
+  - Boss cosmetic variant: "Ancient [BossName]" label.
+  - Player level and all currencies carry forward — no reset.
+- `cycle_index` is used only as an analytics/unlock counter. It does NOT reset completion states.
+- Island completion states (not completed → partial → boss defeated → completed) are **permanent across all cycles**.
 
 ---
 
-## 7. Next Build Slices (from this design)
+## 7. Build Slice Priority Queue
 
-| Priority | Slice ID | What | Key files |
+All milestones listed. Priority order for MVP.
+
+| Priority | Slice | What | Key files |
 |---|---|---|---|
-| 1 | **M16** | Per-tile resolution — extend `islandBoardTileMap.ts` to produce fully-typed tile payloads | `islandBoardTileMap.ts`, `IslandRunBoardPrototype.tsx` |
-| 2 | **M17** | 120-island cap + cycle loop — modulo-120 capping, `cycle_index` increment | `islandRunGameStateStore.ts`, `IslandRunBoardPrototype.tsx`, migration |
-| 3 | **M18** | Stop objective framework — typed `StopObjective` union, seeded per island, Utility + Dynamic stop verification hooks | `islandRunStops.ts`, `IslandRunBoardPrototype.tsx` |
-| 4 | **M19A** | Player level + XP system — Supabase table/columns, `islandRunPlayerLevel.ts` service, XP award on key events | new `islandRunPlayerLevel.ts`, migration |
-| 5 | **M19B** | Passive heart renewal — compute hearts-since-last-open on hydration; cap at 6h accumulation | `islandRunRuntimeStateBackend.ts`, `IslandRunBoardPrototype.tsx` |
-| 6 | **M19C** | Habit → heart awards + anti-abuse — first-completion-wins, server-side daily cap, de-dupe by habit_id+day | `islandRunDailyRewards.ts`, habits feature API, Supabase |
-| 7 | **M20A** | Flappy Phoenix boss game — new component + framework wiring | new `FlappyPhoenix.tsx`, `islandRunMinigameRegistry.ts` |
-| 8 | **M20B** | Oracle boss game — static riddle pool + habit verification gate + AI prompt hook | new `OracleBoss.tsx`, `islandRunMinigameRegistry.ts`, AI service |
-| 9 | **M21A** | Flick Bowl mini-game | new `FlickBowl.tsx` |
-| 10 | **M21B** | Tap Garden mini-game | new `TapGarden.tsx` |
-| 11 | **M21C** | Word Spark mini-game | new `WordSpark.tsx` |
-| 12 | **M21D** | Memory Tiles mini-game | new `MemoryTiles.tsx` |
-| 13 | **M21E** | Balance Run mini-game | new `BalanceRun.tsx` |
-| 14 | **M21F** | Color Rush mini-game | new `ColorRush.tsx` |
-| 15 | **M22A** | Global mini-game calendar — operator-controlled active game rotation | new `islandRunMinigameCalendar.ts`, Supabase config table |
+| 1 | **M11D** | `completedStops` Supabase persistence (gap from M11C) | `islandRunGameStateStore.ts`, migration |
+| 2 | **M16** | Per-tile resolution — fully typed tile payloads wired into `resolveTileLanding()` | `islandBoardTileMap.ts`, `IslandRunBoardPrototype.tsx` |
+| 3 | **M17** | 120-island cap + cycle loop — modulo-120, `cycle_index` increment | `islandRunGameStateStore.ts`, `IslandRunBoardPrototype.tsx`, migration |
+| 4 | **M18** | Stop 1 objective framework — typed `Stop1ObjectiveType` union, seeded per island, MVP types: set_egg / set_intention / spin_arrival / quick_journal / vision_pick / gratitude_flash | `islandRunStops.ts`, `IslandRunBoardPrototype.tsx` |
+| 5 | **M18B** | Stop 3 + Stop 4 objective framework — Utility + Dynamic objective types wired | `islandRunStops.ts`, `IslandRunBoardPrototype.tsx` |
+| 6 | **M19A** | Player level + XP system — Supabase columns, `islandRunPlayerLevel.ts`, XP award hooks, Lv. badge in HUD | new `islandRunPlayerLevel.ts`, `IslandRunBoardPrototype.tsx`, migration 0171 |
+| 7 | **M19B** | Passive heart renewal — compute on app open, heart cap enforcement, `last_seen_at` | `islandRunRuntimeStateBackend.ts`, `IslandRunBoardPrototype.tsx` |
+| 8 | **M19C** | Habit → heart awards + anti-abuse — first-completion-wins, server-side daily cap | `islandRunDailyRewards.ts`, habits API, Supabase |
+| 9 | **M19D** | Ticket (island mini-game currency) wired to board tiles — specific tile types award tickets on landing | `islandBoardTileMap.ts`, `resolveTileLanding()`, `IslandRunBoardPrototype.tsx` |
+| 10 | **M20A** | Flappy Phoenix boss game component + framework wiring | new `FlappyPhoenix.tsx`, `islandRunMinigameRegistry.ts`, `docs/minigames/BOSS_FLAPPY_PHOENIX_DEVPLAN.md` |
+| 11 | **M20B** | Oracle boss game — static riddle pool (60+), habit verification gate, 3-option UI, fallback to ShooterBlitz | new `OracleBoss.tsx`, `islandRunMinigameRegistry.ts`, `docs/minigames/BOSS_ORACLE_DEVPLAN.md` |
+| 12 | **M21A** | Flick Bowl mini-game | new `FlickBowl.tsx` |
+| 13 | **M21B** | Tap Garden mini-game | new `TapGarden.tsx` |
+| 14 | **M21C** | Word Spark mini-game | new `WordSpark.tsx` |
+| 15 | **M21D** | Memory Tiles mini-game | new `MemoryTiles.tsx` |
+| 16 | **M21E** | Drop Stack mini-game | new `DropStack.tsx` |
+| 17 | **M21F** | Color Rush mini-game | new `ColorRush.tsx` |
+| 18 | **M22A** | Global mini-game calendar — operator-controlled active game rotation, Supabase config table | new `islandRunMinigameCalendar.ts`, Supabase config table |
 
 ---
 
-## 8. Implementation Notes
+## 8. Open Questions / Future Design
 
-### Mini-game framework (already built)
-- `IslandRunMinigameProps` / `IslandRunMinigameResult` / `IslandRunMinigameReward` — in `islandRunMinigameTypes.ts` ✅
-- `resolveMinigameForStop` — in `islandRunMinigameService.ts` ✅
-- Registry pattern — in `islandRunMinigameRegistry.ts` ✅
+These are noted but not canonical yet. Do not implement until clarified:
 
-### What each new mini-game must do
-1. Implement `IslandRunMinigameProps` (receive `onComplete`, `islandNumber`, `ticketBudget`).
-2. Call `onComplete({ completed: true/false, reward: {...} })` when done.
-3. Have its own devplan doc at `docs/minigames/MINIGAME_<NAME>_DEVPLAN.md`.
-4. Be registered in `islandRunMinigameRegistry.ts`.
-
-### Oracle AI integration
-- The AI call for Oracle riddles should be a thin server function (Supabase Edge Function or similar).
-- Input: `{ islandNumber, playerLevel, recentHabits[] }` → Output: `{ prompt: string, options: [A,B,C], correctIndex: number }`.
-- Static fallback pool of 50 riddles must always be available offline.
-- Cost control: cache generated riddles per island per day (same riddle for all players on same island that day).
+- **Stop 1: mini webtoon panels** — asset-dependent. Design and art required. Add to Stop 1 type pool when art is ready.
+- **Vision board in Stop 1** — requires a set of curated images per island theme. Needs a content creation pass.
+- **Oracle AI edge function** — which AI provider, cost model, caching strategy. Needs product decision.
+- **Micro-transaction heart packs** — Stripe integration, pricing tiers, refund policy. Needs business decision.
+- **Island upgrades** (buildings, decorations) — scoped to Level 16+ unlock. Full design TBD.
+- **Async multiplayer** (targeting other players' island snapshots) — future layer, not in scope for MVP.
+- **Fight Boss island exact list** — 30 islands to be enumerated in `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md` island detail sheet.
+- **Oracle island exact list** — ~15 islands to be enumerated in same sheet.
