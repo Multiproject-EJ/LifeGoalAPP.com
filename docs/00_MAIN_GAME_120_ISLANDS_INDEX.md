@@ -45,6 +45,7 @@ Use these exact files as the HabitGame Main Loop source set:
 - `docs/07_MAIN_GAME_PROGRESS.md` (append-only progress log)
 - `docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md` (canonical mini-game roster, boss system, heart economy, player level)
 - `docs/13_COLLECTIBLE_PROGRESS_BAR.md` (canonical collectible progress bar design — shard sub-currency, milestone chain, HUD pill)
+- `docs/17_CURRENCIES_AND_SHIELD.md` (canonical currency list: Coins/Diamonds/Hearts/Shards/Tickets/Shields; egg hatch timer surprise rules; HUD display order)
 
 Naming convention is intentional:
 - Numeric prefix controls read order and avoids ambiguity in generic prompts.
@@ -82,6 +83,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
 - [✅] M14: Shop separation & unlock tiers — market stop removed from stop plan; 5 stops are hatchery/minigame/utility/dynamic/boss; persistent 🛍️ Shop HUD button added; Tier 1 always available; Tier 2 (heart boost bundle) gated on bossTrialResolved; egg selling in shop when eggStage >= 4
 - [⛔] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I)
+- [⛔] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E)
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -108,5 +110,7 @@ Quality direction:
 - Stops: 1 Hatchery, 2 Minigame, 3 Utility, 4 Dynamic, 5 Boss — **Shop is NOT a stop**; shop is a persistent HUD button always accessible
 - Encounter tile: easy bonus challenge, not boss
 - Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer
-- Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are recoverable on cycle revisit
+- Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are recoverable on cycle revisit; **hatch duration is a surprise (1–3 days) — no countdown shown to player**
 - Collectible Progress Bar: repeating escalating milestone chain; 7 era-specific collectibles (⚡🎳🌸💡🔷🌀🌈) + 🌟 Star Fragment for special islands; shards earned from egg_shard tiles, stops, bosses; blind-box claim; pill always visible in HUD; full design in docs/13_COLLECTIBLE_PROGRESS_BAR.md
+- Currencies: Coins, Diamonds, Hearts, Shards (app-wide persistent); Tickets (temporary per-island); Shields (Body habit bonus, 1 Shield = 65 Coins convertible in Bank tab); full design in docs/17_CURRENCIES_AND_SHIELD.md
+- HUD currency order: Coins → Diamonds → Hearts → Shields → Shards → Dice
