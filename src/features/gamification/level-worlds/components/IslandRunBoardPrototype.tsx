@@ -2148,11 +2148,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                         session,
                         onComplete: (result: IslandRunMinigameResult) => {
                           if (result.completed) {
-                            // Award rewards
-                            if (result.reward.coins) setCoins((c) => c + result.reward.coins);
-                            if (result.reward.dice) setDicePool((d) => d + result.reward.dice);
-                            if (result.reward.hearts) setHearts((h) => h + result.reward.hearts);
-                            if (result.reward.spinTokens) setSpinTokens((s) => s + result.reward.spinTokens);
+                            // Award rewards — destructure first so TS can narrow inside callbacks
+                            const { coins: rwCoins, dice: rwDice, hearts: rwHearts, spinTokens: rwSpin } = result.reward;
+                            if (rwCoins) setCoins((c) => c + rwCoins);
+                            if (rwDice) setDicePool((d) => d + rwDice);
+                            if (rwHearts) setHearts((h) => h + rwHearts);
+                            if (rwSpin) setSpinTokens((s) => s + rwSpin);
                             // Mark stop completed
                             setCompletedStops((prev) => {
                               if (prev.includes('minigame')) return prev;
