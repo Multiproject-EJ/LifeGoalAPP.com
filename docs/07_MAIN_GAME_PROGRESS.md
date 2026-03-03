@@ -2783,3 +2783,22 @@ This is the core differentiator: game difficulty and resource economy are tied t
 | Already onboarded in PWA | Auto on first game open | Skip → auto-claim reward | +5 hearts + 250 coins |
 | Out of hearts/dice (established player) | `dicePool < 1 && hearts < 1` | Continuous improvement pop-up: 1 AI habit suggestion | +2–3 hearts + tickets |
 | Out of tickets (established player) | `tickets < 1 && Step 3 unlocked` | Soft nudge: "complete a habit today to earn tickets" | +tickets |
+
+---
+
+Date: 2026-03-03
+Slice: M11A — Minigame framework scaffold
+Summary:
+- Introduced IslandRunMinigame interface, IslandRunMinigameResult/Reward types, and ISLAND_RUN_MINIGAME_REGISTRY in new islandRunMinigameService.ts
+- Added resolveMinigameForStop() helper (returns shooter_blitz for all stops; M11B will make this data-driven)
+- Wired minigame stop CTA in IslandRunBoardPrototype through the registry — ad-hoc ShooterBlitz call now routes via launcher contract
+- ShooterBlitz stub launcher fires onExit() until M11B wires reward passthrough; backward-compatible (setShowShooterBlitzFromStop still called)
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunMinigameService.ts (new)
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M11B: Wire ShooterBlitz fully through the M11A framework — implement shooter_blitz launch() to open the component, pipe the real onComplete reward to the caller, and remove the setShowShooterBlitzFromStop bypass.

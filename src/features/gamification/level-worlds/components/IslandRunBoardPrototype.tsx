@@ -33,6 +33,11 @@ import {
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import { ShooterBlitz } from '../../games/shooter-blitz/ShooterBlitz';
+import {
+  resolveMinigameForStop,
+  ISLAND_RUN_MINIGAME_REGISTRY,
+  type IslandRunMinigameResult,
+} from '../services/islandRunMinigameService';
 
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
@@ -2137,8 +2142,32 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                     onClick={() => {
+                      const minigameId = resolveMinigameForStop(islandNumber);
+                      const minigame = ISLAND_RUN_MINIGAME_REGISTRY[minigameId];
+                      minigame.launch({
+                        session,
+                        onComplete: (result: IslandRunMinigameResult) => {
+                          if (result.completed) {
+                            // Award rewards
+                            if (result.reward.coins) setCoins((c) => c + result.reward.coins);
+                            if (result.reward.dice) setDicePool((d) => d + result.reward.dice);
+                            if (result.reward.hearts) setHearts((h) => h + result.reward.hearts);
+                            if (result.reward.spinTokens) setSpinTokens((s) => s + result.reward.spinTokens);
+                            // Mark stop completed
+                            setCompletedStops((prev) => {
+                              if (prev.includes('minigame')) return prev;
+                              return [...prev, 'minigame'];
+                            });
+                          }
+                          setActiveStopId(null);
+                        },
+                        onExit: () => {
+                          setActiveStopId(null);
+                        },
+                      });
+                      // Keep ShowShooterBlitzFromStop for backward compat — ShooterBlitz still has
+                      // its own open/close state; M11B will fully integrate it into the launcher
                       setShowShooterBlitzFromStop(true);
-                      setActiveStopId(null);
                     }}
                   >
                     ▶ Launch Minigame
