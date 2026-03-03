@@ -253,6 +253,31 @@ The main game is considered **production-ready** when all of the following are t
 ## Progress Log (newest first)
 
 Date: 2026-03-03
+Slice: DESIGN — Collectible Progress Bar canonical design locked
+Summary:
+- New canonical doc docs/13_COLLECTIBLE_PROGRESS_BAR.md created covering the full shard sub-currency system
+- 7 era-specific collectible types defined (Energy Cell, Bowl Token, Petal, Spark Shard, Memory Gem, Flux Orb, Prism Shard)
+- Special island collectible: Star Fragment 🌟
+- Repeating escalating milestone chain: T1(20)→T2(60)→T3(120)→T4(220)→T5(350)→T6(500)→T7+(+150/tier)
+- Rewards are blind-box at claim time; app-wide and island-scoped currencies both in pool
+- T5+ intentionally requires micro-transaction spend to reach within one island timer — primary monetisation lever
+- Progress bar pill always visible: top of board view + Home Island overlay
+- Island countdown timer relocated to sit below the pill in board view
+- Build slices M16A–M16I defined; M16A (data model) is next build slice
+- Data model: island_shards, shard_tier_index, shard_claim_count added to canonical requirements
+Files changed:
+- docs/13_COLLECTIBLE_PROGRESS_BAR.md (new)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- Docs-only; no build step required
+Next:
+- M16A: Data model — shard fields in Supabase + state types
+Milestones closed: none (design doc only)
+
+---
+
+Date: 2026-03-03
 Slice: M15 — Real island timer (48h/72h + Catch-up Rule A + expiry persistence)
 Summary:
 - Added islandStartedAtMs + islandExpiresAtMs to IslandRunRuntimeState, IslandRunGameStateRecord, and persistPatch contract

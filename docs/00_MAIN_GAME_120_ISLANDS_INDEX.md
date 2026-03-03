@@ -79,6 +79,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
 - [✅] M14: Shop separation & unlock tiers — market stop removed from stop plan; 5 stops are hatchery/minigame/utility/dynamic/boss; persistent 🛍️ Shop HUD button added; Tier 1 always available; Tier 2 (heart boost bundle) gated on bossTrialResolved; egg selling in shop when eggStage >= 4
+- [⛔] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I)
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -90,10 +91,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** [✅] M15: Real island timer shipped — 48h/72h + Catch-up Rule A + expiry persistence  
-**Files to touch:** `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `supabase/migrations/`  
-**Acceptance criteria:** island start time written to Supabase on first visit; `expires_at` = `started_at` + 72h (normal) or 48h (special island); timer counts down from `expires_at`; on expiry, travel overlay fires and island advances  
-**How to test:** start an island run, check Supabase for `started_at`/`expires_at` row; confirm countdown matches; use `?devTimer=1` to verify short-timer still works
+**Objective:** [⛔] M16A: Data model for shard fields — `island_shards`, `shard_tier_index`, `shard_claim_count` added to Supabase + all state type interfaces
+**Files to touch:** `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `supabase/migrations/0171_island_run_shard_fields.sql`
+**Acceptance criteria:** migration runs cleanly; all three shard fields appear in `IslandRunRuntimeState`, `IslandRunGameStateRecord`, and `persistIslandRunRuntimeStatePatch`; fields default to 0; `performIslandTravel()` zeroes them on travel; `npm run build` passes.
+**How to test:** run migration in local Supabase; check `island_run_runtime_state` table for new columns; trigger island travel in dev mode and confirm fields reset to 0 in Supabase row.
 
 ---
 
@@ -106,3 +107,4 @@ Quality direction:
 - Encounter tile: easy bonus challenge, not boss
 - Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer *(legacy every-5th/every-10th heuristic is deprecated)*
 - Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are collectible on revisit. **Home Island eggs are repeatable** (not subject to the one-time rule). Dormant/hatched-but-unclaimed eggs can exist across multiple islands simultaneously.
+- Collectible Progress Bar: repeating escalating milestone chain; 7 era-specific collectibles (⚡🎳🌸💡🔷🌀🌈) + 🌟 Star Fragment for special islands; shards earned from egg_shard tiles (1–3 per landing); T1–T6 reward tiers (20→60→120→220→350→500 shards); T5+ intentionally hard to reach without micro-transactions; bar always visible at top of board and in Home Island overlay; canonical design in docs/13_COLLECTIBLE_PROGRESS_BAR.md
