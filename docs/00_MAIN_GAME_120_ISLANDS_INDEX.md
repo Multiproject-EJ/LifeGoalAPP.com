@@ -78,6 +78,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M11: Minigame framework + first minigame stub (M11A minigame framework scaffold shipped — IslandRunMinigame interface, ISLAND_RUN_MINIGAME_REGISTRY, resolveMinigameForStop; stop CTA routed via registry; M11B minigame launcher + reward passthrough shipped; M11C per-island stop enforcement shipped — Step 1 gate, HUD progress chip, boss lock visual, completedStops localStorage persistence)
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
+- [🟡] M13: Per-island egg ledger (Supabase) — migration 0169, PerIslandEggEntry/PerIslandEggsLedger types, perIslandEggs in state + patch, key-level merge, handleSetEgg/handleOpenEgg wired, islandEggSlotUsed guard, hydration restores from ledger
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -89,10 +90,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M13 — Per-island egg ledger: implement a `per_island_eggs` Supabase table/jsonb ledger with one entry per island, replace the single global `activeEgg` slot, and preserve eggs left behind on island travel so they are collectible on revisit  
-**Files to touch:** `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `supabase/migrations/`  
-**Acceptance criteria:** each island stores its own egg entry; `activeEgg` is replaced by a per-island lookup; eggs not collected before island travel are preserved and retrievable when that island is revisited; migration + RLS policy added  
-**How to test:** set egg on island 1, travel to island 2, travel back to island 1, confirm egg is still present and collectible
+**Objective:** M14 — Shop separation: persistent HUD Shop button, post-boss unlock tiers, egg-selling enabled after hatch  
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/services/`  
+**Acceptance criteria:** Shop is always accessible via a persistent HUD button independent of island steps; post-boss defeat unlocks additional shop tiers; egg selling in the shop is enabled only after the egg has hatched  
+**How to test:** Open Island Run, confirm shop button is always visible; defeat boss, confirm new shop tiers appear; set egg, wait for hatch, confirm sell option available in shop
 
 ---
 

@@ -2,6 +2,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
+import type { PerIslandEggsLedger } from './islandRunGameStateStore';
 import {
   hydrateIslandRunGameStateRecord,
   hydrateIslandRunGameStateRecordWithSource,
@@ -32,6 +33,7 @@ export interface IslandRunRuntimeStateBackend {
       activeEggSetAtMs?: number | null;
       activeEggHatchDurationMs?: number | null;
       activeEggIsDormant?: boolean;
+      perIslandEggs?: PerIslandEggsLedger;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -88,6 +90,9 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
             : current.activeEggHatchDurationMs,
       activeEggIsDormant:
         typeof patch.activeEggIsDormant === 'boolean' ? patch.activeEggIsDormant : current.activeEggIsDormant,
+      perIslandEggs: patch.perIslandEggs
+        ? { ...current.perIslandEggs, ...patch.perIslandEggs }
+        : current.perIslandEggs,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({
