@@ -271,6 +271,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [islandShards, setIslandShards] = useState<number>(0);
   const [shardTierIndex, setShardTierIndex] = useState<number>(0);
   const [shardClaimCount, setShardClaimCount] = useState<number>(0);
+  // M17A: shields wallet currency (Body Habit Shield)
+  const [shields, setShields] = useState<number>(0);
   // M16C: true when islandShards >= current tier threshold; cleared on player claim (M16E)
   const [shardMilestoneReached, setShardMilestoneReached] = useState<boolean>(false);
   // M16E: tier index of a pending (unclaimed) milestone; null when no claim is waiting
@@ -385,7 +387,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setShardMilestoneReached(true);
       setPendingClaimTierIndex(hydratedTierIndex);
     }
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount]);
+    // M17A: Restore shields wallet currency from runtime state
+    setShields(runtimeState.shields ?? 0);
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -1973,6 +1977,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             🛍️ Shop
           </button>
         </div>
+        {/* M17A: shields HUD chip — only shown when player has at least 1 shield */}
+        {shields > 0 && (
+          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shields">
+            🛡️ <strong>{shields}</strong>
+          </span>
+        )}
         {/* M16C/M16D/M16E: Shard progress pill with fill animation and Claim button */}
         {(() => {
           const threshold = getShardTierThreshold(shardTierIndex);
@@ -2161,6 +2171,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               {dailyHeartsClaimed ? 'Spin reward claimed' : `Spin of the Day (+${dailyRewardPlan.hearts} hearts)`}
             </button>
           )}
+          {/* M17A: dev simulate Body habit (+1 shard) */}
+          <button
+            type="button"
+            className="island-run-prototype__debug-btn"
+            onClick={() => awardShards('body_habit')}
+          >
+            Simulate Body habit (+1 shard)
+          </button>
 
           {hearts < 1 && dicePool < 1 && (
             <button
