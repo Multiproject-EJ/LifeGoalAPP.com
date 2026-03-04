@@ -745,12 +745,12 @@
   border-color: rgba(173, 248, 192, 0.46);
 }
 
-/* M16C: Shard progress pill — always visible in HUD */
+/* M16C/M16D: Shard progress pill with fill animation — always visible in HUD */
 .island-run-prototype__shard-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.22rem 0.7rem;
+  overflow: hidden;
   border-radius: 999px;
   background: rgba(255, 219, 90, 0.15);
   border: 1px solid rgba(255, 232, 130, 0.45);
@@ -761,9 +761,41 @@
   margin-top: 0.3rem;
 }
 
+/* M16D: Fill bar — positioned absolutely behind the text */
+.island-run-prototype__shard-pill-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 219, 90, 0.32);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* M16D: Content wrapper keeps text above the fill bar */
+.island-run-prototype__shard-pill-content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.7rem;
+}
+
 .island-run-prototype__shard-pill-count {
   color: #ffe97a;
   letter-spacing: 0.02em;
+}
+
+/* M16D: Celebration pulse when milestone is reached */
+@keyframes shard-pill-milestone-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 232, 130, 0.85); }
+  60%  { box-shadow: 0 0 0 8px rgba(255, 232, 130, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 232, 130, 0); }
+}
+
+.island-run-prototype__shard-pill--milestone {
+  animation: shard-pill-milestone-pulse 0.6s ease-out;
 }
 
 .island-run-prototype__landing {

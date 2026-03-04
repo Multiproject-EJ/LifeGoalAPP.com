@@ -3032,3 +3032,12 @@ Summary: Added read-only shard progress pill to the Island Run HUD, always visib
 Files changed: src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (helpers + pill JSX + SHARD_MILESTONE_THRESHOLDS import), src/features/gamification/level-worlds/LevelWorlds.css (pill styles), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M16C shipped, Next Slice → M16D), docs/07_MAIN_GAME_PROGRESS.md (this entry)
 Testing: Pill renders in HUD at all times (not gated by dev toggle); updates reactively as islandShards changes via tile/stop/boss earn paths (M16B); special island 5 shows 🌟; normal islands show ⚡ at tier 0; npm run build passes with zero new TS errors.
 Next: M16D — Claim button + blind-box reward reveal
+
+---
+
+Date: 2026-03-04
+Slice: M16D — Progress bar fill animation
+Summary: Added fill animation to the shard progress pill. Pill now has an inner fill `<div>` whose `width` is driven by `islandShards / tier_threshold * 100%`. Smooth CSS `transition: width 0.4s ease-out` animates the bar as shards are earned. When the fill reaches 100% (milestone hit) the pill plays a brief glow pulse via `@keyframes shard-pill-milestone-pulse` (~0.6s). On island travel (`islandShards` resets to 0), a `useEffect` detects the reset and temporarily disables the transition for one animation frame so the bar snaps to 0 instantly. Pill text is layered above the fill via `position: relative; z-index: 1` on the content wrapper, ensuring readability at all fill levels.
+Files changed: src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (prevShardsRef + shardFillNoTransition state + useEffect + updated pill JSX), src/features/gamification/level-worlds/LevelWorlds.css (fill bar styles + celebration keyframe), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M16D shipped, Next Slice → M16E), docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing: Roll dice and land on egg_shard tile — fill bar animates from previous % to new %; earn shards to threshold — celebration pulse plays; travel to next island — fill bar snaps to 0% instantly; pill text readable at all fill levels (0%, 50%, 100%); npm run build passes with zero new TS errors.
+Next: M16E — Claim button + blind-box reward reveal
