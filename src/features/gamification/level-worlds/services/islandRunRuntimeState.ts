@@ -18,6 +18,7 @@ export interface IslandRunRuntimeState {
   islandShards: number;
   shardTierIndex: number;
   shardClaimCount: number;
+  shields: number;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -87,6 +88,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     islandShards?: number;
     shardTierIndex?: number;
     shardClaimCount?: number;
+    shields?: number;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

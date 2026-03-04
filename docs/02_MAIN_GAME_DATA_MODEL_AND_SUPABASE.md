@@ -148,7 +148,7 @@ Repeat similarly for other tables.
 
 ---
 
-## island_run_runtime_state columns (as of migration 0169)
+## island_run_runtime_state columns (as of migration 0172)
 
 | Column | Type | Default | Description |
 |---|---|---|---|
@@ -162,6 +162,10 @@ Repeat similarly for other tables.
 | `active_egg_hatch_duration_ms` | bigint | null | Global active egg hatch duration ms |
 | `active_egg_is_dormant` | boolean | false | Whether the global active egg is dormant |
 | `per_island_eggs` | jsonb | `'{}'` | Per-island egg ledger. Key = island number as text. Value = `{tier, set_at_ms, hatch_at_ms, status: "incubating"\|"ready"\|"collected"\|"sold"}`. One entry per island; never overwritten once status is collected/sold. |
+| `island_shards` | int | 0 | Lifetime cumulative shard count for the Collectible Progress Bar |
+| `shard_tier_index` | int | 0 | Current collectible era tier index (advances on player claim) |
+| `shard_claim_count` | int | 0 | Total number of shard milestone claims |
+| `shields` | int | 0 | Body Habit Shield wallet currency balance (earned from Body habit completions) |
 | `updated_at` | timestamptz | now() | Last updated timestamp |
 
 ---

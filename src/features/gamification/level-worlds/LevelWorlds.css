@@ -1761,6 +1761,13 @@
   color: #d4aaff;
 }
 
+/* M17A: Shield wallet currency chip */
+.island-run-prototype__stat-chip--shields {
+  background: rgba(100, 160, 255, 0.2);
+  border-color: rgba(130, 190, 255, 0.46);
+  color: #c8e4ff;
+}
+
 /* B2-2: Token transition and animation */
 .island-token {
   transition: left 0.22s cubic-bezier(0.33, 1, 0.58, 1), top 0.22s cubic-bezier(0.33, 1, 0.58, 1);

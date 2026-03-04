@@ -30,6 +30,7 @@ export interface IslandRunGameStateRecord {
   islandShards: number;
   shardTierIndex: number;
   shardClaimCount: number;
+  shields: number;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -55,6 +56,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     islandShards: 0,
     shardTierIndex: 0,
     shardClaimCount: 0,
+    shields: 0,
   };
 }
 
@@ -115,6 +117,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.shardClaimCount === 'number' && Number.isFinite(value.shardClaimCount)
         ? Math.max(0, Math.floor(value.shardClaimCount))
         : fallback.shardClaimCount,
+    shields:
+      typeof value.shields === 'number' && Number.isFinite(value.shields)
+        ? Math.max(0, Math.floor(value.shields))
+        : fallback.shields,
   };
 }
 
@@ -161,7 +167,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,shard_tier_index,shard_claim_count')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,shard_tier_index,shard_claim_count,shields')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -201,6 +207,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       islandShards: data.island_shards ?? 0,
       shardTierIndex: data.shard_tier_index ?? 0,
       shardClaimCount: data.shard_claim_count ?? 0,
+      shields: data.shields ?? 0,
     },
     fallback,
   );
@@ -280,6 +287,7 @@ export async function writeIslandRunGameStateRecord(options: {
       island_shards: record.islandShards,
       shard_tier_index: record.shardTierIndex,
       shard_claim_count: record.shardClaimCount,
+      shields: record.shields,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },

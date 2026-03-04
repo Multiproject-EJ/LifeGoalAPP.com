@@ -3104,3 +3104,33 @@ Testing:
 - npm run build passes (zero new TypeScript errors)
 Next:
 - M16D: Collectible Progress Bar HUD pill (era emoji + shard count / threshold display)
+
+---
+
+Date: 2026-03-04
+Slice: M17A — Shields wallet field + HUD display + Body habit shard award
+Summary:
+- Added `shields: number` (default 0) to `IslandRunRuntimeState` and `IslandRunGameStateRecord`
+- Added `shields` to `getDefaultRecord()`, `toRecord()` validation, Supabase column query, hydration mapping, and `writeIslandRunGameStateRecord` upsert in `islandRunGameStateStore.ts`
+- Added `shields?: number` to patch type in `persistIslandRunRuntimeStatePatch` (`islandRunRuntimeState.ts`) and to `IslandRunRuntimeStateBackend.persistPatch` interface + merge logic (`islandRunRuntimeStateBackend.ts`)
+- Created `supabase/migrations/0172_island_run_shields_column.sql`: adds `shields int not null default 0` to `island_run_runtime_state`
+- Added `shields` state + hydration to `IslandRunBoardPrototype.tsx`; shields chip `🛡️ {shields}` rendered in HUD header (hidden when shields = 0) using `island-run-prototype__stat-chip--shields` CSS class
+- Added `body_habit: 1` to `SHARD_EARN` in `shardMilestoneEngine.ts` as a new `ShardEarnSource`
+- Added "Simulate Body habit (+1 shard)" dev-mode button in the `▼ Dev info` panel in `IslandRunBoardPrototype.tsx` (calls `awardShards('body_habit')`)
+- Added `island-run-prototype__stat-chip--shields` CSS rule to `LevelWorlds.css` (blue tint, matching HUD chip style)
+- Updated `docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md`: column table updated to migration 0172; added `island_shards`, `shard_tier_index`, `shard_claim_count`, `shields` rows
+Files changed:
+- src/features/gamification/level-worlds/services/shardMilestoneEngine.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- supabase/migrations/0172_island_run_shields_column.sql (new)
+- docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build
+Next:
+- M17B: Shield earn — Body habit awards 1 Shield; Bank tab convert stub

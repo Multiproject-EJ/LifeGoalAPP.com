@@ -12,6 +12,7 @@ export const SHARD_EARN = {
   stop_complete: 2,   // completing any non-boss stop
   boss_defeat: 5,     // defeating the boss
   egg_open: 2,        // opening / hatching an egg
+  body_habit: 1,      // completing a Body-tagged habit
 } as const;
 export type ShardEarnSource = keyof typeof SHARD_EARN;
 

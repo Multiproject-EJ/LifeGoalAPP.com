@@ -39,6 +39,7 @@ export interface IslandRunRuntimeStateBackend {
       islandShards?: number;
       shardTierIndex?: number;
       shardClaimCount?: number;
+      shields?: number;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -118,6 +119,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.shardClaimCount === 'number' && Number.isFinite(patch.shardClaimCount)
           ? Math.max(0, Math.floor(patch.shardClaimCount))
           : current.shardClaimCount,
+      shields:
+        typeof patch.shields === 'number' && Number.isFinite(patch.shields)
+          ? Math.max(0, Math.floor(patch.shields))
+          : current.shields,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({
