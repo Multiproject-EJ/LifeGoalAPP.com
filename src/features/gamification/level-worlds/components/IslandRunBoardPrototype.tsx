@@ -1212,6 +1212,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       heartsAwarded = 3;
       feedbackMsg = '+3 hearts, +100 coins, +1 spin';
     }
+    // M16B: award shards on egg open
+    awardShards('egg_open');
     // M10B: egg_open sound + haptic
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');

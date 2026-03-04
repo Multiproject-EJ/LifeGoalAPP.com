@@ -6,6 +6,7 @@ export const SHARD_EARN = {
   egg_shard_tile: 1,  // landing on egg_shard tile
   stop_complete: 2,   // completing any non-boss stop
   boss_defeat: 5,     // defeating the boss
+  egg_open: 2,        // opening / hatching an egg
 } as const;
 export type ShardEarnSource = keyof typeof SHARD_EARN;
 
