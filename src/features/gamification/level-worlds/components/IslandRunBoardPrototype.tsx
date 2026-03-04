@@ -2171,15 +2171,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               {dailyHeartsClaimed ? 'Spin reward claimed' : `Spin of the Day (+${dailyRewardPlan.hearts} hearts)`}
             </button>
           )}
-          {/* M17A: dev simulate Body habit (+1 shard) */}
-          <button
-            type="button"
-            className="island-run-prototype__debug-btn"
-            onClick={() => awardShards('body_habit')}
-          >
-            Simulate Body habit (+1 shard)
-          </button>
-
           {hearts < 1 && dicePool < 1 && (
             <button
               type="button"

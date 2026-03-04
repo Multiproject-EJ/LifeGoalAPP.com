@@ -3134,3 +3134,12 @@ Testing:
 - npm run build
 Next:
 - M17B: Shield earn — Body habit awards 1 Shield; Bank tab convert stub
+
+---
+
+Date: 2026-03-04
+Slice: M17B — Shield earn: Body habit completion awards 1 Shield; Bank tab convert stub
+Summary: Wired real Body habit → Shield earn path in UnifiedTodayView.handleMarkDone (domain_key === 'body' check; anti-double-award guard; localStorage-persisted via persistIslandRunRuntimeStatePatch). Added 🛡️ +1 badge on pending Body habit rows (faded ✓ after completion). Added "Shield Wallet" section to ScoreTab Bank tab: shows shields balance, 1 Shield = 65 Coins rate, and "Convert all → Coins" one-tap button with success feedback. Removed dev "Simulate Body habit (+1 shard)" button from IslandRunBoardPrototype dev panel.
+Files changed: src/features/habits/UnifiedTodayView.tsx (shield earn + badge), src/features/habits/HabitsModule.css (shield badge CSS), src/features/gamification/ScoreTab.tsx (Bank tab Shield Wallet section), src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (remove simulate button), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M17B shipped, Next Slice → M17C), docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing: Tag a habit as Body (domain_key = 'body'); complete it in Today tab; verify 🛡️ chip in Island Run HUD increments; open Bank tab and verify shield balance matches; tap Convert; verify shields → 0 and coins increase by (shields × 65); complete same habit again on same day — verify no second shield award; npm run build passes with zero new TS errors.
+Next: M17C — Shards HUD display + persistent wallet balance
