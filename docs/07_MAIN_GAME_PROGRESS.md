@@ -3079,3 +3079,28 @@ Testing:
 - npm run build
 Next:
 - M16C: shard_tier_index advancement — milestone chain progression logic
+
+---
+
+Date: 2026-03-04
+Slice: M16C — Shard tier index advancement + milestone chain progression
+Summary:
+- Exported `getShardTierThreshold(tierIndex: number): number` from `shardMilestoneEngine.ts` with correct cumulative threshold formula (T1–T5 fixed, T6+ = 500 + (n−5)×150 per canonical doc)
+- Exported `SHARD_EXTENDED_BASE_THRESHOLD` and `SHARD_EXTENDED_TIER_INCREMENT` constants from `shardMilestoneEngine.ts`
+- Updated `computeShardEarn` to return `shardMilestoneReached: boolean` instead of `milestonesReached: number`; engine no longer auto-advances `shardTierIndex` or subtracts shard counts (carry-forward model per canonical spec)
+- Added `shardMilestoneReached: boolean` local state to `IslandRunBoardPrototype.tsx`
+- `awardShards` now sets `shardMilestoneReached = true` (once) and `pendingClaimTierIndex` when threshold is crossed; tier index does NOT advance until player claims
+- Hydration restores `shardMilestoneReached` + `pendingClaimTierIndex` from persisted state on app restart
+- Island travel no longer resets `islandShards`, `shardTierIndex`, or `shardClaimCount` — they are lifetime-cumulative per canonical spec; claim modal is closed on travel but claim state persists
+- `onCollect` in M16E claim modal now advances `shardTierIndex` + `shardClaimCount` and persists them (tier advancement is player-gated)
+- Removed local `getShardTierThreshold`, `SHARD_EXTENDED_BASE_THRESHOLD`, `SHARD_EXTENDED_TIER_INCREMENT` from `IslandRunBoardPrototype.tsx` (now imported from engine)
+- Shard pill milestone state now driven by `shardMilestoneReached` flag
+Files changed:
+- src/features/gamification/level-worlds/services/shardMilestoneEngine.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build passes (zero new TypeScript errors)
+Next:
+- M16D: Collectible Progress Bar HUD pill (era emoji + shard count / threshold display)

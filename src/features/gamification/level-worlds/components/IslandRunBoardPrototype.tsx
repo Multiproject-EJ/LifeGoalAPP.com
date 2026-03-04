@@ -35,7 +35,7 @@ import {
   getIslandRunAudioEnabled,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
-import { SHARD_EARN, SHARD_MILESTONE_THRESHOLDS, computeShardEarn, type ShardEarnSource } from '../services/shardMilestoneEngine';
+import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import {
   resolveMinigameForStop,
@@ -59,16 +59,9 @@ const SPECIAL_ISLAND_NUMBERS = new Set([5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 6
 
 // M16C: Era emoji cycle for shard pill HUD (shard_tier_index % 7)
 const ERA_EMOJIS = ['⚡', '🎳', '🌸', '💡', '🔷', '🌀', '🌈'] as const;
-// Threshold for the last defined tier and the linear increment for tiers beyond it (docs/13_COLLECTIBLE_PROGRESS_BAR.md §3b)
-const SHARD_EXTENDED_BASE_THRESHOLD = 350;
-const SHARD_EXTENDED_TIER_INCREMENT = 150;
 function getShardEraEmoji(islandNum: number, tierIndex: number): string {
   if (SPECIAL_ISLAND_NUMBERS.has(islandNum)) return '🌟';
   return ERA_EMOJIS[tierIndex % ERA_EMOJIS.length];
-}
-function getShardTierThreshold(tierIndex: number): number {
-  if (tierIndex < SHARD_MILESTONE_THRESHOLDS.length) return SHARD_MILESTONE_THRESHOLDS[tierIndex];
-  return SHARD_EXTENDED_BASE_THRESHOLD + (tierIndex - (SHARD_MILESTONE_THRESHOLDS.length - 1)) * SHARD_EXTENDED_TIER_INCREMENT;
 }
 
 function getIslandDurationMs(islandNum: number): number {
@@ -278,6 +271,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [islandShards, setIslandShards] = useState<number>(0);
   const [shardTierIndex, setShardTierIndex] = useState<number>(0);
   const [shardClaimCount, setShardClaimCount] = useState<number>(0);
+  // M16C: true when islandShards >= current tier threshold; cleared on player claim (M16E)
+  const [shardMilestoneReached, setShardMilestoneReached] = useState<boolean>(false);
   // M16E: tier index of a pending (unclaimed) milestone; null when no claim is waiting
   const [pendingClaimTierIndex, setPendingClaimTierIndex] = useState<number | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -380,9 +375,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
 
     // M16B: Restore shard state from runtime state on hydration
-    setIslandShards(runtimeState.islandShards ?? 0);
-    setShardTierIndex(runtimeState.shardTierIndex ?? 0);
+    const hydratedShards = runtimeState.islandShards ?? 0;
+    const hydratedTierIndex = runtimeState.shardTierIndex ?? 0;
+    setIslandShards(hydratedShards);
+    setShardTierIndex(hydratedTierIndex);
     setShardClaimCount(runtimeState.shardClaimCount ?? 0);
+    // M16C: derive shardMilestoneReached so Claim button re-appears after app restart
+    if (hydratedShards >= getShardTierThreshold(hydratedTierIndex)) {
+      setShardMilestoneReached(true);
+      setPendingClaimTierIndex(hydratedTierIndex);
+    }
   }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
@@ -776,7 +778,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // TODO M11D: persist completedStops to Supabase island_run_runtime_state
   }, [completedStops, hasHydratedRuntimeState, islandNumber, session.user.id]);
 
-  // M16B: award shards from a given source, update local state, and persist
+  // M16B/M16C: award shards from a given source, update local state, and persist.
+  // shard_tier_index does NOT advance here — that happens on player claim (M16E).
   const awardShards = useCallback((source: ShardEarnSource) => {
     const amount = SHARD_EARN[source];
     const result = computeShardEarn(
@@ -784,23 +787,22 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       amount,
     );
     setIslandShards(result.islandShards);
-    setShardTierIndex(result.shardTierIndex);
-    setShardClaimCount(result.shardClaimCount);
+    // Only persist the cumulative shard count; tier/claim state is unchanged until claim
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
       patch: {
         islandShards: result.islandShards,
-        shardTierIndex: result.shardTierIndex,
-        shardClaimCount: result.shardClaimCount,
       },
     });
-    if (result.milestonesReached > 0) {
+    // M16C: set shardMilestoneReached flag (once) when threshold is first crossed
+    if (result.shardMilestoneReached && !shardMilestoneReached) {
+      setShardMilestoneReached(true);
       // M16E: store the completed tier so the Claim button / modal can show the right collectible
       setPendingClaimTierIndex(shardTierIndex);
       setLandingText((prev) => `${prev} ✨ Shard milestone reached!`);
     }
-  }, [islandShards, shardTierIndex, shardClaimCount, session, client]);
+  }, [islandShards, shardTierIndex, shardClaimCount, shardMilestoneReached, session, client]);
 
   const stopStateMap = useMemo(() => {
     const map = new Map<string, StopProgressState>();
@@ -1625,18 +1627,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIslandIntention('');
     setShowIslandClearCelebration(false);
     setIslandClearStats(null);
-    setIslandShards(0);
-    setShardTierIndex(0);
-    setShardClaimCount(0);
-    setPendingClaimTierIndex(null);
-    setShowClaimModal(false);
+    // M16C: islandShards, shardTierIndex, shardClaimCount, shardMilestoneReached, and
+    // pendingClaimTierIndex are NOT reset on island travel — they are lifetime-cumulative
+    // and persist across islands per docs/13_COLLECTIBLE_PROGRESS_BAR.md §3.
+    setShowClaimModal(false); // close any open claim modal but preserve pending claim state
     setLandingText('Arrived at new island. Ready to roll!');
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
-      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs, islandShards: 0, shardTierIndex: 0, shardClaimCount: 0 },
+      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs },
     });
-    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs, islandShards: 0, shardTierIndex: 0, shardClaimCount: 0 }));
+    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs }));
     // M10D: island travel complete sound + haptic
     playIslandRunSound('island_travel_complete');
     triggerIslandRunHaptic('island_travel_complete');
@@ -1976,11 +1977,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         {(() => {
           const threshold = getShardTierThreshold(shardTierIndex);
           const pct = threshold > 0 ? Math.min((islandShards / threshold) * 100, 100) : 0;
-          const isMilestone = pct >= 100;
-          const hasPendingClaim = pendingClaimTierIndex !== null;
           return (
             <div
-              className={`island-run-prototype__shard-pill${isMilestone ? ' island-run-prototype__shard-pill--milestone' : ''}`}
+              className={`island-run-prototype__shard-pill${shardMilestoneReached ? ' island-run-prototype__shard-pill--milestone' : ''}`}
               aria-label={`Shard progress: ${islandShards} of ${threshold}`}
             >
               <div
@@ -1991,7 +1990,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 <span>{getShardEraEmoji(islandNumber, shardTierIndex)}</span>
                 <span className="island-run-prototype__shard-pill-count">{islandShards} / {threshold}</span>
               </span>
-              {hasPendingClaim && (
+              {shardMilestoneReached && (
                 <button
                   type="button"
                   className="island-run-prototype__shard-pill-claim-btn"
@@ -2720,8 +2719,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           onCollect={() => {
             playIslandRunSound('market_purchase_success');
             triggerIslandRunHaptic('reward_claim');
+            // M16C/M16E: advance tier index + claim count on player claim action
+            const newTierIndex = shardTierIndex + 1;
+            const newClaimCount = shardClaimCount + 1;
+            setShardTierIndex(newTierIndex);
+            setShardClaimCount(newClaimCount);
+            setShardMilestoneReached(false);
             setShowClaimModal(false);
             setPendingClaimTierIndex(null);
+            void persistIslandRunRuntimeStatePatch({
+              session,
+              client,
+              patch: { shardTierIndex: newTierIndex, shardClaimCount: newClaimCount },
+            });
           }}
         />
       )}
