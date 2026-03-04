@@ -3014,3 +3014,12 @@ Testing:
 - Egg sell appears only when eggStage >= 4
 Next:
 - M15: Real island timer — replace ISLAND_DURATION_SEC dev constant with Supabase started_at/expires_at timestamps
+
+---
+
+Date: 2026-03-04
+Slice: M16B — Shard earn logic
+Summary: Created shardMilestoneEngine.ts (pure util — SHARD_EARN constants, SHARD_MILESTONE_THRESHOLDS, computeShardEarn); wired egg_shard tile, stop_complete, boss_defeat earn paths in IslandRunBoardPrototype; local shard state synced with Supabase via persistIslandRunRuntimeStatePatch; milestone crossing triggers landing text feedback; island travel resets shard state.
+Files changed: src/features/gamification/level-worlds/services/shardMilestoneEngine.ts (new), src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (modified), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (updated), docs/07_MAIN_GAME_PROGRESS.md (appended)
+Testing: Landing on egg_shard tile → islandShards increments +1 and persists; completing any non-boss stop → +2 shards; boss defeat → +5 shards; shardTierIndex advances when threshold crossed; shardClaimCount increments on chain completion; island travel → all three fields reset to 0; npm run build passes.
+Next: M16C — Collectible Progress Bar HUD pill (read-only display)
