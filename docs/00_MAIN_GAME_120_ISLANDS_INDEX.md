@@ -82,7 +82,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
 - [✅] M14: Shop separation & unlock tiers — market stop removed from stop plan; 5 stops are hatchery/minigame/utility/dynamic/boss; persistent 🛍️ Shop HUD button added; Tier 1 always available; Tier 2 (heart boost bundle) gated on bossTrialResolved; egg selling in shop when eggStage >= 4
-- [⛔] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I)
+- [🟡] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I); M16A shipped; M16B shard earn logic shipped
 - [⛔] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E)
 
 Support shipped:
@@ -95,10 +95,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** [⛔] M16A: Data model for shard fields — `island_shards`, `shard_tier_index`, `shard_claim_count` added to Supabase + all state type interfaces
-**Files to touch:** `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`, `supabase/migrations/0171_island_run_shard_fields.sql`
-**Acceptance criteria:** migration runs cleanly; all three shard fields appear in `IslandRunRuntimeState`, `IslandRunGameStateRecord`, and `persistIslandRunRuntimeStatePatch`; fields default to 0; `performIslandTravel()` zeroes them on travel; `npm run build` passes.
-**How to test:** run migration in local Supabase; check `island_run_runtime_state` table for new columns; trigger island travel in dev mode and confirm fields reset to 0 in Supabase row.
+**Objective:** [⛔] M16C: Collectible Progress Bar HUD pill — read-only pill component showing `islandShards / milestone_threshold` in the HUD row, with era collectible emoji
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`
+**Acceptance criteria:** HUD row shows a pill with `⚡ 5 / 20` style display (era emoji + current shards + slash + current tier threshold); pill is read-only; updates reactively as shards are earned; no interactivity; `npm run build` passes.
+**How to test:** land on egg_shard tile and observe pill increment; complete a non-boss stop and observe +2; complete boss and observe +5; travel to next island and observe reset to 0.
 
 ---
 

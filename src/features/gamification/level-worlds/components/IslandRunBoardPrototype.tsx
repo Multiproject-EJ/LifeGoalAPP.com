@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
@@ -33,6 +33,7 @@ import {
   getIslandRunAudioEnabled,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
+import { SHARD_EARN, computeShardEarn, type ShardEarnSource } from '../services/shardMilestoneEngine';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import {
   resolveMinigameForStop,
@@ -255,6 +256,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [bossTrialResolved, setBossTrialResolved] = useState(false);
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
+  const [islandShards, setIslandShards] = useState<number>(0);
+  const [shardTierIndex, setShardTierIndex] = useState<number>(0);
+  const [shardClaimCount, setShardClaimCount] = useState<number>(0);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
   const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle' | 'heart_boost_bundle', boolean>>({
     dice_bundle: false,
@@ -352,7 +356,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         isDormant: runtimeState.activeEggIsDormant,
       });
     }
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs]);
+
+    // M16B: Restore shard state from runtime state on hydration
+    setIslandShards(runtimeState.islandShards ?? 0);
+    setShardTierIndex(runtimeState.shardTierIndex ?? 0);
+    setShardClaimCount(runtimeState.shardClaimCount ?? 0);
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -732,6 +741,30 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // TODO M11D: persist completedStops to Supabase island_run_runtime_state
   }, [completedStops, hasHydratedRuntimeState, islandNumber, session.user.id]);
 
+  // M16B: award shards from a given source, update local state, and persist
+  const awardShards = useCallback((source: ShardEarnSource) => {
+    const amount = SHARD_EARN[source];
+    const result = computeShardEarn(
+      { islandShards, shardTierIndex, shardClaimCount },
+      amount,
+    );
+    setIslandShards(result.islandShards);
+    setShardTierIndex(result.shardTierIndex);
+    setShardClaimCount(result.shardClaimCount);
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        islandShards: result.islandShards,
+        shardTierIndex: result.shardTierIndex,
+        shardClaimCount: result.shardClaimCount,
+      },
+    });
+    if (result.milestonesReached > 0) {
+      setLandingText((prev) => `${prev} ✨ Shard milestone reached!`);
+    }
+  }, [islandShards, shardTierIndex, shardClaimCount, session, client]);
+
   const stopStateMap = useMemo(() => {
     const map = new Map<string, StopProgressState>();
     const nonBossStops = islandStopPlan.filter((stop) => stop.stopId !== 'boss');
@@ -989,7 +1022,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         break;
       case 'egg_shard':
         setDicePool((d) => d + 2);
-        setLandingText('🧩 Egg Shard! +2 dice');
+        setLandingText('🧩 Egg Shard! +2 dice, +1 shard');
+        awardShards('egg_shard_tile');
         break;
       case 'micro':
         setDicePool((d) => d + 3);
@@ -1552,6 +1586,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIslandIntention('');
     setShowIslandClearCelebration(false);
     setIslandClearStats(null);
+    setIslandShards(0);
+    setShardTierIndex(0);
+    setShardClaimCount(0);
     setLandingText('Arrived at new island. Ready to roll!');
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -1581,6 +1618,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       const bossReward = getBossReward(islandNumber);
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
       setCompletedStops((current) => (current.includes('boss') ? current : [...current, 'boss']));
+      awardShards('boss_defeat');
 
       logGameSession(session.user.id, {
         gameId: 'shooter_blitz',
@@ -1629,6 +1667,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return;
     }
 
+    if (!completedStops.includes(activeStopId)) {
+      awardShards('stop_complete');
+    }
     setCompletedStops((current) => (current.includes(activeStopId) ? current : [...current, activeStopId]));
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
     setActiveStopId(null);
