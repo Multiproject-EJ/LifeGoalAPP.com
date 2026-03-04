@@ -43,6 +43,31 @@ export async function hydrateIslandRunRuntimeStateWithSource(options: {
   return getIslandRunRuntimeStateBackend().hydrateWithSource({ session, client });
 }
 
+// M16E: Collectible roster for the blind-box reveal (era order, cycling by shard_tier_index)
+export interface CollectibleInfo {
+  emoji: string;
+  name: string;
+  era: string;
+}
+
+const COLLECTIBLE_ROSTER: CollectibleInfo[] = [
+  { emoji: '⚡', name: 'Energy Cell',  era: 'Era 1 — Electric Age'    },
+  { emoji: '🎳', name: 'Bowl Token',   era: 'Era 2 — Bowling Era'     },
+  { emoji: '🌸', name: 'Petal',        era: 'Era 3 — Cherry Blossom'  },
+  { emoji: '💡', name: 'Spark Shard',  era: 'Era 4 — Invention Age'   },
+  { emoji: '🔷', name: 'Memory Gem',   era: 'Era 5 — Crystal Era'     },
+  { emoji: '🌀', name: 'Flux Orb',     era: 'Era 6 — Vortex Age'      },
+  { emoji: '🌈', name: 'Prism Shard',  era: 'Era 7 — Rainbow Era'     },
+];
+
+/**
+ * Returns the collectible earned for the given shard_tier_index.
+ * Deterministic and cycles through the 7 era collectibles indefinitely.
+ */
+export function resolveCollectibleForClaim(shardTierIndex: number): CollectibleInfo {
+  return COLLECTIBLE_ROSTER[shardTierIndex % COLLECTIBLE_ROSTER.length];
+}
+
 export async function persistIslandRunRuntimeStatePatch(options: {
   session: Session;
   client: SupabaseClient | null;

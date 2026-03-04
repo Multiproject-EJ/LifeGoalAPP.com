@@ -3041,3 +3041,24 @@ Summary: Added fill animation to the shard progress pill. Pill now has an inner 
 Files changed: src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (prevShardsRef + shardFillNoTransition state + useEffect + updated pill JSX), src/features/gamification/level-worlds/LevelWorlds.css (fill bar styles + celebration keyframe), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M16D shipped, Next Slice → M16E), docs/07_MAIN_GAME_PROGRESS.md (this entry)
 Testing: Roll dice and land on egg_shard tile — fill bar animates from previous % to new %; earn shards to threshold — celebration pulse plays; travel to next island — fill bar snaps to 0% instantly; pill text readable at all fill levels (0%, 50%, 100%); npm run build passes with zero new TS errors.
 Next: M16E — Claim button + blind-box reward reveal
+
+---
+
+Date: 2026-03-04
+Slice: M16E — Claim button + blind-box collectible reveal
+Summary: Added `resolveCollectibleForClaim(shardTierIndex)` helper to islandRunRuntimeState.ts (7 era collectibles cycling by tier index). Created ShardClaimModal.tsx: full-screen blind-box reveal modal with 0.5s shimmer animation before the collectible emoji pops in, plus a "Collect!" confirm button. Added `pendingClaimTierIndex` + `showClaimModal` state to IslandRunBoardPrototype; `awardShards` now captures the completed tier index and sets `pendingClaimTierIndex` when `milestonesReached > 0`. Shard pill gains a "Claim!" button (animated bounce) when `pendingClaimTierIndex !== null`; clicking opens the modal. On Collect!: `market_purchase_success` sound + `reward_claim` haptic fire, modal closes, pending claim is cleared. Island travel also clears both new state fields. CSS added: claim button bounce keyframe, shimmer placeholder, collectible pop-in keyframe, modal layout styles.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts (resolveCollectibleForClaim + CollectibleInfo type)
+- src/features/gamification/level-worlds/components/ShardClaimModal.tsx (new)
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (pendingClaimTierIndex, showClaimModal, updated awardShards, Claim button, ShardClaimModal wire-up)
+- src/features/gamification/level-worlds/LevelWorlds.css (claim button + modal + shimmer + pop-in styles)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M16 ✅ complete, Next Slice → M17A)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- Set islandShards to tier threshold in dev → "Claim!" button appears on pill
+- Tap "Claim!" → blind-box modal opens with shimmer for ~0.5s then collectible reveals
+- Tap "Collect!" → modal closes, audio + haptic fire, pendingClaim cleared
+- Island travel clears pending claim state
+- npm run build passes with zero new TypeScript errors
+Next:
+- M17A: Currencies & Shield — add shields + shards to wallet state and persistence

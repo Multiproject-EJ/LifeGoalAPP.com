@@ -82,7 +82,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M12: UI beautification + production polish pass (visual design system, spacing/typography cleanup, motion polish, mobile readability; M12A–M12X shipped; M12Y overlay action-row vertical anchoring shipped; M12Z final visual polish cohesion audit shipped — M12 MVP polish gate complete)
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
 - [✅] M14: Shop separation & unlock tiers — market stop removed from stop plan; 5 stops are hatchery/minigame/utility/dynamic/boss; persistent 🛍️ Shop HUD button added; Tier 1 always available; Tier 2 (heart boost bundle) gated on bossTrialResolved; egg selling in shop when eggStage >= 4
-- [🟡] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I); M16A shipped; M16B shard earn logic shipped; M16C HUD pill shipped; M16D fill animation shipped
+- [✅] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I); M16A shipped; M16B shard earn logic shipped; M16C HUD pill shipped; M16D fill animation shipped; M16E Claim button + blind-box reveal shipped
 - [⛔] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E)
 
 Support shipped:
@@ -95,9 +95,9 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** [⛔] M16E: Collectible Progress Bar — Claim button + blind-box reward reveal: dynamic reward pool logic (deficit detection, boss proximity, streak, era bonus)
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`
-**Acceptance criteria:** When `islandShards >= getShardTierThreshold(shardTierIndex)`, a Claim button appears in the HUD; tapping it triggers a blind-box reward reveal animation; `shardTierIndex` advances; `shardClaimCount` increments; `npm run build` passes.
+**Objective:** [⛔] M17A: Currencies & Shield — add `shields` + `shards` to wallet state and persistence (design locked in docs/17_CURRENCIES_AND_SHIELD.md; first slice of M17)
+**Files to touch:** `src/features/gamification/level-worlds/services/islandRunRuntimeState.ts`, `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`
+**Acceptance criteria:** `shields` field added to `IslandRunRuntimeState`; `shards` wallet balance shown in HUD; Body habit awards 1 shard; `npm run build` passes.
 **How to test:** land on egg_shard tile and observe pill increment; complete a non-boss stop and observe +2; complete boss and observe +5; travel to next island and observe reset to 0.
 
 ---

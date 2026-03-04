@@ -22,7 +22,9 @@ import {
   hydrateIslandRunRuntimeStateWithSource,
   persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
+  resolveCollectibleForClaim,
 } from '../services/islandRunRuntimeState';
+import { ShardClaimModal } from './ShardClaimModal';
 import type { PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
@@ -276,6 +278,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [islandShards, setIslandShards] = useState<number>(0);
   const [shardTierIndex, setShardTierIndex] = useState<number>(0);
   const [shardClaimCount, setShardClaimCount] = useState<number>(0);
+  // M16E: tier index of a pending (unclaimed) milestone; null when no claim is waiting
+  const [pendingClaimTierIndex, setPendingClaimTierIndex] = useState<number | null>(null);
+  const [showClaimModal, setShowClaimModal] = useState(false);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
   const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle' | 'heart_boost_bundle', boolean>>({
     dice_bundle: false,
@@ -791,6 +796,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     });
     if (result.milestonesReached > 0) {
+      // M16E: store the completed tier so the Claim button / modal can show the right collectible
+      setPendingClaimTierIndex(shardTierIndex);
       setLandingText((prev) => `${prev} ✨ Shard milestone reached!`);
     }
   }, [islandShards, shardTierIndex, shardClaimCount, session, client]);
@@ -1619,6 +1626,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIslandShards(0);
     setShardTierIndex(0);
     setShardClaimCount(0);
+    setPendingClaimTierIndex(null);
+    setShowClaimModal(false);
     setLandingText('Arrived at new island. Ready to roll!');
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -1961,11 +1970,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             🛍️ Shop
           </button>
         </div>
-        {/* M16C/M16D: Shard progress pill with fill animation — always visible in HUD */}
+        {/* M16C/M16D/M16E: Shard progress pill with fill animation and Claim button */}
         {(() => {
           const threshold = getShardTierThreshold(shardTierIndex);
           const pct = threshold > 0 ? Math.min((islandShards / threshold) * 100, 100) : 0;
           const isMilestone = pct >= 100;
+          const hasPendingClaim = pendingClaimTierIndex !== null;
           return (
             <div
               className={`island-run-prototype__shard-pill${isMilestone ? ' island-run-prototype__shard-pill--milestone' : ''}`}
@@ -1979,6 +1989,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 <span>{getShardEraEmoji(islandNumber, shardTierIndex)}</span>
                 <span className="island-run-prototype__shard-pill-count">{islandShards} / {threshold}</span>
               </span>
+              {hasPendingClaim && (
+                <button
+                  type="button"
+                  className="island-run-prototype__shard-pill-claim-btn"
+                  onClick={() => setShowClaimModal(true)}
+                  aria-label="Claim milestone reward"
+                >
+                  Claim!
+                </button>
+              )}
             </div>
           );
         })()}
@@ -2689,6 +2709,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             }}
           />
         </div>
+      )}
+
+      {/* M16E: Blind-box collectible reveal modal */}
+      {showClaimModal && pendingClaimTierIndex !== null && (
+        <ShardClaimModal
+          collectible={resolveCollectibleForClaim(pendingClaimTierIndex)}
+          onCollect={() => {
+            playIslandRunSound('market_purchase_success');
+            triggerIslandRunHaptic('reward_claim');
+            setShowClaimModal(false);
+            setPendingClaimTierIndex(null);
+          }}
+        />
       )}
     </section>
   );
