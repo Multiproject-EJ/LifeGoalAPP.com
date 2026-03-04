@@ -8,7 +8,7 @@
  * experience in the PWA.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   listHabitsV2,
@@ -28,6 +28,25 @@ import {
   persistIslandRunRuntimeStatePatch,
 } from '../gamification/level-worlds/services/islandRunRuntimeState';
 import './HabitsModule.css';
+
+// M17B: Daily Shield cap helpers — localStorage key: shields_earned_today_{userId}_{YYYY-MM-DD} (UTC)
+const SHIELDS_DAILY_CAP = 3;
+
+function getUtcDateKey(): string {
+  const now = new Date();
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+}
+
+function getShieldsDailyEarned(userId: string): number {
+  const key = `shields_earned_today_${userId}_${getUtcDateKey()}`;
+  return parseInt(window.localStorage.getItem(key) ?? '0', 10);
+}
+
+function incrementShieldsDailyEarned(userId: string): void {
+  const key = `shields_earned_today_${userId}_${getUtcDateKey()}`;
+  const current = parseInt(window.localStorage.getItem(key) ?? '0', 10);
+  window.localStorage.setItem(key, String(current + 1));
+}
 
 type ViewVariant = 'full' | 'compact' | 'minimal';
 
@@ -56,6 +75,36 @@ export function UnifiedTodayView({
   const [error, setError] = useState<string | null>(null);
   const [loggingHabitIds, setLoggingHabitIds] = useState<Set<string>>(new Set());
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  // M17B: inline feedback for shield earned
+  const [shieldFeedback, setShieldFeedback] = useState<string | null>(null);
+  const shieldFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // M17B: Shared helper — award 1 Shield if habit is a Body habit, daily cap not yet reached, and not already done today
+  const maybeAwardBodyHabitShield = useCallback((habit: HabitV2Row, alreadyDoneToday: boolean) => {
+    if (alreadyDoneToday || habit.domain_key !== 'body') return;
+    const dailyEarned = getShieldsDailyEarned(session.user.id);
+    if (shieldFeedbackTimerRef.current !== null) {
+      clearTimeout(shieldFeedbackTimerRef.current);
+    }
+    if (dailyEarned < SHIELDS_DAILY_CAP) {
+      const currentState = readIslandRunRuntimeState(session);
+      const newShields = (currentState.shields ?? 0) + 1;
+      void persistIslandRunRuntimeStatePatch({
+        session,
+        client: null,
+        patch: { shields: newShields },
+      });
+      incrementShieldsDailyEarned(session.user.id);
+      setShieldFeedback('🛡️ +1 Body Habit Shield earned!');
+    } else {
+      setShieldFeedback('Daily Shield limit reached (3/day).');
+    }
+    shieldFeedbackTimerRef.current = setTimeout(() => {
+      setShieldFeedback(null);
+      shieldFeedbackTimerRef.current = null;
+    }, 4000);
+  }, [session]);
+
   const { earnXP, recordActivity } = useGamification(session);
 
   // Load habits and logs on mount
@@ -185,17 +234,9 @@ export function UnifiedTodayView({
       setTodayLogs(logsData ?? []);
 
       // M17B: If the completed habit is a Body habit and not already done today, award 1 Shield
-      if (!alreadyDoneToday) {
-        const completedHabit = habits.find(h => h.id === habitId);
-        if (completedHabit?.domain_key === 'body') {
-          const currentState = readIslandRunRuntimeState(session);
-          const newShields = (currentState.shields ?? 0) + 1;
-          void persistIslandRunRuntimeStatePatch({
-            session,
-            client: null,
-            patch: { shields: newShields },
-          });
-        }
+      const completedHabit = habits.find(h => h.id === habitId);
+      if (completedHabit) {
+        maybeAwardBodyHabitShield(completedHabit, alreadyDoneToday);
       }
 
       // Check and award spins
@@ -221,7 +262,7 @@ export function UnifiedTodayView({
         return next;
       });
     }
-  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins, habits, todayLogs]);
+  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins, habits, todayLogs, maybeAwardBodyHabitShield]);
 
   // Handler for logging a value (quantity/duration)
   const handleLogValue = useCallback(async (habit: HabitV2Row, value: number) => {
@@ -229,6 +270,9 @@ export function UnifiedTodayView({
       setError('Session expired. Please refresh.');
       return;
     }
+
+    // M17B: Anti-double-award guard — check before async logging
+    const alreadyDoneToday = todayLogs.some(log => log.habit_id === habit.id && log.done);
 
     setLoggingHabitIds(prev => new Set(prev).add(habit.id));
     setError(null);
@@ -249,6 +293,9 @@ export function UnifiedTodayView({
         delete next[habit.id];
         return next;
       });
+
+      // M17B: If the completed habit is a Body habit and not already done today, award 1 Shield
+      maybeAwardBodyHabitShield(habit, alreadyDoneToday);
 
       // Check and award spins
       await checkAndAwardSpins(todaysHabits, logsData ?? []);
@@ -272,7 +319,7 @@ export function UnifiedTodayView({
         return next;
       });
     }
-  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins]);
+  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins, todayLogs, maybeAwardBodyHabitShield]);
 
   // Date display
   const dateLabel = useMemo(() => {
@@ -380,6 +427,22 @@ export function UnifiedTodayView({
           fontSize: '0.875rem',
         }}>
           {error}
+        </div>
+      )}
+
+      {/* M17B: Shield earned feedback */}
+      {shieldFeedback && (
+        <div style={{
+          padding: '0.625rem 1rem',
+          margin: variant === 'minimal' ? '0.25rem 0.5rem' : '0.5rem 1rem',
+          background: shieldFeedback.includes('limit') ? '#fefce8' : '#eff6ff',
+          border: `1px solid ${shieldFeedback.includes('limit') ? '#fde68a' : '#bfdbfe'}`,
+          borderRadius: '8px',
+          color: shieldFeedback.includes('limit') ? '#92400e' : '#1d4ed8',
+          fontSize: '0.875rem',
+          fontWeight: 600,
+        }}>
+          {shieldFeedback}
         </div>
       )}
 
