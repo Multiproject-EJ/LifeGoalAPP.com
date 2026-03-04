@@ -3143,3 +3143,19 @@ Summary: Wired real Body habit → Shield earn path in UnifiedTodayView.handleMa
 Files changed: src/features/habits/UnifiedTodayView.tsx (shield earn + badge), src/features/habits/HabitsModule.css (shield badge CSS), src/features/gamification/ScoreTab.tsx (Bank tab Shield Wallet section), src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (remove simulate button), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M17B shipped, Next Slice → M17C), docs/07_MAIN_GAME_PROGRESS.md (this entry)
 Testing: Tag a habit as Body (domain_key = 'body'); complete it in Today tab; verify 🛡️ chip in Island Run HUD increments; open Bank tab and verify shield balance matches; tap Convert; verify shields → 0 and coins increase by (shields × 65); complete same habit again on same day — verify no second shield award; npm run build passes with zero new TS errors.
 Next: M17C — Shards HUD display + persistent wallet balance
+
+---
+
+Date: 2026-03-04
+Slice: M17B (completion) — Daily Shield cap enforcement + handleLogValue shield award + inline feedback
+Summary: Completed M17B acceptance criteria. Added client-side daily cap helpers (`getShieldsDailyEarned`, `incrementShieldsDailyEarned`) using localStorage key `shields_earned_today_{userId}_{YYYY-MM-DD}` (UTC) with a cap of 3/day. Updated `handleMarkDone` to enforce the cap before awarding a Shield (skips silently and shows "Daily Shield limit reached" message if cap hit). Added equivalent Body habit Shield award logic to `handleLogValue` (for quantity/duration habits). Added `shieldFeedback` state with inline banner: blue "🛡️ +1 Body Habit Shield earned!" on success, amber "Daily Shield limit reached (3/day)." when capped; auto-dismisses after 4 seconds. Updated `handleLogValue` dependency array to include `todayLogs` (needed for anti-double-award guard).
+Files changed:
+- src/features/habits/UnifiedTodayView.tsx (daily cap helpers, handleLogValue shield award, inline feedback state + banner)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build passes (zero new TypeScript errors)
+- Complete a Body habit in Today tab → blue "🛡️ +1 Body Habit Shield earned!" banner appears and auto-dismisses
+- Complete 3 Body habits in same UTC day → 4th completion shows amber "Daily Shield limit reached (3/day)." banner; shields balance unchanged
+- Open Bank tab → Shield balance reflects all awarded shields
+- Convert shields → coins → shields go to 0, confirmation message shows
+Next: M17C — Shards HUD display + wallet integration
