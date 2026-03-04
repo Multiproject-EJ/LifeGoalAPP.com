@@ -3062,3 +3062,20 @@ Testing:
 - npm run build passes with zero new TypeScript errors
 Next:
 - M17A: Currencies & Shield — add shields + shards to wallet state and persistence
+
+---
+
+Date: 2026-03-04
+Slice: M16B — Shard award logic wired (stops, boss, egg)
+Summary:
+- Added `egg_open: 2` to `SHARD_EARN` constant in shardMilestoneEngine.ts (egg open source was missing from the original M16B ship)
+- Called `awardShards('egg_open')` inside `handleOpenEgg` in IslandRunBoardPrototype.tsx so shards are awarded when a player opens/hatches an egg
+- All four shard earn sources are now wired: egg_shard_tile (+1), stop_complete (+2), boss_defeat (+5), egg_open (+2)
+- `island_shards` increments and persists via `persistIslandRunRuntimeStatePatch` on egg open (same path as stops/boss)
+Files changed:
+- src/features/gamification/level-worlds/services/shardMilestoneEngine.ts (added egg_open source)
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (awardShards('egg_open') in handleOpenEgg)
+Testing:
+- npm run build
+Next:
+- M16C: shard_tier_index advancement — milestone chain progression logic
