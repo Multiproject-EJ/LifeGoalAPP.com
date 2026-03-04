@@ -3023,3 +3023,12 @@ Summary: Created shardMilestoneEngine.ts (pure util — SHARD_EARN constants, SH
 Files changed: src/features/gamification/level-worlds/services/shardMilestoneEngine.ts (new), src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (modified), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (updated), docs/07_MAIN_GAME_PROGRESS.md (appended)
 Testing: Landing on egg_shard tile → islandShards increments +1 and persists; completing any non-boss stop → +2 shards; boss defeat → +5 shards; shardTierIndex advances when threshold crossed; shardClaimCount increments on chain completion; island travel → all three fields reset to 0; npm run build passes.
 Next: M16C — Collectible Progress Bar HUD pill (read-only display)
+
+---
+
+Date: 2026-03-04
+Slice: M16C — Collectible Progress Bar HUD pill
+Summary: Added read-only shard progress pill to the Island Run HUD, always visible outside the dev panel. Pill displays era emoji (derived from `shardTierIndex % 7`; 🌟 for special islands) + `islandShards / tier_threshold` where tier_threshold is the absolute shards needed for the current tier from `SHARD_MILESTONE_THRESHOLDS`. Added `ERA_EMOJIS`, `getShardEraEmoji`, and `getShardTierThreshold` helpers. Added pill CSS in LevelWorlds.css (amber-tinted pill, distinct from other HUD chips). Display choice: shows absolute tier threshold (e.g. `⚡ 5 / 20`) rather than remaining distance, for clearer player understanding.
+Files changed: src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (helpers + pill JSX + SHARD_MILESTONE_THRESHOLDS import), src/features/gamification/level-worlds/LevelWorlds.css (pill styles), docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M16C shipped, Next Slice → M16D), docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing: Pill renders in HUD at all times (not gated by dev toggle); updates reactively as islandShards changes via tile/stop/boss earn paths (M16B); special island 5 shows 🌟; normal islands show ⚡ at tier 0; npm run build passes with zero new TS errors.
+Next: M16D — Claim button + blind-box reward reveal

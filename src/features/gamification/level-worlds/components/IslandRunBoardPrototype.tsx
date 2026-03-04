@@ -33,7 +33,7 @@ import {
   getIslandRunAudioEnabled,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
-import { SHARD_EARN, computeShardEarn, type ShardEarnSource } from '../services/shardMilestoneEngine';
+import { SHARD_EARN, SHARD_MILESTONE_THRESHOLDS, computeShardEarn, type ShardEarnSource } from '../services/shardMilestoneEngine';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import {
   resolveMinigameForStop,
@@ -54,6 +54,20 @@ const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 
 // M15C: Special islands get 72h timer; normal islands get 48h timer
 const SPECIAL_ISLAND_NUMBERS = new Set([5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120]);
+
+// M16C: Era emoji cycle for shard pill HUD (shard_tier_index % 7)
+const ERA_EMOJIS = ['⚡', '🎳', '🌸', '💡', '🔷', '🌀', '🌈'] as const;
+// Threshold for the last defined tier and the linear increment for tiers beyond it (docs/13_COLLECTIBLE_PROGRESS_BAR.md §3b)
+const SHARD_EXTENDED_BASE_THRESHOLD = 350;
+const SHARD_EXTENDED_TIER_INCREMENT = 150;
+function getShardEraEmoji(islandNum: number, tierIndex: number): string {
+  if (SPECIAL_ISLAND_NUMBERS.has(islandNum)) return '🌟';
+  return ERA_EMOJIS[tierIndex % ERA_EMOJIS.length];
+}
+function getShardTierThreshold(tierIndex: number): number {
+  if (tierIndex < SHARD_MILESTONE_THRESHOLDS.length) return SHARD_MILESTONE_THRESHOLDS[tierIndex];
+  return SHARD_EXTENDED_BASE_THRESHOLD + (tierIndex - (SHARD_MILESTONE_THRESHOLDS.length - 1)) * SHARD_EXTENDED_TIER_INCREMENT;
+}
 
 function getIslandDurationMs(islandNum: number): number {
   if (IS_DEV_TIMER) return 45_000;
@@ -1930,6 +1944,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           >
             🛍️ Shop
           </button>
+        </div>
+        {/* M16C: Shard progress pill — always visible in HUD */}
+        <div className="island-run-prototype__shard-pill" aria-label={`Shard progress: ${islandShards} of ${getShardTierThreshold(shardTierIndex)}`}>
+          <span>{getShardEraEmoji(islandNumber, shardTierIndex)}</span>
+          <span className="island-run-prototype__shard-pill-count">{islandShards} / {getShardTierThreshold(shardTierIndex)}</span>
         </div>
         {isDevPanelOpen && (
           <div id="island-run-dev-panel">
