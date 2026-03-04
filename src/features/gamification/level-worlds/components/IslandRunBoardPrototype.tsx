@@ -243,6 +243,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const { client } = useSupabaseAuth();
   const boardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
+  const prevShardsRef = useRef<number>(0);
+  const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
   const showQaHooks = useMemo(() => new URLSearchParams(window.location.search).get('islandRunQa') === '1', []);
   const [activeScene, setActiveScene] = useState<(typeof ISLAND_SCENES)[number]>(1);
@@ -376,6 +379,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setShardTierIndex(runtimeState.shardTierIndex ?? 0);
     setShardClaimCount(runtimeState.shardClaimCount ?? 0);
   }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount]);
+
+  // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
+  useEffect(() => {
+    const prev = prevShardsRef.current;
+    prevShardsRef.current = islandShards;
+    if (islandShards === 0 && prev > 0) {
+      setShardFillNoTransition(true);
+      const rafId = requestAnimationFrame(() => {
+        setShardFillNoTransition(false);
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [islandShards]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -1945,11 +1961,27 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             🛍️ Shop
           </button>
         </div>
-        {/* M16C: Shard progress pill — always visible in HUD */}
-        <div className="island-run-prototype__shard-pill" aria-label={`Shard progress: ${islandShards} of ${getShardTierThreshold(shardTierIndex)}`}>
-          <span>{getShardEraEmoji(islandNumber, shardTierIndex)}</span>
-          <span className="island-run-prototype__shard-pill-count">{islandShards} / {getShardTierThreshold(shardTierIndex)}</span>
-        </div>
+        {/* M16C/M16D: Shard progress pill with fill animation — always visible in HUD */}
+        {(() => {
+          const threshold = getShardTierThreshold(shardTierIndex);
+          const pct = threshold > 0 ? Math.min((islandShards / threshold) * 100, 100) : 0;
+          const isMilestone = pct >= 100;
+          return (
+            <div
+              className={`island-run-prototype__shard-pill${isMilestone ? ' island-run-prototype__shard-pill--milestone' : ''}`}
+              aria-label={`Shard progress: ${islandShards} of ${threshold}`}
+            >
+              <div
+                className="island-run-prototype__shard-pill-fill"
+                style={{ width: `${pct}%`, transition: shardFillNoTransition ? 'none' : 'width 0.4s ease-out' }}
+              />
+              <span className="island-run-prototype__shard-pill-content">
+                <span>{getShardEraEmoji(islandNumber, shardTierIndex)}</span>
+                <span className="island-run-prototype__shard-pill-count">{islandShards} / {threshold}</span>
+              </span>
+            </div>
+          );
+        })()}
         {isDevPanelOpen && (
           <div id="island-run-dev-panel">
         <div className="island-run-prototype__hud-grid">
