@@ -1,6 +1,6 @@
 # CURRENCIES, SHARDS & SHIELD REWARD — CANONICAL DESIGN
 
-> **Status:** Canonical. Authored 2026-03-03.
+> **Status:** Canonical. Authored 2026-03-03. Updated 2026-03-04.
 > **This file wins** if any other doc under `docs/` conflicts on currency definitions, shard rules, or the Shield reward.
 > Supersedes Section "Currencies" in `docs/07_MAIN_GAME_PROGRESS.md` for the extended definitions below.
 
@@ -44,48 +44,98 @@
 
 ---
 
-## 3. Shield Reward — Body Habit Bonus
+## 3. Shields — TWO DISTINCT TYPES
 
-### 3a. Overview
+> ⚠️ **Critical distinction:** There are **two separate Shield concepts** in this game. They share an icon (🛡️) but are fundamentally different systems. Agents and developers must never conflate them.
+
+---
+
+### 3A. Body Habit Shield (Currency) — Earned from Habits
+
+#### 3A-i. Overview
 
 When a player creates a habit tagged as a **Body habit**, that habit earns **Shield** rewards on completion, in addition to the normal coin reward.
 
 - **Icon:** 🛡️ (Shield)
+- **Type:** Persistent wallet currency (like Coins/Diamonds/Hearts/Shards)
 - **Displayed:** Next to the coin icon for the individual habit in the Today tab's habit row.
 - **Conversion:** 1 Shield = 65 Coins, convertible in the Bank tab.
+- **⛔ NOT earned from:** The 17 board tiles, the 5 island stops, mini-games, boss battles, or any Island Run gameplay mechanic.
+- **✅ Earned exclusively from:** Completing Body-tagged habits in the Today tab.
 
-### 3b. Body Habit tag
+#### 3A-ii. Body Habit tag
 
 - In the habit creation wizard (PWA), the player can select the habit type. Add a **"Body"** option.
 - Body habits are tagged in the database. Suggested approach: use the existing `domain_key` column on `habits_v2` — set `domain_key = 'body'` for Body habits. (Alternatively add a `habit_environment` flag — this column already exists.)
 - When a Body habit is completed (logged), the app awards 1 Shield in addition to the normal coin reward.
 
-### 3c. Shield in the Today tab
+#### 3A-iii. Shield in the Today tab
 
 - Each habit row in the Today tab shows: `[emoji] [title]` … `[🪙 +N] [🛡️ +1]`
 - The Shield counter only appears on Body habits.
 - Tapping the shield icon shows a tooltip/mini-popup: "Body Habit bonus — tap Bank to convert shields to coins."
 
-### 3d. Shield in the Bank tab
+#### 3A-iv. Shield in the Bank tab
 
 - Bank tab shows the Shield balance.
 - "Convert Shields" action: converts all held shields to coins (1 shield = 65 coins). One-tap confirm.
 
-### 3e. Database / type changes required
+#### 3A-v. Database / type changes required
 
 - Add `shields` field to the player's wallet state (alongside coins, diamonds, hearts, shards).
-- Add a `Shield` reward type to `IslandRunMinigameReward` and any other reward output types.
+- Add a `Shield` reward type to `IslandRunMinigameReward` and any other reward output types (for future extensibility only — not wired to board/stop rewards).
 - In `HabitV2Row`, `domain_key = 'body'` is the canonical tag. No new column needed.
 
 ---
 
-## 4. Egg Hatchery — Timer Surprise (No Countdown Shown)
+### 3B. Shop Shield (Protective Item) — Purchased from the Shop
 
-### 4a. Hatch duration
+#### 3B-i. Overview
+
+A **Shop Shield** is a defensive/protective **item** available for purchase in the persistent Shop (🛍️ HUD button). It is a consumable or equipped item, NOT a wallet currency.
+
+- **Icon:** 🛡️ (Shield) — same visual, but contextually different from the Body Habit Shield currency.
+- **Type:** Shop item / purchasable asset. NOT a currency in the wallet.
+- **Purpose:** Provides a protective gameplay benefit (e.g., blocking a penalty, protecting island progress, absorbing a boss hit — exact mechanic TBD per shop item design).
+- **⛔ NOT earned from:** The 17 board tiles, the 5 island stops, Body habits, or any habit completion flow.
+- **✅ Obtained by:** Purchasing from the Shop using Coins, Diamonds, or other currencies.
+
+#### 3B-ii. Shop placement
+
+- Available in the persistent 🛍️ Shop HUD button (always accessible, not a stop).
+- Tier placement and pricing: TBD in shop item design — can be Tier 1 or Tier 2 depending on the protective benefit.
+
+#### 3B-iii. Naming convention for developers
+
+To avoid confusion in code, use distinct naming:
+- Body Habit Shield currency → `shields` (wallet field, e.g. `walletState.shields`)
+- Shop Shield item → `shop_shield` or `ShopItemShield` (item type in shop inventory/purchase system)
+
+---
+
+## 4. Rewards Matrix — What awards what (source of truth)
+
+| Reward Source | Coins | Hearts | Shards | Body Shield (currency) | Shop Shield (item) | Tickets |
+|---|---|---|---|---|---|---|
+| 17 board tiles | ✅ | — | — | ❌ | ❌ | ✅ (some tiles) |
+| 5 island stops | ✅ | — | ✅ | ❌ | ❌ | — |
+| Boss defeat | ✅ | ✅ | ✅ | ❌ | ❌ | — |
+| Mini-game reward | ✅ | ✅ | ✅ | ❌ | ❌ | — |
+| Body habit completion | ✅ | — | — | ✅ | ❌ | — |
+| Shop purchase | — | — | — | ❌ | ✅ | — |
+| Egg hatch | ✅ | — | ✅ | ❌ | ❌ | — |
+
+> This matrix is the canonical reference. If any code or doc contradicts it, this table wins.
+
+---
+
+## 5. Egg Hatchery — Timer Surprise (No Countdown Shown)
+
+### 5a. Hatch duration
 
 Eggs hatch in **1–3 days** (randomly determined per egg, within the island's active timer window). The exact duration is NOT shown to the player — it is a surprise.
 
-### 4b. Visual stages
+### 5b. Visual stages
 
 The egg progresses through **4 animation stages** from unhatched → fully hatched pet. The stages transition automatically based on internal timer milestones (even if the player isn't looking).
 
@@ -98,7 +148,7 @@ The egg progresses through **4 animation stages** from unhatched → fully hatch
 
 > Asset note: The 4 animation frames / Lottie sequences need to be created by the designer. This doc defines the stage logic; assets are a dependency.
 
-### 4c. No countdown shown
+### 5c. No countdown shown
 
 - Do NOT show a timer countdown in the hatchery HUD.
 - Instead show the current animation stage and a generic message like "Your egg is incubating… check back soon! 🥚"
@@ -106,11 +156,12 @@ The egg progresses through **4 animation stages** from unhatched → fully hatch
 
 ---
 
-## 5. HUD Currency Display Order
+## 6. HUD Currency Display Order
 
 ```
-[ 🪙 Coins ] [ 💎 Diamonds ] [ ❤️ Hearts ] [ 🛡️ Shields ] [ (placeholder) Shards ] [ 🎲 Dice ]
+[ 🪙 Coins ] [ 💎 Diamonds ] [ ❤️ Hearts ] [ 🛡️ Shields (Body Habit) ] [ (placeholder) Shards ] [ 🎲 Dice ]
 ```
 
-- Shields and Shards are new additions to the HUD.
+- The HUD Shield icon (🛡️) represents the **Body Habit Shield currency** only.
+- Shop Shield items are NOT shown in the main HUD — they are managed within the Shop/inventory flow.
 - On narrow screens: Coins + Diamonds + Hearts are always shown; Shields and Shards collapse into an overflow "+more" indicator that expands on tap.
