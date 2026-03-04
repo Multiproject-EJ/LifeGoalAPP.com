@@ -36,6 +36,9 @@ export interface IslandRunRuntimeStateBackend {
       perIslandEggs?: PerIslandEggsLedger;
       islandStartedAtMs?: number;
       islandExpiresAtMs?: number;
+      islandShards?: number;
+      shardTierIndex?: number;
+      shardClaimCount?: number;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -103,6 +106,18 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.islandExpiresAtMs === 'number' && Number.isFinite(patch.islandExpiresAtMs)
           ? patch.islandExpiresAtMs
           : current.islandExpiresAtMs,
+      islandShards:
+        typeof patch.islandShards === 'number' && Number.isFinite(patch.islandShards)
+          ? Math.max(0, Math.floor(patch.islandShards))
+          : current.islandShards,
+      shardTierIndex:
+        typeof patch.shardTierIndex === 'number' && Number.isFinite(patch.shardTierIndex)
+          ? Math.max(0, Math.floor(patch.shardTierIndex))
+          : current.shardTierIndex,
+      shardClaimCount:
+        typeof patch.shardClaimCount === 'number' && Number.isFinite(patch.shardClaimCount)
+          ? Math.max(0, Math.floor(patch.shardClaimCount))
+          : current.shardClaimCount,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({
