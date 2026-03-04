@@ -256,9 +256,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [bossTrialResolved, setBossTrialResolved] = useState(false);
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
-  const [islandShards, setIslandShards] = useState<number>(runtimeState.islandShards ?? 0);
-  const [shardTierIndex, setShardTierIndex] = useState<number>(runtimeState.shardTierIndex ?? 0);
-  const [shardClaimCount, setShardClaimCount] = useState<number>(runtimeState.shardClaimCount ?? 0);
+  const [islandShards, setIslandShards] = useState<number>(0);
+  const [shardTierIndex, setShardTierIndex] = useState<number>(0);
+  const [shardClaimCount, setShardClaimCount] = useState<number>(0);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
   const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle' | 'heart_boost_bundle', boolean>>({
     dice_bundle: false,
