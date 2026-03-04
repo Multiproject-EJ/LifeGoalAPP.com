@@ -1768,6 +1768,12 @@
   color: #c8e4ff;
 }
 
+.island-run-prototype__stat-chip--shards {
+  background: rgba(160, 100, 255, 0.2);
+  border-color: rgba(190, 130, 255, 0.46);
+  color: #e0c8ff;
+}
+
 /* B2-2: Token transition and animation */
 .island-token {
   transition: left 0.22s cubic-bezier(0.33, 1, 0.58, 1), top 0.22s cubic-bezier(0.33, 1, 0.58, 1);

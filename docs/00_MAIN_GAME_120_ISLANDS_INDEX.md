@@ -83,7 +83,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
 - [✅] M14: Shop separation & unlock tiers — market stop removed from stop plan; 5 stops are hatchery/minigame/utility/dynamic/boss; persistent 🛍️ Shop HUD button added; Tier 1 always available; Tier 2 (heart boost bundle) gated on bossTrialResolved; egg selling in shop when eggStage >= 4
 - [✅] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I); M16A shipped; M16B shard earn logic shipped; M16C shard tier index advancement + milestone chain progression shipped; M16D fill animation shipped; M16E Claim button + blind-box reveal shipped
-- [🟡] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E); M17A shipped; M17B Body habit shield earn + Bank tab convert stub shipped
+- [🟡] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E); M17A shipped; M17B Body habit shield earn + Bank tab convert stub shipped; M17C Shards HUD chip + wallet field + Bank tab balance shipped
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -95,10 +95,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M17C — Shards HUD display + wallet integration — show persistent `shards` balance in HUD alongside shields
-**Files to touch:** IslandRunBoardPrototype.tsx (shards HUD chip update), ScoreTab.tsx (shards balance in Bank tab), islandRunRuntimeState.ts (if needed)
-**Acceptance criteria:** Shards balance visible in HUD next to shields chip; Bank tab shows shards balance; `npm run build` passes.
-**How to test:** Award shards via body habit completion; observe shards count in HUD; open Bank tab and verify balance.
+**Objective:** M17D — Wire Shards earn paths (stops, boss defeats, eggs, shop purchases, special events per rewards matrix in §4 of docs/17_CURRENCIES_AND_SHIELD.md)
+**Files to touch:** IslandRunBoardPrototype.tsx (award shards in stop/boss/egg resolution handlers), levelWorldsRewards.ts (shards reward amounts), islandRunRuntimeState.ts (if needed)
+**Acceptance criteria:** Completing a stop awards shards per rewards matrix; defeating a boss awards shards; opening an egg awards shards; `npm run build` passes.
+**How to test:** Complete a stop; observe shards HUD chip increment; open Bank tab and verify balance.
 
 ---
 

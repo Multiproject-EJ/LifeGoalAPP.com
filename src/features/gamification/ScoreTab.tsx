@@ -115,6 +115,9 @@ export function ScoreTab({
   const [shieldConvertFeedback, setShieldConvertFeedback] = useState<string | null>(null);
   const [shieldConverting, setShieldConverting] = useState(false);
 
+  // M17C: Shards Wallet state for Bank tab
+  const [shardsBalance, setShardsBalance] = useState(0);
+
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
     if (!rewardTitle.trim() || !cost || cost < 1) {
@@ -140,6 +143,8 @@ export function ScoreTab({
     if (activeTab !== 'bank' || !session) return;
     const state = readIslandRunRuntimeState(session);
     setShieldsBalance(state.shields ?? 0);
+    // M17C: Hydrate shards balance
+    setShardsBalance(state.shards ?? 0);
   }, [activeTab, session]);
 
   // M17B: Convert all shields to coins
@@ -762,6 +767,26 @@ export function ScoreTab({
                   {shieldConvertFeedback}
                 </p>
               )}
+            </article>
+          </section>
+
+          {/* M17C: Shards Wallet section */}
+          <section className="score-tab__ledger">
+            <div className="score-tab__ledger-header">
+              <div>
+                <p className="score-tab__eyebrow">✨ Currency</p>
+                <h3 className="score-tab__ledger-title">Shards Wallet</h3>
+              </div>
+              <span className="score-tab__ledger-pill">Balance</span>
+            </div>
+
+            <article className="score-tab__card">
+              <div className="score-tab__card-row">
+                <h3 className="score-tab__card-title">✨ Shards</h3>
+                <span className="score-tab__pill">Accumulating</span>
+              </div>
+              <p className="score-tab__value">✨ {shardsBalance}</p>
+              <p className="score-tab__meta">Shards accumulate across islands. Spend paths coming soon.</p>
             </article>
           </section>
 

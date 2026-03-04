@@ -148,7 +148,7 @@ Repeat similarly for other tables.
 
 ---
 
-## island_run_runtime_state columns (as of migration 0172)
+## island_run_runtime_state columns (as of migration 0173)
 
 | Column | Type | Default | Description |
 |---|---|---|---|
@@ -166,6 +166,7 @@ Repeat similarly for other tables.
 | `shard_tier_index` | int | 0 | Current collectible era tier index (advances on player claim) |
 | `shard_claim_count` | int | 0 | Total number of shard milestone claims |
 | `shields` | int | 0 | Body Habit Shield wallet currency balance (earned from Body habit completions) |
+| `shards` | int | 0 | Persistent Shards wallet currency balance (accumulates across islands; earn paths wired in future slices) |
 | `updated_at` | timestamptz | now() | Last updated timestamp |
 
 ---

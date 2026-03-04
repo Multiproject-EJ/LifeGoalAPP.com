@@ -3159,3 +3159,27 @@ Testing:
 - Open Bank tab → Shield balance reflects all awarded shields
 - Convert shields → coins → shields go to 0, confirmation message shows
 Next: M17C — Shards HUD display + wallet integration
+
+---
+
+Date: 2026-03-04
+Slice: M17C — Shards HUD display + wallet integration
+Summary: Added persistent `shards` wallet currency field to `IslandRunGameStateRecord`, `IslandRunRuntimeState`, `IslandRunRuntimeStateBackend` (patch interface + merge logic), following the exact same pattern as `shields` from M17A. Added Supabase migration `0173_island_run_shards_wallet_column.sql` (`shards int not null default 0`). Updated Supabase SELECT column list and DB row hydration mapping to include `shards`. Added `shards` state and `setShards` in `IslandRunBoardPrototype.tsx`; hydrated from runtime state in the post-hydration useEffect; added `✨ {shards}` HUD chip after the `🛡️` shields chip (hidden when shards = 0). Added `island-run-prototype__stat-chip--shards` purple-tinted pill CSS to `LevelWorlds.css`. Added `shardsBalance` state in `ScoreTab.tsx`; hydrated alongside shields when Bank tab is active; added read-only "✨ Shards Wallet" section in Bank tab (no spend path — accumulates for future slices). `islandShards` (per-island Collectible Progress Bar sub-currency) is untouched — fully separate system.
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts (shards field: interface, default, toRecord, SELECT, hydration, upsert)
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts (shards to interface + patch type)
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts (shards to patch interface + merge logic)
+- supabase/migrations/0173_island_run_shards_wallet_column.sql (NEW — adds shards column)
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (shards state + HUD chip)
+- src/features/gamification/level-worlds/LevelWorlds.css (--shards chip CSS)
+- src/features/gamification/ScoreTab.tsx (shardsBalance state + Bank tab Shards Wallet section)
+- docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md (column table updated to migration 0173 + shards row)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M17C shipped; Next Slice → M17D)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build passes (zero new TypeScript errors)
+- Open Island Run; observe no shards chip when shards = 0
+- Manually set shards > 0 in localStorage; reload; observe ✨ N chip in HUD after shields chip
+- Open Score → Bank tab; observe ✨ Shards: N balance row
+- islandShards / shard progress pill unaffected — no regression
+Next: M17D — Wire Shards earn paths (stops, boss defeats, eggs, shop purchases, special events)
