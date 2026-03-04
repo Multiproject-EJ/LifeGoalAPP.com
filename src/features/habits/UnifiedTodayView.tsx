@@ -23,6 +23,11 @@ import { updateSpinsAvailable } from '../../services/dailySpin';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
+import {
+  readIslandRunRuntimeState,
+  persistIslandRunRuntimeStatePatch,
+} from '../gamification/level-worlds/services/islandRunRuntimeState';
+import './HabitsModule.css';
 
 type ViewVariant = 'full' | 'compact' | 'minimal';
 
@@ -161,6 +166,9 @@ export function UnifiedTodayView({
       return;
     }
 
+    // M17B: Anti-double-award guard — check if already completed today before logging
+    const alreadyDoneToday = todayLogs.some(log => log.habit_id === habitId && log.done);
+
     setLoggingHabitIds(prev => new Set(prev).add(habitId));
     setError(null);
 
@@ -175,6 +183,20 @@ export function UnifiedTodayView({
       // Reload logs
       const { data: logsData } = await listTodayHabitLogsV2(session.user.id);
       setTodayLogs(logsData ?? []);
+
+      // M17B: If the completed habit is a Body habit and not already done today, award 1 Shield
+      if (!alreadyDoneToday) {
+        const completedHabit = habits.find(h => h.id === habitId);
+        if (completedHabit?.domain_key === 'body') {
+          const currentState = readIslandRunRuntimeState(session);
+          const newShields = (currentState.shields ?? 0) + 1;
+          void persistIslandRunRuntimeStatePatch({
+            session,
+            client: null,
+            patch: { shields: newShields },
+          });
+        }
+      }
 
       // Check and award spins
       await checkAndAwardSpins(todaysHabits, logsData ?? []);
@@ -199,7 +221,7 @@ export function UnifiedTodayView({
         return next;
       });
     }
-  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins]);
+  }, [session, onHabitComplete, todaysHabits, checkAndAwardSpins, habits, todayLogs]);
 
   // Handler for logging a value (quantity/duration)
   const handleLogValue = useCallback(async (habit: HabitV2Row, value: number) => {
@@ -456,6 +478,24 @@ export function UnifiedTodayView({
 
                   {/* Action area */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {/* M17B: Shield badge for Body habits */}
+                    {habit.domain_key === 'body' && (
+                      isDone ? (
+                        <span
+                          className="unified-today__shield-badge unified-today__shield-badge--earned"
+                          title="Body Habit bonus — Shield earned!"
+                        >
+                          🛡️ ✓
+                        </span>
+                      ) : (
+                        <span
+                          className="unified-today__shield-badge"
+                          title="Body Habit bonus — tap bank to convert shields to coins."
+                        >
+                          🛡️ +1
+                        </span>
+                      )
+                    )}
                     {isDone ? (
                       <div style={{ 
                         fontSize: '0.875rem',

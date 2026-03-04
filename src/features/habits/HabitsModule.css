@@ -177,3 +177,23 @@
   font-size: 0.82rem;
   color: #475569;
 }
+
+/* M17B: Shield badge for Body habit rows in UnifiedTodayView */
+.unified-today__shield-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.unified-today__shield-badge--earned {
+  background: #e0e7ff;
+  color: #6b7280;
+  opacity: 0.7;
+}

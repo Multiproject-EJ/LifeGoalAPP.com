@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, useCallback, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type {
   GamificationProfile,
@@ -23,6 +23,10 @@ import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/r
 import { evaluateRewardRisk } from '../../lib/rewardValidation';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import { PowerUpsStore } from '../power-ups/PowerUpsStore';
+import {
+  readIslandRunRuntimeState,
+  persistIslandRunRuntimeStatePatch,
+} from './level-worlds/services/islandRunRuntimeState';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
 import scoreShop from '../../assets/Score_shop.webp';
@@ -106,6 +110,11 @@ export function ScoreTab({
   const [zenTransactions, setZenTransactions] = useState<ZenTokenTransaction[]>([]);
   const [zenTransactionsError, setZenTransactionsError] = useState<string | null>(null);
 
+  // M17B: Shield Wallet state for Bank tab
+  const [shieldsBalance, setShieldsBalance] = useState(0);
+  const [shieldConvertFeedback, setShieldConvertFeedback] = useState<string | null>(null);
+  const [shieldConverting, setShieldConverting] = useState(false);
+
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
     if (!rewardTitle.trim() || !cost || cost < 1) {
@@ -125,6 +134,42 @@ export function ScoreTab({
     setActiveTab(tab);
     onActiveTabChange?.(tab);
   };
+
+  // M17B: Hydrate shields balance when Bank tab is active
+  useEffect(() => {
+    if (activeTab !== 'bank' || !session) return;
+    const state = readIslandRunRuntimeState(session);
+    setShieldsBalance(state.shields ?? 0);
+  }, [activeTab, session]);
+
+  // M17B: Convert all shields to coins
+  const handleConvertShields = useCallback(async () => {
+    if (!session || shieldsBalance === 0) return;
+    const coinsGained = shieldsBalance * 65;
+    const confirmed = window.confirm(
+      `Convert ${shieldsBalance} shield${shieldsBalance !== 1 ? 's' : ''} → ${coinsGained} coins?`
+    );
+    if (!confirmed) return;
+
+    setShieldConverting(true);
+    setShieldConvertFeedback(null);
+
+    // M17B stub: Persist shields: 0 (coins field will be added in a later slice when IslandRunRuntimeState gains a coins field)
+    const result = await persistIslandRunRuntimeStatePatch({
+      session,
+      client: null,
+      patch: { shields: 0 },
+    });
+
+    setShieldConverting(false);
+
+    if (result.ok) {
+      setShieldConvertFeedback(`Converted ${shieldsBalance} shield${shieldsBalance !== 1 ? 's' : ''} → ${coinsGained} coins!`);
+      setShieldsBalance(0);
+    } else {
+      setShieldConvertFeedback('Conversion failed. Please try again.');
+    }
+  }, [session, shieldsBalance]);
 
   useEffect(() => {
     setGoldBalance(profile?.total_points ?? 0);
@@ -685,6 +730,40 @@ export function ScoreTab({
               View achievements
             </button>
           </div>
+
+          {/* M17B: Shield Wallet section */}
+          <section className="score-tab__ledger">
+            <div className="score-tab__ledger-header">
+              <div>
+                <p className="score-tab__eyebrow">🛡️ Currency</p>
+                <h3 className="score-tab__ledger-title">Shield Wallet</h3>
+              </div>
+              <span className="score-tab__ledger-pill">Convert</span>
+            </div>
+
+            <article className="score-tab__card">
+              <div className="score-tab__card-row">
+                <h3 className="score-tab__card-title">🛡️ Shields</h3>
+                <span className="score-tab__pill">Convertible</span>
+              </div>
+              <p className="score-tab__value">🛡️ {shieldsBalance}</p>
+              <p className="score-tab__meta">1 Shield = 65 Coins · Complete Body habits to earn Shields.</p>
+              <button
+                type="button"
+                className="score-tab__link"
+                style={{ marginTop: '0.75rem' }}
+                disabled={shieldsBalance === 0 || shieldConverting}
+                onClick={() => void handleConvertShields()}
+              >
+                {shieldConverting ? 'Converting…' : 'Convert all → Coins'}
+              </button>
+              {shieldConvertFeedback && (
+                <p className="score-tab__meta" style={{ marginTop: '0.5rem', color: shieldConvertFeedback.includes('failed') ? '#dc2626' : '#15803d', fontWeight: 600 }}>
+                  {shieldConvertFeedback}
+                </p>
+              )}
+            </article>
+          </section>
 
           <section className="score-tab__ledger">
             <div className="score-tab__ledger-header">
