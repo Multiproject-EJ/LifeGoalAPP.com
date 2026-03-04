@@ -1556,9 +1556,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
-      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs },
+      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs, islandShards: 0, shardTierIndex: 0, shardClaimCount: 0 },
     });
-    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs }));
+    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs, islandShards: 0, shardTierIndex: 0, shardClaimCount: 0 }));
     // M10D: island travel complete sound + haptic
     playIslandRunSound('island_travel_complete');
     triggerIslandRunHaptic('island_travel_complete');

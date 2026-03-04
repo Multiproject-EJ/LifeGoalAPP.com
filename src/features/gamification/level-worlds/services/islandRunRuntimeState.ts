@@ -15,6 +15,9 @@ export interface IslandRunRuntimeState {
   perIslandEggs: PerIslandEggsLedger;
   islandStartedAtMs: number;
   islandExpiresAtMs: number;
+  islandShards: number;
+  shardTierIndex: number;
+  shardClaimCount: number;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -56,6 +59,9 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     perIslandEggs?: PerIslandEggsLedger;
     islandStartedAtMs?: number;
     islandExpiresAtMs?: number;
+    islandShards?: number;
+    shardTierIndex?: number;
+    shardClaimCount?: number;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

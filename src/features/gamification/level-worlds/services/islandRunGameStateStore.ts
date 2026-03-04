@@ -27,6 +27,9 @@ export interface IslandRunGameStateRecord {
   perIslandEggs: PerIslandEggsLedger;
   islandStartedAtMs: number;
   islandExpiresAtMs: number;
+  islandShards: number;
+  shardTierIndex: number;
+  shardClaimCount: number;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -49,6 +52,9 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     perIslandEggs: {},
     islandStartedAtMs: nowMs,
     islandExpiresAtMs: nowMs + 48 * 60 * 60 * 1000,
+    islandShards: 0,
+    shardTierIndex: 0,
+    shardClaimCount: 0,
   };
 }
 
@@ -97,6 +103,18 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.islandExpiresAtMs === 'number' && Number.isFinite(value.islandExpiresAtMs)
         ? value.islandExpiresAtMs
         : fallback.islandExpiresAtMs,
+    islandShards:
+      typeof value.islandShards === 'number' && Number.isFinite(value.islandShards)
+        ? Math.max(0, Math.floor(value.islandShards))
+        : fallback.islandShards,
+    shardTierIndex:
+      typeof value.shardTierIndex === 'number' && Number.isFinite(value.shardTierIndex)
+        ? Math.max(0, Math.floor(value.shardTierIndex))
+        : fallback.shardTierIndex,
+    shardClaimCount:
+      typeof value.shardClaimCount === 'number' && Number.isFinite(value.shardClaimCount)
+        ? Math.max(0, Math.floor(value.shardClaimCount))
+        : fallback.shardClaimCount,
   };
 }
 
@@ -143,7 +161,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,shard_tier_index,shard_claim_count')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -180,6 +198,9 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       perIslandEggs: data.per_island_eggs ?? {},
       islandStartedAtMs: data.island_started_at_ms,
       islandExpiresAtMs: data.island_expires_at_ms,
+      islandShards: data.island_shards ?? 0,
+      shardTierIndex: data.shard_tier_index ?? 0,
+      shardClaimCount: data.shard_claim_count ?? 0,
     },
     fallback,
   );
@@ -256,6 +277,9 @@ export async function writeIslandRunGameStateRecord(options: {
       per_island_eggs: record.perIslandEggs,
       island_started_at_ms: record.islandStartedAtMs,
       island_expires_at_ms: record.islandExpiresAtMs,
+      island_shards: record.islandShards,
+      shard_tier_index: record.shardTierIndex,
+      shard_claim_count: record.shardClaimCount,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },
