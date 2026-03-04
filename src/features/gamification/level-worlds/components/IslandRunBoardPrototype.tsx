@@ -786,6 +786,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // TODO M11D: persist completedStops to Supabase island_run_runtime_state
   }, [completedStops, hasHydratedRuntimeState, islandNumber, session.user.id]);
 
+  // M17D: award wallet shards (persistent cross-island balance) by a given amount.
+  // This is separate from awardShards (islandShards / Collectible Progress Bar).
+  const awardWalletShards = useCallback((amount: number) => {
+    setShards((prev) => {
+      const next = prev + amount;
+      void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: next } });
+      return next;
+    });
+  }, [session, client]);
+
   // M16B/M16C: award shards from a given source, update local state, and persist.
   // shard_tier_index does NOT advance here — that happens on player claim (M16E).
   const awardShards = useCallback((source: ShardEarnSource) => {
@@ -1224,6 +1234,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
     // M16B: award shards on egg open
     awardShards('egg_open');
+    // M17D: award wallet shards on egg open
+    awardWalletShards(2);
     // M10B: egg_open sound + haptic
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
@@ -1669,6 +1681,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
       setCompletedStops((current) => (current.includes('boss') ? current : [...current, 'boss']));
       awardShards('boss_defeat');
+      awardWalletShards(3);
 
       logGameSession(session.user.id, {
         gameId: 'shooter_blitz',
@@ -1719,6 +1732,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
     if (!completedStops.includes(activeStopId)) {
       awardShards('stop_complete');
+      awardWalletShards(1);
     }
     setCompletedStops((current) => (current.includes(activeStopId) ? current : [...current, activeStopId]));
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
@@ -2194,6 +2208,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               {isDisplayNameLoopCompleted ? 'Onboarding booster used' : 'Use onboarding booster (+1 heart)'}
             </button>
           )}
+          {/* M17D: dev simulate wallet shards button */}
+          <button
+            type="button"
+            className="island-run-prototype__debug-btn"
+            onClick={() => awardWalletShards(5)}
+          >
+            Simulate wallet shards (+5)
+          </button>
         </div>
           </div>
         )}
@@ -2714,6 +2736,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 if (rewardDice > 0) setDicePool((d) => d + rewardDice);
                 if (rewardHearts > 0) setHearts((h) => h + rewardHearts);
                 if (rewardSpinTokens > 0) setSpinTokens((t) => t + rewardSpinTokens);
+                // M17D: award wallet shards on minigame reward
+                awardWalletShards(1);
                 void recordTelemetryEvent({
                   userId: session.user.id,
                   eventType: 'economy_earn',

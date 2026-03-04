@@ -3183,3 +3183,24 @@ Testing:
 - Open Score → Bank tab; observe ✨ Shards: N balance row
 - islandShards / shard progress pill unaffected — no regression
 Next: M17D — Wire Shards earn paths (stops, boss defeats, eggs, shop purchases, special events)
+
+---
+
+Date: 2026-03-04
+Slice: M17D — Wire Shards wallet earn paths (stops, boss, egg open, minigame)
+Summary: Added `awardWalletShards(amount)` helper in `IslandRunBoardPrototype.tsx` that updates `shards` React state and persists via `persistIslandRunRuntimeStatePatch`. Wired earn paths per the §4 rewards matrix: non-boss stop completion (+1 wallet shard), boss defeat / island clear (+3 wallet shards), egg open (+2 wallet shards), minigame reward passthrough (+1 wallet shard). Added "Simulate wallet shards (+5)" button to the ▼ Dev info panel. The `awardShards` / `islandShards` Collectible Progress Bar system is untouched — no regressions.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (awardWalletShards helper + earn path wiring + dev simulate button)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M17D shipped; Next Slice → M17E)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build passes (zero new TypeScript errors)
+- Open Island Run in dev mode (?debugBoard=1); click "Simulate wallet shards (+5)" → ✨ 5 HUD chip appears
+- Complete a non-boss stop → ✨ count increments by 1
+- Resolve and claim boss → ✨ count increments by 3
+- Open a hatched egg → ✨ count increments by 2
+- Complete a minigame → ✨ count increments by 1
+- Reload the page → shards balance persists
+- Open Score → Bank tab → verify ✨ Shards: N balance matches HUD
+- islandShards / shard progress pill unaffected — no regression
+Next: M17E
