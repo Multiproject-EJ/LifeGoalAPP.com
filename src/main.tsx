@@ -6,6 +6,7 @@ import { SupabaseAuthProvider } from './features/auth/SupabaseAuthProvider.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { resolveRoute } from './routes/resolveRoute.ts';
 import { WorldHome } from './world/WorldHome.tsx';
+import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
 
 if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {
@@ -23,10 +24,7 @@ if (typeof window !== 'undefined') {
 
 // Extend the global Window interface for the BeforeInstallPromptEvent which is
 // not yet part of the standard TypeScript lib.
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+// (Type is exported from ./world/useInstallState.ts and imported above.)
 
 function Root() {
   const initialRoute = useMemo(() => resolveRoute(), []);
@@ -51,14 +49,7 @@ function Root() {
           setLoginOnEntry(true);
           setShowApp(true);
         }}
-        installPromptAvailable={!!installPrompt}
-        onInstallPrompt={async () => {
-          if (installPrompt) {
-            installPrompt.prompt();
-            await installPrompt.userChoice;
-            setInstallPrompt(null);
-          }
-        }}
+        beforeInstallPromptEvent={installPrompt}
       />
     );
   }
