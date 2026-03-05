@@ -345,8 +345,23 @@
   text-decoration-color: currentColor;
 }
 
-/* ---------- Footer ---------- */
+/* ---------- Install section ---------- */
 
+.world-home__install-section {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.world-home__installed-indicator {
+  font-size: 12px;
+  color: #4ade80;
+  text-align: center;
+  margin: 8px 0 0;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Footer ---------- */
 .world-home__footer {
   position: relative;
   z-index: 1;
@@ -424,4 +439,176 @@
   .world-home__features {
     max-width: 520px;
   }
+}
+
+/* ============================================================
+   iOS Install Guide — glassmorphic modal overlay
+   ============================================================ */
+
+@keyframes ios-guide-fadein {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+}
+
+.ios-install-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 max(24px, env(safe-area-inset-bottom, 24px));
+}
+
+.ios-install-guide__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.ios-install-guide__card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 16px;
+  background: rgba(15, 20, 40, 0.88);
+  border: 1px solid rgba(165, 180, 252, 0.2);
+  border-radius: 24px;
+  padding: 28px 24px 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(165, 180, 252, 0.08);
+  animation: ios-guide-fadein 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  box-sizing: border-box;
+}
+
+.ios-install-guide__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ios-install-guide__close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+}
+
+.ios-install-guide__close:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 2px;
+}
+
+.ios-install-guide__icon {
+  font-size: 36px;
+  text-align: center;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px rgba(165, 180, 252, 0.4));
+}
+
+.ios-install-guide__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #c7d2fe;
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.ios-install-guide__subtitle {
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.ios-install-guide__steps {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ios-install-guide__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ios-install-guide__step-num {
+  flex: 0 0 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.3);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ios-install-guide__step-text {
+  font-size: 14px;
+  color: #cbd5e1;
+  line-height: 1.5;
+  padding-top: 3px;
+}
+
+.ios-install-guide__share-icon {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-left: 2px;
+}
+
+.ios-install-guide__got-it {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
+}
+
+.ios-install-guide__got-it:hover {
+  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.6);
+}
+
+.ios-install-guide__got-it:active {
+  transform: scale(0.97);
+}
+
+.ios-install-guide__got-it:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-install-guide__card { animation: none; }
 }
