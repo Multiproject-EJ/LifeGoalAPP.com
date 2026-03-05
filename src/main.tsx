@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { registerServiceWorker } from './registerServiceWorker.ts';
 import { SupabaseAuthProvider } from './features/auth/SupabaseAuthProvider.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
+import { resolveRoute } from './routes/resolveRoute.ts';
+import { WorldHome } from './world/WorldHome.tsx';
 
 if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {
@@ -19,13 +21,25 @@ if (typeof window !== 'undefined') {
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
+function Root() {
+  const [showApp, setShowApp] = useState(() => resolveRoute() !== 'world');
+
+  if (!showApp) {
+    return <WorldHome onContinue={() => setShowApp(true)} />;
+  }
+
+  return (
     <ThemeProvider>
       <SupabaseAuthProvider>
         <App />
       </SupabaseAuthProvider>
     </ThemeProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <Root />
   </React.StrictMode>
 );
 
