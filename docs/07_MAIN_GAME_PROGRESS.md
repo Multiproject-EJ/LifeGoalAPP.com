@@ -3222,3 +3222,19 @@ Testing:
 - Convert Shields → Coins action still works; Coins balance updates on reload
 - No regressions to existing Shields convert or Shards balance display
 Next: M18A — Tickets currency stub
+
+---
+
+Date: 2026-03-05
+Slice: M17E — M17 close-out
+Summary:
+- M17A–M17D all shipped: shields wallet field + HUD display + Body habit shield earn + Bank tab convert stub + Shards HUD chip + wallet field + Bank tab balance + Shards earn paths (stops/boss/egg/minigame) all wired.
+- Marked M17 milestone [✅] in 00_MAIN_GAME_120_ISLANDS_INDEX.md.
+- Set Next Slice to M1B-COMPLETE (finish hybrid 3D board foundation — move board rendering out of dev-only mode).
+Files changed:
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- No code changes; docs-only close-out slice.
+Next:
+- M1B-COMPLETE: remove dev-mode guard on board renderer so hybrid 3D board renders for all logged-in users
