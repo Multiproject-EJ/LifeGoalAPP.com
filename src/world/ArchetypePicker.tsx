@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { useId, useRef } from 'react';
 import { ARCHETYPES } from './archetypes.ts';
 import type { Archetype } from './archetypes.ts';
 import { usePersistedState } from './usePersistedState.ts';
@@ -14,6 +14,18 @@ export function ArchetypePicker() {
   const [expandedId, setExpandedId] = React.useState<string | null>(
     selectedId,
   );
+  const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
+
+  // The focused card index — drives roving tabIndex.
+  // Defaults to the selected card, or 0 if nothing is selected.
+  const focusedIndex =
+    selectedId !== null
+      ? Math.max(
+          ARCHETYPES.findIndex((a) => a.id === selectedId),
+          0,
+        )
+      : 0;
+  const [rovingIndex, setRovingIndex] = React.useState(focusedIndex);
 
   const handleSelect = (archetype: Archetype) => {
     const isAlreadySelected = selectedId === archetype.id;
@@ -24,13 +36,26 @@ export function ArchetypePicker() {
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLLIElement>,
+    index: number,
     archetype: Archetype,
   ) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleSelect(archetype);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = (index + 1) % ARCHETYPES.length;
+      setRovingIndex(next);
+      cardRefs.current[next]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = (index - 1 + ARCHETYPES.length) % ARCHETYPES.length;
+      setRovingIndex(prev);
+      cardRefs.current[prev]?.focus();
     }
   };
+
+  const selectedName = ARCHETYPES.find((a) => a.id === selectedId)?.name;
 
   return (
     <section
@@ -49,18 +74,30 @@ export function ArchetypePicker() {
         </p>
       </div>
 
+      {/* Single persistent live region — announced on every selection change */}
+      <p
+        className="archetype-picker__live"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {selectedName ? `${selectedName} selected. Tap again to deselect.` : ''}
+      </p>
+
       <ul
         className="archetype-picker__list"
         role="radiogroup"
         aria-labelledby={`${groupId}-heading`}
       >
-        {ARCHETYPES.map((archetype) => {
+        {ARCHETYPES.map((archetype, index) => {
           const isSelected = selectedId === archetype.id;
           const isExpanded = expandedId === archetype.id;
+          // Roving tabIndex: only the active item in the group is reachable via Tab
+          const tabIdx = index === rovingIndex ? 0 : -1;
 
           return (
             <li
               key={archetype.id}
+              ref={(el) => { cardRefs.current[index] = el; }}
               className={[
                 'archetype-picker__card',
                 isSelected ? 'archetype-picker__card--selected' : '',
@@ -70,9 +107,9 @@ export function ArchetypePicker() {
                 .join(' ')}
               role="radio"
               aria-checked={isSelected}
-              tabIndex={0}
-              onClick={() => handleSelect(archetype)}
-              onKeyDown={(e) => handleKeyDown(e, archetype)}
+              tabIndex={tabIdx}
+              onClick={() => { setRovingIndex(index); handleSelect(archetype); }}
+              onKeyDown={(e) => handleKeyDown(e, index, archetype)}
             >
               <div className="archetype-picker__card-summary">
                 <span
@@ -117,7 +154,7 @@ export function ArchetypePicker() {
                     ))}
                   </ul>
                   {isSelected && (
-                    <p className="archetype-picker__selected-badge" aria-live="polite">
+                    <p className="archetype-picker__selected-badge">
                       ✓ Selected
                     </p>
                   )}
@@ -129,12 +166,8 @@ export function ArchetypePicker() {
       </ul>
 
       {selectedId && (
-        <p className="archetype-picker__hint" aria-live="polite">
-          You chose:{' '}
-          <strong>
-            {ARCHETYPES.find((a) => a.id === selectedId)?.name}
-          </strong>
-          . Tap again to deselect.
+        <p className="archetype-picker__hint">
+          You chose: <strong>{selectedName}</strong>. Tap again to deselect.
         </p>
       )}
     </section>
