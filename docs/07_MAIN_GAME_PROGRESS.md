@@ -3204,3 +3204,21 @@ Testing:
 - Open Score → Bank tab → verify ✨ Shards: N balance matches HUD
 - islandShards / shard progress pill unaffected — no regression
 Next: M17E
+
+---
+
+Date: 2026-03-04
+Slice: M17E — Complete Bank tab currency display (Coins, Diamonds, Hearts rows)
+Summary: Extended the Bank tab in `ScoreTab.tsx` to show all 5 persistent wallet currencies in the canonical HUD order (Coins → Diamonds → Hearts → Shields → Shards). Added `heartsBalance` state variable hydrated from `loadCurrencyBalance(session.user.id).hearts` (localStorage currency store). Merged the former separate Shield Wallet and Shards Wallet ledger sections into a single "All currencies" ledger section containing all five rows. Coins and Diamonds values are derived from the existing `goldBreakdown` (goldRemainder / diamonds). Shields Convert action and Shards balance row are unchanged from M17B/M17C. M17 milestone marked [✅].
+Files changed:
+- src/features/gamification/ScoreTab.tsx (heartsBalance state + hydration + Coins/Diamonds/Hearts card rows; unified currency ledger section)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M17E shipped; M17 → [✅]; Next Slice → M18A)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build passes (zero new TypeScript errors)
+- Open Score → Bank tab; verify 5 currency rows appear: 🪙 Coins, 💎 Diamonds, ❤️ Hearts, 🛡️ Shields, ✨ Shards
+- Coins + Diamonds values match the gold wallet label shown above
+- Hearts balance reflects localStorage currency store value
+- Convert Shields → Coins action still works; Coins balance updates on reload
+- No regressions to existing Shields convert or Shards balance display
+Next: M18A — Tickets currency stub
