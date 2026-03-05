@@ -3226,15 +3226,25 @@ Next: M18A — Tickets currency stub
 ---
 
 Date: 2026-03-05
-Slice: M17E — M17 close-out
-Summary:
-- M17A–M17D all shipped: shields wallet field + HUD display + Body habit shield earn + Bank tab convert stub + Shards HUD chip + wallet field + Bank tab balance + Shards earn paths (stops/boss/egg/minigame) all wired.
-- Marked M17 milestone [✅] in 00_MAIN_GAME_120_ISLANDS_INDEX.md.
-- Set Next Slice to M1B-COMPLETE (finish hybrid 3D board foundation — move board rendering out of dev-only mode).
+Slice: M1 — Hybrid 3D Board Visual Foundation (complete closure)
+Summary: Closed M1 from 🟡 Partial → ✅ Done by implementing all remaining visual foundation items. (1) Created 3 procedural SVG island background scenes (`public/assets/islands/backgrounds/bg_001.svg`, `bg_002.svg`, `bg_003.svg`) — Scene 1: tropical green/teal with pond and lush vegetation; Scene 2: coastal blue/olive with beach palms and sea inlet; Scene 3: mystical purple/teal with twilight glowing flora and crystal spires. (2) Wired background `<img>` into `IslandRunBoardPrototype.tsx` as first child of `.island-run-board` div at z-index 1; CSS gradient classes retained as fallback. (3) Upgraded all 3 depth mask SVGs from simple 3-ellipse placeholders to detailed foreground-occlusion assets featuring boulders, fallen logs, fern fronds, palm trunks with roots, canopy overhangs, hanging vines, and scene-appropriate crystal/mineral accents. Raised depth mask z-index from 3 → 7 (above tiles at 6) for real occlusion. (4) Upgraded tile disc visuals: added inner highlight layer at 32%/22%, deeper base shadow, bottom inset shadow, and radial inner glow for polished-stone/crystal appearance; added per-zBand box-shadow variants (back tiles lighter shadow, front tiles deeper shadow); added animated pulse on stop tiles. (5) Replaced plain 🚀 emoji token with styled CSS spaceship: gradient body (radial highlight + deep blue base), two angled fins, animated thruster flame (`@keyframes island-token-thruster`), porthole window, and pulsing aura (`::before`). (6) Upgraded tile-type visual differentiation from border-color-only to distinct radial-gradient background + inner glow per type (currency=gold, chest=amber, hazard=red, egg_shard=teal-green, micro=purple, event=yellow).
 Files changed:
-- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
-- docs/07_MAIN_GAME_PROGRESS.md
+- public/assets/islands/backgrounds/bg_001.svg (NEW)
+- public/assets/islands/backgrounds/bg_002.svg (NEW)
+- public/assets/islands/backgrounds/bg_003.svg (NEW)
+- public/assets/islands/depth/depth_mask_001.svg (upgraded)
+- public/assets/islands/depth/depth_mask_002.svg (upgraded)
+- public/assets/islands/depth/depth_mask_003.svg (upgraded)
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (background img + styled token)
+- src/features/gamification/level-worlds/LevelWorlds.css (bg z-index, depth mask z-index 7, tile 3D, token spaceship, tile-type gradients)
+- docs/MAIN_GAME_120_LEVEL_STATUS.md (M1 → ✅ Done; assets section updated)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
 Testing:
-- No code changes; docs-only close-out slice.
-Next:
-- M1B-COMPLETE: remove dev-mode guard on board renderer so hybrid 3D board renders for all logged-in users
+- npm run build passes (pre-existing vite TS config errors unrelated to changes)
+- Island Run board shows SVG background art for each of the 3 scene buttons
+- Depth mask SVGs overlay foreground props above tiles (rocks/foliage visible over tile layer)
+- Tile discs show pseudo-3D highlight and shadow; stop tiles animate pulsing ring
+- Token renders as CSS spaceship with body/fins/thruster/window/aura instead of emoji
+- Tile types show distinct gradient fills (currency=gold, hazard=red, egg_shard=teal, etc.)
+- Dev overlay, stop modals, dice roll, token movement: no regressions
+Next: M11A — Minigame framework scaffold

@@ -71,6 +71,8 @@
 ### 3a. What Is Built ✅
 
 #### Board + Movement
+- [x] **M1 hybrid 3D board renderer** — core ring/anchor layout, canvas path glow, dev overlay, background art (3 procedural SVG scenes), production-quality foreground depth-mask SVGs (rocks/foliage/trunks), pseudo-3D tile disc lighting, styled CSS spaceship token, tile-type visual differentiation  
+  → [`src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`](../src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx), [`src/features/gamification/level-worlds/LevelWorlds.css`](../src/features/gamification/level-worlds/LevelWorlds.css), [`public/assets/islands/`](../public/assets/islands/)
 - [x] Fixed 17-tile anchor layout with `zBand` (back / mid / front), `tangentDeg`, and `scale` per anchor  
   → [`src/features/gamification/level-worlds/services/islandBoardLayout.ts`](../src/features/gamification/level-worlds/services/islandBoardLayout.ts)
 - [x] 5 outer stop POIs (Steps 1–5) accessible from the board; the 17-tile ring is for movement and resource earning. **Stops are not tiles on the ring** — they are POIs around the island unlocked by completing prior steps. Boss is always Step 5; Step 1 gates dice. Current implementation uses ring tile indices (0, 4, 8, 12, 16) as stop trigger points — to be refactored to the canonical outer-POI model; see `docs/07_MAIN_GAME_PROGRESS.md`.
@@ -140,7 +142,6 @@
 
 ### 3b. What Is In Progress 🟡
 
-- [~] **M1 hybrid 3D board renderer** — core ring/anchor layout shipped in dev prototype; foreground depth-mask layer and pseudo-3D occlusion not yet implemented
 - [~] **M2 token animation** — basic hop loop shipped; 60 fps easing, squash/stretch micro-animation, and dynamic shadow by `zBand` not yet production-grade
 - [~] **M3 stop modals** — stub modals wired; utility stop has no real objective behind it; minigame stop shows only placeholder copy
 - [~] **M4 travel overlay** — dev simulation working; production-grade "next island" art swap and visual continuity not yet polished
@@ -164,10 +165,12 @@
 - [ ] **Boss real-life objective verification** — boss challenge prompts are flavour text only; no backend check that the player actually completed a habit/goal before claiming the boss reward
 
 #### Assets
-- [ ] **Island background art** — no `bg_<id>.webp` files in `/public/assets/islands/backgrounds/`; placeholder colour fills used in prototype
-- [ ] **Depth mask art** — no `depth_mask_<id>.png` per island for foreground occlusion (3D-hybrid illusion)
+- [x] **Island background art** — 3 procedural SVG scenes in `/public/assets/islands/backgrounds/bg_00{1,2,3}.svg`; wired into board renderer as `<img>` at z-index 1; CSS gradients retained as fallback
+- [x] **Depth mask art** — production-quality foreground SVGs in `/public/assets/islands/depth/depth_mask_00{1,2,3}.svg`; features rocks, foliage, trunks, crystal spires per scene; z-index 7 (above tiles) for real occlusion
+- [x] **Token art** — styled CSS spaceship token (body, fins, thruster flame, porthole window, pulsing aura) replaces plain 🚀 emoji
+- [x] **Tile disc visual** — pseudo-3D lighting (inner highlight, base shadow, radial glow); per-type gradient background for currency/chest/hazard/egg_shard/micro/event tiles
 - [ ] **Audio files** — 17 sound events mapped to `/assets/audio/sfx/sfx_*.mp3` paths; none of those files exist; all `playIslandRunSound` calls are currently no-ops
-- [ ] **Token / tile / stop art** — custom spaceship token, tile disc art, and stop icon art not yet present
+- [ ] **Stop icon art** — custom stop icon art not yet present
 
 #### Backend / Data
 - [ ] **Full per-run state persistence** — in-flight state (current token index, per-stop completion flags, current hearts/coins/spin tokens) is held in React `useState` and lost on page reload; only `currentIslandNumber`, `bossTrialResolvedIslandNumber`, and egg state are persisted to Supabase

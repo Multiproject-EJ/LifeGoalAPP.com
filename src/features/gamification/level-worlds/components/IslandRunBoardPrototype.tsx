@@ -2222,6 +2222,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       </header>
 
       <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--scene-${activeScene}`}>
+        <img
+          className="island-run-board__bg"
+          src={`/assets/islands/backgrounds/bg_00${activeScene}.svg`}
+          alt=""
+          aria-hidden="true"
+        />
+
         <canvas ref={canvasRef} className="island-run-board__path" />
 
         <div className="island-run-board__lap-label">17-tile lap</div>
@@ -2287,7 +2294,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               top: tokenPosition.y,
             }}
           >
-            🚀
+            <div className="island-token__ship" aria-hidden="true">
+              <div className="island-token__ship-body"/>
+              <div className="island-token__ship-fin island-token__ship-fin--left"/>
+              <div className="island-token__ship-fin island-token__ship-fin--right"/>
+              <div className="island-token__ship-thruster"/>
+              <div className="island-token__ship-window"/>
+            </div>
           </div>
         </div>
 

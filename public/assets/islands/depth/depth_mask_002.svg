@@ -1,6 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
   <rect width="1000" height="1000" fill="transparent"/>
-  <ellipse cx="180" cy="610" rx="120" ry="140" fill="rgba(30,58,36,0.75)"/>
-  <ellipse cx="790" cy="640" rx="170" ry="130" fill="rgba(30,58,36,0.75)"/>
-  <ellipse cx="860" cy="360" rx="90" ry="120" fill="rgba(30,58,36,0.72)"/>
+
+  <!-- Bottom-left: sandy coastal rock + driftwood -->
+  <ellipse cx="140" cy="870" rx="195" ry="106" fill="rgba(26,50,28,0.86)"/>
+  <ellipse cx="80" cy="830" rx="115" ry="80" fill="rgba(30,56,32,0.84)"/>
+  <ellipse cx="190" cy="838" rx="95" ry="64" fill="rgba(36,64,40,0.80)"/>
+  <!-- Sandy ridge on top of left rock -->
+  <ellipse cx="128" cy="818" rx="78" ry="26" fill="rgba(90,80,40,0.52)"/>
+  <ellipse cx="192" cy="815" rx="52" ry="18" fill="rgba(100,88,44,0.46)"/>
+  <!-- Driftwood log -->
+  <path d="M 10,888 Q 115,852 228,868 Q 295,876 340,882" stroke="rgba(90,60,22,0.78)" stroke-width="20" fill="none" stroke-linecap="round"/>
+  <path d="M 10,888 Q 115,852 228,868 Q 295,876 340,882" stroke="rgba(118,82,30,0.48)" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <!-- Beach grass / coastal reeds -->
+  <path d="M 72,822 Q 48,778 34,742" stroke="rgba(56,80,32,0.76)" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M 95,814 Q 82,768 86,730" stroke="rgba(56,80,32,0.70)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M 118,806 Q 132,758 154,728" stroke="rgba(56,80,32,0.66)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M 50,738 Q 30,720 22,700" stroke="rgba(62,88,36,0.64)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="34" cy="740" rx="25" ry="10" fill="rgba(58,82,34,0.70)" transform="rotate(-28 34 740)"/>
+  <ellipse cx="86" cy="728" rx="22" ry="9" fill="rgba(58,82,34,0.66)" transform="rotate(-8 86 728)"/>
+  <ellipse cx="154" cy="726" rx="20" ry="8" fill="rgba(58,82,34,0.63)" transform="rotate(22 154 726)"/>
+
+  <!-- Bottom-right: palm trunk + dense bush cluster -->
+  <ellipse cx="860" cy="855" rx="208" ry="112" fill="rgba(26,50,28,0.87)"/>
+  <ellipse cx="945" cy="815" rx="125" ry="94" fill="rgba(30,56,32,0.84)"/>
+  <ellipse cx="800" cy="828" rx="105" ry="70" fill="rgba(36,62,40,0.80)"/>
+  <!-- Sandy texture on right cluster -->
+  <ellipse cx="865" cy="816" rx="82" ry="24" fill="rgba(88,78,38,0.50)"/>
+  <ellipse cx="798" cy="810" rx="56" ry="20" fill="rgba(96,86,42,0.44)"/>
+  <!-- Palm trunk on right -->
+  <path d="M 950,660 Q 938,700 935,750 Q 932,800 940,848" stroke="rgba(90,58,18,0.90)" stroke-width="30" fill="none" stroke-linecap="round"/>
+  <path d="M 950,660 Q 938,700 935,750 Q 932,800 940,848" stroke="rgba(120,82,28,0.42)" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <!-- Palm fronds at top -->
+  <path d="M 950,660 Q 910,630 878,618" stroke="rgba(52,82,28,0.82)" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M 950,660 Q 935,622 928,600" stroke="rgba(52,82,28,0.80)" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M 950,660 Q 966,618 978,602" stroke="rgba(52,82,28,0.78)" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M 950,660 Q 975,638 996,630" stroke="rgba(52,82,28,0.76)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <ellipse cx="878" cy="615" rx="32" ry="12" fill="rgba(54,84,30,0.76)" transform="rotate(-24 878 615)"/>
+  <ellipse cx="928" cy="598" rx="28" ry="11" fill="rgba(54,84,30,0.73)" transform="rotate(-5 928 598)"/>
+  <ellipse cx="978" cy="600" rx="28" ry="11" fill="rgba(54,84,30,0.73)" transform="rotate(22 978 600)"/>
+  <ellipse cx="996" cy="628" rx="24" ry="9" fill="rgba(54,84,30,0.70)" transform="rotate(38 996 628)"/>
+  <!-- Right coastal reeds -->
+  <path d="M 820,820 Q 844,776 858,740" stroke="rgba(54,78,30,0.74)" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M 796,814 Q 774,768 762,730" stroke="rgba(54,78,30,0.68)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <ellipse cx="858" cy="738" rx="22" ry="9" fill="rgba(56,80,32,0.68)" transform="rotate(16 858 738)"/>
+  <ellipse cx="762" cy="728" rx="20" ry="8" fill="rgba(56,80,32,0.64)" transform="rotate(-20 762 728)"/>
+
+  <!-- Right-edge: thick tree trunk with exposed roots -->
+  <rect x="944" y="340" width="56" height="340" rx="16" fill="rgba(42,24,8,0.92)"/>
+  <rect x="952" y="340" width="24" height="320" rx="9" fill="rgba(64,40,14,0.36)"/>
+  <!-- Root buttresses on right side -->
+  <path d="M 944,660 Q 900,692 876,736" stroke="rgba(42,24,8,0.84)" stroke-width="20" fill="none" stroke-linecap="round"/>
+  <path d="M 964,668 Q 988,706 994,748" stroke="rgba(42,24,8,0.80)" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <path d="M 956,672 Q 962,712 960,752" stroke="rgba(42,24,8,0.75)" stroke-width="15" fill="none" stroke-linecap="round"/>
+
+  <!-- Top-right corner: dense leafy overhang -->
+  <ellipse cx="924" cy="235" rx="138" ry="108" fill="rgba(28,56,30,0.84)"/>
+  <ellipse cx="978" cy="188" rx="102" ry="94" fill="rgba(34,66,38,0.87)"/>
+  <ellipse cx="1000" cy="148" rx="82" ry="104" fill="rgba(30,60,34,0.90)"/>
+  <ellipse cx="872" cy="212" rx="82" ry="66" fill="rgba(38,72,42,0.80)"/>
+  <ellipse cx="832" cy="172" rx="66" ry="56" fill="rgba(42,78,46,0.76)"/>
+  <!-- Hanging vines -->
+  <path d="M 900,278 Q 885,322 872,366 Q 860,408 854,450" stroke="rgba(30,62,34,0.62)" stroke-width="6" fill="none"/>
+  <path d="M 938,292 Q 924,338 918,385 Q 910,430 907,475" stroke="rgba(30,62,34,0.56)" stroke-width="5" fill="none"/>
+
+  <!-- Coastal boulders bottom-center-left -->
+  <ellipse cx="348" cy="938" rx="62" ry="40" fill="rgba(54,62,30,0.70)"/>
+  <ellipse cx="330" cy="925" rx="40" ry="26" fill="rgba(64,72,36,0.65)"/>
+
+  <!-- Coastal boulders bottom-center-right -->
+  <ellipse cx="658" cy="932" rx="58" ry="37" fill="rgba(50,58,28,0.68)"/>
+  <ellipse cx="672" cy="920" rx="38" ry="24" fill="rgba(60,68,34,0.63)"/>
 </svg>
