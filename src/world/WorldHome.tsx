@@ -25,28 +25,28 @@ export function WorldHome({
 
       {/* Brand zone */}
       <div className="world-home__brand">
-        <div className="world-home__logo" aria-hidden="true">🎯</div>
-        <div className="world-home__level-badge" aria-hidden="true">WORLD 1</div>
-        <h1 className="world-home__app-name">LifeGoal</h1>
-        <p className="world-home__tagline">Your quest to level up starts here</p>
+        <div className="world-home__logo" aria-hidden="true">🎮</div>
+        <div className="world-home__level-badge" aria-hidden="true">LEVEL 1</div>
+        <h1 className="world-home__app-name">HABITGAME</h1>
+        <p className="world-home__tagline">Level Up Your Life</p>
       </div>
 
       {/* Feature showcase zone */}
       <div className="world-home__features" role="list" aria-label="App features">
         <div className="world-home__feature-card" role="listitem">
-          <span className="world-home__feature-icon" aria-hidden="true">🎯</span>
-          <strong className="world-home__feature-title">Goals &amp; Quests</strong>
-          <p className="world-home__feature-desc">Set life goals and track your journey</p>
+          <span className="world-home__feature-icon" aria-hidden="true">🎮</span>
+          <strong className="world-home__feature-title">Your Life, Gamified</strong>
+          <p className="world-home__feature-desc">Every habit earns XP. Every day builds momentum.</p>
         </div>
         <div className="world-home__feature-card" role="listitem">
-          <span className="world-home__feature-icon" aria-hidden="true">🔥</span>
-          <strong className="world-home__feature-title">Habits &amp; Streaks</strong>
-          <p className="world-home__feature-desc">Build daily rituals, earn rewards</p>
+          <span className="world-home__feature-icon" aria-hidden="true">⚡</span>
+          <strong className="world-home__feature-title">Build Momentum</strong>
+          <p className="world-home__feature-desc">Small actions compound into transformation.</p>
         </div>
         <div className="world-home__feature-card" role="listitem">
           <span className="world-home__feature-icon" aria-hidden="true">🏆</span>
-          <strong className="world-home__feature-title">Level Up</strong>
-          <p className="world-home__feature-desc">Earn XP, unlock achievements, grow</p>
+          <strong className="world-home__feature-title">Earn Rewards</strong>
+          <p className="world-home__feature-desc">Achievements, coins, and milestones celebrate progress.</p>
         </div>
       </div>
 
@@ -58,7 +58,7 @@ export function WorldHome({
             onClick={onContinue}
             type="button"
           >
-            Continue Journey
+            Start Your Game
           </button>
           <button
             className="world-home__btn world-home__btn--secondary"
@@ -77,11 +77,14 @@ export function WorldHome({
             </button>
           )}
         </div>
+        <p className="world-home__cta-supporting">
+          Build habits • Earn rewards • Unlock your future
+        </p>
       </div>
 
       {/* Footer */}
       <p className="world-home__footer">
-        LifeGoalApp &copy; {new Date().getFullYear()}
+        HabitGame &copy; {new Date().getFullYear()}
         <span className="world-home__version" aria-hidden="true"> · v1.0</span>
       </p>
     </div>
