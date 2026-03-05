@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
 
+/** Static path for the primary hero background asset. */
+const HERO_BG_SRC = '/world-assets/world-bg-main.webp';
+
 interface WorldHeroProps {
   children?: React.ReactNode;
 }
@@ -20,14 +23,14 @@ export function WorldHero({ children }: WorldHeroProps) {
   // This ensures the browser prioritises the image as soon as it knows about it.
   useEffect(() => {
     const existingPreload = document.head.querySelector(
-      'link[rel="preload"][href="/world-assets/world-bg-main.webp"]',
+      `link[rel="preload"][href="${HERO_BG_SRC}"]`,
     );
     if (existingPreload) return;
 
     const link = document.createElement('link');
     link.rel = 'preload';
     link.as = 'image';
-    link.href = '/world-assets/world-bg-main.webp';
+    link.href = HERO_BG_SRC;
     link.type = 'image/webp';
     document.head.appendChild(link);
 
@@ -50,7 +53,7 @@ export function WorldHero({ children }: WorldHeroProps) {
          */}
         <img
           className="world-hero__bg-img"
-          src="/world-assets/world-bg-main.webp"
+          src={HERO_BG_SRC}
           alt=""
           aria-hidden="true"
           loading="eager"

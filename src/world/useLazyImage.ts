@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'react';
  * Lazy-loads an image via IntersectionObserver.
  * Sets the `src` on the image element only when it enters the viewport,
  * enabling deferred loading of secondary world assets.
+ *
+ * NOTE: Pass a stable `options` object (e.g. via `useMemo` or a module-level
+ * constant) to avoid re-running the effect on every render.
  */
 export function useLazyImage(
   src: string,
