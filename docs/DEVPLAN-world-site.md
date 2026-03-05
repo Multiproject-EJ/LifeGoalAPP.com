@@ -428,8 +428,8 @@ Swap feature marketing for identity-led onboarding.
 Signal reward loop quickly.
 
 ### Tasks
-- [ ] Add compact rewards strip (XP orb, trait pack, zen seed placeholder).
-- [ ] Add concise copy only.
+- [x] Add compact rewards strip (XP orb, trait pack, zen seed placeholder).
+- [x] Add concise copy only.
 
 ### Definition of done
 - Loop promise is clear without text-heavy sections.

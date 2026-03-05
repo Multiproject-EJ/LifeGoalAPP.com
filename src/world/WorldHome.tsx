@@ -6,6 +6,7 @@ import { IOSInstallGuide } from './IOSInstallGuide.tsx';
 import { WorldHero } from './WorldHero.tsx';
 import { JourneyPreview } from './JourneyPreview.tsx';
 import { ArchetypePicker } from './ArchetypePicker.tsx';
+import { RewardsTease } from './RewardsTease.tsx';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -80,6 +81,9 @@ export function WorldHome({
 
       {/* Archetype Picker — Slice 6: identity hook */}
       <ArchetypePicker />
+
+      {/* Rewards Tease Strip — Slice 7: reward loop signal */}
+      <RewardsTease />
 
       {/* CTA zone */}
       <div className="world-home__cta-zone">
