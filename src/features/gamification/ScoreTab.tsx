@@ -17,6 +17,7 @@ import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { ZEN_TRANSACTIONS_DISPLAY_LIMIT } from '../../constants/zenGarden';
 import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward, shouldPromptEvolution, evolveReward } from '../../services/rewards';
+import { loadCurrencyBalance } from '../../services/gameRewards';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
@@ -118,6 +119,9 @@ export function ScoreTab({
   // M17C: Shards Wallet state for Bank tab
   const [shardsBalance, setShardsBalance] = useState(0);
 
+  // M17E: Hearts Wallet state for Bank tab
+  const [heartsBalance, setHeartsBalance] = useState(0);
+
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
     if (!rewardTitle.trim() || !cost || cost < 1) {
@@ -145,6 +149,8 @@ export function ScoreTab({
     setShieldsBalance(state.shields ?? 0);
     // M17C: Hydrate shards balance
     setShardsBalance(state.shards ?? 0);
+    // M17E: Hydrate hearts balance from localStorage currency store
+    setHeartsBalance(loadCurrencyBalance(session.user.id).hearts);
   }, [activeTab, session]);
 
   // M17B: Convert all shields to coins
@@ -740,12 +746,43 @@ export function ScoreTab({
           <section className="score-tab__ledger">
             <div className="score-tab__ledger-header">
               <div>
-                <p className="score-tab__eyebrow">🛡️ Currency</p>
-                <h3 className="score-tab__ledger-title">Shield Wallet</h3>
+                <p className="score-tab__eyebrow">💰 Currency wallet</p>
+                <h3 className="score-tab__ledger-title">All currencies</h3>
               </div>
-              <span className="score-tab__ledger-pill">Convert</span>
+              <span className="score-tab__ledger-pill">Balance</span>
             </div>
 
+            {/* M17E: Coins row */}
+            <article className="score-tab__card">
+              <div className="score-tab__card-row">
+                <h3 className="score-tab__card-title">🪙 Coins</h3>
+                <span className="score-tab__pill">Spendable</span>
+              </div>
+              <p className="score-tab__value">🪙 {formatter.format(goldBreakdown.goldRemainder)}</p>
+              <p className="score-tab__meta">Spend Coins in the player shop on rewards and upgrades.</p>
+            </article>
+
+            {/* M17E: Diamonds row */}
+            <article className="score-tab__card">
+              <div className="score-tab__card-row">
+                <h3 className="score-tab__card-title">💎 Diamonds</h3>
+                <span className="score-tab__pill">Premium</span>
+              </div>
+              <p className="score-tab__value">💎 {formatter.format(goldBreakdown.diamonds)}</p>
+              <p className="score-tab__meta">1 Diamond = 1,000 Coins. Earned by accumulating large gold totals.</p>
+            </article>
+
+            {/* M17E: Hearts row */}
+            <article className="score-tab__card">
+              <div className="score-tab__card-row">
+                <h3 className="score-tab__card-title">❤️ Hearts</h3>
+                <span className="score-tab__pill">Lives</span>
+              </div>
+              <p className="score-tab__value">❤️ {heartsBalance}</p>
+              <p className="score-tab__meta">Hearts are your Island Run lives. Earned from daily check-ins and rewards.</p>
+            </article>
+
+            {/* M17B: Shields row */}
             <article className="score-tab__card">
               <div className="score-tab__card-row">
                 <h3 className="score-tab__card-title">🛡️ Shields</h3>
@@ -768,18 +805,8 @@ export function ScoreTab({
                 </p>
               )}
             </article>
-          </section>
 
-          {/* M17C: Shards Wallet section */}
-          <section className="score-tab__ledger">
-            <div className="score-tab__ledger-header">
-              <div>
-                <p className="score-tab__eyebrow">✨ Currency</p>
-                <h3 className="score-tab__ledger-title">Shards Wallet</h3>
-              </div>
-              <span className="score-tab__ledger-pill">Balance</span>
-            </div>
-
+            {/* M17C: Shards row */}
             <article className="score-tab__card">
               <div className="score-tab__card-row">
                 <h3 className="score-tab__card-title">✨ Shards</h3>
