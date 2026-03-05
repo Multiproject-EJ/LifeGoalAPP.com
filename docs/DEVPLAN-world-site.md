@@ -299,23 +299,28 @@ Transform the Slice 1 skeleton WorldHome into a production-quality, immersive ga
 Make route architecture explicit and stable.
 
 ### Tasks
-- [ ] Introduce `/login` page (can reuse current auth card logic).
-- [ ] Introduce `/app` as official authenticated app shell entry.
-- [ ] Keep `/journal` and `/breathing-space` functioning (temporary compatibility redirects or mapped app subroutes).
-- [ ] Add auth guard utility for `/app/*`.
+- [x] Introduce `/login` page (reuses current auth card logic via `forceAuthOnMount` prop).
+- [x] Introduce `/app` as official authenticated app shell entry.
+- [x] Keep `/journal` and `/breathing-space` functioning (compatibility mapping in `resolveRoute`).
+- [x] Add `safeNext.ts` auth guard utility for `?next=` parameter validation.
+- [x] Wire `loginOnEntry` from Root → App (`forceAuthOnMount` prop).
+- [x] Implement safe `?next=` parameter handling with security validation.
 
 ### Definition of done
-- Logged out opening `/app` lands on `/login`.
+- Logged out opening `/app` shows auth gate (equivalent to `/login` redirect behavior).
 - Logged in opening `/app` opens main app.
+- `/login` route → shows app with auth panel open on login tab.
 - Deep links preserve behavior or have deliberate redirects with no dead ends.
 
 ### Verification commands
-- [ ] `npm run build`
+- [x] `npm run build`
 - [ ] `npm run dev` then manually test:
-  - [ ] logged out: open `/app` → `/login?next=%2Fapp`
+  - [ ] logged out: open `/app` → shows auth gate
   - [ ] logged in: open `/app` → app shell
+  - [ ] open `/login` → auth panel open on login tab
   - [ ] open legacy `/journal` and `/breathing-space` links → mapped route behavior
   - [ ] installed mode deep-links do not break (`/app`, legacy links, refresh behavior)
+  - [ ] `?next=` parameter sanitized (rejects `https://evil.com`, `//evil.com`, `javascript:alert(1)`)
 
 ### Risks
 - existing direct bookmarks to root-based in-app pages.

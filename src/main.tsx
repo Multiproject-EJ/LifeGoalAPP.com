@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { registerServiceWorker } from './registerServiceWorker.ts';
@@ -29,8 +29,9 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 function Root() {
-  const [showApp, setShowApp] = useState(() => resolveRoute() !== 'world');
-  const [loginOnEntry, setLoginOnEntry] = useState(false);
+  const initialRoute = useMemo(() => resolveRoute(), []);
+  const [showApp, setShowApp] = useState(() => initialRoute !== 'world');
+  const [loginOnEntry, setLoginOnEntry] = useState(() => initialRoute === 'login');
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
@@ -62,13 +63,10 @@ function Root() {
     );
   }
 
-  // loginOnEntry is wired up and ready for Slice 3 to pass into <App />.
-  void loginOnEntry;
-
   return (
     <ThemeProvider>
       <SupabaseAuthProvider>
-        <App />
+        <App forceAuthOnMount={loginOnEntry} />
       </SupabaseAuthProvider>
     </ThemeProvider>
   );

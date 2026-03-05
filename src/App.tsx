@@ -340,7 +340,11 @@ const formatGoldRange = (min: number, max: number) => {
   return normalizedMin === normalizedMax ? `${normalizedMin}` : `${normalizedMin}-${normalizedMax}`;
 };
 
-export default function App() {
+interface AppProps {
+  forceAuthOnMount?: boolean;
+}
+
+export default function App({ forceAuthOnMount }: AppProps) {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
     session: supabaseSession,
@@ -951,6 +955,15 @@ export default function App() {
 
   const isDemoMode = mode === 'demo';
   const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
+
+  useEffect(() => {
+    if (forceAuthOnMount && !isAuthenticated && !isDemoMode) {
+      setShowAuthPanel(true);
+      setActiveAuthTab('login');
+    }
+    // Only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const activeSession = useMemo(() => {
     if (supabaseSession) {
