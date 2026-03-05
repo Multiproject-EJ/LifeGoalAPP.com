@@ -83,7 +83,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M13-UX-POLISH: Collapse dev/prototype info panel behind toggle — board is primary visual on load; Roll/Spin/audio/Stop1 always visible; full HUD expandable via "▼ Dev info" toggle
 - [✅] M14: Shop separation & unlock tiers — market stop removed from stop plan; 5 stops are hatchery/minigame/utility/dynamic/boss; persistent 🛍️ Shop HUD button added; Tier 1 always available; Tier 2 (heart boost bundle) gated on bossTrialResolved; egg selling in shop when eggStage >= 4
 - [✅] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I); M16A shipped; M16B shard earn logic shipped; M16C shard tier index advancement + milestone chain progression shipped; M16D fill animation shipped; M16E Claim button + blind-box reveal shipped
-- [✅] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E); M17A shipped; M17B Body habit shield earn + Bank tab convert stub shipped; M17C Shards HUD chip + wallet field + Bank tab balance shipped; M17D Shards earn paths wired (stops +1, boss +3, egg open +2, minigame +1) + dev simulate button shipped; M17E Bank tab Coins/Diamonds/Hearts rows added — all 5 persistent wallet currencies visible in canonical HUD order
+- [✅] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E); M17A shipped; M17B Body habit shield earn + Bank tab convert stub shipped; M17C Shards HUD chip + wallet field + Bank tab balance shipped; M17D Shards earn paths wired (stops +1, boss +3, egg open +2, minigame +1) + dev simulate button shipped; M17E Bank tab Coins/Diamonds/Hearts rows added — all 5 persistent wallet currencies visible in canonical HUD order; M17D shipped; M17E close-out complete
 
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
@@ -95,10 +95,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M18A — Tickets currency: per-island Ticket rewards from tiles + spend in island shop panel (design TBD; stub wallet field + HUD chip)
-**Files to touch:** TBD
-**Acceptance criteria:** TBD
-**How to test:** TBD
+**Objective:** M1B-COMPLETE — Finish hybrid 3D board foundation: ensure the ring path (17 anchors), depth masks, and island art background all render correctly in non-dev mode (not just dev prototype mode). Remove any dev-only guards that prevent the board from rendering for a logged-in user in normal app flow.
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`, and any feature-flag or route guard that blocks the board from loading outside dev mode.
+**Acceptance criteria:** Board renders with 17 anchor tiles, ring path, and island art on first load for any logged-in user (not just when a dev flag is set); `npm run build` passes.
+**How to test:** Open Island Run in the app as a logged-in user without any dev flags; board should render immediately with the ring path and token visible.
 
 ---
 
