@@ -3,6 +3,7 @@ import './world.css';
 import { useInstallState } from './useInstallState.ts';
 import type { BeforeInstallPromptEvent } from './useInstallState.ts';
 import { IOSInstallGuide } from './IOSInstallGuide.tsx';
+import { WorldHero } from './WorldHero.tsx';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -41,13 +42,7 @@ export function WorldHome({
 
   return (
     <div className="world-home">
-      {/* Atmospheric background layer */}
-      <div className="world-home__bg" aria-hidden="true">
-        <div className="world-home__orb world-home__orb--1" />
-        <div className="world-home__orb world-home__orb--2" />
-        <div className="world-home__orb world-home__orb--3" />
-      </div>
-
+      <WorldHero>
       {/* Brand zone */}
       <div className="world-home__brand">
         <div className="world-home__logo" aria-hidden="true">🎮</div>
@@ -74,6 +69,9 @@ export function WorldHome({
           <p className="world-home__feature-desc">Achievements, coins, and milestones celebrate progress.</p>
         </div>
       </div>
+
+      {/* Journey path connector — visual bridge between cards and CTA */}
+      <div className="world-home__journey-path" aria-hidden="true" />
 
       {/* CTA zone */}
       <div className="world-home__cta-zone">
@@ -123,6 +121,7 @@ export function WorldHome({
         HabitGame &copy; {new Date().getFullYear()}
         <span className="world-home__version" aria-hidden="true"> · v1.0</span>
       </p>
+      </WorldHero>
 
       {/* iOS install coachmark — rendered last so it layers on top */}
       {showIOSGuide && <IOSInstallGuide onDismiss={handleIOSDismiss} />}
