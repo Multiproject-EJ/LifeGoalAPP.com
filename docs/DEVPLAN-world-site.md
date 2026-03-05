@@ -196,6 +196,7 @@ From a mobile user perspective, the experience should feel like this:
 - On protected routes, redirect to `/login?next=<encoded-path>` when logged out.
 - After successful login, send users to `next` when present; otherwise `/app` (or `/lobby` when enabled).
 - In installed standalone mode, preserve app-like continuity (no jarring bounce between public and protected surfaces).
+- **Standalone exception:** When `display-mode: standalone` is detected (installed PWA), `/` immediately resolves to the app experience (`/app` equivalent). The public World Site is only shown to browser-tab visitors. This prevents installed PWA users from seeing a redundant landing page.
 
 ### Mobile-first world-site UI contract
 
@@ -233,13 +234,13 @@ Document current route/auth/PWA behavior and lock migration constraints.
 Render a distinct public world shell at `/` while keeping current app entry behavior available through a compatibility path.
 
 ### Tasks
-- [ ] Introduce a route-resolution layer (minimal internal router or pathname switchboard module).
-- [ ] Add world-shell component for `/` with:
+- [x] Introduce a route-resolution layer (minimal internal router or pathname switchboard module).
+- [x] Add world-shell component for `/` with:
   - brand mark
   - `Log in` CTA
   - `Continue Journey` CTA
 - [ ] Add one Tier-1 background asset to prove asset pipeline.
-- [ ] Implement CTA contract:
+- [x] Implement CTA contract:
   - authenticated → `/app`
   - unauthenticated → `/login`
 
@@ -249,12 +250,12 @@ Render a distinct public world shell at `/` while keeping current app entry beha
 - Existing app can still be reached.
 
 ### Verification commands
-- [ ] `npm run build`
+- [x] `npm run build`
 - [ ] `npm run dev` then manually test:
-  - [ ] visit `/` while logged out → world shell, no forced redirect
+  - [x] visit `/` while logged out → world shell, no forced redirect
   - [ ] tap Continue Journey while logged out → `/login`
   - [ ] tap Continue Journey while logged in → `/app`
-  - [ ] installed PWA still launches and reaches app surface without route errors
+  - [x] installed PWA still launches and reaches app surface without route errors
 
 ### Risks
 - accidental replacement of current root behavior before `/app` alias exists.
