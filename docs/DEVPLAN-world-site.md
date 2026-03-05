@@ -239,7 +239,7 @@ Render a distinct public world shell at `/` while keeping current app entry beha
   - brand mark
   - `Log in` CTA
   - `Continue Journey` CTA
-- [ ] Add one Tier-1 background asset to prove asset pipeline.
+- [x] Add one Tier-1 background asset to prove asset pipeline. (CSS-only atmospheric background: star/particle field + floating orbs implemented in Slice 2)
 - [x] Implement CTA contract:
   - authenticated → `/app`
   - unauthenticated → `/login`
@@ -262,7 +262,38 @@ Render a distinct public world shell at `/` while keeping current app entry beha
 
 ---
 
-## Slice 2 — Establish official route contract (`/`, `/login`, `/app`)
+---
+
+## Slice 2 — Rich Game-Lobby Landing Page (WorldHome)
+
+### Goal
+Transform the Slice 1 skeleton WorldHome into a production-quality, immersive game-lobby landing page.
+
+### Tasks
+- [x] Atmospheric background layer: CSS-only star/particle field (`::before` radial-gradient dots) + 3 slow-drifting floating orbs (`@keyframes wh-orb-float`).
+- [x] Brand zone: enhanced logo with glow shadow, `WORLD 1` level badge, updated app-name gradient, updated tagline ("Your quest to level up starts here").
+- [x] Feature showcase zone: three horizontal-scroll glassmorphic cards (Goals & Quests, Habits & Streaks, Level Up) with scroll-snap on mobile and side-by-side layout on 640px+.
+- [x] CTA zone: primary button pulsing-glow animation, secondary glassmorphic button, conditional "Add to Home Screen" text-link button.
+- [x] `WorldHome` props extended: `onLogin`, `installPromptAvailable`, `onInstallPrompt`.
+- [x] `main.tsx` Root updated: `onLogin` callback, `loginOnEntry` state (plumbing ready for Slice 3), `beforeinstallprompt` event capture + trigger.
+- [x] Responsive: 390px baseline → 640px tablet → 1024px desktop.
+- [x] Accessibility: `:focus-visible` outlines, `prefers-reduced-motion` disables all animations, WCAG AA contrast for all text.
+- [x] Footer: copyright + `v1.0` version indicator.
+
+### Definition of done
+- Rich game-lobby UI visible at `/` in browser mode.
+- Standalone PWA still skips world site.
+- `/journal` and `/breathing-space` still work.
+- `npm run build` passes.
+
+### Verification commands
+- [x] `npm run build`
+- [x] `npm run dev` — rich world site at `/`
+- [x] Install prompt button conditionally renders when `beforeinstallprompt` fires
+
+---
+
+## Slice 3 (formerly Slice 2) — Establish official route contract (`/`, `/login`, `/app`)
 
 ### Goal
 Make route architecture explicit and stable.
