@@ -412,9 +412,9 @@ Show progression at first scroll.
 Swap feature marketing for identity-led onboarding.
 
 ### Tasks
-- [ ] Add 3–6 archetype cards (duplicates allowed initially).
-- [ ] Expand card details on select.
-- [ ] Persist selected archetype locally.
+- [x] Add 3–6 archetype cards (duplicates allowed initially).
+- [x] Expand card details on select.
+- [x] Persist selected archetype locally.
 
 ### Definition of done
 - Archetype selection survives refresh.

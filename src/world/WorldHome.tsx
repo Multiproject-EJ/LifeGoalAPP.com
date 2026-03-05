@@ -5,6 +5,7 @@ import type { BeforeInstallPromptEvent } from './useInstallState.ts';
 import { IOSInstallGuide } from './IOSInstallGuide.tsx';
 import { WorldHero } from './WorldHero.tsx';
 import { JourneyPreview } from './JourneyPreview.tsx';
+import { ArchetypePicker } from './ArchetypePicker.tsx';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -76,6 +77,9 @@ export function WorldHome({
 
       {/* Journey Preview — Slice 5: milestone path */}
       <JourneyPreview />
+
+      {/* Archetype Picker — Slice 6: identity hook */}
+      <ArchetypePicker />
 
       {/* CTA zone */}
       <div className="world-home__cta-zone">
