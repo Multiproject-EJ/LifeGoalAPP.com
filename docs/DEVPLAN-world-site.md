@@ -397,9 +397,9 @@ Shift from CSS-only to image-led “game lobby” visual language.
 Show progression at first scroll.
 
 ### Tasks
-- [ ] Add `JourneyPreview` with 5–7 nodes and path art.
-- [ ] Keep animation subtle and battery-friendly.
-- [ ] Add progression microcopy.
+- [x] Add `JourneyPreview` with 5–7 nodes and path art.
+- [x] Keep animation subtle and battery-friendly.
+- [x] Add progression microcopy.
 
 ### Definition of done
 - It visually communicates “continue progression”, not static content.

@@ -4,6 +4,7 @@ import { useInstallState } from './useInstallState.ts';
 import type { BeforeInstallPromptEvent } from './useInstallState.ts';
 import { IOSInstallGuide } from './IOSInstallGuide.tsx';
 import { WorldHero } from './WorldHero.tsx';
+import { JourneyPreview } from './JourneyPreview.tsx';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -72,6 +73,9 @@ export function WorldHome({
 
       {/* Journey path connector — visual bridge between cards and CTA */}
       <div className="world-home__journey-path" aria-hidden="true" />
+
+      {/* Journey Preview — Slice 5: milestone path */}
+      <JourneyPreview />
 
       {/* CTA zone */}
       <div className="world-home__cta-zone">
