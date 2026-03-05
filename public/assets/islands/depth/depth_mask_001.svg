@@ -1,6 +1,68 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
   <rect width="1000" height="1000" fill="transparent"/>
-  <ellipse cx="220" cy="690" rx="140" ry="110" fill="rgba(35,60,40,0.75)"/>
-  <ellipse cx="760" cy="660" rx="180" ry="120" fill="rgba(35,60,40,0.75)"/>
-  <ellipse cx="870" cy="410" rx="90" ry="150" fill="rgba(35,60,40,0.72)"/>
+
+  <!-- Bottom-left: large boulder cluster with moss -->
+  <ellipse cx="155" cy="860" rx="180" ry="100" fill="rgba(28,52,32,0.88)"/>
+  <ellipse cx="95" cy="820" rx="110" ry="75" fill="rgba(32,58,36,0.85)"/>
+  <ellipse cx="200" cy="830" rx="90" ry="60" fill="rgba(38,68,42,0.82)"/>
+  <!-- Moss-covered rock top surface -->
+  <ellipse cx="140" cy="810" rx="75" ry="28" fill="rgba(48,90,52,0.78)"/>
+  <ellipse cx="205" cy="808" rx="50" ry="20" fill="rgba(52,96,56,0.72)"/>
+  <!-- Fallen log across left cluster -->
+  <path d="M 20,875 Q 120,840 220,858 Q 280,865 320,870" stroke="rgba(55,38,20,0.82)" stroke-width="22" fill="none" stroke-linecap="round"/>
+  <path d="M 20,875 Q 120,840 220,858 Q 280,865 320,870" stroke="rgba(72,50,26,0.55)" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <!-- Leafy fern fronds emerging from left cluster -->
+  <path d="M 80,815 Q 50,775 30,740" stroke="rgba(42,88,48,0.78)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M 100,808 Q 88,762 92,728" stroke="rgba(42,88,48,0.72)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M 125,800 Q 138,754 160,724" stroke="rgba(42,88,48,0.68)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <ellipse cx="30" cy="738" rx="28" ry="12" fill="rgba(44,90,50,0.72)" transform="rotate(-30 30 738)"/>
+  <ellipse cx="93" cy="725" rx="24" ry="10" fill="rgba(44,90,50,0.68)" transform="rotate(-10 93 725)"/>
+  <ellipse cx="160" cy="722" rx="22" ry="9" fill="rgba(44,90,50,0.65)" transform="rotate(20 160 722)"/>
+
+  <!-- Bottom-right: dense vegetation + rock outcrop -->
+  <ellipse cx="848" cy="848" rx="200" ry="110" fill="rgba(28,52,32,0.88)"/>
+  <ellipse cx="930" cy="808" rx="120" ry="90" fill="rgba(32,58,36,0.85)"/>
+  <ellipse cx="790" cy="820" rx="100" ry="68" fill="rgba(38,68,42,0.82)"/>
+  <!-- Moss patches on right cluster -->
+  <ellipse cx="858" cy="808" rx="80" ry="26" fill="rgba(50,92,54,0.76)"/>
+  <ellipse cx="780" cy="802" rx="55" ry="22" fill="rgba(54,98,58,0.7)"/>
+  <!-- Tree trunk at right -->
+  <rect x="910" y="640" width="38" height="200" rx="14" fill="rgba(50,32,14,0.88)"/>
+  <rect x="916" y="640" width="20" height="200" rx="8" fill="rgba(72,50,22,0.42)"/>
+  <!-- Right side large canopy base (overhanging) -->
+  <ellipse cx="930" cy="620" rx="105" ry="90" fill="rgba(30,60,34,0.86)"/>
+  <ellipse cx="955" cy="590" rx="80" ry="72" fill="rgba(36,72,40,0.84)"/>
+  <ellipse cx="990" cy="560" rx="70" ry="80" fill="rgba(32,62,36,0.88)"/>
+  <!-- Right fern fronds -->
+  <path d="M 820,808 Q 848,764 862,730" stroke="rgba(40,84,46,0.76)" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M 795,802 Q 772,758 760,722" stroke="rgba(40,84,46,0.7)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M 840,796 Q 850,748 862,714" stroke="rgba(40,84,46,0.66)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="862" cy="728" rx="24" ry="10" fill="rgba(42,88,48,0.7)" transform="rotate(15 862 728)"/>
+  <ellipse cx="760" cy="720" rx="22" ry="9" fill="rgba(42,88,48,0.66)" transform="rotate(-18 760 720)"/>
+
+  <!-- Right edge: tall tree trunk with roots -->
+  <rect x="940" y="360" width="60" height="320" rx="18" fill="rgba(46,28,10,0.9)"/>
+  <rect x="948" y="360" width="28" height="300" rx="10" fill="rgba(68,44,18,0.38)"/>
+  <!-- Root base buttresses -->
+  <path d="M 940,650 Q 900,680 880,720" stroke="rgba(46,28,10,0.82)" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <path d="M 960,650 Q 980,690 990,730" stroke="rgba(46,28,10,0.78)" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <path d="M 952,660 Q 960,700 958,740" stroke="rgba(46,28,10,0.72)" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+  <!-- Top-right corner: overhanging leafy canopy -->
+  <ellipse cx="920" cy="240" rx="140" ry="110" fill="rgba(30,60,34,0.84)"/>
+  <ellipse cx="975" cy="195" rx="100" ry="90" fill="rgba(36,70,40,0.88)"/>
+  <ellipse cx="1000" cy="155" rx="80" ry="100" fill="rgba(34,66,38,0.9)"/>
+  <ellipse cx="870" cy="220" rx="80" ry="65" fill="rgba(40,76,44,0.8)"/>
+  <ellipse cx="830" cy="180" rx="65" ry="55" fill="rgba(44,82,48,0.76)"/>
+  <!-- Canopy draping vines -->
+  <path d="M 900,280 Q 885,320 870,360 Q 855,400 848,440" stroke="rgba(32,64,36,0.65)" stroke-width="6" fill="none"/>
+  <path d="M 940,295 Q 928,340 920,385 Q 912,428 908,470" stroke="rgba(32,64,36,0.58)" stroke-width="5" fill="none"/>
+
+  <!-- Small isolated rock at bottom-center-left -->
+  <ellipse cx="358" cy="930" rx="60" ry="38" fill="rgba(42,58,36,0.72)"/>
+  <ellipse cx="342" cy="918" rx="38" ry="24" fill="rgba(50,68,42,0.68)"/>
+
+  <!-- Small isolated rock at bottom-center-right -->
+  <ellipse cx="652" cy="925" rx="55" ry="35" fill="rgba(38,54,34,0.7)"/>
+  <ellipse cx="665" cy="914" rx="36" ry="22" fill="rgba(46,64,40,0.65)"/>
 </svg>
