@@ -1325,3 +1325,137 @@
 @media (prefers-reduced-motion: reduce) {
   .ios-install-guide__card { animation: none; }
 }
+
+/* ============================================================
+   Rewards Tease Strip — Slice 7: reward loop signal
+   ============================================================ */
+
+@keyframes rewards-tease-fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.rewards-tease {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 28px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid rgba(165, 180, 252, 0.10);
+  animation: rewards-tease-fadein 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: 0.1s;
+}
+
+/* ---------- Header ---------- */
+
+.rewards-tease__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.rewards-tease__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #a5b4fc;
+  margin: 0;
+}
+
+.rewards-tease__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #c7d2fe;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* ---------- Strip list — wraps to 3+2 on mobile so all items are visible ---------- */
+
+.rewards-tease__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ---------- Individual reward item ---------- */
+
+.rewards-tease__item {
+  flex: 0 0 calc(33.333% - 8px);
+  max-width: 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 10px 14px;
+  background: rgba(15, 20, 40, 0.55);
+  border: 1px solid rgba(165, 180, 252, 0.14);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(165, 180, 252, 0.06);
+  text-align: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.rewards-tease__item:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 2px;
+  border-color: rgba(165, 180, 252, 0.4);
+}
+
+/* ---------- Icon ---------- */
+
+.rewards-tease__icon {
+  font-size: 30px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(165, 180, 252, 0.45));
+}
+
+/* ---------- Label & tagline ---------- */
+
+.rewards-tease__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #c7d2fe;
+  line-height: 1.3;
+  display: block;
+}
+
+.rewards-tease__tagline {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.4;
+  display: block;
+}
+
+/* ---------- Reduced-motion overrides ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .rewards-tease { animation: none; }
+}
+
+/* ---------- 640px+ tablet ---------- */
+
+@media (min-width: 640px) {
+  .rewards-tease {
+    max-width: 560px;
+    padding: 32px 24px 28px;
+  }
+
+  .rewards-tease__item {
+    flex: 0 0 auto;
+    width: 104px;
+    max-width: none;
+  }
+}
