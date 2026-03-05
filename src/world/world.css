@@ -157,12 +157,20 @@
 .world-home__app-name {
   font-size: 32px;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: 0.05em;
   background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 60%, #7c3aed 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+}
+
+.world-home__cta-supporting {
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  margin: 12px 0 0;
+  line-height: 1.5;
 }
 
 .world-home__tagline {
