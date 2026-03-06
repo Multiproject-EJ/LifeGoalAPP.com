@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './world.css';
 import { useInstallState } from './useInstallState.ts';
 import type { BeforeInstallPromptEvent } from './useInstallState.ts';
@@ -39,6 +39,7 @@ export function WorldHome({
   };
 
   const handleIOSDismiss = () => {
+    trackEvent('install_dismiss');
     setShowIOSGuide(false);
     installState.dismiss();
   };
@@ -56,6 +57,15 @@ export function WorldHome({
   const showInstallButton =
     (installState.platform === 'android' || installState.platform === 'ios') &&
     !installState.isDismissed;
+
+  // Fire install_view once per session when install module becomes eligible
+  useEffect(() => {
+    if (showInstallButton) {
+      trackEvent('install_view');
+    }
+  // trackEvent is stable (useCallback), sessionStorage dedupe prevents double-firing
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showInstallButton, trackEvent]);
 
   return (
     <div className="world-home">

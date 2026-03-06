@@ -504,6 +504,12 @@ Track adoption events without noise.
 ### Definition of done
 - [x] Single event per user action.
 - [x] Works on mobile Safari and Chrome.
+- [x] Events visible in browser console via `[WorldAnalytics]` prefix.
+- [x] Custom event `world-analytics` dispatched on `window` for each event.
+- [x] All 7 event types wired into the correct user interactions.
+- [x] Dedupe rules implemented (`world_view` 1×/page, `install_view` 1×/session).
+- [x] `npm run build` passes.
+- [x] No external analytics dependencies added (swap-ready architecture).
 
 ### Event payload guidance
 
@@ -573,10 +579,13 @@ Include this in PR summaries:
 
 ## Immediate next action
 
-Proceed with **Slice 1** implementation after baseline approval:
-- add public world shell at `/`
-- introduce explicit `/login` and `/app` contracts behind a minimal route switchboard
-- preserve current app behavior through compatibility mapping
+All slices (0–11) are complete. The world site landing page is fully implemented with:
+- Mobile-first gamified landing experience
+- Auth flow (Continue Journey / Log in / Lobby)
+- Install UX for iOS and Android
+- Analytics event tracking (swap-ready, no external dependencies)
+
+Future work should focus on: wiring real analytics provider (PostHog / Amplitude), A/B testing CTAs, and iterating on conversion metrics from the analytics data.
 
 ---
 

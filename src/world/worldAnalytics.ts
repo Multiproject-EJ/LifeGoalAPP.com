@@ -1,5 +1,3 @@
-import { isStandaloneMode } from '../routes/detectStandalone.ts';
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -16,37 +14,39 @@ export type WorldEventName =
   | 'archetype_select';
 
 export interface WorldEventPayload {
+  event: WorldEventName;
   path: string;
   platform: WorldPlatform;
+  is_standalone: boolean;
   session_state?: 'authed' | 'guest';
-  is_standalone?: boolean;
-  [key: string]: string | boolean | number | undefined;
-}
-
-interface StoredEvent extends WorldEventPayload {
-  event: WorldEventName;
-  ts: number;
+  archetype_id?: string;
+  dismiss_ttl_days?: number;
+  timestamp: string; // ISO 8601
 }
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = 'habitgame_world_events';
-const MAX_EVENTS = 50;
 const INSTALL_VIEW_SEEN_KEY = 'habitgame_install_view_seen';
 
 // ---------------------------------------------------------------------------
 // Module-level dedupe flag for world_view (once per page load)
 // ---------------------------------------------------------------------------
 
-let worldViewFired = false;
+let viewTracked = false;
 
 // ---------------------------------------------------------------------------
 // Platform detection
 // ---------------------------------------------------------------------------
 
-export function getWorldPlatform(): WorldPlatform {
+/**
+ * Detect the current platform from the user agent.
+ *
+ * @returns `'ios'` for iPhone/iPad/iPod (and MacOS with touch points),
+ *          `'android'` for Android devices, or `'desktop'` as fallback.
+ */
+export function detectPlatform(): WorldPlatform {
   if (typeof navigator === 'undefined') return 'desktop';
   const ua = navigator.userAgent;
   const isIOS =
@@ -57,40 +57,25 @@ export function getWorldPlatform(): WorldPlatform {
   return 'desktop';
 }
 
-// ---------------------------------------------------------------------------
-// Standalone detection (re-exports existing helper)
-// ---------------------------------------------------------------------------
-
-export { isStandaloneMode };
+/** @deprecated Use `detectPlatform()` instead. */
+export const getWorldPlatform = detectPlatform;
 
 // ---------------------------------------------------------------------------
-// SessionStorage helpers
+// Standalone detection
 // ---------------------------------------------------------------------------
 
-function readEvents(): StoredEvent[] {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as StoredEvent[];
-  } catch {
-    return [];
-  }
-}
-
-function writeEvents(events: StoredEvent[]): void {
-  try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-  } catch {
-    // Ignore — sessionStorage may be unavailable (private mode, quota exceeded)
-  }
-}
-
-function appendEvent(entry: StoredEvent): void {
-  const events = readEvents();
-  events.push(entry);
-  // Cap at MAX_EVENTS (FIFO — drop oldest first)
-  const capped = events.length > MAX_EVENTS ? events.slice(-MAX_EVENTS) : events;
-  writeEvents(capped);
+/**
+ * Detect whether the app is running in standalone (installed PWA) mode.
+ *
+ * Uses `window.matchMedia('(display-mode: standalone)')` and the iOS
+ * `navigator.standalone` property.
+ */
+export function detectStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.matchMedia('(display-mode: standalone)').matches) return true;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((navigator as any).standalone === true) return true;
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,17 +85,28 @@ function appendEvent(entry: StoredEvent): void {
 /**
  * Track a world-site analytics event.
  *
- * @param name - The event name.
- * @param extra - Additional payload fields merged with auto-detected context.
+ * Builds the full payload (path, platform, standalone, timestamp) from browser
+ * APIs, merges any `extra` fields, then:
+ *  1. Logs via `console.info('[WorldAnalytics]', payload)` for dev-tools visibility.
+ *  2. Dispatches a `CustomEvent('world-analytics')` on `window` so other code
+ *     can subscribe without coupling to this module.
+ *
+ * Dedupe rules:
+ *  - `world_view`: fires at most once per page load (module-level flag).
+ *  - `install_view`: fires at most once per browsing session (sessionStorage flag).
+ *  - All other events: fire on every call (1× per user action is natural).
+ *
+ * @param name  - The event name from {@link WorldEventName}.
+ * @param extra - Optional additional payload fields merged with auto-detected context.
  */
 export function trackWorldEvent(
   name: WorldEventName,
-  extra: Record<string, string | boolean | number | undefined> = {},
+  extra: Partial<Omit<WorldEventPayload, 'event' | 'path' | 'platform' | 'is_standalone' | 'timestamp'>> = {},
 ): void {
   // Dedupe: world_view fires at most once per page load
   if (name === 'world_view') {
-    if (worldViewFired) return;
-    worldViewFired = true;
+    if (viewTracked) return;
+    viewTracked = true;
   }
 
   // Dedupe: install_view fires at most once per session
@@ -123,28 +119,20 @@ export function trackWorldEvent(
     }
   }
 
-  const platform = getWorldPlatform();
-  const path =
-    typeof window !== 'undefined' ? window.location.pathname : '/';
-  const is_standalone =
-    typeof window !== 'undefined' ? isStandaloneMode() : false;
-
   const payload: WorldEventPayload = {
-    path,
-    platform,
-    is_standalone,
+    event: name,
+    path: typeof window !== 'undefined' ? window.location.pathname : '/',
+    platform: detectPlatform(),
+    is_standalone: detectStandalone(),
+    timestamp: new Date().toISOString(),
     ...extra,
   };
 
-  const entry: StoredEvent = {
-    event: name,
-    ts: Date.now(),
-    ...payload,
-  };
+  // Log for dev-tools visibility (always, not just DEV mode)
+  console.info('[WorldAnalytics]', payload);
 
-  if (import.meta.env.DEV) {
-    console.debug('[WorldAnalytics]', name, entry);
+  // Dispatch custom event so other code can subscribe
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('world-analytics', { detail: payload }));
   }
-
-  appendEvent(entry);
 }
