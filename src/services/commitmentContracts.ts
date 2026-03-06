@@ -426,6 +426,9 @@ async function getVerifiedProgressCount(userId: string, contract: CommitmentCont
 
   if (contract.targetType === 'FocusSession') {
     // TODO: Wire FocusSession progress once a focus session service is available.
+    // Note: FocusSession targets are not yet selectable from ContractWizard (only Habits and Goals
+    // appear in the target list). This branch handles future-proofing for when FocusSession
+    // contracts are created programmatically or via a future wizard update.
     // For now, return null to fall back to manually tracked progress.
     return null;
   }

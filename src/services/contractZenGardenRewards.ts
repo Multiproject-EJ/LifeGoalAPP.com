@@ -125,6 +125,8 @@ async function awardZenItem(
     } as TelemetryEventMetadata,
   });
 
-  // TODO: Integrate with the Zen Garden inventory service to actually add the item
-  // when that service has a public API for adding earned items.
+  // NOTE: Item award is logged via telemetry but NOT yet added to the Zen Garden inventory.
+  // TODO: When the Zen Garden inventory service exposes a public `grantEarnedItem(userId, itemKey)`
+  //       function, call it here to materialize the item in the user's garden.
+  //       Until then, the telemetry event acts as an audit trail that can be replayed.
 }
