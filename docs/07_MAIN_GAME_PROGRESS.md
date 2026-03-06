@@ -3261,3 +3261,24 @@ Testing:
 - Tile types show distinct gradient fills (currency=gold, hazard=red, egg_shard=teal, etc.)
 - Dev overlay, stop modals, dice roll, token movement: no regressions
 Next: M11A — Minigame framework scaffold
+
+---
+
+Date: 2026-03-06
+Slice: M2-COMPLETE — Finish dice movement + token animation production polish
+Summary: Completed all M2 production polish items. The token hop loop (handleRoll/handleSpin) already used setTokenIndex inside an async for-loop with wait(240ms) delays, giving the CSS transition (220ms out-cubic) time to animate each hop. The squash/stretch landing keyframe (islandTokenLand), zBand drop-shadow variants, and bob animation during movement were all already in place from M1. The only missing production-visible piece was the roll result and landing feedback: (1) Added a 🎯 roll-result chip (island-run-prototype__stat-chip--roll) to the production HUD status row, conditionally rendered when rollValue !== null; it shows the dice value (1–3 for dice, 1–5 for spin) with aria-live for accessibility. (2) Added a production landing-feed paragraph (island-run-prototype__landing-feed) below the HUD status row, rendering landingText with aria-live and role="status" so users always see roll outcome + tile landing messages without opening the dev panel. (3) Added CSS styles for both new elements in LevelWorlds.css after the existing spin chip. Roll/hop loop works for all logged-in users with no dev flags required. M2 marked ✅.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (roll result chip added to production HUD; landing-feed paragraph added below HUD)
+- src/features/gamification/level-worlds/LevelWorlds.css (stat-chip--roll style; landing-feed style)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M2 → [✅]; Next Slice → M3-COMPLETE)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build passes (zero new TypeScript errors; pre-existing chunk size warnings unchanged)
+- Open Island Run as logged-in user; complete Stop 1; tap Roll — token hops tile-to-tile with 220ms CSS transition per hop; 🎯 roll chip appears in HUD showing the roll value; landing feed shows "Rolling N..." then tile outcome
+- Spin button (🌀 Spin) appears when spinTokens > 0; produces 1–5 tile movement
+- Token landing triggers squash/stretch animation (islandTokenLand keyframe)
+- zBand shadow changes as token moves through back/mid/front bands
+- resolveTileLanding fires on final tile; stop modals open on stop-trigger tiles
+- No regressions to M3–M17 features
+Next: M3-COMPLETE — Stop modals production polish
+Milestones closed: M2 ✅

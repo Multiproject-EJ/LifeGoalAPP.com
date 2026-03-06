@@ -2002,7 +2002,21 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">Lvl <strong>{islandNumber}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
+          {/* M2: roll result chip — visible in production after every roll */}
+          {rollValue !== null && (
+            <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--roll" aria-live="polite">
+              🎯 <strong>{rollValue}</strong>
+            </span>
+          )}
         </div>
+        {/* M2: Production roll/land feedback — always visible (landingText reflects roll + tile outcome) */}
+        <p
+          className="island-run-prototype__landing-feed"
+          aria-live="polite"
+          role="status"
+        >
+          {landingText}
+        </p>
         {/* M17A: shields HUD chip — only shown when player has at least 1 shield */}
         {shields > 0 && (
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shields">

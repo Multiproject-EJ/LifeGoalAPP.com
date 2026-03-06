@@ -69,7 +69,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 
 ## Milestones
 - [✅] M1: Hybrid 3D board foundation (ring path + 17 anchors + depth masks) renders on top of island art (M1A shipped in dev mode; M1B-COMPLETE — board renders for all logged-in users without dev flags)
-- [🟡] M2: Dice movement + token animation along 17 anchors (M1B core roll/hop loop shipped in dev prototype; M2-COMPLETE needed: dice movement + token animation production polish)
+- [✅] M2: Dice movement + token animation along 17 anchors (M2-COMPLETE — token hops tile-to-tile with CSS transitions, squash/stretch on land, zBand shadow depth, roll result chip + landing feed in production HUD)
 - [🟡] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype)
 - [🟡] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped)
 - [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
@@ -95,10 +95,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M2-COMPLETE — Finish dice movement + token animation production polish: ensure the token visibly hops tile-to-tile along the 17-anchor ring path on each dice roll, with smooth CSS/JS animation, correct z-ordering (depth mask occlusion), and roll result displayed in the HUD. The roll/hop loop should work for any logged-in user without dev flags.
+**Objective:** M3-COMPLETE — Finish stop modals production polish: ensure all 5 stop modals (Hatchery, Minigame, Utility, Dynamic, Boss) open correctly on tile landing and via the orbit-stop POI buttons, display full production content, and are closeable with no visual regressions. Stop state (locked/active/completed) must be reflected visually on the orbit-stop buttons.
 **Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`
-**Acceptance criteria:** Token animates smoothly from tile to tile on dice roll; roll value visible in HUD; animation respects depth/zBand ordering; `npm run build` passes.
-**How to test:** Open Island Run as a logged-in user without any dev flags; tap Roll and observe token hopping tile-to-tile with animation.
+**Acceptance criteria:** All 5 stop modals open on tile landing and via POI tap; stop state shown on orbit buttons; modals closeable; `npm run build` passes.
+**How to test:** Open Island Run as a logged-in user; complete Stop 1; roll to each stop-trigger tile and verify modal opens; tap orbit-stop POI buttons directly; verify lock/active/completed states render correctly.
 
 ---
 
