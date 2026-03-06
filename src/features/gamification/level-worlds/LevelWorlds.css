@@ -2082,6 +2082,75 @@
   margin-top: 0.3rem;
 }
 
+/* M5-COMPLETE: Egg stage visuals inside hatchery card */
+.island-hatchery-card__status {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+.island-hatchery-card__status--done {
+  color: #a0c8a0;
+}
+.island-hatchery-card__status--dormant {
+  color: #d4aaff;
+  border-left: 3px solid rgba(180, 100, 255, 0.5);
+  padding-left: 0.5rem;
+}
+.island-hatchery-card__hint {
+  font-size: 0.84rem;
+  color: #c0ddef;
+  margin: 0 0 0.4rem;
+  line-height: 1.45;
+}
+.island-hatchery-card__egg-visual {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.4rem 0;
+  flex-wrap: wrap;
+}
+.island-hatchery-card__egg-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+}
+.island-hatchery-card__egg-tier {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+}
+.island-hatchery-card__egg-tier--common {
+  background: rgba(160, 200, 160, 0.25);
+  color: #a8e6a8;
+  border: 1px solid rgba(160, 200, 160, 0.4);
+}
+.island-hatchery-card__egg-tier--rare {
+  background: rgba(100, 160, 240, 0.25);
+  color: #90c8ff;
+  border: 1px solid rgba(100, 160, 240, 0.4);
+}
+.island-hatchery-card__egg-tier--mythic {
+  background: rgba(200, 100, 255, 0.2);
+  color: #d4aaff;
+  border: 1px solid rgba(200, 100, 255, 0.4);
+}
+.island-hatchery-card__egg-stage-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e8faff;
+}
+.island-hatchery-card__egg-pips {
+  font-size: 0.78rem;
+  color: #daa520;
+  letter-spacing: 0.15em;
+  font-family: monospace;
+}
+
 /* M14: Shop HUD button */
 .island-run-shop-btn {
   display: inline-flex;

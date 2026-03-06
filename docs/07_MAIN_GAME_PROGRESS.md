@@ -3315,3 +3315,17 @@ Testing:
 - Open Island Run as logged-in user; verify timer counts down; use ?devTimer=1 to test 45s expiry; confirm travel overlay shows and island number increments; verify state resets on new island; verify island 120 → 1 wrap increments cycleIndex
 Next: M5-COMPLETE — Hatchery + egg stages + dormant carryover production polish
 Milestones closed: M4 ✅
+
+---
+
+Date: 2026-03-06
+Slice: M5-COMPLETE — Hatchery + egg stages + dormant carryover production polish
+Summary: Completed all M5 production polish items. (1) Egg hatch delay is now a random integer between 24 and 72 hours (getRandomHatchMs), implementing the "surprise hatch" design — no countdown shown to player; the countdown timer was removed from the hatchery stop modal and replaced with stage name + pip indicator. (2) Egg stages 1–4 now display correctly: stage names (Smooth / Mostly gold / Cracked / Ready to open!), tier badge with colour coding (common/rare/mythic), and a ■■■□ progress-pip indicator are shown in the hatchery modal. Egg asset images are referenced by canonical path (/assets/eggs/<tier>/egg_<tier>_stage_N.png) with onError fallback. (3) rollEggRewards(tier, seed) canonical reward contract implemented: common (1–2 hearts, 50–100 coins, 20% spin); rare (2–3 hearts, 100–250 coins, guaranteed spin); mythic (3–5 hearts, 250–500 coins, guaranteed spin). handleOpenEgg updated to use rollEggRewards. (4) handleSellEgg now persists sold status to perIslandEggs ledger, completing the permanent one-egg-per-island guarantee. (5) Dormant carryover fixed: on island travel, hatched-but-uncollected eggs are written to the perIslandEggs ledger as status='ready' (not carried forward to the new island); when travelling to a new island, its ledger entry (incubating or ready) is restored to activeEgg, enabling multi-island dormant egg tracking. (6) Hatchery stop modal is fully production-grade: shows correct content for all states (no egg / in progress / ready / dormant / collected); Island 1 forces egg set (Complete Hatchery Stop button disabled until an egg is set or slot was previously used). (7) No regressions to M1–M4, M6–M17 features.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (getRandomHatchMs; rollEggRewards; EGG_STAGE_NAMES; eggStagePips; handleSetEgg random duration; handleOpenEgg rollEggRewards; handleSellEgg ledger persist; dormant carryover + new island egg restore in handleIslandTravel; hatchery modal production rewrite; Island 1 egg-set gate; removed unused eggRemainingSec)
+- src/features/gamification/level-worlds/LevelWorlds.css (egg stage visual classes: egg-visual, egg-img, egg-tier tier variants, egg-stage-name, egg-pips, status variants, hint)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M5 → [✅]; Next Slice → M6-COMPLETE)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing: npm run build passes (zero TypeScript errors, zero new errors; chunk size warnings are pre-existing)
+Next: M6-COMPLETE — Encounter tile (easy) + rewards production polish
+Milestones closed: M5 ✅
