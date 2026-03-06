@@ -70,7 +70,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 ## Milestones
 - [✅] M1: Hybrid 3D board foundation (ring path + 17 anchors + depth masks) renders on top of island art (M1A shipped in dev mode; M1B-COMPLETE — board renders for all logged-in users without dev flags)
 - [✅] M2: Dice movement + token animation along 17 anchors (M2-COMPLETE — token hops tile-to-tile with CSS transitions, squash/stretch on land, zBand shadow depth, roll result chip + landing feed in production HUD)
-- [🟡] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype)
+- [✅] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype; M3-COMPLETE — all 5 stop modals open on tile landing + orbit-stop POI tap; stop state locked/active/completed reflected on orbit buttons with ✅/🔒 icons; Escape key closes modals; Dynamic stop kind-specific content blocks added)
 - [🟡] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped)
 - [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
 - [🟡] M6: Encounter tile (easy) + rewards (M6A prototype shipped in dev mode)
@@ -95,10 +95,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M3-COMPLETE — Finish stop modals production polish: ensure all 5 stop modals (Hatchery, Minigame, Utility, Dynamic, Boss) open correctly on tile landing and via the orbit-stop POI buttons, display full production content, and are closeable with no visual regressions. Stop state (locked/active/completed) must be reflected visually on the orbit-stop buttons.
+**Objective:** M4-COMPLETE — Island timer + expiry + travel overlay production polish: ensure the island timer counts down correctly for all users, the travel overlay appears when the timer expires, and the island advances to the next island with correct state reset.
 **Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`
-**Acceptance criteria:** All 5 stop modals open on tile landing and via POI tap; stop state shown on orbit buttons; modals closeable; `npm run build` passes.
-**How to test:** Open Island Run as a logged-in user; complete Stop 1; roll to each stop-trigger tile and verify modal opens; tap orbit-stop POI buttons directly; verify lock/active/completed states render correctly.
+**Acceptance criteria:** Island timer displays correctly in production HUD; travel overlay triggers on expiry; island advances to next island with correct token/stop/state reset; Catch-up Rule A works on resume; `npm run build` passes.
+**How to test:** Open Island Run as a logged-in user; verify timer counts down; use ?devTimer=1 to test 45s expiry; confirm travel overlay shows and island number increments; verify state resets correctly on new island.
 
 ---
 

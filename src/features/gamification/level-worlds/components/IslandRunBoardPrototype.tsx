@@ -217,6 +217,12 @@ function getStopIcon(kind: string, stopId: string) {
   }
 }
 
+function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string): string {
+  if (state === 'locked') return '🔒';
+  if (state === 'completed') return '✅';
+  return icon;
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -444,6 +450,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketPurchaseFeedback('Prototype inventory ready.');
       setMarketInteracted(false);
     }
+  }, [activeStopId]);
+
+  // M3-COMPLETE: Escape key closes active stop modal
+  useEffect(() => {
+    if (!activeStopId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setActiveStopId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeStopId]);
 
   useEffect(() => {
@@ -2265,11 +2284,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               }`}
               style={{ left: stopVisual.x, top: stopVisual.y }}
               onClick={() => {
-                if (stopVisual.stopId) setActiveStopId(stopVisual.stopId);
+                if (stopVisual.stopId && stopVisual.state !== 'locked') setActiveStopId(stopVisual.stopId);
               }}
-              disabled={!stopVisual.stopId}
+              disabled={!stopVisual.stopId || stopVisual.state === 'locked'}
+              aria-label={`${stopVisual.label} — ${stopVisual.state}`}
             >
-              <span className="island-orbit-stop__icon" aria-hidden="true">{stopVisual.state === 'locked' ? '🔒' : stopVisual.icon}</span>
+              <span className="island-orbit-stop__icon" aria-hidden="true">{getOrbitStopDisplayIcon(stopVisual.state, stopVisual.icon)}</span>
               <span
                 className="island-orbit-stop__label"
                 style={{ transform: `translate(-50%, calc(-50% + ${stopVisual.labelOffsetY}px))` }}
@@ -2553,6 +2573,38 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 >
                   Save &amp; Complete
                 </button>
+              </div>
+            )}
+
+            {activeStopId === 'dynamic' && (
+              <div className="island-hatchery-card">
+                {activeStop.kind === 'habit_action' ? (
+                  <p>✅ Complete one habit or action objective to earn your reward and stabilize momentum.</p>
+                ) : activeStop.kind === 'checkin_reflection' ? (
+                  <p>🧭 Take a moment to check in with yourself. Run a quick reflection to calibrate your next moves.</p>
+                ) : activeStop.kind === 'utility_support' ? (
+                  <p>🧰 Take a utility or support action — shield up, clean your queue, reroute, or prepare for the next stretch.</p>
+                ) : activeStop.kind === 'event_challenge' ? (
+                  <p>⚡ A challenge event has emerged. Commit to resolving it for risk/reward tradeoffs on your journey.</p>
+                ) : activeStop.kind === 'mini_game' ? (
+                  <div>
+                    <p>🎮 A mini-game challenge awaits at this stop. Launch it to complete the stop and earn rewards.</p>
+                    <div className="island-hatchery-card__actions">
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={() => {
+                          setActiveLaunchedMinigameId(resolveMinigameForStop(islandNumber));
+                          setActiveStopId(null);
+                        }}
+                      >
+                        ▶ Launch Minigame
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p>Complete this stop to progress.</p>
+                )}
               </div>
             )}
 
