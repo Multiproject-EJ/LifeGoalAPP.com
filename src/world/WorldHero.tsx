@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
+import { LazyImage } from './LazyImage.tsx';
 
-/** Static path for the primary hero background asset. */
+/** Static path for the primary hero background asset (eagerly preloaded). */
 const HERO_BG_SRC = '/world-assets/world-bg-main.webp';
 
 interface WorldHeroProps {
@@ -12,15 +13,16 @@ interface WorldHeroProps {
  * foundation for the world-site landing page.
  *
  * Layer stack (bottom → top):
- *   1. Background  — full-bleed CSS gradient + <img> slot for world-bg-main.webp
- *   2. Atmosphere  — animated star/particle depth layer
- *   3. Glass panel — glassmorphic backdrop panel behind content
- *   4. Bottom glow — radial gradient glow at viewport bottom
- *   5. Content     — {children} rendered on top of all layers
+ *   1. Background    — full-bleed CSS gradient + world-bg-main.webp (eager)
+ *   2. Blur depth    — world-bg-blur.webp blurred overlay (lazy)
+ *   3. Atmosphere    — animated star/particle depth layer (CSS)
+ *   4. Glass panel   — panel-glass-xl.webp glassmorphic backdrop (lazy)
+ *   5. Bottom glow   — fx-bottom-glow.webp + CSS radial glow (lazy)
+ *   6. Content       — {children} rendered on top of all layers
  */
 export function WorldHero({ children }: WorldHeroProps) {
-  // Inject a <link rel="preload"> hint for the primary hero background.
-  // This ensures the browser prioritises the image as soon as it knows about it.
+  // Inject a <link rel="preload"> hint for the primary hero background as a
+  // runtime fallback for any navigation that bypasses index.html's static hint.
   useEffect(() => {
     const existingPreload = document.head.querySelector(
       `link[rel="preload"][href="${HERO_BG_SRC}"]`,
@@ -47,9 +49,8 @@ export function WorldHero({ children }: WorldHeroProps) {
       {/* Layer 1 — Background image with CSS gradient fallback */}
       <div className="world-hero__bg" aria-hidden="true">
         {/*
-         * The <img> will only render once the real asset exists on the CDN.
-         * Until then the CSS gradient fallback is visible through the
-         * transparent background of this element.
+         * Loaded eagerly (preloaded in index.html). The CSS gradient behind
+         * this element acts as fallback if the asset is unavailable.
          */}
         <img
           className="world-hero__bg-img"
@@ -58,23 +59,43 @@ export function WorldHero({ children }: WorldHeroProps) {
           aria-hidden="true"
           loading="eager"
           decoding="async"
-          /* onError hides the broken-image icon; CSS gradient shows instead */
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
           }}
         />
       </div>
 
-      {/* Layer 2 — Atmosphere / depth (star field) */}
+      {/* Layer 2 — Blur depth overlay (lazy) */}
+      <div className="world-hero__blur-layer" aria-hidden="true">
+        <LazyImage
+          src="/world-assets/world-bg-blur.webp"
+          alt=""
+          className="world-hero__blur-img"
+        />
+      </div>
+
+      {/* Layer 3 — Atmosphere / star-field depth layer (CSS) */}
       <div className="world-hero__atmosphere" aria-hidden="true" />
 
-      {/* Layer 3 — Glass panel behind main content area */}
-      <div className="world-hero__glass-panel" aria-hidden="true" />
+      {/* Layer 4 — Glass panel behind main content area (image + CSS fallback) */}
+      <div className="world-hero__glass-panel" aria-hidden="true">
+        <LazyImage
+          src="/world-assets/panel-glass-xl.webp"
+          alt=""
+          className="world-hero__panel-img"
+        />
+      </div>
 
-      {/* Layer 4 — Bottom glow */}
-      <div className="world-hero__bottom-glow" aria-hidden="true" />
+      {/* Layer 5 — Bottom glow (image + CSS radial gradient fallback) */}
+      <div className="world-hero__bottom-glow" aria-hidden="true">
+        <LazyImage
+          src="/world-assets/fx-bottom-glow.webp"
+          alt=""
+          className="world-hero__glow-img"
+        />
+      </div>
 
-      {/* Layer 5 — Content slot */}
+      {/* Layer 6 — Content slot */}
       <div className="world-hero__content">{children}</div>
     </div>
   );
