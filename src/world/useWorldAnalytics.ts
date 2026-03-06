@@ -1,6 +1,8 @@
 import { useEffect, useCallback } from 'react';
 import { trackWorldEvent } from './worldAnalytics.ts';
-import type { WorldEventName } from './worldAnalytics.ts';
+import type { WorldEventName, WorldEventPayload } from './worldAnalytics.ts';
+
+type TrackExtra = Partial<Omit<WorldEventPayload, 'event' | 'path' | 'platform' | 'is_standalone' | 'timestamp'>>;
 
 /**
  * Convenience hook that provides a `trackEvent` helper pre-filled with the
@@ -17,10 +19,7 @@ export function useWorldAnalytics(sessionState: 'authed' | 'guest' = 'guest') {
   }, []); // intentionally empty — fire once per mount
 
   const trackEvent = useCallback(
-    (
-      name: WorldEventName,
-      extra?: Record<string, string | boolean | number | undefined>,
-    ) => {
+    (name: WorldEventName, extra?: TrackExtra) => {
       trackWorldEvent(name, { session_state: sessionState, ...extra });
     },
     [sessionState],
