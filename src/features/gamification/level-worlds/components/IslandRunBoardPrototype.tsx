@@ -44,6 +44,13 @@ import {
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
+import {
+  drawEncounterChallenge,
+  rollEncounterReward,
+  formatEncounterRewardSummary,
+  type EncounterChallenge,
+  type EncounterReward,
+} from '../services/encounterService';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import {
   resolveMinigameForStop,
@@ -78,7 +85,6 @@ function getIslandDurationMs(islandNum: number): number {
 }
 // Egg hatch durations are now random (24–72 h production / 15–30 s dev) via eggService.
 // Egg tier is assigned randomly on set via rollEggTierWeighted() in eggService.
-const ENCOUNTER_TILE_INDEX = 6;
 const MARKET_DICE_BUNDLE_COST = 30;
 const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
@@ -271,6 +277,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [isDisplayNameLoopCompleted, setIsDisplayNameLoopCompleted] = useState(false);
   const [showEncounterModal, setShowEncounterModal] = useState(false);
   const [encounterResolved, setEncounterResolved] = useState(false);
+  // M6-COMPLETE: per-visit encounter tracking (Set of completed tile indices)
+  const [completedEncounterIndices, setCompletedEncounterIndices] = useState<Set<number>>(() => new Set());
+  const [activeEncounterTileIndex, setActiveEncounterTileIndex] = useState<number | null>(null);
+  // M6-COMPLETE: encounter challenge state machine
+  const [currentEncounterChallenge, setCurrentEncounterChallenge] = useState<EncounterChallenge | null>(null);
+  const [encounterStep, setEncounterStep] = useState<'challenge' | 'reward'>('challenge');
+  const [encounterRewardData, setEncounterRewardData] = useState<EncounterReward | null>(null);
+  const [gratitudeText, setGratitudeText] = useState('');
+  const [breathingSecondsLeft, setBreathingSecondsLeft] = useState(0);
   const [bossTrialResolved, setBossTrialResolved] = useState(false);
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
@@ -468,6 +483,52 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeStopId]);
+
+  // M6-COMPLETE: Escape key closes encounter modal
+  useEffect(() => {
+    if (!showEncounterModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowEncounterModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showEncounterModal]);
+
+  // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
+  useEffect(() => {
+    if (!showEncounterModal) return;
+    if (encounterStep !== 'challenge') return;
+    if (currentEncounterChallenge?.type !== 'breathing') return;
+    if (breathingSecondsLeft <= 0) return;
+
+    const timerId = window.setTimeout(() => {
+      setBreathingSecondsLeft((s) => {
+        const next = s - 1;
+        return next;
+      });
+    }, 1000);
+    return () => window.clearTimeout(timerId);
+  }, [showEncounterModal, encounterStep, currentEncounterChallenge, breathingSecondsLeft]);
+
+  // M6-COMPLETE: When breathing countdown reaches 0, auto-complete the challenge
+  useEffect(() => {
+    if (!showEncounterModal) return;
+    if (encounterStep !== 'challenge') return;
+    if (currentEncounterChallenge?.type !== 'breathing') return;
+    if (breathingSecondsLeft !== 0) return;
+    // Only trigger if we were actually counting down (durationSeconds > 0 means it was started)
+    if (currentEncounterChallenge.durationSeconds > 0) {
+      // Small delay so the "0" display is briefly visible before reward reveal
+      const timerId = window.setTimeout(() => {
+        handleBreathingAutoComplete();
+      }, 500);
+      return () => window.clearTimeout(timerId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [breathingSecondsLeft, encounterStep, showEncounterModal, currentEncounterChallenge]);
 
   useEffect(() => {
     if (!showDebug && !showQaHooks) {
@@ -1056,11 +1117,26 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setShowEncounterModal(false);
       setEncounterResolved(false);
     } else if (tileMap[currentIndex]?.tileType === 'encounter') {
-      setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
-      setShowEncounterModal(true);
-      setEncounterResolved(false);
-      // M10C: encounter_trigger sound when encounter modal opens
-      playIslandRunSound('encounter_trigger');
+      // M6-COMPLETE: check if this encounter tile was already completed this visit
+      if (completedEncounterIndices.has(currentIndex)) {
+        setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
+        setShowEncounterModal(false);
+      } else {
+        const challenge = drawEncounterChallenge(islandNumber, currentIndex);
+        setCurrentEncounterChallenge(challenge);
+        setEncounterStep('challenge');
+        setEncounterRewardData(null);
+        setGratitudeText('');
+        if (challenge.type === 'breathing') {
+          setBreathingSecondsLeft(challenge.durationSeconds);
+        }
+        setActiveEncounterTileIndex(currentIndex);
+        setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
+        setShowEncounterModal(true);
+        setEncounterResolved(false);
+        // M10C: encounter_trigger sound when encounter modal opens
+        playIslandRunSound('encounter_trigger');
+      }
     } else {
       resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
       setShowEncounterModal(false);
@@ -1171,10 +1247,25 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setShowEncounterModal(false);
       setEncounterResolved(false);
     } else if (tileMap[currentIndex]?.tileType === 'encounter') {
-      setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
-      setShowEncounterModal(true);
-      setEncounterResolved(false);
-      playIslandRunSound('encounter_trigger');
+      // M6-COMPLETE: check if this encounter tile was already completed this visit
+      if (completedEncounterIndices.has(currentIndex)) {
+        setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
+        setShowEncounterModal(false);
+      } else {
+        const challenge = drawEncounterChallenge(islandNumber, currentIndex);
+        setCurrentEncounterChallenge(challenge);
+        setEncounterStep('challenge');
+        setEncounterRewardData(null);
+        setGratitudeText('');
+        if (challenge.type === 'breathing') {
+          setBreathingSecondsLeft(challenge.durationSeconds);
+        }
+        setActiveEncounterTileIndex(currentIndex);
+        setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
+        setShowEncounterModal(true);
+        setEncounterResolved(false);
+        playIslandRunSound('encounter_trigger');
+      }
     } else {
       resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
       setShowEncounterModal(false);
@@ -1341,14 +1432,62 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setBoosterError(null);
   };
 
-  const handleResolveEncounter = () => {
-    if (encounterResolved) return;
-    setEncounterResolved(true);
-    setHearts((current) => current + 1);
+  // M6-COMPLETE: Core reward application for encounter completion
+  const applyEncounterReward = (reward: EncounterReward) => {
+    setCoins((c) => c + reward.coins);
+    void awardGold(session.user.id, reward.coins, 'shooter_blitz', 'island_run_encounter_reward');
+    if (reward.heart) {
+      setHearts((h) => h + 1);
+    }
+    if (reward.walletShards) {
+      awardWalletShards(1);
+    }
     // M10C: encounter_resolve sound + haptic
     playIslandRunSound('encounter_resolve');
     triggerIslandRunHaptic('encounter_resolve');
-    setLandingText('Encounter resolved: +1 heart reward (prototype).');
+    // Mark tile as completed for this island visit
+    if (activeEncounterTileIndex !== null) {
+      setCompletedEncounterIndices((prev) => new Set([...prev, activeEncounterTileIndex]));
+    }
+    setEncounterResolved(true);
+    const summary = formatEncounterRewardSummary(reward);
+    setLandingText(`Encounter complete! ${summary}`);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_encounter_resolved',
+        island_number: islandNumber,
+        tile_index: activeEncounterTileIndex,
+        reward_coins: reward.coins,
+        reward_heart: reward.heart,
+        reward_wallet_shards: reward.walletShards,
+      },
+    });
+  };
+
+  // M6-COMPLETE: Challenge complete handler (quiz answer or gratitude submit)
+  const handleEncounterChallengeComplete = () => {
+    if (encounterStep !== 'challenge') return;
+    const reward = rollEncounterReward();
+    setEncounterRewardData(reward);
+    setEncounterStep('reward');
+    applyEncounterReward(reward);
+  };
+
+  // M6-COMPLETE: Breathing auto-complete — called from useEffect when countdown hits 0
+  const handleBreathingAutoComplete = () => {
+    if (encounterStep !== 'challenge') return;
+    const reward = rollEncounterReward();
+    setEncounterRewardData(reward);
+    setEncounterStep('reward');
+    applyEncounterReward(reward);
+  };
+
+  const handleResolveEncounter = () => {
+    if (encounterResolved) return;
+    // Legacy path — now delegates to challenge complete flow
+    handleEncounterChallengeComplete();
   };
 
   const handleResolveBossTrial = () => {
@@ -1706,6 +1845,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setActiveStopId(null);
     setShowEncounterModal(false);
     setEncounterResolved(false);
+    // M6-COMPLETE: reset per-visit encounter completion tracking on island travel
+    setCompletedEncounterIndices(new Set());
+    setActiveEncounterTileIndex(null);
+    setCurrentEncounterChallenge(null);
+    setEncounterStep('challenge');
+    setEncounterRewardData(null);
     setCompletedStops([]);
     setBossTrialResolved(false);
     setBossRewardSummary(null);
@@ -2367,12 +2512,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             const isStop = stopMap.has(index);
             const tileType = tileMap[index]?.tileType;
             const isEncounter = tileType === 'encounter';
+            // M6-COMPLETE: completed encounter tiles show a distinct visual state
+            const isEncounterCompleted = isEncounter && completedEncounterIndices.has(index);
             const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
 
             return (
               <div
                 key={anchor.id}
-                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${tileTypeClass} ${
+                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${isEncounterCompleted ? 'island-tile--encounter-completed' : ''} ${tileTypeClass} ${
                   index === tokenIndex ? 'island-tile--token-current' : ''
                 }`}
                 style={{
@@ -2382,7 +2529,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 }}
               >
                 <span className="island-tile__value">
-                  {isEncounter ? '⚔️' : !isStop && tileType && TILE_TYPE_ICONS[tileType] ? TILE_TYPE_ICONS[tileType] : index + 1}
+                  {isEncounterCompleted ? '✅' : isEncounter ? '⚔️' : !isStop && tileType && TILE_TYPE_ICONS[tileType] ? TILE_TYPE_ICONS[tileType] : index + 1}
                 </span>
                 {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
               </div>
@@ -2736,20 +2883,84 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       {showEncounterModal && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
-            <h3 className="island-stop-modal__title">⚔️ Encounter Tile</h3>
-            <p>Easy challenge stub: steady your path and claim a small reward.</p>
-            <div className="island-hatchery-card">
-              <p>{encounterResolved ? 'Reward granted: +1 heart.' : 'Resolve this encounter to gain +1 heart.'}</p>
-            </div>
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--encounter" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
+            <h3 className="island-stop-modal__title">⚔️ Bonus Encounter</h3>
+
+            {encounterStep === 'challenge' && currentEncounterChallenge && (
+              <>
+                {currentEncounterChallenge.type === 'quiz' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">Quick Quiz</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.question}</p>
+                    <div className="island-encounter__answers">
+                      {currentEncounterChallenge.answers.map((answer, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-encounter__answer-btn"
+                          onClick={handleEncounterChallengeComplete}
+                        >
+                          {answer}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {currentEncounterChallenge.type === 'breathing' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">Breathing Exercise</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.instruction}</p>
+                    <div className="island-encounter__breathing">
+                      <div className="island-encounter__breathing-orb" aria-hidden="true" />
+                      <p className="island-encounter__breathing-countdown" aria-live="polite">
+                        {breathingSecondsLeft > 0 ? breathingSecondsLeft : '✓'}
+                      </p>
+                    </div>
+                    <p className="island-encounter__hint">Auto-completes in {breathingSecondsLeft}s…</p>
+                  </div>
+                )}
+
+                {currentEncounterChallenge.type === 'gratitude' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">Gratitude Moment</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.prompt}</p>
+                    <textarea
+                      className="island-encounter__gratitude-input"
+                      value={gratitudeText}
+                      onChange={(e) => setGratitudeText(e.target.value)}
+                      placeholder="Type anything…"
+                      rows={3}
+                      aria-label="Gratitude response"
+                    />
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={handleEncounterChallengeComplete}
+                      disabled={gratitudeText.trim().length === 0}
+                    >
+                      Submit ✓
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {encounterStep === 'reward' && encounterRewardData && (
+              <div className="island-encounter__reward">
+                <p className="island-encounter__eyebrow">Challenge Complete! 🎉</p>
+                <div className="island-encounter__reward-reveal">
+                  <span className="island-encounter__reward-item">🪙 +{encounterRewardData.coins} coins</span>
+                  {encounterRewardData.heart && <span className="island-encounter__reward-item">❤️ +1 heart</span>}
+                  {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
+                </div>
+                <p className="island-encounter__reward-tagline">Keep going — you're on a streak!</p>
+              </div>
+            )}
+
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              {!encounterResolved ? (
-                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleResolveEncounter}>
-                  Resolve Encounter
-                </button>
-              ) : null}
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setShowEncounterModal(false)}>
-                Close
+                {encounterStep === 'reward' ? 'Continue' : 'Close'}
               </button>
             </div>
           </section>
