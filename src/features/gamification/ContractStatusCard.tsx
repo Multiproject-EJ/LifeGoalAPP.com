@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { CommitmentContract } from '../../types/gamification';
 import { getContractPaceForecast } from '../../lib/contractForecast';
+import './ContractStatusCard.css';
 
 interface ContractStatusCardProps {
   contract: CommitmentContract;
@@ -70,11 +71,17 @@ export function ContractStatusCard({
   const isAtRisk = paceForecast?.status === 'at_risk';
   const shouldSuggestSupportOnly = contract.missCount >= 2;
   const isCancelAllowed = contract.status !== 'active' || coolingOffRemaining !== null;
+  const tier = contract.contractTier ?? 'common';
 
   return (
-    <div className="contract-status-card">
+    <div className={`contract-status-card contract-status-card--${tier}`}>
       <div className="contract-status-card__header">
-        <h3 className="contract-status-card__title">{contract.title}</h3>
+        <h3 className="contract-status-card__title">
+          {contract.isSacred && '🔱 '}{contract.title}
+        </h3>
+        <span className={`contract-status-card__tier-badge contract-status-card__tier-badge--${tier}`}>
+          {tier}
+        </span>
         <span className="contract-status-card__stake-badge">
           {contract.stakeAmount} {contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked
         </span>
@@ -84,6 +91,24 @@ export function ContractStatusCard({
       {contract.recoveryMode === 'gentle_ramp' && (
         <div className="contract-status-card__recovery" role="status" aria-live="polite">
           🌱 Gentle ramp active — your target is temporarily reduced while you rebuild momentum.
+        </div>
+      )}
+
+      {contract.contractType === 'escalation' && (contract.escalationLevel ?? 0) > 0 && (
+        <div className="contract-status-card__escalation" role="status" aria-live="polite">
+          <p className="contract-status-card__escalation-title">
+            ⚡ Escalation active — x{(contract.escalationMultiplier ?? 1.0).toFixed(1)} stake multiplier
+          </p>
+          <div className="contract-status-card__escalation-ladder">
+            {[0, 1, 2, 3, 4].map((level) => (
+              <span
+                key={level}
+                className={`contract-status-card__escalation-step${level === (contract.escalationLevel ?? 0) ? ' contract-status-card__escalation-step--active' : ''}`}
+              >
+                {level === 0 ? '1x' : `${(1 + level * 0.5).toFixed(1)}x`}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

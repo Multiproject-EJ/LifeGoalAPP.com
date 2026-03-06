@@ -1,0 +1,111 @@
+/* =====================================================
+   REPUTATION CARD - MOBILE-FIRST
+   ===================================================== */
+
+.reputation-card {
+  background: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin: 0.75rem 0;
+  border: 2px solid var(--border-color, #e0e0e0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.reputation-card--loading,
+.reputation-card--empty {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary, #666);
+  font-size: 0.875rem;
+}
+
+/* ---- Header ---- */
+.reputation-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.reputation-card__icon {
+  font-size: 1.75rem;
+}
+
+.reputation-card__tier-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--tier-color, var(--text-primary, #333));
+  margin: 0;
+}
+
+.reputation-card__reliability {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}
+
+.reputation-card__subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #888);
+  margin: 0.25rem 0 0;
+}
+
+/* ---- Progress bar ---- */
+.reputation-card__bar-wrap {
+  height: 6px;
+  background: var(--border-color, #e0e0e0);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.875rem;
+}
+
+.reputation-card__bar-fill {
+  height: 100%;
+  background: var(--tier-color, var(--primary-color, #667eea));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* ---- Stats grid ---- */
+.reputation-card__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.reputation-card__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.reputation-card__stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #333);
+}
+
+.reputation-card__stat-label {
+  font-size: 0.65rem;
+  color: var(--text-secondary, #888);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ---- Sacred note ---- */
+.reputation-card__sacred-note {
+  font-size: 0.75rem;
+  color: #b91c1c;
+  margin: 0.25rem 0 0;
+  text-align: center;
+}
+
+/* Mobile */
+@media (max-width: 380px) {
+  .reputation-card__stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

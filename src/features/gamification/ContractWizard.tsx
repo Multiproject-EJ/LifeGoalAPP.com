@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ContractCadence, ContractStakeType, ContractTargetType } from '../../types/gamification';
+import type { ContractCadence, ContractStakeType, ContractTargetType, ContractType, ContractStage } from '../../types/gamification';
 import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import { fetchGoals } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
@@ -16,13 +16,33 @@ interface ContractWizardProps {
   onCancel: () => void;
 }
 
-type WizardStep = 1 | 2 | 3 | 4;
+type WizardStep = 0 | 1 | 2 | 3 | 4;
 
 interface TargetOption {
   id: string;
   title: string;
   type: ContractTargetType;
 }
+
+interface ContractTypeOption {
+  type: ContractType;
+  icon: string;
+  label: string;
+  description: string;
+}
+
+const CONTRACT_TYPES: ContractTypeOption[] = [
+  { type: 'classic', icon: '📜', label: 'Classic', description: 'Stake on completing a habit or goal' },
+  { type: 'identity', icon: '🪞', label: 'Identity', description: 'Commit to who you want to become' },
+  { type: 'escalation', icon: '📈', label: 'Escalation', description: 'Stakes grow on consecutive misses' },
+  { type: 'redemption', icon: '⚡', label: 'Redemption', description: 'Miss triggers a redemption quest instead' },
+  { type: 'reverse', icon: '🚫', label: 'Reverse', description: 'Commit to NOT doing something' },
+  { type: 'multi_stage', icon: '🏔️', label: 'Multi-Stage', description: 'Large goal broken into milestones' },
+  { type: 'future_self', icon: '💌', label: 'Future Self', description: 'Write a sealed message to your future self' },
+  { type: 'narrative', icon: '⚔️', label: 'Narrative', description: 'Story-themed contract with character growth' },
+  { type: 'sacred', icon: '🔱', label: 'Sacred', description: 'Rare, high-stakes ceremony (max 2/year)' },
+  { type: 'cascading', icon: '🔗', label: 'Cascading', description: 'Completion unlocks the next contract' },
+];
 
 export function ContractWizard({
   userId,
@@ -31,21 +51,38 @@ export function ContractWizard({
   onComplete,
   onCancel,
 }: ContractWizardProps) {
-  const [currentStep, setCurrentStep] = useState<WizardStep>(1);
+  const [currentStep, setCurrentStep] = useState<WizardStep>(0);
   const [targetOptions, setTargetOptions] = useState<TargetOption[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Step 0: Contract type
+  const [selectedContractType, setSelectedContractType] = useState<ContractType>('classic');
 
   // Form state
   const [selectedTarget, setSelectedTarget] = useState<TargetOption | null>(null);
   const [cadence, setCadence] = useState<ContractCadence>('daily');
   const [targetCount, setTargetCount] = useState<number>(1);
+  const [endDate, setEndDate] = useState<string>('');
   const [stakeType, setStakeType] = useState<ContractStakeType>('gold');
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [graceDays, setGraceDays] = useState<number>(1);
   const [accountabilityMode, setAccountabilityMode] = useState<'solo' | 'witness'>('solo');
   const [witnessLabel, setWitnessLabel] = useState('');
+
+  // Type-specific fields
+  const [identityStatement, setIdentityStatement] = useState('');
+  const [redemptionQuestTitle, setRedemptionQuestTitle] = useState('');
+  const [futureMessage, setFutureMessage] = useState('');
+  const [narrativeTheme, setNarrativeTheme] = useState<'warrior' | 'monk' | 'scholar' | 'explorer'>('warrior');
+  const [sacredConfirmed, setSacredConfirmed] = useState(false);
+  const [stages, setStages] = useState<ContractStage[]>([]);
+  const [newStageName, setNewStageName] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Total steps depends on contract type
+  const totalSteps = selectedContractType === 'sacred' ? 5 : 4;
 
   // Load habits and goals for target selection
   useEffect(() => {
@@ -116,6 +153,12 @@ export function ContractWizard({
   const stakeValid = hasStakeCapacity && stakeAmount > 0 && stakeAmount <= maxStake;
 
   const handleNext = () => {
+    if (currentStep === 0) {
+      // Contract type selection — always valid
+      setError(null);
+      setCurrentStep(1);
+      return;
+    }
     if (currentStep === 1 && !selectedTarget) {
       setError('Please select a target');
       return;
@@ -137,14 +180,37 @@ export function ContractWizard({
       setError('Add a witness name so this mode stays intentional.');
       return;
     }
+    if (currentStep === 3 && selectedContractType === 'sacred' && !sacredConfirmed) {
+      setError('Please confirm you understand the consequences of a Sacred Contract.');
+      return;
+    }
 
     setError(null);
-    setCurrentStep((prev) => Math.min(4, prev + 1) as WizardStep);
+    setCurrentStep((prev) => Math.min(totalSteps as WizardStep, (prev + 1) as WizardStep) as WizardStep);
   };
 
   const handleBack = () => {
     setError(null);
-    setCurrentStep((prev) => Math.max(1, prev - 1) as WizardStep);
+    setCurrentStep((prev) => Math.max(0, prev - 1) as WizardStep);
+  };
+
+  const addStage = () => {
+    if (!newStageName.trim()) return;
+    const newStage: ContractStage = {
+      id: crypto.randomUUID ? crypto.randomUUID() : `stage-${Date.now()}`,
+      title: newStageName.trim(),
+      description: '',
+      targetCount: 1,
+      completed: false,
+      completedAt: null,
+      sealEmoji: '🔱',
+    };
+    setStages((prev) => [...prev, newStage]);
+    setNewStageName('');
+  };
+
+  const removeStage = (id: string) => {
+    setStages((prev) => prev.filter((s) => s.id !== id));
   };
 
   const handleConfirm = async () => {
@@ -155,7 +221,9 @@ export function ContractWizard({
 
     try {
       const input: ContractInput = {
-        title: selectedTarget.title,
+        title: selectedContractType === 'identity' && identityStatement.trim()
+          ? identityStatement.trim()
+          : selectedTarget.title,
         targetType: selectedTarget.type,
         targetId: selectedTarget.id,
         cadence,
@@ -165,6 +233,14 @@ export function ContractWizard({
         graceDays,
         accountabilityMode,
         witnessLabel,
+        endAt: endDate ? new Date(endDate).toISOString() : null,
+        contractType: selectedContractType,
+        identityStatement: identityStatement.trim() || null,
+        redemptionQuestTitle: redemptionQuestTitle.trim() || null,
+        futureMessage: futureMessage.trim() || null,
+        narrativeTheme: selectedContractType === 'narrative' ? narrativeTheme : null,
+        isSacred: selectedContractType === 'sacred',
+        stages: selectedContractType === 'multi_stage' && stages.length > 0 ? stages : null,
       };
 
       const { data: contract, error: createError } = await createContract(userId, input);
@@ -192,7 +268,7 @@ export function ContractWizard({
     <div className="contract-wizard">
       <div className="contract-wizard__header">
         <div className="contract-wizard__step-indicator">
-          Step {currentStep} of 4
+          Step {currentStep + 1} of {totalSteps + 1}
         </div>
         <button
           type="button"
@@ -210,11 +286,60 @@ export function ContractWizard({
         </div>
       )}
 
+      {/* Step 0: Choose Contract Type */}
+      {currentStep === 0 && (
+        <div className="contract-wizard__step">
+          <h3 className="contract-wizard__prompt">Choose your contract type</h3>
+          <div className="contract-wizard__target-list">
+            {CONTRACT_TYPES.map((ct) => (
+              <button
+                key={ct.type}
+                type="button"
+                className={`contract-wizard__target-option${
+                  selectedContractType === ct.type ? ' contract-wizard__target-option--selected' : ''
+                }`}
+                onClick={() => setSelectedContractType(ct.type)}
+              >
+                <span className="contract-wizard__target-type">{ct.icon}</span>
+                <span>
+                  <span className="contract-wizard__target-title">{ct.label}</span>
+                  <br />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #666)' }}>{ct.description}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="contract-wizard__actions">
+            <button
+              type="button"
+              className="contract-wizard__button contract-wizard__button--secondary"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="contract-wizard__button contract-wizard__button--primary"
+              onClick={handleNext}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Step 1: Select Target */}
       {currentStep === 1 && (
         <div className="contract-wizard__step">
-          <h3 className="contract-wizard__prompt">What do you want to commit to?</h3>
+          <h3 className="contract-wizard__prompt">
+            {selectedContractType === 'reverse'
+              ? 'What do you want to commit NOT to do?'
+              : selectedContractType === 'identity'
+              ? 'What habit or goal anchors this identity?'
+              : 'What do you want to commit to?'}
+          </h3>
           
+          {/* TODO: Future — add FocusSession loading here once a FocusSession service is available */}
           {loading ? (
             <p className="contract-wizard__loading">Loading your habits and goals...</p>
           ) : targetOptions.length === 0 ? (
@@ -269,11 +394,128 @@ export function ContractWizard({
         </div>
       )}
 
-      {/* Step 2: Set Cadence + Count */}
+      {/* Step 2: Set Cadence + Count + Type-specific extras */}
       {currentStep === 2 && (
         <div className="contract-wizard__step">
           <h3 className="contract-wizard__prompt">How often should you complete this?</h3>
           
+          {selectedContractType === 'identity' && (
+            <div className="contract-wizard__field-group">
+              <label className="contract-wizard__label" htmlFor="identity-statement">
+                Your identity statement
+              </label>
+              <input
+                id="identity-statement"
+                type="text"
+                maxLength={120}
+                className="contract-wizard__input"
+                placeholder="I am someone who trains every day"
+                value={identityStatement}
+                onChange={(e) => setIdentityStatement(e.target.value)}
+              />
+              <p className="contract-wizard__helper-text">
+                Finish the sentence: I am someone who…
+              </p>
+            </div>
+          )}
+
+          {selectedContractType === 'redemption' && (
+            <div className="contract-wizard__field-group">
+              <label className="contract-wizard__label" htmlFor="redemption-quest-title">
+                Redemption quest (if you miss)
+              </label>
+              <input
+                id="redemption-quest-title"
+                type="text"
+                maxLength={120}
+                className="contract-wizard__input"
+                placeholder="e.g. Run 10km this weekend"
+                value={redemptionQuestTitle}
+                onChange={(e) => setRedemptionQuestTitle(e.target.value)}
+              />
+              <p className="contract-wizard__helper-text">
+                If you miss, you can redeem yourself by completing this harder quest instead of forfeiting.
+              </p>
+            </div>
+          )}
+
+          {selectedContractType === 'future_self' && (
+            <div className="contract-wizard__field-group">
+              <label className="contract-wizard__label" htmlFor="future-message">
+                💌 Sealed message to your future self
+              </label>
+              <textarea
+                id="future-message"
+                rows={4}
+                maxLength={600}
+                className="contract-wizard__input"
+                placeholder="Write something meaningful. This will be unlocked only if you succeed..."
+                value={futureMessage}
+                onChange={(e) => setFutureMessage(e.target.value)}
+                style={{ resize: 'vertical' }}
+              />
+              <p className="contract-wizard__helper-text">
+                Hidden until you complete the contract. Lost forever if you fail.
+              </p>
+            </div>
+          )}
+
+          {selectedContractType === 'narrative' && (
+            <div className="contract-wizard__field-group">
+              <label className="contract-wizard__label">Choose your narrative theme</label>
+              <div className="contract-wizard__chip-group">
+                {(['warrior', 'monk', 'scholar', 'explorer'] as const).map((theme) => (
+                  <button
+                    key={theme}
+                    type="button"
+                    className={`contract-wizard__chip${narrativeTheme === theme ? ' contract-wizard__chip--selected' : ''}`}
+                    onClick={() => setNarrativeTheme(theme)}
+                  >
+                    {theme === 'warrior' ? '⚔️' : theme === 'monk' ? '🧘' : theme === 'scholar' ? '📚' : '🗺️'} {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedContractType === 'multi_stage' && (
+            <div className="contract-wizard__field-group">
+              <label className="contract-wizard__label">Define stages (milestones)</label>
+              {stages.map((stage) => (
+                <div key={stage.id} className="contract-wizard__chip-group" style={{ marginBottom: '0.25rem' }}>
+                  <span style={{ flex: 1, fontSize: '0.875rem' }}>🔱 {stage.title}</span>
+                  <button
+                    type="button"
+                    className="contract-wizard__chip"
+                    onClick={() => removeStage(stage.id)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <div className="contract-wizard__chip-group">
+                <input
+                  type="text"
+                  className="contract-wizard__input"
+                  placeholder="Stage name..."
+                  value={newStageName}
+                  onChange={(e) => setNewStageName(e.target.value)}
+                  style={{ flex: 1, marginBottom: 0 }}
+                />
+                <button
+                  type="button"
+                  className="contract-wizard__chip"
+                  onClick={addStage}
+                >
+                  + Add
+                </button>
+              </div>
+              <p className="contract-wizard__helper-text">
+                Add up to 5 milestones. Each earns a seal on completion.
+              </p>
+            </div>
+          )}
+
           <div className="contract-wizard__field-group">
             <label className="contract-wizard__label">Cadence</label>
             <div className="contract-wizard__chip-group">
@@ -296,20 +538,47 @@ export function ContractWizard({
 
           <div className="contract-wizard__field-group">
             <label className="contract-wizard__label" htmlFor="target-count">
-              Target count
+              {selectedContractType === 'reverse' ? 'Max allowed violations per window' : 'Target count'}
             </label>
             <input
               id="target-count"
               type="number"
-              min="1"
+              min={selectedContractType === 'reverse' ? '0' : '1'}
               className="contract-wizard__input"
               value={targetCount}
-              onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || 1)}
+              onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || (selectedContractType === 'reverse' ? 0 : 1))}
             />
             <p className="contract-wizard__helper-text">
-              This is the minimum to keep your contract
+              {selectedContractType === 'reverse'
+                ? 'Max violations you allow before losing the contract (0 = zero tolerance)'
+                : 'This is the minimum to keep your contract'}
             </p>
           </div>
+
+          <div className="contract-wizard__field-group">
+            <label className="contract-wizard__label" htmlFor="end-date">
+              End date (optional)
+            </label>
+            <input
+              id="end-date"
+              type="date"
+              className="contract-wizard__input"
+              value={endDate}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <p className="contract-wizard__helper-text">
+              Leave blank for an ongoing contract. Set a date to auto-complete it.
+            </p>
+          </div>
+
+          {selectedContractType === 'escalation' && (
+            <div className="contract-wizard__field-group">
+              <p className="contract-wizard__helper-text" style={{ background: '#fff7ed', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #f97316' }}>
+                ⚡ Escalation: each consecutive miss increases your effective stake by 50% (up to 3x). Hit your target and the stake resets.
+              </p>
+            </div>
+          )}
 
           <div className="contract-wizard__actions">
             <button
@@ -446,6 +715,25 @@ export function ContractWizard({
             </div>
           )}
 
+          {selectedContractType === 'sacred' && (
+            <div className="contract-wizard__field-group">
+              <div className="contract-wizard__warning" role="alert" style={{ background: '#fee2e2', borderColor: '#dc2626' }}>
+                <strong>🔱 Sacred Contract Warning</strong>
+                <p style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                  Sacred contracts are limited to 2 per year. Breaking one forfeits <strong>3x</strong> your stake and damages your reliability score permanently. Keeping it earns <strong>3x</strong> bonus and a Diamond achievement.
+                </p>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={sacredConfirmed}
+                    onChange={(e) => setSacredConfirmed(e.target.checked)}
+                  />
+                  I understand and accept this sacred oath
+                </label>
+              </div>
+            </div>
+          )}
+
           <div className="contract-wizard__actions">
             <button
               type="button"
@@ -458,7 +746,7 @@ export function ContractWizard({
               type="button"
               className="contract-wizard__button contract-wizard__button--primary"
               onClick={handleNext}
-              disabled={!stakeValid}
+              disabled={!stakeValid || (selectedContractType === 'sacred' && !sacredConfirmed)}
             >
               Review
             </button>
@@ -473,17 +761,33 @@ export function ContractWizard({
           
           <div className="contract-wizard__summary">
             <div className="contract-wizard__summary-row">
+              <strong>Type:</strong>
+              <span>{CONTRACT_TYPES.find((ct) => ct.type === selectedContractType)?.icon} {CONTRACT_TYPES.find((ct) => ct.type === selectedContractType)?.label ?? 'Classic'}</span>
+            </div>
+            <div className="contract-wizard__summary-row">
               <strong>Commit to:</strong>
               <span>{selectedTarget.title}</span>
             </div>
+            {identityStatement && (
+              <div className="contract-wizard__summary-row">
+                <strong>Identity:</strong>
+                <span>"{identityStatement}"</span>
+              </div>
+            )}
             <div className="contract-wizard__summary-row">
               <strong>Cadence:</strong>
-              <span>Complete {targetCount} times per {cadence}</span>
+              <span>{selectedContractType === 'reverse' ? `Max ${targetCount} violations per ${cadence}` : `Complete ${targetCount} times per ${cadence}`}</span>
             </div>
             <div className="contract-wizard__summary-row">
               <strong>Stake:</strong>
-              <span>{stakeAmount} {stakeType === 'gold' ? 'Gold' : 'Tokens'}</span>
+              <span>{stakeAmount} {stakeType === 'gold' ? 'Gold' : 'Tokens'}{selectedContractType === 'sacred' ? ' (3x penalty on miss, 3x bonus on success)' : ''}</span>
             </div>
+            {endDate && (
+              <div className="contract-wizard__summary-row">
+                <strong>Ends:</strong>
+                <span>{new Date(endDate).toLocaleDateString()}</span>
+              </div>
+            )}
             <div className="contract-wizard__summary-row">
               <strong>Grace days:</strong>
               <span>{graceDays}</span>

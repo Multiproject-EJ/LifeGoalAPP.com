@@ -1,6 +1,7 @@
 import type { CommitmentContract, ContractEvaluation } from '../../types/gamification';
 import { summarizeContractHistory } from '../../lib/contractHistoryAnalytics';
 import { getContractRewardTier, getNextContractRewardTier } from '../../lib/contractRewardMultipliers';
+import './ContractHistoryCard.css';
 
 interface ContractHistoryCardProps {
   contract: CommitmentContract;

@@ -4,6 +4,7 @@ import type {
   ReduceStakeEligibility,
   ResetContractEligibility,
 } from '../../services/commitmentContracts';
+import './ContractResultModal.css';
 
 interface ContractResultModalProps {
   contract: CommitmentContract;
@@ -65,18 +66,41 @@ export function ContractResultModal({
   const shouldSuggestSupportOnly = contract.missCount >= 2;
   const baseBonus = Math.max(1, Math.floor(contract.stakeAmount * 0.1));
   const rewardMultiplier = baseBonus > 0 ? evaluation.bonusAwarded / baseBonus : 1;
+  const isContractCompleted = contract.status === 'completed';
+  const hasFutureMessage = contract.futureMessage && contract.futureMessageUnlockedAt;
 
   if (isSuccess) {
     return (
       <div className="contract-result-modal" role="dialog" aria-modal="true">
         <div className="contract-result-modal__backdrop" onClick={onClose} />
         <div className="contract-result-modal__content">
-          <h3 className="contract-result-modal__title contract-result-modal__title--success">
-            ✨ Contract Kept!
-          </h3>
+          {isContractCompleted ? (
+            <>
+              <div className="contract-result-modal__completed-celebration">
+                <span className="contract-result-modal__completed-emoji">🎉</span>
+                <span className="contract-result-modal__completed-label">Contract Completed!</span>
+              </div>
+              <h3 className="contract-result-modal__title contract-result-modal__title--completed">
+                You did it!
+              </h3>
+              <p className="contract-result-modal__body">
+                You fulfilled every commitment for "{contract.title}". This contract is now complete.
+              </p>
+            </>
+          ) : (
+            <h3 className="contract-result-modal__title contract-result-modal__title--success">
+              ✨ Contract Kept!
+            </h3>
+          )}
           <p className="contract-result-modal__body">
             You completed {evaluation.actualCount} of {evaluation.targetCount} this {contract.cadence}.
           </p>
+          {hasFutureMessage && (
+            <div className="contract-result-modal__future-message">
+              <p className="contract-result-modal__future-message-label">💌 Message from your past self</p>
+              <p className="contract-result-modal__future-message-text">{contract.futureMessage}</p>
+            </div>
+          )}
           {evaluation.bonusAwarded > 0 && (
             <div className="contract-result-modal__bonus">
               <span className="contract-result-modal__bonus-icon">🎁</span>
