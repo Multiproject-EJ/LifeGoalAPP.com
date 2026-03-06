@@ -715,6 +715,11 @@
   line-height: 1.24;
 }
 
+/* M1B: production HUD row — always visible, padded to match always-controls */
+.island-run-prototype__status-row--production {
+  padding: 0.3rem 0.75rem 0.4rem;
+}
+
 .island-run-prototype__status-row span {
   display: inline-flex;
   align-items: center;
