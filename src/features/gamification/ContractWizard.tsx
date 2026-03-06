@@ -4,6 +4,9 @@ import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import { fetchGoals } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
 import { createContract, activateContract, type ContractInput } from '../../services/commitmentContracts';
+import { IdentityStatementInput } from './IdentityStatementInput';
+import { MultiStageEditor } from './MultiStageEditor';
+import { NarrativeThemePicker } from './NarrativeThemePicker';
 import './ContractWizard.css';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -76,7 +79,6 @@ export function ContractWizard({
   const [narrativeTheme, setNarrativeTheme] = useState<'warrior' | 'monk' | 'scholar' | 'explorer'>('warrior');
   const [sacredConfirmed, setSacredConfirmed] = useState(false);
   const [stages, setStages] = useState<ContractStage[]>([]);
-  const [newStageName, setNewStageName] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -192,25 +194,6 @@ export function ContractWizard({
   const handleBack = () => {
     setError(null);
     setCurrentStep((prev) => Math.max(0, prev - 1) as WizardStep);
-  };
-
-  const addStage = () => {
-    if (!newStageName.trim()) return;
-    const newStage: ContractStage = {
-      id: crypto.randomUUID ? crypto.randomUUID() : `stage-${Date.now()}`,
-      title: newStageName.trim(),
-      description: '',
-      targetCount: 1,
-      completed: false,
-      completedAt: null,
-      sealEmoji: '🔱',
-    };
-    setStages((prev) => [...prev, newStage]);
-    setNewStageName('');
-  };
-
-  const removeStage = (id: string) => {
-    setStages((prev) => prev.filter((s) => s.id !== id));
   };
 
   const handleConfirm = async () => {
@@ -397,23 +380,10 @@ export function ContractWizard({
           <h3 className="contract-wizard__prompt">How often should you complete this?</h3>
           
           {selectedContractType === 'identity' && (
-            <div className="contract-wizard__field-group">
-              <label className="contract-wizard__label" htmlFor="identity-statement">
-                Your identity statement
-              </label>
-              <input
-                id="identity-statement"
-                type="text"
-                maxLength={120}
-                className="contract-wizard__input"
-                placeholder="I am someone who trains every day"
-                value={identityStatement}
-                onChange={(e) => setIdentityStatement(e.target.value)}
-              />
-              <p className="contract-wizard__helper-text">
-                Finish the sentence: I am someone who…
-              </p>
-            </div>
+            <IdentityStatementInput
+              value={identityStatement}
+              onChange={setIdentityStatement}
+            />
           )}
 
           {selectedContractType === 'redemption' && (
@@ -458,59 +428,17 @@ export function ContractWizard({
           )}
 
           {selectedContractType === 'narrative' && (
-            <div className="contract-wizard__field-group">
-              <label className="contract-wizard__label">Choose your narrative theme</label>
-              <div className="contract-wizard__chip-group">
-                {(['warrior', 'monk', 'scholar', 'explorer'] as const).map((theme) => (
-                  <button
-                    key={theme}
-                    type="button"
-                    className={`contract-wizard__chip${narrativeTheme === theme ? ' contract-wizard__chip--selected' : ''}`}
-                    onClick={() => setNarrativeTheme(theme)}
-                  >
-                    {theme === 'warrior' ? '⚔️' : theme === 'monk' ? '🧘' : theme === 'scholar' ? '📚' : '🗺️'} {theme.charAt(0).toUpperCase() + theme.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <NarrativeThemePicker
+              value={narrativeTheme}
+              onChange={setNarrativeTheme}
+            />
           )}
 
           {selectedContractType === 'multi_stage' && (
-            <div className="contract-wizard__field-group">
-              <label className="contract-wizard__label">Define stages (milestones)</label>
-              {stages.map((stage) => (
-                <div key={stage.id} className="contract-wizard__chip-group" style={{ marginBottom: '0.25rem' }}>
-                  <span style={{ flex: 1, fontSize: '0.875rem' }}>🔱 {stage.title}</span>
-                  <button
-                    type="button"
-                    className="contract-wizard__chip"
-                    onClick={() => removeStage(stage.id)}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <div className="contract-wizard__chip-group">
-                <input
-                  type="text"
-                  className="contract-wizard__input"
-                  placeholder="Stage name..."
-                  value={newStageName}
-                  onChange={(e) => setNewStageName(e.target.value)}
-                  style={{ flex: 1, marginBottom: 0 }}
-                />
-                <button
-                  type="button"
-                  className="contract-wizard__chip"
-                  onClick={addStage}
-                >
-                  + Add
-                </button>
-              </div>
-              <p className="contract-wizard__helper-text">
-                Add up to 5 milestones. Each earns a seal on completion.
-              </p>
-            </div>
+            <MultiStageEditor
+              stages={stages}
+              onChange={setStages}
+            />
           )}
 
           <div className="contract-wizard__field-group">

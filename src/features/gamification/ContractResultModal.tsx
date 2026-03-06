@@ -4,6 +4,7 @@ import type {
   ReduceStakeEligibility,
   ResetContractEligibility,
 } from '../../services/commitmentContracts';
+import { FutureMessageReveal } from './FutureMessageReveal';
 import './ContractResultModal.css';
 
 interface ContractResultModalProps {
@@ -67,7 +68,6 @@ export function ContractResultModal({
   const baseBonus = Math.max(1, Math.floor(contract.stakeAmount * 0.1));
   const rewardMultiplier = baseBonus > 0 ? evaluation.bonusAwarded / baseBonus : 1;
   const isContractCompleted = contract.status === 'completed';
-  const hasFutureMessage = contract.futureMessage && contract.futureMessageUnlockedAt;
 
   if (isSuccess) {
     return (
@@ -95,11 +95,12 @@ export function ContractResultModal({
           <p className="contract-result-modal__body">
             You completed {evaluation.actualCount} of {evaluation.targetCount} this {contract.cadence}.
           </p>
-          {hasFutureMessage && (
-            <div className="contract-result-modal__future-message">
-              <p className="contract-result-modal__future-message-label">💌 Message from your past self</p>
-              <p className="contract-result-modal__future-message-text">{contract.futureMessage}</p>
-            </div>
+          {contract.futureMessage && (
+            <FutureMessageReveal
+              message={contract.futureMessage}
+              isRevealed={!!contract.futureMessageUnlockedAt}
+              revealedAt={contract.futureMessageUnlockedAt ?? null}
+            />
           )}
           {evaluation.bonusAwarded > 0 && (
             <div className="contract-result-modal__bonus">
