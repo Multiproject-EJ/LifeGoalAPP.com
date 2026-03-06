@@ -290,8 +290,34 @@ Milestones closed: none (design doc only)
 
 ---
 
-Date: 2026-03-03
-Slice: M15 — Real island timer (48h/72h + Catch-up Rule A + expiry persistence)
+Date: 2026-03-06
+Slice: M6-COMPLETE — Encounter tile (easy) + rewards production polish
+Summary:
+- Created `encounterService.ts` with 3 challenge types: quiz (7-item pool), breathing exercise (3-item pool, auto-completing countdown), and gratitude prompt (7-item pool). Seeded challenge selection varies by island + tile + 5-minute bucket.
+- `rollEncounterReward()` rolls variable coin reward (5–15), 15% heart bonus, 25% wallet shard bonus. `formatEncounterRewardSummary()` builds human-readable reward string.
+- Updated `islandBoardTileMap.ts`: replaced single `ENCOUNTER_INDEX` constant with `ENCOUNTER_INDICES` record by rarity — normal islands keep 1 encounter (index 6, day 2+ gate), seasonal islands get 2 encounters (indices 6 & 11), rare islands get 2 encounters (indices 6 & 11, always active).
+- Replaced stub encounter modal with full challenge UI: quiz shows answer buttons (all answers complete), breathing shows pulsing orb + countdown (auto-completes via useEffect timer), gratitude shows textarea + Submit (disabled until non-empty input). Two-phase modal: 'challenge' → 'reward' with animated reward reveal.
+- Replaced single `encounterResolved: boolean` with `completedEncounterIndices: Set<number>` for per-visit tile tracking. `activeEncounterTileIndex` tracks which tile opened the current modal.
+- Landing on an already-completed encounter tile skips the modal and shows a brief status message.
+- Encounter tiles show completed visual state (green glow + ✅ icon) after completion.
+- `performIslandTravel` resets `completedEncounterIndices`, `activeEncounterTileIndex`, `currentEncounterChallenge`, `encounterStep`, and `encounterRewardData` — encounters are per-visit.
+- Added Escape key handler for encounter modal (mirrors M3-COMPLETE stop modal pattern).
+- Removed unused `ENCOUNTER_TILE_INDEX = 6` constant from IslandRunBoardPrototype.tsx.
+- Added CSS: `.island-tile--encounter-completed` (green glow), `.island-stop-modal--encounter` sizing, challenge layout classes, breathing orb animation (`encounter-breathe`), reward reveal animation (`encounter-reward-pop`), gratitude textarea styles.
+Files changed:
+- src/features/gamification/level-worlds/services/encounterService.ts (new)
+- src/features/gamification/level-worlds/services/islandBoardTileMap.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7-COMPLETE — Boss stop full production polish
+Milestones closed: M6 ✅
+
+---
 Summary:
 - Added islandStartedAtMs + islandExpiresAtMs to IslandRunRuntimeState, IslandRunGameStateRecord, and persistPatch contract
 - getIslandDurationMs() helper: 48h for normal islands, 72h for special islands, 45s for devTimer mode

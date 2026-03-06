@@ -20,8 +20,13 @@ const STOP_INDICES: Record<number, string> = {
   16: 'boss',
 };
 
-// Encounter tile index
-const ENCOUNTER_INDEX = 6;
+// Encounter tile indices by island rarity.
+// Normal: 1 tile (index 6, gated by dayIndex); Seasonal: 2 tiles; Rare: 2 tiles (always active).
+const ENCOUNTER_INDICES: Record<IslandRarity, number[]> = {
+  normal: [6],
+  seasonal: [6, 11],
+  rare: [6, 11],
+};
 
 // Non-stop tile pool (weighted)
 const TILE_POOL: IslandTileType[] = [
@@ -77,9 +82,11 @@ export function generateTileMap(
       continue;
     }
 
-    // Encounter tile: only spawns when rarity === 'rare' OR dayIndex >= 2
-    if (tileIndex === ENCOUNTER_INDEX) {
-      if (rarity === 'rare' || dayIndex >= 2) {
+    // Encounter tiles: indices defined per rarity.
+    // Normal islands: encounter only when dayIndex >= 2; seasonal/rare always.
+    const encounterIndices = ENCOUNTER_INDICES[rarity];
+    if (encounterIndices.includes(tileIndex)) {
+      if (rarity !== 'normal' || dayIndex >= 2) {
         tiles.push({ index: tileIndex, tileType: 'encounter' });
       } else {
         // Default to a non-encounter tile using seeded random
