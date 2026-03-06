@@ -2,10 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { registerServiceWorker } from './registerServiceWorker.ts';
-import { SupabaseAuthProvider } from './features/auth/SupabaseAuthProvider.tsx';
+import { SupabaseAuthProvider, useSupabaseAuth } from './features/auth/SupabaseAuthProvider.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { resolveRoute } from './routes/resolveRoute.ts';
 import { WorldHome } from './world/WorldHome.tsx';
+import { Lobby } from './world/Lobby.tsx';
 import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
 
 if (typeof window !== 'undefined') {
@@ -28,7 +29,8 @@ if (typeof window !== 'undefined') {
 
 function Root() {
   const initialRoute = useMemo(() => resolveRoute(), []);
-  const [showApp, setShowApp] = useState(() => initialRoute !== 'world');
+  const [showApp, setShowApp] = useState(() => initialRoute !== 'world' && initialRoute !== 'lobby');
+  const [showLobby, setShowLobby] = useState(() => initialRoute === 'lobby');
   const [loginOnEntry, setLoginOnEntry] = useState(() => initialRoute === 'login');
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
@@ -41,7 +43,7 @@ function Root() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  if (!showApp) {
+  if (!showApp && !showLobby) {
     return (
       <WorldHome
         onContinue={() => setShowApp(true)}
@@ -54,6 +56,21 @@ function Root() {
     );
   }
 
+  if (showLobby) {
+    return (
+      <ThemeProvider>
+        <SupabaseAuthProvider>
+          <LobbyRoute
+            onEnterApp={() => {
+              setShowLobby(false);
+              setShowApp(true);
+            }}
+          />
+        </SupabaseAuthProvider>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <SupabaseAuthProvider>
@@ -61,6 +78,36 @@ function Root() {
       </SupabaseAuthProvider>
     </ThemeProvider>
   );
+}
+
+/**
+ * LobbyRoute — renders Lobby when authenticated, redirects to /login when not.
+ * Must be rendered inside SupabaseAuthProvider.
+ */
+function LobbyRoute({ onEnterApp }: { onEnterApp: () => void }) {
+  const { isAuthenticated, initializing, session } = useSupabaseAuth();
+
+  useEffect(() => {
+    if (!initializing && !isAuthenticated) {
+      window.location.replace('/login?next=%2Flobby');
+    }
+  }, [initializing, isAuthenticated]);
+
+  if (initializing) {
+    // Minimal loading state — avoid flash of unauthenticated content.
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    // Redirect is in-flight via useEffect above.
+    return null;
+  }
+
+  const username = session?.user?.user_metadata?.full_name as string | undefined
+    ?? session?.user?.email?.split('@')[0]
+    ?? null;
+
+  return <Lobby onEnterApp={onEnterApp} username={username} />;
 }
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

@@ -1459,3 +1459,183 @@
     max-width: none;
   }
 }
+
+/* ============================================================
+   Lobby — post-login bridge page
+   Mobile-first, dark-glass game-lobby aesthetic
+   ============================================================ */
+
+.lobby {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: wh-fadein 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Layer 1 — CSS gradient background (same palette as WorldHero) */
+.lobby__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    160deg,
+    #06091a 0%,
+    #0a0e2a 25%,
+    #0d1530 55%,
+    #0f1a3a 75%,
+    #111827 100%
+  );
+}
+
+/* Layer 2 — Subtle star-field atmosphere */
+.lobby__atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%, rgba(165, 180, 252, 0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 72% 8%,  rgba(165, 180, 252, 0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 65%, rgba(165, 180, 252, 0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 88% 42%, rgba(165, 180, 252, 0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 85%, rgba(165, 180, 252, 0.30) 0%, transparent 100%);
+  animation: wh-stars-drift 18s ease-in-out infinite alternate;
+}
+
+/* Glass content panel */
+.lobby__panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 360px;
+  padding: 40px 24px 32px;
+  margin: 0 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(165, 180, 252, 0.15);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(165, 180, 252, 0.08);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Avatar circle */
+.lobby__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(165, 180, 252, 0.3), 0 6px 24px rgba(79, 70, 229, 0.5);
+  flex-shrink: 0;
+}
+
+/* Welcome heading */
+.lobby__welcome {
+  font-size: 22px;
+  font-weight: 700;
+  color: #e8eaf6;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Stats line */
+.lobby__stats {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+/* Active quest card */
+.lobby__quest-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(79, 70, 229, 0.12);
+  border: 1px solid rgba(165, 180, 252, 0.2);
+  border-radius: 12px;
+  padding: 12px 18px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lobby__quest-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(165, 180, 252, 0.4));
+}
+
+.lobby__quest-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c7d2fe;
+}
+
+/* Enter Game button */
+.lobby__enter-btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.45);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
+  animation: wh-btn-pulse 3s ease-in-out infinite;
+}
+
+.lobby__enter-btn:hover {
+  box-shadow: 0 6px 28px rgba(79, 70, 229, 0.65);
+}
+
+.lobby__enter-btn:active {
+  transform: scale(0.97);
+}
+
+.lobby__enter-btn:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 3px;
+}
+
+/* Footer */
+.lobby__footer {
+  font-size: 11px;
+  color: #334155;
+  margin: 4px 0 0;
+}
+
+/* ---------- Reduced-motion overrides ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .lobby { animation: none; }
+  .lobby__atmosphere { animation: none; }
+  .lobby__enter-btn { animation: none; }
+}
+
+/* ---------- 640px+ tablet ---------- */
+@media (min-width: 640px) {
+  .lobby__panel {
+    max-width: 400px;
+    padding: 48px 32px 40px;
+  }
+}
