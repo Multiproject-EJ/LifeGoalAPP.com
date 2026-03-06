@@ -784,6 +784,141 @@ Score = (Bronze × 1) + (Silver × 3) + (Gold × 5) + (Diamond × 10)
 
 ---
 
+## 📜 Contract Achievements
+
+Unlock these achievements through the Commitment Contract system. Contracts require staking gold or tokens on completing a habit or goal — these achievements reward those who honour their commitments.
+
+---
+
+### First Contract Kept (Bronze) 🥉
+
+**ID:** `contract_first_kept`
+
+**Requirement:** Successfully complete your first commitment contract
+
+**Rewards:**
+- 50 XP
+
+**Description:** "A promise made, a promise kept."
+
+**Tips:**
+- Start with a Classic contract on an existing habit you already do daily
+- Choose a modest stake (10–20 gold) for your first contract
+- Keep the target count low (1× daily) to maximise your chance of success
+- This achievement also unlocks the **Contract Scroll** 📜 in your Zen Garden
+
+**Unlock Strategy:**
+1. Open the Contracts tab in the Score section
+2. Tap "New Contract" and choose Classic type
+3. Select a habit you complete reliably
+4. Set a small stake and a 7-day window
+5. Complete the habit every day until the window closes
+6. Achievement unlocks on successful evaluation
+
+---
+
+### 5 Contract Windows in a Row (Silver) 🥈
+
+**ID:** `contract_5_streak`
+
+**Requirement:** Successfully complete 5 consecutive contract evaluation windows
+
+**Rewards:**
+- 150 XP
+
+**Description:** "Consistency is a superpower."
+
+**Tips:**
+- Windows can span multiple contracts — only consecutive successes count
+- Use Grace Days (max 2) to protect against single off-days
+- Redemption contracts can help recover from a miss without breaking the streak
+
+**Unlock Strategy:**
+1. Complete your first contract (First Contract Kept)
+2. Immediately start a second contract on the same or new habit
+3. Maintain success across 5 consecutive windows
+4. Achievement unlocks after the 5th consecutive successful evaluation
+
+---
+
+### 10 Contract Windows Streak (Gold) 🥇
+
+**ID:** `contract_10_streak`
+
+**Requirement:** Successfully complete 10 consecutive contract evaluation windows
+
+**Rewards:**
+- 300 XP
+
+**Description:** "A decade of windows, every one kept."
+
+**Tips:**
+- This requires sustained discipline across multiple contract cycles
+- Consider switching to weekly cadence contracts for longer windows
+- Build a streak freeze bank before attempting this milestone
+- Escalation contracts can turn a close-call into motivation fuel
+
+**Unlock Strategy:**
+1. Achieve the 5-Window Streak first
+2. Continue your momentum for another 5 consecutive successful windows
+3. Achievement unlocks after the 10th consecutive success
+
+---
+
+### Perfect Contract Month (Gold) 🥇
+
+**ID:** `contract_perfect_month`
+
+**Requirement:** Complete every contract evaluation window in a calendar month without a miss
+
+**Rewards:**
+- 400 XP
+
+**Description:** "Thirty days, zero misses. Extraordinary."
+
+**Tips:**
+- Start at the beginning of a month for a clean attempt
+- Keep active contracts realistic — 1–2 with achievable targets
+- Avoid Sacred contracts during your attempt (higher stakes = higher risk)
+- Multi-Stage contracts count each stage completion toward the month
+
+**Unlock Strategy:**
+1. On the 1st of a month, ensure you have at least one active contract
+2. Complete every single evaluation window that closes during the month
+3. Achievement unlocks automatically when the month ends with no misses
+
+---
+
+### Sacred Contract Keeper (Diamond) 💎
+
+**ID:** `contract_sacred_keeper`
+
+**Requirement:** Successfully complete a Sacred contract (🔱)
+
+**Rewards:**
+- 1000 XP
+
+**Description:** "You swore an oath to the universe. And you kept it."
+
+**Status:** **LEGENDARY** 🏆
+
+**Tips:**
+- Sacred contracts carry 3× the stake in both reward and penalty — prepare carefully
+- You can only create 2 Sacred contracts per calendar year — choose wisely
+- Sacred contracts also unlock the **Sacred Oath Stone** 🔱 in your Zen Garden
+- Only attempt a Sacred contract on a goal you are *absolutely certain* you can achieve
+- Build a long streak of regular contract completions before attempting Sacred
+
+**Unlock Strategy:**
+1. Achieve First Contract Kept first
+2. Build your Reliability rating to at least Dependable (50%+)
+3. Tap "New Contract" and select the Sacred (🔱) type
+4. Set a meaningful stake and confirm the 2-per-year ceremony
+5. Complete every evaluation window for the contract's full duration
+6. Achievement and Zen Garden item unlock on successful evaluation
+
+---
+
 ## 🔮 Future Achievements (Coming Soon)
 
 ### Phase 2 Additions

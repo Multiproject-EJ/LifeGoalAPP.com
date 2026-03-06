@@ -354,3 +354,215 @@ For questions or issues:
 ---
 
 **Happy coding! 🎮**
+
+---
+
+## Contract System Integration
+
+The Contract Engine 2.0 lets developers programmatically create, activate, and evaluate commitment contracts. Below is a reference for integrating with the contract system.
+
+### TypeScript Imports
+
+```typescript
+import type {
+  CommitmentContract,
+  ContractType,
+  ContractCadence,
+  ContractStakeType,
+  ContractTargetType,
+  ContractStage,
+  ContractTier,
+  ReputationScore,
+  ReputationTier,
+} from '../../types/gamification';
+
+import {
+  createContract,
+  activateContract,
+  evaluateContract,
+  fetchActiveContracts,
+  fetchReputationScore,
+  generateRedemptionQuest,
+  completeRedemptionQuest,
+  failRedemptionQuest,
+  deriveContractTier,
+  MAX_ACTIVE_CONTRACTS,
+  type ContractInput,
+} from '../../services/commitmentContracts';
+
+import {
+  checkSameContractCooldown,
+  checkSacredContractLimit,
+  escalationLevelToMultiplier,
+  calculateReliabilityRating,
+  SAME_CONTRACT_COOLDOWN_MS,
+  MAX_ESCALATION_LEVEL,
+  SACRED_CONTRACTS_PER_YEAR,
+} from '../../lib/contractIntegrity';
+```
+
+---
+
+### Creating a Contract Programmatically
+
+```typescript
+const input: ContractInput = {
+  title: 'Run every morning',
+  targetType: 'habit',
+  targetId: habitId,
+  cadence: 'daily',
+  targetCount: 1,
+  stakeType: 'gold',
+  stakeAmount: 50,
+  contractType: 'classic',
+  graceDays: 1,
+};
+
+const { data: contract, error } = await createContract(userId, input);
+if (error || !contract) {
+  console.error('Failed to create contract:', error?.message);
+  return;
+}
+
+// Activate immediately (deducts stake)
+const { error: activateError } = await activateContract(userId, contract.id);
+```
+
+For specialised types, include the additional fields:
+
+```typescript
+// Identity contract
+const identityInput: ContractInput = {
+  ...baseInput,
+  contractType: 'identity',
+  identityStatement: 'I am someone who exercises before breakfast.',
+  endAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30-day min
+};
+
+// Future Self contract
+const futureInput: ContractInput = {
+  ...baseInput,
+  contractType: 'future_self',
+  futureMessage: 'If you are reading this, you did it. Be proud.',
+};
+
+// Narrative contract
+const narrativeInput: ContractInput = {
+  ...baseInput,
+  contractType: 'narrative',
+  narrativeTheme: 'warrior',
+};
+
+// Sacred contract
+const sacredInput: ContractInput = {
+  ...baseInput,
+  contractType: 'sacred',
+  isSacred: true,
+  stakeAmount: 300, // Always Legendary/Sacred tier
+};
+
+// Multi-Stage contract
+const multiStageInput: ContractInput = {
+  ...baseInput,
+  contractType: 'multi_stage',
+  stages: [
+    { id: 'stage_1', title: 'Foundation', description: 'Get started', targetCount: 7, sealEmoji: '🏁', completed: false, completedAt: null },
+    { id: 'stage_2', title: 'Momentum', description: 'Build consistency', targetCount: 14, sealEmoji: '🌟', completed: false, completedAt: null },
+    { id: 'stage_3', title: 'Mastery', description: 'Solidify the habit', targetCount: 30, sealEmoji: '🏆', completed: false, completedAt: null },
+  ],
+};
+```
+
+---
+
+### Evaluating a Contract
+
+Evaluation is normally handled by the server-side cron sweep, but can also be triggered client-side:
+
+```typescript
+const { data: evaluation, error } = await evaluateContract(userId, contract.id);
+if (evaluation?.result === 'success') {
+  console.log('Contract window completed!');
+} else if (evaluation?.result === 'miss') {
+  console.log('Window missed. Stakes forfeited.');
+}
+```
+
+---
+
+### Reading Reputation Scores
+
+```typescript
+const { data: reputation, error } = await fetchReputationScore(userId);
+if (reputation) {
+  console.log(`Reliability: ${(reputation.reliabilityRating * 100).toFixed(1)}%`);
+  console.log(`Tier: ${reputation.reliabilityTier}`); // e.g. 'dependable'
+}
+```
+
+---
+
+### Contract Types Reference
+
+| Type | `contractType` value | When to use |
+|------|---------------------|-------------|
+| Classic | `'classic'` | Simple stake on a habit/goal. Default choice. |
+| Identity | `'identity'` | Long-term identity transformation (≥30 days). |
+| Escalation | `'escalation'` | High-accountability habit where growing stakes motivate recovery. |
+| Redemption | `'redemption'` | Forgiving format — miss triggers a quest instead of forfeit. |
+| Reputation | `'reputation'` | User wants to build their public reliability track record explicitly. |
+| Reverse | `'reverse'` | Breaking a bad habit or avoidance goal. |
+| Multi-Stage | `'multi_stage'` | Large project broken into checkpoints. |
+| Future Self | `'future_self'` | Deeply personal emotional stakes (sealed letter). |
+| Narrative | `'narrative'` | Gamification-heavy users who enjoy RPG themes. |
+| Sacred | `'sacred'` | Maximum commitment ceremonies. Reserve for rare, major life goals. |
+| Cascading | `'cascading'` | Sequential habit chains where order matters. |
+
+---
+
+### Checking Integrity Constraints
+
+Always validate before allowing contract creation:
+
+```typescript
+import { checkSameContractCooldown, checkSacredContractLimit } from '../../lib/contractIntegrity';
+
+// 48-hour cooldown check
+const cooldown = checkSameContractCooldown(existingContracts, 'classic', targetHabitId);
+if (!cooldown.allowed) {
+  showError(`Too soon. You can create this contract again after ${cooldown.availableAt}.`);
+  return;
+}
+
+// Sacred yearly limit
+const reputation = await fetchReputationScore(userId);
+const sacredCheck = checkSacredContractLimit(reputation.data!);
+if (!sacredCheck.allowed) {
+  showError(`You have already used both Sacred contracts this year.`);
+  return;
+}
+```
+
+---
+
+### Configuration Constants
+
+```typescript
+import { MAX_ACTIVE_CONTRACTS } from '../../services/commitmentContracts';
+import {
+  SAME_CONTRACT_COOLDOWN_MS,
+  MAX_ESCALATION_LEVEL,
+  SACRED_CONTRACTS_PER_YEAR,
+} from '../../lib/contractIntegrity';
+
+// MAX_ACTIVE_CONTRACTS = 3
+// SAME_CONTRACT_COOLDOWN_MS = 172_800_000 (48 h)
+// MAX_ESCALATION_LEVEL = 4
+// SACRED_CONTRACTS_PER_YEAR = 2
+```
+
+---
+
+### Further Reading
+
+See `docs/CONTRACT_ENGINE.md` for the full technical reference including all contract type evaluation rules, the reputation system, database schema, and known limitations.

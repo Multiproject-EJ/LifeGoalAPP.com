@@ -4,6 +4,55 @@ Track the evolution of LifeGoalApp's gamification system across all phases.
 
 ---
 
+## Contract Engine 2.0 — v2.0.0 (March 2026)
+
+### 🎯 Overview
+Complete overhaul of the commitment contract system. Upgraded from single classic contracts to 11 specialized contract types, a reputation system, visual tiers, integrity enforcement, and Zen Garden integration.
+
+### New Features
+
+#### 11 Contract Types
+- 📜 **Classic** — Original behavior (backward compatible)
+- 🪞 **Identity** — Commit to identity statements ("I am someone who...")
+- 📈 **Escalation** — Stakes increase 50% per consecutive miss (cap 3×)
+- ⚡ **Redemption** — Miss triggers penalty quest instead of instant forfeit
+- ⭐ **Reputation** — Affects persistent reliability score
+- 🚫 **Reverse** — Commit to NOT doing something
+- 🏔️ **Multi-Stage** — Goal broken into milestones with partial rewards
+- 💌 **Future Self** — Sealed message revealed on success, lost on failure
+- ⚔️ **Narrative** — RPG-themed contracts with rank progression
+- 🔱 **Sacred** — Rare (2/year), 3× stakes, Diamond achievement
+- 🔗 **Cascading** — Completing one unlocks the next
+
+#### Contract Tiers
+Visual tier system: Common → Rare → Epic → Legendary → Sacred with glow effects and XP multipliers.
+
+#### Reputation System
+Persistent reliability score tracking across all contracts. Tiers: Untested → Apprentice → Dependable → Reliable → Steadfast → Unbreakable.
+
+#### Multi-Contract Support
+Up to 3 active contracts simultaneously (was 1).
+
+#### Contract Achievements
+5 new achievements: First Contract Kept (Bronze), 5-Window Streak (Silver), 10-Window Streak (Gold), Perfect Month (Gold), Sacred Keeper (Diamond).
+
+#### Integrity Enforcement
+48-hour cooldown, sacred yearly limits, escalation caps, cascading reset protection.
+
+#### Zen Garden Integration
+Contract milestones unlock garden items (Contract Scroll, Sacred Oath Stone, theme items).
+
+### Technical Details
+- 18 files changed, 3,165 lines added
+- New database migration: `0174_contract_engine_v2.sql`
+- New `user_reputation_scores` table with RLS
+- ~20 new columns on `commitment_contracts`
+- New services: `contractIntegrity.ts`, `contractTestUtils.ts`, `contractZenGardenRewards.ts`
+- New components: `ReputationCard.tsx`, `ReputationCard.css`
+- New CSS: `ContractStatusCard.css`, `ContractHistoryCard.css`, `ContractResultModal.css`
+
+---
+
 ## Phase 1: Foundation (v1.0.0) - Current Release ✅
 
 **Release Date:** December 2025

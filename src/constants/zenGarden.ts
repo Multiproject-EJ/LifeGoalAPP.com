@@ -4,6 +4,7 @@ export type ZenGardenItem = {
   description: string;
   cost: number;
   emoji: string;
+  earned?: boolean;
 };
 
 export const ZEN_GARDEN_ITEMS: ZenGardenItem[] = [
@@ -54,3 +55,55 @@ export const ZEN_GARDEN_ITEMS: ZenGardenItem[] = [
 // Display limit for zen token transactions in the bank tab ledger
 // Chosen to show recent activity without overwhelming the UI
 export const ZEN_TRANSACTIONS_DISPLAY_LIMIT = 4;
+
+// Items earned through contract milestones (cost 0, cannot be purchased)
+export const ZEN_GARDEN_EARNED_ITEMS: ZenGardenItem[] = [
+  {
+    id: 'zen_contract_scroll',
+    name: 'Contract Scroll',
+    description: 'A testament to your first kept promise.',
+    cost: 0,
+    emoji: '📜',
+    earned: true,
+  },
+  {
+    id: 'zen_sacred_stone',
+    name: 'Sacred Oath Stone',
+    description: 'Proof of an unbreakable vow.',
+    cost: 0,
+    emoji: '🔱',
+    earned: true,
+  },
+  {
+    id: 'zen_warrior_blade',
+    name: "Warrior's Blade",
+    description: 'Forged through discipline and strength.',
+    cost: 0,
+    emoji: '⚔️',
+    earned: true,
+  },
+  {
+    id: 'zen_monk_bell',
+    name: "Monk's Bell",
+    description: 'Rings with inner peace.',
+    cost: 0,
+    emoji: '🧘',
+    earned: true,
+  },
+  {
+    id: 'zen_scholar_tome',
+    name: "Scholar's Tome",
+    description: 'Knowledge earned through devotion.',
+    cost: 0,
+    emoji: '📚',
+    earned: true,
+  },
+  {
+    id: 'zen_explorer_compass',
+    name: "Explorer's Compass",
+    description: 'Points toward your next adventure.',
+    cost: 0,
+    emoji: '🧭',
+    earned: true,
+  },
+];

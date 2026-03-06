@@ -1,0 +1,88 @@
+/* =====================================================
+   FUTURE MESSAGE REVEAL — MOBILE-FIRST
+   ===================================================== */
+
+.future-message {
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.future-message--sealed {
+  background: var(--card-background, #f9f9f9);
+  border: 2px dashed var(--border-color, #ccc);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.future-message__envelope {
+  font-size: 2.5rem;
+  line-height: 1;
+  display: block;
+}
+
+.future-message__sealed-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin: 0;
+}
+
+.future-message__sealed-hint {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}
+
+/* Revealed state */
+.future-message--revealed {
+  background: linear-gradient(135deg, #fff9f0 0%, #fff3e0 100%);
+  border: 2px solid #f6c37e;
+  text-align: left;
+  animation: future-message-reveal 0.5s ease forwards;
+}
+
+@keyframes future-message-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.future-message__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.future-message__revealed-label {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #9e5a00;
+  margin: 0;
+}
+
+.future-message__date {
+  font-size: 0.75rem;
+  color: #b8722a;
+  margin: 0.25rem 0 0;
+}
+
+.future-message__body {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-left: 3px solid #f6c37e;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-primary, #333);
+  font-style: italic;
+}
