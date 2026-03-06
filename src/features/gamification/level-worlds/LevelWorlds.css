@@ -1774,6 +1774,45 @@
   padding: 0.25rem 0.6rem;
 }
 
+/* M5-COMPLETE: hatchery card state blocks */
+.island-hatchery-card__state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.island-hatchery-card__stage-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  margin: 0.2rem 0;
+}
+
+.island-hatchery-card__headline {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #d5f8ff;
+  margin: 0.1rem 0 0.2rem;
+}
+
+.island-hatchery-card__copy {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  margin: 0.1rem 0 0.35rem;
+}
+
+.island-hatchery-card__state--ready .island-hatchery-card__headline {
+  color: #ffe066;
+}
+
+.island-hatchery-card__state--done .island-hatchery-card__headline,
+.island-hatchery-card__state--done p {
+  opacity: 0.7;
+}
+
+.island-hatchery-card__state--incubating .island-hatchery-card__headline {
+  color: #91e1ff;
+}
+
 
 .island-run-prototype__error {
   margin-top: 0.5rem;
