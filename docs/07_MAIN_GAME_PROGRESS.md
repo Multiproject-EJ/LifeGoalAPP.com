@@ -252,6 +252,19 @@ The main game is considered **production-ready** when all of the following are t
 
 ## Progress Log (newest first)
 
+Date: 2026-03-06
+Slice: M1B-COMPLETE — Finish hybrid 3D board foundation for production
+Summary:
+- Added always-visible production HUD row (hearts, dice, coins, level, timer) to `IslandRunBoardPrototype.tsx`, outside the `isDevPanelOpen` gate so core game status is visible to all logged-in users without any URL flags
+- Added CSS padding rule `.island-run-prototype__status-row--production` in `LevelWorlds.css` to match `always-controls` layout
+- Confirmed board (17 anchor tiles, ring path canvas, background image, depth mask), token at starting position, and 5 outer stop markers already render unconditionally for any logged-in user — no additional rendering guards needed
+- Confirmed `LevelWorldsHub.tsx` already routes to `IslandRunBoardPrototype` by default (`isIslandRunPrototype` defaults to `true`; only `?islandRunDev=0` switches to legacy board)
+- Dev panel (`isDevPanelOpen`) remains collapsed by default; debug overlays (`showDebug`) remain off unless `?debugBoard=1`
+Files changed: src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx, src/features/gamification/level-worlds/LevelWorlds.css, docs/00_MAIN_GAME_120_ISLANDS_INDEX.md, docs/07_MAIN_GAME_PROGRESS.md
+Testing: npm run build (zero errors; pre-existing chunk size warnings unrelated)
+Next: M2-COMPLETE — Finish dice movement + token animation production polish
+Milestones closed: M1 ✅
+
 Date: 2026-03-03
 Slice: DESIGN — Collectible Progress Bar canonical design locked
 Summary:

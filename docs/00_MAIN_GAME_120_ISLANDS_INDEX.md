@@ -68,8 +68,8 @@ It forces the agent to:
 Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 
 ## Milestones
-- [🟡] M1: Hybrid 3D board foundation (ring path + 17 anchors + depth masks) renders on top of island art (M1A shipped in dev mode)
-- [🟡] M2: Dice movement + token animation along 17 anchors (M1B core roll/hop loop shipped in dev prototype)
+- [✅] M1: Hybrid 3D board foundation (ring path + 17 anchors + depth masks) renders on top of island art (M1A shipped in dev mode; M1B-COMPLETE — board renders for all logged-in users without dev flags)
+- [🟡] M2: Dice movement + token animation along 17 anchors (M1B core roll/hop loop shipped in dev prototype; M2-COMPLETE needed: dice movement + token animation production polish)
 - [🟡] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype)
 - [🟡] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped)
 - [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
@@ -95,10 +95,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M1B-COMPLETE — Finish hybrid 3D board foundation: ensure the ring path (17 anchors), depth masks, and island art background all render correctly in non-dev mode (not just dev prototype mode). Remove any dev-only guards that prevent the board from rendering for a logged-in user in normal app flow.
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`, and any feature-flag or route guard that blocks the board from loading outside dev mode.
-**Acceptance criteria:** Board renders with 17 anchor tiles, ring path, and island art on first load for any logged-in user (not just when a dev flag is set); `npm run build` passes.
-**How to test:** Open Island Run in the app as a logged-in user without any dev flags; board should render immediately with the ring path and token visible.
+**Objective:** M2-COMPLETE — Finish dice movement + token animation production polish: ensure the token visibly hops tile-to-tile along the 17-anchor ring path on each dice roll, with smooth CSS/JS animation, correct z-ordering (depth mask occlusion), and roll result displayed in the HUD. The roll/hop loop should work for any logged-in user without dev flags.
+**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`
+**Acceptance criteria:** Token animates smoothly from tile to tile on dice roll; roll value visible in HUD; animation respects depth/zBand ordering; `npm run build` passes.
+**How to test:** Open Island Run as a logged-in user without any dev flags; tap Roll and observe token hopping tile-to-tile with animation.
 
 ---
 

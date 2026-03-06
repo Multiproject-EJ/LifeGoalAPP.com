@@ -1995,6 +1995,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             🛍️ Shop
           </button>
         </div>
+        {/* M1B: Production HUD — always visible for all logged-in users */}
+        <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
+          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
+          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
+          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
+          <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">Lvl <strong>{islandNumber}</strong></span>
+          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
+        </div>
         {/* M17A: shields HUD chip — only shown when player has at least 1 shield */}
         {shields > 0 && (
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shields">
