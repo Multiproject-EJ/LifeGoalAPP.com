@@ -299,6 +299,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(() => getIslandRunAudioEnabled());
+  // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
+  const [cycleIndex, setCycleIndex] = useState<number>(0);
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
@@ -399,7 +401,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setShields(runtimeState.shields ?? 0);
     // M17C: Restore shards wallet currency from runtime state
     setShards(runtimeState.shards ?? 0);
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards]);
+    // M4-COMPLETE: Restore cycleIndex from runtime state
+    setCycleIndex(runtimeState.cycleIndex ?? 0);
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -1629,6 +1633,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setMarketInteracted(true);
   };
   const performIslandTravel = (nextIsland: number) => {
+    // M4-COMPLETE: Handle island 120 → 1 wrap with cycle_index increment
+    const MAX_ISLAND = 120;
+    const wraps = nextIsland > MAX_ISLAND;
+    const resolvedIsland = wraps ? ((nextIsland - 1) % MAX_ISLAND) + 1 : Math.max(1, nextIsland);
+    const nextCycleIndex = wraps ? cycleIndex + 1 : cycleIndex;
+
     // M11C: clear completed stops for the old island before travelling
     try {
       window.localStorage.removeItem(`island_run_stops_${session.user.id}_island_${islandNumber}`);
@@ -1642,8 +1652,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     } else if (!activeEgg) {
       // no egg to carry
     }
-    setIslandNumber(nextIsland);
-    setDicePool(convertHeartToDicePool(nextIsland));
+    setIslandNumber(resolvedIsland);
+    setCycleIndex(nextCycleIndex);
+    setDicePool(convertHeartToDicePool(resolvedIsland));
     setTokenIndex(TOKEN_START_TILE_INDEX);
     setHearts(5);
     setRollValue(null);
@@ -1657,7 +1668,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setMarketInteracted(false);
     setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
     const nowMs = Date.now();
-    const durationMs = getIslandDurationMs(nextIsland);
+    const durationMs = getIslandDurationMs(resolvedIsland);
     const expiresAtMs = nowMs + durationMs;
     setTimeLeftSec(Math.ceil(durationMs / 1000));
     setIslandStartedAtMs(nowMs);
@@ -1674,9 +1685,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
-      patch: { currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs },
+      patch: { currentIslandNumber: resolvedIsland, cycleIndex: nextCycleIndex, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs },
     });
-    setRuntimeState((current) => ({ ...current, currentIslandNumber: nextIsland, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs }));
+    setRuntimeState((current) => ({ ...current, currentIslandNumber: resolvedIsland, cycleIndex: nextCycleIndex, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs }));
     // M10D: island travel complete sound + haptic
     playIslandRunSound('island_travel_complete');
     triggerIslandRunHaptic('island_travel_complete');
@@ -2430,7 +2441,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         <div className="island-travel-overlay" role="status" aria-live="polite">
           <div className="island-travel-overlay__card">
             <p className="island-travel-overlay__eyebrow">Island transfer</p>
-            <p className="island-travel-overlay__title island-travel-overlay__title--headline">✈️ Traveling to Island {islandNumber + 1}...</p>
+            <p className="island-travel-overlay__title island-travel-overlay__title--headline">✈️ Traveling to Island {islandNumber >= 120 ? 1 : islandNumber + 1}...</p>
             <p className="island-travel-overlay__subtitle island-travel-overlay__copy island-travel-overlay__copy--long">Preparing route, rewards, and stop plan.</p>
           </div>
         </div>

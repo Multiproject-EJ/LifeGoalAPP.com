@@ -7,6 +7,7 @@ export interface IslandRunRuntimeState {
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
   currentIslandNumber: number;
+  cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
   activeEggTier: 'common' | 'rare' | 'mythic' | null;
   activeEggSetAtMs: number | null;
@@ -78,6 +79,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     dailyHeartsClaimedDayKey?: string | null;
     onboardingComplete?: boolean;
     currentIslandNumber?: number;
+    cycleIndex?: number;
     bossTrialResolvedIslandNumber?: number | null;
     activeEggTier?: 'common' | 'rare' | 'mythic' | null;
     activeEggSetAtMs?: number | null;

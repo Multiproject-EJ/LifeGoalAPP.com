@@ -3297,3 +3297,21 @@ Testing:
 - Open Island Run as logged-in user; complete Stop 1; roll to each stop-trigger tile and verify modal opens; tap orbit-stop POI buttons — locked boss shows disabled button; completed stops show ✅ icon; Escape key closes open modal
 Next: M4-COMPLETE — Island timer + expiry + travel overlay production polish
 Milestones closed: M3 ✅
+
+---
+
+Date: 2026-03-06
+Slice: M4-COMPLETE — Island timer + expiry + travel overlay production polish
+Summary: Completed all M4 production polish items. (1) Island timer already counted down in real-time via a 1-second setInterval (shipped in M4A); confirmed 48h/72h durations for normal/special islands and 45s dev mode with ?devTimer=1 are correct. (2) Travel overlay already triggered on timer expiry; confirmed expiry is checked on app boot (hydration effect), on entering level screen (mount), and on every tick. (3) Catch-up Rule A (advance exactly one island on resume if expired) was already implemented in the hydration effect. (4) Added island 120 → island 1 wrap with cycle_index increment: performIslandTravel now computes resolvedIsland = rawNext > 120 ? ((rawNext-1) % 120) + 1 : rawNext and increments cycleIndex on each full-lap wrap. (5) Added cycleIndex to IslandRunGameStateRecord, IslandRunRuntimeState, and all persistence layers (localStorage + Supabase upsert with cycle_index column, gracefully falls back to 0 if column absent). (6) Travel overlay destination display fixed: shows correct island 1 when wrapping from island 120. (7) State reset on travel (token index, stops, per-island currency) was already correct. Egg dormant carryover on travel was already correct.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (cycleIndex state; performIslandTravel wrap logic; hydration restore; overlay destination fix; deps array update)
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts (cycleIndex field in record interface + default + toRecord + select + upsert)
+- src/features/gamification/level-worlds/services/islandRunRuntimeState.ts (cycleIndex in state interface + patch type)
+- src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts (cycleIndex in backend interface + persistPatch implementation)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M4 → [✅]; Next Slice → M5-COMPLETE)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build passes (zero TypeScript errors, zero new errors)
+- Open Island Run as logged-in user; verify timer counts down; use ?devTimer=1 to test 45s expiry; confirm travel overlay shows and island number increments; verify state resets on new island; verify island 120 → 1 wrap increments cycleIndex
+Next: M5-COMPLETE — Hatchery + egg stages + dormant carryover production polish
+Milestones closed: M4 ✅
