@@ -133,10 +133,17 @@ export function WorldHome({
       </div>
 
       {/* Footer */}
-      <p className="world-home__footer">
-        HabitGame &copy; {new Date().getFullYear()}
-        <span className="world-home__version" aria-hidden="true"> · v1.0</span>
-      </p>
+      <footer className="world-home__footer">
+        <p className="world-home__copyright">
+          HabitGame &copy; {new Date().getFullYear()}
+          <span className="world-home__version" aria-hidden="true"> · v1.0</span>
+        </p>
+        <nav className="world-home__footer-links" aria-label="Legal">
+          <a href="/privacy" className="world-home__footer-link">Privacy</a>
+          <a href="/terms" className="world-home__footer-link">Terms</a>
+          <a href="/support" className="world-home__footer-link">Support</a>
+        </nav>
+      </footer>
       </WorldHero>
 
       {/* iOS install coachmark — rendered last so it layers on top */}

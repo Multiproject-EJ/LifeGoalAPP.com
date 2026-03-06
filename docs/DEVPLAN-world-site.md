@@ -475,8 +475,11 @@ Add a lightweight trust-building section between `<RewardsTease />` and the CTA 
 Support sharing/indexing/trust.
 
 ### Tasks
-- [ ] Add `/privacy`, `/terms`, `/support` pages.
-- [ ] Add base SEO metadata + OG image for `/`.
+- [x] Add `/privacy`, `/terms`, `/support` pages.
+- [x] Add base SEO metadata + OG image for `/`.
+
+> **Note:** The OG image asset (`/world-assets/og-image.png`, 1200×630) is referenced in the meta
+> tags but still needs to be designed and added. The path is `/public/world-assets/og-image.png`.
 
 ### Definition of done
 - Shared links render polished previews.
