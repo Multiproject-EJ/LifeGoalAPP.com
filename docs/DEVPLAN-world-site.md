@@ -442,9 +442,9 @@ Signal reward loop quickly.
 Enable a thematic post-login bridge before entering full app.
 
 ### Tasks
-- [ ] Add `/lobby` (auth-required).
-- [ ] Show minimal profile summary (avatar, level, streak, quest).
-- [ ] CTA to `/app`.
+- [x] Add `/lobby` (auth-required).
+- [x] Show minimal profile summary (avatar, level, streak, quest).
+- [x] CTA to `/app`.
 
 ### Definition of done
 - Fast, lightweight transition experience.
