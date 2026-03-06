@@ -333,12 +333,12 @@ Make route architecture explicit and stable.
 Encourage install from world layer without intrusive UX.
 
 ### Tasks
-- [ ] Add install state detection:
+- [x] Add install state detection:
   - standalone mode
   - Android `beforeinstallprompt`
   - iOS manual guidance
-- [ ] Show one install module only when eligible.
-- [ ] Persist dismissal state in local storage with cooldown.
+- [x] Show one install module only when eligible.
+- [x] Persist dismissal state in local storage with cooldown.
 
 ### Definition of done
 - Android prompt only appears from user gesture.
@@ -346,12 +346,12 @@ Encourage install from world layer without intrusive UX.
 - Installed users see “Open App” behavior.
 
 ### Verification commands
-- [ ] `npm run build`
-- [ ] Manual mobile checks (Android + iOS Safari where possible):
-  - [ ] eligible Android sees install affordance
-  - [ ] install prompt only after click
-  - [ ] iOS gets coachmark guidance and dismiss persistence
-  - [ ] install UX never blocks Continue Journey / Log in primary paths
+- [x] `npm run build`
+- [x] Manual mobile checks (Android + iOS Safari where possible):
+  - [x] eligible Android sees install affordance
+  - [x] install prompt only after click
+  - [x] iOS gets coachmark guidance and dismiss persistence
+  - [x] install UX never blocks Continue Journey / Log in primary paths
 
 ---
 
@@ -373,10 +373,10 @@ Shift from CSS-only to image-led “game lobby” visual language.
 10. `world-bg-blur.webp`
 
 ### Tasks
-- [ ] Add `/public/world-assets/` pipeline.
-- [ ] Preload only primary background.
-- [ ] Lazy-load secondary assets via intersection observer.
-- [ ] Build `WorldHero` using image layers.
+- [x] Add `/public/world-assets/` pipeline.
+- [x] Preload only primary background.
+- [x] Lazy-load secondary assets via intersection observer.
+- [x] Build `WorldHero` using image layers.
 
 ### Definition of done
 - Visual identity reads “mobile game lobby”.
