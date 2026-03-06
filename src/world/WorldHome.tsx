@@ -8,6 +8,7 @@ import { JourneyPreview } from './JourneyPreview.tsx';
 import { ArchetypePicker } from './ArchetypePicker.tsx';
 import { RewardsTease } from './RewardsTease.tsx';
 import { SocialProof } from './SocialProof.tsx';
+import { useWorldAnalytics } from './useWorldAnalytics.ts';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -22,8 +23,10 @@ export function WorldHome({
 }: WorldHomeProps) {
   const installState = useInstallState(beforeInstallPromptEvent);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const { trackEvent } = useWorldAnalytics();
 
   const handleInstallClick = () => {
+    trackEvent('install_click');
     if (installState.platform === 'android' && installState.promptInstall) {
       installState.promptInstall().catch((err: unknown) => {
         if (err instanceof Error && err.message) {
@@ -38,6 +41,16 @@ export function WorldHome({
   const handleIOSDismiss = () => {
     setShowIOSGuide(false);
     installState.dismiss();
+  };
+
+  const handleContinue = () => {
+    trackEvent('continue_click');
+    onContinue();
+  };
+
+  const handleLogin = () => {
+    trackEvent('login_click');
+    onLogin();
   };
 
   const showInstallButton =
@@ -94,14 +107,14 @@ export function WorldHome({
         <div className="world-home__cta-group">
           <button
             className="world-home__btn world-home__btn--primary"
-            onClick={onContinue}
+            onClick={handleContinue}
             type="button"
           >
             Start Your Game
           </button>
           <button
             className="world-home__btn world-home__btn--secondary"
-            onClick={onLogin}
+            onClick={handleLogin}
             type="button"
           >
             Log in
