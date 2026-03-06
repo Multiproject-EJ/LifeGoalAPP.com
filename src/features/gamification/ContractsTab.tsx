@@ -23,6 +23,7 @@ import {
   reduceContractStake,
   recordWitnessPing,
   fetchContractSweepHealth,
+  MAX_ACTIVE_CONTRACTS,
   type ReduceStakeEligibility,
   type GentleRecoveryEligibility,
   type ContractSweepHealth,
@@ -32,6 +33,7 @@ import { ContractWizard } from './ContractWizard';
 import { ContractStatusCard } from './ContractStatusCard';
 import { ContractResultModal } from './ContractResultModal';
 import { ContractHistoryCard } from './ContractHistoryCard';
+import { ReputationCard } from './ReputationCard';
 
 function buildWitnessReminder(contract: CommitmentContract): string {
   const witnessName = contract.witnessLabel ?? 'my accountability witness';
@@ -80,7 +82,7 @@ export function ContractsTab({
   const userId = session?.user?.id ?? profile?.user_id ?? '';
   const zenTokens = profile?.zen_tokens ?? 0;
   const [goldBalance, setGoldBalance] = useState(profile?.total_points ?? 0);
-  const [activeContract, setActiveContract] = useState<CommitmentContract | null>(null);
+  const [activeContracts, setActiveContracts] = useState<CommitmentContract[]>([]);
   const [showContractWizard, setShowContractWizard] = useState(false);
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
   const [resultContract, setResultContract] = useState<CommitmentContract | null>(null);
@@ -93,6 +95,11 @@ export function ContractsTab({
   const [lastAutoCheckAt, setLastAutoCheckAt] = useState<string | null>(null);
   const [overdueCatchUpMessage, setOverdueCatchUpMessage] = useState<string | null>(null);
   const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
+
+  // For single-contract actions, use the primary (first active) contract
+  const activeContract = activeContracts[0] ?? null;
+  const activeContractCount = activeContracts.filter((c) => c.status === 'active').length;
+  const canCreateMore = activeContractCount < MAX_ACTIVE_CONTRACTS;
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -135,39 +142,49 @@ export function ContractsTab({
       setOverdueCatchUpMessage(null);
     }
 
-    const primaryContract = pickPrimaryContract(contracts);
+    // Load all active/paused contracts (multi-contract support)
+    const displayContracts = contracts.filter(
+      (c) => c.status === 'active' || c.status === 'paused'
+    );
 
-    if (!primaryContract) {
-      setActiveContract(null);
+    if (displayContracts.length === 0) {
+      setActiveContracts([]);
       setHistoryEvaluations([]);
       return;
     }
 
+    // Hydrate the first active contract with progress sync
+    const primaryContract = displayContracts[0];
     const { data: contractEvaluations } = await fetchContractEvaluations(userId, primaryContract.id);
     setHistoryEvaluations(contractEvaluations ?? []);
 
-    let hydratedContract = primaryContract;
+    const hydratedContracts: CommitmentContract[] = [];
 
-    if (primaryContract.status === 'active') {
-      const { data: syncedContract } = await syncContractProgressWithTarget(userId, primaryContract.id);
-      if (syncedContract) {
-        hydratedContract = syncedContract;
+    for (const contract of displayContracts) {
+      let hydratedContract = contract;
+
+      if (contract.status === 'active') {
+        const { data: syncedContract } = await syncContractProgressWithTarget(userId, contract.id);
+        if (syncedContract) {
+          hydratedContract = syncedContract;
+        }
       }
+
+      if (hydratedContract.status === 'active' && new Date() > getWindowEnd(hydratedContract)) {
+        const { data: evaluation } = await evaluateContract(userId, contract.id);
+        if (evaluation) {
+          const { data: refreshedContracts } = await fetchContracts(userId);
+          const refreshed = refreshedContracts?.find((c) => c.id === hydratedContract.id) ?? null;
+          setContractResult(evaluation);
+          setResultContract(refreshed ?? hydratedContract);
+          if (refreshed) hydratedContract = refreshed;
+        }
+      }
+
+      hydratedContracts.push(hydratedContract);
     }
 
-    if (hydratedContract.status === 'active' && new Date() > getWindowEnd(hydratedContract)) {
-      const { data: evaluation } = await evaluateContract(userId, primaryContract.id);
-      if (evaluation) {
-        const { data: refreshedContracts } = await fetchContracts(userId);
-        const refreshed = refreshedContracts?.find((contract) => contract.id === hydratedContract.id) ?? null;
-        setContractResult(evaluation);
-        setActiveContract(refreshed);
-        setResultContract(refreshed ?? hydratedContract);
-        return;
-      }
-    }
-
-    setActiveContract(hydratedContract);
+    setActiveContracts(hydratedContracts);
   };
 
   useEffect(() => {
@@ -230,15 +247,21 @@ export function ContractsTab({
 
   const handleContractWizardComplete = async () => {
     setShowContractWizard(false);
-    const { data: contracts } = await fetchContracts(userId);
-    setActiveContract(contracts ? pickPrimaryContract(contracts) : null);
+    await loadContract();
   };
 
-  const handleMarkProgress = async () => {
-    if (!activeContract || !userId) return;
+  const refreshContractInList = (updated: CommitmentContract) => {
+    setActiveContracts((prev) =>
+      prev.map((c) => (c.id === updated.id ? updated : c))
+    );
+  };
 
-    const previousEvaluatedAt = activeContract.lastEvaluatedAt;
-    const { data, error } = await recordContractProgress(userId, activeContract.id);
+  const handleMarkProgress = async (contractId?: string) => {
+    const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
+    if (!target || !userId) return;
+
+    const previousEvaluatedAt = target.lastEvaluatedAt;
+    const { data, error } = await recordContractProgress(userId, target.id);
     if (error) {
       console.error('Failed to record progress:', error);
       setActionError(error.message);
@@ -248,9 +271,11 @@ export function ContractsTab({
     setActionError(null);
 
     if (data) {
-      setActiveContract(data);
+      refreshContractInList(data);
       const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-      setHistoryEvaluations(refreshedEvaluations ?? []);
+      if (data.id === activeContract?.id) {
+        setHistoryEvaluations(refreshedEvaluations ?? []);
+      }
 
       if (data.lastEvaluatedAt && data.lastEvaluatedAt !== previousEvaluatedAt) {
         const { data: evaluations } = await fetchContractEvaluations(userId, data.id);
@@ -263,10 +288,11 @@ export function ContractsTab({
     }
   };
 
-  const handlePauseContract = async () => {
-    if (!activeContract || !userId) return;
+  const handlePauseContract = async (contractId?: string) => {
+    const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
+    if (!target || !userId) return;
 
-    const { data, error } = await pauseContract(userId, activeContract.id);
+    const { data, error } = await pauseContract(userId, target.id);
     if (error) {
       console.error('Failed to pause contract:', error);
       setActionError(error.message);
@@ -276,14 +302,15 @@ export function ContractsTab({
     setActionError(null);
 
     if (data) {
-      setActiveContract(data);
+      refreshContractInList(data);
     }
   };
 
-  const handleResumeContract = async () => {
-    if (!activeContract || !userId) return;
+  const handleResumeContract = async (contractId?: string) => {
+    const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
+    if (!target || !userId) return;
 
-    const { data, error } = await resumeContract(userId, activeContract.id);
+    const { data, error } = await resumeContract(userId, target.id);
     if (error) {
       console.error('Failed to resume contract:', error);
       setActionError(error.message);
@@ -293,14 +320,15 @@ export function ContractsTab({
     setActionError(null);
 
     if (data) {
-      setActiveContract(data);
+      refreshContractInList(data);
     }
   };
 
-  const handleCancelContract = async () => {
-    if (!activeContract || !userId) return;
+  const handleCancelContract = async (contractId?: string) => {
+    const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
+    if (!target || !userId) return;
 
-    const { data, error } = await cancelContract(userId, activeContract.id);
+    const { data, error } = await cancelContract(userId, target.id);
     if (error) {
       console.error('Failed to cancel contract:', error);
       setActionError(error.message);
@@ -310,7 +338,7 @@ export function ContractsTab({
     setActionError(null);
 
     if (data) {
-      setActiveContract(null);
+      setActiveContracts((prev) => prev.filter((c) => c.id !== target.id));
     }
   };
 
@@ -332,9 +360,11 @@ export function ContractsTab({
       return;
     }
 
-    setActiveContract(data);
+    refreshContractInList(data);
     const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-    setHistoryEvaluations(refreshedEvaluations ?? []);
+    if (data.id === activeContract?.id) {
+      setHistoryEvaluations(refreshedEvaluations ?? []);
+    }
     setRecoveryMessage('Contract reset. Fresh window, same commitment.');
     setContractResult(null);
     setResultContract(null);
@@ -350,9 +380,11 @@ export function ContractsTab({
       return;
     }
 
-    setActiveContract(data);
+    refreshContractInList(data);
     const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-    setHistoryEvaluations(refreshedEvaluations ?? []);
+    if (data.id === activeContract?.id) {
+      setHistoryEvaluations(refreshedEvaluations ?? []);
+    }
     setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'Gold' : 'Tokens'}.`);
     setContractResult(null);
     setResultContract(null);
@@ -369,9 +401,11 @@ export function ContractsTab({
       return;
     }
 
-    setActiveContract(data);
+    refreshContractInList(data);
     const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-    setHistoryEvaluations(refreshedEvaluations ?? []);
+    if (data.id === activeContract?.id) {
+      setHistoryEvaluations(refreshedEvaluations ?? []);
+    }
     setRecoveryMessage(`Gentle ramp started. Target temporarily adjusted to ${data.targetCount} this ${data.cadence}.`);
     setContractResult(null);
     setResultContract(null);
@@ -417,7 +451,7 @@ export function ContractsTab({
   const handlePauseWeek = async () => {
     if (!activeContract || !userId) return;
 
-    const { error } = await pauseContract(userId, activeContract.id);
+    const { data, error } = await pauseContract(userId, activeContract.id);
     if (error) {
       console.error('Failed to pause contract:', error);
       setActionError(error.message);
@@ -427,8 +461,9 @@ export function ContractsTab({
     setActionError(null);
     setContractResult(null);
     setResultContract(null);
-    const { data: contracts } = await fetchContracts(userId);
-    setActiveContract(contracts ? pickPrimaryContract(contracts) : null);
+    if (data) {
+      refreshContractInList(data);
+    }
   };
 
   const getSweepHealthCopy = () => {
@@ -496,7 +531,7 @@ export function ContractsTab({
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
           {actionError && <p className="score-tab__status">{actionError}</p>}
           {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
-          {!activeContract && !showContractWizard && (
+          {activeContracts.length === 0 && !showContractWizard && (
             <div className="score-tab__contracts-empty">
               <p className="score-tab__contracts-empty-text">
                 No active contract yet. Ready to commit?
@@ -510,22 +545,39 @@ export function ContractsTab({
               </button>
             </div>
           )}
-          {activeContract && !showContractWizard && (
-            <ContractStatusCard
-              contract={activeContract}
-              onMarkProgress={handleMarkProgress}
-              onPause={handlePauseContract}
-              onResume={handleResumeContract}
-              onCancel={handleCancelContract}
-              onWitnessPing={handleWitnessPing}
-            />
-          )}
+          {activeContracts.length > 0 && !showContractWizard && (
+            <>
+              {activeContracts.map((contract) => (
+                <ContractStatusCard
+                  key={contract.id}
+                  contract={contract}
+                  onMarkProgress={() => void handleMarkProgress(contract.id)}
+                  onPause={() => void handlePauseContract(contract.id)}
+                  onResume={() => void handleResumeContract(contract.id)}
+                  onCancel={() => void handleCancelContract(contract.id)}
+                  onWitnessPing={handleWitnessPing}
+                />
+              ))}
 
-          {activeContract && !showContractWizard && (
-            <ContractHistoryCard
-              contract={activeContract}
-              evaluations={historyEvaluations}
-            />
+              {activeContracts[0] && (
+                <ContractHistoryCard
+                  contract={activeContracts[0]}
+                  evaluations={historyEvaluations}
+                />
+              )}
+
+              {canCreateMore && (
+                <div className="score-tab__contracts-add">
+                  <button
+                    type="button"
+                    className="score-tab__contracts-create-button"
+                    onClick={() => setShowContractWizard(true)}
+                  >
+                    + Add Contract ({activeContractCount}/{MAX_ACTIVE_CONTRACTS})
+                  </button>
+                </div>
+              )}
+            </>
           )}
           {showContractWizard && (
             <ContractWizard
@@ -535,6 +587,10 @@ export function ContractsTab({
               onComplete={handleContractWizardComplete}
               onCancel={() => setShowContractWizard(false)}
             />
+          )}
+
+          {userId && !showContractWizard && (
+            <ReputationCard userId={userId} />
           )}
         </div>
       )}

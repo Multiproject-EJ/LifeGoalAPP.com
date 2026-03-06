@@ -564,11 +564,36 @@ export const DEMO_CHALLENGES_KEY = 'lifegoal_demo_challenges';
 // COMMITMENT CONTRACTS TYPES (Beeminder-Style Stakes)
 // =====================================================
 
-export type ContractStatus = 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+export type ContractStatus = 'locked' | 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
 export type ContractTargetType = 'Habit' | 'Goal' | 'FocusSession';
 export type ContractCadence = 'daily' | 'weekly';
 export type ContractStakeType = 'gold' | 'tokens';
 export type ContractResult = 'success' | 'miss';
+
+export type ContractType =
+  | 'classic'       // Existing behavior — stake on habit/goal completion
+  | 'identity'      // Commit to an identity statement ("I am someone who...")
+  | 'escalation'    // Stakes increase on consecutive misses
+  | 'redemption'    // Miss triggers a penalty quest instead of flat loss
+  | 'reputation'    // Affects a persistent reliability score
+  | 'reverse'       // Commit to NOT doing something
+  | 'multi_stage'   // Large goal broken into milestones
+  | 'future_self'   // Message to future self, unlocked on completion
+  | 'narrative'     // Story-themed contract with character growth
+  | 'sacred'        // Rare, high-stakes contract (limited per year)
+  | 'cascading';    // Completing unlocks the next contract
+
+export type ContractTier = 'common' | 'rare' | 'epic' | 'legendary' | 'sacred';
+
+export interface ContractStage {
+  id: string;
+  title: string;
+  description: string;
+  targetCount: number;
+  completed: boolean;
+  completedAt: string | null;
+  sealEmoji: string; // Milestone seal: "🔱", "⚔️", etc.
+}
 
 export interface CommitmentContract {
   id: string;
@@ -600,6 +625,46 @@ export interface CommitmentContract {
   lastEvaluatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+
+  // Contract type & tier (defaults to classic/common for existing contracts)
+  contractType: ContractType;
+  contractTier: ContractTier;
+
+  // Identity contract fields
+  identityStatement?: string | null;
+
+  // Escalation contract fields
+  escalationLevel?: number;
+  escalationMultiplier?: number;
+  baseStakeAmount?: number;
+
+  // Redemption contract fields
+  redemptionQuestId?: string | null;
+  redemptionQuestTitle?: string | null;
+  redemptionQuestCompleted?: boolean;
+
+  // Future Self fields
+  futureMessage?: string | null;
+  futureMessageUnlockedAt?: string | null;
+
+  // Narrative contract fields
+  narrativeTheme?: 'warrior' | 'monk' | 'scholar' | 'explorer' | null;
+  narrativeRank?: number;
+
+  // Sacred contract fields
+  isSacred?: boolean;
+  sacredPenaltyMultiplier?: number;
+
+  // Multi-stage contract fields
+  stages?: ContractStage[] | null;
+  currentStageIndex?: number;
+
+  // Cascading contract fields
+  unlocksContractId?: string | null;
+  unlockedByContractId?: string | null;
+
+  // Reputation tracking
+  reliabilityScoreImpact?: number;
 }
 
 export interface ContractEvaluation {
@@ -616,5 +681,36 @@ export interface ContractEvaluation {
   evaluatedAt: string;
 }
 
+// =====================================================
+// REPUTATION SYSTEM
+// =====================================================
+
+export type ReputationTier =
+  | 'untested'     // < 3 contracts
+  | 'apprentice'   // 3+ contracts, < 60% reliability
+  | 'dependable'   // 60-79% reliability
+  | 'reliable'     // 80-89% reliability
+  | 'steadfast'    // 90-94% reliability
+  | 'unbreakable'; // 95%+ reliability
+
+export interface ReputationScore {
+  userId: string;
+  contractsStarted: number;
+  contractsCompleted: number;
+  contractsFailed: number;
+  contractsCancelled: number;
+  reliabilityRating: number;       // 0.0 - 1.0
+  reliabilityTier: ReputationTier;
+  sacredContractsKept: number;
+  sacredContractsBroken: number;
+  sacredContractsUsedThisYear: number;
+  sacredYear: number;
+  longestContractStreak: number;
+  totalStakeEarned: number;
+  totalStakeForfeited: number;
+  updatedAt: string;
+}
+
 export const DEMO_CONTRACTS_KEY = 'lifegoal_demo_contracts';
 export const DEMO_CONTRACT_EVALUATIONS_KEY = 'lifegoal_demo_contract_evaluations';
+export const DEMO_REPUTATION_KEY = 'lifegoal_demo_reputation';
