@@ -7,6 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { resolveRoute } from './routes/resolveRoute.ts';
 import { WorldHome } from './world/WorldHome.tsx';
 import { Lobby } from './world/Lobby.tsx';
+import { TrustPage } from './world/TrustPage.tsx';
 import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
 
 if (typeof window !== 'undefined') {
@@ -27,9 +28,12 @@ if (typeof window !== 'undefined') {
 // not yet part of the standard TypeScript lib.
 // (Type is exported from ./world/useInstallState.ts and imported above.)
 
+// Routes that render public (non-app) views.
+const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']);
+
 function Root() {
   const initialRoute = useMemo(() => resolveRoute(), []);
-  const [showApp, setShowApp] = useState(() => initialRoute !== 'world' && initialRoute !== 'lobby');
+  const [showApp, setShowApp] = useState(() => !NON_APP_ROUTES.has(initialRoute));
   const [showLobby, setShowLobby] = useState(() => initialRoute === 'lobby');
   const [loginOnEntry, setLoginOnEntry] = useState(() => initialRoute === 'login');
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -44,6 +48,9 @@ function Root() {
   }, []);
 
   if (!showApp && !showLobby) {
+    if (initialRoute === 'privacy' || initialRoute === 'terms' || initialRoute === 'support') {
+      return <TrustPage page={initialRoute} />;
+    }
     return (
       <WorldHome
         onContinue={() => setShowApp(true)}
