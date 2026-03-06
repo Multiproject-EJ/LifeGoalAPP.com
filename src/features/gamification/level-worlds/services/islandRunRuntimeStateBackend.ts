@@ -28,6 +28,7 @@ export interface IslandRunRuntimeStateBackend {
       dailyHeartsClaimedDayKey?: string | null;
       onboardingComplete?: boolean;
       currentIslandNumber?: number;
+      cycleIndex?: number;
       bossTrialResolvedIslandNumber?: number | null;
       activeEggTier?: 'common' | 'rare' | 'mythic' | null;
       activeEggSetAtMs?: number | null;
@@ -71,6 +72,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.currentIslandNumber === 'number' && Number.isFinite(patch.currentIslandNumber)
           ? Math.max(1, Math.floor(patch.currentIslandNumber))
           : current.currentIslandNumber,
+      cycleIndex:
+        typeof patch.cycleIndex === 'number' && Number.isFinite(patch.cycleIndex)
+          ? Math.max(0, Math.floor(patch.cycleIndex))
+          : current.cycleIndex,
       bossTrialResolvedIslandNumber:
         typeof patch.bossTrialResolvedIslandNumber === 'number' && Number.isFinite(patch.bossTrialResolvedIslandNumber)
           ? Math.max(1, Math.floor(patch.bossTrialResolvedIslandNumber))
