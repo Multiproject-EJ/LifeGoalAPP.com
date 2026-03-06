@@ -1,0 +1,59 @@
+/* =====================================================
+   IDENTITY STATEMENT INPUT — MOBILE-FIRST
+   ===================================================== */
+
+.identity-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.identity-input__prompt {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin: 0;
+}
+
+.identity-input__label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+  margin-bottom: 0.25rem;
+}
+
+.identity-input__label em {
+  color: var(--primary-color, #667eea);
+  font-style: italic;
+}
+
+.identity-input__textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  background: var(--card-background, #ffffff);
+  color: var(--text-primary, #333);
+  resize: vertical;
+  min-height: 88px;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.identity-input__textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #667eea);
+}
+
+.identity-input__count {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+  text-align: right;
+}
+
+.identity-input__count--warning {
+  color: #e65100;
+  font-weight: 600;
+}

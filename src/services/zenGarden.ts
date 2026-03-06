@@ -156,6 +156,40 @@ export async function fetchZenTokenTransactions(
   }
 }
 
+export async function grantEarnedZenItem(
+  userId: string,
+  itemId: string,
+  itemName: string
+): Promise<{ data: { inventory: string[] } | null; error: Error | null }> {
+  try {
+    const inventory = readInventory(userId);
+    if (inventory.includes(itemId)) {
+      return { data: { inventory }, error: null };
+    }
+    const nextInventory = [...inventory, itemId];
+    writeInventory(userId, nextInventory);
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'economy_earn',
+      metadata: {
+        currency: 'zen_garden_item',
+        amount: 1,
+        sourceType: 'contract_milestone',
+        sourceId: itemId,
+        description: `Earned ${itemName}`,
+      },
+    });
+
+    return { data: { inventory: nextInventory }, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to grant Zen Garden item'),
+    };
+  }
+}
+
 export async function purchaseZenGardenItem(
   userId: string,
   itemId: string,

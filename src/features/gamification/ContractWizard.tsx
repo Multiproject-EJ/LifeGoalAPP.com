@@ -290,22 +290,19 @@ export function ContractWizard({
       {currentStep === 0 && (
         <div className="contract-wizard__step">
           <h3 className="contract-wizard__prompt">Choose your contract type</h3>
-          <div className="contract-wizard__target-list">
+          <div className="contract-wizard__type-grid">
             {CONTRACT_TYPES.map((ct) => (
               <button
                 key={ct.type}
                 type="button"
-                className={`contract-wizard__target-option${
-                  selectedContractType === ct.type ? ' contract-wizard__target-option--selected' : ''
+                className={`contract-wizard__type-card${
+                  selectedContractType === ct.type ? ' contract-wizard__type-card--selected' : ''
                 }`}
                 onClick={() => setSelectedContractType(ct.type)}
               >
-                <span className="contract-wizard__target-type">{ct.icon}</span>
-                <span>
-                  <span className="contract-wizard__target-title">{ct.label}</span>
-                  <br />
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #666)' }}>{ct.description}</span>
-                </span>
+                <span className="contract-wizard__type-icon">{ct.icon}</span>
+                <span className="contract-wizard__type-name">{ct.label}</span>
+                <span className="contract-wizard__type-desc">{ct.description}</span>
               </button>
             ))}
           </div>

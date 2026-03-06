@@ -4,6 +4,7 @@ import { fetchGamificationProfile } from '../../services/gamificationPrefs';
 import { getImpactTreeLedger } from '../../services/impactTrees';
 import type { ZenTokenTransaction } from '../../types/gamification';
 import { fetchZenGardenInventory, fetchZenTokenTransactions, purchaseZenGardenItem } from '../../services/zenGarden';
+import { ZEN_GARDEN_EARNED_ITEMS } from '../../constants/zenGarden';
 import { useTheme } from '../../contexts/ThemeContext';
 import zenShopBg from '../../assets/Zen_shopV2.webp';
 import toZenGardenImg from '../../assets/tozengarden.webp';
@@ -315,6 +316,31 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
               })}
             </div>
           </section>
+
+          {ZEN_GARDEN_EARNED_ITEMS.some((item) => ownedItems.has(item.id)) && (
+            <section className="zen-garden__earned">
+              <div className="zen-garden__shop-header">
+                <div>
+                  <h2 className="zen-garden__shop-title">🏅 Contract Rewards</h2>
+                  <p className="zen-garden__shop-subtitle">
+                    Earned through commitment milestones — yours to keep forever.
+                  </p>
+                </div>
+              </div>
+              <div className="zen-garden__shop-grid">
+                {ZEN_GARDEN_EARNED_ITEMS.filter((item) => ownedItems.has(item.id)).map((item) => (
+                  <article key={item.id} className="zen-garden__item zen-garden__item--owned zen-garden__item--earned">
+                    <div className="zen-garden__item-icon">{item.emoji}</div>
+                    <h3 className="zen-garden__item-title">{item.name}</h3>
+                    <p className="zen-garden__item-description">{item.description}</p>
+                    <div className="zen-garden__item-footer">
+                      <span className="zen-garden__item-earned-badge">Earned</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="zen-garden__tree">
             <button

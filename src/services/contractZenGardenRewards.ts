@@ -6,6 +6,7 @@
 
 import type { CommitmentContract } from '../types/gamification';
 import { recordTelemetryEvent, type TelemetryEventMetadata } from '../services/telemetry';
+import { grantEarnedZenItem } from '../services/zenGarden';
 
 // =====================================================
 // REWARD DEFINITIONS
@@ -19,38 +20,38 @@ export interface ZenGardenContractReward {
 }
 
 export const CONTRACT_ZEN_REWARDS: Record<string, ZenGardenContractReward> = {
-  contract_scroll: {
-    itemKey: 'contract_scroll',
+  zen_contract_scroll: {
+    itemKey: 'zen_contract_scroll',
     emoji: '📜',
     name: 'Contract Scroll',
     description: 'Awarded for completing your first commitment contract.',
   },
-  sacred_oath_stone: {
-    itemKey: 'sacred_oath_stone',
+  zen_sacred_stone: {
+    itemKey: 'zen_sacred_stone',
     emoji: '🔱',
     name: 'Sacred Oath Stone',
     description: 'Awarded for keeping a sacred contract.',
   },
-  warriors_blade: {
-    itemKey: 'warriors_blade',
+  zen_warrior_blade: {
+    itemKey: 'zen_warrior_blade',
     emoji: '⚔️',
     name: "Warrior's Blade",
     description: 'Awarded for reaching narrative rank 3 as a Warrior.',
   },
-  monks_bell: {
-    itemKey: 'monks_bell',
-    emoji: '🔔',
+  zen_monk_bell: {
+    itemKey: 'zen_monk_bell',
+    emoji: '🧘',
     name: "Monk's Bell",
     description: 'Awarded for reaching narrative rank 3 as a Monk.',
   },
-  scholars_tome: {
-    itemKey: 'scholars_tome',
+  zen_scholar_tome: {
+    itemKey: 'zen_scholar_tome',
     emoji: '📚',
     name: "Scholar's Tome",
     description: 'Awarded for reaching narrative rank 3 as a Scholar.',
   },
-  explorers_compass: {
-    itemKey: 'explorers_compass',
+  zen_explorer_compass: {
+    itemKey: 'zen_explorer_compass',
     emoji: '🧭',
     name: "Explorer's Compass",
     description: 'Awarded for reaching narrative rank 3 as an Explorer.',
@@ -58,10 +59,10 @@ export const CONTRACT_ZEN_REWARDS: Record<string, ZenGardenContractReward> = {
 };
 
 const NARRATIVE_THEME_REWARDS: Record<string, string> = {
-  warrior: 'warriors_blade',
-  monk: 'monks_bell',
-  scholar: 'scholars_tome',
-  explorer: 'explorers_compass',
+  warrior: 'zen_warrior_blade',
+  monk: 'zen_monk_bell',
+  scholar: 'zen_scholar_tome',
+  explorer: 'zen_explorer_compass',
 };
 
 // =====================================================
@@ -71,7 +72,7 @@ const NARRATIVE_THEME_REWARDS: Record<string, string> = {
 /**
  * Checks whether a contract milestone just unlocked a Zen Garden item.
  * Returns the reward item if awarded, null otherwise.
- * Fires a telemetry event when an item is awarded.
+ * Grants the item to the user's Zen Garden inventory and fires a telemetry event.
  */
 export async function checkContractZenGardenRewards(
   userId: string,
@@ -84,14 +85,14 @@ export async function checkContractZenGardenRewards(
 
   // First contract ever completed
   if (successCount === 1) {
-    await awardZenItem(userId, contract, 'contract_scroll');
-    return CONTRACT_ZEN_REWARDS.contract_scroll;
+    await awardZenItem(userId, contract, 'zen_contract_scroll');
+    return CONTRACT_ZEN_REWARDS.zen_contract_scroll;
   }
 
   // Sacred contract kept
   if (isSacred && contractType === 'sacred') {
-    await awardZenItem(userId, contract, 'sacred_oath_stone');
-    return CONTRACT_ZEN_REWARDS.sacred_oath_stone;
+    await awardZenItem(userId, contract, 'zen_sacred_stone');
+    return CONTRACT_ZEN_REWARDS.zen_sacred_stone;
   }
 
   // Narrative contract at rank 3
@@ -125,8 +126,5 @@ async function awardZenItem(
     } as TelemetryEventMetadata,
   });
 
-  // NOTE: Item award is logged via telemetry but NOT yet added to the Zen Garden inventory.
-  // TODO: When the Zen Garden inventory service exposes a public `grantEarnedItem(userId, itemKey)`
-  //       function, call it here to materialize the item in the user's garden.
-  //       Until then, the telemetry event acts as an audit trail that can be replayed.
+  await grantEarnedZenItem(userId, itemKey, reward.name);
 }
