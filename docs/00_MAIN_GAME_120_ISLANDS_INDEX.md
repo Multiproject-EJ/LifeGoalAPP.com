@@ -72,7 +72,7 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M2: Dice movement + token animation along 17 anchors (M2-COMPLETE — token hops tile-to-tile with CSS transitions, squash/stretch on land, zBand shadow depth, roll result chip + landing feed in production HUD)
 - [✅] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype; M3-COMPLETE — all 5 stop modals open on tile landing + orbit-stop POI tap; stop state locked/active/completed reflected on orbit buttons with ✅/🔒 icons; Escape key closes modals; Dynamic stop kind-specific content blocks added)
 - [✅] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped; M4-COMPLETE — production-grade timer for all users; travel overlay triggers on expiry; island advance with correct state reset; Catch-up Rule A; island 120 → 1 wrap with cycle_index increment)
-- [🟡] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype)
+- [✅] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype; M5-COMPLETE — random tier assignment weighted (common 70%/rare 25%/mythic 5%), random hatch delay 24–72 h, no countdown shown to player, stage names (Smooth/Mostly Gold/Cracked/Ready to Open) with emoji visuals, all 5 hatchery modal states production-ready, Island 1 forced egg set onboarding, per-island egg persistence with location flag (island/dormant), dormant carryover on travel, new eggService.ts with rollEggRewards/rollEggTierWeighted/getRandomHatchDelayMs/stage helpers)
 - [🟡] M6: Encounter tile (easy) + rewards (M6A prototype shipped in dev mode)
 - [🟡] M7: Boss stop (trial) + rewards (M7A resolve + reward feedback shipped; M7B telemetry/reward contract wiring shipped; M7C refresh persistence markers shipped; M7D table-first persistence wiring shipped; M7E debug evidence marker payloads shipped; M7F deterministic QA hooks/checklist shipped; M7G assertion harness shipped; M7H preset modes shipped; M7I summary helper shipped; M7J export bundle helper shipped; M7K run-scoped filter helper shipped; M7L filter-aware export bundle shipped; M7M explicit scope metadata shipped; M7M.1 unmatched-ref scope normalization shipped; M7N filter-resolution metadata shipped)
 - [🟡] M8: Market stop + purchases (M8A market stop prototype purchase modal stub shipped; M8B market telemetry/debug markers shipped; M8C owned-state no-repurchase UX shipped; M8D repurchase-block telemetry/debug markers shipped; M8E market QA checklist commands shipped; M8F deterministic QA helper shipped; M8G marker export helper shipped; M8H marker reset helper shipped; M8I status assertion helper shipped; M8J in-UI helper hint shipped)
@@ -95,10 +95,10 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M5-COMPLETE — Hatchery + egg stages + dormant carryover production polish: ensure egg incubation timers are accurate for all users, egg stages (1–4) display correctly, dormant egg carryover on island travel works reliably, and the hatchery stop modal is fully production-ready.
+**Objective:** M6-COMPLETE — Encounter tile production polish: ensure encounter tile challenge flow works reliably for all users, encounter rewards are correct, and the encounter modal is fully production-ready.
 **Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, `src/features/gamification/level-worlds/LevelWorlds.css`
-**Acceptance criteria:** Egg incubation timer counts down correctly; egg stages 1–4 display correctly; dormant egg carries over on island travel if not collected; hatchery stop modal opens/closes correctly; egg sell flow works; `npm run build` passes.
-**How to test:** Open Island Run; set an egg via the hatchery stop; verify egg stage advances over time; travel to next island without collecting and verify dormant carryover; verify egg sell flow in shop works.
+**Acceptance criteria:** Encounter tile triggers on tile index 6; encounter modal opens/closes correctly; encounter resolved state persists; rewards applied correctly; `npm run build` passes.
+**How to test:** Open Island Run; roll to tile 6 (or use dev skip); verify encounter modal opens; complete encounter; verify reward feedback; verify modal closes correctly.
 
 ---
 

@@ -26,6 +26,14 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import type { PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import {
+  rollEggTierWeighted,
+  getRandomHatchDelayMs,
+  getEggStageName,
+  getEggStageEmoji,
+  rollEggRewards,
+  type EggTier,
+} from '../services/eggService';
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -68,21 +76,13 @@ function getIslandDurationMs(islandNum: number): number {
   if (IS_DEV_TIMER) return 45_000;
   return SPECIAL_ISLAND_NUMBERS.has(islandNum) ? 72 * 60 * 60 * 1000 : 48 * 60 * 60 * 1000;
 }
-// Egg hatch durations
-const EGG_HATCH_MS_COMMON = IS_DEV_TIMER ? 15_000 : 24 * 60 * 60 * 1000;
-const EGG_HATCH_MS_RARE   = IS_DEV_TIMER ? 20_000 : 36 * 60 * 60 * 1000;
-const EGG_HATCH_MS_MYTHIC = IS_DEV_TIMER ? 30_000 : 48 * 60 * 60 * 1000;
-// Egg tier costs
-const EGG_COST_COMMON = 0;
-const EGG_COST_RARE = 50;
-const EGG_COST_MYTHIC = 150;
+// Egg hatch durations are now random (24–72 h production / 15–30 s dev) via eggService.
+// Egg tier is assigned randomly on set via rollEggTierWeighted() in eggService.
 const ENCOUNTER_TILE_INDEX = 6;
 const MARKET_DICE_BUNDLE_COST = 30;
 const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
 const HEART_BOOST_BUNDLE_COST = 80;
-
-type EggTier = 'common' | 'rare' | 'mythic';
 
 const EGG_SELL_COINS: Record<EggTier, number> = { common: 20, rare: 50, mythic: 120 };
 
@@ -1188,9 +1188,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIsRolling(false);
   };
 
-  const handleSetEgg = (tier: EggTier) => {
+  // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
+  const handleSetEgg = () => {
     const start = Date.now();
-    const hatchDurationMs = tier === 'mythic' ? EGG_HATCH_MS_MYTHIC : tier === 'rare' ? EGG_HATCH_MS_RARE : EGG_HATCH_MS_COMMON;
+    const tier = rollEggTierWeighted();
+    const hatchDurationMs = getRandomHatchDelayMs(IS_DEV_TIMER);
     setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + hatchDurationMs });
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');
@@ -1213,6 +1215,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setAtMs: start,
       hatchAtMs: start + hatchDurationMs,
       status: 'incubating',
+      location: 'island',
     };
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -1235,26 +1238,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (!activeEgg || eggStage < 4) return;
     // M9G: capture tier before clearing egg state so it is available for telemetry/debug payloads
     const openedEgg = activeEgg;
+    const nowTs = Date.now();
     setActiveEgg(null);
-    // B5-3: tier-appropriate rewards
-    let heartsAwarded = 0;
-    let feedbackMsg = '';
-    if (openedEgg.tier === 'common') {
-      setHearts((current) => current + 1);
-      heartsAwarded = 1;
-      feedbackMsg = '+1 heart';
-    } else if (openedEgg.tier === 'rare') {
-      setHearts((current) => current + 2);
-      setDicePool((d) => d + 6);
-      heartsAwarded = 2;
-      feedbackMsg = '+2 hearts, +6 dice';
-    } else {
-      setHearts((current) => current + 3);
-      setCoins((c) => c + 100);
-      setSpinTokens((t) => t + 1);
-      heartsAwarded = 3;
-      feedbackMsg = '+3 hearts, +100 coins, +1 spin';
-    }
+    // M5-COMPLETE: use rollEggRewards for tier-based reward bundle
+    const bundle = rollEggRewards(openedEgg.tier, openedEgg.setAtMs);
+    if (bundle.heartsDelta > 0) setHearts((current) => current + bundle.heartsDelta);
+    if (bundle.coinsDelta > 0) setCoins((c) => c + bundle.coinsDelta);
+    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
+    const feedbackParts: string[] = [];
+    if (bundle.heartsDelta > 0) feedbackParts.push(`+${bundle.heartsDelta} ❤️`);
+    if (bundle.coinsDelta > 0) feedbackParts.push(`+${bundle.coinsDelta} 🪙`);
+    if (bundle.diamondsDelta > 0) feedbackParts.push(`+${bundle.diamondsDelta} 💎`);
+    if (bundle.spinTokensDelta > 0) feedbackParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
+    if (bundle.cosmetics.length > 0) feedbackParts.push('🎁 cosmetic!');
+    const feedbackMsg = feedbackParts.join(', ') || 'reward applied';
     // M16B: award shards on egg open
     awardShards('egg_open');
     // M17D: award wallet shards on egg open
@@ -1262,7 +1259,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // M10B: egg_open sound + haptic
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
-    setLandingText(`Egg opened! ${feedbackMsg}`);
+    setLandingText(`${openedEgg.tier[0].toUpperCase()}${openedEgg.tier.slice(1)} egg opened! ${feedbackMsg}`);
     // M9G: home_egg_open telemetry + debug marker
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -1271,17 +1268,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         stage: 'home_egg_open',
         tier: openedEgg.tier,
         source: 'home_hatchery',
-        heartsAwarded,
+        heartsDelta: bundle.heartsDelta,
+        coinsDelta: bundle.coinsDelta,
+        spinTokensDelta: bundle.spinTokensDelta,
       },
     });
-    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsAwarded });
+    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsDelta: bundle.heartsDelta });
     // B5-3: persist cleared egg state; M13: update ledger entry to 'collected'
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
     // Create a collected entry from the ledger (or synthesize one from the global slot for backward compat)
     const collectedEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'collected' }
-      : { tier: openedEgg.tier, setAtMs: openedEgg.setAtMs, hatchAtMs: openedEgg.hatchAtMs, status: 'collected' };
+      ? { ...existingEntry, status: 'collected', openedAt: nowTs }
+      : { tier: openedEgg.tier, setAtMs: openedEgg.setAtMs, hatchAtMs: openedEgg.hatchAtMs, status: 'collected', openedAt: nowTs };
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -1645,13 +1644,59 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     } catch {
       // ignore storage errors
     }
-    // B5-4: Carry over dormant eggs — if egg is hatchable (stage 4) but not opened, mark dormant
-    if (activeEgg && eggStage >= 4) {
-      setActiveEgg((egg) => egg ? { ...egg, isDormant: true } : null);
-      void persistIslandRunRuntimeStatePatch({ session, client, patch: { activeEggIsDormant: true } });
-    } else if (!activeEgg) {
-      // no egg to carry
+    // M5-COMPLETE: Save current island egg to perIslandEggs, clear activeEgg, then restore new island egg
+    const oldIslandKey = String(islandNumber);
+    const newIslandKey = String(resolvedIsland);
+    // Snapshot perIslandEggs now (before setRuntimeState) to read the new island's entry
+    const currentPerIslandEggs = runtimeState.perIslandEggs ?? {};
+    let eggPatch: Partial<Parameters<typeof persistIslandRunRuntimeStatePatch>[0]['patch']> = {
+      activeEggTier: null,
+      activeEggSetAtMs: null,
+      activeEggHatchDurationMs: null,
+      activeEggIsDormant: false,
+    };
+    let updatedPerIslandEggs = { ...currentPerIslandEggs };
+    if (activeEgg) {
+      const travelNow = Date.now();
+      const isReady = travelNow >= activeEgg.hatchAtMs;
+      const savedEntry: PerIslandEggEntry = {
+        tier: activeEgg.tier,
+        setAtMs: activeEgg.setAtMs,
+        hatchAtMs: activeEgg.hatchAtMs,
+        status: isReady ? 'ready' : 'incubating',
+        location: isReady ? 'dormant' : 'island',
+      };
+      updatedPerIslandEggs = { ...updatedPerIslandEggs, [oldIslandKey]: savedEntry };
+      eggPatch = { ...eggPatch, perIslandEggs: { [oldIslandKey]: savedEntry } };
     }
+    // Restore egg for the new island if one was previously placed there and is not yet collected/sold
+    const newIslandEntry = updatedPerIslandEggs[newIslandKey];
+    if (newIslandEntry && (newIslandEntry.status === 'incubating' || newIslandEntry.status === 'ready')) {
+      const restoreNow = Date.now();
+      const isNowReady = restoreNow >= newIslandEntry.hatchAtMs;
+      const restoredEgg = {
+        tier: newIslandEntry.tier,
+        setAtMs: newIslandEntry.setAtMs,
+        hatchAtMs: newIslandEntry.hatchAtMs,
+        isDormant: isNowReady || newIslandEntry.location === 'dormant',
+      };
+      setActiveEgg(restoredEgg);
+      eggPatch = {
+        ...eggPatch,
+        activeEggTier: newIslandEntry.tier,
+        activeEggSetAtMs: newIslandEntry.setAtMs,
+        activeEggHatchDurationMs: newIslandEntry.hatchAtMs - newIslandEntry.setAtMs,
+        activeEggIsDormant: restoredEgg.isDormant,
+      };
+    } else {
+      setActiveEgg(null);
+    }
+    // Always persist egg state changes on island travel (eggPatch always has fields to clear/update)
+    void persistIslandRunRuntimeStatePatch({ session, client, patch: eggPatch });
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: updatedPerIslandEggs,
+    }));
     setIslandNumber(resolvedIsland);
     setCycleIndex(nextCycleIndex);
     setDicePool(convertHeartToDicePool(resolvedIsland));
@@ -1937,10 +1982,30 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (!activeEgg || eggStage < 4) return;
     const reward = EGG_SELL_COINS[activeEgg.tier];
     const soldTier = activeEgg.tier;
+    const nowTs = Date.now();
+    const islandKey = String(islandNumber);
+    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    const soldEntry: PerIslandEggEntry = existingEntry
+      ? { ...existingEntry, status: 'sold', openedAt: nowTs }
+      : { tier: soldTier, setAtMs: activeEgg.setAtMs, hatchAtMs: activeEgg.hatchAtMs, status: 'sold', openedAt: nowTs };
     setActiveEgg(null);
     setCoins((c) => c + reward);
     void awardGold(session.user.id, reward, 'shooter_blitz', 'island_run_shop_sell_egg');
-    void persistIslandRunRuntimeStatePatch({ session, client, patch: { activeEggTier: null, activeEggSetAtMs: null, activeEggHatchDurationMs: null } });
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        activeEggIsDormant: false,
+        perIslandEggs: { [islandKey]: soldEntry },
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: soldEntry },
+    }));
     setLandingText(`Sold ${soldTier} egg for ${reward} coins.`);
   };
 
@@ -2131,54 +2196,38 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </p>
           </div>
         </div>
-        <div className="island-run-prototype__home-panel" role="group" aria-label="Home hatchery prototype summary">
-          <p className="island-run-prototype__landing" role="note">
-            <strong>Home Island Hatchery (M9A prototype):</strong> always available, supports one home egg slot (v1), and ready home eggs
-            can be collected anytime without landing movement.
-          </p>
+        <div className="island-run-prototype__home-panel" role="group" aria-label="Home hatchery">
           <p className="island-run-prototype__landing island-run-prototype__landing--success" role="status">
-            Home hatchery status (M9B prototype): slot usage <strong>{activeEgg ? '1/1' : '0/1'}</strong> ({activeEgg ? 'occupied' : 'available'}) · ready home eggs <strong>{eggStage >= 4 ? 1 : 0}</strong>.
+            Home Hatchery — slot: <strong>{activeEgg ? '1/1' : '0/1'}</strong>
+            {activeEgg ? ` · ${activeEgg.tier} egg · ${getEggStageName(eggStage)} ${getEggStageEmoji(eggStage)}` : ' · available'}
+            {activeEgg?.isDormant ? ' · 💤 dormant' : ''}
           </p>
-          <p className="island-run-prototype__landing island-run-prototype__landing--info" role="note">
-            Home hatchery actions (M9C prototype): if the slot is empty, set one egg; if an egg is ready (stage 4), open/collect immediately from
-            Home Island without tile movement.
-          </p>
-          <p className="island-run-prototype__landing island-run-prototype__landing--warn" role="note">
-            Home hatchery progression (M9D prototype): island eggs that become ready but uncollected can carry as dormant eggs, and dormant/home eggs
-            are opened from hatchery surfaces when available.
-          </p>
-          {/* M9F: Home Island egg actions */}
+          {/* M9F: Home Island egg actions — repeatable slot (home eggs are not subject to the one-time restriction) */}
           <div className="island-hatchery-card__actions">
-            {islandEggSlotUsed ? (
-              <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
-                🥚 Egg already collected on this island.
-              </span>
-            ) : !activeEgg ? (
+            {!activeEgg ? (
               <button
                 type="button"
-                onClick={() => {
-                  handleSetEgg('common');
-                }}
+                onClick={handleSetEgg}
               >
-                Set egg
+                🥚 Set Home Egg
               </button>
             ) : null}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleOpenEgg}>
-                Open egg 🥚
+                Open Egg {getEggStageEmoji(4)}
               </button>
             )}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleSellEgg}>
-                Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} coins)
+                Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} 🪙)
               </button>
             )}
             {activeEgg && eggStage < 4 && (
               <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
-                🥚 Stage {eggStage} — hatching…
+                {getEggStageEmoji(eggStage)} Stage {eggStage}: {getEggStageName(eggStage)} — incubating…
               </span>
             )}
-            {activeEgg?.isDormant && (
+            {activeEgg?.isDormant && eggStage >= 4 && (
               <span className="island-run-prototype__dormant-badge">💤 Dormant — open anytime</span>
             )}
           </div>
@@ -2457,57 +2506,79 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
             {activeStopId === 'hatchery' && (
               <div className="island-hatchery-card">
+                {/* State 1: Egg already collected/sold on this island — permanent, non-renewable */}
                 {islandEggSlotUsed ? (
-                  <p>🥚 Egg already collected on this island.</p>
-                ) : !activeEgg ? (
-                  <>
-                    <p>No active island egg. Set one:</p>
+                  <div className="island-hatchery-card__state island-hatchery-card__state--done">
+                    <p>🥚 Egg already collected — no new egg on this island.</p>
+                    <p style={{ fontSize: '0.82rem', opacity: 0.65 }}>Each island's egg slot is permanent and non-renewable.</p>
+                  </div>
+                ) : activeEgg && eggStage >= 4 ? (
+                  /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
+                  <div className="island-hatchery-card__state island-hatchery-card__state--ready">
+                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(4)}</p>
+                    {activeEgg.isDormant ? (
+                      <>
+                        <p className="island-hatchery-card__headline">💤 Dormant egg ready!</p>
+                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg hatched while you were away. Collect it now!</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="island-hatchery-card__headline">🌟 Ready to Open!</p>
+                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg has hatched. Open it to claim your reward!</p>
+                      </>
+                    )}
                     <div className="island-hatchery-card__actions">
-                      <button type="button" onClick={() => handleSetEgg('common')}>
-                        Set Common Egg (Free)
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={handleOpenEgg}
+                      >
+                        Open Egg 🥚
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setCoins((c) => c - EGG_COST_RARE); handleSetEgg('rare'); }}
-                        disabled={coins < EGG_COST_RARE}
-                        style={coins < EGG_COST_RARE ? { opacity: 0.5 } : undefined}
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                        onClick={() => { handleSellEgg(); }}
                       >
-                        Set Rare Egg ({EGG_COST_RARE} coins)
+                        Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} 🪙)
                       </button>
-                      {getIslandRarity(islandNumber) !== 'normal' ? (
-                        <button
-                          type="button"
-                          onClick={() => { setCoins((c) => c - EGG_COST_MYTHIC); handleSetEgg('mythic'); }}
-                          disabled={coins < EGG_COST_MYTHIC}
-                          style={coins < EGG_COST_MYTHIC ? { opacity: 0.5 } : undefined}
-                        >
-                          Set Mythic Egg ({EGG_COST_MYTHIC} coins)
-                        </button>
-                      ) : (
-                        <button type="button" disabled style={{ opacity: 0.4 }}>
-                          🔒 Rare islands only
-                        </button>
-                      )}
                     </div>
-                  </>
+                  </div>
+                ) : activeEgg && eggStage < 4 ? (
+                  /* State 3: Egg in progress — show stage name + emoji, NO countdown */
+                  <div className="island-hatchery-card__state island-hatchery-card__state--incubating">
+                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(eggStage)}</p>
+                    <p className="island-hatchery-card__headline">Stage {eggStage}: {getEggStageName(eggStage)}</p>
+                    <p className="island-hatchery-card__copy">
+                      Your <strong>{activeEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
+                    </p>
+                    <p style={{ fontSize: '0.8rem', opacity: 0.55 }}>💡 The egg keeps incubating even while you travel.</p>
+                  </div>
                 ) : (
-                  <>
-                    <p>Tier: <strong>{activeEgg.tier}</strong></p>
-                    <p>Stage: <strong>{eggStage} / 4</strong></p>
-                    <p>{eggStage >= 4 ? 'Ready to open (prototype).' : `Hatches in ${formatClock(eggRemainingSec)}`}</p>
+                  /* State 2: No egg set — allow setting one */
+                  <div className="island-hatchery-card__state island-hatchery-card__state--empty">
+                    {islandNumber === 1 ? (
+                      <p className="island-hatchery-card__headline">🐣 Welcome! Set your first egg.</p>
+                    ) : (
+                      <p className="island-hatchery-card__headline">No egg on this island yet.</p>
+                    )}
+                    <p className="island-hatchery-card__copy">
+                      Set an egg now to earn rewards. The tier is a surprise — hatch time is a secret too!
+                    </p>
                     <div className="island-hatchery-card__actions">
-                      <button type="button" onClick={() => eggStage >= 4 ? handleOpenEgg() : setActiveEgg(null)}>
-                        {eggStage >= 4 ? 'Open Egg (stub)' : 'Clear Egg (dev)'}
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={handleSetEgg}
+                      >
+                        🥚 Set Egg
                       </button>
-                      {eggStage >= 4 && (
-                        <button type="button" onClick={handleSellEgg}>
-                          Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} coins)
-                        </button>
-                      )}
                     </div>
-                  </>
+                  </div>
                 )}
-                <p style={{ fontSize: '0.82rem', opacity: 0.7, marginTop: '0.5rem' }}>💡 Set an egg before leaving to earn rewards over time!</p>
+                {!islandEggSlotUsed && (
+                  <p style={{ fontSize: '0.82rem', opacity: 0.7, marginTop: '0.5rem' }}>💡 Each island has one egg slot — set it before you leave!</p>
+                )}
               </div>
             )}
 
