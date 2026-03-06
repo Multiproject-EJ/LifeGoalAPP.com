@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { isStandaloneMode } from '../routes/detectStandalone.ts';
+import { trackWorldEvent } from './worldAnalytics.ts';
 
 // Re-exported so main.tsx and WorldHome can share the same type.
 export interface BeforeInstallPromptEvent extends Event {
@@ -79,10 +80,26 @@ export function useInstallState(
   const [isDismissed, setIsDismissed] = useState<boolean>(() => readDismissed());
 
   const platform = detectPlatform(beforeInstallPromptEvent);
+  const isEligible =
+    (platform === 'android' || platform === 'ios') && !isDismissed;
+
+  // Fire install_view once per session when the install module becomes eligible.
+  // Uses a ref so the effect can re-run when eligibility changes without
+  // firing the event more than once (handles async beforeInstallPromptEvent).
+  const installViewTracked = useRef(false);
+  useEffect(() => {
+    if (isEligible && !installViewTracked.current) {
+      installViewTracked.current = true;
+      trackWorldEvent('install_view');
+    }
+  }, [isEligible]);
 
   const dismiss = useCallback(() => {
     writeDismiss();
     setIsDismissed(true);
+    trackWorldEvent('install_dismiss', {
+      dismiss_ttl_days: Math.round(COOLDOWN_MS / (24 * 60 * 60 * 1000)),
+    });
   }, []);
 
   const promptInstall: (() => Promise<void>) | null =

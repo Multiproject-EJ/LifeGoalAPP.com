@@ -493,17 +493,17 @@ Support sharing/indexing/trust.
 Track adoption events without noise.
 
 ### Event contract
-- `world_view`
-- `continue_click`
-- `login_click`
-- `install_view`
-- `install_click`
-- `install_dismiss`
-- `archetype_select`
+- [x] `world_view`
+- [x] `continue_click`
+- [x] `login_click`
+- [x] `install_view`
+- [x] `install_click`
+- [x] `install_dismiss`
+- [x] `archetype_select`
 
 ### Definition of done
-- Single event per user action.
-- Works on mobile Safari and Chrome.
+- [x] Single event per user action.
+- [x] Works on mobile Safari and Chrome.
 
 ### Event payload guidance
 

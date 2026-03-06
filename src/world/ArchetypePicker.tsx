@@ -2,6 +2,7 @@ import React, { useId, useRef } from 'react';
 import { ARCHETYPES } from './archetypes.ts';
 import type { Archetype } from './archetypes.ts';
 import { usePersistedState } from './usePersistedState.ts';
+import { trackWorldEvent } from './worldAnalytics.ts';
 
 const STORAGE_KEY = 'habitgame:archetype';
 
@@ -32,6 +33,9 @@ export function ArchetypePicker() {
     const nextId = isAlreadySelected ? null : archetype.id;
     setSelectedId(nextId);
     setExpandedId(nextId);
+    if (nextId !== null) {
+      trackWorldEvent('archetype_select', { archetype_id: archetype.id });
+    }
   };
 
   const handleKeyDown = (
