@@ -3282,3 +3282,18 @@ Testing:
 - No regressions to M3–M17 features
 Next: M3-COMPLETE — Stop modals production polish
 Milestones closed: M2 ✅
+
+---
+
+Date: 2026-03-06
+Slice: M3-COMPLETE — Finish stop modals production polish
+Summary: Completed all M3 production polish items. (1) Orbit-stop POI buttons now correctly prevent opening locked stops — the click handler guards against `state === 'locked'` and the button is disabled when locked. (2) Completed orbit stops now show ✅ icon instead of their default stop icon, giving players clear visual feedback that a stop is done. (3) Added Escape key handler (useEffect on `activeStopId`) to close the active stop modal — pressing Escape dismisses any open stop modal. (4) Added a dedicated Dynamic stop content block in the stop modal, showing kind-specific instructional copy for each dynamic stop variant: `habit_action` (✅), `checkin_reflection` (🧭), `utility_support` (🧰), `event_challenge` (⚡), and `mini_game` (🎮 with launch button). All 5 stop modals (Hatchery, Minigame, Utility, Dynamic, Boss) open on tile landing and via orbit-stop POI tap. Stop state (locked/active/completed) is visually reflected on orbit buttons. Stop 1 (Hatchery) continues to gate dice rolling. Boss locked until non-boss stops complete. All modals closeable via Close button and Escape key.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (Escape key handler; orbit button locked guard + disabled; ✅ completed icon; Dynamic stop content block)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M3 → [✅]; Next Slice → M4-COMPLETE)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- npm run build passes (zero new TypeScript errors)
+- Open Island Run as logged-in user; complete Stop 1; roll to each stop-trigger tile and verify modal opens; tap orbit-stop POI buttons — locked boss shows disabled button; completed stops show ✅ icon; Escape key closes open modal
+Next: M4-COMPLETE — Island timer + expiry + travel overlay production polish
+Milestones closed: M3 ✅
