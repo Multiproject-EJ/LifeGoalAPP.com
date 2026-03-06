@@ -7,6 +7,7 @@ import { WorldHero } from './WorldHero.tsx';
 import { JourneyPreview } from './JourneyPreview.tsx';
 import { ArchetypePicker } from './ArchetypePicker.tsx';
 import { RewardsTease } from './RewardsTease.tsx';
+import { SocialProof } from './SocialProof.tsx';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -84,6 +85,9 @@ export function WorldHome({
 
       {/* Rewards Tease Strip — Slice 7: reward loop signal */}
       <RewardsTease />
+
+      {/* Social Proof — Slice 9: trust signal */}
+      <SocialProof />
 
       {/* CTA zone */}
       <div className="world-home__cta-zone">
