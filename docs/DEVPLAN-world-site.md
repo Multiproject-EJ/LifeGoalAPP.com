@@ -451,7 +451,25 @@ Enable a thematic post-login bridge before entering full app.
 
 ---
 
-## Slice 9 — Trust + SEO layer
+## Slice 9 — Social Proof Strip (landing page)
+
+### Goal
+Add a lightweight trust-building section between `<RewardsTease />` and the CTA zone, completing the conversion funnel.
+
+### Tasks
+- [x] Create `src/world/SocialProof.tsx` with animated community stats (count-up on scroll) and testimonial carousel.
+- [x] Add `.social-proof__*` BEM CSS in `src/world/world.css` (mobile-first, reduced-motion, accessible).
+- [x] Integrate `<SocialProof />` in `WorldHome.tsx` between `<RewardsTease />` and CTA zone.
+
+### Definition of done
+- Stats animate from 0 to target when the section scrolls into view (IntersectionObserver).
+- Testimonial cards scroll-snap horizontally on mobile.
+- Reduced-motion: animations disabled.
+- Accessible: `aria-label`, `aria-labelledby`, `focus-visible` outlines.
+
+---
+
+## Slice 10 — Trust + SEO layer
 
 ### Goal
 Support sharing/indexing/trust.
@@ -466,7 +484,7 @@ Support sharing/indexing/trust.
 
 ---
 
-## Slice 10 — Analytics events
+## Slice 11 — Analytics events
 
 ### Goal
 Track adoption events without noise.
