@@ -1932,6 +1932,25 @@
   color: #e0c8ff;
 }
 
+
+/* M2: Roll result chip */
+.island-run-prototype__stat-chip--roll {
+  background: rgba(40, 180, 100, 0.2);
+  border-color: rgba(80, 220, 140, 0.46);
+  color: #b0ffd0;
+}
+
+/* M2: Production roll/land feedback line — always visible */
+.island-run-prototype__landing-feed {
+  margin: 0.18rem 0 0;
+  padding: 0.22rem 0.5rem;
+  color: #caf3ff;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  min-height: 1.4em;
+  opacity: 0.88;
+}
+
 /* B2-2: Token transition and animation */
 .island-token {
   transition: left 0.22s cubic-bezier(0.33, 1, 0.58, 1), top 0.22s cubic-bezier(0.33, 1, 0.58, 1);
