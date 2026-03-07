@@ -14,7 +14,7 @@ Use this section first when returning to the plan.
 | M1. Onboarding | ✅ Complete | Move to M2 balance/harmony scoring discovery (define axes + thresholds). |
 | M2. Balance / Harmony scoring v1 | ✅ Complete | Balance axes, thresholds, dashboard panel, and gamification bonus XP implemented. |
 | M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
-| M4. Auto-progress ladder v1 | 🟡 In Progress | Done-ish weighted streak + weighted success-rate analytics are now surfaced in habit cards. Next: add UI affordances to classify skipped vs missed directly in daily check-ins. |
+| M4. Auto-progress ladder v1 | ✅ Complete | Progress grading model, done-ish thresholds, habit environment field, completion logic, UI affordances, detail panel environment display, AI coach environment context, demo data, and telemetry all implemented. |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
 | M6. AI Coach instruction system | ✅ Complete | Fully built in `src/services/aiCoachInstructions.ts` with `loadAiCoachInstructions()`, `BASE_INSTRUCTIONS`, env-based overrides, and data access scoping. |
 | M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
@@ -186,19 +186,19 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 - Users can tune “done-ish” boundaries but are guided by smart defaults and coach tips.
 
 **Todos to add for this milestone**
-- [ ] Define a **progress grading model** (done / done-ish / skipped / missed) and how each state affects streaks, XP, and auto-progression.
-- [ ] Add per-habit “done-ish” threshold schema (percentage or rule) with defaults by habit type:
+- [x] Define a **progress grading model** (done / done-ish / skipped / missed) and how each state affects streaks, XP, and auto-progression.
+- [x] Add per-habit “done-ish” threshold schema (percentage or rule) with defaults by habit type:
   - Boolean: allow a “partial” toggle (e.g., *did some*).
   - Quantity: percent of target (e.g., 80%).
   - Duration: minimum minutes or percent of target.
-- [ ] Update habit completion logic to record progress state plus numeric completion percentage.
+- [x] Update habit completion logic to record progress state plus numeric completion percentage.
 - [x] Update streak calculations to include partial credit while avoiding inflated streaks.
 - [x] Add weighted success-rate metrics to habit analytics cards so done-ish contribution is visible alongside streaks.
-- [ ] Add UI copy and visual affordances for “done-ish” (progressful) completion in daily check-ins.
-- [ ] Add mandatory “Habit Environment” textarea to habit setup/edit flows with validation and helper prompts.
-- [ ] Add “Habit Environment” summary in habit detail + coach context panels.
-- [ ] Store environment notes and “done-ish” settings in the habit schema and include them in demo-mode data fixtures.
-- [ ] Add telemetry events for “done-ish” usage and coach adjustments (for later tuning).
+- [x] Add UI copy and visual affordances for “done-ish” (progressful) completion in daily check-ins.
+- [x] Add mandatory “Habit Environment” textarea to habit setup/edit flows with validation and helper prompts.
+- [x] Add “Habit Environment” summary in habit detail + coach context panels.
+- [x] Store environment notes and “done-ish” settings in the habit schema and include them in demo-mode data fixtures.
+- [x] Add telemetry events for “done-ish” usage and coach adjustments (for later tuning).
 
 **Demo-mode parity requirement**
 - Tier state and transitions stored in demo data with Supabase mirror.
@@ -419,3 +419,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: Vision Star Phase 2.2 — async image persistence for generated special star assets.  
   - **What changed**: Added client-side storage persistence for AI-generated special-star images by uploading generated data URLs to the existing vision storage bucket and replacing in-memory/base64 image payloads with a durable public URL when available. Kept robust fallback behavior if upload is unavailable/fails and retained localStorage size guard fallback.  
   - **What’s next**: Add server-side persistence/audit trail for generated special-star outputs and configurable style presets.
+- **2026-03-07**  
+  - **Slice**: M4 completion — Habit Environment display + AI coach context integration.  
+  - **What changed**: Surfaced `habit_environment` in habit detail panel (📍 Where & How section) by propagating the field through the legacy adapter. Added `HabitEnvironmentContext` type and optional `habitEnvironments` parameter to `loadAiCoachInstructions()` so the AI coach now receives per-habit environment notes in its system prompt. Added CSS for the environment card (glassmorphic, indigo accent, dark-glass variant). Marked all M4 todo items as complete and updated milestone status to ✅ Complete.  
+  - **What's next**: Begin M5 Vision Board 2.0 review loop or M9 push notification backend completion.
