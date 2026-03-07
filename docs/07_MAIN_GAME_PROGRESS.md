@@ -3415,3 +3415,30 @@ Testing:
 - Fight Boss islands (islandNumber % 4 === 3): badge shows '⚔️ Fight Boss'; others show '🏆 Milestone Boss'
 Next: M8-COMPLETE — Market stop full production polish
 Milestones closed: M7 ✅
+
+---
+
+Date: 2026-03-07
+Slice: M9-COMPLETE — Home Island + Hatchery Slots production polish
+Summary: Completed all M9 production polish items. (1) Added separate `homeEgg` state (`ActiveEgg | null`) in `IslandRunBoardPrototype.tsx`, persisted to localStorage under `island_run_home_egg_${userId}` independently of island travel — home egg survives island changes. (2) Added `showHomePanel` boolean state and `homeRewardReveal` state for reward reveal animation. (3) Added `homeEggStage` useMemo (same quartile formula as island egg stage, driven by `homeEgg` + `nowMs`). (4) Added effect to play `egg_ready` sound when home egg transitions to stage 4. (5) Added Escape key effect that closes the home panel and clears reward reveal. (6) Added localStorage persist effect for home egg. (7) Added `handleSetHomeEgg`: rolls `rollEggTierWeighted()` + `getRandomHatchDelayMs(IS_DEV_TIMER)`, fires `egg_set` sound + haptic, records `home_egg_set` telemetry + debug marker. (8) Added `handleOpenHomeEgg`: consumes home egg, applies `rollEggRewards` bundle (hearts/coins/diamonds/spinTokens), awards +2 wallet shards via `awardWalletShards(2)`, fires `egg_open` sound + haptic, records `home_egg_open` telemetry + debug marker, shows reward reveal animation (auto-dismisses after 3 s). (9) Added persistent 🏠 HUD button in `island-run-prototype__always-controls` with egg-state indicator (stage emoji inline; gold glow pulse when ready). (10) Replaced old inline `.island-run-prototype__home-panel` scaffolding with a proper overlay/modal using the `island-stop-modal-backdrop` + `island-stop-modal` pattern. Modal has: backdrop-click dismiss, Escape key dismiss, eyebrow label, 3 egg slot states (empty/incubating/ready), reward reveal animation, Close button. (11) Added CSS in `LevelWorlds.css`: `.island-run-prototype__home-btn` (blue pill, mirrors shop-btn pattern), `.island-run-prototype__home-btn--ready` (gold glow pulse animation `home-btn-ready-pulse`), `.island-home-panel-backdrop` (z-index 1200), `.island-home-panel__slot-label`, `.island-home-panel__reward-reveal` (pop-in animation `reward-reveal-pop`), `.island-home-panel__reward-emoji` (bounce animation `reward-emoji-bounce`), `.island-home-panel__reward-tier`, `.island-home-panel__reward-items`. (12) Updated `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`: M9 → [✅]; Next Slice → M18 integration/QA pass.
+Files changed:
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (homeEgg state + localStorage; showHomePanel; homeRewardReveal; homeEggStage useMemo; home egg ready sound effect; Escape key effect; localStorage persist effect; handleSetHomeEgg; handleOpenHomeEgg; 🏠 HUD button; remove inline home-panel; add Home Island overlay modal)
+- src/features/gamification/level-worlds/LevelWorlds.css (Home Island HUD button styles + ready state animation; home panel overlay styles; reward reveal animation)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M9 → [✅]; Next Slice → M18)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- tsc --noEmit passes (zero new TypeScript errors)
+- npm run build passes
+- 🏠 HUD button appears in always-controls row alongside Shop and audio toggle
+- Tap 🏠 → Home Island panel opens as overlay modal
+- Empty slot: shows "Set Home Egg" primary CTA
+- Tap "Set Home Egg": egg appears with tier + stage 1 display; egg_set sound fires; home_egg_set telemetry fires; homeEgg persists to localStorage
+- Egg stage advances over time (no countdown shown)
+- When stage 4: panel shows "Ready to Open!" state; 🏠 button gets gold pulse animation
+- Tap "Open Egg": reward reveal animation shown; rewards applied (+hearts/coins/+2 shards); egg_open sound fires; home_egg_open telemetry fires; slot resets to empty
+- Page reload: home egg state restored from localStorage (stage preserved)
+- Travel to different island: home egg state unaffected (independent of island number)
+- Escape key closes home panel
+- Clicking backdrop closes home panel
+- Mobile: min-height 44px touch targets; modal fits within 90dvh
+Milestones closed: M9 ✅
