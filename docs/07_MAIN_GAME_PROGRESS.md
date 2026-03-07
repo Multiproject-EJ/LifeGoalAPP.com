@@ -252,6 +252,25 @@ The main game is considered **production-ready** when all of the following are t
 
 ## Progress Log (newest first)
 
+Date: 2026-03-07
+Slice: M8-COMPLETE — Utility Stop + Shop Panel full production polish
+Summary:
+- Utility Stop (Stop 3) production-ready: replaced raw buttons with styled island-stop-modal__btn actions; heart refill hides when hearts already at MAX_HEARTS (10); timer extension option added (spend 3 💎 → +12h island timer); sound (utility_stop_complete), haptic, and telemetry fire on each action; Skip button completes stop without action.
+- Shop panel production polish: Owned ✅ badges replace purchase buttons for already-owned Tier 1 (dice/heart bundle) and Tier 2 (heart boost bundle) items; insufficient-funds hint shows coin deficit inline; Tier 2 button wired to handleHeartBoostPurchase handler; shop open fires shop_open sound + telemetry; shop close fires telemetry; Escape key closes shop panel.
+- Diamonds wallet currency added: initialized to 3 for new users, awarded from mythic egg opens (bundle.diamondsDelta), persisted to localStorage (island_run_diamonds_{userId}); 💎 HUD chip shown when > 0.
+- marketOwnedBundles persisted to localStorage per user+island key (island_run_shop_owned_{userId}_island_{n}); restored on page reload; cleared on island travel.
+- Added shop_open + utility_stop_complete to IslandRunSoundEvent; utility_stop_complete added to IslandRunHapticEvent with haptic pattern [20,35,20].
+Files changed:
+- src/features/gamification/level-worlds/services/islandRunAudio.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- docs/07_MAIN_GAME_PROGRESS.md
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+Testing:
+- npm run build (zero errors; pre-existing chunk size warnings unrelated)
+Next:
+- M9-COMPLETE — Home island + hatchery slots production polish
+Milestones closed: M8 ✅
+
 Date: 2026-03-06
 Slice: M1B-COMPLETE — Finish hybrid 3D board foundation for production
 Summary:

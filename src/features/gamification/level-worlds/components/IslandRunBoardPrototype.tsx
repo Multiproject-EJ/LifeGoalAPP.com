@@ -95,6 +95,13 @@ const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
 const HEART_BOOST_BUNDLE_COST = 80;
 
+// M8-COMPLETE: utility stop costs
+const UTILITY_HEART_REFILL_COST = 50;
+const UTILITY_DICE_BONUS_COST = 30;
+const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
+const UTILITY_TIMER_EXT_HOURS = 12;
+const MAX_HEARTS = 10;
+
 const EGG_SELL_COINS: Record<EggTier, number> = { common: 20, rare: 50, mythic: 120 };
 
 interface ActiveEgg {
@@ -293,6 +300,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [shields, setShields] = useState<number>(0);
   // M17C: shards wallet currency (persistent cross-island Shards balance)
   const [shards, setShards] = useState<number>(0);
+  // M8-COMPLETE: diamonds wallet currency (earned from mythic egg rewards; spent in utility stop)
+  const [diamonds, setDiamonds] = useState<number>(() => {
+    try {
+      const stored = window.localStorage.getItem(`island_run_diamonds_${session.user.id}`);
+      return stored !== null ? Math.max(0, parseInt(stored, 10) || 0) : 3;
+    } catch { return 3; }
+  });
   // M16C: true when islandShards >= current tier threshold; cleared on player claim (M16E)
   const [shardMilestoneReached, setShardMilestoneReached] = useState<boolean>(false);
   // M16E: tier index of a pending (unclaimed) milestone; null when no claim is waiting
@@ -502,6 +516,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showEncounterModal]);
+
+  // M8-COMPLETE: Escape key closes shop panel
+  useEffect(() => {
+    if (!showShopPanel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowShopPanel(false);
+        setMarketPurchaseFeedback(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showShopPanel]);
 
   // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
   useEffect(() => {
@@ -875,6 +903,49 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
     // TODO M11D: persist completedStops to Supabase island_run_runtime_state
   }, [completedStops, hasHydratedRuntimeState, islandNumber, session.user.id]);
+
+  // M8-COMPLETE: persist diamonds to localStorage (permanent cross-island balance)
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(`island_run_diamonds_${session.user.id}`, String(diamonds));
+    } catch {
+      // ignore storage errors
+    }
+  }, [diamonds, session.user.id]);
+
+  // M8-COMPLETE: restore shop owned state from localStorage on island change
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, boolean>;
+        if (parsed && typeof parsed === 'object') {
+          setMarketOwnedBundles({
+            dice_bundle: Boolean(parsed.dice_bundle),
+            heart_bundle: Boolean(parsed.heart_bundle),
+            heart_boost_bundle: Boolean(parsed.heart_boost_bundle),
+          });
+          return;
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+  }, [hasHydratedRuntimeState, islandNumber, session.user.id]);
+
+  // M8-COMPLETE: persist shop owned state to localStorage
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(marketOwnedBundles));
+    } catch {
+      // ignore storage errors
+    }
+  }, [marketOwnedBundles, hasHydratedRuntimeState, islandNumber, session.user.id]);
 
   // M17D: award wallet shards (persistent cross-island balance) by a given amount.
   // This is separate from awardShards (islandShards / Collectible Progress Bar).
@@ -1342,6 +1413,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (bundle.heartsDelta > 0) setHearts((current) => current + bundle.heartsDelta);
     if (bundle.coinsDelta > 0) setCoins((c) => c + bundle.coinsDelta);
     if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
+    // M8-COMPLETE: award diamonds from egg reward (mythic eggs have 15% chance of +1 diamond)
+    if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
     const feedbackParts: string[] = [];
     if (bundle.heartsDelta > 0) feedbackParts.push(`+${bundle.heartsDelta} ❤️`);
     if (bundle.coinsDelta > 0) feedbackParts.push(`+${bundle.coinsDelta} 🪙`);
@@ -1940,6 +2013,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setSpinTokens(0);
     setMarketInteracted(false);
     setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+    // M8-COMPLETE: clear per-island shop owned state from localStorage on travel
+    try {
+      window.localStorage.removeItem(`island_run_shop_owned_${session.user.id}_island_${islandNumber}`);
+    } catch {
+      // ignore storage errors
+    }
     const nowMs = Date.now();
     const durationMs = getIslandDurationMs(resolvedIsland);
     const expiresAtMs = nowMs + durationMs;
@@ -2296,8 +2375,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             aria-label="Open shop"
             onClick={() => {
               setShowShopPanel(true);
-              setMarketPurchaseFeedback('Prototype inventory ready.');
+              setMarketPurchaseFeedback(null);
               setMarketInteracted(false);
+              playIslandRunSound('shop_open');
+              void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_open', island_number: islandNumber } });
             }}
           >
             🛍️ Shop
@@ -2313,7 +2394,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           <button
             type="button"
             className="island-run-shop-btn"
-            onClick={() => setShowShopPanel(true)}
+            onClick={() => {
+              setShowShopPanel(true);
+              playIslandRunSound('shop_open');
+              void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_open', island_number: islandNumber } });
+            }}
           >
             🛍️ Shop
           </button>
@@ -2350,6 +2435,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         {shards > 0 && (
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shards">
             ✨ <strong>{shards}</strong>
+          </span>
+        )}
+        {/* M8-COMPLETE: diamonds HUD chip — only shown when player has at least 1 diamond */}
+        {diamonds > 0 && (
+          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--diamonds">
+            💎 <strong>{diamonds}</strong>
           </span>
         )}
         {/* M16C/M16D/M16E: Shard progress pill with fill animation and Claim button */}
@@ -2842,49 +2933,89 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
             {activeStopId === 'utility' && (
               <div className="island-hatchery-card">
-                <p>💚 Heart Top-Up: Spend 50 coins for +1 heart</p>
-                <button
-                  type="button"
-                  disabled={coins < 50}
-                  onClick={() => {
-                    setCoins((c) => c - 50);
-                    setHearts((h) => h + 1);
-                    setUtilityInteracted(true);
-                    handleCompleteActiveStop();
-                  }}
-                >
-                  Top Up Heart (50 coins)
-                </button>
-                <p>🎲 Dice Refill: Spend 30 coins for +10 dice</p>
-                <button
-                  type="button"
-                  disabled={coins < 30}
-                  onClick={() => {
-                    setCoins((c) => c - 30);
-                    setDicePool((d) => d + 10);
-                    setUtilityInteracted(true);
-                    handleCompleteActiveStop();
-                  }}
-                >
-                  Refill Dice (30 coins)
-                </button>
-                <p>📝 Intention</p>
-                <input
-                  type="text"
-                  value={islandIntention}
-                  onChange={(e) => setIslandIntention(e.target.value)}
-                  placeholder="Set your intention for this island..."
-                  style={{ width: '100%', marginBottom: '0.4rem' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUtilityInteracted(true);
-                    handleCompleteActiveStop();
-                  }}
-                >
-                  Save &amp; Complete
-                </button>
+                <p className="island-stop-modal__copy"><strong>⚡ Recovery Actions</strong></p>
+                {/* Heart refill — hidden when already at max */}
+                {hearts < MAX_HEARTS ? (
+                  <div className="island-hatchery-card__actions">
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action"
+                      disabled={coins < UTILITY_HEART_REFILL_COST}
+                      onClick={() => {
+                        setCoins((c) => c - UTILITY_HEART_REFILL_COST);
+                        setHearts((h) => Math.min(MAX_HEARTS, h + 1));
+                        setUtilityInteracted(true);
+                        playIslandRunSound('utility_stop_complete');
+                        triggerIslandRunHaptic('utility_stop_complete');
+                        void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_heart_refill', island_number: islandNumber, cost_coins: UTILITY_HEART_REFILL_COST } });
+                        setLandingText(`Heart refilled! -${UTILITY_HEART_REFILL_COST} coins, +1 ❤️`);
+                        handleCompleteActiveStop();
+                      }}
+                    >
+                      💚 Heart Refill — {UTILITY_HEART_REFILL_COST} 🪙 → +1 ❤️
+                      {coins < UTILITY_HEART_REFILL_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {UTILITY_HEART_REFILL_COST - coins} more)</span>}
+                    </button>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '0.85rem', opacity: 0.65, marginBottom: '0.5rem' }}>❤️ Hearts already full ({hearts}/{MAX_HEARTS})</p>
+                )}
+                {/* Dice bonus */}
+                <div className="island-hatchery-card__actions">
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action"
+                    disabled={coins < UTILITY_DICE_BONUS_COST}
+                    onClick={() => {
+                      setCoins((c) => c - UTILITY_DICE_BONUS_COST);
+                      setDicePool((d) => d + 10);
+                      setUtilityInteracted(true);
+                      playIslandRunSound('utility_stop_complete');
+                      triggerIslandRunHaptic('utility_stop_complete');
+                      void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_dice_bonus', island_number: islandNumber, cost_coins: UTILITY_DICE_BONUS_COST } });
+                      setLandingText(`Dice bonus! -${UTILITY_DICE_BONUS_COST} coins, +10 🎲`);
+                      handleCompleteActiveStop();
+                    }}
+                  >
+                    🎲 Dice Bonus — {UTILITY_DICE_BONUS_COST} 🪙 → +10 🎲
+                    {coins < UTILITY_DICE_BONUS_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {UTILITY_DICE_BONUS_COST - coins} more)</span>}
+                  </button>
+                </div>
+                {/* Timer extension — spend diamonds */}
+                <div className="island-hatchery-card__actions">
+                  {diamonds >= UTILITY_TIMER_EXT_COST_DIAMONDS ? (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action"
+                      onClick={() => {
+                        setDiamonds((d) => d - UTILITY_TIMER_EXT_COST_DIAMONDS);
+                        const extensionMs = UTILITY_TIMER_EXT_HOURS * 60 * 60 * 1000;
+                        setIslandExpiresAtMs((current) => current + extensionMs);
+                        setUtilityInteracted(true);
+                        playIslandRunSound('utility_stop_complete');
+                        triggerIslandRunHaptic('utility_stop_complete');
+                        void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_timer_extension', island_number: islandNumber, cost_diamonds: UTILITY_TIMER_EXT_COST_DIAMONDS, extension_hours: UTILITY_TIMER_EXT_HOURS } });
+                        setLandingText(`Timer extended! -${UTILITY_TIMER_EXT_COST_DIAMONDS} 💎, +${UTILITY_TIMER_EXT_HOURS}h`);
+                        handleCompleteActiveStop();
+                      }}
+                    >
+                      ⏱ Timer Extension — {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 → +{UTILITY_TIMER_EXT_HOURS}h
+                    </button>
+                  ) : (
+                    <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>⏱ Timer Extension — needs {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 (have {diamonds})</p>
+                  )}
+                </div>
+                <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={() => {
+                      setUtilityInteracted(true);
+                      handleCompleteActiveStop();
+                    }}
+                  >
+                    ✓ Skip
+                  </button>
+                </div>
               </div>
             )}
 
@@ -3222,49 +3353,62 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
             <h3 className="island-stop-modal__title">🛍️ Shop</h3>
-            <p className="island-stop-modal__copy"><strong>Coins: {coins}</strong></p>
+            <p className="island-stop-modal__copy"><strong>🪙 {coins} coins</strong></p>
 
             <div className="island-hatchery-card">
               <p><strong>Tier 1 — Always available</strong></p>
               <div className="island-hatchery-card__actions">
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action"
-                  disabled={coins < MARKET_DICE_BUNDLE_COST}
-                  onClick={() => handleMarketPrototypePurchase('dice_bundle')}
-                >
-                  🎲 Dice Bundle — {MARKET_DICE_BUNDLE_COST} coins → +{MARKET_DICE_BUNDLE_REWARD} dice
-                </button>
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action"
-                  disabled={coins < MARKET_HEART_BUNDLE_COST}
-                  onClick={() => handleMarketPrototypePurchase('heart_bundle')}
-                >
-                  ❤️ Heart Bundle — {MARKET_HEART_BUNDLE_COST} coins → +1 heart
-                </button>
+                {marketOwnedBundles.dice_bundle ? (
+                  <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" disabled aria-label="Dice Bundle already owned">
+                    🎲 Dice Bundle — Owned ✅
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action"
+                    disabled={coins < MARKET_DICE_BUNDLE_COST}
+                    onClick={() => handleMarketPrototypePurchase('dice_bundle')}
+                  >
+                    🎲 Dice Bundle — {MARKET_DICE_BUNDLE_COST} 🪙 → +{MARKET_DICE_BUNDLE_REWARD} 🎲
+                    {coins < MARKET_DICE_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_DICE_BUNDLE_COST - coins} more)</span>}
+                  </button>
+                )}
+                {marketOwnedBundles.heart_bundle ? (
+                  <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" disabled aria-label="Heart Bundle already owned">
+                    ❤️ Heart Bundle — Owned ✅
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action"
+                    disabled={coins < MARKET_HEART_BUNDLE_COST}
+                    onClick={() => handleMarketPrototypePurchase('heart_bundle')}
+                  >
+                    ❤️ Heart Bundle — {MARKET_HEART_BUNDLE_COST} 🪙 → +1 ❤️
+                    {coins < MARKET_HEART_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_HEART_BUNDLE_COST - coins} more)</span>}
+                  </button>
+                )}
               </div>
             </div>
 
             <div className="island-hatchery-card">
               <p><strong>Tier 2 — Post-boss unlock</strong></p>
               {completedStops.includes('boss') ? (
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action"
-                  disabled={coins < HEART_BOOST_BUNDLE_COST}
-                  onClick={() => {
-                    if (coins < HEART_BOOST_BUNDLE_COST) return;
-                    setCoins((c) => c - HEART_BOOST_BUNDLE_COST);
-                    setHearts((h) => h + 3);
-                    setMarketPurchaseFeedback(`Purchased Heart Boost Bundle: -${HEART_BOOST_BUNDLE_COST} coins, +3 hearts.`);
-                    setLandingText(`Purchased Heart Boost Bundle: -${HEART_BOOST_BUNDLE_COST} coins, +3 hearts.`);
-                    playIslandRunSound('market_purchase_success');
-                    triggerIslandRunHaptic('market_purchase_success');
-                  }}
-                >
-                  💗 Heart Boost Bundle — {HEART_BOOST_BUNDLE_COST} coins → +3 hearts
-                </button>
+                marketOwnedBundles.heart_boost_bundle ? (
+                  <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" disabled aria-label="Heart Boost Bundle already owned">
+                    💗 Heart Boost Bundle — Owned ✅
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action"
+                    disabled={coins < HEART_BOOST_BUNDLE_COST}
+                    onClick={handleHeartBoostPurchase}
+                  >
+                    💗 Heart Boost Bundle — {HEART_BOOST_BUNDLE_COST} 🪙 → +3 ❤️
+                    {coins < HEART_BOOST_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {HEART_BOOST_BUNDLE_COST - coins} more)</span>}
+                  </button>
+                )
               ) : (
                 <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Defeat the boss to unlock</p>
               )}
@@ -3278,7 +3422,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                   onClick={() => { handleSellEgg(); setShowShopPanel(false); }}
                 >
-                  🥚 Sell {activeEgg.tier} Egg — +{EGG_SELL_COINS[activeEgg.tier]} coins
+                  🥚 Sell {activeEgg.tier} Egg — +{EGG_SELL_COINS[activeEgg.tier]} 🪙
                 </button>
               ) : activeEgg ? (
                 <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>Egg not ready to sell (hatch first — stage {eggStage}/4)</p>
@@ -3293,7 +3437,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => { setShowShopPanel(false); setMarketPurchaseFeedback(null); }}
+                onClick={() => {
+                  setShowShopPanel(false);
+                  setMarketPurchaseFeedback(null);
+                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_close', island_number: islandNumber } });
+                }}
               >
                 ✕ Close
               </button>
