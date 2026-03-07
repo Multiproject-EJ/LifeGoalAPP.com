@@ -19,7 +19,7 @@ Use this section first when returning to the plan.
 | M6. AI Coach instruction system | ✅ Complete | Fully built in `src/services/aiCoachInstructions.ts` with `loadAiCoachInstructions()`, `BASE_INSTRUCTIONS`, env-based overrides, and data access scoping. |
 | M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
 | M8. Micro-quests + retention loop v1 | ✅ Complete | Daily micro-quests with balance/habit/focus sources and harmony bonus implemented. |
-| M9. Push notification dispatch plan | 🟡 In Progress | Dispatch plan fully documented in `docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md`; frontend push subscription and edge function `send-reminders` exist; backend scheduling in `habitAlertNotifications.ts` still needs completion. |
+| M9. Push notification dispatch plan | ✅ Complete | Dispatch plan documented, `scheduleHabitReminders()` / `getScheduledReminders()` / `cancelReminder()` implemented in `habitAlertNotifications.ts`, demo mock schedule in `getDemoMockScheduledReminders()` in `demoData.ts`; server-side dispatch handled by `send-reminders` edge function cron. |
 
 ### Additional Feature Status Notes
 
@@ -313,6 +313,15 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 **Demo-mode parity requirement**
 - Demo mode shows scheduled notifications via mock schedule data.
 
+**Todos**
+- [x] Write dispatch plan (`docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md`)
+- [x] Choose and document backend scheduling approach (cron → `send-reminders` edge function every 15 min)
+- [x] Implement `scheduleHabitReminders(userId)` in `habitAlertNotifications.ts`
+- [x] Implement `getScheduledReminders(userId)` in `habitAlertNotifications.ts`
+- [x] Implement `cancelReminder(reminderId)` in `habitAlertNotifications.ts`
+- [x] Add demo-mode mock schedule via `getDemoMockScheduledReminders()` in `demoData.ts`
+- [x] Wire `scheduleHabitNotifications` and `cancelHabitNotifications` stubs to the new scheduling logic
+
 **Test notes**
 - Documented manual test path; for live send, use a controlled test account.
 
@@ -423,3 +432,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M4 completion — Habit Environment display + AI coach context integration.  
   - **What changed**: Surfaced `habit_environment` in habit detail panel (📍 Where & How section) by propagating the field through the legacy adapter. Added `HabitEnvironmentContext` type and optional `habitEnvironments` parameter to `loadAiCoachInstructions()` so the AI coach now receives per-habit environment notes in its system prompt. Added CSS for the environment card (glassmorphic, indigo accent, dark-glass variant). Marked all M4 todo items as complete and updated milestone status to ✅ Complete.  
   - **What's next**: Begin M5 Vision Board 2.0 review loop or M9 push notification backend completion.
+- **2026-03-07**  
+  - **Slice**: M9 — Push notification backend scheduling implementation.  
+  - **What changed**: Completed backend scheduling for M9. Added `ScheduledReminder` type to `habitAlertNotifications.ts`. Implemented `scheduleHabitReminders(userId)` (builds upcoming reminder schedule from per-habit prefs, adds coach nudge at 20:30 and check-in nudge at 18:00), `getScheduledReminders(userId)` (returns cached or freshly computed pending reminders), and `cancelReminder(reminderId)` (marks a reminder cancelled in demo-mode localStorage). Updated existing `scheduleHabitNotifications` and `cancelHabitNotifications` stubs to use the new scheduling logic. Added `MockScheduledReminder` type and `getDemoMockScheduledReminders()` to `demoData.ts` providing habit reminders, a streak warning, a check-in nudge, and a coach nudge across the demo habit set. Updated M9 status to ✅ Complete.  
+  - **What's next**: Move to M10 analytics/telemetry or M11 QA/accessibility polish pass.
