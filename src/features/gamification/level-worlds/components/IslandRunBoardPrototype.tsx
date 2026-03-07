@@ -56,6 +56,11 @@ import {
   resolveMinigameForStop,
   type IslandRunMinigameResult,
 } from '../services/islandRunMinigameService';
+import {
+  getBossTrialConfig,
+  getBossTypeColor,
+  type BossType,
+} from '../services/bossService';
 
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
@@ -98,19 +103,6 @@ interface ActiveEgg {
   hatchAtMs: number;
   isDormant?: boolean;
 }
-
-const BOSS_CHALLENGES = [
-  "Commit to your #1 habit for this island cycle.",
-  "Reflect: what did you accomplish this cycle?",
-  "Set one clear goal for your next island.",
-  "Name someone you want to support this week.",
-  "Complete one thing you've been procrastinating.",
-  "Write down 3 wins from this island run.",
-  "Identify your biggest distraction and block it for 1 hour.",
-  "Do something kind for yourself or someone else today.",
-  "Review your top life goal — are your actions aligned?",
-  "Plan tomorrow morning: name your first task when you wake up.",
-];
 
 function getBossReward(islandNumber: number): { hearts: number; coins: number; spinTokens: number } {
   const tier = Math.floor((islandNumber - 1) / 10);
@@ -288,6 +280,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [breathingSecondsLeft, setBreathingSecondsLeft] = useState(0);
   const [bossTrialResolved, setBossTrialResolved] = useState(false);
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
+  // M7-COMPLETE: boss trial flow state machine
+  const [bossTrialPhase, setBossTrialPhase] = useState<'idle' | 'in_progress' | 'success' | 'failed'>('idle');
+  const [bossTrialTimeLeft, setBossTrialTimeLeft] = useState<number>(0);
+  const [bossTrialScore, setBossTrialScore] = useState<number>(0);
+  const [bossAttemptCount, setBossAttemptCount] = useState<number>(0);
   const [coins, setCoins] = useState(0);
   const [islandShards, setIslandShards] = useState<number>(0);
   const [shardTierIndex, setShardTierIndex] = useState<number>(0);
@@ -469,7 +466,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setMarketPurchaseFeedback('Prototype inventory ready.');
       setMarketInteracted(false);
     }
-  }, [activeStopId]);
+    // M7-COMPLETE: sync trial phase when boss modal opens (e.g. after page reload with already-resolved state)
+    if (activeStopId === 'boss' && bossTrialResolved && bossTrialPhase === 'idle') {
+      setBossTrialPhase('success');
+    }
+    if (!activeStopId && bossTrialPhase === 'in_progress') {
+      setBossTrialPhase('idle');
+      setBossTrialTimeLeft(0);
+      setBossTrialScore(0);
+    }
+  }, [activeStopId, bossTrialResolved, bossTrialPhase]);
 
   // M3-COMPLETE: Escape key closes active stop modal
   useEffect(() => {
@@ -1553,6 +1559,78 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }));
   };
 
+  // M7-COMPLETE: boss trial timer countdown
+  useEffect(() => {
+    if (bossTrialPhase !== 'in_progress') return;
+    if (bossTrialTimeLeft <= 0) {
+      const { scoreTarget } = getBossTrialConfig(islandNumber);
+      if (bossTrialScore >= scoreTarget) {
+        handleResolveBossTrial();
+        setBossTrialPhase('success');
+      } else {
+        // Failed: deduct 1 heart, track attempt
+        setHearts((h) => Math.max(0, h - 1));
+        setBossAttemptCount((c) => c + 1);
+        setBossTrialPhase('failed');
+        playIslandRunSound('boss_trial_start');
+        triggerIslandRunHaptic('stop_land');
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'economy_earn',
+          metadata: {
+            stage: 'island_run_boss_trial_failed',
+            island_number: islandNumber,
+            score: bossTrialScore,
+            attempt: bossAttemptCount + 1,
+          },
+        });
+      }
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setBossTrialTimeLeft((t) => t - 1);
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [bossTrialPhase, bossTrialTimeLeft, bossTrialScore, bossAttemptCount, islandNumber, session.user.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleStartBossTrial = () => {
+    const { trialDurationSec } = getBossTrialConfig(islandNumber);
+    setBossTrialPhase('in_progress');
+    setBossTrialTimeLeft(trialDurationSec);
+    setBossTrialScore(0);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_boss_trial_start',
+        island_number: islandNumber,
+        attempt: bossAttemptCount + 1,
+      },
+    });
+  };
+
+  const handleBossTrialTap = () => {
+    if (bossTrialPhase !== 'in_progress') return;
+    setBossTrialScore((s) => s + 1);
+  };
+
+  const handleBossTrialRetry = () => {
+    if (hearts < 1) return;
+    const { trialDurationSec } = getBossTrialConfig(islandNumber);
+    setBossTrialPhase('in_progress');
+    setBossTrialTimeLeft(trialDurationSec);
+    setBossTrialScore(0);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_boss_trial_retry',
+        island_number: islandNumber,
+        attempt: bossAttemptCount + 1,
+      },
+    });
+  };
+
   const emitMarketPurchaseMarker = (payload: {
     bundle: 'dice_bundle' | 'heart_bundle';
     status: 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
@@ -1854,6 +1932,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setCompletedStops([]);
     setBossTrialResolved(false);
     setBossRewardSummary(null);
+    // M7-COMPLETE: reset boss trial phase on island travel
+    setBossTrialPhase('idle');
+    setBossTrialTimeLeft(0);
+    setBossTrialScore(0);
+    setBossAttemptCount(0);
     setSpinTokens(0);
     setMarketInteracted(false);
     setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
@@ -2838,17 +2921,130 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             )}
 
             {activeStop.stopId === 'boss' ? (
-              <div className="island-hatchery-card">
-                <p><strong>Challenge:</strong> {BOSS_CHALLENGES[(islandNumber - 1) % BOSS_CHALLENGES.length]}</p>
-                <p>
-                  {bossTrialResolved
-                    ? `Reward granted. ${bossRewardSummary ?? ''}`
-                    : `Resolve to earn +${getBossReward(islandNumber).hearts} hearts and +${getBossReward(islandNumber).coins} coins${getBossReward(islandNumber).spinTokens > 0 ? ` and +${getBossReward(islandNumber).spinTokens} spin` : ''}.`}
-                </p>
-                {!bossTrialResolved ? (
-                  <button type="button" onClick={handleResolveBossTrial}>Resolve Boss Trial</button>
-                ) : null}
-              </div>
+              (() => {
+                const bossConfig = getBossTrialConfig(islandNumber);
+                const bossReward = getBossReward(islandNumber);
+                const typeColor = getBossTypeColor(bossConfig.type as BossType);
+                return (
+                  <div className="island-boss-trial">
+                    {/* Boss type + difficulty badges */}
+                    <div className="island-boss-trial__badges">
+                      <span
+                        className="island-boss-trial__badge island-boss-trial__badge--type"
+                        style={{ borderColor: typeColor, color: typeColor }}
+                      >
+                        {bossConfig.type === 'fight' ? '⚔️ Fight Boss' : '🏆 Milestone Boss'}
+                      </span>
+                      <span className="island-boss-trial__badge island-boss-trial__badge--difficulty">
+                        {bossConfig.difficulty}
+                      </span>
+                    </div>
+
+                    {/* Idle phase: pre-trial info */}
+                    {bossTrialPhase === 'idle' && (
+                      <div className="island-boss-trial__phase island-boss-trial__phase--idle">
+                        <p className="island-boss-trial__challenge-label">
+                          <strong>Challenge:</strong>{' '}
+                          {bossConfig.type === 'fight'
+                            ? `Reach ${bossConfig.scoreTarget} hits before time runs out.`
+                            : `Complete ${bossConfig.scoreTarget} actions in ${bossConfig.trialDurationSec}s.`}
+                        </p>
+                        <p className="island-boss-trial__reward-preview">
+                          🎁 Reward on win:{' '}
+                          <strong>+{bossReward.hearts} ❤️</strong>,{' '}
+                          <strong>+{bossReward.coins} 🪙</strong>
+                          {bossReward.spinTokens > 0 ? <>, <strong>+{bossReward.spinTokens} spin</strong></> : null}
+                          , <strong>+3 🔷 shards</strong>
+                        </p>
+                        <p className="island-boss-trial__lives-note">
+                          💡 Lives = Hearts — a failed attempt costs 1 ❤️. You have <strong>{hearts}</strong> {hearts === 1 ? 'heart' : 'hearts'}.
+                        </p>
+                        <div className="island-boss-trial__cta">
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-boss-trial__begin-btn"
+                            onClick={handleStartBossTrial}
+                          >
+                            ⚡ Begin Boss Trial
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* In-progress phase: timer + tap counter */}
+                    {bossTrialPhase === 'in_progress' && (
+                      <div className="island-boss-trial__phase island-boss-trial__phase--active">
+                        <div className="island-boss-trial__timer-row">
+                          <span className="island-boss-trial__timer-label">⏱ Time left</span>
+                          <span
+                            className={`island-boss-trial__timer-value ${bossTrialTimeLeft <= 10 ? 'island-boss-trial__timer-value--urgent' : ''}`}
+                          >
+                            {bossTrialTimeLeft}s
+                          </span>
+                        </div>
+                        <div className="island-boss-trial__score-row">
+                          <span className="island-boss-trial__score-label">Score</span>
+                          <span className="island-boss-trial__score-value">
+                            {bossTrialScore} / {bossConfig.scoreTarget}
+                          </span>
+                        </div>
+                        <div className="island-boss-trial__progress-bar">
+                          <div
+                            className="island-boss-trial__progress-fill"
+                            style={{ width: `${Math.min(100, (bossTrialScore / bossConfig.scoreTarget) * 100)}%` }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-boss-trial__tap-btn"
+                          onClick={handleBossTrialTap}
+                        >
+                          {bossConfig.type === 'fight' ? '🎯 Hit!' : '✅ Action!'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Success phase: reward summary */}
+                    {bossTrialPhase === 'success' && (
+                      <div className="island-boss-trial__phase island-boss-trial__phase--success">
+                        <p className="island-boss-trial__result island-boss-trial__result--win">🏆 Trial Complete!</p>
+                        <p className="island-boss-trial__reward-text">
+                          {bossRewardSummary ?? `Rewards: +${bossReward.hearts} ❤️, +${bossReward.coins} 🪙, +3 🔷`}
+                        </p>
+                        <p className="island-boss-trial__next-hint">Tap <strong>Claim Island Clear</strong> to celebrate and travel.</p>
+                      </div>
+                    )}
+
+                    {/* Failed phase: heart cost + retry */}
+                    {bossTrialPhase === 'failed' && (
+                      <div className="island-boss-trial__phase island-boss-trial__phase--failed">
+                        <p className="island-boss-trial__result island-boss-trial__result--fail">💔 Trial Failed</p>
+                        <p className="island-boss-trial__failed-copy">
+                          You scored {bossTrialScore} / {bossConfig.scoreTarget}. 1 heart deducted.
+                        </p>
+                        <p className="island-boss-trial__hearts-left">
+                          Hearts remaining: <strong>{hearts}</strong>
+                        </p>
+                        {hearts > 0 ? (
+                          <div className="island-boss-trial__cta">
+                            <button
+                              type="button"
+                              className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-boss-trial__retry-btn"
+                              onClick={handleBossTrialRetry}
+                            >
+                              🔄 Retry (costs 1 ❤️)
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="island-boss-trial__no-hearts">
+                            ❤️ No hearts left. Return tomorrow for daily hearts or purchase from the shop.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
             ) : null}
 
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
@@ -2867,9 +3063,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   type="button"
                   className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                   onClick={handleCompleteActiveStop}
-                  disabled={!bossTrialResolved}
+                  disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
-                  Claim Island Clear
+                  {bossTrialResolved ? '🎉 Claim Island Clear' : 'Claim Island Clear'}
                 </button>
               ) : null}
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
@@ -3007,11 +3203,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       {showIslandClearCelebration && islandClearStats && (
         <div className="island-clear-celebration" role="status" aria-live="polite">
-          <div className="island-clear-celebration__card">
-            <p className="island-clear-celebration__eyebrow">Island Cleared!</p>
+          <div className="island-clear-celebration__card island-clear-celebration__card--boss">
+            <p className="island-clear-celebration__confetti" aria-hidden="true">🎉✨🏆✨🎉</p>
+            <p className="island-clear-celebration__eyebrow">Boss Defeated! Island Cleared!</p>
             <p className="island-clear-celebration__title">🏆 Island {islandClearStats.islandNumber} Complete!</p>
-            <p>❤️ +{islandClearStats.heartsEarned} hearts · 🪙 +{islandClearStats.coinsEarned} coins</p>
-            <p>✅ {islandClearStats.stopsCleared} stops cleared</p>
+            <div className="island-clear-celebration__rewards">
+              <span className="island-clear-celebration__reward-item">❤️ +{islandClearStats.heartsEarned}</span>
+              <span className="island-clear-celebration__reward-item">🪙 +{islandClearStats.coinsEarned}</span>
+              <span className="island-clear-celebration__reward-item">🔷 +3</span>
+            </div>
+            <p className="island-clear-celebration__stops">✅ {islandClearStats.stopsCleared} stops cleared · 🛍️ Shop Tier 2 unlocked</p>
           </div>
         </div>
       )}
@@ -3047,7 +3248,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
             <div className="island-hatchery-card">
               <p><strong>Tier 2 — Post-boss unlock</strong></p>
-              {bossTrialResolved ? (
+              {completedStops.includes('boss') ? (
                 <button
                   type="button"
                   className="island-stop-modal__btn island-stop-modal__btn--action"
