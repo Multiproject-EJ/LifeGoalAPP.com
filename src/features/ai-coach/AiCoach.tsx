@@ -4,7 +4,7 @@ import { AiSupportAssistant } from '../assistant';
 import { createBalanceSnapshot, type BalanceAxisKey, type BalanceSnapshot } from '../../services/balanceScore';
 import { fetchCheckinsForUser } from '../../services/checkins';
 import { getAiCoachAccess } from '../../services/aiCoachAccess';
-import { loadAiCoachInstructions } from '../../services/aiCoachInstructions';
+import { loadAiCoachInstructions, type HabitEnvironmentContext } from '../../services/aiCoachInstructions';
 import { getDemoCheckins, getDemoHabitLogsForRange, getDemoHabitsForUser } from '../../services/demoData';
 import { isDemoSession } from '../../services/demoSession';
 import { listHabitLogsForRangeMultiV2, listHabitsV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
@@ -394,6 +394,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [showStrategyAssistant, setShowStrategyAssistant] = useState(false);
   const [interventions, setInterventions] = useState<CoachIntervention[]>([]);
   const [interventionsLoading, setInterventionsLoading] = useState(false);
+  const [habitContexts, setHabitContexts] = useState<HabitEnvironmentContext[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogTitleId = useId();
@@ -404,8 +405,8 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const dataAccess = useMemo(() => getAiCoachAccess(session), [session]);
   const demoMode = useMemo(() => isDemoSession(session), [session]);
   const instructionPayload = useMemo(
-    () => loadAiCoachInstructions(dataAccess, demoMode),
-    [dataAccess, demoMode],
+    () => loadAiCoachInstructions(dataAccess, demoMode, habitContexts),
+    [dataAccess, demoMode, habitContexts],
   );
 
   const accessSummary = useMemo(() => {
@@ -471,6 +472,12 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         const habitIntervention = await buildHabitStruggleIntervention(session.user.id, habits, demoMode);
         if (habitIntervention) {
           nextInterventions.push(habitIntervention);
+        }
+        if (isMounted) {
+          const envContexts: HabitEnvironmentContext[] = habits
+            .filter((h) => h.habit_environment)
+            .map((h) => ({ title: h.title, environment: h.habit_environment as string }));
+          setHabitContexts(envContexts);
         }
       }
 

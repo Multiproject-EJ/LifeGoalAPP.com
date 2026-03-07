@@ -1,5 +1,10 @@
 import type { AiCoachDataAccess } from '../types/aiCoach';
 
+export type HabitEnvironmentContext = {
+  title: string;
+  environment: string;
+};
+
 export type AiCoachInstructionPayload = {
   systemPrompt: string;
   source: 'default' | 'env' | 'demo-env';
@@ -39,9 +44,16 @@ function formatAccessLine(label: string, enabled: boolean): string {
   return `${label}: ${enabled ? 'allowed' : 'blocked'}`;
 }
 
+function formatHabitEnvironments(habits: HabitEnvironmentContext[]): string {
+  return habits
+    .map((h) => `- ${h.title}: ${h.environment}`)
+    .join('\n');
+}
+
 export function loadAiCoachInstructions(
   dataAccess: AiCoachDataAccess,
   demoMode: boolean,
+  habitEnvironments?: HabitEnvironmentContext[],
 ): AiCoachInstructionPayload {
   const resolved = resolveEnvInstructions(demoMode);
   const instructions = resolved.text ?? BASE_INSTRUCTIONS;
@@ -55,8 +67,13 @@ export function loadAiCoachInstructions(
     formatAccessLine('Vision board', dataAccess.visionBoard),
   ].join('\n');
 
+  const habitEnvSection =
+    dataAccess.habits && habitEnvironments && habitEnvironments.length > 0
+      ? `\n\nHabit environments (use these when coaching on specific habits):\n${formatHabitEnvironments(habitEnvironments)}`
+      : '';
+
   return {
-    systemPrompt: `${instructions}\n\nData access\n${accessSummary}`,
+    systemPrompt: `${instructions}\n\nData access\n${accessSummary}${habitEnvSection}`,
     source: resolved.text ? resolved.source : 'default',
     demoMode,
     dataAccess,

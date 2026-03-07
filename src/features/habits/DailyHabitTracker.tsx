@@ -4336,6 +4336,13 @@ export function DailyHabitTracker({
                       <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
                     </button>
                   ) : null}
+                  {/* Habit Environment summary */}
+                  {habit.habit_environment ? (
+                    <div className="habit-checklist__environment">
+                      <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
+                      <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
+                    </div>
+                  ) : null}
                   {/* Progress bar for done-ish completions */}
                   {state?.progressState === 'doneIsh' && state?.completionPercentage && (
                     <div className="habit-checklist__progress">

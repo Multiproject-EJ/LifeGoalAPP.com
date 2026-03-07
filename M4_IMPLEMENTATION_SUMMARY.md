@@ -92,13 +92,13 @@ Example habits:
 
 ## What Still Needs Implementation
 
-### UI Enhancements ✅ (Completed in this PR)
-- ✅ Habit detail views showing done-ish settings
+### UI Enhancements ✅ (All Completed)
+- ✅ Habit detail views showing done-ish settings and habit environment (📍 Where & How section in expanded panel)
 - ✅ Visual affordances for done-ish state in check-in UI (partial progress bars, icons)
 - ✅ "Done-ish ✨" button/option in daily check-in flows for boolean habits
 - ✅ Progress state badges showing completion status with icons and colors
 - ✅ Partial progress bars for done-ish completions with percentage display
-- Coach context panel displaying environment notes (not implemented)
+- ✅ Coach context panel displaying environment notes (implemented: habit_environment included in AI coach system prompt via loadAiCoachInstructions())
 
 ### Analytics & Streaks (Not in Current PR)
 - Streak calculations using partial credit (0.7 weight)
@@ -161,11 +161,11 @@ Run migration `0008_m4_autoprog_ladder_v1.sql` to add:
 
 ## Next Steps
 1. ✅ Implement UI affordances for done-ish state in check-in flows
-2. Add habit environment display in detail views (future)
+2. ✅ Add habit environment display in detail views (implemented: 📍 Where & How section in DailyHabitTracker.tsx detail panel)
 3. Update streak/analytics to use progress states (future)
 4. ✅ Add telemetry events for tracking
 5. Manual testing of all completion scenarios
-6. Update coaching prompts to reference environment context (future)
+6. ✅ Update coaching prompts to reference environment context (implemented: habit_environment passed to loadAiCoachInstructions() in AiCoach.tsx)
 
 ## Related Documentation
 - DEV_PLAN.md: M4 marked as 🟡 In Progress
