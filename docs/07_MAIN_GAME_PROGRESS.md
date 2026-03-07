@@ -290,8 +290,34 @@ Milestones closed: none (design doc only)
 
 ---
 
-Date: 2026-03-03
-Slice: M15 — Real island timer (48h/72h + Catch-up Rule A + expiry persistence)
+Date: 2026-03-06
+Slice: M6-COMPLETE — Encounter tile (easy) + rewards production polish
+Summary:
+- Created `encounterService.ts` with 3 challenge types: quiz (7-item pool), breathing exercise (3-item pool, auto-completing countdown), and gratitude prompt (7-item pool). Seeded challenge selection varies by island + tile + 5-minute bucket.
+- `rollEncounterReward()` rolls variable coin reward (5–15), 15% heart bonus, 25% wallet shard bonus. `formatEncounterRewardSummary()` builds human-readable reward string.
+- Updated `islandBoardTileMap.ts`: replaced single `ENCOUNTER_INDEX` constant with `ENCOUNTER_INDICES` record by rarity — normal islands keep 1 encounter (index 6, day 2+ gate), seasonal islands get 2 encounters (indices 6 & 11), rare islands get 2 encounters (indices 6 & 11, always active).
+- Replaced stub encounter modal with full challenge UI: quiz shows answer buttons (all answers complete), breathing shows pulsing orb + countdown (auto-completes via useEffect timer), gratitude shows textarea + Submit (disabled until non-empty input). Two-phase modal: 'challenge' → 'reward' with animated reward reveal.
+- Replaced single `encounterResolved: boolean` with `completedEncounterIndices: Set<number>` for per-visit tile tracking. `activeEncounterTileIndex` tracks which tile opened the current modal.
+- Landing on an already-completed encounter tile skips the modal and shows a brief status message.
+- Encounter tiles show completed visual state (green glow + ✅ icon) after completion.
+- `performIslandTravel` resets `completedEncounterIndices`, `activeEncounterTileIndex`, `currentEncounterChallenge`, `encounterStep`, and `encounterRewardData` — encounters are per-visit.
+- Added Escape key handler for encounter modal (mirrors M3-COMPLETE stop modal pattern).
+- Removed unused `ENCOUNTER_TILE_INDEX = 6` constant from IslandRunBoardPrototype.tsx.
+- Added CSS: `.island-tile--encounter-completed` (green glow), `.island-stop-modal--encounter` sizing, challenge layout classes, breathing orb animation (`encounter-breathe`), reward reveal animation (`encounter-reward-pop`), gratitude textarea styles.
+Files changed:
+- src/features/gamification/level-worlds/services/encounterService.ts (new)
+- src/features/gamification/level-worlds/services/islandBoardTileMap.ts
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+- src/features/gamification/level-worlds/LevelWorlds.css
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md
+- docs/07_MAIN_GAME_PROGRESS.md
+Testing:
+- npm run build
+Next:
+- M7-COMPLETE — Boss stop full production polish
+Milestones closed: M6 ✅
+
+---
 Summary:
 - Added islandStartedAtMs + islandExpiresAtMs to IslandRunRuntimeState, IslandRunGameStateRecord, and persistPatch contract
 - getIslandDurationMs() helper: 48h for normal islands, 72h for special islands, 45s for devTimer mode
@@ -3320,12 +3346,24 @@ Milestones closed: M4 ✅
 
 Date: 2026-03-06
 Slice: M5-COMPLETE — Hatchery + egg stages + dormant carryover production polish
-Summary: Completed all M5 production polish items. (1) Egg hatch delay is now a random integer between 24 and 72 hours (getRandomHatchMs), implementing the "surprise hatch" design — no countdown shown to player; the countdown timer was removed from the hatchery stop modal and replaced with stage name + pip indicator. (2) Egg stages 1–4 now display correctly: stage names (Smooth / Mostly gold / Cracked / Ready to open!), tier badge with colour coding (common/rare/mythic), and a ■■■□ progress-pip indicator are shown in the hatchery modal. Egg asset images are referenced by canonical path (/assets/eggs/<tier>/egg_<tier>_stage_N.png) with onError fallback. (3) rollEggRewards(tier, seed) canonical reward contract implemented: common (1–2 hearts, 50–100 coins, 20% spin); rare (2–3 hearts, 100–250 coins, guaranteed spin); mythic (3–5 hearts, 250–500 coins, guaranteed spin). handleOpenEgg updated to use rollEggRewards. (4) handleSellEgg now persists sold status to perIslandEggs ledger, completing the permanent one-egg-per-island guarantee. (5) Dormant carryover fixed: on island travel, hatched-but-uncollected eggs are written to the perIslandEggs ledger as status='ready' (not carried forward to the new island); when travelling to a new island, its ledger entry (incubating or ready) is restored to activeEgg, enabling multi-island dormant egg tracking. (6) Hatchery stop modal is fully production-grade: shows correct content for all states (no egg / in progress / ready / dormant / collected); Island 1 forces egg set (Complete Hatchery Stop button disabled until an egg is set or slot was previously used). (7) No regressions to M1–M4, M6–M17 features.
+Summary: Completed all M5 production polish items. (1) Created new `eggService.ts` service with: `rollEggTierWeighted()` (common 70% / rare 25% / mythic 5% weighted random), `getRandomHatchDelayMs(devMode)` (random 24–72 h production / 15–30 s dev), `getEggStageName(stage)` (Smooth/Mostly Gold/Cracked/Ready to Open), `getEggStageEmoji(stage)`, and `rollEggRewards(eggTier, seed) -> RewardBundle` with full tier-based reward schedule (common: 1 heart + 5–19 coins + 25% spin; rare: 2 hearts + 20–49 coins + guaranteed spin; mythic: 3 hearts + 75–124 coins + 15% diamond + 2 spins + 30% cosmetic). (2) Updated `handleSetEgg` to no-arg: tier assigned randomly via `rollEggTierWeighted()`, hatch delay via `getRandomHatchDelayMs(IS_DEV_TIMER)` — no countdown shown to player, no tier picker in UI. (3) Updated `handleOpenEgg` to use `rollEggRewards` for full `RewardBundle` application. (4) Updated `handleSellEgg` to persist `perIslandEggs` with `status='sold'` and `openedAt` timestamp. (5) Updated `PerIslandEggEntry` in `islandRunGameStateStore.ts`: added `location?: 'island' | 'home' | 'dormant'` and `openedAt?: number`. (6) Rewrote `performIslandTravel` egg handling: saves current island egg to perIslandEggs with `location='dormant'` (if ready) or `location='island'` (if incubating), clears `activeEgg`, and immediately restores the new island's egg from perIslandEggs — enabling multiple simultaneous dormant eggs across islands. (7) Rewrote hatchery stop modal with all 5 canonical states: (a) egg already collected/sold — permanent non-renewable message; (b) egg ready to open — Open Egg + Sell Egg buttons with reward copy; (c) dormant egg ready — "💤 Dormant egg ready!" headline with collect/sell actions; (d) egg in progress — stage emoji + stage name + encouraging copy, NO countdown shown; (e) no egg set — single "🥚 Set Egg" button with Island 1 forced onboarding message. (8) Updated home panel to use no-arg `handleSetEgg()` with stage name/emoji display. (9) Added CSS classes for hatchery card state blocks (stage-emoji, headline, copy, state variants) to `LevelWorlds.css`.
 Files changed:
-- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (getRandomHatchMs; rollEggRewards; EGG_STAGE_NAMES; eggStagePips; handleSetEgg random duration; handleOpenEgg rollEggRewards; handleSellEgg ledger persist; dormant carryover + new island egg restore in handleIslandTravel; hatchery modal production rewrite; Island 1 egg-set gate; removed unused eggRemainingSec)
-- src/features/gamification/level-worlds/LevelWorlds.css (egg stage visual classes: egg-visual, egg-img, egg-tier tier variants, egg-stage-name, egg-pips, status variants, hint)
+- src/features/gamification/level-worlds/services/eggService.ts (NEW — rollEggRewards, rollEggTierWeighted, getRandomHatchDelayMs, getEggStageName, getEggStageEmoji)
+- src/features/gamification/level-worlds/services/islandRunGameStateStore.ts (PerIslandEggEntry: location + openedAt fields; PerIslandEggLocation type)
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (import eggService; remove fixed EGG_HATCH_MS_* / EGG_COST_* constants; handleSetEgg no-arg random; handleOpenEgg rollEggRewards; handleSellEgg perIslandEggs persist; performIslandTravel per-island save/restore; hatchery stop modal 5 states; home panel cleaned up)
+- src/features/gamification/level-worlds/LevelWorlds.css (hatchery card state CSS: __state, __stage-emoji, __headline, __copy, state variants)
 - docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M5 → [✅]; Next Slice → M6-COMPLETE)
 - docs/07_MAIN_GAME_PROGRESS.md (this entry)
-Testing: npm run build passes (zero TypeScript errors, zero new errors; chunk size warnings are pre-existing)
-Next: M6-COMPLETE — Encounter tile (easy) + rewards production polish
+Testing:
+- tsc --noEmit passes (zero new TypeScript errors)
+- Open Island Run on Island 1 via hatchery stop → "Set Egg" forced with onboarding copy; tier revealed after set
+- Egg stage advances over time: Smooth → Mostly Gold → Cracked → Ready to Open; no countdown shown
+- Travel to next island without collecting: old island egg saved to perIslandEggs with location='dormant'; new island starts with null activeEgg
+- Return to original island: dormant egg restored, "Dormant egg ready" prompt shown
+- Open egg → rollEggRewards bundle applied (hearts + coins + spins + optional cosmetic); perIslandEggs status='collected'
+- Sell egg in shop → EGG_SELL_COINS reward; perIslandEggs status='sold'
+- After collect/sell on any island: that island shows "Egg already collected — no new egg on this island" permanently
+- Home Island hatchery: repeatable slot; no islandEggSlotUsed restriction
+- Multiple dormant eggs can exist simultaneously across different islands in perIslandEggs
+Next: M6-COMPLETE — Encounter tile production polish
 Milestones closed: M5 ✅

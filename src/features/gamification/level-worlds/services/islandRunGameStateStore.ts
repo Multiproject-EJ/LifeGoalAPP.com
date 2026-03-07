@@ -5,11 +5,18 @@ import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
+/** Where an egg lives: on a specific island, on the Home Island, or dormant (hatched but uncollected). */
+export type PerIslandEggLocation = 'island' | 'home' | 'dormant';
+
 export interface PerIslandEggEntry {
   tier: 'common' | 'rare' | 'mythic';
   setAtMs: number;
   hatchAtMs: number;
   status: PerIslandEggStatus;
+  /** Location flag for dormant/carryover tracking. */
+  location?: PerIslandEggLocation;
+  /** Unix ms timestamp when the egg was collected or sold. */
+  openedAt?: number;
 }
 
 /** Key = island number (as string), value = egg entry */

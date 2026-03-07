@@ -1774,6 +1774,45 @@
   padding: 0.25rem 0.6rem;
 }
 
+/* M5-COMPLETE: hatchery card state blocks */
+.island-hatchery-card__state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.island-hatchery-card__stage-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  margin: 0.2rem 0;
+}
+
+.island-hatchery-card__headline {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #d5f8ff;
+  margin: 0.1rem 0 0.2rem;
+}
+
+.island-hatchery-card__copy {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  margin: 0.1rem 0 0.35rem;
+}
+
+.island-hatchery-card__state--ready .island-hatchery-card__headline {
+  color: #ffe066;
+}
+
+.island-hatchery-card__state--done .island-hatchery-card__headline,
+.island-hatchery-card__state--done p {
+  opacity: 0.7;
+}
+
+.island-hatchery-card__state--incubating .island-hatchery-card__headline {
+  color: #91e1ff;
+}
+
 
 .island-run-prototype__error {
   margin-top: 0.5rem;
@@ -2082,75 +2121,6 @@
   margin-top: 0.3rem;
 }
 
-/* M5-COMPLETE: Egg stage visuals inside hatchery card */
-.island-hatchery-card__status {
-  margin: 0 0 0.5rem;
-  font-size: 0.88rem;
-  line-height: 1.4;
-}
-.island-hatchery-card__status--done {
-  color: #a0c8a0;
-}
-.island-hatchery-card__status--dormant {
-  color: #d4aaff;
-  border-left: 3px solid rgba(180, 100, 255, 0.5);
-  padding-left: 0.5rem;
-}
-.island-hatchery-card__hint {
-  font-size: 0.84rem;
-  color: #c0ddef;
-  margin: 0 0 0.4rem;
-  line-height: 1.45;
-}
-.island-hatchery-card__egg-visual {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.4rem 0;
-  flex-wrap: wrap;
-}
-.island-hatchery-card__egg-img {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.04);
-}
-.island-hatchery-card__egg-tier {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 0.1rem 0.4rem;
-  border-radius: 6px;
-}
-.island-hatchery-card__egg-tier--common {
-  background: rgba(160, 200, 160, 0.25);
-  color: #a8e6a8;
-  border: 1px solid rgba(160, 200, 160, 0.4);
-}
-.island-hatchery-card__egg-tier--rare {
-  background: rgba(100, 160, 240, 0.25);
-  color: #90c8ff;
-  border: 1px solid rgba(100, 160, 240, 0.4);
-}
-.island-hatchery-card__egg-tier--mythic {
-  background: rgba(200, 100, 255, 0.2);
-  color: #d4aaff;
-  border: 1px solid rgba(200, 100, 255, 0.4);
-}
-.island-hatchery-card__egg-stage-name {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #e8faff;
-}
-.island-hatchery-card__egg-pips {
-  font-size: 0.78rem;
-  color: #daa520;
-  letter-spacing: 0.15em;
-  font-family: monospace;
-}
-
 /* M14: Shop HUD button */
 .island-run-shop-btn {
   display: inline-flex;
@@ -2174,4 +2144,166 @@
 .island-run-shop-btn:focus-visible {
   outline: 2px solid rgba(255, 210, 100, 0.9);
   outline-offset: 2px;
+}
+
+/* ─── M6-COMPLETE: Encounter tile — completed visual state ──────────────────── */
+
+.island-tile--encounter-completed {
+  box-shadow:
+    0 0 0 2px rgba(140, 230, 130, 0.85),
+    0 0 18px rgba(100, 210, 80, 0.35),
+    0 6px 16px rgba(0, 0, 0, 0.36),
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 8px rgba(120, 220, 100, 0.18);
+  border-color: rgba(190, 255, 170, 0.9);
+  opacity: 0.78;
+}
+
+/* ─── M6-COMPLETE: Encounter modal — production challenge UI ────────────────── */
+
+.island-stop-modal--encounter {
+  width: min(420px, 100%);
+}
+
+.island-encounter__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 200, 120, 0.9);
+  margin: 0 0 0.3rem;
+}
+
+.island-encounter__question {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: #e8f0ff;
+  line-height: 1.45;
+  margin: 0 0 0.85rem;
+}
+
+.island-encounter__challenge {
+  display: grid;
+  gap: 0.55rem;
+}
+
+/* Quiz: answer buttons stacked vertically */
+.island-encounter__answers {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.island-encounter__answer-btn {
+  text-align: left;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+/* Breathing: animated pulsing orb */
+.island-encounter__breathing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0;
+}
+
+@keyframes encounter-breathe {
+  0%   { transform: scale(0.82); opacity: 0.55; }
+  50%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(0.82); opacity: 0.55; }
+}
+
+.island-encounter__breathing-orb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(130, 200, 255, 0.9) 0%, rgba(80, 150, 220, 0.5) 60%, transparent 100%);
+  animation: encounter-breathe 3s ease-in-out infinite;
+}
+
+.island-encounter__breathing-countdown {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #a3e8ff;
+  line-height: 1;
+  margin: 0;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.island-encounter__hint {
+  font-size: 0.78rem;
+  color: rgba(200, 230, 255, 0.6);
+  text-align: center;
+  margin: 0;
+}
+
+/* Gratitude: textarea input */
+.island-encounter__gratitude-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 72px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(163, 210, 255, 0.35);
+  background: rgba(10, 25, 40, 0.7);
+  color: #d8ecff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 120ms ease;
+}
+
+.island-encounter__gratitude-input::placeholder {
+  color: rgba(160, 200, 240, 0.35);
+}
+
+.island-encounter__gratitude-input:focus {
+  outline: none;
+  border-color: rgba(163, 210, 255, 0.7);
+}
+
+/* Reward reveal section */
+.island-encounter__reward {
+  display: grid;
+  gap: 0.55rem;
+}
+
+@keyframes encounter-reward-pop {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.9); }
+  60%  { transform: translateY(-2px) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.island-encounter__reward-reveal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem 0.5rem;
+}
+
+.island-encounter__reward-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 200, 80, 0.18);
+  border: 1px solid rgba(255, 210, 100, 0.4);
+  color: #ffe9a0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  animation: encounter-reward-pop 380ms cubic-bezier(0.18, 1.3, 0.5, 1) both;
+}
+
+.island-encounter__reward-item:nth-child(2) { animation-delay: 90ms; }
+.island-encounter__reward-item:nth-child(3) { animation-delay: 180ms; }
+
+.island-encounter__reward-tagline {
+  font-size: 0.82rem;
+  color: rgba(200, 235, 255, 0.65);
+  text-align: center;
+  margin: 0.1rem 0 0;
 }

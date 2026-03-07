@@ -26,6 +26,14 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import type { PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import {
+  rollEggTierWeighted,
+  getRandomHatchDelayMs,
+  getEggStageName,
+  getEggStageEmoji,
+  rollEggRewards,
+  type EggTier,
+} from '../services/eggService';
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -36,6 +44,13 @@ import {
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
+import {
+  drawEncounterChallenge,
+  rollEncounterReward,
+  formatEncounterRewardSummary,
+  type EncounterChallenge,
+  type EncounterReward,
+} from '../services/encounterService';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import {
   resolveMinigameForStop,
@@ -68,24 +83,12 @@ function getIslandDurationMs(islandNum: number): number {
   if (IS_DEV_TIMER) return 45_000;
   return SPECIAL_ISLAND_NUMBERS.has(islandNum) ? 72 * 60 * 60 * 1000 : 48 * 60 * 60 * 1000;
 }
-// Egg hatch duration: random integer between 24 and 72 hours (surprise hatch — no countdown shown)
-const EGG_HATCH_MS_MIN = IS_DEV_TIMER ? 10_000 : 24 * 60 * 60 * 1000;
-const EGG_HATCH_MS_MAX = IS_DEV_TIMER ? 30_000 : 72 * 60 * 60 * 1000;
-/** Returns a random hatch duration in ms (24–72 h prod; 10–30 s dev). */
-function getRandomHatchMs(): number {
-  return EGG_HATCH_MS_MIN + Math.floor(Math.random() * (EGG_HATCH_MS_MAX - EGG_HATCH_MS_MIN + 1));
-}
-// Egg tier costs
-const EGG_COST_COMMON = 0;
-const EGG_COST_RARE = 50;
-const EGG_COST_MYTHIC = 150;
-const ENCOUNTER_TILE_INDEX = 6;
+// Egg hatch durations are now random (24–72 h production / 15–30 s dev) via eggService.
+// Egg tier is assigned randomly on set via rollEggTierWeighted() in eggService.
 const MARKET_DICE_BUNDLE_COST = 30;
 const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
 const HEART_BOOST_BUNDLE_COST = 80;
-
-type EggTier = 'common' | 'rare' | 'mythic';
 
 const EGG_SELL_COINS: Record<EggTier, number> = { common: 20, rare: 50, mythic: 120 };
 
@@ -94,51 +97,6 @@ interface ActiveEgg {
   setAtMs: number;
   hatchAtMs: number;
   isDormant?: boolean;
-}
-
-interface EggRewardBundle {
-  heartsDelta: number;
-  coinsDelta: number;
-  spinTokensDelta: number;
-}
-
-/** Canonical egg reward contract (docs/04_MAIN_GAME_EGGS_HATCHERY_HOME.md). */
-function rollEggRewards(tier: EggTier, seed: number): EggRewardBundle {
-  // Simple seeded LCG for reproducible rewards given the same seed
-  let s = seed >>> 0;
-  const rng = () => { s = ((s * 1664525 + 1013904223) >>> 0); return s / 0xffffffff; };
-  switch (tier) {
-    case 'common':
-      return {
-        heartsDelta: 1 + Math.floor(rng() * 2),        // 1–2
-        coinsDelta: 50 + Math.floor(rng() * 51),        // 50–100
-        spinTokensDelta: rng() < 0.2 ? 1 : 0,           // 20% chance
-      };
-    case 'rare':
-      return {
-        heartsDelta: 2 + Math.floor(rng() * 2),         // 2–3
-        coinsDelta: 100 + Math.floor(rng() * 151),       // 100–250
-        spinTokensDelta: 1,                              // guaranteed
-      };
-    case 'mythic':
-      return {
-        heartsDelta: 3 + Math.floor(rng() * 3),         // 3–5
-        coinsDelta: 250 + Math.floor(rng() * 251),       // 250–500
-        spinTokensDelta: 1,                              // guaranteed
-      };
-  }
-}
-
-const EGG_STAGE_NAMES: Record<number, string> = {
-  1: 'Smooth',
-  2: 'Mostly gold',
-  3: 'Cracked',
-  4: 'Ready to open!',
-};
-
-/** Stage progress indicator, e.g. "■■■□" for stage 3 of 4. */
-function eggStagePips(stage: number): string {
-  return '■'.repeat(Math.max(0, stage)) + '□'.repeat(Math.max(0, 4 - stage));
 }
 
 const BOSS_CHALLENGES = [
@@ -319,6 +277,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [isDisplayNameLoopCompleted, setIsDisplayNameLoopCompleted] = useState(false);
   const [showEncounterModal, setShowEncounterModal] = useState(false);
   const [encounterResolved, setEncounterResolved] = useState(false);
+  // M6-COMPLETE: per-visit encounter tracking (Set of completed tile indices)
+  const [completedEncounterIndices, setCompletedEncounterIndices] = useState<Set<number>>(() => new Set());
+  const [activeEncounterTileIndex, setActiveEncounterTileIndex] = useState<number | null>(null);
+  // M6-COMPLETE: encounter challenge state machine
+  const [currentEncounterChallenge, setCurrentEncounterChallenge] = useState<EncounterChallenge | null>(null);
+  const [encounterStep, setEncounterStep] = useState<'challenge' | 'reward'>('challenge');
+  const [encounterRewardData, setEncounterRewardData] = useState<EncounterReward | null>(null);
+  const [gratitudeText, setGratitudeText] = useState('');
+  const [breathingSecondsLeft, setBreathingSecondsLeft] = useState(0);
   const [bossTrialResolved, setBossTrialResolved] = useState(false);
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   const [coins, setCoins] = useState(0);
@@ -516,6 +483,52 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeStopId]);
+
+  // M6-COMPLETE: Escape key closes encounter modal
+  useEffect(() => {
+    if (!showEncounterModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowEncounterModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showEncounterModal]);
+
+  // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
+  useEffect(() => {
+    if (!showEncounterModal) return;
+    if (encounterStep !== 'challenge') return;
+    if (currentEncounterChallenge?.type !== 'breathing') return;
+    if (breathingSecondsLeft <= 0) return;
+
+    const timerId = window.setTimeout(() => {
+      setBreathingSecondsLeft((s) => {
+        const next = s - 1;
+        return next;
+      });
+    }, 1000);
+    return () => window.clearTimeout(timerId);
+  }, [showEncounterModal, encounterStep, currentEncounterChallenge, breathingSecondsLeft]);
+
+  // M6-COMPLETE: When breathing countdown reaches 0, auto-complete the challenge
+  useEffect(() => {
+    if (!showEncounterModal) return;
+    if (encounterStep !== 'challenge') return;
+    if (currentEncounterChallenge?.type !== 'breathing') return;
+    if (breathingSecondsLeft !== 0) return;
+    // Only trigger if we were actually counting down (durationSeconds > 0 means it was started)
+    if (currentEncounterChallenge.durationSeconds > 0) {
+      // Small delay so the "0" display is briefly visible before reward reveal
+      const timerId = window.setTimeout(() => {
+        handleBreathingAutoComplete();
+      }, 500);
+      return () => window.clearTimeout(timerId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [breathingSecondsLeft, encounterStep, showEncounterModal, currentEncounterChallenge]);
 
   useEffect(() => {
     if (!showDebug && !showQaHooks) {
@@ -968,6 +981,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     return entry?.status === 'collected' || entry?.status === 'sold';
   }, [runtimeState.perIslandEggs, islandNumber]);
 
+  const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
+
   // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
   const prevEggStageRef = useRef(0);
   useEffect(() => {
@@ -1102,11 +1117,26 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setShowEncounterModal(false);
       setEncounterResolved(false);
     } else if (tileMap[currentIndex]?.tileType === 'encounter') {
-      setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
-      setShowEncounterModal(true);
-      setEncounterResolved(false);
-      // M10C: encounter_trigger sound when encounter modal opens
-      playIslandRunSound('encounter_trigger');
+      // M6-COMPLETE: check if this encounter tile was already completed this visit
+      if (completedEncounterIndices.has(currentIndex)) {
+        setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
+        setShowEncounterModal(false);
+      } else {
+        const challenge = drawEncounterChallenge(islandNumber, currentIndex);
+        setCurrentEncounterChallenge(challenge);
+        setEncounterStep('challenge');
+        setEncounterRewardData(null);
+        setGratitudeText('');
+        if (challenge.type === 'breathing') {
+          setBreathingSecondsLeft(challenge.durationSeconds);
+        }
+        setActiveEncounterTileIndex(currentIndex);
+        setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
+        setShowEncounterModal(true);
+        setEncounterResolved(false);
+        // M10C: encounter_trigger sound when encounter modal opens
+        playIslandRunSound('encounter_trigger');
+      }
     } else {
       resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
       setShowEncounterModal(false);
@@ -1217,10 +1247,25 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setShowEncounterModal(false);
       setEncounterResolved(false);
     } else if (tileMap[currentIndex]?.tileType === 'encounter') {
-      setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
-      setShowEncounterModal(true);
-      setEncounterResolved(false);
-      playIslandRunSound('encounter_trigger');
+      // M6-COMPLETE: check if this encounter tile was already completed this visit
+      if (completedEncounterIndices.has(currentIndex)) {
+        setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
+        setShowEncounterModal(false);
+      } else {
+        const challenge = drawEncounterChallenge(islandNumber, currentIndex);
+        setCurrentEncounterChallenge(challenge);
+        setEncounterStep('challenge');
+        setEncounterRewardData(null);
+        setGratitudeText('');
+        if (challenge.type === 'breathing') {
+          setBreathingSecondsLeft(challenge.durationSeconds);
+        }
+        setActiveEncounterTileIndex(currentIndex);
+        setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
+        setShowEncounterModal(true);
+        setEncounterResolved(false);
+        playIslandRunSound('encounter_trigger');
+      }
     } else {
       resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
       setShowEncounterModal(false);
@@ -1234,9 +1279,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIsRolling(false);
   };
 
-  const handleSetEgg = (tier: EggTier) => {
+  // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
+  const handleSetEgg = () => {
     const start = Date.now();
-    const hatchDurationMs = getRandomHatchMs();
+    const tier = rollEggTierWeighted();
+    const hatchDurationMs = getRandomHatchDelayMs(IS_DEV_TIMER);
     setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + hatchDurationMs });
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');
@@ -1259,6 +1306,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setAtMs: start,
       hatchAtMs: start + hatchDurationMs,
       status: 'incubating',
+      location: 'island',
     };
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -1281,18 +1329,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (!activeEgg || eggStage < 4) return;
     // M9G: capture tier before clearing egg state so it is available for telemetry/debug payloads
     const openedEgg = activeEgg;
+    const nowTs = Date.now();
     setActiveEgg(null);
-    // M5-COMPLETE: use rollEggRewards for canonical tier-based rewards
-    const seed = Date.now() ^ (islandNumber * 0x9e3779b9);
-    const rewards = rollEggRewards(openedEgg.tier, seed);
-    setHearts((current) => current + rewards.heartsDelta);
-    setCoins((current) => current + rewards.coinsDelta);
-    if (rewards.spinTokensDelta > 0) setSpinTokens((t) => t + rewards.spinTokensDelta);
-    const feedbackMsg = [
-      `+${rewards.heartsDelta} heart${rewards.heartsDelta !== 1 ? 's' : ''}`,
-      `+${rewards.coinsDelta} coins`,
-      rewards.spinTokensDelta > 0 ? `+${rewards.spinTokensDelta} spin` : null,
-    ].filter(Boolean).join(', ');
+    // M5-COMPLETE: use rollEggRewards for tier-based reward bundle
+    const bundle = rollEggRewards(openedEgg.tier, openedEgg.setAtMs);
+    if (bundle.heartsDelta > 0) setHearts((current) => current + bundle.heartsDelta);
+    if (bundle.coinsDelta > 0) setCoins((c) => c + bundle.coinsDelta);
+    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
+    const feedbackParts: string[] = [];
+    if (bundle.heartsDelta > 0) feedbackParts.push(`+${bundle.heartsDelta} ❤️`);
+    if (bundle.coinsDelta > 0) feedbackParts.push(`+${bundle.coinsDelta} 🪙`);
+    if (bundle.diamondsDelta > 0) feedbackParts.push(`+${bundle.diamondsDelta} 💎`);
+    if (bundle.spinTokensDelta > 0) feedbackParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
+    if (bundle.cosmetics.length > 0) feedbackParts.push('🎁 cosmetic!');
+    const feedbackMsg = feedbackParts.join(', ') || 'reward applied';
     // M16B: award shards on egg open
     awardShards('egg_open');
     // M17D: award wallet shards on egg open
@@ -1300,7 +1350,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // M10B: egg_open sound + haptic
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
-    setLandingText(`Egg opened! ${feedbackMsg}`);
+    setLandingText(`${openedEgg.tier[0].toUpperCase()}${openedEgg.tier.slice(1)} egg opened! ${feedbackMsg}`);
     // M9G: home_egg_open telemetry + debug marker
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -1309,17 +1359,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         stage: 'home_egg_open',
         tier: openedEgg.tier,
         source: 'home_hatchery',
-        heartsAwarded: rewards.heartsDelta,
+        heartsDelta: bundle.heartsDelta,
+        coinsDelta: bundle.coinsDelta,
+        spinTokensDelta: bundle.spinTokensDelta,
       },
     });
-    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsAwarded: rewards.heartsDelta });
+    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsDelta: bundle.heartsDelta });
     // B5-3: persist cleared egg state; M13: update ledger entry to 'collected'
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
     // Create a collected entry from the ledger (or synthesize one from the global slot for backward compat)
     const collectedEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'collected' }
-      : { tier: openedEgg.tier, setAtMs: openedEgg.setAtMs, hatchAtMs: openedEgg.hatchAtMs, status: 'collected' };
+      ? { ...existingEntry, status: 'collected', openedAt: nowTs }
+      : { tier: openedEgg.tier, setAtMs: openedEgg.setAtMs, hatchAtMs: openedEgg.hatchAtMs, status: 'collected', openedAt: nowTs };
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -1380,14 +1432,62 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setBoosterError(null);
   };
 
-  const handleResolveEncounter = () => {
-    if (encounterResolved) return;
-    setEncounterResolved(true);
-    setHearts((current) => current + 1);
+  // M6-COMPLETE: Core reward application for encounter completion
+  const applyEncounterReward = (reward: EncounterReward) => {
+    setCoins((c) => c + reward.coins);
+    void awardGold(session.user.id, reward.coins, 'shooter_blitz', 'island_run_encounter_reward');
+    if (reward.heart) {
+      setHearts((h) => h + 1);
+    }
+    if (reward.walletShards) {
+      awardWalletShards(1);
+    }
     // M10C: encounter_resolve sound + haptic
     playIslandRunSound('encounter_resolve');
     triggerIslandRunHaptic('encounter_resolve');
-    setLandingText('Encounter resolved: +1 heart reward (prototype).');
+    // Mark tile as completed for this island visit
+    if (activeEncounterTileIndex !== null) {
+      setCompletedEncounterIndices((prev) => new Set([...prev, activeEncounterTileIndex]));
+    }
+    setEncounterResolved(true);
+    const summary = formatEncounterRewardSummary(reward);
+    setLandingText(`Encounter complete! ${summary}`);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_encounter_resolved',
+        island_number: islandNumber,
+        tile_index: activeEncounterTileIndex,
+        reward_coins: reward.coins,
+        reward_heart: reward.heart,
+        reward_wallet_shards: reward.walletShards,
+      },
+    });
+  };
+
+  // M6-COMPLETE: Challenge complete handler (quiz answer or gratitude submit)
+  const handleEncounterChallengeComplete = () => {
+    if (encounterStep !== 'challenge') return;
+    const reward = rollEncounterReward();
+    setEncounterRewardData(reward);
+    setEncounterStep('reward');
+    applyEncounterReward(reward);
+  };
+
+  // M6-COMPLETE: Breathing auto-complete — called from useEffect when countdown hits 0
+  const handleBreathingAutoComplete = () => {
+    if (encounterStep !== 'challenge') return;
+    const reward = rollEncounterReward();
+    setEncounterRewardData(reward);
+    setEncounterStep('reward');
+    applyEncounterReward(reward);
+  };
+
+  const handleResolveEncounter = () => {
+    if (encounterResolved) return;
+    // Legacy path — now delegates to challenge complete flow
+    handleEncounterChallengeComplete();
   };
 
   const handleResolveBossTrial = () => {
@@ -1683,40 +1783,59 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     } catch {
       // ignore storage errors
     }
-    // M5-COMPLETE: Dormant egg carryover — save egg state in per-island ledger before leaving.
-    // Eggs stay on their origin island; they do NOT carry forward to the new island.
+    // M5-COMPLETE: Save current island egg to perIslandEggs, clear activeEgg, then restore new island egg
     const oldIslandKey = String(islandNumber);
     const newIslandKey = String(resolvedIsland);
+    // Snapshot perIslandEggs now (before setRuntimeState) to read the new island's entry
+    const currentPerIslandEggs = runtimeState.perIslandEggs ?? {};
+    let eggPatch: Partial<Parameters<typeof persistIslandRunRuntimeStatePatch>[0]['patch']> = {
+      activeEggTier: null,
+      activeEggSetAtMs: null,
+      activeEggHatchDurationMs: null,
+      activeEggIsDormant: false,
+    };
+    let updatedPerIslandEggs = { ...currentPerIslandEggs };
     if (activeEgg) {
-      const oldEntry = runtimeState.perIslandEggs?.[oldIslandKey];
-      if (eggStage >= 4) {
-        // Egg hatched but not collected → mark as ready (dormant) in ledger
-        const dormantEntry: PerIslandEggEntry = oldEntry
-          ? { ...oldEntry, status: 'ready' }
-          : { tier: activeEgg.tier, setAtMs: activeEgg.setAtMs, hatchAtMs: activeEgg.hatchAtMs, status: 'ready' };
-        void persistIslandRunRuntimeStatePatch({
-          session, client,
-          patch: { activeEggIsDormant: false, perIslandEggs: { [oldIslandKey]: dormantEntry } },
-        });
-        setRuntimeState((current) => ({
-          ...current,
-          perIslandEggs: { ...current.perIslandEggs, [oldIslandKey]: dormantEntry },
-        }));
-      }
-      // Egg (stage 1–3) keeps timing in the ledger ('incubating') — no state change needed.
-      // Clear activeEgg so the new island starts fresh (loaded from ledger if applicable).
+      const travelNow = Date.now();
+      const isReady = travelNow >= activeEgg.hatchAtMs;
+      const savedEntry: PerIslandEggEntry = {
+        tier: activeEgg.tier,
+        setAtMs: activeEgg.setAtMs,
+        hatchAtMs: activeEgg.hatchAtMs,
+        status: isReady ? 'ready' : 'incubating',
+        location: isReady ? 'dormant' : 'island',
+      };
+      updatedPerIslandEggs = { ...updatedPerIslandEggs, [oldIslandKey]: savedEntry };
+      eggPatch = { ...eggPatch, perIslandEggs: { [oldIslandKey]: savedEntry } };
+    }
+    // Restore egg for the new island if one was previously placed there and is not yet collected/sold
+    const newIslandEntry = updatedPerIslandEggs[newIslandKey];
+    if (newIslandEntry && (newIslandEntry.status === 'incubating' || newIslandEntry.status === 'ready')) {
+      const restoreNow = Date.now();
+      const isNowReady = restoreNow >= newIslandEntry.hatchAtMs;
+      const restoredEgg = {
+        tier: newIslandEntry.tier,
+        setAtMs: newIslandEntry.setAtMs,
+        hatchAtMs: newIslandEntry.hatchAtMs,
+        isDormant: isNowReady || newIslandEntry.location === 'dormant',
+      };
+      setActiveEgg(restoredEgg);
+      eggPatch = {
+        ...eggPatch,
+        activeEggTier: newIslandEntry.tier,
+        activeEggSetAtMs: newIslandEntry.setAtMs,
+        activeEggHatchDurationMs: newIslandEntry.hatchAtMs - newIslandEntry.setAtMs,
+        activeEggIsDormant: restoredEgg.isDormant,
+      };
+    } else {
       setActiveEgg(null);
     }
-    // Restore egg for the new island from its ledger entry (if it has one)
-    const newIslandLedgerEntry = runtimeState.perIslandEggs?.[newIslandKey];
-    if (newIslandLedgerEntry && (newIslandLedgerEntry.status === 'incubating' || newIslandLedgerEntry.status === 'ready')) {
-      setActiveEgg({
-        tier: newIslandLedgerEntry.tier,
-        setAtMs: newIslandLedgerEntry.setAtMs,
-        hatchAtMs: newIslandLedgerEntry.hatchAtMs,
-        isDormant: newIslandLedgerEntry.status === 'ready',
-      });
-    }
+    // Always persist egg state changes on island travel (eggPatch always has fields to clear/update)
+    void persistIslandRunRuntimeStatePatch({ session, client, patch: eggPatch });
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: updatedPerIslandEggs,
+    }));
     setIslandNumber(resolvedIsland);
     setCycleIndex(nextCycleIndex);
     setDicePool(convertHeartToDicePool(resolvedIsland));
@@ -1726,6 +1845,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setActiveStopId(null);
     setShowEncounterModal(false);
     setEncounterResolved(false);
+    // M6-COMPLETE: reset per-visit encounter completion tracking on island travel
+    setCompletedEncounterIndices(new Set());
+    setActiveEncounterTileIndex(null);
+    setCurrentEncounterChallenge(null);
+    setEncounterStep('challenge');
+    setEncounterRewardData(null);
     setCompletedStops([]);
     setBossTrialResolved(false);
     setBossRewardSummary(null);
@@ -2002,11 +2127,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (!activeEgg || eggStage < 4) return;
     const reward = EGG_SELL_COINS[activeEgg.tier];
     const soldTier = activeEgg.tier;
+    const nowTs = Date.now();
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
     const soldEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'sold' }
-      : { tier: soldTier, setAtMs: activeEgg.setAtMs, hatchAtMs: activeEgg.hatchAtMs, status: 'sold' };
+      ? { ...existingEntry, status: 'sold', openedAt: nowTs }
+      : { tier: soldTier, setAtMs: activeEgg.setAtMs, hatchAtMs: activeEgg.hatchAtMs, status: 'sold', openedAt: nowTs };
     setActiveEgg(null);
     setCoins((c) => c + reward);
     void awardGold(session.user.id, reward, 'shooter_blitz', 'island_run_shop_sell_egg');
@@ -2215,54 +2341,38 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </p>
           </div>
         </div>
-        <div className="island-run-prototype__home-panel" role="group" aria-label="Home hatchery prototype summary">
-          <p className="island-run-prototype__landing" role="note">
-            <strong>Home Island Hatchery (M9A prototype):</strong> always available, supports one home egg slot (v1), and ready home eggs
-            can be collected anytime without landing movement.
-          </p>
+        <div className="island-run-prototype__home-panel" role="group" aria-label="Home hatchery">
           <p className="island-run-prototype__landing island-run-prototype__landing--success" role="status">
-            Home hatchery status (M9B prototype): slot usage <strong>{activeEgg ? '1/1' : '0/1'}</strong> ({activeEgg ? 'occupied' : 'available'}) · ready home eggs <strong>{eggStage >= 4 ? 1 : 0}</strong>.
+            Home Hatchery — slot: <strong>{activeEgg ? '1/1' : '0/1'}</strong>
+            {activeEgg ? ` · ${activeEgg.tier} egg · ${getEggStageName(eggStage)} ${getEggStageEmoji(eggStage)}` : ' · available'}
+            {activeEgg?.isDormant ? ' · 💤 dormant' : ''}
           </p>
-          <p className="island-run-prototype__landing island-run-prototype__landing--info" role="note">
-            Home hatchery actions (M9C prototype): if the slot is empty, set one egg; if an egg is ready (stage 4), open/collect immediately from
-            Home Island without tile movement.
-          </p>
-          <p className="island-run-prototype__landing island-run-prototype__landing--warn" role="note">
-            Home hatchery progression (M9D prototype): island eggs that become ready but uncollected can carry as dormant eggs, and dormant/home eggs
-            are opened from hatchery surfaces when available.
-          </p>
-          {/* M9F: Home Island egg actions */}
+          {/* M9F: Home Island egg actions — repeatable slot (home eggs are not subject to the one-time restriction) */}
           <div className="island-hatchery-card__actions">
-            {islandEggSlotUsed ? (
-              <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
-                🥚 Egg already collected on this island.
-              </span>
-            ) : !activeEgg ? (
+            {!activeEgg ? (
               <button
                 type="button"
-                onClick={() => {
-                  handleSetEgg('common');
-                }}
+                onClick={handleSetEgg}
               >
-                Set egg
+                🥚 Set Home Egg
               </button>
             ) : null}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleOpenEgg}>
-                Open egg 🥚
+                Open Egg {getEggStageEmoji(4)}
               </button>
             )}
             {activeEgg && eggStage >= 4 && (
               <button type="button" onClick={handleSellEgg}>
-                Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} coins)
+                Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} 🪙)
               </button>
             )}
             {activeEgg && eggStage < 4 && (
               <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
-                🥚 Stage {eggStage} — hatching…
+                {getEggStageEmoji(eggStage)} Stage {eggStage}: {getEggStageName(eggStage)} — incubating…
               </span>
             )}
-            {activeEgg?.isDormant && (
+            {activeEgg?.isDormant && eggStage >= 4 && (
               <span className="island-run-prototype__dormant-badge">💤 Dormant — open anytime</span>
             )}
           </div>
@@ -2402,12 +2512,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             const isStop = stopMap.has(index);
             const tileType = tileMap[index]?.tileType;
             const isEncounter = tileType === 'encounter';
+            // M6-COMPLETE: completed encounter tiles show a distinct visual state
+            const isEncounterCompleted = isEncounter && completedEncounterIndices.has(index);
             const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
 
             return (
               <div
                 key={anchor.id}
-                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${tileTypeClass} ${
+                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${isEncounterCompleted ? 'island-tile--encounter-completed' : ''} ${tileTypeClass} ${
                   index === tokenIndex ? 'island-tile--token-current' : ''
                 }`}
                 style={{
@@ -2417,7 +2529,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 }}
               >
                 <span className="island-tile__value">
-                  {isEncounter ? '⚔️' : !isStop && tileType && TILE_TYPE_ICONS[tileType] ? TILE_TYPE_ICONS[tileType] : index + 1}
+                  {isEncounterCompleted ? '✅' : isEncounter ? '⚔️' : !isStop && tileType && TILE_TYPE_ICONS[tileType] ? TILE_TYPE_ICONS[tileType] : index + 1}
                 </span>
                 {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
               </div>
@@ -2541,114 +2653,78 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
             {activeStopId === 'hatchery' && (
               <div className="island-hatchery-card">
-                {/* M5-COMPLETE: Production hatchery stop modal content */}
+                {/* State 1: Egg already collected/sold on this island — permanent, non-renewable */}
                 {islandEggSlotUsed ? (
-                  <p className="island-hatchery-card__status island-hatchery-card__status--done">
-                    🥚 Egg already collected — no new egg on this island.
-                  </p>
-                ) : activeEgg?.isDormant ? (
-                  <>
-                    <p className="island-hatchery-card__status island-hatchery-card__status--dormant">
-                      💤 <strong>Dormant egg ready!</strong> Your egg hatched while you were away.
-                    </p>
-                    <div className="island-hatchery-card__egg-visual">
-                      <img
-                        src={`/assets/eggs/${activeEgg.tier}/egg_${activeEgg.tier}_stage_4.png`}
-                        alt={`${activeEgg.tier} egg ready to open`}
-                        className="island-hatchery-card__egg-img"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                      <span className={`island-hatchery-card__egg-tier island-hatchery-card__egg-tier--${activeEgg.tier}`}>{activeEgg.tier}</span>
-                      <span className="island-hatchery-card__egg-stage-name">{EGG_STAGE_NAMES[4]}</span>
-                      <span className="island-hatchery-card__egg-pips" aria-label="Stage 4 of 4">{eggStagePips(4)}</span>
-                    </div>
-                    <div className="island-hatchery-card__actions">
-                      <button type="button" onClick={handleOpenEgg} className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary">
-                        ✨ Open Egg
-                      </button>
-                      <button type="button" onClick={handleSellEgg}>
-                        Sell (+{EGG_SELL_COINS[activeEgg.tier]} coins)
-                      </button>
-                    </div>
-                  </>
-                ) : !activeEgg ? (
-                  <>
-                    {islandNumber === 1 ? (
-                      <p className="island-hatchery-card__hint">
-                        🐣 <strong>Set your first egg to begin hatching!</strong> Eggs hatch over 1–3 days — the timing is a surprise.
-                      </p>
+                  <div className="island-hatchery-card__state island-hatchery-card__state--done">
+                    <p>🥚 Egg already collected — no new egg on this island.</p>
+                    <p style={{ fontSize: '0.82rem', opacity: 0.65 }}>Each island's egg slot is permanent and non-renewable.</p>
+                  </div>
+                ) : activeEgg && eggStage >= 4 ? (
+                  /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
+                  <div className="island-hatchery-card__state island-hatchery-card__state--ready">
+                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(4)}</p>
+                    {activeEgg.isDormant ? (
+                      <>
+                        <p className="island-hatchery-card__headline">💤 Dormant egg ready!</p>
+                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg hatched while you were away. Collect it now!</p>
+                      </>
                     ) : (
-                      <p className="island-hatchery-card__hint">
-                        🥚 No active island egg. Set one to start the timer.
-                      </p>
+                      <>
+                        <p className="island-hatchery-card__headline">🌟 Ready to Open!</p>
+                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg has hatched. Open it to claim your reward!</p>
+                      </>
                     )}
                     <div className="island-hatchery-card__actions">
-                      <button type="button" onClick={() => handleSetEgg('common')}>
-                        Set Common Egg (Free)
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={handleOpenEgg}
+                      >
+                        Open Egg 🥚
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setCoins((c) => c - EGG_COST_RARE); handleSetEgg('rare'); }}
-                        disabled={coins < EGG_COST_RARE}
-                        style={coins < EGG_COST_RARE ? { opacity: 0.5 } : undefined}
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                        onClick={() => { handleSellEgg(); }}
                       >
-                        Set Rare Egg ({EGG_COST_RARE} coins)
+                        Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} 🪙)
                       </button>
-                      {getIslandRarity(islandNumber) !== 'normal' ? (
-                        <button
-                          type="button"
-                          onClick={() => { setCoins((c) => c - EGG_COST_MYTHIC); handleSetEgg('mythic'); }}
-                          disabled={coins < EGG_COST_MYTHIC}
-                          style={coins < EGG_COST_MYTHIC ? { opacity: 0.5 } : undefined}
-                        >
-                          Set Mythic Egg ({EGG_COST_MYTHIC} coins)
-                        </button>
-                      ) : (
-                        <button type="button" disabled style={{ opacity: 0.4 }}>
-                          🔒 Mythic — rare islands only
-                        </button>
-                      )}
                     </div>
-                  </>
-                ) : eggStage < 4 ? (
-                  <>
-                    <div className="island-hatchery-card__egg-visual">
-                      <img
-                        src={`/assets/eggs/${activeEgg.tier}/egg_${activeEgg.tier}_stage_${eggStage}.png`}
-                        alt={`${activeEgg.tier} egg stage ${eggStage}`}
-                        className="island-hatchery-card__egg-img"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                      <span className={`island-hatchery-card__egg-tier island-hatchery-card__egg-tier--${activeEgg.tier}`}>{activeEgg.tier}</span>
-                      <span className="island-hatchery-card__egg-stage-name">{EGG_STAGE_NAMES[eggStage] ?? 'Incubating'}</span>
-                      <span className="island-hatchery-card__egg-pips" aria-label={`Stage ${eggStage} of 4`}>{eggStagePips(eggStage)}</span>
-                    </div>
-                    <p className="island-hatchery-card__hint">
-                      🕐 Hatching… (the hatch moment is a surprise — check back later!)
+                  </div>
+                ) : activeEgg && eggStage < 4 ? (
+                  /* State 3: Egg in progress — show stage name + emoji, NO countdown */
+                  <div className="island-hatchery-card__state island-hatchery-card__state--incubating">
+                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(eggStage)}</p>
+                    <p className="island-hatchery-card__headline">Stage {eggStage}: {getEggStageName(eggStage)}</p>
+                    <p className="island-hatchery-card__copy">
+                      Your <strong>{activeEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
                     </p>
-                  </>
+                    <p style={{ fontSize: '0.8rem', opacity: 0.55 }}>💡 The egg keeps incubating even while you travel.</p>
+                  </div>
                 ) : (
-                  <>
-                    <div className="island-hatchery-card__egg-visual">
-                      <img
-                        src={`/assets/eggs/${activeEgg.tier}/egg_${activeEgg.tier}_stage_4.png`}
-                        alt={`${activeEgg.tier} egg ready to open`}
-                        className="island-hatchery-card__egg-img"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                      <span className={`island-hatchery-card__egg-tier island-hatchery-card__egg-tier--${activeEgg.tier}`}>{activeEgg.tier}</span>
-                      <span className="island-hatchery-card__egg-stage-name">{EGG_STAGE_NAMES[4]}</span>
-                      <span className="island-hatchery-card__egg-pips" aria-label="Stage 4 of 4">{eggStagePips(4)}</span>
-                    </div>
+                  /* State 2: No egg set — allow setting one */
+                  <div className="island-hatchery-card__state island-hatchery-card__state--empty">
+                    {islandNumber === 1 ? (
+                      <p className="island-hatchery-card__headline">🐣 Welcome! Set your first egg.</p>
+                    ) : (
+                      <p className="island-hatchery-card__headline">No egg on this island yet.</p>
+                    )}
+                    <p className="island-hatchery-card__copy">
+                      Set an egg now to earn rewards. The tier is a surprise — hatch time is a secret too!
+                    </p>
                     <div className="island-hatchery-card__actions">
-                      <button type="button" onClick={handleOpenEgg} className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary">
-                        ✨ Open Egg
-                      </button>
-                      <button type="button" onClick={handleSellEgg}>
-                        Sell (+{EGG_SELL_COINS[activeEgg.tier]} coins)
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={handleSetEgg}
+                      >
+                        🥚 Set Egg
                       </button>
                     </div>
-                  </>
+                  </div>
+                )}
+                {!islandEggSlotUsed && (
+                  <p style={{ fontSize: '0.82rem', opacity: 0.7, marginTop: '0.5rem' }}>💡 Each island has one egg slot — set it before you leave!</p>
                 )}
               </div>
             )}
@@ -2782,13 +2858,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 </button>
               ) : null}
               {activeStop.stopId === 'hatchery' ? (
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                  onClick={handleCompleteActiveStop}
-                  disabled={islandNumber === 1 && !activeEgg && !islandEggSlotUsed}
-                  title={islandNumber === 1 && !activeEgg && !islandEggSlotUsed ? 'Set an egg to continue (required on Island 1)' : undefined}
-                >
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Hatchery Stop
                 </button>
               ) : null}
@@ -2813,20 +2883,84 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       {showEncounterModal && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
-            <h3 className="island-stop-modal__title">⚔️ Encounter Tile</h3>
-            <p>Easy challenge stub: steady your path and claim a small reward.</p>
-            <div className="island-hatchery-card">
-              <p>{encounterResolved ? 'Reward granted: +1 heart.' : 'Resolve this encounter to gain +1 heart.'}</p>
-            </div>
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--encounter" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
+            <h3 className="island-stop-modal__title">⚔️ Bonus Encounter</h3>
+
+            {encounterStep === 'challenge' && currentEncounterChallenge && (
+              <>
+                {currentEncounterChallenge.type === 'quiz' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">Quick Quiz</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.question}</p>
+                    <div className="island-encounter__answers">
+                      {currentEncounterChallenge.answers.map((answer, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-encounter__answer-btn"
+                          onClick={handleEncounterChallengeComplete}
+                        >
+                          {answer}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {currentEncounterChallenge.type === 'breathing' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">Breathing Exercise</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.instruction}</p>
+                    <div className="island-encounter__breathing">
+                      <div className="island-encounter__breathing-orb" aria-hidden="true" />
+                      <p className="island-encounter__breathing-countdown" aria-live="polite">
+                        {breathingSecondsLeft > 0 ? breathingSecondsLeft : '✓'}
+                      </p>
+                    </div>
+                    <p className="island-encounter__hint">Auto-completes in {breathingSecondsLeft}s…</p>
+                  </div>
+                )}
+
+                {currentEncounterChallenge.type === 'gratitude' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">Gratitude Moment</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.prompt}</p>
+                    <textarea
+                      className="island-encounter__gratitude-input"
+                      value={gratitudeText}
+                      onChange={(e) => setGratitudeText(e.target.value)}
+                      placeholder="Type anything…"
+                      rows={3}
+                      aria-label="Gratitude response"
+                    />
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={handleEncounterChallengeComplete}
+                      disabled={gratitudeText.trim().length === 0}
+                    >
+                      Submit ✓
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {encounterStep === 'reward' && encounterRewardData && (
+              <div className="island-encounter__reward">
+                <p className="island-encounter__eyebrow">Challenge Complete! 🎉</p>
+                <div className="island-encounter__reward-reveal">
+                  <span className="island-encounter__reward-item">🪙 +{encounterRewardData.coins} coins</span>
+                  {encounterRewardData.heart && <span className="island-encounter__reward-item">❤️ +1 heart</span>}
+                  {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
+                </div>
+                <p className="island-encounter__reward-tagline">Keep going — you're on a streak!</p>
+              </div>
+            )}
+
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              {!encounterResolved ? (
-                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleResolveEncounter}>
-                  Resolve Encounter
-                </button>
-              ) : null}
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setShowEncounterModal(false)}>
-                Close
+                {encounterStep === 'reward' ? 'Continue' : 'Close'}
               </button>
             </div>
           </section>

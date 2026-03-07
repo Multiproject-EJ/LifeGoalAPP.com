@@ -1,0 +1,119 @@
+/**
+ * M5-COMPLETE: Egg Service
+ * Canonical egg logic: tier assignment, hatch delay, stage names, reward rolls.
+ * Follow docs/04_MAIN_GAME_EGGS_HATCHERY_HOME.md for all design decisions.
+ */
+
+export type EggTier = 'common' | 'rare' | 'mythic';
+
+/** Where an egg currently lives. */
+export type EggLocation = 'island' | 'home' | 'dormant';
+
+/** Reward payload returned by rollEggRewards. */
+export interface RewardBundle {
+  heartsDelta: number;
+  coinsDelta: number;
+  diamondsDelta: number;
+  spinTokensDelta: number;
+  boosters: string[];
+  cosmetics: string[];
+}
+
+/**
+ * Weighted random egg tier assignment on set.
+ * common: 70%, rare: 25%, mythic: 5%
+ */
+export function rollEggTierWeighted(): EggTier {
+  const roll = Math.random();
+  if (roll < 0.70) return 'common';
+  if (roll < 0.95) return 'rare';
+  return 'mythic';
+}
+
+/**
+ * Returns a random hatch delay in milliseconds.
+ * Production: hatchDelayHours = random integer in [24, 72] inclusive.
+ * Dev mode (devMode=true): random integer in [15, 30] seconds inclusive for fast iteration.
+ */
+export function getRandomHatchDelayMs(devMode = false): number {
+  if (devMode) {
+    const seconds = Math.floor(Math.random() * 16) + 15; // [15, 30] s inclusive
+    return seconds * 1000;
+  }
+  const hours = Math.floor(Math.random() * 49) + 24; // [24, 72] h inclusive
+  return hours * 60 * 60 * 1000;
+}
+
+/**
+ * Returns the display name for the given egg stage (1–4).
+ * Stage is derived from progress toward hatch_at, divided into quartiles.
+ */
+export function getEggStageName(stage: number): string {
+  switch (stage) {
+    case 1: return 'Smooth';
+    case 2: return 'Mostly Gold';
+    case 3: return 'Cracked';
+    case 4: return 'Ready to Open';
+    default: return 'Unknown';
+  }
+}
+
+/**
+ * Returns the display emoji for the given egg stage (1–4).
+ */
+export function getEggStageEmoji(stage: number): string {
+  switch (stage) {
+    case 1: return '🥚';
+    case 2: return '✨🥚';
+    case 3: return '🥚🔥';
+    case 4: return '🌟🥚';
+    default: return '🥚';
+  }
+}
+
+/**
+ * Roll egg rewards based on tier and a numeric seed.
+ * seed is used for reproducible results (e.g. setAtMs).
+ *
+ * v1 reward schedule (per docs/04_MAIN_GAME_EGGS_HATCHERY_HOME.md):
+ *   common  — small hearts + small coins + occasional spin
+ *   rare    — bigger bundle + guaranteed spin
+ *   mythic  — large bundle + cosmetic chance
+ */
+export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
+  let s = seed;
+  const rand = (): number => {
+    s = ((s * 1664525 + 1013904223) | 0) >>> 0;
+    return s / 0x100000000;
+  };
+
+  switch (eggTier) {
+    case 'common':
+      return {
+        heartsDelta: 1,
+        coinsDelta: Math.floor(rand() * 15) + 5, // 5–19
+        diamondsDelta: 0,
+        spinTokensDelta: rand() < 0.25 ? 1 : 0,
+        boosters: [],
+        cosmetics: [],
+      };
+    case 'rare':
+      return {
+        heartsDelta: 2,
+        coinsDelta: Math.floor(rand() * 30) + 20, // 20–49
+        diamondsDelta: 0,
+        spinTokensDelta: 1,
+        boosters: [],
+        cosmetics: [],
+      };
+    case 'mythic':
+      return {
+        heartsDelta: 3,
+        coinsDelta: Math.floor(rand() * 50) + 75, // 75–124
+        diamondsDelta: rand() < 0.15 ? 1 : 0,
+        spinTokensDelta: 2,
+        boosters: [],
+        cosmetics: rand() < 0.30 ? ['mystery_cosmetic'] : [],
+      };
+  }
+}
