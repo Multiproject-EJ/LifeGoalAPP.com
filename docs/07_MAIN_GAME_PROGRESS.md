@@ -3367,3 +3367,32 @@ Testing:
 - Multiple dormant eggs can exist simultaneously across different islands in perIslandEggs
 Next: M6-COMPLETE — Encounter tile production polish
 Milestones closed: M5 ✅
+
+---
+
+Date: 2026-03-07
+Slice: M7-COMPLETE — Boss stop full production polish
+Summary: Completed all M7 production polish items for the boss stop (Stop 5). (1) Created new `bossService.ts` with deterministic boss type resolution (~75% Milestone Boss, ~25% Fight Boss, seeded by island number via `islandNumber % 4 === 3`), `getBossDifficulty(islandNumber)` scaling Easy→Very Hard over islands 1–120, `getBossTrialDurationSec(islandNumber)` countdown 60→30 seconds, `getBossScoreTarget(islandNumber)` target 5→15 taps, `getBossChallengeText()`, `getBossTypeColor()`, and `getBossTrialConfig()` aggregate. (2) Added boss trial flow state machine in `IslandRunBoardPrototype.tsx`: `bossTrialPhase` ('idle' | 'in_progress' | 'success' | 'failed'), `bossTrialTimeLeft`, `bossTrialScore`, `bossAttemptCount`. (3) Added useEffect timer countdown: decrements every 1s during 'in_progress' phase; on timeout evaluates score >= target → success (calls handleResolveBossTrial + sets phase 'success') or failure (deducts 1 heart, increments attempt count, sets phase 'failed', fires telemetry). (4) Added `handleStartBossTrial`, `handleBossTrialTap`, `handleBossTrialRetry` handlers with telemetry events for start/retry. (5) Reset boss trial phase on island travel and when modal closes during 'in_progress'. (6) Replaced basic boss modal content with production-ready 4-phase UI: idle (type badge, difficulty badge, challenge description, reward preview with +3 shards, lives=hearts note, Begin Boss Trial CTA), in_progress (live countdown timer with urgent pulse at ≤10s, score/target row, animated progress bar, tap button), success (reward summary, "Claim Island Clear" hint), failed (failure copy, hearts remaining, Retry button or no-hearts message). (7) Added IIFE render pattern for bossConfig variable scoping in JSX. (8) Enhanced island clear celebration: boss-themed card styling, confetti emoji animation, reward items row (hearts/coins/shards chips), Shop Tier 2 unlock message. (9) Fixed Shop Tier 2 unlock gate from `bossTrialResolved` to `completedStops.includes('boss')` for correct persistence across page reloads. (10) Added comprehensive boss trial CSS to `LevelWorlds.css`: badge row, type/difficulty badges, all 4 phase layouts, progress bar, tap button with active state, timer pulse animation, success/failed phase styling, enhanced celebration card. (11) Removed unused `BOSS_CHALLENGES` constant. (12) Updated `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`: M7 → [✅], Next Slice → M8-COMPLETE.
+Files changed:
+- src/features/gamification/level-worlds/services/bossService.ts (NEW — resolveBossType, getBossDifficulty, getBossTrialDurationSec, getBossScoreTarget, getBossTrialConfig, getBossChallengeText, getBossTypeColor)
+- src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx (import bossService; remove BOSS_CHALLENGES; add bossTrialPhase/TimeLeft/Score/AttemptCount state; add timer effect; add handleStartBossTrial/handleBossTrialTap/handleBossTrialRetry; replace boss modal with 4-phase UI; fix Shop Tier 2 unlock; enhance island clear celebration)
+- src/features/gamification/level-worlds/LevelWorlds.css (boss trial CSS: badges, phases, timer, progress bar, tap button, celebration enhancements)
+- docs/00_MAIN_GAME_120_ISLANDS_INDEX.md (M7 → [✅]; Next Slice → M8-COMPLETE)
+- docs/07_MAIN_GAME_PROGRESS.md (this entry)
+Testing:
+- tsc --noEmit passes (zero new TypeScript errors)
+- npm run build passes
+- Open Island Run; complete stops 1–4; open boss stop (orbit button or tile 16 landing)
+- Boss stop modal shows type badge (Milestone/Fight), difficulty level, challenge description, reward preview (+hearts, +coins, +3 shards)
+- Lives=Hearts note shows current heart count
+- Click Begin Boss Trial: timer counts down, tap button increments score, progress bar animates
+- When timer hits 0 with score >= target: phase transitions to 'success', reward granted, Claim Island Clear button enabled
+- When timer hits 0 with score < target: phase transitions to 'failed', 1 heart deducted, Retry button shown (if hearts > 0)
+- Claim Island Clear → island clear celebration shows with boss card styling, reward chips, "Shop Tier 2 unlocked"
+- Shop Tier 2 (Heart Boost Bundle) correctly unlocks only after 'boss' in completedStops
+- Travel to new island: all boss trial state reset (phase=idle, score=0, attemptCount=0)
+- Page reload with already-resolved boss: modal opens in 'success' phase (synced from bossTrialResolved)
+- Escape key closes boss modal (existing behavior, verified)
+- Fight Boss islands (islandNumber % 4 === 3): badge shows '⚔️ Fight Boss'; others show '🏆 Milestone Boss'
+Next: M8-COMPLETE — Market stop full production polish
+Milestones closed: M7 ✅
