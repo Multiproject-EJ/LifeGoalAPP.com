@@ -103,6 +103,8 @@ const UTILITY_TIMER_EXT_HOURS = 12;
 const MAX_HEARTS = 10;
 
 const EGG_SELL_COINS: Record<EggTier, number> = { common: 20, rare: 50, mythic: 120 };
+// M9-COMPLETE: how long (ms) the reward reveal animation stays visible before auto-dismiss
+const HOME_REWARD_REVEAL_DURATION_MS = 3000;
 
 interface ActiveEgg {
   tier: EggTier;
@@ -348,6 +350,22 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // M14: persistent shop panel state
   const [showShopPanel, setShowShopPanel] = useState(false);
 
+  // M9-COMPLETE: Home Island panel state
+  const [showHomePanel, setShowHomePanel] = useState(false);
+  // M9-COMPLETE: Home egg state — persisted in localStorage, independent of island travel
+  const homeEggStorageKey = `island_run_home_egg_${session.user.id}`;
+  const [homeEgg, setHomeEggState] = useState<ActiveEgg | null>(() => {
+    try {
+      const raw = window.localStorage.getItem(homeEggStorageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { tier: EggTier; setAtMs: number; hatchAtMs: number };
+      if (!parsed.tier || !parsed.setAtMs || !parsed.hatchAtMs) return null;
+      return { tier: parsed.tier, setAtMs: parsed.setAtMs, hatchAtMs: parsed.hatchAtMs };
+    } catch { return null; }
+  });
+  // M9-COMPLETE: Reward reveal animation state for Home Island egg open
+  const [homeRewardReveal, setHomeRewardReveal] = useState<{ tier: EggTier; feedback: string } | null>(null);
+
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
   const [islandIntention, setIslandIntention] = useState('');
@@ -530,6 +548,37 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShopPanel]);
+
+  // M9-COMPLETE: Escape key closes Home Island panel
+  useEffect(() => {
+    if (!showHomePanel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowHomePanel(false);
+        setHomeRewardReveal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showHomePanel]);
+
+  // M9-COMPLETE: Persist home egg to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      if (homeEgg) {
+        window.localStorage.setItem(homeEggStorageKey, JSON.stringify({
+          tier: homeEgg.tier,
+          setAtMs: homeEgg.setAtMs,
+          hatchAtMs: homeEgg.hatchAtMs,
+        }));
+      } else {
+        window.localStorage.removeItem(homeEggStorageKey);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [homeEgg, homeEggStorageKey]);
 
   // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
   useEffect(() => {
@@ -1060,6 +1109,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
 
+  // M9-COMPLETE: home egg stage — computed independently of island egg
+  const homeEggStage = useMemo(() => {
+    if (!homeEgg) return 0;
+    const total = Math.max(1, homeEgg.hatchAtMs - homeEgg.setAtMs);
+    const progress = Math.min(1, Math.max(0, (nowMs - homeEgg.setAtMs) / total));
+    return Math.min(4, Math.max(1, Math.ceil(progress * 4)));
+  }, [homeEgg, nowMs]);
+
   // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
   const prevEggStageRef = useRef(0);
   useEffect(() => {
@@ -1068,6 +1125,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
     prevEggStageRef.current = eggStage;
   }, [eggStage]);
+
+  // M9-COMPLETE: play egg_ready sound when home egg transitions to stage 4
+  const prevHomeEggStageRef = useRef(0);
+  useEffect(() => {
+    if (homeEggStage === 4 && prevHomeEggStageRef.current < 4) {
+      playIslandRunSound('egg_ready');
+    }
+    prevHomeEggStageRef.current = homeEggStage;
+  }, [homeEggStage]);
 
   useEffect(() => {
     if (showTravelOverlay) {
@@ -1466,6 +1532,62 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       ...current,
       perIslandEggs: { ...current.perIslandEggs, [islandKey]: collectedEntry },
     }));
+  };
+
+  // M9-COMPLETE: handleSetHomeEgg — sets a home egg with random tier/delay, persisted in localStorage independently
+  const handleSetHomeEgg = () => {
+    const start = Date.now();
+    const tier = rollEggTierWeighted();
+    const hatchDurationMs = getRandomHatchDelayMs(IS_DEV_TIMER);
+    setHomeEggState({ tier, setAtMs: start, hatchAtMs: start + hatchDurationMs });
+    playIslandRunSound('egg_set');
+    triggerIslandRunHaptic('egg_set');
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: { stage: 'home_egg_set', tier, source: 'home_hatchery' },
+    });
+    logIslandRunEntryDebug('home_egg_set', { tier, source: 'home_hatchery' });
+  };
+
+  // M9-COMPLETE: handleOpenHomeEgg — opens home egg, rolls rewards, awards +2 shards, shows reveal animation
+  const handleOpenHomeEgg = () => {
+    if (!homeEgg || homeEggStage < 4) return;
+    const openedEgg = homeEgg;
+    setHomeEggState(null);
+    const bundle = rollEggRewards(openedEgg.tier, openedEgg.setAtMs);
+    if (bundle.heartsDelta > 0) setHearts((h) => h + bundle.heartsDelta);
+    if (bundle.coinsDelta > 0) setCoins((c) => c + bundle.coinsDelta);
+    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
+    if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
+    // M17D: +2 wallet shards on home egg open
+    awardWalletShards(2);
+    const feedbackParts: string[] = [];
+    if (bundle.heartsDelta > 0) feedbackParts.push(`+${bundle.heartsDelta} ❤️`);
+    if (bundle.coinsDelta > 0) feedbackParts.push(`+${bundle.coinsDelta} 🪙`);
+    if (bundle.diamondsDelta > 0) feedbackParts.push(`+${bundle.diamondsDelta} 💎`);
+    if (bundle.spinTokensDelta > 0) feedbackParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
+    if (bundle.cosmetics.length > 0) feedbackParts.push('🎁 cosmetic!');
+    feedbackParts.push('+2 ✨ shards');
+    const feedbackMsg = feedbackParts.join(' · ');
+    setHomeRewardReveal({ tier: openedEgg.tier, feedback: feedbackMsg });
+    playIslandRunSound('egg_open');
+    triggerIslandRunHaptic('egg_open');
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'home_egg_open',
+        tier: openedEgg.tier,
+        source: 'home_hatchery',
+        heartsDelta: bundle.heartsDelta,
+        coinsDelta: bundle.coinsDelta,
+        spinTokensDelta: bundle.spinTokensDelta,
+      },
+    });
+    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsDelta: bundle.heartsDelta });
+    // Auto-dismiss reward reveal after 3 seconds
+    window.setTimeout(() => setHomeRewardReveal(null), HOME_REWARD_REVEAL_DURATION_MS);
   };
 
   const handleClaimOnboardingBooster = () => {
@@ -2383,6 +2505,25 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           >
             🛍️ Shop
           </button>
+          {/* M9-COMPLETE: persistent Home Island HUD button */}
+          {(() => {
+            const homeIsReady = homeEgg !== null && homeEggStage >= 4;
+            const homeIsIncubating = homeEgg !== null && homeEggStage < 4;
+            const homeEggIndicator = homeIsReady ? ' 🌟' : homeIsIncubating ? ` ${getEggStageEmoji(homeEggStage)}` : '';
+            return (
+              <button
+                type="button"
+                className={`island-run-prototype__home-btn${homeIsReady ? ' island-run-prototype__home-btn--ready' : ''}`}
+                aria-label="Open Home Island hatchery"
+                onClick={() => {
+                  setShowHomePanel(true);
+                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'home_panel_open', island_number: islandNumber } });
+                }}
+              >
+                🏠{homeEggIndicator}
+              </button>
+            );
+          })()}
           {(() => {
             const step1Stop = islandStopPlan[0];
             const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
@@ -2515,42 +2656,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </p>
           </div>
         </div>
-        <div className="island-run-prototype__home-panel" role="group" aria-label="Home hatchery">
-          <p className="island-run-prototype__landing island-run-prototype__landing--success" role="status">
-            Home Hatchery — slot: <strong>{activeEgg ? '1/1' : '0/1'}</strong>
-            {activeEgg ? ` · ${activeEgg.tier} egg · ${getEggStageName(eggStage)} ${getEggStageEmoji(eggStage)}` : ' · available'}
-            {activeEgg?.isDormant ? ' · 💤 dormant' : ''}
-          </p>
-          {/* M9F: Home Island egg actions — repeatable slot (home eggs are not subject to the one-time restriction) */}
-          <div className="island-hatchery-card__actions">
-            {!activeEgg ? (
-              <button
-                type="button"
-                onClick={handleSetEgg}
-              >
-                🥚 Set Home Egg
-              </button>
-            ) : null}
-            {activeEgg && eggStage >= 4 && (
-              <button type="button" onClick={handleOpenEgg}>
-                Open Egg {getEggStageEmoji(4)}
-              </button>
-            )}
-            {activeEgg && eggStage >= 4 && (
-              <button type="button" onClick={handleSellEgg}>
-                Sell Egg (+{EGG_SELL_COINS[activeEgg.tier]} 🪙)
-              </button>
-            )}
-            {activeEgg && eggStage < 4 && (
-              <span className="island-run-prototype__landing island-run-prototype__landing--info" role="status">
-                {getEggStageEmoji(eggStage)} Stage {eggStage}: {getEggStageName(eggStage)} — incubating…
-              </span>
-            )}
-            {activeEgg?.isDormant && eggStage >= 4 && (
-              <span className="island-run-prototype__dormant-badge">💤 Dormant — open anytime</span>
-            )}
-          </div>
-        </div>
+        {/* M9-COMPLETE: Home Island panel is now a persistent HUD overlay — see 🏠 button in always-controls */}
         <div className="island-run-prototype__controls">
           {ISLAND_SCENES.map((sceneId) => (
             <button
@@ -3506,6 +3612,110 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             });
           }}
         />
+      )}
+
+      {/* M9-COMPLETE: Home Island panel — persistent overlay, accessible via 🏠 HUD button */}
+      {showHomePanel && (
+        <div
+          className="island-stop-modal-backdrop island-home-panel-backdrop"
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowHomePanel(false); setHomeRewardReveal(null); } }}
+        >
+          <section
+            className="island-stop-modal island-home-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Home Island Hatchery"
+          >
+            <p className="island-stop-modal__eyebrow">Home Island</p>
+            <h3 className="island-stop-modal__title">🏠 Home Hatchery</h3>
+            <p className="island-stop-modal__copy" style={{ fontSize: '0.78rem', opacity: 0.75 }}>
+              Your home egg slot — repeatable. Set a new egg any time the slot is empty.
+            </p>
+
+            {/* Reward reveal animation */}
+            {homeRewardReveal && (
+              <div className="island-home-panel__reward-reveal" role="status" aria-live="polite">
+                <p className="island-home-panel__reward-emoji">{getEggStageEmoji(4)}</p>
+                <p className="island-home-panel__reward-tier">
+                  {homeRewardReveal.tier.charAt(0).toUpperCase() + homeRewardReveal.tier.slice(1)} Egg Opened!
+                </p>
+                <p className="island-home-panel__reward-items">{homeRewardReveal.feedback}</p>
+              </div>
+            )}
+
+            {/* Egg slot display */}
+            {!homeRewardReveal && (
+              <div className="island-hatchery-card island-home-panel__slot">
+                <p className="island-home-panel__slot-label">
+                  Egg Slot — <strong>{homeEgg ? '1/1' : '0/1'}</strong>
+                </p>
+
+                {/* State: Empty slot */}
+                {!homeEgg && (
+                  <div className="island-hatchery-card__state">
+                    <p className="island-hatchery-card__stage-emoji">🪹</p>
+                    <p className="island-hatchery-card__headline">Slot available</p>
+                    <p className="island-hatchery-card__copy">Set a new egg now to earn rewards. Tier is a surprise — hatch time too!</p>
+                    <div className="island-hatchery-card__actions">
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={handleSetHomeEgg}
+                      >
+                        🥚 Set Home Egg
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* State: Egg incubating (stage 1–3) */}
+                {homeEgg && homeEggStage < 4 && (
+                  <div className="island-hatchery-card__state island-hatchery-card__state--progress">
+                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(homeEggStage)}</p>
+                    <p className="island-hatchery-card__headline">Stage {homeEggStage}: {getEggStageName(homeEggStage)}</p>
+                    <p className="island-hatchery-card__copy">
+                      Your <strong>{homeEgg.tier}</strong> egg is incubating… Check back later!
+                    </p>
+                    <p style={{ fontSize: '0.75rem', opacity: 0.6, margin: 0 }}>
+                      💡 Home eggs progress while you play — no need to stay on any island.
+                    </p>
+                  </div>
+                )}
+
+                {/* State: Egg ready to open (stage 4) */}
+                {homeEgg && homeEggStage >= 4 && (
+                  <div className="island-hatchery-card__state island-hatchery-card__state--ready">
+                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(4)}</p>
+                    <p className="island-hatchery-card__headline">Ready to Open!</p>
+                    <p className="island-hatchery-card__copy">
+                      Your <strong>{homeEgg.tier}</strong> egg is ready — open it to claim your rewards.
+                    </p>
+                    <div className="island-hatchery-card__actions">
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={handleOpenHomeEgg}
+                      >
+                        🌟 Open Egg
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => { setShowHomePanel(false); setHomeRewardReveal(null); }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </section>
   );

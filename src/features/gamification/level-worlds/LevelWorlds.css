@@ -2573,3 +2573,113 @@
   color: rgba(200, 240, 220, 0.7);
   margin: 0;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   M9-COMPLETE: Home Island HUD button + Home Panel overlay
+   ───────────────────────────────────────────────────────────────────────── */
+
+.island-run-prototype__home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.18rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 200, 255, 0.45);
+  background: rgba(20, 80, 130, 0.28);
+  color: #c8eeff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.island-run-prototype__home-btn:hover:not(:disabled) {
+  background: rgba(20, 80, 130, 0.48);
+  border-color: rgba(120, 200, 255, 0.7);
+}
+
+.island-run-prototype__home-btn:focus-visible {
+  outline: 2px solid rgba(120, 200, 255, 0.96);
+  outline-offset: 2px;
+}
+
+/* Ready state — egg ready to open, glow pulse */
+.island-run-prototype__home-btn--ready {
+  border-color: rgba(255, 215, 50, 0.75);
+  background: rgba(140, 100, 0, 0.32);
+  color: #ffe878;
+  animation: home-btn-ready-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes home-btn-ready-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 50, 0); }
+  50%       { box-shadow: 0 0 0 5px rgba(255, 215, 50, 0.26); }
+}
+
+/* Home panel modal container */
+.island-home-panel-backdrop {
+  z-index: 1200;
+}
+
+.island-home-panel {
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+
+.island-home-panel__slot {
+  margin: 0;
+}
+
+.island-home-panel__slot-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(160, 220, 245, 0.65);
+  margin: 0 0 0.45rem;
+}
+
+/* Reward reveal animation — shown after egg open */
+.island-home-panel__reward-reveal {
+  display: grid;
+  gap: 0.3rem;
+  text-align: center;
+  padding: 1rem 0.75rem;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255, 215, 50, 0.12), rgba(70, 180, 255, 0.08));
+  border: 1px solid rgba(255, 215, 50, 0.32);
+  animation: reward-reveal-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes reward-reveal-pop {
+  from { opacity: 0; transform: scale(0.82) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.island-home-panel__reward-emoji {
+  font-size: 2.6rem;
+  margin: 0;
+  line-height: 1;
+  animation: reward-emoji-bounce 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) 0.15s both;
+}
+
+@keyframes reward-emoji-bounce {
+  0%   { transform: scale(0.5); }
+  70%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.island-home-panel__reward-tier {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 780;
+  color: #ffe878;
+}
+
+.island-home-panel__reward-items {
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(200, 240, 255, 0.9);
+  font-weight: 600;
+}
