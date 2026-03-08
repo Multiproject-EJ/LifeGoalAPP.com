@@ -56,3 +56,16 @@ export function normalizeGoalStatus(value: string | null | undefined): GoalStatu
 
   return DEFAULT_GOAL_STATUS;
 }
+
+/**
+ * Derive a rough completion percentage from a goal's status tag.
+ * Used for both the goal card progress bar and the AI coach context summary.
+ */
+export function goalStatusToCompletionPct(statusTag: string | null | undefined): number {
+  const status = normalizeGoalStatus(statusTag);
+  if (status === 'achieved') return 100;
+  if (status === 'on_track') return 50;
+  if (status === 'at_risk') return 25;
+  if (status === 'off_track') return 10;
+  return 0;
+}

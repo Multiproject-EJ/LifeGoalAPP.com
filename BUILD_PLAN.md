@@ -22,8 +22,8 @@
 | Actions Feature (Phases 0–6) | ✅ Complete | — |
 | Island Game System (M1B–M9) | ✅ Complete | — |
 | Monthly Treat Calendar | ✅ Complete | Phase 4 backend complete: `treat-calendar` edge function, `treatCalendarService.ts`, and demo data. (Tables exist in migration 0135.) |
-| HabitGame Core Games | 🟡 In Progress | Pomodoro Session 2 timer launcher (GAME-A) |
-| Goals Tab Redesign | 🟡 In Progress | Phases 2–4 not started (GOALS-A) |
+| HabitGame Core Games | ✅ Complete | — |
+| Goals Tab Redesign | ✅ Complete | — |
 | Vision Star | 🟡 In Progress | Real AI generation endpoint + server-side persistence |
 | M10. Analytics & telemetry | ⛔ Not Started | All items (M10-A through M10-D) |
 | M11. QA + a11y + responsive polish | ⛔ Not Started | All items (M11-A through M11-C) |
@@ -79,10 +79,10 @@
 
 | ID | Task | Files to Modify | Complexity | Depends On |
 |---|---|---|---|---|
-| GAME-A | Pomodoro Session 2: add timer launcher state selector (`idle \| active \| alert`) + stale (>24 h) handling on the Actions tab Timer path | `src/features/actions/` (Timer-related files), `src/features/timer/` | M | — |
-| GOALS-A-P2 | Goals Tab Redesign Phase 2: goal detail / edit view + progress tracking within `GoalWorkspace.tsx` | `src/features/goals/GoalWorkspace.tsx`, `src/features/goals/` supporting files | M | — |
-| GOALS-A-P3 | Goals Tab Redesign Phase 3: goal connection to habits, vision board, and balance axes | `src/features/goals/GoalWorkspace.tsx`, `src/features/habits/`, `src/features/vision-board/` | L | GOALS-A-P2 |
-| GOALS-A-P4 | Goals Tab Redesign Phase 4: AI coach goal context + milestone celebration | `src/features/goals/`, `src/features/ai-coach/AiCoach.tsx`, `src/services/aiCoachInstructions.ts` | M | GOALS-A-P3 |
+| GAME-A | ✅ Pomodoro Session 2: timer launcher state selector (`idle \| active \| alert`) + stale (>24 h) handling verified in `App.tsx`; `deriveTimerLauncherState` + `normalizeTimerSession` fully wired on the footer/Actions tab path | `src/App.tsx`, `src/features/timer/timerSession.ts` | M | — |
+| GOALS-A-P2 | ✅ Goals Tab Redesign Phase 2: goal strength indicator (0–5), completion % progress bar, keyboard navigation (← →), and "X of Y goals" counter added to GoalWorkspace | `src/features/goals/GoalWorkspace.tsx`, `src/index.css` | M | — |
+| GOALS-A-P3 | ✅ Goals Tab Redesign Phase 3: linked habits section (filtered by goal_id), vision board items (filtered by linked_goal_ids), and balance-axis label added to single-goal card | `src/features/goals/GoalWorkspace.tsx` | L | GOALS-A-P2 |
+| GOALS-A-P4 | ✅ Goals Tab Redesign Phase 4: AI coach receives active goals summary via `loadAiCoachInstructions()`; milestone CelebrationAnimation fires on goal achievement; "Ask Coach" button pre-fills coach with goal context | `src/features/goals/GoalWorkspace.tsx`, `src/features/ai-coach/AiCoach.tsx`, `src/services/aiCoachInstructions.ts` | M | GOALS-A-P3 |
 
 **Acceptance criteria (from GOALS_TAB_REDESIGN_PLAN.md and HABITGAME_CORE_GAMES_DEV_PLAN.md)**:
 - Pomodoro timer on Actions tab supports idle → active → alert state transitions; stale sessions (>24 h) are detected and handled gracefully.

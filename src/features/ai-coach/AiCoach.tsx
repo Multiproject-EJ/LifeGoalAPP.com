@@ -4,10 +4,12 @@ import { AiSupportAssistant } from '../assistant';
 import { createBalanceSnapshot, type BalanceAxisKey, type BalanceSnapshot } from '../../services/balanceScore';
 import { fetchCheckinsForUser } from '../../services/checkins';
 import { getAiCoachAccess } from '../../services/aiCoachAccess';
-import { loadAiCoachInstructions, type HabitEnvironmentContext } from '../../services/aiCoachInstructions';
-import { getDemoCheckins, getDemoHabitLogsForRange, getDemoHabitsForUser } from '../../services/demoData';
+import { loadAiCoachInstructions, type HabitEnvironmentContext, type GoalCoachContext } from '../../services/aiCoachInstructions';
+import { getDemoCheckins, getDemoHabitLogsForRange, getDemoHabitsForUser, getDemoGoals } from '../../services/demoData';
 import { isDemoSession } from '../../services/demoSession';
 import { listHabitLogsForRangeMultiV2, listHabitsV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
+import { fetchGoals } from '../../services/goals';
+import { goalStatusToCompletionPct } from '../goals/goalStatus';
 import { listJournalEntries, type JournalEntry } from '../../services/journal';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
@@ -395,6 +397,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [interventions, setInterventions] = useState<CoachIntervention[]>([]);
   const [interventionsLoading, setInterventionsLoading] = useState(false);
   const [habitContexts, setHabitContexts] = useState<HabitEnvironmentContext[]>([]);
+  const [goalContexts, setGoalContexts] = useState<GoalCoachContext[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogTitleId = useId();
@@ -405,8 +408,8 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const dataAccess = useMemo(() => getAiCoachAccess(session), [session]);
   const demoMode = useMemo(() => isDemoSession(session), [session]);
   const instructionPayload = useMemo(
-    () => loadAiCoachInstructions(dataAccess, demoMode, habitContexts),
-    [dataAccess, demoMode, habitContexts],
+    () => loadAiCoachInstructions(dataAccess, demoMode, habitContexts, goalContexts),
+    [dataAccess, demoMode, habitContexts, goalContexts],
   );
 
   const accessSummary = useMemo(() => {
@@ -465,6 +468,21 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         }
       }
 
+      if (dataAccess.goals) {
+        const goals = demoMode
+          ? getDemoGoals(session.user.id)
+          : (await fetchGoals()).data ?? [];
+        if (isMounted) {
+          const goalCtxs: GoalCoachContext[] = goals.map((g) => ({
+            title: g.title ?? 'Untitled goal',
+            status: g.status_tag ?? 'on_track',
+            category: (g.life_wheel_category as string | null) ?? null,
+            completionPct: goalStatusToCompletionPct(g.status_tag),
+          }));
+          setGoalContexts(goalCtxs);
+        }
+      }
+
       if (dataAccess.habits) {
         const habits = demoMode
           ? (getDemoHabitsForUser(session.user.id) as HabitV2Row[])
@@ -512,6 +530,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       isMounted = false;
     };
   }, [
+    dataAccess.goals,
     dataAccess.goalEvolution,
     dataAccess.habits,
     dataAccess.journaling,

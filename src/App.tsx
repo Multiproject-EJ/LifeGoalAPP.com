@@ -2735,6 +2735,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 }
                 setActiveWorkspaceNav('timer');
               }}
+              onNavigateToAiCoach={(starterQuestion) => {
+                setAiCoachStarterQuestion(starterQuestion);
+                setShowAiCoachModal(true);
+              }}
             />
           </div>
         );

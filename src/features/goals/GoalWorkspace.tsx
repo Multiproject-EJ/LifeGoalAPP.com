@@ -10,6 +10,7 @@ import {
   GOAL_STATUS_ORDER,
   type GoalStatusTag,
   normalizeGoalStatus,
+  goalStatusToCompletionPct,
 } from './goalStatus';
 import { isDemoSession } from '../../services/demoSession';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
@@ -19,12 +20,19 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { AI_FEATURE_ICON } from '../../constants/ai';
 import type { TimerLaunchContext } from '../timer/timerSession';
+import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
+import { fetchVisionImages } from '../../services/visionBoard';
+import { BALANCE_AXES } from '../../services/balanceScore';
+import { getDemoHabitsForUser, getDemoVisionImages } from '../../services/demoData';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
+type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
 type GoalWorkspaceProps = {
   session: Session;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
+  onNavigateToAiCoach?: (starterQuestion?: string) => void;
 };
 
 type GoalDraft = {
@@ -81,7 +89,7 @@ const initialDraft: GoalDraft = {
   statusTag: defaultStatusTag,
 };
 
-export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps) {
+export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach }: GoalWorkspaceProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const { earnXP, recordActivity } = useGamification(session);
@@ -103,6 +111,10 @@ export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps
   const [activeGoalIndex, setActiveGoalIndex] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [entryChoice, setEntryChoice] = useState<'slice' | 'guided' | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationXP, setCelebrationXP] = useState(0);
+  const [allHabits, setAllHabits] = useState<HabitV2Row[]>([]);
+  const [allVisionImages, setAllVisionImages] = useState<VisionImageRow[]>([]);
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -314,6 +326,44 @@ export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps
     }
   }, [activeGoalIndex, searchedGoals.length]);
 
+  // Load habits and vision images for goal connections (GOALS-A-P3)
+  useEffect(() => {
+    let isMounted = true;
+    const loadSupportingData = async () => {
+      const userId = session.user.id;
+      const habits = isDemoExperience
+        ? (getDemoHabitsForUser(userId) as HabitV2Row[])
+        : (await listHabitsV2()).data ?? [];
+      const visionImages = isDemoExperience
+        ? (getDemoVisionImages(userId) as VisionImageRow[])
+        : (await fetchVisionImages(userId)).data ?? [];
+      if (isMounted) {
+        setAllHabits(habits);
+        setAllVisionImages(visionImages);
+      }
+    };
+    void loadSupportingData();
+    return () => { isMounted = false; };
+  }, [session.user.id, isDemoExperience]);
+
+  // Keyboard navigation for prev/next goal (GOALS-A-P2)
+  useEffect(() => {
+    if (entryChoice === null) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return;
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        setActiveGoalIndex((current) => Math.max(0, current - 1));
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        setActiveGoalIndex((current) => Math.min(searchedGoals.length - 1, current + 1));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [entryChoice, searchedGoals.length]);
+
   const handleDraftChange = (field: keyof GoalDraft) =>
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       setDraft((current) => ({ ...current, [field]: event.target.value }));
@@ -462,6 +512,8 @@ export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps
         await earnXP(xpAmount, 'goal_achieve', editingGoalId);
         await recordActivity();
 
+        setCelebrationXP(xpAmount);
+        setShowCelebration(true);
         setStatusMessage(
           isEarly 
             ? `Goal achieved early! Earned ${xpAmount} XP 🎉`
@@ -963,6 +1015,27 @@ export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps
                               {getStatusLabel(goal.status_tag)}
                             </span>
                           </div>
+
+                          {/* GOALS-A-P2: Goal strength + completion */}
+                          {(() => {
+                            const strength = computeGoalStrength(goal);
+                            const completionPct = computeGoalCompletionPct(goal);
+                            const strengthStars = '⭐'.repeat(strength) + '☆'.repeat(5 - strength);
+                            return (
+                              <div className="goal-card__progress">
+                                <div className="goal-card__strength" title="Goal strength is based on: description, target date, life area, progress notes, and status. Fill in more fields to increase strength.">
+                                  <span>Goal Strength: {strength}/5 {strengthStars}</span>
+                                </div>
+                                <div className="goal-card__completion">
+                                  <span>Progress: {completionPct}%</span>
+                                  <div className="goal-card__completion-bar" role="progressbar" aria-valuenow={completionPct} aria-valuemin={0} aria-valuemax={100}>
+                                    <div className="goal-card__completion-fill" style={{ width: `${completionPct}%` }} />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+
                           {goal.description ? <p>{goal.description}</p> : null}
                           {goal.progress_notes ? (
                             <div className="goal-card__notes">
@@ -974,6 +1047,52 @@ export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps
                               <p>Use weekly notes to track wins and surface blockers for your next review.</p>
                             </div>
                           )}
+
+                          {/* GOALS-A-P3: Linked habits */}
+                          {(() => {
+                            const linkedHabits = allHabits.filter((h) => h.goal_id === goal.id);
+                            return linkedHabits.length > 0 ? (
+                              <div className="goal-card__section">
+                                <h5>🔗 Linked Habits ({linkedHabits.length})</h5>
+                                <ul className="goal-card__linked-list">
+                                  {linkedHabits.map((h) => (
+                                    <li key={h.id}>{h.emoji ? `${h.emoji} ` : ''}{h.title}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : null;
+                          })()}
+
+                          {/* GOALS-A-P3: Vision board images */}
+                          {(() => {
+                            const linkedImages = allVisionImages.filter(
+                              (img) => img.linked_goal_ids && img.linked_goal_ids.includes(goal.id)
+                            );
+                            return linkedImages.length > 0 ? (
+                              <div className="goal-card__section">
+                                <h5>🖼️ Vision Board ({linkedImages.length})</h5>
+                                <ul className="goal-card__linked-list">
+                                  {linkedImages.map((img) => (
+                                    <li key={img.id}>{img.caption ?? 'Vision item'}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : null;
+                          })()}
+
+                          {/* GOALS-A-P3: Balance axis */}
+                          {(() => {
+                            const axis = getBalanceAxisForCategory(goal.life_wheel_category);
+                            const categoryLabel = goal.life_wheel_category
+                              ? (LIFE_WHEEL_CATEGORIES.find((c) => c.key === goal.life_wheel_category)?.label ?? goal.life_wheel_category)
+                              : null;
+                            return axis && categoryLabel ? (
+                              <div className="goal-card__section goal-card__section--axis">
+                                <span>⚖️ Supports <strong>{categoryLabel}</strong> → <strong>{axis.title}</strong> axis</span>
+                              </div>
+                            ) : null;
+                          })()}
+
                           <footer className="goal-card__footer">
                             <span>Created {formatRelativeDate(goal.created_at)}</span>
                             <div className="goal-card__actions">
@@ -1013,6 +1132,21 @@ export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps
                                   >
                                     ⏱️ Timer
                                   </button>
+                                  {onNavigateToAiCoach ? (
+                                    <button
+                                      type="button"
+                                      className="goal-card__button goal-card__button--primary"
+                                      onClick={() =>
+                                        onNavigateToAiCoach(
+                                          `Help me with my goal: "${goal.title}"${goal.description ? `. Context: ${goal.description}` : ''}`
+                                        )
+                                      }
+                                      aria-label={`Ask AI coach about goal: ${goal.title}`}
+                                      title="Ask AI coach"
+                                    >
+                                      {AI_FEATURE_ICON} Ask Coach
+                                    </button>
+                                  ) : null}
                                   <button
                                     type="button"
                                     className="goal-card__button goal-card__button--primary"
@@ -1068,6 +1202,14 @@ export function GoalWorkspace({ session, onNavigateToTimer }: GoalWorkspaceProps
         initialCategory={null}
         coachingMode={entryChoice === 'guided' ? 'guided' : 'slice'}
       />
+
+      {showCelebration && (
+        <CelebrationAnimation
+          type="action"
+          xpAmount={celebrationXP}
+          onComplete={() => setShowCelebration(false)}
+        />
+      )}
     </section>
   );
 }
@@ -1125,4 +1267,24 @@ function formatRelativeDate(value: string) {
 
   const deltaYears = Math.round(deltaMonths / 12);
   return formatter.format(deltaYears, 'year');
+}
+
+function computeGoalStrength(goal: GoalRow): number {
+  let score = 0;
+  if (goal.description && goal.description.trim().length > 0) score += 1;
+  if (goal.target_date) score += 1;
+  if (goal.life_wheel_category) score += 1;
+  if (goal.progress_notes && goal.progress_notes.trim().length > 0) score += 1;
+  if (goal.status_tag && goal.status_tag !== 'on_track') score += 1;
+  return score;
+}
+
+function computeGoalCompletionPct(goal: GoalRow): number {
+  return goalStatusToCompletionPct(goal.status_tag);
+}
+
+function getBalanceAxisForCategory(category: LifeWheelCategoryKey | string | null): { title: string; description: string } | null {
+  if (!category) return null;
+  const axis = BALANCE_AXES.find((a) => a.categories.includes(category as LifeWheelCategoryKey));
+  return axis ? { title: axis.title, description: axis.description } : null;
 }
