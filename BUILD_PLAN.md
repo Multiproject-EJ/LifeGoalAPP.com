@@ -27,7 +27,7 @@
 | Vision Star | 🟡 In Progress | Real AI generation endpoint + server-side persistence |
 | M10. Analytics & telemetry | ✅ Complete | All items (M10-A through M10-D) |
 | M11. QA + a11y + responsive polish | ✅ Complete | All items (M11-A through M11-C) |
-| M12. Documentation refresh + release checklist | ⛔ Not Started | All items (M12-A through M12-C) |
+| M12. Documentation refresh + release checklist | ✅ Complete | All items (M12-A through M12-C) |
 
 ---
 
@@ -118,9 +118,9 @@
 
 | ID | Task | Files to Modify | Complexity | Depends On |
 |---|---|---|---|---|
-| M12-A | Refresh feature docs for AI coach, interventions, quests, balance scoring, and push notifications | `docs/game-of-life-2.0/`, `README.md` (if present) | M | Phases 1–4 complete |
-| M12-B | Write release checklist including Supabase migration steps (`0008_m4_autoprog_ladder_v1.sql` and any Phase 2 migrations), demo parity notes, and feature flags | New file: `docs/RELEASE_CHECKLIST.md` | M | M12-A |
-| M12-C | Add links to AI coach personality spec and architecture docs; write demo mode setup guide | `docs/game-of-life-2.0/`, `DEV_PLAN.md` Linked Feature Plans | S | M12-A |
+| M12-A | ✅ Refresh feature docs for AI coach, interventions, quests, balance scoring, and push notifications | `docs/game-of-life-2.0/FEATURES.md` | M | Phases 1–4 complete |
+| M12-B | ✅ Write release checklist including Supabase migration steps, demo parity notes, and feature flags | `docs/RELEASE_CHECKLIST.md` | M | M12-A |
+| M12-C | ✅ Add links to AI coach personality spec and architecture docs; write demo mode setup guide | `docs/game-of-life-2.0/DEMO_MODE_SETUP.md`, `DEV_PLAN.md` Linked Feature Plans | S | M12-A |
 
 **Acceptance criteria (from DEV_PLAN.md M12)**:
 - Docs accurately describe shipped features with no references to unimplemented behavior.
