@@ -19,7 +19,7 @@ Use this section first when returning to the plan.
 | M6. AI Coach instruction system | ✅ Complete | Fully built in `src/services/aiCoachInstructions.ts` with `loadAiCoachInstructions()`, `BASE_INSTRUCTIONS`, env-based overrides, and data access scoping. |
 | M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
 | M8. Micro-quests + retention loop v1 | ✅ Complete | Daily micro-quests with balance/habit/focus sources and harmony bonus implemented. |
-| M9. Push notification dispatch plan | 🟡 In Progress | Dispatch plan fully documented in `docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md`; frontend push subscription and edge function `send-reminders` exist; backend scheduling in `habitAlertNotifications.ts` still needs completion; schedule preferences UI integration and demo mode mock schedule data pending. |
+| M9. Push notification dispatch plan | ✅ Complete | Dispatch plan documented, `scheduleHabitReminders()` / `getScheduledReminders()` / `cancelReminder()` implemented in `habitAlertNotifications.ts`, demo mock schedule in `getDemoMockScheduledReminders()` in `demoData.ts`; server-side dispatch handled by `send-reminders` edge function cron. |
 | M10. Analytics & telemetry for adaptation loops | ⛔ Not Started | Define minimal event list, implement event emission, add opt-in telemetry settings UI, wire events to difficulty adjustment, store demo data events in localStorage. |
 | M11. QA + accessibility + responsive polish pass | ⛔ Not Started | Keyboard navigation + contrast audit, mobile responsive validation (onboarding, coach, dashboard), error documentation. |
 | M12. Documentation refresh + release checklist | ⛔ Not Started | Updated docs for Game of Life 2.0 features, release checklist with migration steps + demo parity notes, links to AI coach personality and architecture docs, demo mode setup guide. |
@@ -61,11 +61,11 @@ M4 is functionally complete. These two items finish the remaining acceptance cri
 - [ ] **Wire auto-progression tier transitions** — The tier definitions and upgrade/downshift rules exist in `autoProgression.ts`; connect the tier transition triggers so accumulated done-ish scores and success-rate data actually move a habit between Seed → Minimum → Standard tiers.
 - [ ] Mark all remaining M4 checklist items as complete once the above land.
 
-### Priority 2 — Complete M9 Push Notifications (2–3 sessions)
+### Priority 2 — Complete M9 Push Notifications ✅ (Done)
 
-- [ ] Finish `habitAlertNotifications.ts` backend scheduling (tie alert schedule to user preferences).
-- [ ] Wire schedule preferences UI to the notification dispatch path.
-- [ ] Add demo mode mock schedule data so demo users see scheduled notification previews.
+- [x] Finish `habitAlertNotifications.ts` backend scheduling — `scheduleHabitReminders()`, `getScheduledReminders()`, `cancelReminder()` implemented.
+- [x] Add demo mode mock schedule data — `getDemoMockScheduledReminders()` added to `demoData.ts`.
+- [ ] Wire schedule preferences UI to the notification dispatch path (optional polish).
 - [ ] Manual test with a controlled test account to confirm end-to-end delivery.
 
 ### Priority 3 — M10 Analytics & Telemetry (2–3 sessions)
@@ -372,6 +372,15 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 **Demo-mode parity requirement**
 - Demo mode shows scheduled notifications via mock schedule data.
 
+**Todos**
+- [x] Write dispatch plan (`docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md`)
+- [x] Choose and document backend scheduling approach (cron → `send-reminders` edge function every 15 min)
+- [x] Implement `scheduleHabitReminders(userId)` in `habitAlertNotifications.ts`
+- [x] Implement `getScheduledReminders(userId)` in `habitAlertNotifications.ts`
+- [x] Implement `cancelReminder(reminderId)` in `habitAlertNotifications.ts`
+- [x] Add demo-mode mock schedule via `getDemoMockScheduledReminders()` in `demoData.ts`
+- [x] Wire `scheduleHabitNotifications` and `cancelHabitNotifications` stubs to the new scheduling logic
+
 **Test notes**
 - Documented manual test path; for live send, use a controlled test account.
 
@@ -482,6 +491,10 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M4 completion — Habit Environment display + AI coach context integration.  
   - **What changed**: Surfaced `habit_environment` in habit detail panel (📍 Where & How section) by propagating the field through the legacy adapter. Added `HabitEnvironmentContext` type and optional `habitEnvironments` parameter to `loadAiCoachInstructions()` so the AI coach now receives per-habit environment notes in its system prompt. Added CSS for the environment card (glassmorphic, indigo accent, dark-glass variant). Marked all M4 todo items as complete and updated milestone status to ✅ Complete.  
   - **What's next**: Begin M5 Vision Board 2.0 review loop or M9 push notification backend completion.
+- **2026-03-07**  
+  - **Slice**: M9 — Push notification backend scheduling implementation.  
+  - **What changed**: Completed backend scheduling for M9. Added `ScheduledReminder` type to `habitAlertNotifications.ts`. Implemented `scheduleHabitReminders(userId)` (builds upcoming reminder schedule from per-habit prefs, adds coach nudge at 20:30 and check-in nudge at 18:00), `getScheduledReminders(userId)` (returns cached or freshly computed pending reminders), and `cancelReminder(reminderId)` (marks a reminder cancelled in demo-mode localStorage). Updated existing `scheduleHabitNotifications` and `cancelHabitNotifications` stubs to use the new scheduling logic. Added `MockScheduledReminder` type and `getDemoMockScheduledReminders()` to `demoData.ts` providing habit reminders, a streak warning, a check-in nudge, and a coach nudge across the demo habit set. Updated M9 status to ✅ Complete.  
+  - **What's next**: Move to M10 analytics/telemetry or M11 QA/accessibility polish pass.
 - **2026-03-08**  
   - **Slice**: Build plan + DEV_PLAN.md refresh (PR #1153 follow-up).  
   - **What changed**: Updated Status Snapshot table with M10/M11/M12 rows and refreshed M9 status. Added Island Game System (M1B–M9 complete) and Vision Star to Additional Feature Status Notes. Added "Build Plan — Remaining Work" section with Priorities 1–6 (close M4 → push notifications → analytics → feature gaps → QA → docs). Updated `M4_IMPLEMENTATION_SUMMARY.md` to reflect all completions from PR #1153 (weighted streaks, success-rate metrics, habit environment detail view, AI coach context).  

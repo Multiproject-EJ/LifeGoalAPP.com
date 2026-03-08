@@ -2039,6 +2039,113 @@ export function getDemoState(): DemoState {
   return clone(state);
 }
 
+/**
+ * Return a mock set of upcoming scheduled push notifications for demo mode.
+ *
+ * Mirrors the ScheduledReminder shape from habitAlertNotifications.ts so the UI
+ * can render a realistic preview without a real push subscription.
+ *
+ * Includes:
+ * - Habit reminders for the first 3 daily demo habits
+ * - A streak warning for the first habit with a specific-days schedule
+ * - An evening life wheel check-in nudge
+ * - A nightly Game of Life Coach nudge
+ */
+export type MockScheduledReminder = {
+  id: string;
+  user_id: string;
+  habit_id: string | null;
+  habit_title: string | null;
+  notification_type: 'habit_reminder' | 'coach_nudge' | 'checkin_nudge' | 'streak_warning';
+  scheduled_at: string;
+  status: 'pending' | 'sent' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+};
+
+export function getDemoMockScheduledReminders(): MockScheduledReminder[] {
+  const now = new Date();
+  const reminders: MockScheduledReminder[] = [];
+
+  function nextAt(hours: number, minutes: number): string {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+    if (d <= now) d.setDate(d.getDate() + 1);
+    return d.toISOString();
+  }
+
+  // Habit reminders for the first 3 active daily habits
+  const dailyHabits = state.habits
+    .filter((h) => !h.archived && (h.schedule as { mode?: string })?.mode === 'daily')
+    .slice(0, 3);
+
+  const habitReminderTimes: [number, number][] = [
+    [8, 0],
+    [8, 0],
+    [9, 30],
+  ];
+
+  dailyHabits.forEach((habit, i) => {
+    const [h, m] = habitReminderTimes[i] ?? [8, 0];
+    reminders.push({
+      id: `demo-reminder-habit-${i + 1}`,
+      user_id: DEMO_USER_ID,
+      habit_id: habit.id,
+      habit_title: habit.title,
+      notification_type: 'habit_reminder',
+      scheduled_at: nextAt(h, m),
+      status: 'pending',
+      created_at: iso(now),
+      updated_at: iso(now),
+    });
+  });
+
+  // Streak warning for the first habit with a specific-days schedule
+  const weeklyHabit = state.habits.find(
+    (h) => !h.archived && (h.schedule as { mode?: string })?.mode === 'specific_days',
+  );
+  if (weeklyHabit) {
+    reminders.push({
+      id: 'demo-reminder-streak-1',
+      user_id: DEMO_USER_ID,
+      habit_id: weeklyHabit.id,
+      habit_title: weeklyHabit.title,
+      notification_type: 'streak_warning',
+      scheduled_at: nextAt(17, 0),
+      status: 'pending',
+      created_at: iso(now),
+      updated_at: iso(now),
+    });
+  }
+
+  // Evening life wheel check-in nudge
+  reminders.push({
+    id: 'demo-reminder-checkin-1',
+    user_id: DEMO_USER_ID,
+    habit_id: null,
+    habit_title: null,
+    notification_type: 'checkin_nudge',
+    scheduled_at: nextAt(18, 0),
+    status: 'pending',
+    created_at: iso(now),
+    updated_at: iso(now),
+  });
+
+  // Nightly Game of Life Coach nudge
+  reminders.push({
+    id: 'demo-reminder-coach-1',
+    user_id: DEMO_USER_ID,
+    habit_id: null,
+    habit_title: null,
+    notification_type: 'coach_nudge',
+    scheduled_at: nextAt(20, 30),
+    status: 'pending',
+    created_at: iso(now),
+    updated_at: iso(now),
+  });
+
+  return reminders.sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+}
+
 export function clearDemoData(): void {
   if (typeof window === 'undefined') return;
   try {
