@@ -30,7 +30,7 @@ Use this section first when returning to the plan.
 
 **Island Game System**: ✅ Complete — Milestones M1B through M9 fully built (HUD, dice, stops, timer, hatchery, encounters, boss, shop, home island). Latest commit `6df53f9` on 2026-03-07.
 
-**Monthly Treat Calendar**: ✅ Complete — Phase 1-4 done. `treat-calendar` edge function, `treatCalendarService.ts`, and demo data added in Phase 4 backend. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
+**Monthly Treat Calendar**: ✅ Complete — Redesigned as Holiday Treats Advent Calendar (Phase 4 backend done). `holiday_key` column added (migration 0177), `treat-calendar` edge function with holiday filter, `treatCalendarService.ts` with `ADVENT_META` config, and Christmas Advent demo data. See `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
 
 **HabitGame Core Games**: 🟡 Lucky Roll fully built + all 4 mini-games have implementations (TaskTower, PomodoroSprint, WheelOfWins, VisionQuest imported and integrated). Pomodoro D.7/D.8 Session 1 mapping is now clarified to target the **Actions tab Timer flow** (not the Pomodoro mini-game modal); next slice is Session 2 timer launcher selector (`idle|active|alert`) + stale (>24h) handling tests on the timer path. See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
 
@@ -78,7 +78,7 @@ M4 is functionally complete. These two items finish the remaining acceptance cri
 
 ### Priority 4 — Additional Feature Completion (3–5 sessions)
 
-- [x] **Monthly Treat Calendar Phase 4** — `treat-calendar` edge function, `treatCalendarService.ts`, and demo data complete. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
+- [x] **Holiday Treats Advent Calendar** — Redesigned as holiday-specific advent countdown tied to Holiday Preferences. `holiday_key` migration, `treat-calendar` edge function, `treatCalendarService.ts`, and Christmas Advent demo data complete. See `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
 - [ ] **HabitGame Pomodoro Session 2** — Build timer launcher selector (`idle|active|alert`) and add stale (>24h) handling on the Actions tab Timer path. See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
 - [ ] **Goals Tab Redesign Phases 2–4** — Continue `GoalWorkspace.tsx` past the Phase 1 two-card entry. See `GOALS_TAB_REDESIGN_PLAN.md`.
 - [ ] **Vision Star AI generation** — Replace local templating with a real AI generation endpoint for special-story content; add server-side persistence/audit trail for generated outputs.
@@ -107,8 +107,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 
 - [ACTIONS_FEATURE_DEV_PLAN.md](./ACTIONS_FEATURE_DEV_PLAN.md) — Actions system planning.
 - [GOALS_TAB_REDESIGN_PLAN.md](./GOALS_TAB_REDESIGN_PLAN.md) — Goals tab UX overhaul.
-- [MONTHLY_TREAT_CALENDAR_DEV_PLAN.md](./MONTHLY_TREAT_CALENDAR_DEV_PLAN.md) — Monthly treats calendar feature.
-- [DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md](./DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md) — Daily treats countdown calendar.
+- [HOLIDAY_TREATS_CALENDAR_PLAN.md](./HOLIDAY_TREATS_CALENDAR_PLAN.md) — Holiday Treats Advent Calendar (replaces old monthly + countdown plan docs).
 - [TRAINING_EXERCISE_DEV_PLAN.md](./TRAINING_EXERCISE_DEV_PLAN.md) — Training exercise feature plan.
 - [NEW_YEARS_MANIFEST_DEV_PLAN.md](./NEW_YEARS_MANIFEST_DEV_PLAN.md) — New Year’s manifest feature plan.
 - [COMPETITION_KILLER_DEV_PLAN.md](./COMPETITION_KILLER_DEV_PLAN.md) — Strategic roadmap (tie steps to milestones when actioned).

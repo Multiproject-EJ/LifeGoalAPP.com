@@ -152,10 +152,12 @@ const ADVENT_META: AdventMeta[] = [
     emojis: ['🎃', '👻', '🕷️', '🦇', '🕯️', '💀', '🕸️', '🍬', '🧙', '🌙'],
   },
   {
+    // Easter is a movable feast (Mar 22 – Apr 25). The demo window covers the
+    // common range; production seasons should seed the exact date per year.
     theme_name: 'Easter Countdown',
     holiday_key: 'easter',
-    countdownStart: { month: 2, day: 22 },
-    holidayDate: { month: 3, day: 5 },
+    countdownStart: { month: 2, day: 18 },
+    holidayDate: { month: 3, day: 25 },
     emojis: ['🐣', '🌸', '🥚', '🐰', '🌷', '🦋', '🌼', '🍀', '✨', '🌈'],
   },
   {
@@ -173,6 +175,9 @@ const ADVENT_META: AdventMeta[] = [
     emojis: ['🎉', '🥂', '🎆', '🎊', '⭐', '✨', '🎇', '🕛', '🥳', '🌟'],
   },
   {
+    // US Thanksgiving falls on the 4th Thursday of November (Nov 22–28).
+    // The demo window covers Nov 1–28; production seasons should seed the
+    // exact date per year.
     theme_name: 'Thanksgiving Countdown',
     holiday_key: 'thanksgiving',
     countdownStart: { month: 10, day: 1 },
@@ -196,6 +201,33 @@ const ADVENT_META: AdventMeta[] = [
 ];
 
 /**
+ * Check whether a given month/day falls within a countdown window.
+ * Uses a fixed leap year (2000) as the reference so comparisons are
+ * done purely by calendar date rather than by a custom ordinal encoding.
+ * Handles windows that cross the year boundary (e.g., New Year: Dec 26 → Jan 1).
+ */
+function isInCountdownWindow(
+  todayMonth: number,
+  todayDay: number,
+  startMonth: number,
+  startDay: number,
+  endMonth: number,
+  endDay: number,
+): boolean {
+  const REF_YEAR = 2000; // leap year — safe for all month/day combinations
+  const todayMs = new Date(REF_YEAR, todayMonth, todayDay).getTime();
+  const startMs = new Date(REF_YEAR, startMonth, startDay).getTime();
+  const endMs   = new Date(REF_YEAR, endMonth,   endDay  ).getTime();
+
+  if (startMs <= endMs) {
+    // Normal window within the same calendar year
+    return todayMs >= startMs && todayMs <= endMs;
+  }
+  // Window crosses the year boundary (e.g., Dec 26 → Jan 1)
+  return todayMs >= startMs || todayMs <= endMs;
+}
+
+/**
  * Pick a demo advent season to display.
  * Prefers the advent whose countdown window includes today;
  * falls back to Christmas as the canonical advent calendar.
@@ -207,11 +239,7 @@ function pickDemoAdventMeta(year: number): { meta: AdventMeta; startsOn: string;
 
   for (const meta of ADVENT_META) {
     const { countdownStart: cs, holidayDate: hd } = meta;
-    // Check if today falls within the countdown window (same year)
-    const startOrd = cs.month * 31 + cs.day;
-    const endOrd = hd.month * 31 + hd.day;
-    const todayOrd = todayM * 31 + todayD;
-    if (startOrd <= endOrd && todayOrd >= startOrd && todayOrd <= endOrd) {
+    if (isInCountdownWindow(todayM, todayD, cs.month, cs.day, hd.month, hd.day)) {
       const startsOn = new Date(year, cs.month, cs.day).toISOString().split('T')[0];
       const endsOn = new Date(year, hd.month, hd.day).toISOString().split('T')[0];
       return { meta, startsOn, endsOn };
