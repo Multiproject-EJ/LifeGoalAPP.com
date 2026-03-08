@@ -163,7 +163,7 @@ const ADVENT_META: AdventMeta[] = [
   {
     theme_name: 'Valentine\'s Countdown',
     holiday_key: 'valentines_day',
-    countdownStart: { month: 1, day: 1 },
+    countdownStart: { month: 1, day: 12 },
     holidayDate: { month: 1, day: 14 },
     emojis: ['💘', '❤️', '🌹', '💌', '💝', '🍫', '💕', '✨', '🎀', '💗'],
   },

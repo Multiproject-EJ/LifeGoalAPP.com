@@ -27,7 +27,7 @@ Unlike a generic rolling monthly calendar, each advent season is tied to a speci
 | `christmas`       | Christmas Advent           | 25    | Dec 1 → Dec 25      | 🎄 ⭐ 🎁 🦌 🔔 ❄️ 🕯️ 🍪 🧦 ☃️        |
 | `halloween`       | Halloween Countdown        | 31    | Oct 1 → Oct 31      | 🎃 👻 🕷️ 🦇 🕯️ 💀 🕸️ 🍬 🧙 🌙        |
 | `easter`          | Easter Countdown           | ~38  | Mar 18 → Apr 25 (approx) | 🐣 🌸 🥚 🐰 🌷 🦋 🌼 🍀 ✨ 🌈          |
-| `valentines_day`  | Valentine's Countdown      | 14    | Feb 1 → Feb 14      | 💘 ❤️ 🌹 💌 💝 🍫 💕 ✨ 🎀 💗          |
+| `valentines_day`  | Valentine's Countdown      | 3     | Feb 12 → Feb 14     | 💘 ❤️ 🌹 💌 💝 🍫 💕 ✨ 🎀 💗          |
 | `new_year`        | New Year Countdown         | 7     | Dec 26 → Jan 1      | 🎉 🥂 🎆 🎊 ⭐ ✨ 🎇 🕛 🥳 🌟          |
 | `thanksgiving`    | Thanksgiving Countdown     | ~28  | Nov 1 → Nov 28 (4th Thu) | 🦃 🍂 🌽 🥧 🍁 🌾 🥕 🙏 🍎 🍠          |
 | `hanukkah`        | Hanukkah Countdown         | 9     | Dec 14 → Dec 22     | 🕎 ✡️ 🕯️ 💙 ⭐ 🎁 🪙 🥞 🌟 ✨          |
