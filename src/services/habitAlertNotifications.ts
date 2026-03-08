@@ -215,6 +215,8 @@ export async function cancelHabitNotifications(habitId: string): Promise<void> {
  *
  * Scheduling rules:
  * - Skips habits where reminders are disabled or have no preferred_time.
+ * - Adds a streak warning at 17:00 for the first enabled habit (mirrors the
+ *   streak_warning entry in getDemoMockScheduledReminders() for demo parity).
  * - Adds a nightly Game of Life Coach nudge at 20:30.
  * - Adds a life wheel check-in nudge at 18:00.
  * - Returns reminders sorted by scheduled_at ascending.
@@ -245,6 +247,24 @@ export async function scheduleHabitReminders(userId: string): Promise<ScheduledR
       habit_title: pref.title,
       notification_type: 'habit_reminder',
       scheduled_at: scheduledAt.toISOString(),
+      status: 'pending',
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    });
+  }
+
+  // Streak warning at 17:00 for the first enabled habit — ensures streak_warning
+  // is represented in the schedule for parity with getDemoMockScheduledReminders().
+  const firstEnabledPref = prefs.find((p) => p.enabled);
+  const streakAt = nextOccurrenceOf('17:00');
+  if (firstEnabledPref && streakAt) {
+    reminders.push({
+      id: generateReminderId(),
+      user_id: userId,
+      habit_id: firstEnabledPref.habit_id,
+      habit_title: firstEnabledPref.title,
+      notification_type: 'streak_warning',
+      scheduled_at: streakAt.toISOString(),
       status: 'pending',
       created_at: now.toISOString(),
       updated_at: now.toISOString(),
