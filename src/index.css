@@ -4143,6 +4143,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 
+.habit-tracker {
   background: rgba(15, 23, 42, 0.04);
   border-radius: 20px;
   padding: clamp(1.5rem, 3vw, 2.5rem);
