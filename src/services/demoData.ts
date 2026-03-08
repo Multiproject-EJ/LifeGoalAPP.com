@@ -541,6 +541,14 @@ const defaultState: DemoState = {
       outreachPercentage = 0;
     }
     
+    // Day index 1 satisfies (i % 5 === 1), making it the first done-ish day
+    // in the 28-day demo sequence.  Include an environment coaching feedback
+    // note on this entry to satisfy M4-C: at least one log with coaching context.
+    const morningNote =
+      i === 1
+        ? 'Coach suggested moving this ritual 30 min earlier, before checking phone — tried it today and felt more focused. Updated environment: coffee prepped the night before.'
+        : null;
+
     defaultState.habitLogs.push(
       {
         id: createId('habit-log'),
@@ -550,7 +558,7 @@ const defaultState: DemoState = {
         date: dateIso,
         value: null,
         done: morningDone,
-        note: null,
+        note: morningNote,
         mood: null,
         progress_state: morningState,
         completion_percentage: morningPercentage,

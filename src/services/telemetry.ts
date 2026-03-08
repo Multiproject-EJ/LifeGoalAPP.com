@@ -27,6 +27,7 @@ export type TelemetryEventType =
   | 'habit_stage_recommendation_applied'
   | 'habit_tier_changed'
   | 'habit_environment_set'
+  | 'habit_environment_updated'
   | 'reward_evolution_prompted'
   | 'reward_evolution_accepted'
   | 'reward_evolution_declined'
