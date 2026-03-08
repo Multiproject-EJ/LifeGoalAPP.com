@@ -100,11 +100,11 @@ Example habits:
 - ✅ Partial progress bars for done-ish completions with percentage display
 - ✅ Coach context panel displaying environment notes (implemented: habit_environment included in AI coach system prompt via loadAiCoachInstructions())
 
-### Analytics & Streaks (Not in Current PR)
-- Streak calculations using partial credit (0.7 weight)
-- Performance classifier using done-ish data
-- Auto-progression tier logic incorporating done-ish scores
-- Analytics dashboard distinguishing all four states
+### Analytics & Streaks ✅ (All Completed)
+- ✅ Streak calculations using partial credit (0.7 weight) — integrated into `DailyHabitTracker` insights and `QuickActionsFAB` sorting via done-ish weighting in streak logic
+- ✅ Weighted success-rate metrics on habit analytics cards — 30-day weighted success snapshots (done/done-ish/skipped/missed with partial-credit scoring) surfaced on each habit card with done-ish day counts for transparency
+- ⬜ Performance classifier using done-ish data — analytics dashboard distinguishing all four states (future work)
+- ⬜ Auto-progression tier logic incorporating done-ish scores — tier definitions and upgrade/downshift rules exist in `autoProgression.ts`; actual tier transition triggers based on accumulated done-ish data are not yet wired (Priority 1 remaining work)
 
 ### Telemetry ✅ (Completed in this PR)
 - ✅ `habit_done_ish_completed` event - fires when marking habit as done-ish
@@ -162,10 +162,12 @@ Run migration `0008_m4_autoprog_ladder_v1.sql` to add:
 ## Next Steps
 1. ✅ Implement UI affordances for done-ish state in check-in flows
 2. ✅ Add habit environment display in detail views (implemented: 📍 Where & How section in DailyHabitTracker.tsx detail panel)
-3. Update streak/analytics to use progress states (future)
+3. ✅ Weighted streaks and success-rate metrics using progress states
 4. ✅ Add telemetry events for tracking
 5. Manual testing of all completion scenarios
 6. ✅ Update coaching prompts to reference environment context (implemented: habit_environment passed to loadAiCoachInstructions() in AiCoach.tsx)
+7. ⬜ Add skipped/missed classification buttons to daily check-in UI (Priority 1 remaining work)
+8. ⬜ Wire auto-progression tier transitions using accumulated done-ish + success-rate data (Priority 1 remaining work)
 
 ## Related Documentation
 - DEV_PLAN.md: M4 marked as 🟡 In Progress

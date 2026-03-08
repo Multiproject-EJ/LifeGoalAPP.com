@@ -20,10 +20,15 @@ Use this section first when returning to the plan.
 | M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
 | M8. Micro-quests + retention loop v1 | ✅ Complete | Daily micro-quests with balance/habit/focus sources and harmony bonus implemented. |
 | M9. Push notification dispatch plan | ✅ Complete | Dispatch plan documented, `scheduleHabitReminders()` / `getScheduledReminders()` / `cancelReminder()` implemented in `habitAlertNotifications.ts`, demo mock schedule in `getDemoMockScheduledReminders()` in `demoData.ts`; server-side dispatch handled by `send-reminders` edge function cron. |
+| M10. Analytics & telemetry for adaptation loops | ⛔ Not Started | Define minimal event list, implement event emission, add opt-in telemetry settings UI, wire events to difficulty adjustment, store demo data events in localStorage. |
+| M11. QA + accessibility + responsive polish pass | ⛔ Not Started | Keyboard navigation + contrast audit, mobile responsive validation (onboarding, coach, dashboard), error documentation. |
+| M12. Documentation refresh + release checklist | ⛔ Not Started | Updated docs for Game of Life 2.0 features, release checklist with migration steps + demo parity notes, links to AI coach personality and architecture docs, demo mode setup guide. |
 
 ### Additional Feature Status Notes
 
 **Training/Exercise Tab**: ✅ Complete — Full feature under `src/features/training/` with 13+ files, all 10 strategy types built, documented in `TRAINING_FEATURE_COMPLETE.md`.
+
+**Island Game System**: ✅ Complete — Milestones M1B through M9 fully built (HUD, dice, stops, timer, hatchery, encounters, boss, shop, home island). Latest commit `6df53f9` on 2026-03-07.
 
 **Monthly Treat Calendar**: 🟡 Phase 1-3 Complete (RNG, UI, scratch card), Phase 4 backend (Supabase tables + RLS + edge functions) still pending. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
 
@@ -31,7 +36,9 @@ Use this section first when returning to the plan.
 
 **Goals Tab Redesign**: 🟡 Phase 1 done (two-card entry in `GoalWorkspace.tsx`), Phases 2-4 not started. See `GOALS_TAB_REDESIGN_PLAN.md`.
 
-**Actions Feature**: ✅ Phases 0-4 Complete (Actions Tab, Timer, Projects Manager, Kanban/Timeline views), Phase 5 (AI) and Phase 6 (Desktop) Complete. Full task-project integration operational. See `ACTIONS_FEATURE_DEV_PLAN.md`.
+**Vision Star**: 🟡 Time-bound scheduling and weekly special-story generation implemented (local templating). Special-story generation still uses local templating; real AI generation endpoint and server-side persistence/audit trail pending.
+
+**Actions Feature**: ✅ Phases 0-6 Complete (Actions Tab, Timer, Projects Manager, Kanban/Timeline views, AI, Desktop). Full task-project integration operational. See `ACTIONS_FEATURE_DEV_PLAN.md`.
 
 ### First Step (always)
 1. **Determine current build status** by checking recent commits and the app for any progress on the milestones above.
@@ -39,6 +46,58 @@ Use this section first when returning to the plan.
 3. Resume from the first unchecked milestone or the documented next task.
 
 This plan lays out the milestone skeleton required for Game of Life 2.0 delivery. Each milestone includes reuse targets, acceptance criteria, demo-mode parity requirements, and test notes. Order is fixed as requested.
+
+---
+
+## Build Plan — Remaining Work (as of 2026-03-08)
+
+This section lists all remaining work in priority order. Each priority block includes estimated session count and a concrete task list. Update items as they complete.
+
+### Priority 1 — Close M4 (1–2 sessions)
+
+M4 is functionally complete. These two items finish the remaining acceptance criteria:
+
+- [ ] **Skipped/missed classification UI** — Add explicit skipped vs missed buttons/controls to the daily check-in flow so users can classify days without ambiguity. Update `DailyHabitTracker.tsx` (and any unified today view) to surface the choice.
+- [ ] **Wire auto-progression tier transitions** — The tier definitions and upgrade/downshift rules exist in `autoProgression.ts`; connect the tier transition triggers so accumulated done-ish scores and success-rate data actually move a habit between Seed → Minimum → Standard tiers.
+- [ ] Mark all remaining M4 checklist items as complete once the above land.
+
+### Priority 2 — Complete M9 Push Notifications ✅ (Done)
+
+- [x] Finish `habitAlertNotifications.ts` backend scheduling — `scheduleHabitReminders()`, `getScheduledReminders()`, `cancelReminder()` implemented.
+- [x] Add demo mode mock schedule data — `getDemoMockScheduledReminders()` added to `demoData.ts`.
+- [ ] Wire schedule preferences UI to the notification dispatch path (optional polish).
+- [ ] Manual test with a controlled test account to confirm end-to-end delivery.
+
+### Priority 3 — M10 Analytics & Telemetry (2–3 sessions)
+
+- [ ] Define minimal event list: onboarding completion, balance shift, intervention accepted, quest completion.
+- [ ] Implement event emission for each event in the minimal list.
+- [ ] Add opt-in telemetry settings UI (privacy-respecting toggle in account/settings).
+- [ ] Wire emitted events to difficulty adjustment recommendations in the AI coach.
+- [ ] Store demo data events in `localStorage` mock telemetry store.
+
+### Priority 4 — Additional Feature Completion (3–5 sessions)
+
+- [ ] **Monthly Treat Calendar Phase 4** — Create Supabase tables, RLS policies, and edge functions for server-backed treat persistence. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
+- [ ] **HabitGame Pomodoro Session 2** — Build timer launcher selector (`idle|active|alert`) and add stale (>24h) handling on the Actions tab Timer path. See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
+- [ ] **Goals Tab Redesign Phases 2–4** — Continue `GoalWorkspace.tsx` past the Phase 1 two-card entry. See `GOALS_TAB_REDESIGN_PLAN.md`.
+- [ ] **Vision Star AI generation** — Replace local templating with a real AI generation endpoint for special-story content; add server-side persistence/audit trail for generated outputs.
+
+### Priority 5 — M11 QA + Polish (2–3 sessions)
+
+- [ ] Keyboard navigation checks on key screens (onboarding, dashboard, coach).
+- [ ] Contrast audit against WCAG AA minimums.
+- [ ] Mobile layout validation: onboarding, coach, and dashboard on narrow viewports.
+- [ ] Document and resolve common errors found during the audit.
+
+### Priority 6 — M12 Documentation + Release (1–2 sessions)
+
+- [ ] Refresh docs for all Game of Life 2.0 features (AI coach, interventions, quests, balance scoring).
+- [ ] Write release checklist including data migration steps and demo parity notes.
+- [ ] Add links to AI coach personality spec and architecture docs.
+- [ ] Write demo mode setup guide (what to enable, what is mocked, known limitations).
+
+---
 
 ## Linked Feature Plans (standalone docs to fold into this master plan)
 
@@ -436,3 +495,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M9 — Push notification backend scheduling implementation.  
   - **What changed**: Completed backend scheduling for M9. Added `ScheduledReminder` type to `habitAlertNotifications.ts`. Implemented `scheduleHabitReminders(userId)` (builds upcoming reminder schedule from per-habit prefs, adds coach nudge at 20:30 and check-in nudge at 18:00), `getScheduledReminders(userId)` (returns cached or freshly computed pending reminders), and `cancelReminder(reminderId)` (marks a reminder cancelled in demo-mode localStorage). Updated existing `scheduleHabitNotifications` and `cancelHabitNotifications` stubs to use the new scheduling logic. Added `MockScheduledReminder` type and `getDemoMockScheduledReminders()` to `demoData.ts` providing habit reminders, a streak warning, a check-in nudge, and a coach nudge across the demo habit set. Updated M9 status to ✅ Complete.  
   - **What's next**: Move to M10 analytics/telemetry or M11 QA/accessibility polish pass.
+- **2026-03-08**  
+  - **Slice**: Build plan + DEV_PLAN.md refresh (PR #1153 follow-up).  
+  - **What changed**: Updated Status Snapshot table with M10/M11/M12 rows and refreshed M9 status. Added Island Game System (M1B–M9 complete) and Vision Star to Additional Feature Status Notes. Added "Build Plan — Remaining Work" section with Priorities 1–6 (close M4 → push notifications → analytics → feature gaps → QA → docs). Updated `M4_IMPLEMENTATION_SUMMARY.md` to reflect all completions from PR #1153 (weighted streaks, success-rate metrics, habit environment detail view, AI coach context).  
+  - **What's next**: Priority 1 — add skipped/missed classification UI and wire auto-progression tier transitions to fully close M4.
