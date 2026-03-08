@@ -2063,11 +2063,11 @@ export function getDemoState(): DemoState {
  * Mirrors the ScheduledReminder shape from habitAlertNotifications.ts so the UI
  * can render a realistic preview without a real push subscription.
  *
- * Includes:
- * - Habit reminders for the first 3 daily demo habits
- * - A streak warning for the first habit with a specific-days schedule
- * - An evening life wheel check-in nudge
- * - A nightly Game of Life Coach nudge
+ * All four notification_type values from ScheduledReminder are represented:
+ * - 'habit_reminder'  — per-habit morning/daily reminders
+ * - 'streak_warning'  — alert when a habit streak is at risk
+ * - 'checkin_nudge'   — evening life wheel check-in prompt (18:00)
+ * - 'coach_nudge'     — nightly Game of Life Coach nudge (20:30)
  */
 export type MockScheduledReminder = {
   id: string;
@@ -2172,4 +2172,133 @@ export function clearDemoData(): void {
   } catch (error) {
     console.warn('Unable to clear demo data from localStorage.', error);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Demo Treat Calendar
+// ---------------------------------------------------------------------------
+
+/**
+ * Demo data for the Holiday Treats Advent Calendar.
+ *
+ * Returns an advent-style season tied to a specific holiday, pre-seeded
+ * hatches with holiday-themed emojis and varied reward types, and a
+ * progress snapshot with several days already opened.
+ *
+ * The demo uses a Christmas advent (Dec 1–25) as the canonical showcase.
+ * If today is actually in December the live day index is used; otherwise
+ * a mid-advent index (day 8) is returned so the UI shows a meaningful
+ * partial-open state.
+ */
+export type DemoTreatHatch = {
+  id: string;
+  season_id: string;
+  day_index: number;
+  symbol_name: string;
+  symbol_emoji: string;
+  numbers: null;
+  number_reward: null;
+  symbol_reward: string;
+  reward_payload: { reward_type: string; reward_value: number };
+  created_at: string;
+};
+
+export type DemoTreatSeason = {
+  id: string;
+  theme_name: string;
+  starts_on: string;
+  ends_on: string;
+  status: 'active';
+  holiday_key: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DemoTreatProgress = {
+  user_id: string;
+  season_id: string;
+  last_opened_date: string | null;
+  last_opened_day: number;
+  opened_days: number[];
+  symbol_counts: Record<string, number>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DemoTreatCalendarData = {
+  season: DemoTreatSeason;
+  hatches: DemoTreatHatch[];
+  progress: DemoTreatProgress;
+  today_day_index: number;
+};
+
+export function getDemoTreatCalendarData(): DemoTreatCalendarData {
+  const now = new Date();
+  const year = now.getFullYear();
+
+  // Christmas Advent: Dec 1 → Dec 25 (25 hatch doors)
+  const starts_on = `${year}-12-01`;
+  const ends_on = `${year}-12-25`;
+  const seasonCreatedAt = `${year}-12-01T00:00:00.000Z`;
+  const totalDays = 25;
+
+  const season: DemoTreatSeason = {
+    id: 'demo-season-christmas',
+    theme_name: 'Christmas Advent',
+    starts_on,
+    ends_on,
+    status: 'active',
+    holiday_key: 'christmas',
+    created_at: seasonCreatedAt,
+    updated_at: seasonCreatedAt,
+  };
+
+  const rewardTypes = ['xp', 'shard', 'cosmetic', 'bonus', 'mystery'] as const;
+  // Christmas-themed emoji palette for the hatch doors
+  const emojis = ['🎄', '⭐', '🎁', '🦌', '🔔', '❄️', '🕯️', '🍪', '🧦', '☃️'];
+
+  const hatches: DemoTreatHatch[] = Array.from({ length: totalDays }, (_, i) => {
+    const dayIndex = i + 1;
+    const rewardType = rewardTypes[dayIndex % rewardTypes.length];
+    const emoji = emojis[dayIndex % emojis.length];
+    const rewardValue = rewardType === 'xp' ? 20 + (dayIndex % 3) * 10 : 10 + dayIndex;
+    return {
+      id: `demo-hatch-${dayIndex}`,
+      season_id: season.id,
+      day_index: dayIndex,
+      symbol_name: `reward_${rewardType}`,
+      symbol_emoji: emoji,
+      numbers: null,
+      number_reward: null,
+      symbol_reward: rewardType,
+      reward_payload: { reward_type: rewardType, reward_value: rewardValue },
+      created_at: seasonCreatedAt,
+    };
+  });
+
+  // In December use the real day-of-month (clamped to 1-25);
+  // outside December fix at day 8 so the UI shows a nicely partial advent state.
+  const today_day_index =
+    now.getMonth() === 11
+      ? Math.min(Math.max(1, now.getDate()), totalDays)
+      : 8;
+
+  // Pre-open the days before today (up to 7) to show the scratch-card reveal state
+  const preOpenCount = Math.min(today_day_index - 1, 7);
+  const opened_days = Array.from({ length: preOpenCount }, (_, i) => i + 1);
+
+  const progress: DemoTreatProgress = {
+    user_id: DEMO_USER_ID,
+    season_id: season.id,
+    last_opened_date: preOpenCount > 0
+      ? `${year}-12-${String(preOpenCount).padStart(2, '0')}`
+      : null,
+    last_opened_day: preOpenCount,
+    opened_days,
+    symbol_counts: {},
+    created_at: seasonCreatedAt,
+    updated_at: now.toISOString(),
+  };
+
+  return { season, hatches, progress, today_day_index };
 }

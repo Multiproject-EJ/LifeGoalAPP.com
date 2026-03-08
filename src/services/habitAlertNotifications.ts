@@ -1,3 +1,4 @@
+import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import { fetchHabitReminderPrefs } from './habitReminderPrefs';
 import { formatTime, formatDateKey, parseTimeToDate } from './habitAlertUtils';
 
@@ -283,7 +284,32 @@ export async function scheduleHabitReminders(userId: string): Promise<ScheduledR
   }
 
   reminders.sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
-  setDemoStoredReminders(reminders);
+
+  if (canUseSupabaseData()) {
+    // Production: upsert upcoming reminders into the scheduled_reminders table so
+    // the send-reminders edge function cron can dispatch them.
+    try {
+      const supabase = getSupabaseClient();
+      const rows = reminders.map((r) => ({
+        id: r.id,
+        user_id: r.user_id,
+        habit_id: r.habit_id,
+        habit_title: r.habit_title,
+        notification_type: r.notification_type,
+        scheduled_at: r.scheduled_at,
+        status: r.status,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+      }));
+      await supabase.from('scheduled_reminders').upsert(rows, { onConflict: 'id' });
+    } catch {
+      // Non-fatal: fall through so the caller still gets the reminders list
+    }
+  } else {
+    // Demo mode: persist to localStorage for client-side preview
+    setDemoStoredReminders(reminders);
+  }
+
   return reminders;
 }
 
@@ -297,6 +323,27 @@ export async function scheduleHabitReminders(userId: string): Promise<ScheduledR
  * @returns Sorted list of pending ScheduledReminder items
  */
 export async function getScheduledReminders(userId: string): Promise<ScheduledReminder[]> {
+  if (canUseSupabaseData()) {
+    // Production: query the scheduled_reminders table for pending reminders
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from('scheduled_reminders')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'pending')
+        .order('scheduled_at', { ascending: true });
+      if (!error && data && data.length > 0) {
+        return data as ScheduledReminder[];
+      }
+    } catch {
+      // Fall through to recompute
+    }
+    // Nothing in DB yet — compute and store
+    return scheduleHabitReminders(userId);
+  }
+
+  // Demo mode: check localStorage cache first
   const stored = getDemoStoredReminders();
   const pending = stored.filter((r) => r.user_id === userId && r.status === 'pending');
   if (pending.length > 0) {
@@ -316,6 +363,20 @@ export async function getScheduledReminders(userId: string): Promise<ScheduledRe
  * @param reminderId - ID of the reminder to cancel
  */
 export async function cancelReminder(reminderId: string): Promise<void> {
+  if (canUseSupabaseData()) {
+    try {
+      const supabase = getSupabaseClient();
+      await supabase
+        .from('scheduled_reminders')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', reminderId);
+    } catch {
+      // Non-fatal
+    }
+    return;
+  }
+
+  // Demo mode: mark as cancelled in localStorage
   const stored = getDemoStoredReminders();
   const updated = stored.map((r) =>
     r.id === reminderId

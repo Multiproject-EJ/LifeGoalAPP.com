@@ -30,7 +30,7 @@ Use this section first when returning to the plan.
 
 **Island Game System**: ✅ Complete — Milestones M1B through M9 fully built (HUD, dice, stops, timer, hatchery, encounters, boss, shop, home island). Latest commit `6df53f9` on 2026-03-07.
 
-**Monthly Treat Calendar**: 🟡 Phase 1-3 Complete (RNG, UI, scratch card), Phase 4 backend (Supabase tables + RLS + edge functions) still pending. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
+**Monthly Treat Calendar**: ✅ Complete — Redesigned as Holiday Treats Advent Calendar (Phase 4 backend done). `holiday_key` column added (migration 0177), `treat-calendar` edge function with holiday filter, `treatCalendarService.ts` with `ADVENT_META` config, and Christmas Advent demo data. See `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
 
 **HabitGame Core Games**: 🟡 Lucky Roll fully built + all 4 mini-games have implementations (TaskTower, PomodoroSprint, WheelOfWins, VisionQuest imported and integrated). Pomodoro D.7/D.8 Session 1 mapping is now clarified to target the **Actions tab Timer flow** (not the Pomodoro mini-game modal); next slice is Session 2 timer launcher selector (`idle|active|alert`) + stale (>24h) handling tests on the timer path. See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
 
@@ -78,7 +78,7 @@ M4 is functionally complete. These two items finish the remaining acceptance cri
 
 ### Priority 4 — Additional Feature Completion (3–5 sessions)
 
-- [ ] **Monthly Treat Calendar Phase 4** — Create Supabase tables, RLS policies, and edge functions for server-backed treat persistence. See `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md`.
+- [x] **Holiday Treats Advent Calendar** — Redesigned as holiday-specific advent countdown tied to Holiday Preferences. `holiday_key` migration, `treat-calendar` edge function, `treatCalendarService.ts`, and Christmas Advent demo data complete. See `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
 - [ ] **HabitGame Pomodoro Session 2** — Build timer launcher selector (`idle|active|alert`) and add stale (>24h) handling on the Actions tab Timer path. See `HABITGAME_CORE_GAMES_DEV_PLAN.md`.
 - [ ] **Goals Tab Redesign Phases 2–4** — Continue `GoalWorkspace.tsx` past the Phase 1 two-card entry. See `GOALS_TAB_REDESIGN_PLAN.md`.
 - [ ] **Vision Star AI generation** — Replace local templating with a real AI generation endpoint for special-story content; add server-side persistence/audit trail for generated outputs.
@@ -107,8 +107,9 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 
 - [ACTIONS_FEATURE_DEV_PLAN.md](./ACTIONS_FEATURE_DEV_PLAN.md) — Actions system planning.
 - [GOALS_TAB_REDESIGN_PLAN.md](./GOALS_TAB_REDESIGN_PLAN.md) — Goals tab UX overhaul.
-- [MONTHLY_TREAT_CALENDAR_DEV_PLAN.md](./MONTHLY_TREAT_CALENDAR_DEV_PLAN.md) — Monthly treats calendar feature.
-- [DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md](./DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md) — Daily treats countdown calendar.
+- [HOLIDAY_TREATS_CALENDAR_PLAN.md](./HOLIDAY_TREATS_CALENDAR_PLAN.md) — Holiday Treats Advent Calendar (replaces old monthly + countdown plan docs).
+- [MONTHLY_TREAT_CALENDAR_DEV_PLAN.md](./MONTHLY_TREAT_CALENDAR_DEV_PLAN.md) — ⚠️ Superseded — see `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
+- [DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md](./DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md) — ⚠️ Superseded — see `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
 - [TRAINING_EXERCISE_DEV_PLAN.md](./TRAINING_EXERCISE_DEV_PLAN.md) — Training exercise feature plan.
 - [NEW_YEARS_MANIFEST_DEV_PLAN.md](./NEW_YEARS_MANIFEST_DEV_PLAN.md) — New Year’s manifest feature plan.
 - [COMPETITION_KILLER_DEV_PLAN.md](./COMPETITION_KILLER_DEV_PLAN.md) — Strategic roadmap (tie steps to milestones when actioned).
@@ -512,3 +513,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M4 Final — Demo fixtures, telemetry audit, coach context verification.  
   - **What changed**: Verified all demo habits have `habit_environment` and `done_ish_config` with realistic values. Added environment coaching feedback note to demo morning ritual log (day 1 done-ish entry). Audited and wired telemetry events for all 4 progress states (`habit_done_ish_completed`, `habit_skipped`, `habit_missed`, `habit_tier_changed` already existed; added `habit_environment_updated` event type and wired it on the habit update path in `HabitsModule.tsx`). Confirmed coach context panel receives `habit_environment` notes via `loadAiCoachInstructions()` — `AiCoach.tsx` extracts environments from loaded habits and passes them as `HabitEnvironmentContext[]`. Marked M4-C, M4-D, M4-E complete in `BUILD_PLAN.md`. Closed M4 milestone.  
   - **What's next**: Move to BUILD_PLAN Phase 2 (M9-A push notification backend + TREAT-A monthly treat calendar backend).
+- **2026-03-08**
+  - **Slice**: Phase 2 — M9-A/B/C push notification backend + TREAT-A monthly treat calendar backend.
+  - **What changed**: (M9-A) Added production-path branching to `habitAlertNotifications.ts`: `scheduleHabitReminders()` now upserts reminders to the `scheduled_reminders` Supabase table when `canUseSupabaseData()` is true; `getScheduledReminders()` reads from the table in production mode; `cancelReminder()` updates the table row in production mode. Created `supabase/migrations/0176_scheduled_reminders.sql` with the `scheduled_reminders` table, `(status, scheduled_at)` index, and per-user RLS policies. (M9-B) Updated the `getDemoMockScheduledReminders()` JSDoc in `demoData.ts` to explicitly document that all four `notification_type` values are represented. (M9-C) Added a full "Manual Testing: Live Notification Send" section to `docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md` covering prerequisites, test setup, trigger steps, expected payloads, and verification steps. (TREAT-A) The `daily_calendar_*` tables already exist in migration `0135_monthly_treat_calendar.sql`; created `supabase/functions/treat-calendar/index.ts` edge function (GET for season+hatches+progress, POST /open for claiming today's hatch with validation); created `src/services/treatCalendarService.ts` with `fetchCurrentSeason()`, `fetchUserProgress()`, and `openTodayHatch()` functions with full demo-mode/production-mode parity; added `getDemoTreatCalendarData()` to `demoData.ts` providing a full demo season, 31 pre-seeded hatches with varied reward types, and a progress snapshot showing the first few days already opened.
+  - **What's next**: Phase 3 — HabitGame Pomodoro timer or Goals Tab redesign Phase 2.

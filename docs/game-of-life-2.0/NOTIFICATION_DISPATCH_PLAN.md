@@ -71,3 +71,32 @@ This plan documents how push reminders and Game of Life Coach nudges are schedul
   - Update notification preferences and confirm the demo schedule preview updates.
   - In a configured Supabase project, invoke `send-reminders` to validate habit reminder dispatch.
   - For check-in/coach nudges, verify preference gating and frequency limits once the edge function is extended.
+
+## Manual Testing: Live Notification Send
+
+### Prerequisites
+1. A Supabase project with the `send-reminders` edge function deployed
+2. Web Push VAPID keys configured in Supabase edge function environment variables (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`)
+3. A test user account with at least one habit that has reminders enabled
+
+### Test Setup
+1. Create or use a test account (e.g., `test@lifegoalapp.com`)
+2. Add a habit with a reminder time set to ~5 minutes from now
+3. Ensure the browser has granted notification permission
+4. Verify a push subscription exists in the `push_subscriptions` table
+
+### Trigger Steps
+1. Wait for the `send-reminders` cron to fire (every 15 minutes), OR
+2. Manually invoke the edge function: `supabase functions invoke send-reminders`
+3. Check the `scheduled_reminders` table — the reminder's `status` should change from `pending` to `sent`
+
+### Expected Payloads
+- **habit_reminder**: `{ title: "Habit Reminder", body: "Time to work on: [habit name]", data: { type: "habit_reminder", habit_id: "..." } }`
+- **coach_nudge**: `{ title: "Game of Life Coach", body: "Your coach has a message for you", data: { type: "coach_nudge" } }`
+- **checkin_nudge**: `{ title: "Life Wheel Check-in", body: "How was your day across each life area?", data: { type: "checkin_nudge" } }`
+- **streak_warning**: `{ title: "Streak Alert", body: "Don't break your streak on [habit name]!", data: { type: "streak_warning", habit_id: "..." } }`
+
+### Verification
+- A push notification appears on the test device
+- The `scheduled_reminders` row is updated to `status: 'sent'`
+- No errors in the edge function logs (`supabase functions logs send-reminders`)

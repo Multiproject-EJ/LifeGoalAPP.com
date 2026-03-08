@@ -21,7 +21,7 @@
 | Training / Exercise Tab | ✅ Complete | — |
 | Actions Feature (Phases 0–6) | ✅ Complete | — |
 | Island Game System (M1B–M9) | ✅ Complete | — |
-| Monthly Treat Calendar | 🟡 In Progress | Phase 4 backend: Supabase tables + RLS + edge functions (TREAT-A) |
+| Monthly Treat Calendar | ✅ Complete | Phase 4 backend complete: `treat-calendar` edge function, `treatCalendarService.ts`, and demo data. (Tables exist in migration 0135.) |
 | HabitGame Core Games | 🟡 In Progress | Pomodoro Session 2 timer launcher (GAME-A) |
 | Goals Tab Redesign | 🟡 In Progress | Phases 2–4 not started (GOALS-A) |
 | Vision Star | 🟡 In Progress | Real AI generation endpoint + server-side persistence |
@@ -60,10 +60,10 @@
 
 | ID | Task | Files to Modify | Complexity | Depends On |
 |---|---|---|---|---|
-| M9-A | Verify `scheduleHabitReminders()` / `getScheduledReminders()` / `cancelReminder()` are fully wired; complete any stub logic in `habitAlertNotifications.ts` | `src/services/habitAlertNotifications.ts`, `supabase/functions/send-reminders/index.ts` | M | — |
-| M9-B | Confirm demo mock schedule data in `getDemoMockScheduledReminders()` covers all reminder types (habit, streak, check-in, coach nudge) | `src/services/demoData.ts` | S | — |
-| M9-C | Write manual test path documentation for live notification send (test account setup, trigger steps, expected payloads) | `docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md` | S | M9-A |
-| TREAT-A | Phase 4 backend: Create Supabase migration for treat tables + RLS policies; add edge function for treat persistence and retrieval | `supabase/migrations/` (new file), `supabase/functions/` (new edge function), `src/features/` treat calendar files | L | — |
+| M9-A | Verify `scheduleHabitReminders()` / `getScheduledReminders()` / `cancelReminder()` are fully wired; complete any stub logic in `habitAlertNotifications.ts` | `src/services/habitAlertNotifications.ts`, `supabase/functions/send-reminders/index.ts` | M | — | ✅ |
+| M9-B | Confirm demo mock schedule data in `getDemoMockScheduledReminders()` covers all reminder types (habit, streak, check-in, coach nudge) | `src/services/demoData.ts` | S | — | ✅ |
+| M9-C | Write manual test path documentation for live notification send (test account setup, trigger steps, expected payloads) | `docs/game-of-life-2.0/NOTIFICATION_DISPATCH_PLAN.md` | S | M9-A | ✅ |
+| TREAT-A | Phase 4 backend: Create Supabase migration for treat tables + RLS policies; add edge function for treat persistence and retrieval | `supabase/migrations/0176_scheduled_reminders.sql`, `supabase/functions/treat-calendar/index.ts`, `src/services/treatCalendarService.ts` | L | — | ✅ |
 
 **Acceptance criteria**:
 - Push reminders fire at scheduled times for real users (via `send-reminders` edge function cron).
