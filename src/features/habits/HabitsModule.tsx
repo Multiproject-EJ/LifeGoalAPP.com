@@ -760,11 +760,11 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           throw new Error('Failed to update habit - no data returned');
         }
         
-        // Fire telemetry event if habit environment was set
+        // Fire telemetry event if habit environment was updated
         if (draft.habitEnvironment && session?.user?.id) {
           void recordTelemetryEvent({
             userId: session.user.id,
-            eventType: 'habit_environment_set',
+            eventType: 'habit_environment_updated',
             metadata: {
               habitId: draft.habitId,
               environment: draft.habitEnvironment,

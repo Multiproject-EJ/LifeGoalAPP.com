@@ -67,6 +67,10 @@ export function loadAiCoachInstructions(
     formatAccessLine('Vision board', dataAccess.visionBoard),
   ].join('\n');
 
+  // M4-E verified: when dataAccess.habits is enabled and the caller provides
+  // habitEnvironments, the per-habit environment notes are appended to the
+  // system prompt so the coach can suggest environment tweaks.  AiCoach.tsx
+  // extracts these from the loaded habits and passes them here.
   const habitEnvSection =
     dataAccess.habits && habitEnvironments && habitEnvironments.length > 0
       ? `\n\nHabit environments (use these when coaching on specific habits):\n${formatHabitEnvironments(habitEnvironments)}`

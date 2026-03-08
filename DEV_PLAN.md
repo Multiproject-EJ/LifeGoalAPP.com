@@ -14,7 +14,7 @@ Use this section first when returning to the plan.
 | M1. Onboarding | ✅ Complete | Move to M2 balance/harmony scoring discovery (define axes + thresholds). |
 | M2. Balance / Harmony scoring v1 | ✅ Complete | Balance axes, thresholds, dashboard panel, and gamification bonus XP implemented. |
 | M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
-| M4. Auto-progress ladder v1 | 🟡 In Progress | Add skipped/missed classification UI in daily check-ins (see BUILD_PLAN.md Phase 1). |
+| M4. Auto-progress ladder v1 | ✅ Complete | M4 fully closed: demo fixtures verified, telemetry wired for all 4 progress states, coach context receives habit_environment notes. Move to BUILD_PLAN Phase 2 (M9-A push notification backend + TREAT-A monthly treat calendar backend). |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
 | M6. AI Coach instruction system | ✅ Complete | Fully built in `src/services/aiCoachInstructions.ts` with `loadAiCoachInstructions()`, `BASE_INSTRUCTIONS`, env-based overrides, and data access scoping. |
 | M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
@@ -58,8 +58,8 @@ This section lists all remaining work in priority order. Each priority block inc
 M4 is functionally complete. These two items finish the remaining acceptance criteria:
 
 - [x] **Skipped/missed classification UI** — Add explicit skipped vs missed buttons/controls to the daily check-in flow so users can classify days without ambiguity. Update `DailyHabitTracker.tsx` (and any unified today view) to surface the choice.
-- [ ] **Wire auto-progression tier transitions** — The tier definitions and upgrade/downshift rules exist in `autoProgression.ts`; connect the tier transition triggers so accumulated done-ish scores and success-rate data actually move a habit between Seed → Minimum → Standard tiers.
-- [ ] Mark all remaining M4 checklist items as complete once the above land.
+- [x] **Wire auto-progression tier transitions** — The tier definitions and upgrade/downshift rules exist in `autoProgression.ts`; connect the tier transition triggers so accumulated done-ish scores and success-rate data actually move a habit between Seed → Minimum → Standard tiers.
+- [x] Mark all remaining M4 checklist items as complete once the above land.
 
 ### Priority 2 — Complete M9 Push Notifications ✅ (Done)
 
@@ -508,3 +508,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: M4-A + M4-B — Skipped/missed classification UI and habit log recording.  
   - **What changed**: Updated `handleLogHabitSkip` in `DailyHabitTracker.tsx` to also call `logHabitCompletion()` with `progress_state: 'skipped'` and update `completions`/`monthlyCompletions`/`historicalLogs` state, plus fire `habit_skipped` telemetry. Added `handleLogHabitMissed` handler that records `progress_state: 'missed'` in the habit log and fires `habit_missed` telemetry. Updated the skip menu UI to show two explicit options — "⏭️ Skip — intentional" and "❌ Missed — unintentional". Updated the progress state badge to display for skipped and missed states (not just completed). Added `.progress-state--skipped`, `.progress-state--missed`, and `.habit-checklist__skip-option--missed` CSS rules. Added skipped demo log entries to `demoData.ts`. Marked M4-A and M4-B complete in `BUILD_PLAN.md`.  
   - **What's next**: Wire auto-progression tier transitions so accumulated done-ish scores and success-rate data actually move habits between Seed → Minimum → Standard tiers.
+- **2026-03-08**  
+  - **Slice**: M4 Final — Demo fixtures, telemetry audit, coach context verification.  
+  - **What changed**: Verified all demo habits have `habit_environment` and `done_ish_config` with realistic values. Added environment coaching feedback note to demo morning ritual log (day 1 done-ish entry). Audited and wired telemetry events for all 4 progress states (`habit_done_ish_completed`, `habit_skipped`, `habit_missed`, `habit_tier_changed` already existed; added `habit_environment_updated` event type and wired it on the habit update path in `HabitsModule.tsx`). Confirmed coach context panel receives `habit_environment` notes via `loadAiCoachInstructions()` — `AiCoach.tsx` extracts environments from loaded habits and passes them as `HabitEnvironmentContext[]`. Marked M4-C, M4-D, M4-E complete in `BUILD_PLAN.md`. Closed M4 milestone.  
+  - **What's next**: Move to BUILD_PLAN Phase 2 (M9-A push notification backend + TREAT-A monthly treat calendar backend).
