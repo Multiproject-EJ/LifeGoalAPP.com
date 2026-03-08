@@ -68,15 +68,18 @@ CREATE TABLE IF NOT EXISTS user_reputation_scores (
 
 ALTER TABLE user_reputation_scores ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users can read own reputation score"
+DROP POLICY IF EXISTS "Users can read own reputation score" ON user_reputation_scores;
+CREATE POLICY "Users can read own reputation score"
   ON user_reputation_scores FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can insert own reputation score"
+DROP POLICY IF EXISTS "Users can insert own reputation score" ON user_reputation_scores;
+CREATE POLICY "Users can insert own reputation score"
   ON user_reputation_scores FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update own reputation score"
+DROP POLICY IF EXISTS "Users can update own reputation score" ON user_reputation_scores;
+CREATE POLICY "Users can update own reputation score"
   ON user_reputation_scores FOR UPDATE
   USING (auth.uid() = user_id);
 
