@@ -11207,6 +11207,57 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 }
 
+/* M11-B: onboarding + coach mobile fixes for ≤375px viewports */
+@media (max-width: 375px) {
+  .gol-onboarding {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .gol-onboarding__header h3 {
+    font-size: 1.1rem;
+  }
+
+  .gol-onboarding__progress {
+    font-size: 0.8rem;
+  }
+
+  .gol-onboarding__choices {
+    gap: 0.5rem;
+  }
+
+  .gol-onboarding__choice {
+    padding: 0.75rem;
+    /* Ensure minimum 44×44px tap target */
+    min-height: 44px;
+  }
+
+  .gol-onboarding__score button,
+  .gol-onboarding__pill-list button {
+    /* Ensure minimum 44×44px tap target */
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .gol-onboarding__shop-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .gol-onboarding__actions button {
+    /* Ensure minimum 44×44px tap target */
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .gol-onboarding__close {
+    /* Ensure minimum 44×44px tap target */
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
 .vision-board {
   background: transparent;
   border-radius: 20px;

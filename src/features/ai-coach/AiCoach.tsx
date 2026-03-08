@@ -13,7 +13,7 @@ import { goalStatusToCompletionPct } from '../goals/goalStatus';
 import { listJournalEntries, type JournalEntry } from '../../services/journal';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
-import { recordTelemetryEvent } from '../../services/telemetry';
+import { recordTelemetryEvent, getTelemetryDifficultyAdjustment } from '../../services/telemetry';
 import { AI_FEATURE_ICON } from '../../constants/ai';
 import { fetchRecentGoalSnapshots } from '../../services/goalSnapshots';
 
@@ -398,6 +398,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [interventionsLoading, setInterventionsLoading] = useState(false);
   const [habitContexts, setHabitContexts] = useState<HabitEnvironmentContext[]>([]);
   const [goalContexts, setGoalContexts] = useState<GoalCoachContext[]>([]);
+  const [minProgressStreak, setMinProgressStreak] = useState<number>(14);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogTitleId = useId();
@@ -408,8 +409,8 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const dataAccess = useMemo(() => getAiCoachAccess(session), [session]);
   const demoMode = useMemo(() => isDemoSession(session), [session]);
   const instructionPayload = useMemo(
-    () => loadAiCoachInstructions(dataAccess, demoMode, habitContexts, goalContexts),
-    [dataAccess, demoMode, habitContexts, goalContexts],
+    () => loadAiCoachInstructions(dataAccess, demoMode, habitContexts, goalContexts, minProgressStreak),
+    [dataAccess, demoMode, habitContexts, goalContexts, minProgressStreak],
   );
 
   const accessSummary = useMemo(() => {
@@ -543,6 +544,16 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     // Focus input on mount
     inputRef.current?.focus();
   }, []);
+
+  // M10-C: Load telemetry-based difficulty adjustment on mount so the coach
+  // system prompt reflects the user's recent coaching history.
+  useEffect(() => {
+    let cancelled = false;
+    void getTelemetryDifficultyAdjustment(session.user.id).then((result) => {
+      if (!cancelled) setMinProgressStreak(result.minProgressStreak);
+    });
+    return () => { cancelled = true; };
+  }, [session.user.id]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

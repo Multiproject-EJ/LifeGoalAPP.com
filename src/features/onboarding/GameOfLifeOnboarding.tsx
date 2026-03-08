@@ -370,6 +370,17 @@ export function GameOfLifeOnboarding({
     window.localStorage.setItem(storageKey, payload);
   }, [hasLoadedStorage, stepIndex, tokens, unlockedItems, storageKey]);
 
+  // M11-A: Close onboarding with Escape key.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const resetRewardState = () => {
     setPhase('action');
     setRewardClaimed(false);
@@ -475,6 +486,7 @@ export function GameOfLifeOnboarding({
                 type="button"
                 className={`gol-onboarding__choice ${selectedAxis === axis.title ? 'is-selected' : ''}`}
                 onClick={() => setSelectedAxis(axis.title)}
+                aria-pressed={selectedAxis === axis.title}
               >
                 <span aria-hidden="true">{axis.icon}</span>
                 <span>
@@ -518,6 +530,8 @@ export function GameOfLifeOnboarding({
                 type="button"
                 className={checkinScore === value ? 'is-selected' : ''}
                 onClick={() => setCheckinScore(value)}
+                aria-label={`Rate energy level ${value} out of 5`}
+                aria-pressed={checkinScore === value}
               >
                 {value}
               </button>
@@ -533,6 +547,7 @@ export function GameOfLifeOnboarding({
                 type="button"
                 className={focusChoice === option ? 'is-selected' : ''}
                 onClick={() => setFocusChoice(option)}
+                aria-pressed={focusChoice === option}
               >
                 {option}
               </button>
@@ -573,11 +588,11 @@ export function GameOfLifeOnboarding({
   };
 
   return (
-    <section className="gol-onboarding" aria-label="Game of Life onboarding">
+    <section className="gol-onboarding" role="dialog" aria-modal="true" aria-label="Game of Life onboarding">
       <header className="gol-onboarding__header" aria-live="polite" aria-atomic="true">
         <div className="gol-onboarding__header-row">
           <span className="gol-onboarding__step">{progressLabel}</span>
-          <button type="button" className="gol-onboarding__close" onClick={onClose}>
+          <button type="button" className="gol-onboarding__close" onClick={onClose} aria-label="Close onboarding">
             Close
           </button>
         </div>
