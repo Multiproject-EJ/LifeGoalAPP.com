@@ -14,7 +14,7 @@ Use this section first when returning to the plan.
 | M1. Onboarding | ✅ Complete | Move to M2 balance/harmony scoring discovery (define axes + thresholds). |
 | M2. Balance / Harmony scoring v1 | ✅ Complete | Balance axes, thresholds, dashboard panel, and gamification bonus XP implemented. |
 | M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
-| M4. Auto-progress ladder v1 | ✅ Complete | Progress grading model, done-ish thresholds, habit environment field, completion logic, UI affordances, detail panel environment display, AI coach environment context, demo data, and telemetry all implemented. |
+| M4. Auto-progress ladder v1 | 🟡 In Progress | Add skipped/missed classification UI in daily check-ins (see BUILD_PLAN.md Phase 1). |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
 | M6. AI Coach instruction system | ✅ Complete | Fully built in `src/services/aiCoachInstructions.ts` with `loadAiCoachInstructions()`, `BASE_INSTRUCTIONS`, env-based overrides, and data access scoping. |
 | M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
@@ -117,6 +117,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 - [HABITGAME_CORE_GAMES_DEV_PLAN.md](./HABITGAME_CORE_GAMES_DEV_PLAN.md) — Master plan for the 5 core games system (Lucky Roll, Task Tower, Pomodoro Sprint, Vision Quest, Wheel of Wins). Replaces the Daily Treats middle card league placeholder.
   - [HABITGAME_ACCESS_FLOW.md](./HABITGAME_ACCESS_FLOW.md) — User access patterns and navigation hierarchy for the game system.
   - [LEVEL_WORLDS_DEV_PLAN.md](./LEVEL_WORLDS_DEV_PLAN.md) — Level Worlds campaign mode system — discrete level-based progression wrapping Lucky Roll.
+- [BUILD_PLAN.md](./BUILD_PLAN.md) — Structured execution companion: status dashboard, phased build order (Phases 1–5), per-item task breakdowns with file targets, complexity estimates, and dependencies. Update DEV_PLAN.md Status Snapshot as items complete.
 
 ---
 
@@ -499,3 +500,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: Build plan + DEV_PLAN.md refresh (PR #1153 follow-up).  
   - **What changed**: Updated Status Snapshot table with M10/M11/M12 rows and refreshed M9 status. Added Island Game System (M1B–M9 complete) and Vision Star to Additional Feature Status Notes. Added "Build Plan — Remaining Work" section with Priorities 1–6 (close M4 → push notifications → analytics → feature gaps → QA → docs). Updated `M4_IMPLEMENTATION_SUMMARY.md` to reflect all completions from PR #1153 (weighted streaks, success-rate metrics, habit environment detail view, AI coach context).  
   - **What's next**: Priority 1 — add skipped/missed classification UI and wire auto-progression tier transitions to fully close M4.
+- **2026-03-08**  
+  - **Slice**: BUILD_PLAN.md creation.  
+  - **What changed**: Created `BUILD_PLAN.md` in the repo root. Contains a status dashboard table for all milestones and features (✅/🟡/⛔), a five-phase prioritized build order (Phase 1 M4 critical path → Phase 2 backend gaps → Phase 3 feature completion → Phase 4 platform quality → Phase 5 ship), per-item task breakdowns with files to modify, acceptance criteria, complexity estimates (S/M/L), and cross-item dependencies. Updated M4 Status Snapshot row to 🟡 In Progress with next task referencing BUILD_PLAN.md Phase 1. Added BUILD_PLAN.md to the Linked Feature Plans section.  
+  - **What's next**: Phase 1 — implement skipped/missed classification buttons in `DailyHabitTracker.tsx` and wire auto-progression tier transitions (see BUILD_PLAN.md M4-A and M4-B).
