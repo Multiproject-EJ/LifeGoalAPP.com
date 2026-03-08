@@ -12,7 +12,7 @@
 | M1. Onboarding (3 slices) | ✅ Complete | — |
 | M2. Balance / Harmony scoring v1 | ✅ Complete | — |
 | M3. Rationality micro-system v1 | ✅ Complete | — |
-| M4. Auto-progress ladder v1 | 🟡 In Progress | Skipped/missed UI (M4-A, M4-B); demo fixture verification (M4-C); telemetry audit (M4-D); coach context panel verification (M4-E) |
+| M4. Auto-progress ladder v1 | 🟡 In Progress | Demo fixture verification (M4-C); telemetry audit (M4-D); coach context panel verification (M4-E) |
 | M5. Vision Board 2.0 metadata + review loop | ✅ Complete | — |
 | M6. AI Coach instruction system | ✅ Complete | — |
 | M7. AI Coach interventions v1 | ✅ Complete | — |
@@ -39,8 +39,8 @@
 
 | ID | Task | Files to Modify | Complexity | Depends On |
 |---|---|---|---|---|
-| M4-A | Record `progress_state` + `completion_percentage` via classification buttons in daily check-in | `src/features/habits/DailyHabitTracker.tsx`, `src/features/habits/HabitsModule.tsx`, `src/features/habits/progressGrading.ts` | M | — |
-| M4-B | Add explicit "Skipped" / "Missed" / "Done-ish ✨" buttons to daily check-in UI (replace binary done/not-done) | `src/features/habits/DailyHabitTracker.tsx`, `src/index.css`, `src/features/habits/progressGrading.css` | M | M4-A |
+| M4-A | ✅ Record `progress_state` + `completion_percentage` via classification buttons in daily check-in | `src/features/habits/DailyHabitTracker.tsx`, `src/features/habits/HabitsModule.tsx`, `src/features/habits/progressGrading.ts` | M | — |
+| M4-B | ✅ Add explicit "Skipped" / "Missed" / "Done-ish ✨" buttons to daily check-in UI (replace binary done/not-done) | `src/features/habits/DailyHabitTracker.tsx`, `src/index.css`, `src/features/habits/progressGrading.css` | M | M4-A |
 | M4-C | Verify all demo habits have `habit_environment` + `done_ish_config`; ensure at least one partial-completion log and one environment coaching feedback example exist | `src/services/demoData.ts` | S | — |
 | M4-D | Audit and wire telemetry: confirm `habit_environment_updated` and coach-adjustment events fire; `habit_done_ish_completed` already exists | `src/features/habits/DailyHabitTracker.tsx`, `src/features/habits/HabitsModule.tsx`, `src/services/analytics.ts` (or equivalent telemetry module) | S | M4-A |
 | M4-E | Verify coach context panel displays environment notes (PR #1153 may have addressed this via `loadAiCoachInstructions()`); close or implement | `src/features/ai-coach/AiCoach.tsx`, `src/services/aiCoachInstructions.ts` | S | — |

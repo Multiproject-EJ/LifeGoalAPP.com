@@ -31,6 +31,28 @@
   color: #991b1b;
 }
 
+/* Skipped/missed badge variants in habit card (BEM modifier aliases) */
+.progress-state--skipped {
+  background: #e2e8f0;
+  color: #475569;
+  opacity: 0.9;
+}
+
+.progress-state--missed {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Missed option in skip menu */
+.habit-checklist__skip-option--missed {
+  color: #991b1b;
+}
+
+.habit-checklist__skip-option--missed:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
 /* Progress bar for done-ish partial completion */
 .progress-bar-container {
   width: 100%;

@@ -485,14 +485,19 @@ const defaultState: DemoState = {
     date.setDate(start.getDate() + i);
     const dateIso = date.toISOString().slice(0, 10);
     
-    // Determine progress states for morning ritual (mix of done, done-ish, and missed)
-    let morningState: 'done' | 'doneIsh' | 'missed';
+    // Determine progress states for morning ritual (mix of done, done-ish, skipped, and missed)
+    let morningState: 'done' | 'doneIsh' | 'skipped' | 'missed';
     let morningDone: boolean;
     let morningPercentage: number;
     
     if (i % 7 === 2) {
       // Missed day
       morningState = 'missed';
+      morningDone = false;
+      morningPercentage = 0;
+    } else if (i % 11 === 3) {
+      // Skipped day (intentional)
+      morningState = 'skipped';
       morningDone = false;
       morningPercentage = 0;
     } else if (i % 5 === 1) {
@@ -508,7 +513,7 @@ const defaultState: DemoState = {
     }
     
     // Determine progress states for outreach habit
-    let outreachState: 'done' | 'doneIsh' | 'missed';
+    let outreachState: 'done' | 'doneIsh' | 'skipped' | 'missed';
     let outreachDone: boolean;
     let outreachPercentage: number;
     
@@ -518,6 +523,11 @@ const defaultState: DemoState = {
         outreachState = 'doneIsh';
         outreachDone = false;
         outreachPercentage = 85 + Math.floor(Math.random() * 10); // 85-94%
+      } else if (i % 6 === 3) {
+        // Skipped day (intentional)
+        outreachState = 'skipped';
+        outreachDone = false;
+        outreachPercentage = 0;
       } else {
         // Fully done day
         outreachState = 'done';

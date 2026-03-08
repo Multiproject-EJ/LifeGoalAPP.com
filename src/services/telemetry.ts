@@ -21,6 +21,8 @@ export type TelemetryEventType =
   | 'economy_spend'
   | 'tree_of_life_awarded'
   | 'habit_done_ish_completed'
+  | 'habit_skipped'
+  | 'habit_missed'
   | 'habit_stage_logged'
   | 'habit_stage_recommendation_applied'
   | 'habit_tier_changed'
