@@ -58,15 +58,20 @@ Deno.serve(async (req) => {
   // GET /treat-calendar?season_id=<uuid>
   // Returns active season info + hatches + user progress.
   // If season_id is omitted, the current active season is used.
+  // An optional holiday_key param can narrow the lookup to a specific holiday.
   // --------------------------------------------------------
   if (req.method === 'GET') {
     const seasonId = url.searchParams.get('season_id');
+    const holidayKey = url.searchParams.get('holiday_key');
 
     let seasonQuery = supabase.from('daily_calendar_seasons').select('*');
     if (seasonId) {
       seasonQuery = seasonQuery.eq('id', seasonId);
     } else {
       seasonQuery = seasonQuery.eq('status', 'active').order('starts_on', { ascending: false }).limit(1);
+      if (holidayKey) {
+        seasonQuery = seasonQuery.eq('holiday_key', holidayKey);
+      }
     }
 
     const { data: seasons, error: seasonError } = await seasonQuery;

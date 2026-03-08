@@ -1,15 +1,34 @@
 import { canUseSupabaseData, getSupabaseClient, getSupabaseUrl } from '../lib/supabaseClient';
 
 // ---------------------------------------------------------------------------
+// Holiday keys — must match the ids in HolidayPreferencesSection.HOLIDAY_OPTIONS
+// and the values stored in holiday_preferences.holidays.
+// ---------------------------------------------------------------------------
+
+export type HolidayKey =
+  | 'new_year'
+  | 'valentines_day'
+  | 'st_patricks_day'
+  | 'easter'
+  | 'halloween'
+  | 'thanksgiving'
+  | 'hanukkah'
+  | 'christmas';
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export type CalendarSeason = {
   id: string;
   theme_name: string;
-  starts_on: string; // date string YYYY-MM-DD
-  ends_on: string;   // date string YYYY-MM-DD
+  /** First day of the advent countdown (inclusive) — YYYY-MM-DD */
+  starts_on: string;
+  /** Last day / the holiday date (inclusive) — YYYY-MM-DD */
+  ends_on: string;
   status: 'active' | 'archived' | 'draft';
+  /** Which holiday this advent calendar belongs to, e.g. 'christmas' */
+  holiday_key: HolidayKey | null;
   created_at: string;
   updated_at: string;
 };
@@ -103,31 +122,144 @@ function computeTodayDayIndex(startsOn: string): number {
   return Math.max(1, diffDays + 1);
 }
 
-/** Build a demo season for the current calendar month. */
+// ---------------------------------------------------------------------------
+// Advent calendar meta — date ranges and theming per holiday
+// ---------------------------------------------------------------------------
+
+type AdventMeta = {
+  theme_name: string;
+  holiday_key: HolidayKey;
+  /** Month (0-based) and day on which the countdown starts */
+  countdownStart: { month: number; day: number };
+  /** Month (0-based) and day of the holiday itself (last hatch) */
+  holidayDate: { month: number; day: number };
+  emojis: string[];
+};
+
+const ADVENT_META: AdventMeta[] = [
+  {
+    theme_name: 'Christmas Advent',
+    holiday_key: 'christmas',
+    countdownStart: { month: 11, day: 1 },
+    holidayDate: { month: 11, day: 25 },
+    emojis: ['🎄', '⭐', '🎁', '🦌', '🔔', '❄️', '🕯️', '🍪', '🧦', '☃️'],
+  },
+  {
+    theme_name: 'Halloween Countdown',
+    holiday_key: 'halloween',
+    countdownStart: { month: 9, day: 1 },
+    holidayDate: { month: 9, day: 31 },
+    emojis: ['🎃', '👻', '🕷️', '🦇', '🕯️', '💀', '🕸️', '🍬', '🧙', '🌙'],
+  },
+  {
+    theme_name: 'Easter Countdown',
+    holiday_key: 'easter',
+    countdownStart: { month: 2, day: 22 },
+    holidayDate: { month: 3, day: 5 },
+    emojis: ['🐣', '🌸', '🥚', '🐰', '🌷', '🦋', '🌼', '🍀', '✨', '🌈'],
+  },
+  {
+    theme_name: 'Valentine\'s Countdown',
+    holiday_key: 'valentines_day',
+    countdownStart: { month: 1, day: 1 },
+    holidayDate: { month: 1, day: 14 },
+    emojis: ['💘', '❤️', '🌹', '💌', '💝', '🍫', '💕', '✨', '🎀', '💗'],
+  },
+  {
+    theme_name: 'New Year Countdown',
+    holiday_key: 'new_year',
+    countdownStart: { month: 11, day: 26 },
+    holidayDate: { month: 0, day: 1 },
+    emojis: ['🎉', '🥂', '🎆', '🎊', '⭐', '✨', '🎇', '🕛', '🥳', '🌟'],
+  },
+  {
+    theme_name: 'Thanksgiving Countdown',
+    holiday_key: 'thanksgiving',
+    countdownStart: { month: 10, day: 1 },
+    holidayDate: { month: 10, day: 28 },
+    emojis: ['🦃', '🍂', '🌽', '🥧', '🍁', '🌾', '🥕', '🙏', '🍎', '🍠'],
+  },
+  {
+    theme_name: 'Hanukkah Countdown',
+    holiday_key: 'hanukkah',
+    countdownStart: { month: 11, day: 14 },
+    holidayDate: { month: 11, day: 22 },
+    emojis: ['🕎', '✡️', '🕯️', '💙', '⭐', '🎁', '🪙', '🥞', '🌟', '✨'],
+  },
+  {
+    theme_name: 'St. Patrick\'s Day Countdown',
+    holiday_key: 'st_patricks_day',
+    countdownStart: { month: 2, day: 10 },
+    holidayDate: { month: 2, day: 17 },
+    emojis: ['☘️', '🍀', '🌈', '🟢', '🎩', '🪙', '🍺', '✨', '🌿', '⭐'],
+  },
+];
+
+/**
+ * Pick a demo advent season to display.
+ * Prefers the advent whose countdown window includes today;
+ * falls back to Christmas as the canonical advent calendar.
+ */
+function pickDemoAdventMeta(year: number): { meta: AdventMeta; startsOn: string; endsOn: string } {
+  const today = new Date();
+  const todayM = today.getMonth();
+  const todayD = today.getDate();
+
+  for (const meta of ADVENT_META) {
+    const { countdownStart: cs, holidayDate: hd } = meta;
+    // Check if today falls within the countdown window (same year)
+    const startOrd = cs.month * 31 + cs.day;
+    const endOrd = hd.month * 31 + hd.day;
+    const todayOrd = todayM * 31 + todayD;
+    if (startOrd <= endOrd && todayOrd >= startOrd && todayOrd <= endOrd) {
+      const startsOn = new Date(year, cs.month, cs.day).toISOString().split('T')[0];
+      const endsOn = new Date(year, hd.month, hd.day).toISOString().split('T')[0];
+      return { meta, startsOn, endsOn };
+    }
+  }
+
+  // Default: Christmas advent in the current year
+  const xmas = ADVENT_META[0];
+  return {
+    meta: xmas,
+    startsOn: new Date(year, xmas.countdownStart.month, xmas.countdownStart.day).toISOString().split('T')[0],
+    endsOn: new Date(year, xmas.holidayDate.month, xmas.holidayDate.day).toISOString().split('T')[0],
+  };
+}
+
+/** Build a demo advent season for the nearest matching holiday. */
 function buildDemoSeasonData(userId: string): CalendarSeasonData {
   const now = new Date();
   const year = now.getFullYear();
-  const month = now.getMonth();
-  const startsOn = new Date(year, month, 1).toISOString().split('T')[0];
-  const endsOn = new Date(year, month + 1, 0).toISOString().split('T')[0];
+  const { meta, startsOn, endsOn } = pickDemoAdventMeta(year);
 
   const season: CalendarSeason = {
-    id: 'demo-season-current',
-    theme_name: 'Spring Garden',
+    id: `demo-season-${meta.holiday_key}`,
+    theme_name: meta.theme_name,
     starts_on: startsOn,
     ends_on: endsOn,
     status: 'active',
-    created_at: new Date(year, month, 1).toISOString(),
-    updated_at: new Date(year, month, 1).toISOString(),
+    holiday_key: meta.holiday_key,
+    created_at: new Date(startsOn).toISOString(),
+    updated_at: new Date(startsOn).toISOString(),
   };
 
   const rewardTypes = ['xp', 'shard', 'cosmetic', 'bonus', 'mystery'] as const;
-  const emojis = ['🌸', '🌟', '💎', '🎁', '🌈', '✨', '🦋', '🌺', '🍀', '⭐'];
 
-  const hatches: CalendarHatch[] = Array.from({ length: 31 }, (_, i) => {
+  // Compute the total number of hatch doors (days in the countdown)
+  const start = new Date(startsOn);
+  const end = new Date(endsOn);
+  const totalDays =
+    Math.floor(
+      (Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) -
+        Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) /
+        (1000 * 60 * 60 * 24),
+    ) + 1;
+
+  const hatches: CalendarHatch[] = Array.from({ length: totalDays }, (_, i) => {
     const dayIndex = i + 1;
     const rewardType = rewardTypes[dayIndex % rewardTypes.length];
-    const emoji = emojis[dayIndex % emojis.length];
+    const emoji = meta.emojis[dayIndex % meta.emojis.length];
     const rewardValue = rewardType === 'xp' ? 20 + (dayIndex % 3) * 10 : 10 + dayIndex;
     return {
       id: `demo-hatch-${dayIndex}`,
@@ -157,12 +289,12 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
     user_id: userId,
     season_id: season.id,
     last_opened_date: preOpenedDays.length > 0
-      ? new Date(year, month, preOpenedDays[preOpenedDays.length - 1]).toISOString().split('T')[0]
+      ? new Date(start.getFullYear(), start.getMonth(), preOpenedDays[preOpenedDays.length - 1]).toISOString().split('T')[0]
       : null,
     last_opened_day: preOpenedDays[preOpenedDays.length - 1] ?? 0,
     opened_days: preOpenedDays,
     symbol_counts: {},
-    created_at: new Date(year, month, 1).toISOString(),
+    created_at: season.created_at,
     updated_at: new Date().toISOString(),
   };
 
@@ -174,13 +306,23 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch the active season together with all hatch definitions and the
- * caller's progress.  Falls back to demo data in demo mode.
+ * Fetch the active advent/holiday season together with all hatch definitions
+ * and the caller's progress.
+ *
+ * @param userId    - Authenticated user's ID
+ * @param holidayKey - Optional filter: only return a season for this holiday.
+ *                    If omitted, the most recently active season is returned.
  */
-export async function fetchCurrentSeason(userId: string): Promise<ServiceResponse<CalendarSeasonData>> {
+export async function fetchCurrentSeason(
+  userId: string,
+  holidayKey?: HolidayKey,
+): Promise<ServiceResponse<CalendarSeasonData>> {
   if (!canUseSupabaseData()) {
     const cached = getDemoSeason();
-    if (cached) return { data: cached, error: null };
+    // Invalidate the cache if it's for a different holiday
+    if (cached && (!holidayKey || cached.season.holiday_key === holidayKey)) {
+      return { data: cached, error: null };
+    }
     const demo = buildDemoSeasonData(userId);
     setDemoSeason(demo);
     return { data: demo, error: null };
@@ -188,17 +330,23 @@ export async function fetchCurrentSeason(userId: string): Promise<ServiceRespons
 
   try {
     const supabase = getSupabaseClient();
-    const { data: seasons, error: seasonError } = await supabase
+    let query = supabase
       .from('daily_calendar_seasons')
       .select('*')
       .eq('status', 'active')
       .order('starts_on', { ascending: false })
       .limit(1);
 
+    if (holidayKey) {
+      query = query.eq('holiday_key', holidayKey);
+    }
+
+    const { data: seasons, error: seasonError } = await query;
+
     if (seasonError) return { data: null, error: new Error(seasonError.message) };
     if (!seasons || seasons.length === 0) return { data: null, error: new Error('No active season') };
 
-    const season = seasons[0] as CalendarSeason;
+    const season = seasons[0] as unknown as CalendarSeason;
 
     const [{ data: hatches, error: hatchError }, { data: progress }] = await Promise.all([
       supabase
@@ -219,8 +367,8 @@ export async function fetchCurrentSeason(userId: string): Promise<ServiceRespons
     return {
       data: {
         season,
-        hatches: (hatches ?? []) as CalendarHatch[],
-        progress: progress as CalendarProgress | null,
+        hatches: (hatches ?? []) as unknown as CalendarHatch[],
+        progress: progress as unknown as CalendarProgress | null,
         today_day_index: computeTodayDayIndex(season.starts_on),
       },
       error: null,
@@ -231,7 +379,7 @@ export async function fetchCurrentSeason(userId: string): Promise<ServiceRespons
 }
 
 /**
- * Fetch the user's progress for a specific season.
+ * Fetch the user's progress for a specific advent season.
  */
 export async function fetchUserProgress(
   userId: string,
@@ -251,7 +399,7 @@ export async function fetchUserProgress(
       .maybeSingle();
 
     if (error) return { data: null, error: new Error(error.message) };
-    return { data: data as CalendarProgress | null, error: null };
+    return { data: data as unknown as CalendarProgress | null, error: null };
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
   }

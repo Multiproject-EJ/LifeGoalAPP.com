@@ -2474,6 +2474,193 @@ export interface Database {
         };
         Relationships: [];
       };
+      daily_calendar_seasons: {
+        Row: {
+          id: string;
+          theme_name: string;
+          starts_on: string;
+          ends_on: string;
+          status: string;
+          holiday_key: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          theme_name: string;
+          starts_on: string;
+          ends_on: string;
+          status?: string;
+          holiday_key?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          theme_name?: string;
+          starts_on?: string;
+          ends_on?: string;
+          status?: string;
+          holiday_key?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      daily_calendar_hatches: {
+        Row: {
+          id: string;
+          season_id: string;
+          day_index: number;
+          symbol_name: string | null;
+          symbol_emoji: string | null;
+          numbers: number[] | null;
+          number_reward: number | null;
+          symbol_reward: string | null;
+          reward_payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          season_id: string;
+          day_index: number;
+          symbol_name?: string | null;
+          symbol_emoji?: string | null;
+          numbers?: number[] | null;
+          number_reward?: number | null;
+          symbol_reward?: string | null;
+          reward_payload?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          season_id?: string;
+          day_index?: number;
+          symbol_name?: string | null;
+          symbol_emoji?: string | null;
+          numbers?: number[] | null;
+          number_reward?: number | null;
+          symbol_reward?: string | null;
+          reward_payload?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "daily_calendar_hatches_season_id_fkey";
+            columns: ["season_id"];
+            isOneToOne: false;
+            referencedRelation: "daily_calendar_seasons";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      daily_calendar_progress: {
+        Row: {
+          user_id: string;
+          season_id: string;
+          last_opened_date: string | null;
+          last_opened_day: number;
+          opened_days: number[];
+          symbol_counts: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          season_id: string;
+          last_opened_date?: string | null;
+          last_opened_day?: number;
+          opened_days?: number[];
+          symbol_counts?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          season_id?: string;
+          last_opened_date?: string | null;
+          last_opened_day?: number;
+          opened_days?: number[];
+          symbol_counts?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "daily_calendar_progress_season_id_fkey";
+            columns: ["season_id"];
+            isOneToOne: false;
+            referencedRelation: "daily_calendar_seasons";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      daily_calendar_rewards: {
+        Row: {
+          id: string;
+          user_id: string;
+          season_id: string;
+          day_index: number;
+          reward_type: string;
+          reward_payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          season_id: string;
+          day_index: number;
+          reward_type: string;
+          reward_payload?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          season_id?: string;
+          day_index?: number;
+          reward_type?: string;
+          reward_payload?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      scheduled_reminders: {
+        Row: {
+          id: string;
+          user_id: string;
+          habit_id: string | null;
+          habit_title: string | null;
+          notification_type: string;
+          scheduled_at: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          habit_id?: string | null;
+          habit_title?: string | null;
+          notification_type: string;
+          scheduled_at: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          habit_id?: string | null;
+          habit_title?: string | null;
+          notification_type?: string;
+          scheduled_at?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_habit_streaks: {
