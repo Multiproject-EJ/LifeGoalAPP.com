@@ -5,6 +5,14 @@ export type HabitEnvironmentContext = {
   environment: string;
 };
 
+export type GoalCoachContext = {
+  title: string;
+  status: string;
+  category: string | null;
+  completionPct: number;
+  linkedHabitCount?: number;
+};
+
 export type AiCoachInstructionPayload = {
   systemPrompt: string;
   source: 'default' | 'env' | 'demo-env';
@@ -50,10 +58,25 @@ function formatHabitEnvironments(habits: HabitEnvironmentContext[]): string {
     .join('\n');
 }
 
+function formatGoalsSummary(goals: GoalCoachContext[]): string {
+  if (goals.length === 0) return '';
+  const active = goals.filter((g) => g.status !== 'achieved');
+  const top = active[0] ?? goals[0];
+  const lines = [
+    `User has ${active.length} active goal${active.length === 1 ? '' : 's'} (${goals.length} total).`,
+    `Top priority: "${top.title}" (status: ${top.status}${top.category ? `, area: ${top.category}` : ''}). Progress: ${top.completionPct}%.`,
+  ];
+  if (top.linkedHabitCount && top.linkedHabitCount > 0) {
+    lines.push(`Linked habits for top goal: ${top.linkedHabitCount}.`);
+  }
+  return lines.join(' ');
+}
+
 export function loadAiCoachInstructions(
   dataAccess: AiCoachDataAccess,
   demoMode: boolean,
   habitEnvironments?: HabitEnvironmentContext[],
+  activeGoals?: GoalCoachContext[],
 ): AiCoachInstructionPayload {
   const resolved = resolveEnvInstructions(demoMode);
   const instructions = resolved.text ?? BASE_INSTRUCTIONS;
@@ -76,8 +99,13 @@ export function loadAiCoachInstructions(
       ? `\n\nHabit environments (use these when coaching on specific habits):\n${formatHabitEnvironments(habitEnvironments)}`
       : '';
 
+  const goalsSummarySection =
+    dataAccess.goals && activeGoals && activeGoals.length > 0
+      ? `\n\nGoals context: ${formatGoalsSummary(activeGoals)}`
+      : '';
+
   return {
-    systemPrompt: `${instructions}\n\nData access\n${accessSummary}${habitEnvSection}`,
+    systemPrompt: `${instructions}\n\nData access\n${accessSummary}${habitEnvSection}${goalsSummarySection}`,
     source: resolved.text ? resolved.source : 'default',
     demoMode,
     dataAccess,

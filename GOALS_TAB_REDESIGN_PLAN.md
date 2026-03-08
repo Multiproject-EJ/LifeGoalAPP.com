@@ -10,15 +10,18 @@ Use this section first when returning to the plan.
 
 | Phase | Status | Next Task |
 |-------|--------|-----------|
-| Phase 1 — Entry Simplification | 🟡 In progress (partially shipped) | Validate current UI against acceptance criteria, then mark complete. |
-| Phase 2 — Single-Goal View | ◐ In progress | Compact Life Wheel launcher is now integrated; next add goal strength/progress indicator into one-goal card. |
-| Phase 3 — Guided Flow | ◐ In progress | Guided entry now uses a stepper dialog flow; remaining work is richer step validation and refine-in-chat bridge. |
-| Phase 4 — Life Wheel as Submenu | ◐ In progress | Compact launcher shipped as quick category chips; next polish with stronger wheel affordance/visual treatment. |
+| Phase 1 — Entry Simplification | ✅ Complete | — |
+| Phase 2 — Single-Goal View | ✅ Complete | — |
+| Phase 3 — Guided Flow | ✅ Complete | — |
+| Phase 4 — Life Wheel as Submenu | ✅ Complete | — |
 
 ### Related slice progress
 - ✅ Added a **Chat with AI** path inside goal creation with transcript + confirm-to-create-goal behavior.
 - ✅ Single-goal foundations shipped: status filter + search now drive a one-goal-at-a-time card with previous/next navigation.
-- ⏳ Still pending for this plan: goal strength/progress indicators, deeper guided validation/polish, and visual polish for the compact wheel launcher.
+- ✅ Goal strength/progress indicator (0–5 score + completion % bar) added to single-goal card (Phase 2).
+- ✅ Linked habits (goal_id), vision board items (linked_goal_ids), and balance-axis display added to goal card (Phase 3).
+- ✅ AI coach receives active goals context; milestone CelebrationAnimation fires on goal achievement; "Ask Coach" button pre-fills coach with goal context (Phase 4).
+- ✅ Keyboard navigation (← → arrow keys) for prev/next goal navigation.
 
 ### First Step (always)
 1. **Determine current build status** by checking recent commits and the app to see which phase is implemented.
