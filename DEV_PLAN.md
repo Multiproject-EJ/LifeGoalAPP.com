@@ -57,7 +57,7 @@ This section lists all remaining work in priority order. Each priority block inc
 
 M4 is functionally complete. These two items finish the remaining acceptance criteria:
 
-- [ ] **Skipped/missed classification UI** — Add explicit skipped vs missed buttons/controls to the daily check-in flow so users can classify days without ambiguity. Update `DailyHabitTracker.tsx` (and any unified today view) to surface the choice.
+- [x] **Skipped/missed classification UI** — Add explicit skipped vs missed buttons/controls to the daily check-in flow so users can classify days without ambiguity. Update `DailyHabitTracker.tsx` (and any unified today view) to surface the choice.
 - [ ] **Wire auto-progression tier transitions** — The tier definitions and upgrade/downshift rules exist in `autoProgression.ts`; connect the tier transition triggers so accumulated done-ish scores and success-rate data actually move a habit between Seed → Minimum → Standard tiers.
 - [ ] Mark all remaining M4 checklist items as complete once the above land.
 
@@ -504,3 +504,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
   - **Slice**: BUILD_PLAN.md creation.  
   - **What changed**: Created `BUILD_PLAN.md` in the repo root. Contains a status dashboard table for all milestones and features (✅/🟡/⛔), a five-phase prioritized build order (Phase 1 M4 critical path → Phase 2 backend gaps → Phase 3 feature completion → Phase 4 platform quality → Phase 5 ship), per-item task breakdowns with files to modify, acceptance criteria, complexity estimates (S/M/L), and cross-item dependencies. Updated M4 Status Snapshot row to 🟡 In Progress with next task referencing BUILD_PLAN.md Phase 1. Added BUILD_PLAN.md to the Linked Feature Plans section.  
   - **What's next**: Phase 1 — implement skipped/missed classification buttons in `DailyHabitTracker.tsx` and wire auto-progression tier transitions (see BUILD_PLAN.md M4-A and M4-B).
+- **2026-03-08**  
+  - **Slice**: M4-A + M4-B — Skipped/missed classification UI and habit log recording.  
+  - **What changed**: Updated `handleLogHabitSkip` in `DailyHabitTracker.tsx` to also call `logHabitCompletion()` with `progress_state: 'skipped'` and update `completions`/`monthlyCompletions`/`historicalLogs` state, plus fire `habit_skipped` telemetry. Added `handleLogHabitMissed` handler that records `progress_state: 'missed'` in the habit log and fires `habit_missed` telemetry. Updated the skip menu UI to show two explicit options — "⏭️ Skip — intentional" and "❌ Missed — unintentional". Updated the progress state badge to display for skipped and missed states (not just completed). Added `.progress-state--skipped`, `.progress-state--missed`, and `.habit-checklist__skip-option--missed` CSS rules. Added skipped demo log entries to `demoData.ts`. Marked M4-A and M4-B complete in `BUILD_PLAN.md`.  
+  - **What's next**: Wire auto-progression tier transitions so accumulated done-ish scores and success-rate data actually move habits between Seed → Minimum → Standard tiers.

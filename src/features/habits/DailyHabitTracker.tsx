@@ -3735,6 +3735,7 @@ export function DailyHabitTracker({
       return;
     }
 
+    const dateISO = activeDate;
     const trimmedReason = reason?.trim();
     const content = trimmedReason
       ? `Reason:\n${trimmedReason}`
@@ -3761,11 +3762,120 @@ export function DailyHabitTracker({
         goal_id: habit.goal?.id ?? null,
       });
 
+      const skipPayload: HabitLogInsert = {
+        habit_id: habit.id,
+        date: dateISO,
+        completed: false,
+        progress_state: 'skipped',
+        completion_percentage: 0,
+      };
+      const { data: skipLogData, error: skipLogError } = await logHabitCompletion(skipPayload);
+      if (skipLogError) throw skipLogError;
+      const skipLogRow: HabitLogRow = skipLogData ?? ({
+        id: `temp-${habit.id}-${dateISO}`,
+        habit_id: habit.id,
+        date: dateISO,
+        completed: false,
+        progress_state: 'skipped',
+        completion_percentage: 0,
+      } satisfies HabitLogRow);
+
+      setCompletions((current) => ({
+        ...current,
+        [habit.id]: { logId: skipLogRow.id, completed: false, progressState: 'skipped', completionPercentage: 0, loggedStage: null },
+      }));
+      setMonthlyCompletions((current) => {
+        const next = { ...current };
+        const habitMatrix = { ...(next[habit.id] ?? {}) };
+        habitMatrix[dateISO] = { logId: skipLogRow.id, completed: false, progressState: 'skipped', completionPercentage: 0, loggedStage: null };
+        next[habit.id] = habitMatrix;
+        return next;
+      });
+      setHistoricalLogs((current) => {
+        const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
+        nextLogs.push(skipLogRow);
+        setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
+        return nextLogs;
+      });
+
+      if (session?.user?.id) {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'habit_skipped',
+          metadata: { habitId: habit.id, habitName: habit.name, progressState: 'skipped' },
+        });
+      }
+
       setSkipMenuHabitId(null);
       setSkipReasonHabitId(null);
       setSkipReason('');
     } catch (error) {
       setSkipError(error instanceof Error ? error.message : 'Unable to log the skip right now.');
+    } finally {
+      setSkipSaving(false);
+    }
+  };
+
+  const handleLogHabitMissed = async (habit: HabitWithGoal) => {
+    if (!isConfigured && !isDemoExperience) {
+      setSkipError('Connect Supabase to log missed habits.');
+      return;
+    }
+
+    const dateISO = activeDate;
+    setSkipSaving(true);
+    setSkipError(null);
+
+    try {
+      const missedPayload: HabitLogInsert = {
+        habit_id: habit.id,
+        date: dateISO,
+        completed: false,
+        progress_state: 'missed',
+        completion_percentage: 0,
+      };
+      const { data: missedLogData, error: missedLogError } = await logHabitCompletion(missedPayload);
+      if (missedLogError) throw missedLogError;
+      const missedLogRow: HabitLogRow = missedLogData ?? ({
+        id: `temp-missed-${habit.id}-${dateISO}`,
+        habit_id: habit.id,
+        date: dateISO,
+        completed: false,
+        progress_state: 'missed',
+        completion_percentage: 0,
+      } satisfies HabitLogRow);
+
+      setCompletions((current) => ({
+        ...current,
+        [habit.id]: { logId: missedLogRow.id, completed: false, progressState: 'missed', completionPercentage: 0, loggedStage: null },
+      }));
+      setMonthlyCompletions((current) => {
+        const next = { ...current };
+        const habitMatrix = { ...(next[habit.id] ?? {}) };
+        habitMatrix[dateISO] = { logId: missedLogRow.id, completed: false, progressState: 'missed', completionPercentage: 0, loggedStage: null };
+        next[habit.id] = habitMatrix;
+        return next;
+      });
+      setHistoricalLogs((current) => {
+        const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
+        nextLogs.push(missedLogRow);
+        setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
+        return nextLogs;
+      });
+
+      if (session?.user?.id) {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'habit_missed',
+          metadata: { habitId: habit.id, habitName: habit.name, progressState: 'missed' },
+        });
+      }
+
+      setSkipMenuHabitId(null);
+      setSkipReasonHabitId(null);
+      setSkipReason('');
+    } catch (error) {
+      setSkipError(error instanceof Error ? error.message : 'Unable to log the missed habit right now.');
     } finally {
       setSkipSaving(false);
     }
@@ -4278,7 +4388,7 @@ export function DailyHabitTracker({
                     disabled={isSaving || (!scheduledToday && !isCompleted)}
                   />
                   {/* Progress state badge */}
-                  {isCompleted && state?.progressState && (
+                  {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
                     <span
                       className={`progress-state-badge ${getProgressStateColorClass(state.progressState)}`}
                       aria-label={getProgressStateLabel(state.progressState)}
@@ -4573,7 +4683,7 @@ export function DailyHabitTracker({
                             onClick={() => void handleLogHabitSkip(habit)}
                             disabled={skipSaving}
                           >
-                            Skip
+                            ⏭️ Skip — intentional
                           </button>
                           <button
                             type="button"
@@ -4581,7 +4691,15 @@ export function DailyHabitTracker({
                             onClick={() => setSkipReasonHabitId(habit.id)}
                             disabled={skipSaving}
                           >
-                            Skip - Add reason
+                            ⏭️ Skip — add reason
+                          </button>
+                          <button
+                            type="button"
+                            className="habit-checklist__skip-option habit-checklist__skip-option--missed"
+                            onClick={() => void handleLogHabitMissed(habit)}
+                            disabled={skipSaving}
+                          >
+                            ❌ Missed — unintentional
                           </button>
                           {skipReasonHabitId === habit.id ? (
                             <div className="habit-checklist__skip-reason">
@@ -5098,55 +5216,6 @@ export function DailyHabitTracker({
         } catch (error) {
           console.error('Failed to create journal entry for day status:', error);
         }
-      }
-    };
-
-    const handleToggleSkipMenu = (habitId: string) => {
-      setSkipMenuHabitId((current) => (current === habitId ? null : habitId));
-      setSkipReasonHabitId(null);
-      setSkipReason('');
-      setSkipError(null);
-    };
-
-    const handleLogHabitSkip = async (habit: HabitWithGoal, reason?: string) => {
-      if (!isConfigured && !isDemoExperience) {
-        setSkipError('Connect Supabase to log skip reasons.');
-        return;
-      }
-
-      const trimmedReason = reason?.trim();
-      const content = trimmedReason
-        ? `Reason:\n${trimmedReason}`
-        : `Skipped ${habit.name} today.`;
-
-      setSkipSaving(true);
-      setSkipError(null);
-
-      try {
-        await createJournalEntry({
-          user_id: session.user.id,
-          entry_date: activeDate,
-          title: `Skipped habit: ${habit.name}`,
-          content,
-          mood: null,
-          tags: ['habit_skip'],
-          linked_goal_ids: habit.goal?.id ? [habit.goal.id] : null,
-          linked_habit_ids: [habit.id],
-          is_private: true,
-          type: 'quick',
-          mood_score: null,
-          category: null,
-          unlock_date: null,
-          goal_id: habit.goal?.id ?? null,
-        });
-
-        setSkipMenuHabitId(null);
-        setSkipReasonHabitId(null);
-        setSkipReason('');
-      } catch (error) {
-        setSkipError(error instanceof Error ? error.message : 'Unable to log the skip right now.');
-      } finally {
-        setSkipSaving(false);
       }
     };
 
