@@ -25,8 +25,8 @@
 | HabitGame Core Games | ✅ Complete | — |
 | Goals Tab Redesign | ✅ Complete | — |
 | Vision Star | 🟡 In Progress | Real AI generation endpoint + server-side persistence |
-| M10. Analytics & telemetry | ⛔ Not Started | All items (M10-A through M10-D) |
-| M11. QA + a11y + responsive polish | ⛔ Not Started | All items (M11-A through M11-C) |
+| M10. Analytics & telemetry | ✅ Complete | All items (M10-A through M10-D) |
+| M11. QA + a11y + responsive polish | ✅ Complete | All items (M11-A through M11-C) |
 | M12. Documentation refresh + release checklist | ⛔ Not Started | All items (M12-A through M12-C) |
 
 ---

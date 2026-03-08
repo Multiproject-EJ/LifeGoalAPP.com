@@ -77,6 +77,7 @@ export function loadAiCoachInstructions(
   demoMode: boolean,
   habitEnvironments?: HabitEnvironmentContext[],
   activeGoals?: GoalCoachContext[],
+  minProgressStreak?: number,
 ): AiCoachInstructionPayload {
   const resolved = resolveEnvInstructions(demoMode);
   const instructions = resolved.text ?? BASE_INSTRUCTIONS;
@@ -104,8 +105,15 @@ export function loadAiCoachInstructions(
       ? `\n\nGoals context: ${formatGoalsSummary(activeGoals)}`
       : '';
 
+  // M10-C: difficulty adjustment from telemetry history (extended streak when
+  // the user has recently accepted interventions or experienced a balance shift).
+  const difficultySection =
+    minProgressStreak !== undefined && minProgressStreak !== 14
+      ? `\n\nDifficulty adjustment: User's minimum progress streak is ${minProgressStreak} days (elevated from default 14 due to recent coaching history). Offer more gradual milestones and normalise slower pacing.`
+      : '';
+
   return {
-    systemPrompt: `${instructions}\n\nData access\n${accessSummary}${habitEnvSection}${goalsSummarySection}`,
+    systemPrompt: `${instructions}\n\nData access\n${accessSummary}${habitEnvSection}${goalsSummarySection}${difficultySection}`,
     source: resolved.text ? resolved.source : 'default',
     demoMode,
     dataAccess,

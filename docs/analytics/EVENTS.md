@@ -186,3 +186,27 @@ Dashboard helper: `getGoalCoachTelemetrySummary({ userId, sinceISO })` in `src/s
 
 
 Export helper: `buildGoalCoachTelemetrySnapshot(...)` can generate JSON snapshots for experiment reviews.
+
+
+## 8) M10 Audit Results (Phase 4)
+
+### Minimal Event List — Emit Site Audit
+
+| Event Type | Emit Site | Status |
+|---|---|---|
+| `onboarding_completed` | `src/features/onboarding/GameOfLifeOnboarding.tsx` (~line 436) | ✅ Emitted |
+| `balance_shift` | `src/services/telemetry.ts` → `recordBalanceShiftEvent()` (dedup via localStorage) | ✅ Emitted |
+| `intervention_accepted` | `src/features/ai-coach/AiCoach.tsx` → `handleInterventionAction()` | ✅ Emitted |
+| `micro_quest_completed` | `src/features/dashboard/ProgressDashboard.tsx` (~line 830) | ✅ Emitted |
+
+### Difficulty Adjustment Wiring
+
+- `getTelemetryDifficultyAdjustment(userId)` is called from:
+  1. `src/features/habits/HabitsModule.tsx` (habit-level streak adjustment)
+  2. `src/features/ai-coach/AiCoach.tsx` (on mount, feeds `minProgressStreak` into coach system prompt via `loadAiCoachInstructions`)
+- `loadAiCoachInstructions()` in `src/services/aiCoachInstructions.ts` now accepts an optional `minProgressStreak` parameter. When the value is elevated above the 14-day default, an explicit coaching note is appended to the system prompt instructing the coach to offer more gradual milestones.
+
+### Demo Mode
+
+- `addDemoTelemetryEvent` / `getDemoTelemetryEvents` in `src/services/demoData.ts` store events in the in-memory localStorage mock.
+- The demo default state now includes `telemetry_enabled: true` and five seed events (`onboarding_completed`, two `intervention_accepted`, `balance_shift`, `micro_quest_completed`) to ensure a realistic dashboard out of the box.

@@ -1112,3 +1112,47 @@
   overflow-y: auto;
   padding-right: 0.5rem;
 }
+
+/* M11-B: coach modal mobile fixes for ≤375px viewports */
+@media (max-width: 375px) {
+  .ai-coach-modal__container {
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+  }
+
+  .ai-coach-modal__header {
+    padding: 1rem;
+  }
+
+  .ai-coach-modal__header-btn,
+  .ai-coach-modal__close-btn {
+    /* Ensure minimum 44×44px tap target */
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .ai-coach-modal__messages {
+    padding: 0.75rem;
+  }
+
+  .ai-coach-modal__input-area {
+    padding: 0.75rem;
+  }
+
+  .ai-coach-modal__input {
+    font-size: 16px; /* Prevent iOS auto-zoom on focus */
+  }
+
+  .ai-coach-modal__send-btn {
+    /* Ensure minimum 44×44px tap target */
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .ai-coach-modal__strategy-panel {
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+  }
+}
