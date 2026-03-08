@@ -108,6 +108,8 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 - [ACTIONS_FEATURE_DEV_PLAN.md](./ACTIONS_FEATURE_DEV_PLAN.md) — Actions system planning.
 - [GOALS_TAB_REDESIGN_PLAN.md](./GOALS_TAB_REDESIGN_PLAN.md) — Goals tab UX overhaul.
 - [HOLIDAY_TREATS_CALENDAR_PLAN.md](./HOLIDAY_TREATS_CALENDAR_PLAN.md) — Holiday Treats Advent Calendar (replaces old monthly + countdown plan docs).
+- [MONTHLY_TREAT_CALENDAR_DEV_PLAN.md](./MONTHLY_TREAT_CALENDAR_DEV_PLAN.md) — ⚠️ Superseded — see `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
+- [DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md](./DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md) — ⚠️ Superseded — see `HOLIDAY_TREATS_CALENDAR_PLAN.md`.
 - [TRAINING_EXERCISE_DEV_PLAN.md](./TRAINING_EXERCISE_DEV_PLAN.md) — Training exercise feature plan.
 - [NEW_YEARS_MANIFEST_DEV_PLAN.md](./NEW_YEARS_MANIFEST_DEV_PLAN.md) — New Year’s manifest feature plan.
 - [COMPETITION_KILLER_DEV_PLAN.md](./COMPETITION_KILLER_DEV_PLAN.md) — Strategic roadmap (tie steps to milestones when actioned).
