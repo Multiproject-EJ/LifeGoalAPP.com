@@ -123,6 +123,14 @@ Holiday-specific symbols (e.g., 🎄 for Christmas) replace the generic palette 
 - [x] Scratch-card reveal component (canvas)
 - [x] Reward reveal animation + copy
 - [x] Month-end / last-door rollover screen
+- [x] Holiday-specific CSS themes for all 8 holidays (dialog bg, button gradient, accent colour)
+- [x] Countdown display: "X days to go" / "Today is [holiday]!"
+- [x] Holiday emoji on locked/available hatch doors (rotated through `ADVENT_META.emojis`)
+- [x] 🔒 padlock on future locked doors
+- [x] Empty state: "No holiday countdown active" with Settings → Holiday Preferences nudge
+- [x] Door count driven by advent window length, not calendar month
+- [x] Holiday preferences respected: only enabled holidays show a calendar
+- [x] Eyebrow updated to "Holiday Advent Calendar" (was "Monthly Treat Calendar")
 
 ### Phase 4 — Backend ✅
 - [x] Supabase migration 0135 — `daily_calendar_*` tables + RLS
@@ -159,7 +167,8 @@ Holiday-specific symbols (e.g., 🎄 for Christmas) replace the generic palette 
 ---
 
 ## Changelog
-- 2026-03-08: Redesigned as holiday-specific advent calendar. Added `holiday_key` column (migration 0177), rewrote `treatCalendarService.ts` with `ADVENT_META` config, updated edge function with `holiday_key` filter, updated demo data to Christmas Advent. Consolidated `DAILY_TREATS_COUNTDOWN_CALENDAR_PLAN.md` + `MONTHLY_TREAT_CALENDAR_DEV_PLAN.md` into this file.
+- 2026-03-08: Fully wired UI to holiday data — `CountdownCalendarModal` now reads user's Holiday Preferences, derives active advent window via `getActiveAdventMeta()`, applies per-holiday CSS theme (8 holiday classes), shows days-remaining countdown, uses holiday emojis on hatch doors, shows empty state when no holiday is active, doors capped to advent length. Exported `AdventMeta`, `getActiveAdventMeta`, `getAdventDoorCount` from `treatCalendarService.ts`. Added `daily-treats-calendar__countdown` CSS base style.
+- 2026-03-08: Redesigned as holiday-specific advent calendar. Added `holiday_key` column (migration 0177), rewrote `treatCalendarService.ts` with `ADVENT_META` config, updated edge function with `holiday_key` filter, updated demo data to Christmas Advent. Consolidated old plan docs into this file.
 - 2026-02-04: Themed monthly styling added.
 - 2026-02-01: Scratch-card reveal canvas added.
 - 2026-01-29: Reward reveal status messaging and daily open gating.

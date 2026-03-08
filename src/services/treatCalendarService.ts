@@ -126,8 +126,10 @@ function computeTodayDayIndex(startsOn: string): number {
 // Advent calendar meta — date ranges and theming per holiday
 // ---------------------------------------------------------------------------
 
-type AdventMeta = {
+export type AdventMeta = {
   theme_name: string;
+  /** Short holiday name for display (e.g. "Christmas", "Halloween") */
+  displayName: string;
   holiday_key: HolidayKey;
   /** Month (0-based) and day on which the countdown starts */
   countdownStart: { month: number; day: number };
@@ -139,6 +141,7 @@ type AdventMeta = {
 const ADVENT_META: AdventMeta[] = [
   {
     theme_name: 'Christmas Advent',
+    displayName: 'Christmas',
     holiday_key: 'christmas',
     countdownStart: { month: 11, day: 1 },
     holidayDate: { month: 11, day: 25 },
@@ -146,6 +149,7 @@ const ADVENT_META: AdventMeta[] = [
   },
   {
     theme_name: 'Halloween Countdown',
+    displayName: 'Halloween',
     holiday_key: 'halloween',
     countdownStart: { month: 9, day: 1 },
     holidayDate: { month: 9, day: 31 },
@@ -155,6 +159,7 @@ const ADVENT_META: AdventMeta[] = [
     // Easter is a movable feast (Mar 22 – Apr 25). The demo window covers the
     // common range; production seasons should seed the exact date per year.
     theme_name: 'Easter Countdown',
+    displayName: 'Easter',
     holiday_key: 'easter',
     countdownStart: { month: 2, day: 18 },
     holidayDate: { month: 3, day: 25 },
@@ -162,6 +167,7 @@ const ADVENT_META: AdventMeta[] = [
   },
   {
     theme_name: 'Valentine\'s Countdown',
+    displayName: 'Valentine\'s Day',
     holiday_key: 'valentines_day',
     countdownStart: { month: 1, day: 12 },
     holidayDate: { month: 1, day: 14 },
@@ -169,6 +175,7 @@ const ADVENT_META: AdventMeta[] = [
   },
   {
     theme_name: 'New Year Countdown',
+    displayName: 'New Year',
     holiday_key: 'new_year',
     countdownStart: { month: 11, day: 26 },
     holidayDate: { month: 0, day: 1 },
@@ -179,6 +186,7 @@ const ADVENT_META: AdventMeta[] = [
     // The demo window covers Nov 1–28; production seasons should seed the
     // exact date per year.
     theme_name: 'Thanksgiving Countdown',
+    displayName: 'Thanksgiving',
     holiday_key: 'thanksgiving',
     countdownStart: { month: 10, day: 1 },
     holidayDate: { month: 10, day: 28 },
@@ -186,6 +194,7 @@ const ADVENT_META: AdventMeta[] = [
   },
   {
     theme_name: 'Hanukkah Countdown',
+    displayName: 'Hanukkah',
     holiday_key: 'hanukkah',
     countdownStart: { month: 11, day: 14 },
     holidayDate: { month: 11, day: 22 },
@@ -193,6 +202,7 @@ const ADVENT_META: AdventMeta[] = [
   },
   {
     theme_name: 'St. Patrick\'s Day Countdown',
+    displayName: 'St. Patrick\'s Day',
     holiday_key: 'st_patricks_day',
     countdownStart: { month: 2, day: 10 },
     holidayDate: { month: 2, day: 17 },
@@ -225,6 +235,61 @@ function isInCountdownWindow(
   }
   // Window crosses the year boundary (e.g., Dec 26 → Jan 1)
   return todayMs >= startMs || todayMs <= endMs;
+}
+
+/**
+ * Return the AdventMeta for whichever holiday countdown window contains
+ * today, plus the days remaining until the holiday date.
+ * Returns null when today is outside every countdown window.
+ *
+ * @param enabledHolidays - Optional set of holiday_key strings the user has
+ *   enabled in their Holiday Preferences.  When supplied, only matching
+ *   holidays are considered.  When omitted every holiday is eligible.
+ */
+export function getActiveAdventMeta(
+  enabledHolidays?: Set<string>,
+): { meta: AdventMeta; daysRemaining: number } | null {
+  const today = new Date();
+  const todayM = today.getMonth();
+  const todayD = today.getDate();
+  const year   = today.getFullYear();
+  const REF_YEAR = 2000;
+
+  for (const meta of ADVENT_META) {
+    if (enabledHolidays && !enabledHolidays.has(meta.holiday_key)) continue;
+
+    const { countdownStart: cs, holidayDate: hd } = meta;
+    if (!isInCountdownWindow(todayM, todayD, cs.month, cs.day, hd.month, hd.day)) continue;
+
+    // Compute days remaining using local date components to avoid DST/UTC drift.
+    // Build Date objects from local year/month/day at midnight so the difference
+    // is always exactly N calendar days regardless of the user's timezone.
+    const todayLocal    = new Date(year, todayM, todayD);
+    // New Year: if the holiday month is before the start month the holiday falls
+    // in the next calendar year (e.g. Dec 26 countdown → Jan 1 next year).
+    const holidayYear   = hd.month < cs.month ? year + 1 : year;
+    const holidayLocal  = new Date(holidayYear, hd.month, hd.day);
+    const daysRemaining = Math.max(
+      0,
+      Math.round((holidayLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24)),
+    );
+
+    return { meta, daysRemaining };
+  }
+  return null;
+}
+
+/**
+ * Compute the total number of advent doors for a given meta entry.
+ * This is the inclusive day count from countdownStart to holidayDate.
+ */
+export function getAdventDoorCount(meta: AdventMeta): number {
+  const REF_YEAR = 2000;
+  const startMs = new Date(REF_YEAR, meta.countdownStart.month, meta.countdownStart.day).getTime();
+  // For cross-year windows (New Year), holiday is the following year
+  const endYear = meta.holidayDate.month < meta.countdownStart.month ? REF_YEAR + 1 : REF_YEAR;
+  const endMs = new Date(endYear, meta.holidayDate.month, meta.holidayDate.day).getTime();
+  return Math.floor((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1;
 }
 
 /**

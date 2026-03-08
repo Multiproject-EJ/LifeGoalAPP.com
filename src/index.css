@@ -17147,36 +17147,136 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 1.5rem;
 }
 
-.daily-treats-calendar--theme-aurora .daily-treats-calendar__dialog {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(224, 231, 255, 0.9));
+/* ── Holiday-specific advent calendar themes ──────────────────────────────── */
+
+/* Christmas — deep forest green + warm gold */
+.daily-treats-calendar--holiday-christmas .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(209, 231, 211, 0.92));
+}
+.daily-treats-calendar--holiday-christmas .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #166534, #ca8a04);
+}
+.daily-treats-calendar--holiday-christmas .daily-treats-calendar__countdown {
+  color: #166534;
+}
+.daily-treats-calendar--holiday-christmas .daily-treats-calendar__hatch--today {
+  border-color: #ca8a04;
+  box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.35);
 }
 
-.daily-treats-calendar--theme-aurora .daily-treats-calendar__button {
+/* Halloween — pumpkin orange + deep purple */
+.daily-treats-calendar--holiday-halloween .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(254, 215, 170, 0.88));
+}
+.daily-treats-calendar--holiday-halloween .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #c2410c, #7c3aed);
+}
+.daily-treats-calendar--holiday-halloween .daily-treats-calendar__countdown {
+  color: #c2410c;
+}
+.daily-treats-calendar--holiday-halloween .daily-treats-calendar__hatch--today {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.35);
+}
+
+/* Easter — soft lilac + spring green */
+.daily-treats-calendar--holiday-easter .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(233, 213, 255, 0.88));
+}
+.daily-treats-calendar--holiday-easter .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #a855f7, #4ade80);
+}
+.daily-treats-calendar--holiday-easter .daily-treats-calendar__countdown {
+  color: #9333ea;
+}
+.daily-treats-calendar--holiday-easter .daily-treats-calendar__hatch--today {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+/* Valentine's Day — rose pink + warm red */
+.daily-treats-calendar--holiday-valentines .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(254, 205, 211, 0.9));
+}
+.daily-treats-calendar--holiday-valentines .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #e11d48, #f43f5e);
+}
+.daily-treats-calendar--holiday-valentines .daily-treats-calendar__countdown {
+  color: #be123c;
+}
+.daily-treats-calendar--holiday-valentines .daily-treats-calendar__hatch--today {
+  border-color: #e11d48;
+  box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.35);
+}
+
+/* New Year — midnight blue + gold sparkle */
+.daily-treats-calendar--holiday-new-year .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(196, 181, 253, 0.88));
+}
+.daily-treats-calendar--holiday-new-year .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #1e1b4b, #ca8a04);
+}
+.daily-treats-calendar--holiday-new-year .daily-treats-calendar__countdown {
+  color: #4338ca;
+}
+.daily-treats-calendar--holiday-new-year .daily-treats-calendar__hatch--today {
+  border-color: #ca8a04;
+  box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.35);
+}
+
+/* Thanksgiving — warm amber + harvest brown */
+.daily-treats-calendar--holiday-thanksgiving .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(254, 243, 199, 0.92));
+}
+.daily-treats-calendar--holiday-thanksgiving .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #b45309, #d97706);
+}
+.daily-treats-calendar--holiday-thanksgiving .daily-treats-calendar__countdown {
+  color: #92400e;
+}
+.daily-treats-calendar--holiday-thanksgiving .daily-treats-calendar__hatch--today {
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.35);
+}
+
+/* Hanukkah — sky blue + silver white */
+.daily-treats-calendar--holiday-hanukkah .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(186, 230, 253, 0.88));
+}
+.daily-treats-calendar--holiday-hanukkah .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #0369a1, #94a3b8);
+}
+.daily-treats-calendar--holiday-hanukkah .daily-treats-calendar__countdown {
+  color: #0369a1;
+}
+.daily-treats-calendar--holiday-hanukkah .daily-treats-calendar__hatch--today {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.35);
+}
+
+/* St. Patrick's Day — shamrock green + gold */
+.daily-treats-calendar--holiday-st-patricks .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(187, 247, 208, 0.9));
+}
+.daily-treats-calendar--holiday-st-patricks .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #15803d, #ca8a04);
+}
+.daily-treats-calendar--holiday-st-patricks .daily-treats-calendar__countdown {
+  color: #166534;
+}
+.daily-treats-calendar--holiday-st-patricks .daily-treats-calendar__hatch--today {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);
+}
+
+/* Generic fallback (no specific holiday match) */
+.daily-treats-calendar--holiday-generic .daily-treats-calendar__dialog,
+.daily-treats-calendar--holiday-none .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(224, 231, 255, 0.9));
+}
+.daily-treats-calendar--holiday-generic .daily-treats-calendar__button,
+.daily-treats-calendar--holiday-none .daily-treats-calendar__button {
   background: linear-gradient(135deg, #6366f1, #22d3ee);
-}
-
-.daily-treats-calendar--theme-sunset .daily-treats-calendar__dialog {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(254, 226, 226, 0.9));
-}
-
-.daily-treats-calendar--theme-sunset .daily-treats-calendar__button {
-  background: linear-gradient(135deg, #f97316, #f43f5e);
-}
-
-.daily-treats-calendar--theme-ocean .daily-treats-calendar__dialog {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(186, 230, 253, 0.85));
-}
-
-.daily-treats-calendar--theme-ocean .daily-treats-calendar__button {
-  background: linear-gradient(135deg, #0ea5e9, #22d3ee);
-}
-
-.daily-treats-calendar--theme-forest .daily-treats-calendar__dialog {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(220, 252, 231, 0.9));
-}
-
-.daily-treats-calendar--theme-forest .daily-treats-calendar__button {
-  background: linear-gradient(135deg, #22c55e, #84cc16);
 }
 
 .daily-treats-congrats {
@@ -17368,6 +17468,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   margin: 0;
   font-size: 0.85rem;
   color: #475569;
+}
+
+.daily-treats-calendar__countdown {
+  margin: 0.1rem 0 0.15rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
 }
 
 .daily-treats-calendar__hint {
