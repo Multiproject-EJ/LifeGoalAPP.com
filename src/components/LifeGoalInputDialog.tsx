@@ -3,6 +3,12 @@ import type { Session } from '@supabase/supabase-js';
 import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
 import type { GoalStatusTag } from '../features/goals/goalStatus';
 import { DEFAULT_GOAL_STATUS, GOAL_STATUS_OPTIONS } from '../features/goals/goalStatus';
+import {
+  DEFAULT_GOAL_STRATEGY,
+  GOAL_STRATEGY_META,
+  type GoalStrategyType,
+} from '../features/goals/goalStrategy';
+import { StrategyPicker } from './StrategyPicker';
 import useAiGoalSuggestion from '../hooks/useAiGoalSuggestion';
 import useGoalCoachChat, {
   type GoalCoachContextEvolutionEvent,
@@ -49,6 +55,7 @@ type LifeGoalFormData = {
   estimatedDurationDays: string;
   timingNotes: string;
   statusTag: GoalStatusTag;
+  strategyType: GoalStrategyType;
   steps: LifeGoalStep[];
   alerts: LifeGoalAlert[];
 };
@@ -91,6 +98,7 @@ export function LifeGoalInputDialog({
     estimatedDurationDays: '',
     timingNotes: '',
     statusTag: DEFAULT_GOAL_STATUS,
+    strategyType: DEFAULT_GOAL_STRATEGY,
     steps: [],
     alerts: [],
   }));
@@ -113,6 +121,7 @@ export function LifeGoalInputDialog({
   });
 
   const [saving, setSaving] = useState(false);
+  const [strategyExpanded, setStrategyExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'steps' | 'timing' | 'alerts'>('basic');
   const guidedTabOrder: Array<'basic' | 'steps' | 'timing' | 'alerts'> = ['basic', 'steps', 'timing', 'alerts'];
   const guidedTabIndex = guidedTabOrder.indexOf(activeTab);
@@ -694,9 +703,11 @@ export function LifeGoalInputDialog({
         estimatedDurationDays: '',
         timingNotes: '',
         statusTag: DEFAULT_GOAL_STATUS,
+        strategyType: DEFAULT_GOAL_STRATEGY,
         steps: [],
         alerts: [],
       });
+      setStrategyExpanded(false);
       onClose();
     } catch (error) {
       console.error('Error saving life goal:', error);
@@ -938,6 +949,31 @@ export function LifeGoalInputDialog({
                   ))}
                 </select>
               </label>
+
+              <div className="life-goal-dialog__strategy-section">
+                <button
+                  type="button"
+                  className="life-goal-dialog__strategy-toggle"
+                  onClick={() => setStrategyExpanded((prev) => !prev)}
+                  aria-expanded={strategyExpanded}
+                >
+                  <span>How will you pursue this? <em>(optional)</em></span>
+                  {!strategyExpanded && (
+                    <span className="life-goal-dialog__strategy-preview">
+                      {GOAL_STRATEGY_META[formData.strategyType].icon}{' '}
+                      {GOAL_STRATEGY_META[formData.strategyType].label}
+                    </span>
+                  )}
+                  <span className="life-goal-dialog__strategy-chevron">{strategyExpanded ? '▲' : '▼'}</span>
+                </button>
+                {strategyExpanded && (
+                  <StrategyPicker
+                    value={formData.strategyType}
+                    onChange={(strategy) => setFormData((current) => ({ ...current, strategyType: strategy }))}
+                    className="life-goal-dialog__strategy-picker"
+                  />
+                )}
+              </div>
             </div>
           )}
 

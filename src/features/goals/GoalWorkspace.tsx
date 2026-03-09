@@ -12,6 +12,12 @@ import {
   normalizeGoalStatus,
   goalStatusToCompletionPct,
 } from './goalStatus';
+import {
+  GOAL_STRATEGY_META,
+  normalizeGoalStrategy,
+  type GoalStrategyType,
+} from './goalStrategy';
+import { StrategyPicker } from '../../components/StrategyPicker';
 import { isDemoSession } from '../../services/demoSession';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
 import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
@@ -28,6 +34,9 @@ import { getDemoHabitsForUser, getDemoVisionImages } from '../../services/demoDa
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
+// Extended GoalRow type to include goal_strategy_type which is added via migration 0178
+// but not yet reflected in the generated database.types.ts
+type GoalRowWithStrategy = GoalRow & { goal_strategy_type?: string | null };
 
 type GoalWorkspaceProps = {
   session: Session;
@@ -41,6 +50,7 @@ type GoalDraft = {
   targetDate: string;
   progressNotes: string;
   statusTag: GoalStatusTag;
+  strategyType: GoalStrategyType;
 };
 
 // Type definition matching LifeGoalInputDialog's form data structure
@@ -53,6 +63,7 @@ type LifeGoalFormData = {
   estimatedDurationDays: string;
   timingNotes: string;
   statusTag: GoalStatusTag;
+  strategyType: GoalStrategyType;
   steps: Array<{
     id: string;
     title: string;
@@ -87,6 +98,7 @@ const initialDraft: GoalDraft = {
   targetDate: '',
   progressNotes: '',
   statusTag: defaultStatusTag,
+  strategyType: 'standard',
 };
 
 export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach }: GoalWorkspaceProps) {
@@ -430,6 +442,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
       targetDate: goal.target_date ? goal.target_date.slice(0, 10) : '',
       progressNotes: goal.progress_notes ?? '',
       statusTag: normalizeGoalStatus(goal.status_tag),
+      strategyType: normalizeGoalStrategy((goal as GoalRowWithStrategy).goal_strategy_type),
     });
   };
 
@@ -477,13 +490,14 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
       const isNowAchieved = editDraft.statusTag === 'achieved';
       const justAchieved = !wasAchieved && isNowAchieved;
 
-      const payload: Database['public']['Tables']['goals']['Update'] = {
+      const payload = {
         title,
         description: editDraft.description.trim() || null,
         target_date: editDraft.targetDate || null,
         progress_notes: editDraft.progressNotes.trim() || null,
         status_tag: editDraft.statusTag,
-      };
+        goal_strategy_type: editDraft.strategyType ?? 'standard',
+      } as Database['public']['Tables']['goals']['Update'];
 
       const { data, error } = await updateGoal(editingGoalId, payload);
       if (error) throw error;
@@ -611,9 +625,10 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
             : null,
           timing_notes: formData.timingNotes || null,
           status_tag: formData.statusTag,
+          goal_strategy_type: formData.strategyType ?? 'standard',
         };
 
-        const { data: goal, error: goalError } = await insertGoal(goalPayload);
+        const { data: goal, error: goalError } = await insertGoal(goalPayload as Parameters<typeof insertGoal>[0]);
         if (goalError) throw goalError;
         if (!goal) throw new Error('Failed to create goal');
 
@@ -976,6 +991,14 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
                             </small>
                           </label>
                           <label className="goal-card__field">
+                            <span>Approach</span>
+                            <StrategyPicker
+                              compact
+                              value={editDraft.strategyType}
+                              onChange={(strategy) => setEditDraft((current) => ({ ...current, strategyType: strategy }))}
+                            />
+                          </label>
+                          <label className="goal-card__field">
                             <span>Weekly progress notes</span>
                             <textarea
                               value={editDraft.progressNotes}
@@ -1015,6 +1038,19 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
                               {getStatusLabel(goal.status_tag)}
                             </span>
                           </div>
+
+                          {(goal as GoalRowWithStrategy).goal_strategy_type && (goal as GoalRowWithStrategy).goal_strategy_type !== 'standard' && (() => {
+                            const meta = GOAL_STRATEGY_META[normalizeGoalStrategy((goal as GoalRowWithStrategy).goal_strategy_type)];
+                            return (
+                              <span
+                                className="goal-strategy-badge"
+                                title={meta.description}
+                                aria-label={`Strategy: ${meta.label}`}
+                              >
+                                {meta.icon} {meta.label}
+                              </span>
+                            );
+                          })()}
 
                           {/* GOALS-A-P2: Goal strength + completion */}
                           {(() => {

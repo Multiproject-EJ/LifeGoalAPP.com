@@ -10,6 +10,7 @@ interface LifeGoalAppDB extends DBSchema {
       description?: string | null;
       status?: string | null;
       target_date?: string | null;
+      goal_strategy_type?: string | null;
       created_at: string;
       updated_at: string;
       // sync metadata

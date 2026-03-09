@@ -3951,6 +3951,63 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-style: italic;
 }
 
+.goal-strategy-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--color-surface-glass, rgba(148, 163, 184, 0.15));
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 6px;
+}
+
+.life-goal-dialog__strategy-section {
+  margin-top: 12px;
+}
+
+.life-goal-dialog__strategy-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  min-height: 44px;
+}
+
+.life-goal-dialog__strategy-toggle:hover {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.life-goal-dialog__strategy-toggle > span:first-child {
+  flex: 1;
+}
+
+.life-goal-dialog__strategy-toggle em {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.life-goal-dialog__strategy-preview {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.life-goal-dialog__strategy-chevron {
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+
+.life-goal-dialog__strategy-picker {
+  margin-top: 10px;
+}
+
 .goal-card__footer {
   color: #64748b;
   font-size: 0.85rem;
