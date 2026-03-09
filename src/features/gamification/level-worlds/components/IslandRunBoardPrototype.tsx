@@ -265,12 +265,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [dicePool, setDicePool] = useState(() => convertHeartToDicePool(1));
   const [tokenIndex, setTokenIndex] = useState(TOKEN_START_TILE_INDEX);
   const [rollValue, setRollValue] = useState<number | null>(null);
+  const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
+  const [step1PromptedIsland, setStep1PromptedIsland] = useState<number | null>(null);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
   const [nowMs, setNowMs] = useState(Date.now());
   const [showOnboardingBooster, setShowOnboardingBooster] = useState(false);
@@ -1148,6 +1150,41 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     return () => window.clearInterval(timer);
   }, [showTravelOverlay, islandNumber, islandExpiresAtMs]);
 
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || showFirstRunCelebration || showTravelOverlay) return;
+
+    const step1Stop = islandStopPlan[0];
+    const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+    if (step1Complete) return;
+    if (step1PromptedIsland === islandNumber) return;
+
+    if (step1Stop?.stopId) {
+      setActiveStopId(step1Stop.stopId);
+      setStep1PromptedIsland(islandNumber);
+      setLandingText(`Start here: complete Stop 1 (${step1Stop.title}) to unlock dice.`);
+    }
+  }, [
+    hasHydratedRuntimeState,
+    showFirstRunCelebration,
+    showTravelOverlay,
+    islandStopPlan,
+    completedStops,
+    step1PromptedIsland,
+    islandNumber,
+  ]);
+
+  useEffect(() => {
+    if (!isRolling) return;
+
+    const timer = window.setInterval(() => {
+      const left = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+      const right = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+      setRollingDiceFaces([left, right]);
+    }, 90);
+
+    return () => window.clearInterval(timer);
+  }, [isRolling]);
+
   // M15G: Write summary to global key so App.tsx overlay can read islandExpiresAtMs
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1189,15 +1226,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     ? `${String(Math.floor(timeLeftSec / 3600)).padStart(2, '0')}:${String(Math.floor((timeLeftSec % 3600) / 60)).padStart(2, '0')}`
     : formatClock(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
+  const step1Stop = islandStopPlan[0] ?? null;
+  const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+  const isEnergyDepletedForRoll = dicePool < DICE_PER_ROLL && hearts < 1;
+  const rollButtonMode: 'rolling' | 'step1' | 'roll' | 'convert' = isRolling
+    ? 'rolling'
+    : !step1Complete
+      ? 'step1'
+      : dicePool >= DICE_PER_ROLL
+        ? 'roll'
+        : 'convert';
+
+  const openStep1Stop = () => {
+    if (!step1Stop?.stopId) return;
+    setActiveStopId(step1Stop.stopId);
+  };
 
   const handleRoll = async () => {
     if (showFirstRunCelebration) return;
 
     // M11C: Step 1 enforcement — player must complete Stop 1 before rolling
-    const step1Stop = islandStopPlan[0];
-    const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
     if (!step1Complete) {
       setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling dice.`);
+      openStep1Stop();
       return;
     }
 
@@ -1226,6 +1277,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
     const dieOne = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
     const dieTwo = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+    setRollingDiceFaces([dieOne, dieTwo]);
     const nextRoll = dieOne + dieTwo;
     setRollValue(nextRoll);
     setLandingText(`Rolling ${dieOne} + ${dieTwo} = ${nextRoll}...`);
@@ -1343,10 +1395,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // B2-1: handleSpin — costs 1 spin token, rolls SPIN_MIN–SPIN_MAX
   const handleSpin = async () => {
     // M11C: Step 1 enforcement — player must complete Stop 1 before spinning
-    const step1Stop = islandStopPlan[0];
-    const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
     if (!step1Complete) {
       setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling or spinning.`);
+      openStep1Stop();
       return;
     }
 
@@ -2158,7 +2209,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     // pendingClaimTierIndex are NOT reset on island travel — they are lifetime-cumulative
     // and persist across islands per docs/13_COLLECTIBLE_PROGRESS_BAR.md §3.
     setShowClaimModal(false); // close any open claim modal but preserve pending claim state
-    setLandingText('Arrived at new island. Ready to roll!');
+    setRollValue(null);
+    setRollingDiceFaces([1, 1]);
+    setStep1PromptedIsland(null);
+    setLandingText('Arrived at new island. Complete Stop 1 (Hatchery) to unlock dice.');
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -2177,6 +2231,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const handleCompleteActiveStop = () => {
     if (!activeStopId) return;
+
+    if (activeStopId === 'hatchery' && !activeEgg && !islandEggSlotUsed) {
+      setLandingText('Set an egg in Hatchery before completing Stop 1.');
+      return;
+    }
 
     if (activeStopId === 'boss') {
       if (!bossTrialResolved) {
@@ -2441,6 +2500,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setLandingText(`Sold ${soldTier} egg for ${reward} coins.`);
   };
 
+  const openShopPanel = () => {
+    setShowShopPanel(true);
+    setMarketPurchaseFeedback(null);
+    setMarketInteracted(false);
+    playIslandRunSound('shop_open');
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: { stage: 'shop_open', island_number: islandNumber },
+    });
+  };
+
   return (
     <section className="island-run-prototype">
       <header className="island-run-prototype__header">
@@ -2459,15 +2530,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         <div className="island-run-prototype__always-controls">
           <button
             type="button"
-            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${dicePool >= DICE_PER_ROLL ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-            onClick={handleRoll}
-            disabled={showFirstRunCelebration || isRolling || (dicePool < DICE_PER_ROLL && hearts < 1) || showTravelOverlay}
+            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+            onClick={step1Complete ? handleRoll : openStep1Stop}
+            disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll) || showTravelOverlay}
           >
-            {isRolling
+            {rollButtonMode === 'rolling'
               ? 'Rolling...'
-              : dicePool >= DICE_PER_ROLL
-                ? 'Roll (2 dice)'
-                : `Convert 1 heart → ${dicePerHeart} dice`}
+              : rollButtonMode === 'step1'
+                ? 'Open Stop 1 (Hatchery)'
+                : rollButtonMode === 'roll'
+                  ? 'Roll (2 dice)'
+                  : `Convert 1 heart → ${dicePerHeart} dice`}
           </button>
           {spinTokens > 0 && (
             <button
@@ -2479,6 +2552,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               🌀 Spin
             </button>
           )}
+          <div className={`island-run-prototype__dice-throw ${isRolling ? 'island-run-prototype__dice-throw--active' : ''}`} aria-live="polite">
+            <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[0]}</span>
+            <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[1]}</span>
+            {rollValue !== null ? <span className="island-run-prototype__dice-total">= {rollValue}</span> : null}
+          </div>
           {/* M10A: audio toggle — persists to localStorage */}
           <button
             type="button"
@@ -2498,13 +2576,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             type="button"
             className="island-run-prototype__shop-btn"
             aria-label="Open shop"
-            onClick={() => {
-              setShowShopPanel(true);
-              setMarketPurchaseFeedback(null);
-              setMarketInteracted(false);
-              playIslandRunSound('shop_open');
-              void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_open', island_number: islandNumber } });
-            }}
+            onClick={openShopPanel}
           >
             🛍️ Shop
           </button>
@@ -2527,25 +2599,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </button>
             );
           })()}
-          {(() => {
-            const step1Stop = islandStopPlan[0];
-            const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
-            return !step1Complete ? (
-              <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>
-            ) : null;
-          })()}
-          {/* M14: persistent shop HUD button */}
-          <button
-            type="button"
-            className="island-run-shop-btn"
-            onClick={() => {
-              setShowShopPanel(true);
-              playIslandRunSound('shop_open');
-              void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_open', island_number: islandNumber } });
-            }}
-          >
-            🛍️ Shop
-          </button>
+          {!step1Complete ? (
+            <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>
+          ) : null}
         </div>
         {/* M1B: Production HUD — always visible for all logged-in users */}
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
@@ -2636,8 +2692,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               {(() => {
                 const nonBossStops = islandStopPlan.filter((s) => s.stopId !== 'boss');
                 const completedNonBoss = nonBossStops.filter((s) => completedStops.includes(s.stopId)).length;
-                const step1Stop = islandStopPlan[0];
-                const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
                 if (!step1Complete) {
                   return <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>;
                 }
@@ -3294,7 +3348,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 </button>
               ) : null}
               {activeStop.stopId === 'hatchery' ? (
-                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={handleCompleteActiveStop}
+                  disabled={!activeEgg && !islandEggSlotUsed}
+                >
                   Complete Hatchery Stop
                 </button>
               ) : null}
