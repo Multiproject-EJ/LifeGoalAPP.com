@@ -18,6 +18,7 @@ export interface GoalRecord {
   description?: string | null;
   status?: string | null;
   target_date?: string | null;
+  goal_strategy_type?: string | null;
   created_at: string;
   updated_at: string;
   _dirty?: boolean;
@@ -63,6 +64,7 @@ async function refreshGoalsFromSupabase(userId: string): Promise<void> {
       description: g.description ?? null,
       status: g.status_tag ?? null,
       target_date: g.target_date ?? null,
+      goal_strategy_type: (g as any).goal_strategy_type ?? 'standard',
       created_at: g.created_at ?? now,
       updated_at: now, // IndexedDB-only field for tracking
       _dirty: false,
@@ -78,6 +80,7 @@ export interface CreateGoalInput {
   description?: string;
   status?: string;
   target_date?: string;
+  goal_strategy_type?: string;
 }
 
 /**
@@ -98,6 +101,7 @@ export async function createGoalOfflineFirst(
     description: input.description ?? null,
     status: input.status ?? 'on_track',
     target_date: input.target_date ?? null,
+    goal_strategy_type: input.goal_strategy_type ?? 'standard',
     created_at: now,
     updated_at: now,
     _dirty: true,
@@ -155,6 +159,7 @@ export async function syncGoalsWithSupabase(userId: string): Promise<void> {
           description: goal.description,
           status_tag: goal.status,
           target_date: goal.target_date,
+          goal_strategy_type: goal.goal_strategy_type ?? 'standard',
         })
         .select()
         .single();
@@ -170,6 +175,7 @@ export async function syncGoalsWithSupabase(userId: string): Promise<void> {
           description: newGoal.description ?? null,
           status: newGoal.status_tag ?? null,
           target_date: newGoal.target_date ?? null,
+          goal_strategy_type: (newGoal as GoalRow & { goal_strategy_type?: string }).goal_strategy_type ?? 'standard',
           created_at: newGoal.created_at,
           updated_at: new Date().toISOString(),
           _dirty: false,
@@ -185,6 +191,7 @@ export async function syncGoalsWithSupabase(userId: string): Promise<void> {
           description: goal.description,
           status_tag: goal.status,
           target_date: goal.target_date,
+          goal_strategy_type: goal.goal_strategy_type ?? 'standard',
         })
         .eq('id', goal.id);
 
