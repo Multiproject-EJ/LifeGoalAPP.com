@@ -5,3 +5,4 @@ export * from './planQuality';
 export * from './goalHealth';
 export * from './executionTypes';
 export * from './goalStrategy';
+export * from './goalDoctor';

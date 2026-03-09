@@ -1,7 +1,7 @@
 # GOAL_STRATEGY_ENGINE_DEV_PLAN.md
 
 > **Purpose**: A living, agent-optimised development plan for the Goal Strategy Engine — a system that lets users choose *how* they pursue a goal, not just *what* the goal is. Any AI agent or human engineer can pick up a single slice, execute it safely, and hand off with full context.
-> **Status**: 🟡 Phase 1 complete — ready for Phase 2 execution
+> **Status**: 🟢 Phase 2 complete — slices 2.1–2.4 shipped
 > **Owner**: Founder + AI collaborators
 > **Last updated**: 2026-03-09
 > **Linked from**: [`DEV_PLAN.md`](./DEV_PLAN.md) → Linked Feature Plans
@@ -52,10 +52,10 @@ Transform LifeGoalApp from a goal *tracker* into a **Goal Strategy Engine** — 
 | Phase 1 | 1.4 | Strategy Picker UI component | ✅ Complete |
 | Phase 1 | 1.5 | Add strategy picker as optional step in `LifeGoalInputDialog` | ✅ Complete |
 | Phase 1 | 1.6 | Display strategy badge on goal card | ✅ Complete |
-| Phase 2 | 2.1 | `goalDoctor.ts` — diagnosis + prescription engine | 🔲 Not started |
-| Phase 2 | 2.2 | Goal Doctor card UI on `GoalWorkspace` | 🔲 Not started |
-| Phase 2 | 2.3 | "Switch Strategy" action on goal card | 🔲 Not started |
-| Phase 2 | 2.4 | Goal Doctor → AI Coach bridge | 🔲 Not started |
+| Phase 2 | 2.1 | `goalDoctor.ts` — diagnosis + prescription engine | ✅ Complete |
+| Phase 2 | 2.2 | Goal Doctor card UI on `GoalWorkspace` | ✅ Complete |
+| Phase 2 | 2.3 | "Switch Strategy" action on goal card | ✅ Complete |
+| Phase 2 | 2.4 | Goal Doctor → AI Coach bridge | ✅ Complete |
 | Phase 3 | 3.1 | Micro Wins strategy mode card view | 🔲 Not started |
 | Phase 3 | 3.2 | Experiment Lab strategy mode card view | 🔲 Not started |
 | Phase 3 | 3.3 | Identity Builder strategy mode card view | 🔲 Not started |
@@ -760,6 +760,17 @@ Track unresolved design/technical decisions here. Resolve before the relevant sl
 > - **What changed**:
 > - **What's next**:
 > - **Blockers / deviations** (if any):
+
+### 2026-03-09 (Phase 2)
+- **Slice**: Phase 2 complete (slices 2.1–2.4)
+- **What shipped**:
+  - `src/features/goals/goalDoctor.ts` — `GoalDiagnosis` type, `diagnoseAndPrescribe()` mapping table (10 rows across 5 risk reasons × health states), `buildGoalDoctorContext()` pre-filled AI coach prompt builder
+  - `src/components/GoalDoctorCard.tsx` — Full card UI: loading skeleton, collapsed "✅" chip (urgency=low), expanded medium/high urgency card with diagnosis title, detail, prescription block, "Switch Strategy" + "Ask Coach" buttons; `role="region"` + `aria-label` accessibility
+  - `src/index.css` — `.goal-doctor-card__*` CSS classes (minimal, no new file)
+  - `src/features/goals/GoalWorkspace.tsx` — `goalHealthById` + `stepsByGoal` state, fire-and-forget health evaluation after goals load, `<GoalDoctorCard>` wired below progress bar; `onSwitchStrategy` persists via `updateGoal`; `onAskCoach` bridges to existing `onNavigateToAiCoach`
+  - `src/features/goals/index.ts` — Re-exports `goalDoctor`
+  - `docs/AI_ENABLEMENT_ROADMAP.md` — Goal Doctor section added
+- **What's next**: Phase 3 — Goal Strategy Insights (slices 3.x)
 
 ### 2026-03-09
 - **Slice**: Phase 1 complete (slices 1.1–1.6)

@@ -20,7 +20,7 @@ import {
 import { StrategyPicker } from '../../components/StrategyPicker';
 import { isDemoSession } from '../../services/demoSession';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
-import { insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
+import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
@@ -31,8 +31,12 @@ import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import { fetchVisionImages } from '../../services/visionBoard';
 import { BALANCE_AXES } from '../../services/balanceScore';
 import { getDemoHabitsForUser, getDemoVisionImages } from '../../services/demoData';
+import type { GoalHealthResult } from './goalHealth';
+import { evaluateGoalHealthFromSignals } from '../../services/goalExecution';
+import { GoalDoctorCard } from '../../components/GoalDoctorCard';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
+type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 // Extended GoalRow type to include goal_strategy_type which is added via migration 0178
 // but not yet reflected in the generated database.types.ts
@@ -127,6 +131,8 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
   const [celebrationXP, setCelebrationXP] = useState(0);
   const [allHabits, setAllHabits] = useState<HabitV2Row[]>([]);
   const [allVisionImages, setAllVisionImages] = useState<VisionImageRow[]>([]);
+  const [goalHealthById, setGoalHealthById] = useState<Record<string, GoalHealthResult>>({});
+  const [stepsByGoal, setStepsByGoal] = useState<Record<string, StepRow[]>>({});
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -141,9 +147,34 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
     try {
       const { data, error } = await fetchGoals();
       if (error) throw error;
-      setGoals(data ?? []);
+      const loadedGoals = data ?? [];
+      setGoals(loadedGoals);
       setEditingGoalId(null);
       setPendingDeleteId(null);
+
+      // Fire-and-forget: load steps + evaluate health for each goal
+      void (async () => {
+        try {
+          const stepsResults = await Promise.all(
+            loadedGoals.map(async (goal) => {
+              const { data: steps } = await fetchStepsForGoal(goal.id);
+              return { goalId: goal.id, steps: steps ?? [] };
+            })
+          );
+          const nextStepsByGoal = stepsResults.reduce<Record<string, StepRow[]>>((acc, r) => {
+            acc[r.goalId] = r.steps;
+            return acc;
+          }, {});
+          setStepsByGoal(nextStepsByGoal);
+          const nextHealthById = loadedGoals.reduce<Record<string, GoalHealthResult>>((acc, goal) => {
+            acc[goal.id] = evaluateGoalHealthFromSignals(goal, nextStepsByGoal[goal.id] ?? []);
+            return acc;
+          }, {});
+          setGoalHealthById(nextHealthById);
+        } catch {
+          // Health evaluation is non-critical — swallow errors silently
+        }
+      })();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Unable to load goals. Try again in a moment.',
@@ -1071,6 +1102,23 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
                               </div>
                             );
                           })()}
+
+                          {/* Phase 2: Goal Doctor card */}
+                          <GoalDoctorCard
+                            goalTitle={goal.title ?? ''}
+                            healthResult={goalHealthById[goal.id] ?? null}
+                            currentStrategy={normalizeGoalStrategy((goal as GoalRowWithStrategy).goal_strategy_type)}
+                            onSwitchStrategy={(strategy) => {
+                              void updateGoal(goal.id, { goal_strategy_type: strategy } as Database['public']['Tables']['goals']['Update']).then(({ error }) => {
+                                if (error) {
+                                  setErrorMessage(error.message ?? 'Unable to update goal strategy.');
+                                } else {
+                                  void refreshGoals();
+                                }
+                              });
+                            }}
+                            onAskCoach={(prompt) => onNavigateToAiCoach?.(prompt)}
+                          />
 
                           {goal.description ? <p>{goal.description}</p> : null}
                           {goal.progress_notes ? (
