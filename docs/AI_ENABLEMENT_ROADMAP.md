@@ -34,3 +34,9 @@ This document is the living source of truth for AI across the PWA: what is live 
 
 
 - **Goal Coach Chat**: `Chat with AI` can call `goal-coach-chat` (multi-turn) via `VITE_AI_GOAL_COACH_CHAT_URL`, returning `{ assistant_message, draft_goal }` for confirm-to-create-goal flows.
+
+## ✅ Goal Doctor (Phase 2 — Goal Strategy Engine)
+- **Diagnosis engine** (`goalDoctor.ts`): maps `GoalHealthResult` signals to a `GoalDiagnosis` with prescribed strategy, urgency, and pre-filled AI coach prompt.
+- **`GoalDoctorCard` component**: surfaces diagnosis on the active goal card with "Switch Strategy" and "Ask Coach" actions.
+- **Wire-up**: `GoalWorkspace.tsx` runs `evaluateGoalHealthFromSignals` in the background after goals load; `GoalDoctorCard` renders when health data is available.
+- **Demo mode**: works fully offline — `evaluateGoalHealthFromSignals` is pure/local, no Supabase calls required for the diagnosis itself.
