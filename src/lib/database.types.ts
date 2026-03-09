@@ -958,6 +958,7 @@ export interface Database {
           daily_hearts_claimed_day_key: string | null;
           current_island_number: number;
           boss_trial_resolved_island_number: number | null;
+          completed_stops_by_island: Json;
           created_at: string;
           updated_at: string;
         };
@@ -967,6 +968,7 @@ export interface Database {
           daily_hearts_claimed_day_key?: string | null;
           current_island_number?: number;
           boss_trial_resolved_island_number?: number | null;
+          completed_stops_by_island?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -976,6 +978,7 @@ export interface Database {
           daily_hearts_claimed_day_key?: string | null;
           current_island_number?: number;
           boss_trial_resolved_island_number?: number | null;
+          completed_stops_by_island?: Json;
           created_at?: string;
           updated_at?: string;
         };

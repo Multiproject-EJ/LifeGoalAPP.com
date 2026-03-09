@@ -42,6 +42,7 @@ export interface IslandRunRuntimeStateBackend {
       shardClaimCount?: number;
       shields?: number;
       shards?: number;
+      completedStopsByIsland?: Record<string, string[]>;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -133,6 +134,18 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.shards === 'number' && Number.isFinite(patch.shards)
           ? Math.max(0, Math.floor(patch.shards))
           : current.shards,
+      completedStopsByIsland:
+        patch.completedStopsByIsland !== null && typeof patch.completedStopsByIsland === 'object' && !Array.isArray(patch.completedStopsByIsland)
+          ? {
+              ...current.completedStopsByIsland,
+              ...Object.fromEntries(
+                Object.entries(patch.completedStopsByIsland).map(([islandKey, stops]) => [
+                  islandKey,
+                  Array.isArray(stops) ? stops.filter((stop): stop is string => typeof stop === 'string') : [],
+                ]),
+              ),
+            }
+          : current.completedStopsByIsland,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({
