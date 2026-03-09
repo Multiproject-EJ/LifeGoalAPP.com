@@ -65,6 +65,7 @@ import {
 const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
+const DICE_PER_ROLL = 2;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
 // Production island duration: 72 hours. Use ?devTimer=1 for 45s dev mode.
@@ -1204,7 +1205,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return;
     }
 
-    if (dicePool < 1) {
+    if (dicePool < DICE_PER_ROLL) {
       if (hearts < 1) {
         return;
       }
@@ -1217,15 +1218,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
     setIsRolling(true);
     setActiveStopId(null);
-    setDicePool((current) => Math.max(0, current - 1));
+    setDicePool((current) => Math.max(0, current - DICE_PER_ROLL));
 
     // M10A: roll sound + haptic
     playIslandRunSound('roll');
     triggerIslandRunHaptic('roll');
 
-    const nextRoll = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+    const dieOne = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+    const dieTwo = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+    const nextRoll = dieOne + dieTwo;
     setRollValue(nextRoll);
-    setLandingText(`Rolling ${nextRoll}...`);
+    setLandingText(`Rolling ${dieOne} + ${dieTwo} = ${nextRoll}...`);
 
     let currentIndex = tokenIndex;
     for (let step = 0; step < nextRoll; step += 1) {
@@ -2456,14 +2459,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         <div className="island-run-prototype__always-controls">
           <button
             type="button"
-            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${dicePool > 0 ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${dicePool >= DICE_PER_ROLL ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
             onClick={handleRoll}
-            disabled={showFirstRunCelebration || isRolling || (dicePool < 1 && hearts < 1) || showTravelOverlay}
+            disabled={showFirstRunCelebration || isRolling || (dicePool < DICE_PER_ROLL && hearts < 1) || showTravelOverlay}
           >
             {isRolling
               ? 'Rolling...'
-              : dicePool > 0
-                ? 'Roll (1 dice)'
+              : dicePool >= DICE_PER_ROLL
+                ? 'Roll (2 dice)'
                 : `Convert 1 heart → ${dicePerHeart} dice`}
           </button>
           {spinTokens > 0 && (
@@ -2721,7 +2724,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               {dailyHeartsClaimed ? 'Spin reward claimed' : `Spin of the Day (+${dailyRewardPlan.hearts} hearts)`}
             </button>
           )}
-          {hearts < 1 && dicePool < 1 && (
+          {hearts < 1 && dicePool < DICE_PER_ROLL && (
             <button
               type="button"
               className="island-run-prototype__booster-btn"

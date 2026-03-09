@@ -106,7 +106,7 @@ Quality direction:
 - Board tile positions are fixed across all islands (art only changes); stops are outer POIs accessible via stop trigger tiles on the ring
 - 17 tile anchors (±1 tolerated later, but v1 = 17)
 - Board visual style: **3D-hybrid** (2D art + pseudo-3D board layer + depth/occlusion masks)
-- Movement: 1 Heart = 1 dice roll (1–3 tiles). Occasional Spin Move (1–5 tiles).
+- Movement: 1 Heart converts into dice pool; each move consumes a **2-dice pair** (each die 1–3, total move 2–6 tiles). Occasional Spin Move (1–5 tiles).
 - Stops: 1 Hatchery, 2 Minigame, 3 Utility, 4 Dynamic, 5 Boss — **Shop is NOT a stop**; shop is a persistent HUD button always accessible
 - Encounter tile: easy bonus challenge, not boss
 - Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer

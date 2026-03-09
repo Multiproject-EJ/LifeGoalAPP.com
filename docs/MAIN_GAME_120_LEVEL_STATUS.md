@@ -76,7 +76,7 @@
 - [x] Fixed 17-tile anchor layout with `zBand` (back / mid / front), `tangentDeg`, and `scale` per anchor  
   → [`src/features/gamification/level-worlds/services/islandBoardLayout.ts`](../src/features/gamification/level-worlds/services/islandBoardLayout.ts)
 - [x] 5 outer stop POIs (Steps 1–5) accessible from the board; the 17-tile ring is for movement and resource earning. **Stops are not tiles on the ring** — they are POIs around the island unlocked by completing prior steps. Boss is always Step 5; Step 1 gates dice. Current implementation uses ring tile indices (0, 4, 8, 12, 16) as stop trigger points — to be refactored to the canonical outer-POI model; see `docs/07_MAIN_GAME_PROGRESS.md`.
-- [x] Token movement: dice roll (1–3 tiles, costs 1 heart) and spin move (1–5 tiles, costs 1 spin token), modulo-17 wraparound
+- [x] Token movement: paired 2-dice roll (each die 1–3, total 2–6 tiles, costs 2 dice from pool) and spin move (1–5 tiles, costs 1 spin token), modulo-17 wraparound
 - [x] Per-island tile-type map (`generateTileMap`) — deterministic seeded assignment of `currency / chest / event / hazard / egg_shard / micro / encounter / stop` to non-stop tiles  
   → [`src/features/gamification/level-worlds/services/islandBoardTileMap.ts`](../src/features/gamification/level-worlds/services/islandBoardTileMap.ts)
 - [x] Island type schedule — `normal` (default) and `special`; the canonical 20 special islands are: **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120** (see `docs/07_MAIN_GAME_PROGRESS.md`). *(The legacy every-5th = seasonal / every-10th = rare heuristic is deprecated and must not be used.)*

@@ -32,7 +32,7 @@
 ### Out of dice AND hearts
 In `IslandRunBoardPrototype.tsx`, `handleRoll()`:
 ```typescript
-if (dicePool < 1) {
+if (dicePool < 2) {
   if (hearts < 1) {
     // ← INSERT: check isOnboardingComplete
     //   if NOT complete → show in-game onboarding pop-up
@@ -86,7 +86,7 @@ interface IslandOnboardingModalProps {
 `IslandImprovementModal` (or similar)
 
 ### When it shows
-- `isOnboardingComplete === true` AND `dicePool < 1` AND `hearts < 1`
+- `isOnboardingComplete === true` AND `dicePool < 2` AND `hearts < 1`
 
 ### Data pipeline
 ```
