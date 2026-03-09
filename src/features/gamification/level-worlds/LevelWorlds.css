@@ -960,6 +960,55 @@
   padding-inline: 0.92rem;
 }
 
+.island-run-prototype__dice-throw {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 36px;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(179, 225, 244, 0.35);
+  background: rgba(11, 27, 39, 0.64);
+  color: #d6f5ff;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.island-run-prototype__dice-throw--active {
+  border-color: rgba(255, 227, 142, 0.8);
+  box-shadow: 0 0 0 1px rgba(255, 232, 165, 0.36) inset, 0 0 20px rgba(255, 207, 102, 0.35);
+}
+
+.island-run-prototype__dice-face {
+  min-width: 2.25rem;
+}
+
+.island-run-prototype__dice-face--rolling {
+  animation: island-run-dice-jitter 240ms ease-in-out infinite;
+}
+
+.island-run-prototype__dice-total {
+  color: #fff0bb;
+}
+
+@keyframes island-run-dice-jitter {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-1px) rotate(-4deg) scale(1.02);
+  }
+  50% {
+    transform: translateY(1px) rotate(5deg) scale(0.99);
+  }
+  75% {
+    transform: translateY(-1px) rotate(-3deg) scale(1.01);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
 .island-run-prototype__qa-controls .island-run-prototype__debug-btn {
   flex: 1 1 172px;
 }
