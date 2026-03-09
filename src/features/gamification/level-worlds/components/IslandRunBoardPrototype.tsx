@@ -925,9 +925,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
 
-  // M11C: restore completedStops from localStorage when island or hydration state changes
+  // M11D: restore completedStops from table-backed runtime state first; fallback to localStorage
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    const persistedStops = runtimeState.completedStopsByIsland?.[String(islandNumber)];
+    if (Array.isArray(persistedStops)) {
+      setCompletedStops(persistedStops.filter((x): x is string => typeof x === 'string'));
+      return;
+    }
+
     const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
     try {
       const raw = window.localStorage.getItem(key);
@@ -942,9 +948,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       // ignore storage errors
     }
     setCompletedStops([]);
-  }, [hasHydratedRuntimeState, islandNumber, session.user.id]);
+  }, [hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session.user.id]);
 
-  // M11C: persist completedStops to localStorage whenever it changes
+  // M11D: persist completedStops to both localStorage and Supabase runtime state
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
@@ -953,8 +959,23 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     } catch {
       // ignore storage errors
     }
-    // TODO M11D: persist completedStops to Supabase island_run_runtime_state
-  }, [completedStops, hasHydratedRuntimeState, islandNumber, session.user.id]);
+    const islandKey = String(islandNumber);
+    const patch = { [islandKey]: completedStops };
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        completedStopsByIsland: patch,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      completedStopsByIsland: {
+        ...current.completedStopsByIsland,
+        ...patch,
+      },
+    }));
+  }, [client, completedStops, hasHydratedRuntimeState, islandNumber, session]);
 
   // M8-COMPLETE: persist diamonds to localStorage (permanent cross-island balance)
   useEffect(() => {
@@ -2104,14 +2125,30 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     const resolvedIsland = wraps ? ((nextIsland - 1) % MAX_ISLAND) + 1 : Math.max(1, nextIsland);
     const nextCycleIndex = wraps ? cycleIndex + 1 : cycleIndex;
 
-    // M11C: clear completed stops for the old island before travelling
+    // M11C/M11D: clear completed stops for the old island before travelling (local + table-backed runtime state)
+    const oldIslandKey = String(islandNumber);
     try {
       window.localStorage.removeItem(`island_run_stops_${session.user.id}_island_${islandNumber}`);
     } catch {
       // ignore storage errors
     }
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        completedStopsByIsland: {
+          [oldIslandKey]: [],
+        },
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      completedStopsByIsland: {
+        ...current.completedStopsByIsland,
+        [oldIslandKey]: [],
+      },
+    }));
     // M5-COMPLETE: Save current island egg to perIslandEggs, clear activeEgg, then restore new island egg
-    const oldIslandKey = String(islandNumber);
     const newIslandKey = String(resolvedIsland);
     // Snapshot perIslandEggs now (before setRuntimeState) to read the new island's entry
     const currentPerIslandEggs = runtimeState.perIslandEggs ?? {};

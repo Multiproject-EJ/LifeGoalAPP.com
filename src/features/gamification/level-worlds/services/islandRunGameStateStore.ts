@@ -40,6 +40,7 @@ export interface IslandRunGameStateRecord {
   shardClaimCount: number;
   shields: number;
   shards: number;
+  completedStopsByIsland: Record<string, string[]>;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -68,6 +69,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     shardClaimCount: 0,
     shields: 0,
     shards: 0,
+    completedStopsByIsland: {},
   };
 }
 
@@ -140,6 +142,15 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.shards === 'number' && Number.isFinite(value.shards)
         ? Math.max(0, Math.floor(value.shards))
         : fallback.shards,
+    completedStopsByIsland:
+      value.completedStopsByIsland !== null && typeof value.completedStopsByIsland === 'object' && !Array.isArray(value.completedStopsByIsland)
+        ? Object.fromEntries(
+            Object.entries(value.completedStopsByIsland).map(([islandKey, stops]) => [
+              islandKey,
+              Array.isArray(stops) ? stops.filter((stop): stop is string => typeof stop === 'string') : [],
+            ]),
+          )
+        : fallback.completedStopsByIsland,
   };
 }
 
@@ -186,7 +197,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,shard_tier_index,shard_claim_count,shields,shards')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,shard_tier_index,shard_claim_count,shields,shards,completed_stops_by_island')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -229,6 +240,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       shardClaimCount: data.shard_claim_count ?? 0,
       shields: data.shields ?? 0,
       shards: data.shards ?? 0,
+      completedStopsByIsland: data.completed_stops_by_island ?? {},
     },
     fallback,
   );
@@ -311,6 +323,7 @@ export async function writeIslandRunGameStateRecord(options: {
       shard_claim_count: record.shardClaimCount,
       shields: record.shields,
       shards: record.shards,
+      completed_stops_by_island: record.completedStopsByIsland,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },
@@ -335,4 +348,3 @@ export async function writeIslandRunGameStateRecord(options: {
 
   return { ok: true };
 }
-
