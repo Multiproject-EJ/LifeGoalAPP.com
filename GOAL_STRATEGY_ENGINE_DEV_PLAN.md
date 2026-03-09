@@ -1,9 +1,9 @@
 # GOAL_STRATEGY_ENGINE_DEV_PLAN.md
 
 > **Purpose**: A living, agent-optimised development plan for the Goal Strategy Engine — a system that lets users choose *how* they pursue a goal, not just *what* the goal is. Any AI agent or human engineer can pick up a single slice, execute it safely, and hand off with full context.
-> **Status**: 🟡 Draft v1 — ready for Phase 1 execution
+> **Status**: 🟡 Phase 1 complete — ready for Phase 2 execution
 > **Owner**: Founder + AI collaborators
-> **Last updated**: 2026-03-08
+> **Last updated**: 2026-03-09
 > **Linked from**: [`DEV_PLAN.md`](./DEV_PLAN.md) → Linked Feature Plans
 
 ---
@@ -46,12 +46,12 @@ Transform LifeGoalApp from a goal *tracker* into a **Goal Strategy Engine** — 
 
 | Phase | Slice | Description | Status |
 |---|---|---|---|
-| Phase 1 | 1.1 | `goalStrategy.ts` — type definitions + meta | 🔲 Not started |
-| Phase 1 | 1.2 | Supabase migration — add `goal_strategy_type` column | 🔲 Not started |
-| Phase 1 | 1.3 | Wire `goal_strategy_type` into services + types | 🔲 Not started |
-| Phase 1 | 1.4 | Strategy Picker UI component | 🔲 Not started |
-| Phase 1 | 1.5 | Add strategy picker as optional step in `LifeGoalInputDialog` | 🔲 Not started |
-| Phase 1 | 1.6 | Display strategy badge on goal card | 🔲 Not started |
+| Phase 1 | 1.1 | `goalStrategy.ts` — type definitions + meta | ✅ Complete |
+| Phase 1 | 1.2 | Supabase migration — add `goal_strategy_type` column | ✅ Complete |
+| Phase 1 | 1.3 | Wire `goal_strategy_type` into services + types | ✅ Complete |
+| Phase 1 | 1.4 | Strategy Picker UI component | ✅ Complete |
+| Phase 1 | 1.5 | Add strategy picker as optional step in `LifeGoalInputDialog` | ✅ Complete |
+| Phase 1 | 1.6 | Display strategy badge on goal card | ✅ Complete |
 | Phase 2 | 2.1 | `goalDoctor.ts` — diagnosis + prescription engine | 🔲 Not started |
 | Phase 2 | 2.2 | Goal Doctor card UI on `GoalWorkspace` | 🔲 Not started |
 | Phase 2 | 2.3 | "Switch Strategy" action on goal card | 🔲 Not started |
@@ -760,6 +760,19 @@ Track unresolved design/technical decisions here. Resolve before the relevant sl
 > - **What changed**:
 > - **What's next**:
 > - **Blockers / deviations** (if any):
+
+### 2026-03-09
+- **Slice**: Phase 1 complete (slices 1.1–1.6)
+- **PR**: #1165
+- **What shipped**:
+  - `src/features/goals/goalStrategy.ts` — 12 strategy types with full metadata (label, icon, tagline, description, bestFor, xpMultiplier), `normalizeGoalStrategy()`, `getStrategyXpMultiplier()`
+  - `src/components/StrategyPicker.tsx` — Full card grid (role="radiogroup") + compact single-line mode; ✨ Suggested chip support
+  - `supabase/migrations/0178_goal_strategy_type.sql` — Additive migration, `goal_strategy_type TEXT NOT NULL DEFAULT 'standard'` with check constraint
+  - `src/data/localDb.ts` + `src/data/goalsRepo.ts` — `goal_strategy_type` threaded through offline-first CRUD and Supabase sync
+  - `src/components/LifeGoalInputDialog.tsx` (or equivalent) — Collapsible optional strategy picker section; zero disruption to existing flow
+  - `src/features/goals/GoalWorkspace.tsx` — Strategy badge (non-standard goals only) + compact picker in edit form
+  - `src/features/goals/index.ts` — Re-exports `goalStrategy`
+- **What's next**: Phase 2 — Goal Doctor diagnosis engine (slices 2.1–2.4)
 
 - **2026-03-08**
   - **Slice**: Document created (v1)

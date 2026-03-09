@@ -28,6 +28,7 @@
 | M10. Analytics & telemetry | ✅ Complete | All items (M10-A through M10-D) |
 | M11. QA + a11y + responsive polish | ✅ Complete | All items (M11-A through M11-C) |
 | M12. Documentation refresh + release checklist | ✅ Complete | All items (M12-A through M12-C) |
+| Goal Strategy Engine | 🟡 In Progress | Phase 1 complete. Phases 2–5 remaining (Goal Doctor, strategy mode card views, archetype auto-suggestion, XP multipliers, telemetry). |
 
 ---
 
@@ -126,6 +127,19 @@
 - Docs accurately describe shipped features with no references to unimplemented behavior.
 - Release checklist covers every Supabase migration needed and notes which are safe to run idempotently.
 - Demo mode setup guide explains what is mocked, what is real, and any known limitations.
+
+---
+
+### Phase 6 — Goal Strategy Engine (Phase 2: Goal Doctor)
+
+**Goal**: Build the Goal Doctor diagnosis + prescription engine and surface it on the goal card so stalled goals get actionable strategy-switch suggestions.
+
+| ID | Task | Files to Modify | Complexity | Depends On |
+|---|---|---|---|---|
+| GSE-2.1 | `goalDoctor.ts` — diagnosis engine (stall detection + prescription logic) | `src/features/goals/goalDoctor.ts` (new) | M | Phase 1 complete |
+| GSE-2.2 | Goal Doctor card UI on `GoalWorkspace` | `src/features/goals/GoalWorkspace.tsx` | M | GSE-2.1 |
+| GSE-2.3 | "Switch Strategy" action on goal card | `src/features/goals/GoalWorkspace.tsx`, `src/components/StrategyPicker.tsx` | S | GSE-2.2 |
+| GSE-2.4 | Goal Doctor → AI Coach bridge | `src/services/aiCoachInstructions.ts`, `src/features/ai-coach/AiCoach.tsx` | M | GSE-2.3 |
 
 ---
 
