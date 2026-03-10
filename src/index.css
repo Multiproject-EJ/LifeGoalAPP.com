@@ -2760,12 +2760,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .workspace-shell {
-    width: 100%;
+    width: min(100%, calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
     max-width: 100%;
     box-sizing: border-box;
     padding-bottom: clamp(1rem, 5vw, 1.5rem);
-    padding-left: clamp(0.25rem, 2vw, 0.75rem);
-    padding-right: clamp(0.25rem, 2vw, 0.75rem);
+    padding-left: max(env(safe-area-inset-left, 0px), clamp(0.25rem, 2vw, 0.75rem));
+    padding-right: max(env(safe-area-inset-right, 0px), clamp(0.25rem, 2vw, 0.75rem));
   }
 
   .workspace-stage {
@@ -14642,11 +14642,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   right: 0;
   bottom: 0;
   z-index: 30;
-  padding: clamp(0.4rem, 1.5vw, 0.65rem) clamp(0.9rem, 5vw, 1.5rem)
-    calc(clamp(0.35rem, 1.5vw, 0.65rem) + env(safe-area-inset-bottom, 0));
+  padding: clamp(0.4rem, 1.5vw, 0.65rem)
+    max(env(safe-area-inset-right, 0px), clamp(0.9rem, 5vw, 1.5rem))
+    calc(clamp(0.35rem, 1.5vw, 0.65rem) + env(safe-area-inset-bottom, 0))
+    max(env(safe-area-inset-left, 0px), clamp(0.9rem, 5vw, 1.5rem));
   display: flex;
   justify-content: center;
   pointer-events: none;
+  overflow-x: clip;
   transform: translateY(0);
   transition: transform 0.38s ease;
   will-change: transform;
