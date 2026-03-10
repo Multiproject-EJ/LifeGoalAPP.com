@@ -172,6 +172,13 @@
   position: relative;
 }
 
+.actions-tab__quick-add-task-image-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.35rem;
+  pointer-events: none;
+}
+
 .actions-tab__launcher-card {
   border-radius: 20px;
   padding: 1.25rem;
@@ -318,19 +325,13 @@
   min-width: 0;
   position: relative;
   border-radius: 10px;
-  padding-top: 1.75rem;
 }
 
 .actions-tab__quick-add-task-image {
-  position: absolute;
-  top: -0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
   width: clamp(4.25rem, 22vw, 6.5rem);
   height: auto;
   object-fit: contain;
-  pointer-events: none;
-  z-index: 1;
 }
 
 .actions-tab__quick-add-input-shell::before,
