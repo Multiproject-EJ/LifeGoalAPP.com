@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import { PointsBadge } from './PointsBadge';
 import { splitGoldBalance } from '../constants/economy';
 import mindIcon from '../assets/mind-icon.webp';
@@ -41,6 +49,7 @@ type MobileFooterNavProps = {
   onStatusHoldToggle?: () => void;
   onExpand?: () => void;
   onSnapExpand?: () => void;
+  onCollapse?: () => void;
   pointsBalance?: number;
 };
 
@@ -71,6 +80,7 @@ export function MobileFooterNav({
   onStatusHoldToggle,
   onExpand,
   onSnapExpand,
+  onCollapse,
   pointsBalance,
 }: MobileFooterNavProps) {
   const [statusHoldProgress, setStatusHoldProgress] = useState(0);
@@ -92,6 +102,9 @@ export function MobileFooterNav({
   const pointsTimerRef = useRef<number | null>(null);
   const controlFadeTimeoutRef = useRef<number | null>(null);
   const diamondFadeTimeoutRef = useRef<number | null>(null);
+  const swipeStartYRef = useRef<number | null>(null);
+  const swipeStartXRef = useRef<number | null>(null);
+  const isSwipeCollapseTriggeredRef = useRef(false);
   const isDiodeOff = !isDiodeActive;
   const listItems: FooterListItem[] = status && items.length
     ? items.length > 1
@@ -119,6 +132,52 @@ export function MobileFooterNav({
       return;
     }
     onExpand?.();
+  };
+
+  const isButtonTarget = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) {
+      return false;
+    }
+    return Boolean(target.closest('button'));
+  };
+
+  const handleSurfacePointerDownCapture = (event: PointerEvent<HTMLDivElement>) => {
+    swipeStartYRef.current = event.clientY;
+    swipeStartXRef.current = event.clientX;
+    isSwipeCollapseTriggeredRef.current = false;
+  };
+
+  const handleSurfacePointerMoveCapture = (event: PointerEvent<HTMLDivElement>) => {
+    if (!onCollapse || isSwipeCollapseTriggeredRef.current) {
+      return;
+    }
+    if (swipeStartYRef.current === null || swipeStartXRef.current === null) {
+      return;
+    }
+    const deltaY = event.clientY - swipeStartYRef.current;
+    const deltaX = Math.abs(event.clientX - swipeStartXRef.current);
+    const SWIPE_DOWN_THRESHOLD = 28;
+
+    if (deltaY > SWIPE_DOWN_THRESHOLD && deltaY > deltaX) {
+      isSwipeCollapseTriggeredRef.current = true;
+      onCollapse();
+    }
+  };
+
+  const resetSurfaceSwipe = () => {
+    swipeStartYRef.current = null;
+    swipeStartXRef.current = null;
+    isSwipeCollapseTriggeredRef.current = false;
+  };
+
+  const handleSurfaceClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (!onCollapse || isSwipeCollapseTriggeredRef.current) {
+      return;
+    }
+    if (isButtonTarget(event.target)) {
+      return;
+    }
+    onCollapse();
   };
   const holdAccentColor = isDiodeActive ? '248, 113, 113' : '34, 197, 94';
 
@@ -362,6 +421,11 @@ export function MobileFooterNav({
         data-diode-active={isDiodeActive}
         onMouseEnter={onExpand}
         onFocusCapture={onExpand}
+        onClickCapture={handleSurfaceClickCapture}
+        onPointerDownCapture={handleSurfacePointerDownCapture}
+        onPointerMoveCapture={handleSurfacePointerMoveCapture}
+        onPointerUpCapture={resetSurfaceSwipe}
+        onPointerCancelCapture={resetSurfaceSwipe}
         onPointerDown={handlePointerDown}
       >
         {onOpenMenu ? (
