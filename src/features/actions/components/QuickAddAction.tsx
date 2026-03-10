@@ -7,9 +7,10 @@ export interface QuickAddActionProps {
   onAdd: (input: CreateActionInput) => Promise<void>;
   projects?: Project[];
   disabled?: boolean;
+  showTaskImage?: boolean;
 }
 
-export function QuickAddAction({ onAdd, projects = [], disabled = false }: QuickAddActionProps) {
+export function QuickAddAction({ onAdd, projects = [], disabled = false, showTaskImage = true }: QuickAddActionProps) {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [category, setCategory] = useState<ActionCategory>('nice_to_do');
@@ -57,14 +58,17 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false }: Quick
 
   return (
     <section className="actions-tab__quick-add" aria-label="Add new action">
-      <div className="actions-tab__quick-add-input-row">
-        <div className="actions-tab__quick-add-input-shell">
+      {showTaskImage && (
+        <div className="actions-tab__quick-add-task-image-wrap" aria-hidden="true">
           <img
             src={taskIcon}
             alt=""
             className="actions-tab__quick-add-task-image"
-            aria-hidden="true"
           />
+        </div>
+      )}
+      <div className="actions-tab__quick-add-input-row">
+        <div className="actions-tab__quick-add-input-shell">
           <input
             type="text"
             className={`actions-tab__quick-add-input ${hasTitle ? '' : 'actions-tab__quick-add-input--pulse'}`}

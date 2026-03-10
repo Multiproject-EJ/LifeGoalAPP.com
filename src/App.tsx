@@ -393,6 +393,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isDesktopUiResearchPreviewEnabled, setIsDesktopUiResearchPreviewEnabled] = useState(false);
   const isMobileExperience = isMobileViewport || !isDesktopUiResearchPreviewEnabled;
   const [showMobileHome, setShowMobileHome] = useState(false);
+  const [actionsLauncherResetSignal, setActionsLauncherResetSignal] = useState(0);
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
   const [workspaceStats, setWorkspaceStats] = useState<WorkspaceStats | null>(null);
   const [workspaceProfileLoading, setWorkspaceProfileLoading] = useState(false);
@@ -1717,6 +1718,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
+    if (navId === 'actions') {
+      setActionsLauncherResetSignal((prev) => prev + 1);
+    }
+
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
   };
@@ -2604,6 +2609,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setActiveWorkspaceNav('timer');
               }}
               isMobileView={isMobileExperience}
+              resetToLauncherSignal={actionsLauncherResetSignal}
             />
           </div>
         );

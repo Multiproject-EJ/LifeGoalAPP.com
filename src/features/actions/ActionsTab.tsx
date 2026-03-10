@@ -38,6 +38,7 @@ type ActionsTabProps = {
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
   showPointsBadges?: boolean;
   isMobileView?: boolean;
+  resetToLauncherSignal?: number;
 };
 
 type StatusMessage = {
@@ -51,6 +52,7 @@ export function ActionsTab({
   onNavigateToTimer,
   showPointsBadges = false,
   isMobileView = false,
+  resetToLauncherSignal = 0,
 }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
   const {
@@ -399,6 +401,11 @@ export function ActionsTab({
     setActiveView('tasks');
   }, [isMobileView]);
 
+  useEffect(() => {
+    if (!isMobileView) return;
+    setActiveView('launcher');
+  }, [isMobileView, resetToLauncherSignal]);
+
   if (loading) {
     return (
       <div className="actions-tab actions-tab--loading">
@@ -441,7 +448,7 @@ export function ActionsTab({
         )}
 
         <div className="actions-tab__launcher-card">
-          <QuickAddAction onAdd={handleAddAction} projects={projects} />
+          <QuickAddAction onAdd={handleAddAction} projects={projects} showTaskImage={false} />
           <div className="actions-tab__launcher-actions">
             {onNavigateToProjects && (
               <button
