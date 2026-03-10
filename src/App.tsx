@@ -912,6 +912,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle],
   );
 
+  const handleMobileFooterCollapse = useCallback(() => {
+    if (!shouldAllowFooterCollapse) {
+      return;
+    }
+    setIsMobileFooterCollapsed(true);
+    if (mobileFooterCollapseTimeoutRef.current !== null) {
+      window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
+      mobileFooterCollapseTimeoutRef.current = null;
+    }
+  }, [shouldAllowFooterCollapse]);
+
   useEffect(() => {
     if (!shouldAllowFooterCollapse) {
       setIsMobileFooterCollapsed(false);
@@ -3862,6 +3873,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
+          onCollapse={handleMobileFooterCollapse}
           pointsBalance={goldBalance}
         />
         )}
@@ -4146,6 +4158,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           isSnapActive={isMobileFooterSnapActive}
           onExpand={() => handleMobileFooterExpand(false)}
           onSnapExpand={() => handleMobileFooterExpand(true)}
+          onCollapse={handleMobileFooterCollapse}
           pointsBalance={goldBalance}
         />
       ) : null}
