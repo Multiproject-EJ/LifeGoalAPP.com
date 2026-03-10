@@ -19,6 +19,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace, LifeGoalsSection } from './features/goals';
 import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome } from './features/habits';
+import type { TimeBoundOfferId } from './features/habits/TimeBoundOfferRow';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import { LifeWheelCheckins } from './features/checkins';
@@ -185,6 +186,18 @@ function formatCompactDuration(totalSec: number): string {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m`;
   return `${s}s`;
+}
+
+function setIslandRunOpenStopParam(stopId: 'boss' | 'hatchery' | 'dynamic') {
+  const url = new URL(window.location.href);
+  if (stopId === 'hatchery') {
+    url.searchParams.set('openHatchery', '1');
+    url.searchParams.delete('openIslandStop');
+  } else {
+    url.searchParams.delete('openHatchery');
+    url.searchParams.set('openIslandStop', stopId);
+  }
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
 
@@ -472,6 +485,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     );
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
+  const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
@@ -2554,6 +2568,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
               profileStrengthSnapshot={profileStrengthSnapshot}
               profileStrengthSignals={profileStrengthSignals}
               personalitySummary={personalitySummary}
+              onOpenSpinWheel={() => setShowDailySpinWheel(true)}
+              onOpenLuckyRoll={() => setShowLuckyRoll(true)}
+              onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
+              onOpenIslandRunStop={(stopId) => {
+                setIslandRunOpenStopParam(stopId);
+                setShowMobileHome(false);
+                setShowLevelWorldsFromEntry(true);
+              }}
+              pendingOfferToOpen={pendingTodayOfferOpen}
+              onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
             />
             <HabitsModule
               session={activeSession}
@@ -3861,8 +3885,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
           }}
           onDailyHatchClick={() => {
             setShowGameBoardOverlay(false);
-            setReopenGameOverlayOnRewardClose(true);
-            setShowCalendarPlaceholder(true);
+            setReopenGameOverlayOnRewardClose(false);
+            setShowMobileHome(false);
+            setActiveWorkspaceNav('planning');
+            setPendingTodayOfferOpen('daily_treat');
           }}
           onBankClick={() => {
             setShowGameBoardOverlay(false);
@@ -4146,7 +4172,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
         }}
         onDailyHatchClick={() => {
           setShowGameBoardOverlay(false);
-          window.location.href = '/level-worlds.html?level=1&openHatchery=1';
+          setReopenGameOverlayOnRewardClose(false);
+          setShowMobileHome(false);
+          setActiveWorkspaceNav('planning');
+          setPendingTodayOfferOpen('daily_treat');
         }}
         onBankClick={() => {
           setShowGameBoardOverlay(false);

@@ -197,3 +197,112 @@
   color: #6b7280;
   opacity: 0.7;
 }
+
+/* T1A: Time-bound offers row */
+.time-bound-offers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.time-bound-offers__item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+.time-bound-offers__circle {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.38), rgba(91,61,184,0.88));
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 8px 18px rgba(22, 9, 63, 0.25);
+}
+
+.time-bound-offers__icon {
+  font-size: 1.35rem;
+}
+
+.time-bound-offers__badge {
+  position: absolute;
+  left: 50%;
+  bottom: 0.28rem;
+  transform: translateX(-50%);
+  font-size: 0.62rem;
+  line-height: 1;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2rem 0.42rem;
+}
+
+.time-bound-offers__label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #e8dbff;
+  text-align: center;
+}
+
+.time-bound-offers__item--done .time-bound-offers__circle {
+  filter: grayscale(0.2);
+}
+
+.time-bound-offers__item--done .time-bound-offers__circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.time-bound-offers__item:disabled {
+  cursor: not-allowed;
+  opacity: 0.92;
+}
+
+.habit-day-nav__offer-teaser {
+  max-width: 22rem;
+  text-align: center;
+}
+
+.habit-day-nav__offer-teaser-icon {
+  font-size: 2rem;
+  margin: 0.5rem 0 0.35rem;
+}
+
+.habit-day-nav__offer-teaser-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8f5ff;
+}
+
+.habit-day-nav__offer-teaser-copy {
+  margin: 0.5rem 0 0;
+  font-size: 0.92rem;
+  color: #d8cfff;
+}
+
+.habit-day-nav__offer-teaser-cta {
+  margin-top: 0.9rem;
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, rgba(127,90,240,0.95), rgba(66,33,153,0.95));
+  color: #fff;
+  font-weight: 700;
+  padding: 0.72rem 0.9rem;
+}
