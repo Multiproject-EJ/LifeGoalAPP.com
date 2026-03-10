@@ -73,6 +73,9 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
 const OPEN_HATCHERY_ON_LOAD = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('openHatchery') === '1';
+const OPEN_ISLAND_STOP_ON_LOAD = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search).get('openIslandStop')
+  : null;
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 
 // M15C: Special islands get 72h timer; normal islands get 48h timer
@@ -472,6 +475,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       // Clean the URL param without a reload
       const url = new URL(window.location.href);
       url.searchParams.delete('openHatchery');
+      window.history.replaceState({}, '', url.toString());
+      return;
+    }
+
+    if (OPEN_ISLAND_STOP_ON_LOAD === 'boss' || OPEN_ISLAND_STOP_ON_LOAD === 'dynamic') {
+      setActiveStopId(OPEN_ISLAND_STOP_ON_LOAD);
+      // Clean the URL param without a reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete('openIslandStop');
       window.history.replaceState({}, '', url.toString());
     }
   }, [hasHydratedRuntimeState]);
