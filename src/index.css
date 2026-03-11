@@ -15832,11 +15832,9 @@ html.platform-ipad .workspace-shell__menu-edge {
   text-align: left;
 }
 
-.mobile-menu-overlay__profile-launch-texts {
+.mobile-menu-overlay__profile-launch-spacer {
   flex: 1;
   min-width: 0;
-  display: grid;
-  gap: 0.35rem;
 }
 
 .mobile-menu-overlay__profile-hand {
@@ -15932,6 +15930,36 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: rgba(30, 41, 59, 0.78);
 }
 
+.mobile-menu-overlay__profile-dialog-meta {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  background: rgba(226, 232, 240, 0.45);
+  border-radius: 12px;
+}
+
+.mobile-menu-overlay__profile-dialog-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mobile-menu-overlay__profile-dialog-meta-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.mobile-menu-overlay__profile-dialog-meta-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: right;
+}
+
 .mobile-menu-overlay__profile-dialog-details {
   margin: 0;
   display: grid;
@@ -16009,6 +16037,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-meta {
+  background: rgba(30, 41, 59, 0.75);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
 ) .mobile-menu-overlay__profile-dialog-eyebrow,
 :is(
   [data-theme='dark-glass'],
@@ -16021,7 +16058,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
-) .mobile-menu-overlay__profile-dialog-details dt {
+) .mobile-menu-overlay__profile-dialog-details dt,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-meta-label {
   color: rgba(226, 232, 240, 0.8);
 }
 
@@ -16037,6 +16080,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .mobile-menu-overlay__profile-dialog-details dd,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-meta-value,
 :is(
   [data-theme='dark-glass'],
   [data-theme='midnight-purple'],

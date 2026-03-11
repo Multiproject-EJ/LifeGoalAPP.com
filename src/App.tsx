@@ -2245,6 +2245,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const accountEmail = activeSession.user.email || 'No email on file';
   const accountWorkspaceName = workspaceProfile?.workspace_name || 'Personal rituals workspace';
   const accountWorkspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
+  const accountBirthday = workspaceProfile?.birthday || 'Not set';
   const accountOnboardingStatus = activeSession.user.user_metadata?.onboarding_complete ? 'Complete' : 'In progress';
 
   const profileAutoSaveResetKey = supabaseSession
@@ -2879,21 +2880,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       </span>
                     )}
                   </div>
-                  <div className="mobile-menu-overlay__profile-launch-texts">
-                    <h2 className="mobile-menu-overlay__title">Player Profile</h2>
-                    <div className="mobile-menu-overlay__meta" aria-label="Profile summary">
-                      <div className="mobile-menu-overlay__meta-row">
-                        <span className="mobile-menu-overlay__meta-label">Name</span>
-                        <span className="mobile-menu-overlay__meta-value">{accountDisplayName}</span>
-                      </div>
-                      <div className="mobile-menu-overlay__meta-row">
-                        <span className="mobile-menu-overlay__meta-label">Type</span>
-                        <span className="mobile-menu-overlay__meta-value">
-                          {playstyleLabel ?? personalitySummary ?? 'Personality test'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <div className="mobile-menu-overlay__profile-launch-spacer" aria-hidden="true" />
                   <div className="mobile-menu-overlay__profile-hand" aria-hidden="true">
                     <span className="mobile-menu-overlay__profile-hand-icon">🪪</span>
                     <span className="mobile-menu-overlay__profile-hand-label">Player's Hand</span>
@@ -2971,12 +2958,24 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       ×
                     </button>
                   </div>
+                  <div className="mobile-menu-overlay__profile-dialog-meta" aria-label="Profile summary">
+                    <div className="mobile-menu-overlay__profile-dialog-meta-row">
+                      <span className="mobile-menu-overlay__profile-dialog-meta-label">Name</span>
+                      <span className="mobile-menu-overlay__profile-dialog-meta-value">{accountDisplayName}</span>
+                    </div>
+                    <div className="mobile-menu-overlay__profile-dialog-meta-row">
+                      <span className="mobile-menu-overlay__profile-dialog-meta-label">Type</span>
+                      <span className="mobile-menu-overlay__profile-dialog-meta-value">
+                        {playstyleLabel ?? personalitySummary ?? 'Personality test'}
+                      </span>
+                    </div>
+                  </div>
                   <dl className="mobile-menu-overlay__profile-dialog-details">
-                    <div><dt>Name</dt><dd>{accountDisplayName}</dd></div>
                     <div><dt>Initials</dt><dd>{accountInitials || 'Not set'}</dd></div>
                     <div><dt>Email</dt><dd>{accountEmail}</dd></div>
                     <div><dt>Workspace Name</dt><dd>{accountWorkspaceName}</dd></div>
                     <div><dt>Workspace Mode</dt><dd>{accountWorkspaceMode}</dd></div>
+                    <div><dt>Birthday</dt><dd>{accountBirthday}</dd></div>
                     <div><dt>Onboarding</dt><dd>{accountOnboardingStatus}</dd></div>
                   </dl>
                   <div className="mobile-menu-overlay__profile-dialog-actions">
