@@ -30,6 +30,7 @@ type MyAccountPanelProps = {
   stats: WorkspaceStats | null;
   profileLoading: boolean;
   onProfileUpdate?: (profile: WorkspaceProfileRow) => void;
+  onLaunchWeeklyHabitReview?: () => void;
 };
 
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
@@ -53,6 +54,7 @@ export function MyAccountPanel({
   stats,
   profileLoading,
   onProfileUpdate,
+  onLaunchWeeklyHabitReview,
 }: MyAccountPanelProps) {
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [folder1Open, setFolder1Open] = useState(false);
@@ -202,6 +204,13 @@ export function MyAccountPanel({
     } finally {
       setCacheClearing(false);
     }
+  };
+
+  const handleLaunchWeeklyHabitReview = () => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(`lifegoal.weekly-habit-review-launch:${session.user.id}`, 'true');
+    window.dispatchEvent(new CustomEvent('lifegoal:launch-weekly-habit-review'));
+    onLaunchWeeklyHabitReview?.();
   };
 
   return (
@@ -461,6 +470,23 @@ export function MyAccountPanel({
       <TelemetrySettingsSection session={session} isDemoExperience={isDemoExperience} />
 
       <YesterdayRecapSettings session={session} />
+
+      <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
+        <p className="account-panel__eyebrow">Habits</p>
+        <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
+        <p className="account-panel__hint">
+          Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
+        </p>
+        <div className="account-panel__actions-row">
+          <button
+            type="button"
+            className="btn"
+            onClick={handleLaunchWeeklyHabitReview}
+          >
+            Launch weekly habit review
+          </button>
+        </div>
+      </section>
 
       {/* Collapsible Folder: Holiday Themes */}
       <section className="account-panel__card">
