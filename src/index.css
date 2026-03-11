@@ -14898,9 +14898,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__menu-row {
-  margin-bottom: -1.6rem;
+  margin-bottom: -0.35rem;
   position: relative;
-  top: -1cm;
+  top: -0.2rem;
 }
 
 .mobile-footer-nav__list {
