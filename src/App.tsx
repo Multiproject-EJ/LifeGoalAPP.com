@@ -2535,6 +2535,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
             stats={workspaceStats}
             profileLoading={workspaceProfileLoading}
             onProfileUpdate={setWorkspaceProfile}
+            onLaunchWeeklyHabitReview={() => setActiveWorkspaceNav('planning')}
+            onLaunchDailyCatchUpPrompt={() => setActiveWorkspaceNav('planning')}
           />
         </div>
       );

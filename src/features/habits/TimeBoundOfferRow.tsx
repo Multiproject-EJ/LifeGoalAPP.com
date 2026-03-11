@@ -14,6 +14,7 @@ export type TimeBoundOfferItem = {
   label: string;
   icon: string;
   expiresAtMs: number | null;
+  badgeLabelOverride?: string;
   isCollected: boolean;
   isVisible: boolean;
   sortPriority?: number;
@@ -64,11 +65,12 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
 
   const padded = useMemo(() => {
     if (sorted.length >= 4) return sorted;
-    const placeholders = Array.from({ length: 4 - sorted.length }, (_, idx) => ({
+    const placeholders: TimeBoundOfferItem[] = Array.from({ length: 4 - sorted.length }, (_, idx) => ({
       id: `placeholder_${idx}` as TimeBoundOfferId,
       label: 'Waiting',
       icon: '⏳',
       expiresAtMs: null,
+      badgeLabelOverride: '✓ Done',
       isCollected: true,
       isVisible: true,
     }));
@@ -80,7 +82,7 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
       {padded.map((offer) => {
         const isPlaceholder = offer.id.startsWith('placeholder_');
         const isDone = offer.isCollected || isPlaceholder;
-        const badgeLabel = isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs);
+        const badgeLabel = offer.badgeLabelOverride ?? (isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs));
 
         return (
           <button
