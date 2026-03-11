@@ -44,6 +44,11 @@ LifeGoalApp will be delivered as a progressive web application (PWA) powered by 
 The AI plan is now tracked in a dedicated document so it can evolve without bloating the main README. See
 [AI_ENABLEMENT_ROADMAP.md](./docs/AI_ENABLEMENT_ROADMAP.md) for live production status, setup instructions, and the delivery checklist.
 
+## Wisdom Engine Principles
+
+LifeGoalApp's app-level philosophy for compounding micro-insights, reflective growth, and Socratic coaching is documented in
+[WISDOM_ENGINE_PRINCIPLES.md](./docs/WISDOM_ENGINE_PRINCIPLES.md).
+
 ## Design System
 
 LifeGoalApp features a modern glassmorphic design system with light/dark themes and reusable components.
