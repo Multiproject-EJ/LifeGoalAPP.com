@@ -3,6 +3,8 @@
 This document describes all shipped features of the Game of Life 2.0 layer. It is updated as of M12 (2026-03-08) and covers milestones M1–M11.
 
 > **Architecture note**: Every feature has a demo-mode path. See [`DEMO_MODE_SETUP.md`](./DEMO_MODE_SETUP.md) for how demo and live modes differ.
+>
+> **Product philosophy note**: For app-level wisdom design principles (micro-insights, discovery over instruction, Socratic guidance), see [`../WISDOM_ENGINE_PRINCIPLES.md`](../WISDOM_ENGINE_PRINCIPLES.md).
 
 ---
 
