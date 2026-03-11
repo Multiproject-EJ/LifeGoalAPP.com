@@ -58,7 +58,6 @@ export function MyAccountPanel({
   onLaunchWeeklyHabitReview,
   onLaunchDailyCatchUpPrompt,
 }: MyAccountPanelProps) {
-  const [profileExpanded, setProfileExpanded] = useState(false);
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
@@ -71,11 +70,6 @@ export function MyAccountPanel({
   const [legacyAliasReadiness, setLegacyAliasReadiness] = useState<LegacyAliasSunsetReadiness | null>(null);
   
   const user = session.user;
-  const displayName =
-    profile?.full_name || (user.user_metadata?.full_name as string | undefined) || user.email || 'Workspace member';
-  const email = user.email || 'No email on file';
-  const avatarInitial = displayName.trim().charAt(0).toUpperCase() || 'U';
-  const workspaceName = profile?.workspace_name || 'Personal rituals workspace';
   const userInitials = profile?.initials || generateInitials(profile?.full_name || '');
 
   const planName =
@@ -91,23 +85,17 @@ export function MyAccountPanel({
     },
   );
 
-  const onboardingComplete = Boolean(user.user_metadata?.onboarding_complete);
   const memberSince = formatDate(user.created_at, { dateStyle: 'medium' });
   const lastSignIn = formatDate(user.last_sign_in_at, {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
-  const workspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
-  const birthday = profile?.birthday || 'Not set';
   const isBirthdayGiftEnabled = profile?.birthday_gift_enabled ?? false;
   const lastBirthdayGiftClaimedLabel = formatDate(profile?.birthday_gift_last_claimed_at, { dateStyle: 'medium' });
   const nextBirthdayGiftEligibleLabel = profile?.birthday_gift_last_claimed_at
     ? formatDate(new Date(new Date(profile.birthday_gift_last_claimed_at).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(), { dateStyle: 'medium' })
     : 'Now (if birthday matches today)';
   const showDemoNotice = isDemoExperience;
-  const profileCardClassName = `account-panel__card account-panel__profile ${
-    profileExpanded ? 'account-panel__profile--expanded' : ''
-  }`;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -142,7 +130,6 @@ export function MyAccountPanel({
       setOnboardingSnapshot('Stored onboarding progress is unreadable.');
     }
   }, [onLaunchOnboarding, onLaunchDayZeroOnboarding, session.user.id]);
-
 
   useEffect(() => {
     setHapticModeState(getHapticMode());
@@ -197,7 +184,6 @@ export function MyAccountPanel({
       setSavingPreference(false);
     }
   };
-
 
   const handleRunLegacyAliasScan = () => {
     setLegacyAliasReadiness(getLegacyAliasSunsetReadiness(session.user.id));
@@ -258,70 +244,6 @@ export function MyAccountPanel({
         <ThemeSelector />
       </section>
       <div className="account-panel__summary-grid">
-        <section
-          className={profileCardClassName}
-          aria-labelledby="account-profile"
-        >
-          <button
-            type="button"
-            className="account-panel__profile-summary"
-            onClick={() => setProfileExpanded((prev) => !prev)}
-            aria-expanded={profileExpanded}
-            aria-controls="account-profile-details"
-          >
-            <div className="account-panel__avatar" aria-hidden="true">
-              {avatarInitial}
-            </div>
-            <div className="account-panel__profile-text">
-              <p className="account-panel__eyebrow">Player Profile</p>
-              <h2 id="account-profile">My account</h2>
-              <p className="account-panel__lead">Review your identity details and workspace access.</p>
-            </div>
-            <span className="account-panel__chevron" aria-hidden="true" />
-          </button>
-          <div
-            id="account-profile-details"
-            className="account-panel__profile-body"
-            hidden={!profileExpanded}
-          >
-            <dl className="account-panel__details">
-              <div>
-                <dt>Name</dt>
-                <dd>{displayName}</dd>
-              </div>
-              <div>
-                <dt>Initials</dt>
-                <dd>{userInitials || 'Not set'}</dd>
-              </div>
-              <div>
-                <dt>Email</dt>
-                <dd>{email}</dd>
-              </div>
-              <div>
-                <dt>Workspace name</dt>
-                <dd>{workspaceName}</dd>
-              </div>
-              <div>
-                <dt>Workspace mode</dt>
-                <dd>{workspaceMode}</dd>
-              </div>
-              <div>
-                <dt>Birthday</dt>
-                <dd>{birthday}</dd>
-              </div>
-              <div>
-                <dt>Onboarding</dt>
-                <dd>{onboardingComplete ? 'Complete' : 'In progress'}</dd>
-              </div>
-            </dl>
-            <div className="account-panel__actions-row">
-              <button type="button" className="btn" onClick={onEditProfile} disabled={profileLoading}>
-                {profileLoading ? 'Loading…' : 'Edit account details'}
-              </button>
-            </div>
-          </div>
-        </section>
-
         {onLaunchOnboarding ? (
           <section className="account-panel__card" aria-labelledby="account-onboarding">
             <p className="account-panel__eyebrow">Onboarding</p>
@@ -409,7 +331,6 @@ export function MyAccountPanel({
             </div>
           </dl>
         </section>
-
 
         <section className="account-panel__card" aria-labelledby="account-haptics">
           <p className="account-panel__eyebrow">Haptic feedback</p>
@@ -663,7 +584,6 @@ export function MyAccountPanel({
             </button>
           </div>
         </section>
-
 
         <section className="account-panel__card" aria-labelledby="account-legacy-alias-readiness">
           <p className="account-panel__eyebrow">Migration diagnostics</p>
