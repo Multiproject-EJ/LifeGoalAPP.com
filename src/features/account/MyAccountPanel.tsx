@@ -493,6 +493,23 @@ export function MyAccountPanel({
         </div>
       </section>
 
+      <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
+        <p className="account-panel__eyebrow">Habits</p>
+        <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
+        <p className="account-panel__hint">
+          Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
+        </p>
+        <div className="account-panel__actions-row">
+          <button
+            type="button"
+            className="btn"
+            onClick={handleLaunchWeeklyHabitReview}
+          >
+            Launch weekly habit review
+          </button>
+        </div>
+      </section>
+
       {/* Collapsible Folder: Holiday Themes */}
       <section className="account-panel__card">
         <SettingsFolderButton
