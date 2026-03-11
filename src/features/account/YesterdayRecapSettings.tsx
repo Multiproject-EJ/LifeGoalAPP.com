@@ -8,9 +8,10 @@ import {
 
 interface YesterdayRecapSettingsProps {
   session: Session;
+  onLaunchDailyCatchUpPrompt?: () => void;
 }
 
-export function YesterdayRecapSettings({ session }: YesterdayRecapSettingsProps) {
+export function YesterdayRecapSettings({ session, onLaunchDailyCatchUpPrompt }: YesterdayRecapSettingsProps) {
   const [enabled, setEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
   const isDemoMode = !canUseSupabaseData();
@@ -25,6 +26,13 @@ export function YesterdayRecapSettings({ session }: YesterdayRecapSettingsProps)
     setEnabled(nextValue);
     setYesterdayRecapEnabled(userId, nextValue);
     setTimeout(() => setSaving(false), 250);
+  };
+
+  const handleLaunchDailyCatchUpPrompt = () => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(`lifegoal.daily-catchup-launch:${userId}`, 'true');
+    window.dispatchEvent(new CustomEvent('lifegoal:launch-daily-catchup'));
+    onLaunchDailyCatchUpPrompt?.();
   };
 
   return (
@@ -46,6 +54,17 @@ export function YesterdayRecapSettings({ session }: YesterdayRecapSettingsProps)
             </span>
           </span>
         </label>
+      </div>
+
+
+      <div className="account-panel__actions-row" style={{ marginTop: '0.75rem' }}>
+        <button
+          type="button"
+          className="btn"
+          onClick={handleLaunchDailyCatchUpPrompt}
+        >
+          Launch daily catch-up prompt
+        </button>
       </div>
 
       {isDemoMode && (

@@ -307,6 +307,8 @@ const weeklyHabitReviewShownKey = (userId: string, weekStartISO: string) =>
   `lifegoal.weekly-habit-review-shown:${userId}:${weekStartISO}`;
 const weeklyHabitReviewLaunchKey = (userId: string) =>
   `lifegoal.weekly-habit-review-launch:${userId}`;
+const dailyCatchUpLaunchKey = (userId: string) =>
+  `lifegoal.daily-catchup-launch:${userId}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
 
@@ -1192,6 +1194,52 @@ export function DailyHabitTracker({
     saveDraft(reviewShownKey, true);
     setIsWeeklyHabitReviewOpen(true);
   }, [activeDate, habits.length, isViewingToday, session.user.id, stageMixSnapshot.totalLogged]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !session?.user?.id) {
+      return;
+    }
+
+    const launchKey = dailyCatchUpLaunchKey(session.user.id);
+    const tryOpenDailyCatchUp = () => {
+      if (loading || habits.length === 0) {
+        return false;
+      }
+
+      const previousDayISO = formatISODate(addDays(parseISODate(activeDate), -1));
+      const scheduledYesterday = habits.filter((habit) => isHabitScheduledOnDate(habit, previousDayISO));
+      const promptHabits = scheduledYesterday.length > 0 ? scheduledYesterday : habits.slice(0, 5);
+      if (promptHabits.length === 0) {
+        return false;
+      }
+
+      setYesterdayHabits(promptHabits);
+      setYesterdaySelections(
+        promptHabits.reduce<Record<string, boolean>>((acc, habit) => {
+          acc[habit.id] = false;
+          return acc;
+        }, {}),
+      );
+      setYesterdayActionStatus(null);
+      setShowYesterdayRecap(true);
+      return true;
+    };
+
+    if (loadDraft<boolean>(launchKey) && tryOpenDailyCatchUp()) {
+      removeDraft(launchKey);
+    }
+
+    const launchHandler = () => {
+      if (tryOpenDailyCatchUp()) {
+        removeDraft(launchKey);
+      } else {
+        saveDraft(launchKey, true);
+      }
+    };
+
+    window.addEventListener('lifegoal:launch-daily-catchup', launchHandler);
+    return () => window.removeEventListener('lifegoal:launch-daily-catchup', launchHandler);
+  }, [activeDate, habits, loading, session?.user?.id]);
 
   useEffect(() => {
     const windowStart = timeLimitedOffer.windowStart;
