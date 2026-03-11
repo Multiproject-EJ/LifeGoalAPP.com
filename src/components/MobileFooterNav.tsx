@@ -5,7 +5,9 @@ import {
   type CSSProperties,
   type MouseEvent,
   type PointerEvent,
+  type TouchEvent,
   type ReactNode,
+  type WheelEvent,
 } from 'react';
 import { PointsBadge } from './PointsBadge';
 import { splitGoldBalance } from '../constants/economy';
@@ -178,6 +180,11 @@ export function MobileFooterNav({
       return;
     }
     onCollapse();
+  };
+
+  const blockBackgroundScroll = (event: TouchEvent<HTMLElement> | WheelEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
   const holdAccentColor = isDiodeActive ? '248, 113, 113' : '34, 197, 94';
 
@@ -413,6 +420,8 @@ export function MobileFooterNav({
         isEnergyMenuOpen && isDiodeActive ? ' mobile-footer-nav--energy-focus' : ''
       }`}
       aria-label="Primary navigation"
+      onWheelCapture={blockBackgroundScroll}
+      onTouchMoveCapture={blockBackgroundScroll}
     >
       <div
         className={`mobile-footer-nav__surface ${
