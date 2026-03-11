@@ -98,6 +98,12 @@ export function MyAccountPanel({
     timeStyle: 'short',
   });
   const workspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
+  const birthday = profile?.birthday || 'Not set';
+  const isBirthdayGiftEnabled = profile?.birthday_gift_enabled ?? false;
+  const lastBirthdayGiftClaimedLabel = formatDate(profile?.birthday_gift_last_claimed_at, { dateStyle: 'medium' });
+  const nextBirthdayGiftEligibleLabel = profile?.birthday_gift_last_claimed_at
+    ? formatDate(new Date(new Date(profile.birthday_gift_last_claimed_at).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(), { dateStyle: 'medium' })
+    : 'Now (if birthday matches today)';
   const showDemoNotice = isDemoExperience;
   const profileCardClassName = `account-panel__card account-panel__profile ${
     profileExpanded ? 'account-panel__profile--expanded' : ''
@@ -162,6 +168,31 @@ export function MyAccountPanel({
       }
     } catch (error) {
       console.error('Failed to update initials preference:', error);
+    } finally {
+      setSavingPreference(false);
+    }
+  };
+
+  const handleToggleBirthdayGift = async (enabled: boolean) => {
+    if (!profile || isDemoExperience) return;
+
+    setSavingPreference(true);
+    try {
+      const { data, error } = await upsertWorkspaceProfile({
+        ...profile,
+        birthday_gift_enabled: enabled,
+      });
+
+      if (error) {
+        console.error('Failed to update birthday gift preference:', error);
+        return;
+      }
+
+      if (data && onProfileUpdate) {
+        onProfileUpdate(data);
+      }
+    } catch (error) {
+      console.error('Failed to update birthday gift preference:', error);
     } finally {
       setSavingPreference(false);
     }
@@ -273,6 +304,10 @@ export function MyAccountPanel({
               <div>
                 <dt>Workspace mode</dt>
                 <dd>{workspaceMode}</dd>
+              </div>
+              <div>
+                <dt>Birthday</dt>
+                <dd>{birthday}</dd>
               </div>
               <div>
                 <dt>Onboarding</dt>
@@ -460,6 +495,33 @@ export function MyAccountPanel({
               Set your name in the account details to enable this feature.
             </p>
           )}
+        </section>
+
+        <section className="account-panel__card" aria-labelledby="account-birthday-gift">
+          <p className="account-panel__eyebrow">Rewards</p>
+          <h3 id="account-birthday-gift">Birthday gift</h3>
+          <p className="account-panel__hint">
+            Opt in to receive a birthday gift worth 💎 1 diamond. Gifts are limited to one claim every 365 days even if your birthday date changes.
+          </p>
+          <div className="account-panel__toggle-row">
+            <label className="account-panel__toggle-label">
+              <input
+                type="checkbox"
+                checked={isBirthdayGiftEnabled}
+                onChange={(event) => handleToggleBirthdayGift(event.target.checked)}
+                disabled={savingPreference || isDemoExperience}
+                className="account-panel__toggle-input"
+              />
+              <span className="account-panel__toggle-text">Enable optional birthday gift</span>
+            </label>
+            {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
+          </div>
+          <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>
+            Last claimed: {lastBirthdayGiftClaimedLabel}
+          </p>
+          <p className="account-panel__hint">
+            Next eligible claim window: {nextBirthdayGiftEligibleLabel}
+          </p>
         </section>
       </div>
 
