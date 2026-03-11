@@ -94,7 +94,6 @@ import {
   triggerHabitHapticFeedback,
   type HabitFeedbackType,
 } from '../../utils/habitFeedback';
-import visionStarButtonLarge from '../../assets/VisionStarBig.webp';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
@@ -304,6 +303,10 @@ const visionStarScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star-schedule:${userId}:${dateISO}`;
 const weeklySpecialVisionStarKey = (userId: string, weekStartISO: string) =>
   `lifegoal.special-vision-star-week:${userId}:${weekStartISO}`;
+const weeklyHabitReviewShownKey = (userId: string, weekStartISO: string) =>
+  `lifegoal.weekly-habit-review-shown:${userId}:${weekStartISO}`;
+const weeklyHabitReviewLaunchKey = (userId: string) =>
+  `lifegoal.weekly-habit-review-launch:${userId}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
 
@@ -524,14 +527,13 @@ export function DailyHabitTracker({
   const [celebrationOrigin, setCelebrationOrigin] = useState<{ x: number; y: number } | null>(null);
   const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
   const [habitFeedbackById, setHabitFeedbackById] = useState<Record<string, HabitFeedbackType>>({});
+  const [isWeeklyHabitReviewOpen, setIsWeeklyHabitReviewOpen] = useState(false);
   const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
   const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
   const [visionStarSchedule, setVisionStarSchedule] = useState<VisionStarDailySchedule>({
     date: '',
     windows: [],
   });
-  const [visionStarCountdown, setVisionStarCountdown] = useState(0);
-  const [nextVisionDropCountdown, setNextVisionDropCountdown] = useState(0);
   const [timeLimitedOffer, setTimeLimitedOffer] = useState<{
     date: string;
     nextHabitId: string | null;
@@ -626,6 +628,34 @@ export function DailyHabitTracker({
       }),
     [habitHealthByHabitId, habits],
   );
+  const weeklyReviewSnapshot = useMemo(() => {
+    const stalled: HabitWithGoal[] = [];
+    const onTrack: HabitWithGoal[] = [];
+
+    for (const habit of habits) {
+      const healthState = habitHealthByHabitId[habit.id] ?? 'active';
+      const adherence = adherenceByHabit[habit.id]?.percentage ?? 0;
+      const lastCompletedOn = habitInsights[habit.id]?.lastCompletedOn;
+      const daysSinceLastCompleted = lastCompletedOn
+        ? Math.floor((parseISODate(today).getTime() - parseISODate(lastCompletedOn).getTime()) / (24 * 60 * 60 * 1000))
+        : Number.POSITIVE_INFINITY;
+
+      if (healthState === 'in_review' || adherence < 40 || daysSinceLastCompleted >= 10) {
+        stalled.push(habit);
+        continue;
+      }
+
+      if (healthState === 'active' && adherence >= 70) {
+        onTrack.push(habit);
+      }
+    }
+
+    return {
+      stalled,
+      onTrack,
+      totalHabits: habits.length,
+    };
+  }, [adherenceByHabit, habitHealthByHabitId, habitInsights, habits, today]);
   const defaultPriceByHabitId = useCallback((habitId: string) => {
     return getDefaultHabitRewardGold({
       healthState: habitHealthByHabitId[habitId],
@@ -695,20 +725,24 @@ export function DailyHabitTracker({
   }, [adherenceByHabit, completions, habitHealthByHabitId, sortedHabits]);
 
   const nowTimestamp = Date.now();
+  const isSpecialVisionStarDay = useMemo(() => {
+    const weekStartISO = getWeekStartISO(activeDate);
+    const specialDayOffset = loadDraft<number>(weeklySpecialVisionStarKey(session.user.id, weekStartISO));
+    if (typeof specialDayOffset !== 'number' || specialDayOffset < 0 || specialDayOffset > 6) {
+      return false;
+    }
+    const parsedDay = parseISODate(activeDate).getDay();
+    const mondayBasedIndex = parsedDay === 0 ? 6 : parsedDay - 1;
+    return mondayBasedIndex === specialDayOffset;
+  }, [activeDate, session.user.id]);
   const activeVisionStarWindow = useMemo(
-    () =>
-      visionStarSchedule.windows.find(
-        (window) => nowTimestamp >= window.windowStart && nowTimestamp <= window.windowEnd,
-      ) ?? null,
-    [nowTimestamp, visionStarSchedule.windows],
-  );
-  const isVisionStarWindowActive = Boolean(isViewingToday && !hasClaimedVisionStar && activeVisionStarWindow);
-  const nextVisionWindowStart = useMemo(
-    () =>
-      visionStarSchedule.windows
-        .filter((window) => window.windowStart > nowTimestamp)
-        .sort((a, b) => a.windowStart - b.windowStart)[0] ?? null,
-    [nowTimestamp, visionStarSchedule.windows],
+    () => ({
+      id: `${activeDate}-daily`,
+      windowStart: nowTimestamp,
+      windowEnd: getNextUtcMidnightMs(),
+      isSpecial: isSpecialVisionStarDay,
+    }),
+    [activeDate, isSpecialVisionStarDay, nowTimestamp],
   );
   const isTimeLimitedOfferActive =
     isViewingToday &&
@@ -1123,38 +1157,41 @@ export function DailyHabitTracker({
   ]);
 
   useEffect(() => {
-    if (!activeVisionStarWindow || hasClaimedVisionStar || !isViewingToday) {
-      setVisionStarCountdown(0);
-      return undefined;
+    if (typeof window === 'undefined') return;
+    const launchKey = weeklyHabitReviewLaunchKey(session.user.id);
+    if (loadDraft<boolean>(launchKey)) {
+      removeDraft(launchKey);
+      setIsWeeklyHabitReviewOpen(true);
     }
 
-    const updateCountdown = () => {
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((activeVisionStarWindow.windowEnd - now) / 1000));
-      setVisionStarCountdown(remaining);
-    };
-
-    updateCountdown();
-    const interval = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(interval);
-  }, [activeVisionStarWindow, hasClaimedVisionStar, isViewingToday]);
+    const launchHandler = () => setIsWeeklyHabitReviewOpen(true);
+    window.addEventListener('lifegoal:launch-weekly-habit-review', launchHandler);
+    return () => window.removeEventListener('lifegoal:launch-weekly-habit-review', launchHandler);
+  }, [session.user.id]);
 
   useEffect(() => {
-    if (!nextVisionWindowStart || hasClaimedVisionStar || !isViewingToday || activeVisionStarWindow) {
-      setNextVisionDropCountdown(0);
-      return undefined;
+    if (!isViewingToday || typeof window === 'undefined') {
+      return;
     }
 
-    const updateCountdown = () => {
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((nextVisionWindowStart.windowStart - now) / 1000));
-      setNextVisionDropCountdown(remaining);
-    };
+    const now = new Date();
+    if (now.getDay() !== 0 || now.getHours() < 8) {
+      return;
+    }
 
-    updateCountdown();
-    const interval = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(interval);
-  }, [activeVisionStarWindow, hasClaimedVisionStar, isViewingToday, nextVisionWindowStart]);
+    if (!habits.length && stageMixSnapshot.totalLogged === 0) {
+      return;
+    }
+
+    const weekStartISO = getWeekStartISO(activeDate);
+    const reviewShownKey = weeklyHabitReviewShownKey(session.user.id, weekStartISO);
+    if (loadDraft<boolean>(reviewShownKey)) {
+      return;
+    }
+
+    saveDraft(reviewShownKey, true);
+    setIsWeeklyHabitReviewOpen(true);
+  }, [activeDate, habits.length, isViewingToday, session.user.id, stageMixSnapshot.totalLogged]);
 
   useEffect(() => {
     const windowStart = timeLimitedOffer.windowStart;
@@ -1382,8 +1419,8 @@ export function DailyHabitTracker({
       return;
     }
 
-    if (!activeVisionStarWindow || hasClaimedVisionStar || !isViewingToday) {
-      setVisionRewardError('Vision star is sleeping right now. Check back for the next timed appearance.');
+    if (hasClaimedVisionStar || !isViewingToday) {
+      setVisionRewardError('Vision star already collected for today. Come back tomorrow for a new one.');
       setIsVisionRewardSelecting(false);
       return;
     }
@@ -1691,25 +1728,6 @@ export function DailyHabitTracker({
     [habits, offerPriceByHabitId, timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
   );
   const shouldShowOfferBonus = hasClaimedVisionStar && isTimeLimitedOfferActive;
-  const visionStarCountdownLabel = `${Math.floor(visionStarCountdown / 60)}:${String(
-    visionStarCountdown % 60,
-  ).padStart(2, '0')}`;
-  const nextVisionDropCountdownLabel = `${Math.floor(nextVisionDropCountdown / 60)}:${String(
-    nextVisionDropCountdown % 60,
-  ).padStart(2, '0')}`;
-  const nextVisionDropMinutesLabel = Math.max(1, Math.ceil(nextVisionDropCountdown / 60));
-  const visionStarSubtitle = hasClaimedVisionStar
-    ? 'Claimed for today'
-    : activeVisionStarWindow
-      ? activeVisionStarWindow.isSpecial
-        ? `Special weekly star live • ${visionStarCountdownLabel}`
-        : `Live now • ${visionStarCountdownLabel}`
-      : nextVisionWindowStart
-        ? `Next drop ${new Date(nextVisionWindowStart.windowStart).toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: '2-digit',
-          })}`
-        : 'Timed drops appear twice today';
   const luckyRollDoneForToday = useMemo(() => {
     try {
       const raw = window.localStorage.getItem(`gol_lucky_roll_state_${session.user.id}`);
@@ -1748,17 +1766,16 @@ export function DailyHabitTracker({
 
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
-    const visionExpires = activeVisionStarWindow?.windowEnd ?? nextVisionWindowStart?.windowStart ?? null;
-    const visionVisible = Boolean(activeVisionStarWindow || nextVisionWindowStart || hasClaimedVisionStar);
 
     return [
       {
         id: 'vision_star',
         label: 'Vision Star',
-        icon: activeVisionStarWindow?.isSpecial ? '🌌' : '🌟',
-        expiresAtMs: visionExpires,
+        icon: isSpecialVisionStarDay ? '🌌' : '🌟',
+        expiresAtMs: nextUtcMidnight,
+        badgeLabelOverride: hasClaimedVisionStar ? '✓ Done' : 'Open',
         isCollected: hasClaimedVisionStar,
-        isVisible: visionVisible,
+        isVisible: true,
         sortPriority: 1,
       },
       {
@@ -1817,13 +1834,12 @@ export function DailyHabitTracker({
       },
     ];
   }, [
-    activeVisionStarWindow,
     hasClaimedVisionStar,
     isBossChallengeAvailable,
     isEggHatchAvailable,
+    isSpecialVisionStarDay,
     isMysteryStopAvailable,
     luckyRollDoneForToday,
-    nextVisionWindowStart,
     session.user.id,
     spinAvailable,
     spinStatusLoading,
@@ -1834,11 +1850,7 @@ export function DailyHabitTracker({
 
   const openOfferContent = useCallback((offerId: TimeBoundOfferId) => {
     if (offerId === 'vision_star') {
-      if (isVisionStarWindowActive) {
-        void handleVisionRewardClick();
-      } else {
-        setVisionRewardError('Vision star is not live right now. Check the countdown for the next drop.');
-      }
+      void handleVisionRewardClick();
       return;
     }
 
@@ -1894,7 +1906,7 @@ export function DailyHabitTracker({
         setVisionRewardError('Mystery stop launcher is unavailable in this view.');
       }
     }
-  }, [handleVisionRewardClick, isVisionStarWindowActive, onOpenDailyTreat, onOpenIslandRunStop, onOpenLuckyRoll, onOpenSpinWheel]);
+  }, [handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, onOpenLuckyRoll, onOpenSpinWheel]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     const key = offerTeaserKey(offerId);
@@ -1926,7 +1938,7 @@ export function DailyHabitTracker({
     const map: Record<TimeBoundOfferId, { title: string; description: string; cta: string; icon: string }> = {
       vision_star: {
         title: 'Vision Star',
-        description: 'A timed vision boost is available. Open now to claim before the window closes.',
+        description: 'Your daily vision boost is ready. Open now to claim it.',
         cta: 'Open Vision Star →',
         icon: '🌟',
       },
@@ -1981,6 +1993,45 @@ export function DailyHabitTracker({
         >
           {activeOfferTeaserConfig.cta}
         </button>
+      </div>
+    </div>
+  ) : null;
+
+  const weeklyHabitReviewModal = isWeeklyHabitReviewOpen ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Weekly habit review"
+      onClick={() => setIsWeeklyHabitReviewOpen(false)}
+    >
+      <div className="habit-day-nav__vision-modal" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          className="habit-day-nav__vision-modal-close"
+          onClick={() => setIsWeeklyHabitReviewOpen(false)}
+          aria-label="Close weekly habit review"
+        >
+          ✕
+        </button>
+        <span className="habit-day-nav__vision-modal-eyebrow">Weekly habit review</span>
+        <h3 className="habit-day-nav__vision-modal-title">📊 Last 30 days snapshot</h3>
+        <p className="habit-day-nav__vision-modal-caption">
+          Stage mix: Easy {stageMixSnapshot.seedCount} • Medium {stageMixSnapshot.minimumCount} • Hard {stageMixSnapshot.standardCount}
+        </p>
+        <p className="habit-day-nav__vision-modal-caption">
+          Mix: Easy {stageMixSnapshot.seedPercent}% • Medium {stageMixSnapshot.minimumPercent}% • Hard {stageMixSnapshot.standardPercent}%
+        </p>
+        <p className="habit-day-nav__vision-modal-caption">
+          On track: {weeklyReviewSnapshot.onTrack.length}/{weeklyReviewSnapshot.totalHabits} habits • Stalled: {weeklyReviewSnapshot.stalled.length}
+        </p>
+        {weeklyReviewSnapshot.stalled.length > 0 ? (
+          <p className="habit-day-nav__vision-modal-caption">
+            Needs attention: {weeklyReviewSnapshot.stalled.slice(0, 3).map((habit) => habit.name).join(' • ')}
+          </p>
+        ) : (
+          <p className="habit-day-nav__vision-modal-caption">No stalled habits detected this week. Keep the momentum.</p>
+        )}
       </div>
     </div>
   ) : null;
@@ -3937,36 +3988,6 @@ export function DailyHabitTracker({
                 </div>
               </>
             )}
-            {!hasClaimedVisionStar && activeVisionStarWindow ? (
-              <div className="habit-day-nav__vision-row">
-                <button
-                  type="button"
-                  className={`habit-day-nav__vision-button ${
-                    isVisionStarWindowActive ? 'habit-day-nav__vision-button--glow' : ''
-                  } ${activeVisionStarWindow?.isSpecial ? 'habit-day-nav__vision-button--special' : ''}`}
-                  ref={visionButtonRef}
-                  onClick={handleVisionRewardClick}
-                  disabled={visionImagesLoading || visionRewarding || !isVisionStarWindowActive}
-                  aria-label="Reveal a vision board star boost"
-                >
-                  <img
-                    className={`habit-day-nav__vision-button-image ${
-                      isStarBursting || visionRewarding ? 'habit-day-nav__vision-button-image--burst' : ''
-                    }`}
-                    src={visionStarButtonLarge}
-                    alt=""
-                    aria-hidden="true"
-                  />
-                  <span className="habit-day-nav__vision-button-text">
-                    <span className="habit-day-nav__vision-title">
-                      {activeVisionStarWindow?.isSpecial ? 'Special vision star' : 'Vision star'}
-                    </span>
-                    <span className="habit-day-nav__vision-subtitle">{visionStarSubtitle}</span>
-                    <span className="habit-day-nav__vision-timer-pill">Expires in {visionStarCountdownLabel}</span>
-                  </span>
-                </button>
-              </div>
-            ) : null}
             <div
               className={`habit-day-nav__bonus ${
                 shouldGlowBonus ? 'habit-day-nav__bonus--super-boost' : ''
@@ -3989,21 +4010,13 @@ export function DailyHabitTracker({
                   src={visionRewardForDay.imageUrl}
                   alt={visionRewardForDay.caption ? `Vision board: ${visionRewardForDay.caption}` : 'Vision board inspiration'}
                 />
-              ) : !hasClaimedVisionStar && nextVisionWindowStart ? (
-                <div className="habit-day-nav__bonus-opportunity">
-                  <span className="habit-day-nav__bonus-opportunity-title">Next vision star drop</span>
-                  <span className="habit-day-nav__bonus-opportunity-line">
-                    In about {nextVisionDropMinutesLabel} minute{nextVisionDropMinutesLabel === 1 ? '' : 's'} you can fix a habit and earn hearts.
-                  </span>
-                  <span className="habit-day-nav__bonus-opportunity-timer">⏳ {nextVisionDropCountdownLabel}</span>
-                </div>
               ) : (
                 <span
                   className={`habit-day-nav__bonus-placeholder ${
                     hasClaimedVisionStar && shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''
                   }`}
                 >
-                  {hasClaimedVisionStar ? 'Vision star claimed today.' : 'Vision star appears in timed drops. Catch it while it’s live.'}
+                  {hasClaimedVisionStar ? 'Vision star claimed today.' : 'Open the Vision Star card to claim your daily boost.'}
                 </span>
               )}
               {visionRewardForDay?.caption && !shouldShowOfferBonus ? (
@@ -4583,22 +4596,6 @@ export function DailyHabitTracker({
               {timeLimitedOfferCopy.limited}
               {timeLimitedCountdownLabel ? ` • ${timeLimitedCountdownLabel}` : ''}
             </span>
-          </div>
-        ) : null}
-        {stageMixSnapshot.totalLogged > 0 ? (
-          <div className="habit-checklist__offer" aria-label="Stage mix insights">
-            <div>
-              <p className="habit-checklist__offer-eyebrow">Last 30 days stage mix</p>
-              <h3 className="habit-checklist__offer-title">
-                Easy {stageMixSnapshot.seedCount} • Medium {stageMixSnapshot.minimumCount} • Hard {stageMixSnapshot.standardCount}
-              </h3>
-              <p className="habit-checklist__offer-subtitle">
-                You logged {stageMixSnapshot.totalLogged} staged check-ins. Use this to see whether you're rebuilding or pushing.
-              </p>
-              <p className="habit-checklist__offer-subtitle" style={{ marginTop: '0.25rem' }}>
-                Mix: Easy {stageMixSnapshot.seedPercent}% • Medium {stageMixSnapshot.minimumPercent}% • Hard {stageMixSnapshot.standardPercent}%
-              </p>
-            </div>
           </div>
         ) : null}
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
@@ -5723,12 +5720,10 @@ export function DailyHabitTracker({
 
           <div className="habit-checklist-card__board-body">
             {renderDayNavigation('compact', true, isCompactView)}
-            {!isCompactView ? (
-              <div className="habit-checklist-card__title">
-                <h2>{titleText}</h2>
-                {subtitleText ? <p>{subtitleText}</p> : null}
-              </div>
-            ) : null}
+            <div className="habit-checklist-card__title">
+              <h2>{titleText}</h2>
+              {subtitleText ? <p>{subtitleText}</p> : null}
+            </div>
 
             {habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
@@ -6689,6 +6684,7 @@ export function DailyHabitTracker({
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
         {offerTeaserModal}
+        {weeklyHabitReviewModal}
         {visionRewardModal}
         {visionVisualizationModal}
         {habitVisionPreviewModal}
@@ -6856,6 +6852,7 @@ export function DailyHabitTracker({
         </>
       )}
       {offerTeaserModal}
+      {weeklyHabitReviewModal}
       {visionRewardModal}
       {visionVisualizationModal}
       {habitVisionPreviewModal}
