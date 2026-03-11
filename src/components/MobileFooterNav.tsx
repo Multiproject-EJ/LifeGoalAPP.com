@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type MouseEvent,
   type PointerEvent,
   type TouchEvent,
   type ReactNode,
@@ -136,13 +135,6 @@ export function MobileFooterNav({
     onExpand?.();
   };
 
-  const isButtonTarget = (target: EventTarget | null) => {
-    if (!(target instanceof Element)) {
-      return false;
-    }
-    return Boolean(target.closest('button'));
-  };
-
   const handleSurfacePointerDownCapture = (event: PointerEvent<HTMLDivElement>) => {
     swipeStartYRef.current = event.clientY;
     swipeStartXRef.current = event.clientX;
@@ -170,16 +162,6 @@ export function MobileFooterNav({
     swipeStartYRef.current = null;
     swipeStartXRef.current = null;
     isSwipeCollapseTriggeredRef.current = false;
-  };
-
-  const handleSurfaceClickCapture = (event: MouseEvent<HTMLDivElement>) => {
-    if (!onCollapse || isSwipeCollapseTriggeredRef.current) {
-      return;
-    }
-    if (isButtonTarget(event.target)) {
-      return;
-    }
-    onCollapse();
   };
 
   const blockBackgroundScroll = (event: TouchEvent<HTMLElement> | WheelEvent<HTMLElement>) => {
@@ -430,7 +412,6 @@ export function MobileFooterNav({
         data-diode-active={isDiodeActive}
         onMouseEnter={onExpand}
         onFocusCapture={onExpand}
-        onClickCapture={handleSurfaceClickCapture}
         onPointerDownCapture={handleSurfacePointerDownCapture}
         onPointerMoveCapture={handleSurfacePointerMoveCapture}
         onPointerUpCapture={resetSurfaceSwipe}
