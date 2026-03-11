@@ -15813,6 +15813,297 @@ html.platform-ipad .workspace-shell__menu-edge {
   filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.35));
 }
 
+
+.mobile-menu-overlay__profile-picture--large {
+  width: 72px;
+  height: 72px;
+}
+
+.mobile-menu-overlay__profile-launch {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 16px;
+  background: rgba(226, 232, 240, 0.45);
+  padding: 0.65rem;
+  text-align: left;
+}
+
+.mobile-menu-overlay__profile-launch-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-menu-overlay__profile-hand {
+  min-width: 92px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.55);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+  padding: 0.45rem;
+}
+
+.mobile-menu-overlay__profile-hand-icon {
+  font-size: 1.4rem;
+}
+
+.mobile-menu-overlay__profile-hand-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mobile-menu-overlay__profile-hand-alert {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #000;
+}
+
+.mobile-menu-overlay__profile-dialog {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.mobile-menu-overlay__profile-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(2px);
+}
+
+.mobile-menu-overlay__profile-dialog-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 560px);
+  max-height: min(82vh, 640px);
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(248, 250, 252, 0.96);
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mobile-menu-overlay__profile-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mobile-menu-overlay__profile-dialog-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.mobile-menu-overlay__profile-dialog-title {
+  margin: 0.2rem 0 0;
+  font-size: 1.15rem;
+}
+
+.mobile-menu-overlay__profile-dialog-lead {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(30, 41, 59, 0.78);
+}
+
+.mobile-menu-overlay__profile-dialog-meta {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  background: rgba(226, 232, 240, 0.45);
+  border-radius: 12px;
+}
+
+.mobile-menu-overlay__profile-dialog-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mobile-menu-overlay__profile-dialog-meta-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.mobile-menu-overlay__profile-dialog-meta-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: right;
+}
+
+.mobile-menu-overlay__profile-dialog-details {
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.mobile-menu-overlay__profile-dialog-details div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(226, 232, 240, 0.5);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+}
+
+.mobile-menu-overlay__profile-dialog-details dt {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(15, 23, 42, 0.58);
+  font-weight: 700;
+}
+
+.mobile-menu-overlay__profile-dialog-details dd {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+}
+
+.mobile-menu-overlay__profile-dialog-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.mobile-menu-overlay__profile-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-launch {
+  background: rgba(30, 41, 59, 0.65);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-hand {
+  background: rgba(15, 23, 42, 0.75);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-panel {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-meta {
+  background: rgba(30, 41, 59, 0.75);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-eyebrow,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-lead,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-details dt,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-meta-label {
+  color: rgba(226, 232, 240, 0.8);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-title,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-details dd,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-meta-value,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-hand-label {
+  color: #f8fafc;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__profile-dialog-details div {
+  background: rgba(30, 41, 59, 0.75);
+}
+
 .mobile-menu-overlay__quick-actions {
   display: flex;
   gap: 0.75rem;

@@ -400,6 +400,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
   const [isBreatheSubmenuOpen, setIsBreatheSubmenuOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
     'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
@@ -1677,6 +1678,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   };
 
   const handleMobileNavSelect = (navId: string, options?: { preserveBreatheTab?: boolean }) => {
+    setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     closeGameBoardOverlayIfOpen();
@@ -2238,6 +2240,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     workspaceProfile?.full_name ||
     ((supabaseSession?.user.user_metadata?.full_name as string | undefined) ?? '') ||
     '';
+  const accountDisplayName = normalizedDisplayName || userDisplay || 'Guest';
+  const accountInitials = profileInitials || generateInitials(accountDisplayName);
+  const accountEmail = activeSession.user.email || 'No email on file';
+  const accountWorkspaceName = workspaceProfile?.workspace_name || 'Personal rituals workspace';
+  const accountWorkspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
+  const accountBirthday = workspaceProfile?.birthday || 'Not set';
+  const accountOnboardingStatus = activeSession.user.user_metadata?.onboarding_complete ? 'Complete' : 'In progress';
 
   const profileAutoSaveResetKey = supabaseSession
     ? `${
@@ -2838,6 +2847,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <div
           className="mobile-menu-overlay__backdrop"
           onClick={() => {
+            setIsMobileProfileDialogOpen(false);
             setIsMobileMenuOpen(false);
           }}
           role="presentation"
@@ -2850,40 +2860,47 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <>
             <div className="mobile-menu-overlay__header">
               <div className="mobile-menu-overlay__header-top">
-                <div className="mobile-menu-overlay__profile-picture" aria-label={playstyleLabel ?? 'Player profile picture'}>
-                  {playstyleIcon ? (
-                    <span className="mobile-menu-overlay__profile-playstyle" role="img" aria-hidden="true">
-                      {playstyleIcon}
-                    </span>
-                  ) : (
-                    <span className="mobile-menu-overlay__profile-initials">
-                      {(normalizedDisplayName || userDisplay || 'Guest').charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="mobile-menu-overlay__header-info">
-                  <h2 className="mobile-menu-overlay__title">Player Profile</h2>
-                  <div className="mobile-menu-overlay__meta" aria-label="Profile summary">
-                    <div className="mobile-menu-overlay__meta-row">
-                      <span className="mobile-menu-overlay__meta-label">Name</span>
-                      <span className="mobile-menu-overlay__meta-value">
-                        {normalizedDisplayName || userDisplay || 'Guest'}
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__profile-launch"
+                  onClick={() => setIsMobileProfileDialogOpen(true)}
+                  aria-label="Open player profile details"
+                >
+                  <div
+                    className="mobile-menu-overlay__profile-picture mobile-menu-overlay__profile-picture--large"
+                    aria-hidden="true"
+                  >
+                    {playstyleIcon ? (
+                      <span className="mobile-menu-overlay__profile-playstyle" role="img" aria-hidden="true">
+                        {playstyleIcon}
                       </span>
-                    </div>
-                    <div className="mobile-menu-overlay__meta-row">
-                      <span className="mobile-menu-overlay__meta-label">Type</span>
-                      <span className="mobile-menu-overlay__meta-value">
-                        {playstyleLabel ?? personalitySummary ?? 'Personality test'}
+                    ) : (
+                      <span className="mobile-menu-overlay__profile-initials">
+                        {(normalizedDisplayName || userDisplay || 'Guest').charAt(0).toUpperCase()}
                       </span>
-                    </div>
+                    )}
                   </div>
-                </div>
+                  <div className="mobile-menu-overlay__profile-launch-spacer" aria-hidden="true" />
+                  <div className="mobile-menu-overlay__profile-hand" aria-hidden="true">
+                    <span className="mobile-menu-overlay__profile-hand-icon">🪪</span>
+                    <span className="mobile-menu-overlay__profile-hand-label">Player's Hand</span>
+                    {microTestBadge.showBadge && (
+                      <span
+                        className="mobile-menu-overlay__profile-hand-alert"
+                        aria-label={`${microTestBadge.count} micro-tests available`}
+                      />
+                    )}
+                  </div>
+                </button>
                 <div className="mobile-menu-overlay__controls">
                   <button
                     type="button"
                     className="mobile-menu-overlay__close mobile-menu-overlay__close--enlarged"
                     aria-label="Close menu"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      setIsMobileProfileDialogOpen(false);
+                      setIsMobileMenuOpen(false);
+                    }}
                   >
                     ×
                   </button>
@@ -2915,43 +2932,88 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   </div>
                 </div>
               </div>
-              <div className="mobile-menu-overlay__quick-actions">
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__quick-action-btn mobile-menu-overlay__quick-action-btn--two-thirds"
-                  onClick={() => handleMobileNavSelect('identity')}
-                  aria-label="Your identity and preferences"
-                  style={{ position: 'relative' }}
-                >
-                  <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
-                  <span className="mobile-menu-overlay__quick-action-label">Player's Hand</span>
-                  {microTestBadge.showBadge && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        width: '10px',
-                        height: '10px',
-                        backgroundColor: '#ef4444',
-                        borderRadius: '50%',
-                        border: '2px solid #000',
-                      }}
-                      aria-label={`${microTestBadge.count} micro-tests available`}
-                    />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__quick-action-btn mobile-menu-overlay__quick-action-btn--one-third"
-                  onClick={() => handleMobileNavSelect('player-avatar')}
-                  aria-label="Player avatar customization"
-                >
-                  <span className="mobile-menu-overlay__quick-action-icon">👤</span>
-                  <span className="mobile-menu-overlay__quick-action-label">Avatar</span>
-                </button>
-              </div>
             </div>
+            {isMobileProfileDialogOpen ? (
+              <div className="mobile-menu-overlay__profile-dialog" role="dialog" aria-modal="true" aria-label="Player profile details">
+                <div
+                  className="mobile-menu-overlay__profile-dialog-backdrop"
+                  onClick={() => setIsMobileProfileDialogOpen(false)}
+                  role="presentation"
+                />
+                <div className="mobile-menu-overlay__profile-dialog-panel">
+                  <div className="mobile-menu-overlay__profile-dialog-header">
+                    <div>
+                      <p className="mobile-menu-overlay__profile-dialog-eyebrow">Player Profile</p>
+                      <h3 className="mobile-menu-overlay__profile-dialog-title">My account</h3>
+                      <p className="mobile-menu-overlay__profile-dialog-lead">
+                        Review your identity details and workspace access.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__close"
+                      aria-label="Close profile details"
+                      onClick={() => setIsMobileProfileDialogOpen(false)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="mobile-menu-overlay__profile-dialog-meta" aria-label="Profile summary">
+                    <div className="mobile-menu-overlay__profile-dialog-meta-row">
+                      <span className="mobile-menu-overlay__profile-dialog-meta-label">Name</span>
+                      <span className="mobile-menu-overlay__profile-dialog-meta-value">{accountDisplayName}</span>
+                    </div>
+                    <div className="mobile-menu-overlay__profile-dialog-meta-row">
+                      <span className="mobile-menu-overlay__profile-dialog-meta-label">Type</span>
+                      <span className="mobile-menu-overlay__profile-dialog-meta-value">
+                        {playstyleLabel ?? personalitySummary ?? 'Personality test'}
+                      </span>
+                    </div>
+                  </div>
+                  <dl className="mobile-menu-overlay__profile-dialog-details">
+                    <div><dt>Initials</dt><dd>{accountInitials || 'Not set'}</dd></div>
+                    <div><dt>Email</dt><dd>{accountEmail}</dd></div>
+                    <div><dt>Workspace Name</dt><dd>{accountWorkspaceName}</dd></div>
+                    <div><dt>Workspace Mode</dt><dd>{accountWorkspaceMode}</dd></div>
+                    <div><dt>Birthday</dt><dd>{accountBirthday}</dd></div>
+                    <div><dt>Onboarding</dt><dd>{accountOnboardingStatus}</dd></div>
+                  </dl>
+                  <div className="mobile-menu-overlay__profile-dialog-actions">
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__quick-action-btn"
+                      onClick={() => handleMobileNavSelect('identity')}
+                      aria-label="Open player's hand"
+                    >
+                      <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
+                      <span className="mobile-menu-overlay__quick-action-label">Player's Hand</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__quick-action-btn"
+                      onClick={() => handleMobileNavSelect('player-avatar')}
+                      aria-label="Open avatar settings"
+                    >
+                      <span className="mobile-menu-overlay__quick-action-icon">👤</span>
+                      <span className="mobile-menu-overlay__quick-action-label">Avatar</span>
+                    </button>
+                  </div>
+                  <div className="mobile-menu-overlay__profile-dialog-footer">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => {
+                        setIsMobileProfileDialogOpen(false);
+                        setIsMobileMenuOpen(false);
+                        handleEditAccountDetails();
+                      }}
+                    >
+                      Edit account details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="mobile-menu-overlay__content">
               <ul className="mobile-menu-overlay__list">
                 {mobileMenuNavItems

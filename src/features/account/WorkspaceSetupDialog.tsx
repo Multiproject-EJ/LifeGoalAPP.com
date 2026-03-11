@@ -24,6 +24,7 @@ export function WorkspaceSetupDialog({
   const { client } = useSupabaseAuth();
   const [fullName, setFullName] = useState('');
   const [workspaceName, setWorkspaceName] = useState('');
+  const [birthday, setBirthday] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -35,10 +36,12 @@ export function WorkspaceSetupDialog({
     if (!profile) {
       setFullName('');
       setWorkspaceName('');
+      setBirthday('');
       return;
     }
     setFullName(profile.full_name ?? '');
     setWorkspaceName(profile.workspace_name ?? '');
+    setBirthday(profile.birthday ?? '');
   }, [profile]);
 
   useEffect(() => {
@@ -69,6 +72,7 @@ export function WorkspaceSetupDialog({
         user_id: session.user.id,
         full_name: trimmedName,
         workspace_name: workspaceName.trim() || null,
+        birthday: birthday || null,
         initials: generateInitials(trimmedName),
       });
       if (error || !data) {
@@ -105,7 +109,7 @@ export function WorkspaceSetupDialog({
           <p className="workspace-setup__eyebrow">Complete your account</p>
           <h2>Save your account details</h2>
           <p>
-            Share your name and workspace title so your account looks personalized every time you sign in. We’ll
+            Share your name, optional birthday, and workspace title so your account looks personalized every time you sign in. We’ll
             sync these details to Supabase.
           </p>
         </div>
@@ -138,6 +142,14 @@ export function WorkspaceSetupDialog({
               value={workspaceName}
               onChange={(event) => setWorkspaceName(event.target.value)}
               placeholder="My rituals HQ"
+            />
+          </label>
+          <label className="supabase-auth__field">
+            <span>Birthday (optional)</span>
+            <input
+              type="date"
+              value={birthday}
+              onChange={(event) => setBirthday(event.target.value)}
             />
           </label>
           {statusMessage ? (
