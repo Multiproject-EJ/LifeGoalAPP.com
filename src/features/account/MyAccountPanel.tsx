@@ -30,6 +30,7 @@ type MyAccountPanelProps = {
   stats: WorkspaceStats | null;
   profileLoading: boolean;
   onProfileUpdate?: (profile: WorkspaceProfileRow) => void;
+  onLaunchWeeklyHabitReview?: () => void;
 };
 
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
@@ -53,6 +54,7 @@ export function MyAccountPanel({
   stats,
   profileLoading,
   onProfileUpdate,
+  onLaunchWeeklyHabitReview,
 }: MyAccountPanelProps) {
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [folder1Open, setFolder1Open] = useState(false);
@@ -208,6 +210,7 @@ export function MyAccountPanel({
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(`lifegoal.weekly-habit-review-launch:${session.user.id}`, 'true');
     window.dispatchEvent(new CustomEvent('lifegoal:launch-weekly-habit-review'));
+    onLaunchWeeklyHabitReview?.();
   };
 
   return (

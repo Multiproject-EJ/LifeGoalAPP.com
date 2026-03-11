@@ -4016,7 +4016,7 @@ export function DailyHabitTracker({
                     hasClaimedVisionStar && shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''
                   }`}
                 >
-                  {hasClaimedVisionStar ? 'Vision star claimed today.' : 'Open the Vision Star card to claim your daily boost.'}
+                  {hasClaimedVisionStar ? 'Vision star claimed today.' : ''}
                 </span>
               )}
               {visionRewardForDay?.caption && !shouldShowOfferBonus ? (
@@ -4598,6 +4598,9 @@ export function DailyHabitTracker({
             </span>
           </div>
         ) : null}
+        <div className="habit-checklist-card__title">
+          <h2>My Habits</h2>
+        </div>
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
@@ -5123,8 +5126,6 @@ export function DailyHabitTracker({
               : 'none';
     const progressIcon =
       progressStage === 'celebrate' ? '⭐' : progressStage === 'strong' ? '✦' : null;
-    const titleText = 'My Habits';
-    const subtitleText = null;
     const isViewingToday = activeDate === today;
     const canGoForward = activeDate < today;
     const actionsBadgeAria = `${completedActionsCount} actions completed ${
@@ -5720,11 +5721,6 @@ export function DailyHabitTracker({
 
           <div className="habit-checklist-card__board-body">
             {renderDayNavigation('compact', true, isCompactView)}
-            <div className="habit-checklist-card__title">
-              <h2>{titleText}</h2>
-              {subtitleText ? <p>{subtitleText}</p> : null}
-            </div>
-
             {habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
                 <p>No habits scheduled for this day.</p>
