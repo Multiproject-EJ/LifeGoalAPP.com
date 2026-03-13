@@ -410,7 +410,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [footerTimerSession, setFooterTimerSession] = useState<TimerSessionState>(() =>
     normalizeTimerSession(readTimerSession()),
   );
-  const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage'>('home');
+  const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard'>('home');
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
@@ -1723,6 +1723,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     if (navId === 'score') {
       setScoreTabActiveTab('home');
+      setShowMobileGamification(false);
     }
 
     if (navId === 'actions' && timerLauncherState !== 'idle') {
