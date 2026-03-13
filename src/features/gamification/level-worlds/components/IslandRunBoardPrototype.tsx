@@ -53,6 +53,7 @@ import {
   type EncounterReward,
 } from '../services/encounterService';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
+import { IslandStoryReader } from './IslandStoryReader';
 import {
   resolveMinigameForStop,
   type IslandRunMinigameResult,
@@ -359,6 +360,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // M9-COMPLETE: Home Island panel state
   const [showHomePanel, setShowHomePanel] = useState(false);
+  const [showStoryReader, setShowStoryReader] = useState(false);
   // M9-COMPLETE: Home egg state — persisted in localStorage, independent of island travel
   const homeEggStorageKey = `island_run_home_egg_${session.user.id}`;
   const [homeEgg, setHomeEggState] = useState<ActiveEgg | null>(() => {
@@ -372,6 +374,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   });
   // M9-COMPLETE: Reward reveal animation state for Home Island egg open
   const [homeRewardReveal, setHomeRewardReveal] = useState<{ tier: EggTier; feedback: string } | null>(null);
+  const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
 
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
@@ -1234,6 +1237,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       // ignore storage errors
     }
   }, [islandStartedAtMs, islandExpiresAtMs, activeEgg]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !hasHydratedRuntimeState) {
+      return;
+    }
+
+    const hasSeenStory = window.localStorage.getItem(storySeenStorageKey) === 'true';
+    if (!hasSeenStory) {
+      setShowStoryReader(true);
+    }
+  }, [hasHydratedRuntimeState, storySeenStorageKey]);
 
   useEffect(() => {
     if (timeLeftSec > 0 || showTravelOverlay) {
@@ -2562,6 +2576,24 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
+  const handleStoryRewardClaim = (coinsReward: number) => {
+    if (coinsReward <= 0) {
+      return;
+    }
+    setCoins((current) => current + coinsReward);
+    void awardGold(session.user.id, coinsReward, 'shooter_blitz', 'island_story_episode_reward');
+    setLandingText(`Story reward claimed: +${coinsReward} coins.`);
+  };
+
+  const handleCloseStoryReader = () => {
+    setShowStoryReader(false);
+    try {
+      window.localStorage.setItem(storySeenStorageKey, 'true');
+    } catch {
+      // ignore localStorage failures
+    }
+  };
+
   return (
     <section className="island-run-prototype">
       <header className="island-run-prototype__header">
@@ -2629,6 +2661,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             onClick={openShopPanel}
           >
             🛍️ Shop
+          </button>
+          <button
+            type="button"
+            className="island-run-prototype__shop-btn"
+            aria-label="Open story reader"
+            onClick={() => setShowStoryReader(true)}
+          >
+            📖 Story
           </button>
           {/* M9-COMPLETE: persistent Home Island HUD button */}
           {(() => {
@@ -3709,6 +3749,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           />
         </div>
       )}
+
+      <IslandStoryReader
+        manifestPath="/storyline/episode-001/manifest.json"
+        isOpen={showStoryReader}
+        onClose={handleCloseStoryReader}
+        onRewardClaim={handleStoryRewardClaim}
+      />
 
       {/* M16E: Blind-box collectible reveal modal */}
       {showClaimModal && pendingClaimTierIndex !== null && (
