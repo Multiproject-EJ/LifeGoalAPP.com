@@ -34,6 +34,8 @@ import scoreBank from '../../assets/score_Bank.webp';
 import scoreShop from '../../assets/Score_shop.webp';
 import scoreZenGarden from '../../assets/Score_zengarden.webp';
 
+const scoreLeaderboard = '/icons/Score_tab_leaderboard.webp';
+
 interface ScoreTabProps {
   session: Session | null;
   profile: GamificationProfile | null;
@@ -729,7 +731,9 @@ export function ScoreTab({
               handleTabChange('leaderboard');
             }}
           >
-            <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🥇</span>
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src={scoreLeaderboard} alt="" onError={(event) => { event.currentTarget.src = scoreAchievements; }} />
+            </span>
             <span className="score-tab__hub-title">Leaderboard</span>
           </button>
           <button

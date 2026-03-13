@@ -1723,6 +1723,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     if (navId === 'score') {
       setScoreTabActiveTab('home');
+      setShowMobileGamification(false);
     }
 
     if (navId === 'actions' && timerLauncherState !== 'idle') {
