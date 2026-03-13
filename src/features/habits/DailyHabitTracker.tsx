@@ -1799,12 +1799,21 @@ export function DailyHabitTracker({
     return nonBossDone && !bossDone;
   }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
 
-  const isEggHatchAvailable = useMemo(() => {
-    if (!islandRunRuntime.activeEggTier || !islandRunRuntime.activeEggSetAtMs || !islandRunRuntime.activeEggHatchDurationMs) {
-      return false;
+  const isEggSetForHatching = useMemo(() => {
+    if (islandRunRuntime.activeEggTier && islandRunRuntime.activeEggSetAtMs && islandRunRuntime.activeEggHatchDurationMs) {
+      return true;
     }
-    return Date.now() >= (islandRunRuntime.activeEggSetAtMs + islandRunRuntime.activeEggHatchDurationMs);
-  }, [islandRunRuntime.activeEggHatchDurationMs, islandRunRuntime.activeEggSetAtMs, islandRunRuntime.activeEggTier]);
+
+    const activeIslandEgg = islandRunRuntime.perIslandEggs?.[String(activeIsland)];
+    if (!activeIslandEgg) return false;
+    return activeIslandEgg.status === 'incubating' || activeIslandEgg.status === 'ready';
+  }, [
+    activeIsland,
+    islandRunRuntime.activeEggHatchDurationMs,
+    islandRunRuntime.activeEggSetAtMs,
+    islandRunRuntime.activeEggTier,
+    islandRunRuntime.perIslandEggs,
+  ]);
 
   const isMysteryStopAvailable = useMemo(() => {
     const eventStop = stopPlanForActiveIsland.find((stop) => stop.kind === 'event_challenge');
@@ -1864,11 +1873,11 @@ export function DailyHabitTracker({
       },
       {
         id: 'egg_hatch',
-        label: 'Egg Ready',
+        label: 'Egg Hatch',
         icon: '🥚',
         expiresAtMs: null,
         isCollected: false,
-        isVisible: isEggHatchAvailable,
+        isVisible: isEggSetForHatching,
         sortPriority: 6,
       },
       {
@@ -1884,7 +1893,7 @@ export function DailyHabitTracker({
   }, [
     hasClaimedVisionStar,
     isBossChallengeAvailable,
-    isEggHatchAvailable,
+    isEggSetForHatching,
     isSpecialVisionStarDay,
     isMysteryStopAvailable,
     luckyRollDoneForToday,
