@@ -72,6 +72,16 @@ export function getEggStageEmoji(stage: number): string {
 }
 
 /**
+ * Returns themed egg artwork path for a tier + stage combination.
+ * Assets live under public/assets/Eggs as Egg_<tier>_lv<stage>.webp.
+ */
+export function getEggStageArtSrc(eggTier: EggTier, stage: number): string {
+  const safeStage = Math.min(4, Math.max(1, Math.floor(stage)));
+  const assetTier = eggTier === 'mythic' ? 'mystery' : eggTier;
+  return `/assets/Eggs/Egg_${assetTier}_lv${safeStage}.webp`;
+}
+
+/**
  * Roll egg rewards based on tier and a numeric seed.
  * seed is used for reproducible results (e.g. setAtMs).
  *

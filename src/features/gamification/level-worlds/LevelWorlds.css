@@ -1836,6 +1836,22 @@
   margin: 0.2rem 0;
 }
 
+.island-hatchery-card__stage-art {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin: 0.2rem 0;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+.island-home-panel__reward-art {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto 0.2rem;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+}
+
 .island-hatchery-card__headline {
   font-size: 0.95rem;
   font-weight: 700;

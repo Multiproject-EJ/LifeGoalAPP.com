@@ -31,6 +31,7 @@ import {
   getRandomHatchDelayMs,
   getEggStageName,
   getEggStageEmoji,
+  getEggStageArtSrc,
   rollEggRewards,
   type EggTier,
 } from '../services/eggService';
@@ -3048,7 +3049,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 ) : activeEgg && eggStage >= 4 ? (
                   /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
-                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(4)}</p>
+                    <img
+                      className="island-hatchery-card__stage-art"
+                      src={getEggStageArtSrc(activeEgg.tier, 4)}
+                      alt={`${activeEgg.tier} egg ready to open`}
+                    />
                     {activeEgg.isDormant ? (
                       <>
                         <p className="island-hatchery-card__headline">💤 Dormant egg ready!</p>
@@ -3080,7 +3085,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 ) : activeEgg && eggStage < 4 ? (
                   /* State 3: Egg in progress — show stage name + emoji, NO countdown */
                   <div className="island-hatchery-card__state island-hatchery-card__state--incubating">
-                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(eggStage)}</p>
+                    <img
+                      className="island-hatchery-card__stage-art"
+                      src={getEggStageArtSrc(activeEgg.tier, eggStage)}
+                      alt={`${activeEgg.tier} egg stage ${eggStage}`}
+                    />
                     <p className="island-hatchery-card__headline">Stage {eggStage}: {getEggStageName(eggStage)}</p>
                     <p className="island-hatchery-card__copy">
                       Your <strong>{activeEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
@@ -3747,7 +3756,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             {/* Reward reveal animation */}
             {homeRewardReveal && (
               <div className="island-home-panel__reward-reveal" role="status" aria-live="polite">
-                <p className="island-home-panel__reward-emoji">{getEggStageEmoji(4)}</p>
+                <img
+                  className="island-home-panel__reward-art"
+                  src={getEggStageArtSrc(homeRewardReveal.tier, 4)}
+                  alt={`${homeRewardReveal.tier} egg opened`}
+                />
                 <p className="island-home-panel__reward-tier">
                   {homeRewardReveal.tier.charAt(0).toUpperCase() + homeRewardReveal.tier.slice(1)} Egg Opened!
                 </p>
@@ -3783,7 +3796,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 {/* State: Egg incubating (stage 1–3) */}
                 {homeEgg && homeEggStage < 4 && (
                   <div className="island-hatchery-card__state island-hatchery-card__state--progress">
-                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(homeEggStage)}</p>
+                    <img
+                      className="island-hatchery-card__stage-art"
+                      src={getEggStageArtSrc(homeEgg.tier, homeEggStage)}
+                      alt={`${homeEgg.tier} home egg stage ${homeEggStage}`}
+                    />
                     <p className="island-hatchery-card__headline">Stage {homeEggStage}: {getEggStageName(homeEggStage)}</p>
                     <p className="island-hatchery-card__copy">
                       Your <strong>{homeEgg.tier}</strong> egg is incubating… Check back later!
@@ -3797,7 +3814,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 {/* State: Egg ready to open (stage 4) */}
                 {homeEgg && homeEggStage >= 4 && (
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
-                    <p className="island-hatchery-card__stage-emoji">{getEggStageEmoji(4)}</p>
+                    <img
+                      className="island-hatchery-card__stage-art"
+                      src={getEggStageArtSrc(homeEgg.tier, 4)}
+                      alt={`${homeEgg.tier} home egg ready to open`}
+                    />
                     <p className="island-hatchery-card__headline">Ready to Open!</p>
                     <p className="island-hatchery-card__copy">
                       Your <strong>{homeEgg.tier}</strong> egg is ready — open it to claim your rewards.

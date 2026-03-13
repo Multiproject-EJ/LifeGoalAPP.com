@@ -10,6 +10,10 @@ type MobileHabitHomeProps = {
   profileStrengthSnapshot?: ProfileStrengthResult | null;
   profileStrengthSignals?: ProfileStrengthSignalSnapshot | null;
   personalitySummary?: string | null;
+  onOpenDailyTreat?: () => void;
+  onOpenLuckyRoll?: () => void;
+  onOpenSpinWheel?: () => void;
+  onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
 };
 
 export function MobileHabitHome({
@@ -19,6 +23,10 @@ export function MobileHabitHome({
   profileStrengthSnapshot,
   profileStrengthSignals,
   personalitySummary,
+  onOpenDailyTreat,
+  onOpenLuckyRoll,
+  onOpenSpinWheel,
+  onOpenIslandRunStop,
 }: MobileHabitHomeProps) {
   return (
     <div className="mobile-habit-home">
@@ -30,6 +38,10 @@ export function MobileHabitHome({
         profileStrengthSnapshot={profileStrengthSnapshot}
         profileStrengthSignals={profileStrengthSignals}
         personalitySummary={personalitySummary}
+        onOpenDailyTreat={onOpenDailyTreat}
+        onOpenLuckyRoll={onOpenLuckyRoll}
+        onOpenSpinWheel={onOpenSpinWheel}
+        onOpenIslandRunStop={onOpenIslandRunStop}
       />
     </div>
   );
