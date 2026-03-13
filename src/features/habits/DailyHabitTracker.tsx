@@ -1966,6 +1966,12 @@ export function DailyHabitTracker({
   }, [handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, onOpenLuckyRoll, onOpenSpinWheel]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
+    // UX: egg hatch should open directly (no intermediate teaser modal)
+    if (offerId === 'egg_hatch') {
+      openOfferContent(offerId);
+      return;
+    }
+
     const key = offerTeaserKey(offerId);
     const hasSeenTeaser = seenOfferTeasers[key] === true;
 
