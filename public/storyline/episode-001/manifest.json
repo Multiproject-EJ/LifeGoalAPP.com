@@ -1,0 +1,26 @@
+{
+  "id": "episode-001",
+  "title": "Prologue — Arrival",
+  "autoLaunch": true,
+  "soundtrack": {
+    "src": "/storyline/episode-001/bgm.mp3",
+    "loop": true,
+    "volume": 0.35
+  },
+  "panels": [
+    {
+      "id": "intro-text",
+      "type": "text",
+      "text": "Welcome to Island Run. Upload your prologue images/videos in public/storyline/episode-001 and update this manifest to control reading order.",
+      "caption": "This is a placeholder panel so the reader is usable immediately.",
+      "soundtrack": {
+        "src": "/storyline/episode-001/scene-1.mp3",
+        "loop": true,
+        "volume": 0.5
+      }
+    }
+  ],
+  "reward": {
+    "coins": 50
+  }
+}

@@ -1,0 +1,144 @@
+.island-story-reader__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(6, 10, 20, 0.86);
+  display: flex;
+  justify-content: center;
+}
+
+.island-story-reader {
+  width: min(100%, 720px);
+  height: 100%;
+  background: #080d18;
+  color: #eaf1ff;
+  display: flex;
+  flex-direction: column;
+}
+
+.island-story-reader__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  background: rgba(8, 13, 24, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.island-story-reader__icon-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  border-radius: 10px;
+  padding: 0.3rem 0.6rem;
+}
+
+.island-story-reader__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.island-story-reader__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.island-story-reader__title {
+  margin: 0;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.island-story-reader__header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.island-story-reader__progress {
+  font-size: 0.72rem;
+  opacity: 0.78;
+}
+
+.island-story-reader__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.7rem 0.7rem 2.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.island-story-reader__status {
+  padding: 0.8rem;
+  margin: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.island-story-reader__status--error {
+  background: rgba(255, 89, 89, 0.2);
+  border: 1px solid rgba(255, 89, 89, 0.4);
+}
+
+.island-story-reader__panel {
+  margin: 0;
+}
+
+.island-story-reader__media-shell {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #10182a;
+}
+
+.island-story-reader__media-shell img,
+.island-story-reader__media-shell video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.island-story-reader__media-shell--video video {
+  min-height: 220px;
+}
+
+.island-story-reader__panel--text {
+  border-radius: 14px;
+  padding: 0.95rem;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.island-story-reader__caption {
+  margin: 0.45rem 0.2rem 0;
+  font-size: 0.82rem;
+  color: rgba(234, 241, 255, 0.78);
+}
+
+.island-story-reader__end-card {
+  border: 1px solid rgba(139, 175, 255, 0.5);
+  border-radius: 14px;
+  padding: 1rem;
+  background: linear-gradient(160deg, rgba(36, 66, 124, 0.45), rgba(16, 28, 54, 0.85));
+}
+
+.island-story-reader__end-card h4,
+.island-story-reader__end-card p {
+  margin: 0 0 0.5rem;
+}
+
+.island-story-reader__end-card button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  font-weight: 600;
+  background: #8bc8ff;
+  color: #0a1325;
+}
