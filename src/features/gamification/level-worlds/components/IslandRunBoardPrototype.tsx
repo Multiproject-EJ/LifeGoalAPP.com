@@ -1142,10 +1142,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   }, [activeEgg, nowMs]);
 
   // M13: per-island egg slot usage check
+  const islandEggEntry = useMemo(() => runtimeState.perIslandEggs?.[String(islandNumber)] ?? null, [runtimeState.perIslandEggs, islandNumber]);
+
   const islandEggSlotUsed = useMemo(() => {
-    const entry = runtimeState.perIslandEggs?.[String(islandNumber)];
-    return entry?.status === 'collected' || entry?.status === 'sold';
-  }, [runtimeState.perIslandEggs, islandNumber]);
+    return islandEggEntry?.status === 'collected' || islandEggEntry?.status === 'sold';
+  }, [islandEggEntry]);
 
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
 
@@ -3083,7 +3084,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 {/* State 1: Egg already collected/sold on this island — permanent, non-renewable */}
                 {islandEggSlotUsed ? (
                   <div className="island-hatchery-card__state island-hatchery-card__state--done">
-                    <p>🥚 Egg already collected — no new egg on this island.</p>
+                    <img
+                      className="island-hatchery-card__stage-art"
+                      src={getEggStageArtSrc(islandEggEntry?.tier ?? 'common', 4)}
+                      alt={`${islandEggEntry?.tier ?? 'common'} egg already completed on this island`}
+                    />
+                    <p className="island-hatchery-card__headline">Egg already collected — no new egg on this island.</p>
                     <p style={{ fontSize: '0.82rem', opacity: 0.65 }}>Each island's egg slot is permanent and non-renewable.</p>
                   </div>
                 ) : activeEgg && eggStage >= 4 ? (
