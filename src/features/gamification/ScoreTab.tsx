@@ -22,6 +22,7 @@ import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
 import { evaluateRewardRisk } from '../../lib/rewardValidation';
+import { fetchLeaderboardSnapshot, type LeaderboardEntry } from '../../services/leaderboard';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import { PowerUpsStore } from '../power-ups/PowerUpsStore';
 import {
@@ -44,8 +45,8 @@ interface ScoreTabProps {
   onNavigateToShop?: () => void;
   onNavigateToZenGarden?: () => void;
   onNavigateToGarage?: () => void;
-  initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen' | 'garage';
-  onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage') => void;
+  initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard';
+  onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard') => void;
 }
 
 const REWARD_CATEGORIES: Array<{ value: RewardCategory; emoji: string; label: string }> = [
@@ -80,7 +81,7 @@ export function ScoreTab({
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
   const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
-  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage'>(initialActiveTab ?? 'home');
+  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard'>(initialActiveTab ?? 'home');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -121,6 +122,12 @@ export function ScoreTab({
 
   // M17E: Hearts Wallet state for Bank tab
   const [heartsBalance, setHeartsBalance] = useState(0);
+  const [leaderboardTopEntries, setLeaderboardTopEntries] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardViewerEntries, setLeaderboardViewerEntries] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardViewerRank, setLeaderboardViewerRank] = useState<number | null>(null);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  const [leaderboardArchetypeFilter, setLeaderboardArchetypeFilter] = useState<string>('all');
 
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
@@ -137,10 +144,36 @@ export function ScoreTab({
     });
   }, [rewardCategory, rewardCooldown, rewardCost, rewardDescription, rewardTitle]);
 
-  const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage') => {
+  const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard') => {
     setActiveTab(tab);
     onActiveTabChange?.(tab);
   };
+
+  const leaderboardArchetypes = useMemo(() => {
+    const archetypes = new Set<string>();
+    [...leaderboardTopEntries, ...leaderboardViewerEntries].forEach((entry) => {
+      if (entry.archetype && entry.archetype !== 'Unknown') {
+        archetypes.add(entry.archetype);
+      }
+    });
+    return Array.from(archetypes).sort((a, b) => a.localeCompare(b));
+  }, [leaderboardTopEntries, leaderboardViewerEntries]);
+
+  const filteredTopLeaderboardEntries = useMemo(() => {
+    if (leaderboardArchetypeFilter === 'all') {
+      return leaderboardTopEntries;
+    }
+
+    return leaderboardTopEntries.filter((entry) => entry.archetype === leaderboardArchetypeFilter);
+  }, [leaderboardArchetypeFilter, leaderboardTopEntries]);
+
+  const filteredViewerLeaderboardEntries = useMemo(() => {
+    if (leaderboardArchetypeFilter === 'all') {
+      return leaderboardViewerEntries;
+    }
+
+    return leaderboardViewerEntries.filter((entry) => entry.archetype === leaderboardArchetypeFilter);
+  }, [leaderboardArchetypeFilter, leaderboardViewerEntries]);
 
   // M17B: Hydrate shields balance when Bank tab is active
   useEffect(() => {
@@ -248,6 +281,35 @@ export function ScoreTab({
       isMounted = false;
     };
   }, [enabled, userId, activeTab, zenTokens]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLeaderboard = async () => {
+      if (!enabled || activeTab !== 'leaderboard') {
+        return;
+      }
+
+      setLeaderboardLoading(true);
+      const { data, error } = await fetchLeaderboardSnapshot({
+        viewerUserId: userId,
+        topLimit: 50,
+        contextRadius: 10,
+      });
+      if (!isMounted) return;
+      setLeaderboardTopEntries(data.topEntries);
+      setLeaderboardViewerEntries(data.viewerEntries);
+      setLeaderboardViewerRank(data.viewerRank);
+      setLeaderboardError(error);
+      setLeaderboardLoading(false);
+    };
+
+    void loadLeaderboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, enabled, userId]);
 
   const sourceChips = useMemo(() => {
     const tally = transactions.reduce<Record<string, { label: string; count: number; xp: number }>>(
@@ -569,6 +631,16 @@ export function ScoreTab({
           </button>
           <button
             type="button"
+            className={`score-tab__tab${activeTab === 'leaderboard' ? ' score-tab__tab--active' : ''}`}
+            onClick={() => {
+              handleTabChange('leaderboard');
+            }}
+          >
+            <span className="score-tab__tab-icon" aria-hidden="true">🥇</span>
+            Leaderboard
+          </button>
+          <button
+            type="button"
             className={`score-tab__tab${activeTab === 'shop' ? ' score-tab__tab--active' : ''}`}
             onClick={() => {
               handleTabChange('shop');
@@ -654,6 +726,16 @@ export function ScoreTab({
             type="button"
             className="score-tab__hub-card"
             onClick={() => {
+              handleTabChange('leaderboard');
+            }}
+          >
+            <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🥇</span>
+            <span className="score-tab__hub-title">Leaderboard</span>
+          </button>
+          <button
+            type="button"
+            className="score-tab__hub-card"
+            onClick={() => {
               handleTabChange('garage');
               onNavigateToGarage?.();
             }}
@@ -675,6 +757,92 @@ export function ScoreTab({
       {!loading && !enabled && (
         <div className="score-tab__status">
           Gamification is currently disabled. Enable it in settings to track XP and gold.
+        </div>
+      )}
+
+
+      {!loading && enabled && activeTab === 'leaderboard' && (
+        <div className="score-tab__content">
+          <div className="score-tab__bank-intro">
+            <h2 className="score-tab__headline">Player Leaderboard</h2>
+            <p className="score-tab__subtitle">
+              Ranked by combined wealth (gold + XP). We only load Top 50 plus your own position window (10 above and 10 below).
+            </p>
+          </div>
+
+          <div className="score-tab__leaderboard-filters" role="tablist" aria-label="Leaderboard archetypes">
+            <button
+              type="button"
+              className={`score-tab__leaderboard-filter${leaderboardArchetypeFilter === 'all' ? ' score-tab__leaderboard-filter--active' : ''}`}
+              onClick={() => setLeaderboardArchetypeFilter('all')}
+            >
+              All archetypes
+            </button>
+            {leaderboardArchetypes.map((archetype) => (
+              <button
+                key={archetype}
+                type="button"
+                className={`score-tab__leaderboard-filter${leaderboardArchetypeFilter === archetype ? ' score-tab__leaderboard-filter--active' : ''}`}
+                onClick={() => setLeaderboardArchetypeFilter(archetype)}
+              >
+                {archetype}
+              </button>
+            ))}
+          </div>
+
+          {leaderboardLoading && <p className="score-tab__status">Loading leaderboard…</p>}
+          {!leaderboardLoading && leaderboardError && (
+            <p className="score-tab__status">{leaderboardError}</p>
+          )}
+          {!leaderboardLoading && !leaderboardError && filteredTopLeaderboardEntries.length === 0 && (
+            <p className="score-tab__status">No leaderboard entries yet. Complete activities to join the rankings.</p>
+          )}
+
+          {!leaderboardLoading && !leaderboardError && filteredTopLeaderboardEntries.length > 0 && (
+            <>
+              <section className="score-tab__leaderboard-section">
+                <h3 className="score-tab__leaderboard-section-title">Top 50</h3>
+                <div className="score-tab__leaderboard-list" aria-live="polite">
+                  {filteredTopLeaderboardEntries.map((entry) => (
+                    <article key={`top-${entry.userId}`} className="score-tab__leaderboard-row">
+                      <p className="score-tab__leaderboard-rank">#{entry.rank}</p>
+                      <div className="score-tab__leaderboard-main">
+                        <p className="score-tab__leaderboard-name">{entry.playerName}</p>
+                        <p className="score-tab__leaderboard-meta">{entry.archetype} • Level {entry.level}</p>
+                      </div>
+                      <p className="score-tab__leaderboard-wealth">{formatter.format(entry.combinedWealth)}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              {leaderboardViewerRank && (
+                <section className="score-tab__leaderboard-section">
+                  <h3 className="score-tab__leaderboard-section-title">Your placement</h3>
+                  <p className="score-tab__meta">You are currently ranked #{formatter.format(leaderboardViewerRank)}.</p>
+                  {filteredViewerLeaderboardEntries.length > 0 ? (
+                    <div className="score-tab__leaderboard-list" aria-live="polite">
+                      {filteredViewerLeaderboardEntries.map((entry) => (
+                        <article
+                          key={`viewer-${entry.userId}-${entry.rank}`}
+                          className={`score-tab__leaderboard-row${entry.userId === userId ? ' score-tab__leaderboard-row--viewer' : ''}`}
+                        >
+                          <p className="score-tab__leaderboard-rank">#{entry.rank}</p>
+                          <div className="score-tab__leaderboard-main">
+                            <p className="score-tab__leaderboard-name">{entry.playerName}</p>
+                            <p className="score-tab__leaderboard-meta">{entry.archetype} • Level {entry.level}</p>
+                          </div>
+                          <p className="score-tab__leaderboard-wealth">{formatter.format(entry.combinedWealth)}</p>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="score-tab__status">No nearby players for this archetype filter.</p>
+                  )}
+                </section>
+              )}
+            </>
+          )}
         </div>
       )}
 
