@@ -7,6 +7,12 @@ import {
   OUTER_STOP_ANCHORS,
   type TileAnchor,
 } from '../services/islandBoardLayout';
+import {
+  ISLAND_BOARD_THEMES,
+  getIslandBoardThemeById,
+  getIslandBoardThemeForIslandNumber,
+  type IslandBoardTheme,
+} from '../services/islandBoardThemes';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
@@ -64,7 +70,6 @@ import {
   type BossType,
 } from '../services/bossService';
 
-const ISLAND_SCENES = [1, 2, 3] as const;
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
 const DICE_PER_ROLL = 2;
@@ -188,6 +193,8 @@ type OrbitStopVisual = {
   state: StopProgressState | 'shop';
   icon: string;
   labelOffsetY: number;
+  labelOffsetX: number;
+  hideLabel: boolean;
   stopId?: string;
 };
 
@@ -208,6 +215,15 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+function preloadThemeAssets(theme: IslandBoardTheme) {
+  const urls = [theme.backgroundImage, theme.depthMaskImage, theme.pathOverlayImage].filter(Boolean) as string[];
+  urls.forEach((url) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = url;
+  });
 }
 
 function getStopIcon(kind: string, stopId: string) {
@@ -262,7 +278,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
   const showQaHooks = useMemo(() => new URLSearchParams(window.location.search).get('islandRunQa') === '1', []);
-  const [activeScene, setActiveScene] = useState<(typeof ISLAND_SCENES)[number]>(1);
+  const [themeOverrideId, setThemeOverrideId] = useState<IslandBoardTheme['id'] | null>(null);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
@@ -276,6 +292,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
+  const activeTheme = useMemo(() => {
+    if (themeOverrideId) return getIslandBoardThemeById(themeOverrideId);
+    return getIslandBoardThemeForIslandNumber(islandNumber);
+  }, [islandNumber, themeOverrideId]);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [step1PromptedIsland, setStep1PromptedIsland] = useState<number | null>(null);
@@ -338,6 +358,41 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [audioEnabled, setAudioEnabled] = useState(() => getIslandRunAudioEnabled());
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
   const [cycleIndex, setCycleIndex] = useState<number>(0);
+
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(`island_run_theme_override_${session.user.id}`);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { themeId?: IslandBoardTheme['id'] | null };
+      if (!parsed?.themeId) return;
+      if (ISLAND_BOARD_THEMES.some((theme) => theme.id === parsed.themeId)) {
+        setThemeOverrideId(parsed.themeId);
+      }
+    } catch {
+      // no-op: keep auto theme fallback
+    }
+  }, [session.user.id]);
+
+  useEffect(() => {
+    try {
+      const key = `island_run_theme_override_${session.user.id}`;
+      if (!themeOverrideId) {
+        window.localStorage.removeItem(key);
+      } else {
+        window.localStorage.setItem(key, JSON.stringify({ themeId: themeOverrideId }));
+      }
+    } catch {
+      // no-op: localStorage unavailable
+    }
+  }, [session.user.id, themeOverrideId]);
+
+  useEffect(() => {
+    preloadThemeAssets(activeTheme);
+    const activeIndex = ISLAND_BOARD_THEMES.findIndex((theme) => theme.id === activeTheme.id);
+    const nextTheme = ISLAND_BOARD_THEMES[(activeIndex + 1) % ISLAND_BOARD_THEMES.length];
+    if (nextTheme) preloadThemeAssets(nextTheme);
+  }, [activeTheme]);
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
@@ -892,9 +947,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     context.quadraticCurveTo(last.x, last.y, closeMidX, closeMidY);
 
     const glowGradient = context.createLinearGradient(0, 0, 0, boardSize.height);
-    glowGradient.addColorStop(0, 'rgba(161, 236, 255, 0.28)');
-    glowGradient.addColorStop(0.5, 'rgba(247, 218, 138, 0.42)');
-    glowGradient.addColorStop(1, 'rgba(214, 174, 92, 0.65)');
+    glowGradient.addColorStop(0, activeTheme.pathGlowStops[0]);
+    glowGradient.addColorStop(0.5, activeTheme.pathGlowStops[1]);
+    glowGradient.addColorStop(1, activeTheme.pathGlowStops[2]);
 
     context.strokeStyle = 'rgba(255, 255, 255, 0.26)';
     context.lineWidth = 26;
@@ -911,7 +966,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       context.stroke();
       context.setLineDash([]);
     }
-  }, [boardSize, showDebug]);
+  }, [activeTheme.pathGlowStops, boardSize, showDebug]);
 
   // B3-5: island clear celebration auto-dismiss
   useEffect(() => {
@@ -932,8 +987,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // B1-3: regenerate tileMap whenever islandNumber or dayIndex changes
   useEffect(() => {
     const rarity = getIslandRarity(islandNumber);
-    setTileMap(generateTileMap(islandNumber, rarity, 'forest', dayIndex));
-  }, [islandNumber, dayIndex]);
+    setTileMap(generateTileMap(islandNumber, rarity, activeTheme.tileThemeId, dayIndex));
+  }, [activeTheme.tileThemeId, islandNumber, dayIndex]);
 
   // B4-4: log dayIndex changes for debug
   useEffect(() => {
@@ -1107,7 +1162,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const orbitStopVisuals = useMemo<OrbitStopVisual[]>(() => {
     const orderedAnchors = OUTER_STOP_ANCHORS.filter((anchor) => anchor.id !== 'shop');
 
-    return islandStopPlan.map((stop, index) => {
+    const baseVisuals = islandStopPlan.map((stop, index) => {
       const anchor = orderedAnchors[index] ?? orderedAnchors[orderedAnchors.length - 1];
       const position = toScreen({
         id: `orbit_${anchor.id}`,
@@ -1130,7 +1185,60 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         state: stopStateMap.get(stop.stopId) ?? 'active',
         icon: getStopIcon(stop.kind, stop.stopId),
         labelOffsetY,
+        labelOffsetX: 0,
+        hideLabel: false,
         stopId: stop.stopId,
+      } satisfies OrbitStopVisual;
+    });
+
+    const placedLabels: { x: number; y: number }[] = [];
+    const isSmallBoard = boardSize.width <= 390;
+    const labelHalfWidth = isSmallBoard ? 52 : 58;
+    const labelHalfHeight = 14;
+
+    return baseVisuals.map((visual) => {
+      let labelOffsetY = visual.labelOffsetY;
+      let labelOffsetX = 0;
+
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const candidateX = clamp(visual.x + labelOffsetX, labelHalfWidth, boardSize.width - labelHalfWidth);
+        const minOffsetY = -(visual.y - (labelHalfHeight + 8));
+        const maxOffsetY = (boardSize.height - (labelHalfHeight + 8)) - visual.y;
+        const clampedOffsetY = clamp(labelOffsetY, minOffsetY, maxOffsetY);
+        const candidateY = visual.y + clampedOffsetY;
+
+        const hasCollision = placedLabels.some((placed) => (
+          Math.abs(candidateX - placed.x) < labelHalfWidth * 1.8
+          && Math.abs(candidateY - placed.y) < labelHalfHeight * 2.2
+        ));
+
+        labelOffsetY = clampedOffsetY;
+
+        if (!hasCollision) {
+          labelOffsetX = candidateX - visual.x;
+          placedLabels.push({ x: candidateX, y: candidateY });
+          return {
+            ...visual,
+            labelOffsetX,
+            labelOffsetY,
+            hideLabel: false,
+          } satisfies OrbitStopVisual;
+        }
+
+        const verticalNudge = 16 + attempt * 6;
+        labelOffsetY += labelOffsetY < 0 ? -verticalNudge : verticalNudge;
+        labelOffsetX += attempt % 2 === 0 ? 16 : -16;
+      }
+
+      const finalX = clamp(visual.x + labelOffsetX, labelHalfWidth, boardSize.width - labelHalfWidth);
+      const finalY = clamp(visual.y + labelOffsetY, labelHalfHeight + 8, boardSize.height - (labelHalfHeight + 8));
+      placedLabels.push({ x: finalX, y: finalY });
+
+      return {
+        ...visual,
+        labelOffsetX: finalX - visual.x,
+        labelOffsetY: finalY - visual.y,
+        hideLabel: isSmallBoard,
       } satisfies OrbitStopVisual;
     });
   }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap]);
@@ -2820,17 +2928,24 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           </div>
         </div>
         {/* M9-COMPLETE: Home Island panel is now a persistent HUD overlay — see 🏠 button in always-controls */}
-        <div className="island-run-prototype__controls">
-          {ISLAND_SCENES.map((sceneId) => (
+        <div className="island-run-prototype__controls" aria-label={`Theme controls (active: ${activeTheme.label})`}>
+          {ISLAND_BOARD_THEMES.map((theme) => (
             <button
-              key={sceneId}
+              key={theme.id}
               type="button"
-              className={`island-run-prototype__scene-btn ${activeScene === sceneId ? 'island-run-prototype__scene-btn--active' : ''}`}
-              onClick={() => setActiveScene(sceneId)}
+              className={`island-run-prototype__scene-btn ${activeTheme.id === theme.id ? 'island-run-prototype__scene-btn--active' : ''}`}
+              onClick={() => setThemeOverrideId(theme.id)}
             >
-              BG {sceneId}
+              {theme.label}
             </button>
           ))}
+          <button
+            type="button"
+            className={`island-run-prototype__scene-btn ${themeOverrideId === null ? 'island-run-prototype__scene-btn--active' : ''}`}
+            onClick={() => setThemeOverrideId(null)}
+          >
+            Auto theme
+          </button>
           <button type="button" className="island-run-prototype__debug-btn" onClick={() => setShowDebug((value) => !value)}>
             {showDebug ? 'Hide' : 'Show'} anchor/depth debug
           </button>
@@ -2911,13 +3026,22 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>}
       </header>
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--scene-${activeScene} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''}`}>
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''}`}>
         <img
           className="island-run-board__bg"
-          src={`/assets/islands/backgrounds/bg_00${activeScene}.svg`}
+          src={activeTheme.backgroundImage}
           alt=""
           aria-hidden="true"
         />
+
+        {activeTheme.pathOverlayImage && (
+          <img
+            className="island-run-board__path-overlay"
+            src={activeTheme.pathOverlayImage}
+            alt=""
+            aria-hidden="true"
+          />
+        )}
 
         <canvas ref={canvasRef} className="island-run-board__path" />
 
@@ -2928,7 +3052,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <button
               key={stopVisual.id}
               type="button"
-              className={`island-orbit-stop island-orbit-stop--${stopVisual.state} island-orbit-stop--scene-${activeScene} ${
+              className={`island-orbit-stop island-orbit-stop--${stopVisual.state} island-orbit-stop--${activeTheme.sceneClass} ${
                 stopVisual.stopId && stopVisual.stopId === activeStopId ? 'island-orbit-stop--selected' : ''
               }`}
               style={{ left: stopVisual.x, top: stopVisual.y }}
@@ -2940,8 +3064,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             >
               <span className="island-orbit-stop__icon" aria-hidden="true">{getOrbitStopDisplayIcon(stopVisual.state, stopVisual.icon)}</span>
               <span
-                className="island-orbit-stop__label"
-                style={{ transform: `translate(-50%, calc(-50% + ${stopVisual.labelOffsetY}px))` }}
+                className={`island-orbit-stop__label ${stopVisual.hideLabel ? 'island-orbit-stop__label--hidden' : ''}`}
+                style={{ transform: `translate(calc(-50% + ${stopVisual.labelOffsetX}px), calc(-50% + ${stopVisual.labelOffsetY}px))` }}
                 title={stopVisual.label}
               >
                 {stopVisual.label}
@@ -2999,7 +3123,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
         <img
           className="island-run-board__depth-mask"
-          src={`/assets/islands/depth/depth_mask_00${activeScene}.svg`}
+          src={activeTheme.depthMaskImage}
           alt=""
           aria-hidden="true"
         />
