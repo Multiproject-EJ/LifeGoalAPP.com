@@ -29,6 +29,29 @@ Use a **hybrid composition** per island:
 
 This gives a 3D look while staying performant in mobile web.
 
+### Migration note: current flat oval -> island-integrated board (no logic rewrite)
+To avoid regressions, migrate visuals in-place and keep traversal logic unchanged.
+
+**Phase 1 (fast visual uplift):**
+- Keep existing 17-tile indices/order and movement rules exactly as implemented.
+- Replace flat oval treatment with one island background + path overlay.
+- Continue absolute positioning for tiles/token, but anchor from canonical board coords (0..1 normalized).
+
+**Phase 2 (scalable theming):**
+- Move board geometry into a single exported layout contract (`TILE_ANCHORS`, `STOP_TRIGGER_TILES`, tangent/scale/zBand).
+- Introduce per-island theme metadata (background, optional path grade/depth mask, ring transform offsets if needed).
+- Support runtime theme swap without resetting run state.
+
+**Phase 3 (quality/polish):**
+- Add subtle water/path glow and token shadow tuning by `zBand`.
+- Add responsive label collision rules for stop markers.
+- Add lightweight asset preloading + cache policy so many island themes can load safely on mobile.
+
+**Non-negotiable invariants:**
+- 17 anchor order never changes.
+- Stop trigger tile mapping remains deterministic.
+- Theme changes are cosmetic only and must not alter landing outcomes.
+
 ---
 
 ## Rendering Architecture (must implement)

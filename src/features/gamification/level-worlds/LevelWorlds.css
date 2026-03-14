@@ -1163,8 +1163,20 @@
   pointer-events: none;
 }
 
-.island-run-board__path {
+.island-run-board__path-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   z-index: 2;
+  pointer-events: none;
+  opacity: 0.36;
+  mix-blend-mode: screen;
+}
+
+.island-run-board__path {
+  z-index: 3;
 }
 
 .island-run-board__orbit-stops {
@@ -1239,6 +1251,11 @@
   background: rgba(1, 10, 15, 0.92);
   border-color: rgba(206, 244, 255, 0.72);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
+}
+
+
+.island-orbit-stop__label--hidden {
+  display: none;
 }
 
 .island-orbit-stop--scene-3 .island-orbit-stop__label {
