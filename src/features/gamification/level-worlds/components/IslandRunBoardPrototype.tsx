@@ -265,6 +265,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [activeScene, setActiveScene] = useState<(typeof ISLAND_SCENES)[number]>(1);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
+  const [isHudCollapsed, setIsHudCollapsed] = useState(true);
 
   const [hearts, setHearts] = useState(5);
   const [dicePool, setDicePool] = useState(() => convertHeartToDicePool(1));
@@ -2596,20 +2597,34 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   };
 
   return (
-    <section className="island-run-prototype">
+    <section className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}>
       <header className="island-run-prototype__header">
         <h2 className="island-run-prototype__title">
-          🏝️ Island Run
-          <button
-            type="button"
-            className="island-run-prototype__dev-toggle"
-            aria-expanded={isDevPanelOpen}
-            aria-controls="island-run-dev-panel"
-            onClick={() => setIsDevPanelOpen((v) => !v)}
-          >
-            {isDevPanelOpen ? '▲ Hide dev info' : '▼ Dev info'}
-          </button>
+          <span>🏝️ Island Run</span>
+          <span className="island-run-prototype__title-actions">
+            {!isHudCollapsed && (
+              <button
+                type="button"
+                className="island-run-prototype__dev-toggle"
+                aria-expanded={isDevPanelOpen}
+                aria-controls="island-run-dev-panel"
+                onClick={() => setIsDevPanelOpen((v) => !v)}
+              >
+                {isDevPanelOpen ? '▲ Hide dev info' : '▼ Dev info'}
+              </button>
+            )}
+            <button
+              type="button"
+              className="island-run-prototype__dev-toggle"
+              aria-expanded={!isHudCollapsed}
+              aria-controls="island-run-main-hud"
+              onClick={() => setIsHudCollapsed((value) => !value)}
+            >
+              {isHudCollapsed ? '▼ Show HUD' : '▲ Hide HUD'}
+            </button>
+          </span>
         </h2>
+        {!isHudCollapsed && <div id="island-run-main-hud">
         <div className="island-run-prototype__always-controls">
           <button
             type="button"
@@ -2893,9 +2908,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>
           </div>
         )}
+        </div>}
       </header>
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--scene-${activeScene}`}>
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--scene-${activeScene} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''}`}>
         <img
           className="island-run-board__bg"
           src={`/assets/islands/backgrounds/bg_00${activeScene}.svg`}

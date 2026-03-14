@@ -648,10 +648,25 @@
 }
 
 .island-run-prototype__title {
-  line-height: 1.24;
-  font-size: clamp(1.02rem, 2.6vw, 1.14rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
 
+.island-run-prototype__title-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.island-run-prototype--hud-collapsed {
+  gap: 0.45rem;
+}
+
+.island-run-prototype--hud-collapsed .island-run-prototype__header {
+  padding: 0.55rem 0.75rem;
+}
 
 .island-run-prototype__hud-grid {
   display: grid;
@@ -1083,6 +1098,11 @@
   border: 1px solid rgba(176, 237, 255, 0.46);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(11, 24, 36, 0.6) inset;
   isolation: isolate;
+}
+
+.island-run-board--hud-collapsed {
+  height: min(88vh, 820px);
+  min-height: 620px;
 }
 
 .island-run-board::before,
