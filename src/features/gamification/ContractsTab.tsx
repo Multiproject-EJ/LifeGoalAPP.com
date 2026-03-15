@@ -23,6 +23,7 @@ import {
   reduceContractStake,
   recordWitnessPing,
   fetchContractSweepHealth,
+  logOutcomeOnlyContractFailure,
   MAX_ACTIVE_CONTRACTS,
   type ReduceStakeEligibility,
   type GentleRecoveryEligibility,
@@ -286,6 +287,48 @@ export function ContractsTab({
         }
       }
     }
+  };
+
+  const handleLogOutcomeFailure = async (contractId?: string) => {
+    const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
+    if (!target || !userId) return;
+
+    const { data: evaluation, error } = await logOutcomeOnlyContractFailure(userId, target.id);
+    if (error || !evaluation) {
+      setActionError(error?.message ?? 'Unable to log failure right now.');
+      return;
+    }
+
+    setActionError(null);
+    const { data: refreshedContracts } = await fetchContracts(userId);
+    const refreshed = refreshedContracts?.find((contract) => contract.id === target.id) ?? null;
+    if (refreshed) {
+      refreshContractInList(refreshed);
+      setResultContract(refreshed);
+    }
+    setContractResult(evaluation);
+    await loadContract();
+  };
+
+  const handleFinalizeOutcomeSuccess = async (contractId?: string) => {
+    const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
+    if (!target || !userId) return;
+
+    const { data: evaluation, error } = await evaluateContract(userId, target.id, { forceResult: 'success' });
+    if (error || !evaluation) {
+      setActionError(error?.message ?? 'Unable to finalize contract right now.');
+      return;
+    }
+
+    setActionError(null);
+    const { data: refreshedContracts } = await fetchContracts(userId);
+    const refreshed = refreshedContracts?.find((contract) => contract.id === target.id) ?? null;
+    if (refreshed) {
+      refreshContractInList(refreshed);
+      setResultContract(refreshed);
+    }
+    setContractResult(evaluation);
+    await loadContract();
   };
 
   const handlePauseContract = async (contractId?: string) => {
@@ -552,6 +595,8 @@ export function ContractsTab({
                   key={contract.id}
                   contract={contract}
                   onMarkProgress={() => void handleMarkProgress(contract.id)}
+                  onLogFailure={() => void handleLogOutcomeFailure(contract.id)}
+                  onFinalizeSuccess={() => void handleFinalizeOutcomeSuccess(contract.id)}
                   onPause={() => void handlePauseContract(contract.id)}
                   onResume={() => void handleResumeContract(contract.id)}
                   onCancel={() => void handleCancelContract(contract.id)}

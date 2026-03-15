@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ContractCadence, ContractStakeType, ContractTargetType, ContractType, ContractStage } from '../../types/gamification';
-import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
-import { fetchGoals } from '../../services/goals';
+import { listHabitsV2, quickAddDailyHabit, type HabitV2Row } from '../../services/habitsV2';
+import { fetchGoals, insertGoal } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
 import { createContract, activateContract, type ContractInput } from '../../services/commitmentContracts';
 import { IdentityStatementInput } from './IdentityStatementInput';
@@ -10,6 +10,7 @@ import { NarrativeThemePicker } from './NarrativeThemePicker';
 import './ContractWizard.css';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
+type GoalInsert = Database['public']['Tables']['goals']['Insert'];
 
 interface ContractWizardProps {
   userId: string;
@@ -57,6 +58,10 @@ export function ContractWizard({
   const [currentStep, setCurrentStep] = useState<WizardStep>(0);
   const [targetOptions, setTargetOptions] = useState<TargetOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quickCreateType, setQuickCreateType] = useState<'Habit' | 'Goal' | null>(null);
+  const [quickCreateTitle, setQuickCreateTitle] = useState('');
+  const [quickCreateTargetDate, setQuickCreateTargetDate] = useState('');
+  const [quickCreateSubmitting, setQuickCreateSubmitting] = useState(false);
 
   // Step 0: Contract type
   const [selectedContractType, setSelectedContractType] = useState<ContractType>('classic');
@@ -69,6 +74,7 @@ export function ContractWizard({
   const [stakeType, setStakeType] = useState<ContractStakeType>('gold');
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [graceDays, setGraceDays] = useState<number>(1);
+  const [trackingMode, setTrackingMode] = useState<'progress' | 'outcome_only'>('progress');
   const [accountabilityMode, setAccountabilityMode] = useState<'solo' | 'witness'>('solo');
   const [witnessLabel, setWitnessLabel] = useState('');
 
@@ -214,6 +220,7 @@ export function ContractWizard({
         stakeType,
         stakeAmount,
         graceDays,
+        trackingMode,
         accountabilityMode,
         witnessLabel,
         endAt: endDate ? new Date(endDate).toISOString() : null,
@@ -351,6 +358,106 @@ export function ContractWizard({
                     <span className="contract-wizard__target-title">{target.title}</span>
                   </button>
                 ))}
+              </div>
+              <div className="contract-wizard__quick-create">
+                <p className="contract-wizard__quick-create-title">Or create one from here</p>
+                <div className="contract-wizard__quick-create-types">
+                  <button
+                    type="button"
+                    className={`contract-wizard__quick-create-chip${quickCreateType === 'Habit' ? ' contract-wizard__quick-create-chip--selected' : ''}`}
+                    onClick={() => setQuickCreateType('Habit')}
+                  >
+                    + New Habit
+                  </button>
+                  <button
+                    type="button"
+                    className={`contract-wizard__quick-create-chip${quickCreateType === 'Goal' ? ' contract-wizard__quick-create-chip--selected' : ''}`}
+                    onClick={() => setQuickCreateType('Goal')}
+                  >
+                    + New Goal
+                  </button>
+                </div>
+
+                {quickCreateType && (
+                  <div className="contract-wizard__quick-create-form">
+                    <input
+                      type="text"
+                      className="contract-wizard__input"
+                      placeholder={quickCreateType === 'Habit' ? 'Habit title' : 'Goal title'}
+                      value={quickCreateTitle}
+                      onChange={(event) => setQuickCreateTitle(event.target.value)}
+                    />
+                    {quickCreateType === 'Goal' && (
+                      <input
+                        type="date"
+                        className="contract-wizard__input"
+                        value={quickCreateTargetDate}
+                        min={new Date().toISOString().split('T')[0]}
+                        onChange={(event) => setQuickCreateTargetDate(event.target.value)}
+                      />
+                    )}
+                    <button
+                      type="button"
+                      className="contract-wizard__button contract-wizard__button--secondary"
+                      disabled={quickCreateSubmitting || !quickCreateTitle.trim()}
+                      onClick={async () => {
+                        const title = quickCreateTitle.trim();
+                        if (!title) return;
+
+                        setQuickCreateSubmitting(true);
+                        setError(null);
+                        try {
+                          if (quickCreateType === 'Habit') {
+                            const { data: habit, error: createError } = await quickAddDailyHabit({ title }, userId);
+                            if (createError || !habit) {
+                              throw createError || new Error('Failed to create habit');
+                            }
+
+                            const option: TargetOption = {
+                              id: habit.id,
+                              title: habit.title,
+                              type: 'Habit',
+                            };
+                            setTargetOptions((prev) => [option, ...prev]);
+                            setSelectedTarget(option);
+                          } else {
+                            const payload: GoalInsert = {
+                              title,
+                              description: null,
+                              target_date: quickCreateTargetDate || null,
+                              user_id: userId,
+                              progress_notes: null,
+                              status_tag: 'active',
+                            };
+
+                            const { data: goal, error: createError } = await insertGoal(payload);
+                            if (createError || !goal) {
+                              throw createError || new Error('Failed to create goal');
+                            }
+
+                            const option: TargetOption = {
+                              id: goal.id,
+                              title: goal.title,
+                              type: 'Goal',
+                            };
+                            setTargetOptions((prev) => [option, ...prev]);
+                            setSelectedTarget(option);
+                          }
+
+                          setQuickCreateTitle('');
+                          setQuickCreateTargetDate('');
+                          setQuickCreateType(null);
+                        } catch (creationError) {
+                          setError(creationError instanceof Error ? creationError.message : 'Failed to create target');
+                        } finally {
+                          setQuickCreateSubmitting(false);
+                        }
+                      }}
+                    >
+                      {quickCreateSubmitting ? 'Creating...' : `Create ${quickCreateType}`}
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="contract-wizard__actions">
                 <button
@@ -599,6 +706,29 @@ export function ContractWizard({
             </p>
           </div>
 
+          <div className="contract-wizard__field-group">
+            <label className="contract-wizard__label">Tracking style</label>
+            <div className="contract-wizard__chip-group">
+              <button
+                type="button"
+                className={`contract-wizard__chip${trackingMode === 'progress' ? ' contract-wizard__chip--selected' : ''}`}
+                onClick={() => setTrackingMode('progress')}
+              >
+                Progress check-ins
+              </button>
+              <button
+                type="button"
+                className={`contract-wizard__chip${trackingMode === 'outcome_only' ? ' contract-wizard__chip--selected' : ''}`}
+                onClick={() => setTrackingMode('outcome_only')}
+              >
+                Outcome only
+              </button>
+            </div>
+            <p className="contract-wizard__helper-text">
+              Outcome only fits "don’t do X" commitments: log a failure if needed, or finalize success at the end date.
+            </p>
+          </div>
+
 
           <div className="contract-wizard__field-group">
             <label className="contract-wizard__label">Accountability mode</label>
@@ -716,6 +846,10 @@ export function ContractWizard({
             <div className="contract-wizard__summary-row">
               <strong>Grace days:</strong>
               <span>{graceDays}</span>
+            </div>
+            <div className="contract-wizard__summary-row">
+              <strong>Tracking:</strong>
+              <span>{trackingMode === 'outcome_only' ? 'Outcome only' : 'Progress check-ins'}</span>
             </div>
             <div className="contract-wizard__summary-row">
               <strong>Accountability:</strong>

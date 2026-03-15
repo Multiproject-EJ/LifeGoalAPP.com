@@ -182,6 +182,44 @@
   color: var(--text-primary, #333);
 }
 
+.contract-wizard__quick-create {
+  border: 1px dashed var(--border-color, #d5d5d5);
+  border-radius: 10px;
+  padding: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.contract-wizard__quick-create-title {
+  margin: 0 0 0.625rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+}
+
+.contract-wizard__quick-create-types {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.contract-wizard__quick-create-chip {
+  border: 1px solid var(--border-color, #d9d9d9);
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  background: transparent;
+  color: var(--text-primary, #333);
+  font-size: 0.8rem;
+}
+
+.contract-wizard__quick-create-chip--selected {
+  border-color: var(--primary-color, #667eea);
+  background: color-mix(in srgb, var(--primary-color, #667eea) 12%, transparent);
+}
+
+.contract-wizard__quick-create-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
 /* Form fields */
 .contract-wizard__field-group {
   margin-bottom: 1.5rem;
