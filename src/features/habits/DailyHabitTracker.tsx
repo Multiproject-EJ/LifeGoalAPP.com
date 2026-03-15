@@ -94,6 +94,16 @@ import {
   triggerHabitHapticFeedback,
   type HabitFeedbackType,
 } from '../../utils/habitFeedback';
+import type { CommitmentContract } from '../../types/gamification';
+import {
+  cancelContract,
+  fetchActiveContracts,
+  pauseContract,
+  recordContractProgress,
+  recordWitnessPing,
+  resumeContract,
+  syncContractProgressWithTarget,
+} from '../../services/commitmentContracts';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 
@@ -492,6 +502,10 @@ export function DailyHabitTracker({
   const [isIntentionsMet, setIsIntentionsMet] = useState(false);
   const [intentionsMeetSaving, setIntentionsMeetSaving] = useState(false);
   const [intentionsMeetError, setIntentionsMeetError] = useState<string | null>(null);
+  const [activeContracts, setActiveContracts] = useState<CommitmentContract[]>([]);
+  const [contractsLoading, setContractsLoading] = useState(false);
+  const [contractsError, setContractsError] = useState<string | null>(null);
+  const [contractActionId, setContractActionId] = useState<string | null>(null);
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
   const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
   const [visionRewardDate, setVisionRewardDate] = useState<string | null>(null);
@@ -3511,6 +3525,76 @@ export function DailyHabitTracker({
 
   const resetToToday = useCallback(() => setActiveDate(today), [today]);
 
+  const loadActiveContracts = useCallback(async () => {
+    setContractsLoading(true);
+    setContractsError(null);
+
+    const { data, error } = await fetchActiveContracts(session.user.id);
+
+    if (error) {
+      setContractsError(error.message);
+      setActiveContracts([]);
+      setContractsLoading(false);
+      return;
+    }
+
+    const syncedContracts = await Promise.all(
+      (data ?? []).map(async (contract) => {
+        if (contract.status !== 'active') {
+          return contract;
+        }
+
+        const { data: syncedContract } = await syncContractProgressWithTarget(session.user.id, contract.id);
+        return syncedContract ?? contract;
+      }),
+    );
+
+    setActiveContracts(syncedContracts);
+    setContractsLoading(false);
+  }, [session.user.id]);
+
+  useEffect(() => {
+    void loadActiveContracts();
+  }, [loadActiveContracts]);
+
+  const handleContractAction = useCallback(
+    async (
+      contractId: string,
+      action: (userId: string, contractId: string) => Promise<{ error: Error | null }>,
+      fallbackMessage: string,
+    ) => {
+      setContractActionId(contractId);
+      setContractsError(null);
+
+      try {
+        const { error } = await action(session.user.id, contractId);
+        if (error) {
+          setContractsError(error.message);
+          return;
+        }
+        await loadActiveContracts();
+      } catch (error) {
+        setContractsError(error instanceof Error ? error.message : fallbackMessage);
+      } finally {
+        setContractActionId(null);
+      }
+    },
+    [loadActiveContracts, session.user.id],
+  );
+
+  const handlePingWitness = useCallback(async (contract: CommitmentContract) => {
+    const message = `Hey ${contract.witnessLabel ?? 'my accountability witness'} — quick contract check-in: I'm committing to ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${contract.cadence === 'daily' ? 'today' : 'this week'} for "${contract.title}". A quick encouragement message from you would help me stay on track 💛`;
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(message);
+      }
+      await recordWitnessPing(session.user.id, contract, 'clipboard');
+    } catch (error) {
+      setContractsError(error instanceof Error ? error.message : 'Unable to copy witness ping message.');
+    }
+  }, [session.user.id]);
+
   /**
    * Toggle habit completion for the monthly grid using the new habit_completions table.
    * This function is specifically for monthly view interactions with habits_v2.
@@ -5827,6 +5911,101 @@ export function DailyHabitTracker({
                 </div>
               </div>
             ) : null}
+
+            <div className="habit-contracts-card" aria-live="polite">
+              <div className="habit-contracts-card__header">
+                <div>
+                  <p className="habit-contracts-card__eyebrow">Keep commitments visible</p>
+                  <h3 className="habit-contracts-card__title">Active contracts</h3>
+                </div>
+                <button
+                  type="button"
+                  className="habit-contracts-card__refresh"
+                  onClick={() => void loadActiveContracts()}
+                  disabled={contractsLoading || contractActionId !== null}
+                >
+                  {contractsLoading ? 'Refreshing…' : 'Refresh'}
+                </button>
+              </div>
+
+              {contractsLoading && activeContracts.length === 0 ? (
+                <p className="habit-contracts-card__hint">Loading your active contracts…</p>
+              ) : activeContracts.length === 0 ? (
+                <p className="habit-contracts-card__hint">
+                  No active contracts right now. Start one from the Contracts tab and it will appear here.
+                </p>
+              ) : (
+                <div className="habit-contracts-card__list">
+                  {activeContracts.map((contract) => {
+                    const progressPercent = Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
+                    const isBusy = contractActionId === contract.id;
+
+                    return (
+                      <article key={contract.id} className="habit-contracts-card__item">
+                        <div className="habit-contracts-card__item-head">
+                          <h4 className="habit-contracts-card__item-title">{contract.isSacred ? `🔱 ${contract.title}` : contract.title}</h4>
+                          <span className={`habit-contracts-card__status habit-contracts-card__status--${contract.status}`}>
+                            {contract.status}
+                          </span>
+                        </div>
+                        <p className="habit-contracts-card__item-copy">
+                          {contract.currentProgress} / {contract.targetCount} this {contract.cadence}
+                        </p>
+                        <div className="habit-contracts-card__meter" role="presentation">
+                          <span className="habit-contracts-card__meter-fill" style={{ width: `${progressPercent}%` }} />
+                        </div>
+                        <div className="habit-contracts-card__actions">
+                          <button
+                            type="button"
+                            className="habit-contracts-card__button habit-contracts-card__button--primary"
+                            onClick={() =>
+                              void handleContractAction(
+                                contract.id,
+                                contract.status === 'paused' ? resumeContract : recordContractProgress,
+                                'Unable to update contract progress.',
+                              )
+                            }
+                            disabled={isBusy}
+                          >
+                            {contract.status === 'paused' ? 'Resume' : 'Mark progress'}
+                          </button>
+                          {contract.status === 'active' ? (
+                            <button
+                              type="button"
+                              className="habit-contracts-card__button"
+                              onClick={() => void handleContractAction(contract.id, pauseContract, 'Unable to pause contract.')}
+                              disabled={isBusy}
+                            >
+                              Pause
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="habit-contracts-card__button"
+                            onClick={() => void handleContractAction(contract.id, cancelContract, 'Unable to cancel contract.')}
+                            disabled={isBusy}
+                          >
+                            Cancel
+                          </button>
+                          {contract.accountabilityMode === 'witness' && contract.witnessLabel ? (
+                            <button
+                              type="button"
+                              className="habit-contracts-card__button"
+                              onClick={() => void handlePingWitness(contract)}
+                              disabled={isBusy}
+                            >
+                              Ping witness
+                            </button>
+                          ) : null}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+
+              {contractsError ? <p className="habit-contracts-card__error">{contractsError}</p> : null}
+            </div>
 
             <div className="habit-quick-journal" aria-live="polite">
               <div className="habit-quick-journal__header">
