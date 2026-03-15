@@ -1153,6 +1153,21 @@
   inset: 0;
 }
 
+.island-run-board__dice-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 1.3rem;
+  transform: translateX(-50%);
+  z-index: 9;
+  pointer-events: none;
+}
+
+.island-run-board__dice-dock .island-run-prototype__dice-throw {
+  background: rgba(7, 20, 30, 0.78);
+  border-color: rgba(179, 225, 244, 0.48);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(212, 244, 255, 0.18) inset;
+}
+
 .island-run-board__bg {
   position: absolute;
   inset: 0;
