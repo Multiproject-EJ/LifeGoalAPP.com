@@ -14819,6 +14819,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: clamp(0.5rem, 2vw, 0.85rem);
   pointer-events: auto;
   position: relative;
+  touch-action: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
