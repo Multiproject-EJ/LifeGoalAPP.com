@@ -569,6 +569,7 @@ export type ContractTargetType = 'Habit' | 'Goal' | 'FocusSession';
 export type ContractCadence = 'daily' | 'weekly';
 export type ContractStakeType = 'gold' | 'tokens';
 export type ContractResult = 'success' | 'miss';
+export type ContractTrackingMode = 'progress' | 'outcome_only';
 
 export type ContractType =
   | 'classic'       // Existing behavior — stake on habit/goal completion
@@ -608,7 +609,9 @@ export interface CommitmentContract {
   graceDays: number;           // 0-2 per cadence window
   coolingOffHours: number;     // 24 by default
   status: ContractStatus;
+  trackingMode?: ContractTrackingMode;
   currentProgress: number;     // completions in current window
+  selfReportedOutcome?: ContractResult | null;
   missCount: number;           // total misses
   successCount: number;        // total successes
   resetCount?: number;

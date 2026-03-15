@@ -161,6 +161,24 @@
   margin: 0;
 }
 
+.contract-status-card__time-progress {
+  margin-bottom: 1rem;
+}
+
+.contract-status-card__time-progress-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+  margin: 0 0 0.35rem;
+}
+
+.contract-status-card__time-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e 0%, #667eea 100%);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
 /* ---- Escalation ladder ---- */
 .contract-status-card__escalation {
   background: #fff7ed;
@@ -334,6 +352,10 @@
   cursor: pointer;
   min-height: 44px;
   transition: all 0.2s ease;
+}
+
+.contract-status-card__actions > .contract-status-card__secondary-button {
+  width: 100%;
 }
 
 .contract-status-card__secondary-button:hover:not(:disabled) {

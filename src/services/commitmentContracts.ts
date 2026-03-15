@@ -14,6 +14,7 @@ import type {
   ContractStage,
   ReputationScore,
   ReputationTier,
+  ContractTrackingMode,
 } from '../types/gamification';
 import { DEMO_REPUTATION_KEY } from '../types/gamification';
 import { recordTelemetryEvent, type TelemetryEventMetadata } from './telemetry';
@@ -64,6 +65,7 @@ export type ContractInput = {
   endAt?: string | null;
   // New contract type fields
   contractType?: ContractType;
+  trackingMode?: ContractTrackingMode;
   identityStatement?: string | null;
   redemptionQuestTitle?: string | null;
   futureMessage?: string | null;
@@ -107,7 +109,9 @@ type ContractRow = {
   grace_days: number;
   cooling_off_hours: number;
   status: ContractStatus;
+  tracking_mode: ContractTrackingMode;
   current_progress: number;
+  self_reported_outcome: 'success' | 'miss' | null;
   miss_count: number;
   success_count: number;
   reset_count: number;
@@ -186,7 +190,9 @@ function contractFromRow(row: ContractRow): CommitmentContract {
     graceDays: row.grace_days,
     coolingOffHours: row.cooling_off_hours,
     status: row.status,
+    trackingMode: row.tracking_mode ?? 'progress',
     currentProgress: row.current_progress,
+    selfReportedOutcome: row.self_reported_outcome ?? null,
     missCount: row.miss_count,
     successCount: row.success_count,
     resetCount: row.reset_count,
@@ -240,7 +246,9 @@ function contractToRow(contract: CommitmentContract): ContractRow {
     grace_days: contract.graceDays,
     cooling_off_hours: contract.coolingOffHours,
     status: contract.status,
+    tracking_mode: contract.trackingMode ?? 'progress',
     current_progress: contract.currentProgress,
+    self_reported_outcome: contract.selfReportedOutcome ?? null,
     miss_count: contract.missCount,
     success_count: contract.successCount,
     reset_count: contract.resetCount ?? 0,
@@ -700,7 +708,9 @@ export async function createContract(
       graceDays: input.graceDays ?? 1,
       coolingOffHours: input.coolingOffHours ?? 24,
       status: 'draft',
+      trackingMode: input.trackingMode ?? 'progress',
       currentProgress: 0,
+      selfReportedOutcome: null,
       missCount: 0,
       successCount: 0,
       resetCount: 0,
@@ -1282,6 +1292,13 @@ export async function recordContractProgress(
       };
     }
 
+    if (contract.trackingMode === 'outcome_only') {
+      return {
+        data: null,
+        error: new Error('Outcome-only contracts do not use progress check-ins. Log a failure or finalize at end date.'),
+      };
+    }
+
     // Check if we're still in the same window
     const now = new Date();
     const currentWindowStart = new Date(contract.currentWindowStart);
@@ -1373,7 +1390,8 @@ export async function syncContractProgressWithTarget(
 
 export async function evaluateContract(
   userId: string,
-  contractId: string
+  contractId: string,
+  options?: { forceResult?: 'success' | 'miss' }
 ): Promise<ServiceResponse<ContractEvaluation>> {
   try {
     const { data: contracts, error } = await fetchContracts(userId);
@@ -1403,9 +1421,29 @@ export async function evaluateContract(
     const hasEndDatePassed = contract.endAt !== null && now > new Date(contract.endAt);
 
     // Calculate result
-    const actualCount = contract.currentProgress;
-    const targetWithGrace = contract.targetCount - contract.graceDays;
-    const result = actualCount >= targetWithGrace ? 'success' : 'miss';
+    let actualCount = contract.currentProgress;
+    let result: 'success' | 'miss';
+    if (options?.forceResult) {
+      result = options.forceResult;
+      actualCount = result === 'success' ? contract.targetCount : 0;
+    } else if (contract.trackingMode === 'outcome_only') {
+      if (contract.selfReportedOutcome === 'miss') {
+        result = 'miss';
+        actualCount = 0;
+      } else {
+        if (contract.endAt && now < new Date(contract.endAt)) {
+          return {
+            data: null,
+            error: new Error('This outcome-only contract can be finalized on or after its end date, or you can log a failure now.'),
+          };
+        }
+        result = 'success';
+        actualCount = contract.targetCount;
+      }
+    } else {
+      const targetWithGrace = contract.targetCount - contract.graceDays;
+      result = actualCount >= targetWithGrace ? 'success' : 'miss';
+    }
     const graceDaysUsed = Math.min(
       contract.graceDays,
       Math.max(0, contract.targetCount - actualCount)
@@ -1515,6 +1553,7 @@ export async function evaluateContract(
     const updatedContract: CommitmentContract = {
       ...contract,
       currentProgress: 0,
+      selfReportedOutcome: null,
       targetCount: shouldExitGentleRamp
         ? contract.recoveryOriginalTargetCount ?? contract.targetCount
         : contract.targetCount,
@@ -1612,6 +1651,9 @@ export async function evaluateDueContracts(
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
   try {
     if (canUseSupabaseData()) {
+      const { data: existingContracts } = await fetchContracts(userId);
+      const hasOutcomeOnlyContract = (existingContracts ?? []).some((contract) => contract.trackingMode === 'outcome_only');
+      if (!hasOutcomeOnlyContract) {
       const supabase = getSupabaseClient();
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
         p_user_id: userId,
@@ -1624,6 +1666,7 @@ export async function evaluateDueContracts(
 
       const evaluations = (data ?? []).map((row: unknown) => evaluationFromRow(row as EvaluationRow));
       return { data: evaluations, error: null };
+      }
     }
 
     const { data: contracts, error } = await fetchContracts(userId);
@@ -1639,6 +1682,10 @@ export async function evaluateDueContracts(
 
       const windowStart = new Date(contract.currentWindowStart);
       const windowEnd = getWindowEnd(windowStart, contract.cadence);
+      if (contract.trackingMode === 'outcome_only') {
+        return contract.endAt !== null && now > new Date(contract.endAt);
+      }
+
       return now > windowEnd;
     });
 
@@ -1766,6 +1813,50 @@ export async function fetchContractEvaluations(
     return {
       data: null,
       error: error instanceof Error ? error : new Error('Failed to fetch contract evaluations'),
+    };
+  }
+}
+
+export async function logOutcomeOnlyContractFailure(
+  userId: string,
+  contractId: string,
+): Promise<ServiceResponse<ContractEvaluation>> {
+  try {
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) {
+      return { data: null, error: error || new Error('Contracts not found') };
+    }
+
+    const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
+    if (contractIndex === -1) {
+      return { data: null, error: new Error('Contract not found') };
+    }
+
+    const contract = contracts[contractIndex];
+    if (contract.status !== 'active') {
+      return { data: null, error: new Error('Only active contracts can log outcome failure') };
+    }
+
+    if (contract.trackingMode !== 'outcome_only') {
+      return { data: null, error: new Error('This action is only for outcome-only contracts') };
+    }
+
+    const updatedContract: CommitmentContract = {
+      ...contract,
+      selfReportedOutcome: 'miss',
+      endAt: new Date(Date.now() - 1000).toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedContracts = [...contracts];
+    updatedContracts[contractIndex] = updatedContract;
+    await saveContracts(userId, updatedContracts);
+
+    return evaluateContract(userId, contractId);
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to log outcome contract failure'),
     };
   }
 }

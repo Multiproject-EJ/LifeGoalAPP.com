@@ -6,6 +6,8 @@ import './ContractStatusCard.css';
 interface ContractStatusCardProps {
   contract: CommitmentContract;
   onMarkProgress: () => void;
+  onLogFailure: () => void;
+  onFinalizeSuccess: () => void;
   onPause: () => void;
   onResume: () => void;
   onCancel: () => void;
@@ -15,6 +17,8 @@ interface ContractStatusCardProps {
 export function ContractStatusCard({
   contract,
   onMarkProgress,
+  onLogFailure,
+  onFinalizeSuccess,
   onPause,
   onResume,
   onCancel,
@@ -71,6 +75,19 @@ export function ContractStatusCard({
   const isAtRisk = paceForecast?.status === 'at_risk';
   const shouldSuggestSupportOnly = contract.missCount >= 2;
   const isCancelAllowed = contract.status !== 'active' || coolingOffRemaining !== null;
+  const isOutcomeOnly = contract.trackingMode === 'outcome_only';
+  const endDate = contract.endAt ? new Date(contract.endAt) : null;
+  const endDateMs = endDate?.getTime() ?? null;
+  const now = new Date();
+  const canFinalizeOutcome = isOutcomeOnly && endDate !== null && now >= endDate;
+  const timeProgressPercentage = useMemo(() => {
+    if (endDateMs === null) return null;
+    const started = new Date(contract.startAt).getTime();
+    const ends = endDateMs;
+    if (Number.isNaN(started) || Number.isNaN(ends) || ends <= started) return null;
+    const ratio = ((Date.now() - started) / (ends - started)) * 100;
+    return Math.max(0, Math.min(100, ratio));
+  }, [contract.startAt, endDateMs]);
   const tier = contract.contractTier ?? 'common';
 
   return (
@@ -133,9 +150,26 @@ export function ContractStatusCard({
           />
         </div>
         <p className="contract-status-card__progress-text">
-          {contract.currentProgress} of {contract.targetCount} completions this {contract.cadence}
+          {isOutcomeOnly
+            ? 'Outcome-only contract: no daily check-ins required.'
+            : `${contract.currentProgress} of ${contract.targetCount} completions this ${contract.cadence}`}
         </p>
       </div>
+
+      {endDate && timeProgressPercentage !== null && (
+        <div className="contract-status-card__time-progress" role="status" aria-live="polite">
+          <p className="contract-status-card__time-progress-label">Contract timeline</p>
+          <div className="contract-status-card__progress-bar">
+            <div
+              className="contract-status-card__time-progress-fill"
+              style={{ width: `${timeProgressPercentage}%` }}
+            />
+          </div>
+          <p className="contract-status-card__progress-text">
+            {Math.round(timeProgressPercentage)}% elapsed · ends {endDate.toLocaleDateString()}
+          </p>
+        </div>
+      )}
 
       <div className="contract-status-card__info">
         <div className="contract-status-card__info-row">
@@ -176,14 +210,27 @@ export function ContractStatusCard({
         <button
           type="button"
           className="contract-status-card__primary-button"
-          onClick={contract.status === 'paused' ? onResume : onMarkProgress}
+          onClick={contract.status === 'paused' ? onResume : isOutcomeOnly ? onLogFailure : onMarkProgress}
         >
           {contract.status === 'paused'
             ? 'Resume Contract'
+            : isOutcomeOnly
+              ? 'Log Failure'
             : isAtRisk
               ? 'Rescue Progress'
               : 'Mark Progress'}
         </button>
+        {isOutcomeOnly && (
+          <button
+            type="button"
+            className="contract-status-card__secondary-button"
+            onClick={onFinalizeSuccess}
+            disabled={!canFinalizeOutcome}
+            title={!canFinalizeOutcome ? 'Finalize on or after the contract end date.' : undefined}
+          >
+            Finalize Success
+          </button>
+        )}
         <div className="contract-status-card__secondary-actions">
           {contract.status === 'active' && (
             <button
