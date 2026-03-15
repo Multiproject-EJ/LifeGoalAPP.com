@@ -141,6 +141,16 @@ export function MobileFooterNav({
     isSwipeCollapseTriggeredRef.current = false;
   };
 
+  const handleSurfaceTouchStartCapture = (event: TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    if (!touch) {
+      return;
+    }
+    swipeStartYRef.current = touch.clientY;
+    swipeStartXRef.current = touch.clientX;
+    isSwipeCollapseTriggeredRef.current = false;
+  };
+
   const handleSurfacePointerMoveCapture = (event: PointerEvent<HTMLDivElement>) => {
     if (!onCollapse || isSwipeCollapseTriggeredRef.current) {
       return;
@@ -150,6 +160,24 @@ export function MobileFooterNav({
     }
     const deltaY = event.clientY - swipeStartYRef.current;
     const deltaX = Math.abs(event.clientX - swipeStartXRef.current);
+    const SWIPE_DOWN_THRESHOLD = 28;
+
+    if (deltaY > SWIPE_DOWN_THRESHOLD && deltaY > deltaX) {
+      isSwipeCollapseTriggeredRef.current = true;
+      onCollapse();
+    }
+  };
+
+  const handleSurfaceTouchMoveCapture = (event: TouchEvent<HTMLDivElement>) => {
+    if (!onCollapse || isSwipeCollapseTriggeredRef.current) {
+      return;
+    }
+    const touch = event.touches[0];
+    if (!touch || swipeStartYRef.current === null || swipeStartXRef.current === null) {
+      return;
+    }
+    const deltaY = touch.clientY - swipeStartYRef.current;
+    const deltaX = Math.abs(touch.clientX - swipeStartXRef.current);
     const SWIPE_DOWN_THRESHOLD = 28;
 
     if (deltaY > SWIPE_DOWN_THRESHOLD && deltaY > deltaX) {
@@ -416,6 +444,10 @@ export function MobileFooterNav({
         onPointerMoveCapture={handleSurfacePointerMoveCapture}
         onPointerUpCapture={resetSurfaceSwipe}
         onPointerCancelCapture={resetSurfaceSwipe}
+        onTouchStartCapture={handleSurfaceTouchStartCapture}
+        onTouchMoveCapture={handleSurfaceTouchMoveCapture}
+        onTouchEndCapture={resetSurfaceSwipe}
+        onTouchCancelCapture={resetSurfaceSwipe}
         onPointerDown={handlePointerDown}
       >
         {onOpenMenu ? (
