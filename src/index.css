@@ -51,6 +51,7 @@ body {
   background: radial-gradient(circle at top, #e0f2fe, #f8fafc 62%);
   color: #0f172a;
   overflow-x: hidden;
+  scrollbar-gutter: stable both-edges;
 }
 
 /* Hide native scrollbars app-wide while preserving scroll behavior */
