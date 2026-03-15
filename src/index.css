@@ -5167,6 +5167,33 @@ html.platform-ipad .workspace-shell__menu-edge {
   overflow-wrap: anywhere;
 }
 
+.mobile-habit-home .habit-checklist-card__board-body {
+  padding-inline: clamp(1rem, 4vw, 1.15rem);
+  overflow-x: clip;
+}
+
+.mobile-habit-home .habit-checklist-card__board-body > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mobile-habit-home .habit-checklist__row,
+.mobile-habit-home .habit-contracts-card__item-head,
+.mobile-habit-home .habit-contracts-card__header {
+  min-width: 0;
+}
+
+.mobile-habit-home .habit-checklist__row {
+  flex-wrap: wrap;
+  row-gap: 0.45rem;
+}
+
+.mobile-habit-home .habit-health-badge,
+.mobile-habit-home .habit-checklist__offer-timer {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .habit-day-nav {
   display: flex;
   align-items: center;
