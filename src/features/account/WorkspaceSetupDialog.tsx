@@ -25,6 +25,7 @@ export function WorkspaceSetupDialog({
   const [fullName, setFullName] = useState('');
   const [workspaceName, setWorkspaceName] = useState('');
   const [birthday, setBirthday] = useState('');
+  const [gender, setGender] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,11 +38,13 @@ export function WorkspaceSetupDialog({
       setFullName('');
       setWorkspaceName('');
       setBirthday('');
+      setGender('');
       return;
     }
     setFullName(profile.full_name ?? '');
     setWorkspaceName(profile.workspace_name ?? '');
     setBirthday(profile.birthday ?? '');
+    setGender(profile.gender ?? '');
   }, [profile]);
 
   useEffect(() => {
@@ -73,6 +76,7 @@ export function WorkspaceSetupDialog({
         full_name: trimmedName,
         workspace_name: workspaceName.trim() || null,
         birthday: birthday || null,
+        gender: gender || null,
         initials: generateInitials(trimmedName),
       });
       if (error || !data) {
@@ -109,8 +113,8 @@ export function WorkspaceSetupDialog({
           <p className="workspace-setup__eyebrow">Complete your account</p>
           <h2>Save your account details</h2>
           <p>
-            Share your name, optional birthday, and workspace title so your account looks personalized every time you sign in. We’ll
-            sync these details to Supabase.
+            Share your name, optional birthday, optional gender, and workspace title so your account looks personalized every time you
+            sign in. We’ll sync these details to Supabase.
           </p>
         </div>
         <form className="workspace-setup__form" onSubmit={handleSubmit}>
@@ -151,6 +155,16 @@ export function WorkspaceSetupDialog({
               value={birthday}
               onChange={(event) => setBirthday(event.target.value)}
             />
+          </label>
+          <label className="supabase-auth__field">
+            <span>Gender (optional)</span>
+            <select value={gender} onChange={(event) => setGender(event.target.value)}>
+              <option value="">Prefer not to say</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="non_binary">Non-binary</option>
+              <option value="other">Other</option>
+            </select>
           </label>
           {statusMessage ? (
             <p className="supabase-auth__status supabase-auth__status--success">{statusMessage}</p>

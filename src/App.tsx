@@ -2247,6 +2247,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const accountWorkspaceName = workspaceProfile?.workspace_name || 'Personal rituals workspace';
   const accountWorkspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
   const accountBirthday = workspaceProfile?.birthday || 'Not set';
+  const accountGender = workspaceProfile?.gender || 'Not set';
   const accountOnboardingStatus = activeSession.user.user_metadata?.onboarding_complete ? 'Complete' : 'In progress';
 
   const profileAutoSaveResetKey = supabaseSession
@@ -2977,6 +2978,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     <div><dt>Workspace Name</dt><dd>{accountWorkspaceName}</dd></div>
                     <div><dt>Workspace Mode</dt><dd>{accountWorkspaceMode}</dd></div>
                     <div><dt>Birthday</dt><dd>{accountBirthday}</dd></div>
+                    <div><dt>Gender</dt><dd>{accountGender}</dd></div>
                     <div><dt>Onboarding</dt><dd>{accountOnboardingStatus}</dd></div>
                   </dl>
                   <div className="mobile-menu-overlay__profile-dialog-actions">

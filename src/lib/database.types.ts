@@ -1301,6 +1301,7 @@ export interface Database {
           full_name: string | null;
           workspace_name: string | null;
           birthday: string | null;
+          gender: string | null;
           birthday_gift_enabled: boolean | null;
           birthday_gift_last_claimed_at: string | null;
           initials: string | null;
@@ -1315,6 +1316,7 @@ export interface Database {
           full_name?: string | null;
           workspace_name?: string | null;
           birthday?: string | null;
+          gender?: string | null;
           birthday_gift_enabled?: boolean | null;
           birthday_gift_last_claimed_at?: string | null;
           initials?: string | null;
@@ -1329,6 +1331,7 @@ export interface Database {
           full_name?: string | null;
           workspace_name?: string | null;
           birthday?: string | null;
+          gender?: string | null;
           birthday_gift_enabled?: boolean | null;
           birthday_gift_last_claimed_at?: string | null;
           initials?: string | null;
