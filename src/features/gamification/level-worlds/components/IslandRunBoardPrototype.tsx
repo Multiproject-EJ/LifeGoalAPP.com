@@ -2704,6 +2704,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
   };
 
+  const diceThrowDisplay = (
+    <div
+      className={`island-run-prototype__dice-throw ${isRolling ? 'island-run-prototype__dice-throw--active' : ''}`}
+      aria-live="polite"
+    >
+      <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[0]}</span>
+      <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[1]}</span>
+      {rollValue !== null ? <span className="island-run-prototype__dice-total">= {rollValue}</span> : null}
+    </div>
+  );
+
   return (
     <section className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}>
       <header className="island-run-prototype__header">
@@ -2758,11 +2769,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               🌀 Spin
             </button>
           )}
-          <div className={`island-run-prototype__dice-throw ${isRolling ? 'island-run-prototype__dice-throw--active' : ''}`} aria-live="polite">
-            <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[0]}</span>
-            <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[1]}</span>
-            {rollValue !== null ? <span className="island-run-prototype__dice-total">= {rollValue}</span> : null}
-          </div>
           {/* M10A: audio toggle — persists to localStorage */}
           <button
             type="button"
@@ -3127,6 +3133,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           alt=""
           aria-hidden="true"
         />
+
+        <div className="island-run-board__dice-dock">
+          {diceThrowDisplay}
+        </div>
 
         {showDebug && (
           <svg className="island-debug-overlay" viewBox={`0 0 ${boardSize.width} ${boardSize.height}`}>
