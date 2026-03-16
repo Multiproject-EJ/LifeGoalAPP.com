@@ -5200,6 +5200,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: 100%;
   max-width: 100%;
   margin-inline: auto;
+  box-sizing: border-box;
 }
 
 .mobile-habit-home .time-bound-offers {
@@ -5208,12 +5209,14 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-habit-home .time-bound-offers__item {
   width: min(100%, 88px);
+  box-sizing: border-box;
 }
 
 .mobile-habit-home .habit-checklist__item {
   width: 100%;
   max-width: 100%;
   margin-inline: auto;
+  box-sizing: border-box;
 }
 
 .habit-day-nav {
@@ -6768,7 +6771,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   align-items: center;
   gap: 0.65rem;
   cursor: pointer;
-  padding: 0.35rem 0.35rem 0.35rem 0.15rem;
+  padding: 0.35rem;
   border-radius: 12px;
   min-width: 0;
 }
