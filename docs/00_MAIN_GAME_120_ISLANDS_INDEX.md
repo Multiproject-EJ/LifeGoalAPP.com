@@ -108,6 +108,7 @@ Quality direction:
 - Board visual style: **3D-hybrid** (2D art + pseudo-3D board layer + depth/occlusion masks)
 - Movement: 1 Heart converts into dice pool; each move consumes a **2-dice pair** (each die 1–3, total move 2–6 tiles). Occasional Spin Move (1–5 tiles).
 - Stops: 1 Hatchery, 2 Minigame, 3 Utility, 4 Dynamic, 5 Boss — **Shop is NOT a stop**; shop is a persistent HUD button always accessible
+- Dynamic Stop expansion (planned): include an occasional **Community Quiz** stop variant where players answer one of a 100-question bank (player-style/archetype prompts), then immediately see aggregate community result percentages (cohort-scoped or global). Detailed implementation is deferred to a later build slice.
 - Encounter tile: easy bonus challenge, not boss
 - Special islands: exactly **20** in the 1–120 sequence — **5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120**; normal islands: **48 h** timer; special islands: **72 h** timer
 - Eggs: **one per island total** (non-renewable after sold/claimed); Common/Rare/Mythic, 4 stages; hatch timer runs from first island visit regardless of player location; unclaimed hatched eggs are recoverable on cycle revisit; **hatch duration is a surprise (1–3 days) — no countdown shown to player**

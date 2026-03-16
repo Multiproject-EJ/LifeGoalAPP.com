@@ -67,8 +67,16 @@ Stop 4 is predictable in flavour (the player knows it's a "do something useful" 
 - 🎯 **Goal check-in:** Review progress on one active goal; mark a step done or add a note. Reward on completion.
 - 💊 **Utility bonus:** Receive a free heart top-up or dice bundle (no action required; just claim).
 - 🏋️ **Habit nudge:** Reminder to complete a specific habit today; clicking through to log it awards a bonus.
+- 🧠 **Community quiz pulse (occasional):** A single multiple-choice community question appears (for example: "I love tracking habits daily" with options like A/B/C player-style preferences). After answering, the player immediately sees aggregate community distribution (e.g. `20% A / 45% B / 35% C`). Questions can be scoped to a specific archetype/player-type cohort or to the full player base.
 
 Dynamic Stop content is also **deterministically seeded** per `(islandNumber, cycleIndex)`.
+
+### 5.1 Community Quiz Pulse — Planning Notes (v1 concept, implementation later)
+
+- Build and maintain a bank of **100 community quiz questions** for recurring use across islands/cycles.
+- Purpose: increase community feeling by letting players compare their style/preferences with others in real time.
+- Quiz result reveal should happen **after answer submission** and show percentage split by option.
+- Exact implementation details (sampling rules, anti-spam/answer integrity, cohort logic, refresh cadence, reward hooks) are intentionally deferred to a later dedicated build/design slice.
 
 ---
 
@@ -80,4 +88,5 @@ Dynamic Stop content is also **deterministically seeded** per `(islandNumber, cy
   - Add Mystery Stop modal (`MysteryStopModal.tsx`) with blind-box reveal animation.
   - Add seeded content selector for Mystery Stop.
   - Update Dynamic Stop to support timed-review and goal-check-in variants.
+  - Add an occasional Community Quiz variant (100-question bank, post-answer aggregate percentage reveal, cohort-or-global audience scope).
   - Add hatchery ↔ minigame swap logic per island definition.
