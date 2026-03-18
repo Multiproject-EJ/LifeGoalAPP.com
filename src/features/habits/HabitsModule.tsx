@@ -4,6 +4,7 @@ import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
+import { environmentContextToJson, normalizeEnvironmentContext } from '../environment/environmentSchema';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEveryNDaysNextDue } from './scheduleInterpreter';
@@ -650,6 +651,11 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       remindersEnabled: false,
       reminderTimes: [],
       habitEnvironment: habit.habit_environment ?? undefined,
+      environmentContext: normalizeEnvironmentContext(habit.environment_context ?? null, {
+        fallbackText: habit.habit_environment ?? undefined,
+      }),
+      environmentScore: habit.environment_score ?? null,
+      environmentRiskTags: habit.environment_risk_tags ?? [],
       doneIshThreshold:
         habit.type === 'quantity'
           ? ((habit.done_ish_config as DoneIshConfig | null)?.quantityThresholdPercent ?? 80)
@@ -724,6 +730,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
+          environment_context: environmentContextToJson(draft.environmentContext ?? null),
+          environment_score: draft.environmentScore ?? null,
+          environment_risk_tags: draft.environmentRiskTags ?? [],
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
           autoprog: {
             ...(existingAutoprog ?? buildDefaultAutoProgressState({
@@ -797,6 +806,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
+          environment_context: environmentContextToJson(draft.environmentContext ?? null),
+          environment_score: draft.environmentScore ?? null,
+          environment_risk_tags: draft.environmentRiskTags ?? [],
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Insert']['done_ish_config'],
           autoprog: buildDefaultAutoProgressState({
             schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],

@@ -118,6 +118,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
             : null,
           timing_notes: formData.timingNotes || null,
           status_tag: formData.statusTag,
+          environment_context: formData.environmentContext ?? null,
         };
 
         const { data: goal, error: goalError } = await insertGoal(goalPayload);

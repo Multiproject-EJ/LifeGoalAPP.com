@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { AI_FEATURE_ICON } from '../../constants/ai';
 import { generateHabitSuggestion } from '../../services/habitAiSuggestions';
+import { EnvironmentStrengthCard } from '../environment/components';
+import { computeEnvironmentAudit } from '../environment/environmentAudit';
+import { buildEnvironmentRecommendations } from '../environment/environmentRecommendations';
+import {
+  environmentContextToJson,
+  normalizeEnvironmentContext,
+  type EnvironmentContextV1,
+} from '../environment/environmentSchema';
 import './HabitWizard.css';
 
 // Placeholder schedule type - will be refined to match habits_v2 JSON schema later
@@ -18,6 +26,9 @@ export interface HabitWizardDraft {
   remindersEnabled?: boolean;
   reminderTimes?: string[];
   habitEnvironment?: string;
+  environmentContext?: EnvironmentContextV1 | null;
+  environmentScore?: number | null;
+  environmentRiskTags?: string[];
   doneIshThreshold?: number; // Percentage threshold for quantity/duration (0-100)
   booleanPartialEnabled?: boolean; // For boolean habits
   scalePlanEnabled?: boolean;
@@ -43,9 +54,6 @@ export type HabitWizardProps = {
 
 type ScheduleChoice = 'every_day' | 'specific_days' | 'x_per_week';
 
-// Validation constants
-const MIN_ENVIRONMENT_LENGTH = 10;
-
 export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   
@@ -66,6 +74,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
   const [reminderTime, setReminderTime] = useState<string>('08:00');
   const [habitEnvironment, setHabitEnvironment] = useState<string>('');
+  const [environmentContext, setEnvironmentContext] = useState<EnvironmentContextV1 | null>(null);
   const [doneIshThreshold, setDoneIshThreshold] = useState<number>(80);
   const [booleanPartialEnabled, setBooleanPartialEnabled] = useState<boolean>(true);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false);
@@ -93,6 +102,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       setRemindersEnabled(initialDraft.remindersEnabled ?? false);
       setReminderTime(initialDraft.reminderTimes?.[0] || '08:00');
       setHabitEnvironment(initialDraft.habitEnvironment || '');
+      setEnvironmentContext(initialDraft.environmentContext ?? null);
       setDoneIshThreshold(initialDraft.doneIshThreshold ?? 80);
       setBooleanPartialEnabled(initialDraft.booleanPartialEnabled ?? true);
       setScalePlanEnabled(initialDraft.scalePlanEnabled ?? true);
@@ -156,6 +166,12 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   };
 
   const handleCreateDraft = () => {
+    const normalizedEnvironment = normalizeEnvironmentContext(
+      environmentContextToJson(environmentContext),
+      { fallbackText: habitEnvironment.trim() || undefined },
+    );
+    const environmentAudit = computeEnvironmentAudit(normalizedEnvironment);
+    const environmentRecommendations = buildEnvironmentRecommendations(normalizedEnvironment);
     const draft: HabitWizardDraft = {
       title,
       emoji: emoji || null,
@@ -164,6 +180,9 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       remindersEnabled,
       reminderTimes: remindersEnabled && reminderTime ? [reminderTime] : [],
       habitEnvironment: habitEnvironment.trim() || undefined,
+      environmentContext: normalizedEnvironment,
+      environmentScore: normalizedEnvironment ? environmentAudit.score : null,
+      environmentRiskTags: environmentRecommendations.riskTags,
       doneIshThreshold,
       booleanPartialEnabled,
       scalePlanEnabled,
@@ -481,20 +500,27 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
             </>
           )}
 
-          {/* Habit Environment - Mandatory field */}
+          <EnvironmentStrengthCard
+            value={environmentContext}
+            onChange={setEnvironmentContext}
+            title="Make this habit easier"
+            subtitle="Optional setup that gives your habit a cue, blocker plan, and bad-day version."
+            legacyNoteLabel="Legacy environment notes"
+          />
+
           <div style={{ marginBottom: '1.5rem' }}>
             <label
               htmlFor="habit-environment"
               style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
             >
-              Habit Environment *
+              Habit environment notes
             </label>
             <textarea
               id="habit-environment"
               value={habitEnvironment}
               onChange={(e) => setHabitEnvironment(e.target.value)}
-              placeholder="Where will you do this? What tools do you need? Who can support you?"
-              rows={4}
+              placeholder="Anything extra to remember about where, tools, or support?"
+              rows={3}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -507,7 +533,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
               }}
             />
             <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0 0' }}>
-              Describe the context and conditions needed for success. This helps you prepare and makes the habit more achievable. Minimum {MIN_ENVIRONMENT_LENGTH} characters required.
+              This stays optional and is preserved for backward compatibility with existing habit notes.
             </p>
           </div>
 
@@ -701,23 +727,20 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
 
         <button
           onClick={step === 3 ? handleCreateDraft : handleNext}
-          disabled={
-            (step === 1 && !title) ||
-            (step === 3 && habitEnvironment.trim().length < MIN_ENVIRONMENT_LENGTH)
-          }
+          disabled={step === 1 && !title}
           style={{
             padding: '0.75rem 1.5rem',
             border: 'none',
             borderRadius: '8px',
             background: 
-              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < MIN_ENVIRONMENT_LENGTH))
+              (step === 1 && !title)
                 ? '#e2e8f0'
                 : '#667eea',
             color: 'white',
             fontSize: '1rem',
             fontWeight: 500,
             cursor: 
-              ((step === 1 && !title) || (step === 3 && habitEnvironment.trim().length < MIN_ENVIRONMENT_LENGTH))
+              (step === 1 && !title)
                 ? 'not-allowed'
                 : 'pointer',
           }}
