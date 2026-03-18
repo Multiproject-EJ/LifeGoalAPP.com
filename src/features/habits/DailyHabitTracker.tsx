@@ -4367,6 +4367,10 @@ export function DailyHabitTracker({
       goal_id: habit.goal?.id ?? null,
       habit_environment: null,
       done_ish_config: { booleanPartialEnabled: true, quantityThresholdPercent: 80, durationThresholdPercent: 80 },
+      environment_context: null,
+      environment_score: null,
+      environment_risk_tags: [],
+      environment_last_audited_at: null,
     }),
     [session.user.id],
   );

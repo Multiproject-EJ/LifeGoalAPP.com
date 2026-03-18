@@ -121,7 +121,7 @@ type DemoHabitSeed = {
 function createDemoHabit(seed: DemoHabitSeed): HabitRow {
   const type = seed.type ?? 'boolean';
   const doneIshThreshold = seed.doneIshThreshold ?? 80;
-  
+
   return {
     id: seed.id,
     user_id: DEMO_USER_ID,
@@ -150,6 +150,10 @@ function createDemoHabit(seed: DemoHabitSeed): HabitRow {
       quantityThresholdPercent: type === 'quantity' ? doneIshThreshold : 80,
       durationThresholdPercent: type === 'duration' ? doneIshThreshold : 80,
     },
+    environment_context: null,
+    environment_score: null,
+    environment_risk_tags: [],
+    environment_last_audited_at: null,
   };
 }
 
@@ -181,6 +185,9 @@ const defaultState: DemoState = {
       weekly_workload_target: null,
       plan_quality_score: null,
       plan_quality_breakdown: null,
+      environment_context: null,
+      environment_score: null,
+      environment_last_audited_at: null,
     },
     {
       id: createId('goal'),
@@ -201,6 +208,9 @@ const defaultState: DemoState = {
       weekly_workload_target: null,
       plan_quality_score: null,
       plan_quality_breakdown: null,
+      environment_context: null,
+      environment_score: null,
+      environment_last_audited_at: null,
     },
     {
       id: createId('goal'),
@@ -220,6 +230,9 @@ const defaultState: DemoState = {
       weekly_workload_target: null,
       plan_quality_score: null,
       plan_quality_breakdown: null,
+      environment_context: null,
+      environment_score: null,
+      environment_last_audited_at: null,
     },
   ],
   habits: [],
@@ -1103,6 +1116,25 @@ function normalizeGoalRow(goal: GoalRow): GoalRow {
     weekly_workload_target: goal.weekly_workload_target ?? null,
     plan_quality_score: goal.plan_quality_score ?? null,
     plan_quality_breakdown: goal.plan_quality_breakdown ?? null,
+    environment_context: goal.environment_context ?? null,
+    environment_score: goal.environment_score ?? null,
+    environment_last_audited_at: goal.environment_last_audited_at ?? null,
+  };
+}
+
+function normalizeHabitRow(habit: HabitRow): HabitRow {
+  return {
+    ...habit,
+    habit_environment: habit.habit_environment ?? DEFAULT_HABIT_ENVIRONMENT,
+    done_ish_config: habit.done_ish_config ?? {
+      booleanPartialEnabled: true,
+      quantityThresholdPercent: 80,
+      durationThresholdPercent: 80,
+    },
+    environment_context: habit.environment_context ?? null,
+    environment_score: habit.environment_score ?? null,
+    environment_risk_tags: habit.environment_risk_tags ?? [],
+    environment_last_audited_at: habit.environment_last_audited_at ?? null,
   };
 }
 
@@ -1125,7 +1157,7 @@ function loadState(): DemoState {
     return {
       profile,
       goals,
-      habits: parsed.habits ?? clone(defaultState.habits),
+      habits: (parsed.habits ?? clone(defaultState.habits)).map(normalizeHabitRow),
       habitLogs: parsed.habitLogs ?? clone(defaultState.habitLogs),
       visionImages: parsed.visionImages ?? clone(defaultState.visionImages),
       visionImageTags: parsed.visionImageTags ?? clone(defaultState.visionImageTags),
@@ -1283,6 +1315,9 @@ export function addDemoGoal(payload: GoalInsert): GoalRow {
     weekly_workload_target: payload.weekly_workload_target ?? null,
     plan_quality_score: payload.plan_quality_score ?? null,
     plan_quality_breakdown: payload.plan_quality_breakdown ?? null,
+    environment_context: payload.environment_context ?? null,
+    environment_score: payload.environment_score ?? null,
+    environment_last_audited_at: payload.environment_last_audited_at ?? null,
   });
 
   updateState((current) => ({ ...current, goals: [record, ...current.goals] }));
@@ -1341,6 +1376,7 @@ export function getDemoHabitsByGoal(goalId: string): HabitRow[] {
   return clone(
     state.habits
       .filter((habit) => habit.goal_id === goalId)
+      .map(normalizeHabitRow)
       .sort((a, b) => a.title.localeCompare(b.title)),
   );
 }
@@ -1350,6 +1386,7 @@ export function getDemoHabitsForUser(userId: string): HabitRow[] {
   return clone(
     state.habits
       .filter((habit) => habit.goal_id && goalIds.has(habit.goal_id))
+      .map(normalizeHabitRow)
       .sort((a, b) => a.title.localeCompare(b.title)),
   );
 }
@@ -1367,6 +1404,7 @@ export function upsertDemoHabit(payload: HabitInsert | HabitUpdate): HabitRow {
           ...payload,
           schedule: (payload.schedule ?? existing.schedule) as Json,
         };
+        nextRecord = normalizeHabitRow(nextRecord);
         habits[index] = nextRecord;
         return { ...current, habits };
       }
@@ -1390,7 +1428,13 @@ export function upsertDemoHabit(payload: HabitInsert | HabitUpdate): HabitRow {
       goal_id: payload.goal_id ?? (payload as HabitInsert).goal_id ?? null,
       habit_environment: payload.habit_environment ?? (payload as HabitInsert).habit_environment ?? DEFAULT_HABIT_ENVIRONMENT,
       done_ish_config: payload.done_ish_config ?? (payload as HabitInsert).done_ish_config ?? { booleanPartialEnabled: true, quantityThresholdPercent: 80, durationThresholdPercent: 80 },
+      environment_context: payload.environment_context ?? (payload as HabitInsert).environment_context ?? null,
+      environment_score: payload.environment_score ?? (payload as HabitInsert).environment_score ?? null,
+      environment_risk_tags: payload.environment_risk_tags ?? (payload as HabitInsert).environment_risk_tags ?? [],
+      environment_last_audited_at:
+        payload.environment_last_audited_at ?? (payload as HabitInsert).environment_last_audited_at ?? null,
     };
+    nextRecord = normalizeHabitRow(nextRecord);
     habits.push(nextRecord);
     habits.sort((a, b) => a.title.localeCompare(b.title));
     return { ...current, habits };
