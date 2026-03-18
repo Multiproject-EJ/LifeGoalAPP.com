@@ -205,6 +205,9 @@ export interface Database {
           weekly_workload_target: number | null;
           plan_quality_score: number | null;
           plan_quality_breakdown: Json | null;
+          environment_context: Json | null;
+          environment_score: number | null;
+          environment_last_audited_at: string | null;
         };
         Insert: {
           id?: string;
@@ -224,6 +227,9 @@ export interface Database {
           weekly_workload_target?: number | null;
           plan_quality_score?: number | null;
           plan_quality_breakdown?: Json | null;
+          environment_context?: Json | null;
+          environment_score?: number | null;
+          environment_last_audited_at?: string | null;
         };
         Update: {
           id?: string;
@@ -243,6 +249,9 @@ export interface Database {
           weekly_workload_target?: number | null;
           plan_quality_score?: number | null;
           plan_quality_breakdown?: Json | null;
+          environment_context?: Json | null;
+          environment_score?: number | null;
+          environment_last_audited_at?: string | null;
         };
         Relationships: [];
       };
@@ -308,6 +317,51 @@ export interface Database {
           before_state?: Json | null;
           after_state?: Json | null;
           source?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      environment_audits: {
+        Row: {
+          id: string;
+          user_id: string;
+          goal_id: string | null;
+          habit_id: string | null;
+          entity_type: string;
+          audit_source: string;
+          score_before: number | null;
+          score_after: number | null;
+          risk_tags: string[];
+          before_state: Json | null;
+          after_state: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          goal_id?: string | null;
+          habit_id?: string | null;
+          entity_type: string;
+          audit_source?: string;
+          score_before?: number | null;
+          score_after?: number | null;
+          risk_tags?: string[];
+          before_state?: Json | null;
+          after_state?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          goal_id?: string | null;
+          habit_id?: string | null;
+          entity_type?: string;
+          audit_source?: string;
+          score_before?: number | null;
+          score_after?: number | null;
+          risk_tags?: string[];
+          before_state?: Json | null;
+          after_state?: Json | null;
           created_at?: string;
         };
         Relationships: [];
@@ -517,6 +571,10 @@ export interface Database {
           goal_id: string | null;
           habit_environment: string | null;
           done_ish_config: Json | null;
+          environment_context: Json | null;
+          environment_score: number | null;
+          environment_risk_tags: string[];
+          environment_last_audited_at: string | null;
         };
         Insert: {
           id?: string;
@@ -536,6 +594,10 @@ export interface Database {
           goal_id?: string | null;
           habit_environment?: string | null;
           done_ish_config?: Json | null;
+          environment_context?: Json | null;
+          environment_score?: number | null;
+          environment_risk_tags?: string[];
+          environment_last_audited_at?: string | null;
         };
         Update: {
           id?: string;
@@ -555,6 +617,10 @@ export interface Database {
           goal_id?: string | null;
           habit_environment?: string | null;
           done_ish_config?: Json | null;
+          environment_context?: Json | null;
+          environment_score?: number | null;
+          environment_risk_tags?: string[];
+          environment_last_audited_at?: string | null;
         };
         Relationships: [];
       };
