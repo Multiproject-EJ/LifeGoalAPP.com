@@ -559,6 +559,7 @@ export interface Database {
           title: string;
           emoji: string | null;
           type: Database['public']['Enums']['habit_type'];
+          status: Database['public']['Enums']['habit_lifecycle_status'];
           target_num: number | null;
           target_unit: string | null;
           schedule: Json;
@@ -566,6 +567,11 @@ export interface Database {
           start_date: string | null;
           archived: boolean | null;
           created_at: string | null;
+          paused_at: string | null;
+          paused_reason: string | null;
+          resume_on: string | null;
+          deactivated_at: string | null;
+          deactivated_reason: string | null;
           autoprog: Json | null;
           domain_key: string | null;
           goal_id: string | null;
@@ -582,6 +588,7 @@ export interface Database {
           title: string;
           emoji?: string | null;
           type?: Database['public']['Enums']['habit_type'];
+          status?: Database['public']['Enums']['habit_lifecycle_status'];
           target_num?: number | null;
           target_unit?: string | null;
           schedule: Json;
@@ -589,6 +596,11 @@ export interface Database {
           start_date?: string | null;
           archived?: boolean | null;
           created_at?: string | null;
+          paused_at?: string | null;
+          paused_reason?: string | null;
+          resume_on?: string | null;
+          deactivated_at?: string | null;
+          deactivated_reason?: string | null;
           autoprog?: Json | null;
           domain_key?: string | null;
           goal_id?: string | null;
@@ -605,6 +617,7 @@ export interface Database {
           title?: string;
           emoji?: string | null;
           type?: Database['public']['Enums']['habit_type'];
+          status?: Database['public']['Enums']['habit_lifecycle_status'];
           target_num?: number | null;
           target_unit?: string | null;
           schedule?: Json;
@@ -612,6 +625,11 @@ export interface Database {
           start_date?: string | null;
           archived?: boolean | null;
           created_at?: string | null;
+          paused_at?: string | null;
+          paused_reason?: string | null;
+          resume_on?: string | null;
+          deactivated_at?: string | null;
+          deactivated_reason?: string | null;
           autoprog?: Json | null;
           domain_key?: string | null;
           goal_id?: string | null;
@@ -2787,6 +2805,7 @@ export interface Database {
       };
     };
     Enums: {
+      habit_lifecycle_status: 'active' | 'paused' | 'deactivated' | 'archived';
       habit_type: 'boolean' | 'quantity' | 'duration';
       vb_board_type: 'vision' | 'focus';
       vb_card_size: 'S' | 'M' | 'L' | 'XL';
