@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, isHabitLifecycleActive, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
@@ -163,6 +163,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const todaysHabits = useMemo(() => {
     const today = new Date();
     return habits.filter((habit) => {
+      if (!isHabitLifecycleActive(habit)) {
+        return false;
+      }
       // Get this habit's week logs
       const habitWeekLogs = weekLogs.filter(log => log.habit_id === habit.id);
       return isHabitScheduledToday(habit, today, habitWeekLogs);
@@ -181,7 +184,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
       try {
         // Load habits
-        const { data: habitsData, error: habitsError } = await listHabitsV2();
+        const { data: habitsData, error: habitsError } = await listHabitsV2({ includeInactive: true });
         if (habitsError) {
           throw new Error(habitsError.message);
         }
