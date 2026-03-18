@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, isHabitLifecycleActive, getHabitLifecycleStatus, pauseHabitV2, resumeHabitV2, deactivateHabitV2, reactivateHabitV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
@@ -14,10 +14,10 @@ import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
 import type { TimerLaunchContext } from '../timer/timerSession';
+import { scheduleHabitNotifications, cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import './HabitsModule.css';
 import {
   AUTO_PROGRESS_TIERS,
-  AUTO_PROGRESS_UPGRADE_RULES,
   buildAutoProgressPlan,
   buildDefaultAutoProgressState,
   getAutoProgressState,
@@ -114,6 +114,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   
   // Archiving state for tracking in-flight archive operations
   const [archivingHabitIds, setArchivingHabitIds] = useState<Set<string>>(new Set());
+  const [lifecycleUpdatingHabitIds, setLifecycleUpdatingHabitIds] = useState<Set<string>>(new Set());
 
   // Auto-progress ladder state for tracking in-flight tier changes
   const [autoProgressHabitIds, setAutoProgressHabitIds] = useState<Set<string>>(new Set());
@@ -152,6 +153,13 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     habitId: string;
     habitTitle: string;
   } | null>(null);
+  const [lifecycleDialog, setLifecycleDialog] = useState<{
+    habitId: string;
+    habitTitle: string;
+    action: 'pause' | 'deactivate';
+  } | null>(null);
+  const [lifecycleReason, setLifecycleReason] = useState('');
+  const [lifecycleResumeOn, setLifecycleResumeOn] = useState('');
   
   // State for AI-enhanced rationales (by habit ID)
   const [enhancedRationales, setEnhancedRationales] = useState<Record<string, EnhancedRationaleResult>>({});
@@ -163,11 +171,24 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const todaysHabits = useMemo(() => {
     const today = new Date();
     return habits.filter((habit) => {
+      if (!isHabitLifecycleActive(habit)) {
+        return false;
+      }
       // Get this habit's week logs
       const habitWeekLogs = weekLogs.filter(log => log.habit_id === habit.id);
       return isHabitScheduledToday(habit, today, habitWeekLogs);
     });
   }, [habits, weekLogs]);
+
+  const activeHabits = useMemo(
+    () => habits.filter((habit) => getHabitLifecycleStatus(habit) === 'active'),
+    [habits],
+  );
+
+  const inactiveHabits = useMemo(
+    () => habits.filter((habit) => getHabitLifecycleStatus(habit) !== 'active'),
+    [habits],
+  );
 
   // Load habits and today's logs on mount
   useEffect(() => {
@@ -181,7 +202,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
       try {
         // Load habits
-        const { data: habitsData, error: habitsError } = await listHabitsV2();
+        const { data: habitsData, error: habitsError } = await listHabitsV2({ includeInactive: true });
         if (habitsError) {
           throw new Error(habitsError.message);
         }
@@ -566,6 +587,97 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     });
   };
 
+  const handleLifecycleAction = async (
+    habit: HabitV2Row,
+    action: 'pause' | 'resume' | 'deactivate' | 'reactivate',
+    options?: { reason?: string; resumeOn?: string },
+  ) => {
+    if (lifecycleUpdatingHabitIds.has(habit.id)) {
+      return;
+    }
+
+    setLifecycleUpdatingHabitIds((prev) => new Set(prev).add(habit.id));
+    setError(null);
+
+    try {
+      const actionResult = await (async () => {
+        switch (action) {
+          case 'pause':
+            return pauseHabitV2(habit.id, {
+              reason: options?.reason,
+              resumeOn: options?.resumeOn || null,
+            });
+          case 'resume':
+            return resumeHabitV2(habit.id);
+          case 'deactivate':
+            return deactivateHabitV2(habit.id, { reason: options?.reason });
+          case 'reactivate':
+            return reactivateHabitV2(habit.id);
+        }
+      })();
+
+      if (actionResult.error || !actionResult.data) {
+        throw new Error(actionResult.error?.message ?? 'Unable to update habit lifecycle.');
+      }
+
+      const updatedHabit = actionResult.data;
+      setHabits((prev) => prev.map((entry) => (entry.id === habit.id ? updatedHabit : entry)));
+
+      if (action === 'resume' || action === 'reactivate') {
+        await scheduleHabitNotifications(habit.id, session.user.id);
+      } else {
+        await cancelHabitNotifications(habit.id);
+      }
+
+      const messageMap: Record<typeof action, string> = {
+        pause: 'Habit paused.',
+        resume: 'Habit resumed.',
+        deactivate: 'Habit deactivated.',
+        reactivate: 'Habit reactivated.',
+      };
+      setSuccessMessage(messageMap[action]);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update habit lifecycle.');
+    } finally {
+      setLifecycleUpdatingHabitIds((prev) => {
+        const next = new Set(prev);
+        next.delete(habit.id);
+        return next;
+      });
+    }
+  };
+
+  const handleOpenLifecycleDialog = (habit: HabitV2Row, action: 'pause' | 'deactivate') => {
+    setLifecycleDialog({
+      habitId: habit.id,
+      habitTitle: habit.title,
+      action,
+    });
+    setLifecycleReason('');
+    setLifecycleResumeOn('');
+  };
+
+  const handleConfirmLifecycleDialog = async () => {
+    if (!lifecycleDialog) {
+      return;
+    }
+
+    const habit = habits.find((entry) => entry.id === lifecycleDialog.habitId);
+    if (!habit) {
+      setLifecycleDialog(null);
+      return;
+    }
+
+    await handleLifecycleAction(habit, lifecycleDialog.action, {
+      reason: lifecycleReason.trim() || undefined,
+      resumeOn: lifecycleDialog.action === 'pause' ? lifecycleResumeOn || undefined : undefined,
+    });
+    setLifecycleDialog(null);
+    setLifecycleReason('');
+    setLifecycleResumeOn('');
+  };
+
   // Handler for confirming the archive action
   const handleConfirmArchive = async () => {
     if (!archiveConfirmation) return;
@@ -667,6 +779,200 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         return next;
       });
     }
+  };
+
+  const renderHabitCard = (habit: HabitV2Row) => {
+    const autoProgressState = getAutoProgressState(habit);
+    const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
+    const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
+    const suggestion = performanceSuggestions[habit.id];
+    const environmentPrompt = getHabitEnvironmentReviewPrompt(habit);
+    const recommendedDownshift = downshiftTier && suggestion?.suggestedAction === 'ease';
+    const canUpgrade = upgradeTier && suggestion?.suggestedAction === 'progress';
+    const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
+    const lifecycleStatus = getHabitLifecycleStatus(habit);
+    const isLifecycleUpdating = lifecycleUpdatingHabitIds.has(habit.id);
+
+    return (
+      <div
+        key={habit.id}
+        className="habit-card"
+        style={{
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '8px',
+          padding: '1rem',
+          position: 'relative',
+        }}
+      >
+        {!habit.archived && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '0.5rem',
+              right: '0.5rem',
+              display: 'flex',
+              gap: '0.25rem',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => handleEditHabit(habit)}
+              className="action-btn"
+              aria-label={`Edit habit: ${habit.title}`}
+              title="Edit habit"
+              style={{
+                background: 'transparent',
+                border: '1px solid #e2e8f0',
+                borderRadius: '4px',
+                padding: '0.375rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                transition: 'all 0.2s',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleArchiveHabit(habit.id, habit.title)}
+              disabled={archivingHabitIds.has(habit.id)}
+              className="action-btn archive"
+              aria-label={`Archive habit: ${habit.title}`}
+              title="Archive habit"
+              style={{
+                background: 'transparent',
+                border: '1px solid #e2e8f0',
+                borderRadius: '4px',
+                padding: '0.375rem',
+                cursor: archivingHabitIds.has(habit.id) ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: archivingHabitIds.has(habit.id) ? '#94a3b8' : '#64748b',
+                opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
+                transition: 'all 0.2s',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', paddingRight: '4.5rem' }}>
+          {habit.emoji && <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>}
+          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
+            {habit.title}
+          </h3>
+          <span
+            style={{
+              marginLeft: 'auto',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              textTransform: 'capitalize',
+              color: lifecycleStatus === 'active' ? '#166534' : lifecycleStatus === 'paused' ? '#92400e' : '#475569',
+              background: lifecycleStatus === 'active' ? '#dcfce7' : lifecycleStatus === 'paused' ? '#fef3c7' : '#e2e8f0',
+              borderRadius: '999px',
+              padding: '0.2rem 0.5rem',
+            }}
+          >
+            {lifecycleStatus.replace('_', ' ')}
+          </span>
+        </div>
+        <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          <div>
+            <strong>Type:</strong> {habit.type}
+            {habit.type !== 'boolean' && habit.target_num !== null && (
+              <span> • Target: {habit.target_num} {habit.target_unit || ''}</span>
+            )}
+          </div>
+          <div>
+            <strong>Schedule:</strong> {(() => {
+              const schedule = parseSchedule(habit.schedule);
+              if (!schedule || !schedule.mode) return 'Custom';
+              if (schedule.mode === 'daily') return 'Every day';
+              if (schedule.mode === 'specific_days') {
+                return `Specific days (${schedule.days?.length || 0} days/week)`;
+              }
+              if (schedule.mode === 'times_per_week') {
+                return `${schedule.timesPerWeek || 0} times per week`;
+              }
+              if (schedule.mode === 'every_n_days') {
+                const nextDue = getEveryNDaysNextDue(schedule, habit.created_at);
+                return `Every ${schedule.intervalDays || '?'} days${nextDue ? ` • Next due ${nextDue.toLocaleDateString()}` : ''}`;
+              }
+              return 'Custom';
+            })()}
+          </div>
+          {lifecycleStatus === 'paused' && habit.resume_on ? (
+            <div><strong>Resume on:</strong> {new Date(habit.resume_on).toLocaleDateString()}</div>
+          ) : null}
+          <div style={{ marginTop: '0.25rem', color: environmentPrompt.tone }}>
+            <strong>{environmentPrompt.title}:</strong> {environmentPrompt.detail}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
+          {lifecycleStatus === 'active' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => handleOpenLifecycleDialog(habit, 'pause')}
+                disabled={isLifecycleUpdating}
+                style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.45rem 0.75rem', background: 'white', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
+              >
+                {isLifecycleUpdating ? 'Updating…' : 'Pause'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOpenLifecycleDialog(habit, 'deactivate')}
+                disabled={isLifecycleUpdating}
+                style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.45rem 0.75rem', background: '#f8fafc', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
+              >
+                Deactivate
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void handleLifecycleAction(habit, lifecycleStatus === 'paused' ? 'resume' : 'reactivate')}
+              disabled={isLifecycleUpdating}
+              style={{ border: '1px solid #bfdbfe', borderRadius: '6px', padding: '0.45rem 0.75rem', background: '#eff6ff', color: '#1d4ed8', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
+            >
+              {isLifecycleUpdating ? 'Updating…' : lifecycleStatus === 'paused' ? 'Resume' : 'Reactivate'}
+            </button>
+          )}
+          {recommendedDownshift && (
+            <button
+              type="button"
+              onClick={() => void handleAutoProgressShift(habit, downshiftTier, 'downshift')}
+              disabled={isUpdatingAutoProgress}
+              style={{ border: '1px solid #f59e0b', borderRadius: '6px', padding: '0.45rem 0.75rem', background: '#fffbeb', color: '#92400e', cursor: isUpdatingAutoProgress ? 'not-allowed' : 'pointer' }}
+            >
+              {isUpdatingAutoProgress ? 'Adjusting…' : `Ease to ${AUTO_PROGRESS_TIERS[downshiftTier].label}`}
+            </button>
+          )}
+          {canUpgrade && (
+            <button
+              type="button"
+              onClick={() => void handleAutoProgressShift(habit, upgradeTier, 'upgrade')}
+              disabled={isUpdatingAutoProgress}
+              style={{ border: '1px solid #10b981', borderRadius: '6px', padding: '0.45rem 0.75rem', background: '#ecfdf5', color: '#047857', cursor: isUpdatingAutoProgress ? 'not-allowed' : 'pointer' }}
+            >
+              {isUpdatingAutoProgress ? 'Adjusting…' : `Upgrade to ${AUTO_PROGRESS_TIERS[upgradeTier].label}`}
+            </button>
+          )}
+        </div>
+      </div>
+    );
   };
 
   // Handler for editing a habit (opens wizard with pre-filled data)
@@ -1513,210 +1819,32 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               No habits yet. Create your first habit to get started!
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {habits.map((habit) => {
-                const autoProgressState = getAutoProgressState(habit);
-                const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
-                const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
-                const suggestion = performanceSuggestions[habit.id];
-                const environmentPrompt = getHabitEnvironmentReviewPrompt(habit);
-                const recommendedDownshift = downshiftTier && suggestion?.suggestedAction === 'ease';
-                const canUpgrade = upgradeTier && suggestion?.suggestedAction === 'progress';
-                const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
-
-                return (
-                  <div
-                    key={habit.id}
-                    className="habit-card"
-                    style={{
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      position: 'relative',
-                    }}
-                  >
-                    {/* Action strip in top-right corner */}
-                    {!habit.archived && (
-                      <div 
-                        style={{ 
-                          position: 'absolute', 
-                          top: '0.5rem', 
-                          right: '0.5rem',
-                          display: 'flex',
-                          gap: '0.25rem',
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleEditHabit(habit)}
-                          className="action-btn"
-                          aria-label={`Edit habit: ${habit.title}`}
-                          title="Edit habit"
-                          style={{
-                            background: 'transparent',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '4px',
-                            padding: '0.375rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#64748b',
-                            transition: 'all 0.2s',
-                          }}
-                        >
-                          {/* Pencil icon */}
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleArchiveHabit(habit.id, habit.title)}
-                          disabled={archivingHabitIds.has(habit.id)}
-                          className="action-btn archive"
-                          aria-label={`Archive habit: ${habit.title}`}
-                          title="Archive habit"
-                          style={{
-                            background: 'transparent',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '4px',
-                            padding: '0.375rem',
-                            cursor: archivingHabitIds.has(habit.id) ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: archivingHabitIds.has(habit.id) ? '#94a3b8' : '#64748b',
-                            opacity: archivingHabitIds.has(habit.id) ? 0.6 : 1,
-                            transition: 'all 0.2s',
-                          }}
-                        >
-                          {/* Trash icon */}
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', paddingRight: '4.5rem' }}>
-                      {habit.emoji && (
-                        <span style={{ fontSize: '1.5rem' }}>{habit.emoji}</span>
-                      )}
-                      <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
-                        {habit.title}
-                      </h3>
-                    </div>
-                    <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <div>
-                        <strong>Type:</strong> {habit.type}
-                        {habit.type !== 'boolean' && habit.target_num && (
-                          <span> ({habit.target_num} {habit.target_unit || 'units'})</span>
-                        )}
-                      </div>
-                      <div>
-                        <strong>Schedule:</strong> Custom schedule
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: '0.85rem',
-                        marginBottom: '0.85rem',
-                        padding: '0.85rem 1rem',
-                        borderRadius: '12px',
-                        border: `1px solid ${environmentPrompt.tone}33`,
-                        background: `${environmentPrompt.tone}12`,
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, color: environmentPrompt.tone, marginBottom: '0.25rem' }}>
-                        {environmentPrompt.title}
-                      </div>
-                      <div style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '0.6rem' }}>
-                        {environmentPrompt.detail}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleEditHabit(habit)}
-                        style={{
-                          border: '1px solid #cbd5e1',
-                          background: '#fff',
-                          color: '#334155',
-                          borderRadius: '8px',
-                          padding: '0.45rem 0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Re-audit setup
-                      </button>
-                    </div>
-
-                    <div className="habit-card__autoprog">
-                      <div className="habit-card__autoprog-header">
-                        <div>
-                          <p className="habit-card__autoprog-label">Game of Life ladder</p>
-                          <h4 className="habit-card__autoprog-tier">
-                            {AUTO_PROGRESS_TIERS[autoProgressState.tier].label} tier
-                          </h4>
-                          <p className="habit-card__autoprog-description">
-                            {AUTO_PROGRESS_TIERS[autoProgressState.tier].description}
-                          </p>
-                        </div>
-                        {autoProgressState.lastShiftAt ? (
-                          <span className="habit-card__autoprog-meta">
-                            Last shift: {new Date(autoProgressState.lastShiftAt).toLocaleDateString()}
-                          </span>
-                        ) : null}
-                      </div>
-                      {recommendedDownshift ? (
-                        <p className="habit-card__autoprog-hint">
-                          Consistency dipped—downshifting will keep momentum without breaking your Game of Life streaks.
-                        </p>
-                      ) : null}
-                      <div className="habit-card__autoprog-actions">
-                        <button
-                          type="button"
-                          className="habit-card__autoprog-button"
-                          disabled={!downshiftTier || isUpdatingAutoProgress}
-                          onClick={() => {
-                            if (!downshiftTier) return;
-                            handleAutoProgressShift(habit, downshiftTier, 'downshift');
-                          }}
-                        >
-                          {downshiftTier
-                            ? `Downshift to ${AUTO_PROGRESS_TIERS[downshiftTier].label}`
-                            : 'At lowest tier'}
-                        </button>
-                        <button
-                          type="button"
-                          className="habit-card__autoprog-button habit-card__autoprog-button--primary"
-                          disabled={!upgradeTier || !canUpgrade || isUpdatingAutoProgress}
-                          onClick={() => {
-                            if (!upgradeTier) return;
-                            handleAutoProgressShift(habit, upgradeTier, 'upgrade');
-                          }}
-                        >
-                          {upgradeTier
-                            ? `Re-upgrade to ${AUTO_PROGRESS_TIERS[upgradeTier].label}`
-                            : 'At standard tier'}
-                        </button>
-                      </div>
-                      <p className="habit-card__autoprog-rules">
-                        Re-upgrade rule: {AUTO_PROGRESS_UPGRADE_RULES.minStreakDays}-day streak and{' '}
-                        {AUTO_PROGRESS_UPGRADE_RULES.minAdherence30}% 30-day adherence.
-                      </p>
-                      {upgradeTier && !canUpgrade ? (
-                        <p className="habit-card__autoprog-locked">
-                          Keep logging to unlock the next tier.
-                        </p>
-                      ) : null}
-                    </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Active habits ({activeHabits.length})</h3>
+                {activeHabits.length === 0 ? (
+                  <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
+                    No active habits right now.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {activeHabits.map(renderHabitCard)}
                   </div>
-                );
-              })}
+                )}
+              </div>
+
+              <div>
+                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Inactive habits ({inactiveHabits.length})</h3>
+                {inactiveHabits.length === 0 ? (
+                  <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
+                    No paused or deactivated habits.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {inactiveHabits.map(renderHabitCard)}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -2406,6 +2534,126 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       )}
 
       {/* Archive Confirmation Dialog */}
+      {lifecycleDialog && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => {
+            setLifecycleDialog(null);
+            setLifecycleReason('');
+            setLifecycleResumeOn('');
+          }}
+        >
+          <div
+            role="dialog"
+            aria-labelledby="lifecycle-dialog-title"
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '2rem',
+              maxWidth: '420px',
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="lifecycle-dialog-title" style={{ margin: '0 0 0.75rem 0', fontSize: '1.125rem' }}>
+              {lifecycleDialog.action === 'pause' ? 'Pause habit?' : 'Deactivate habit?'}
+            </h3>
+            <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>
+              {lifecycleDialog.action === 'pause'
+                ? `Pause "${lifecycleDialog.habitTitle}" and remove it from today's active checklist until you resume it.`
+                : `Deactivate "${lifecycleDialog.habitTitle}" and move it out of the active habit list while keeping its history.`}
+            </p>
+
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+              Reason (optional)
+            </label>
+            <textarea
+              value={lifecycleReason}
+              onChange={(e) => setLifecycleReason(e.target.value)}
+              placeholder={lifecycleDialog.action === 'pause' ? 'Why are you pausing this habit?' : 'Why are you deactivating this habit?'}
+              style={{
+                width: '100%',
+                minHeight: '90px',
+                padding: '0.75rem',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                marginBottom: lifecycleDialog.action === 'pause' ? '1rem' : '1.5rem',
+              }}
+            />
+
+            {lifecycleDialog.action === 'pause' && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+                  Resume on (optional)
+                </label>
+                <input
+                  type="date"
+                  value={lifecycleResumeOn}
+                  onChange={(e) => setLifecycleResumeOn(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setLifecycleDialog(null);
+                  setLifecycleReason('');
+                  setLifecycleResumeOn('');
+                }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleConfirmLifecycleDialog()}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: lifecycleDialog.action === 'pause' ? '#f59e0b' : '#334155',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {lifecycleDialog.action === 'pause' ? 'Pause habit' : 'Deactivate habit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {archiveConfirmation && (
         <div 
           style={{
