@@ -13,6 +13,7 @@ import { insertEnvironmentAudit } from './environmentAudits';
 export type HabitV2Row = Database['public']['Tables']['habits_v2']['Row'];
 export type HabitLogV2Row = Database['public']['Tables']['habit_logs_v2']['Row'];
 export type HabitStreakRow = Database['public']['Views']['v_habit_streaks']['Row'];
+export type HabitLifecycleStatus = Database['public']['Enums']['habit_lifecycle_status'];
 
 type HabitV2Insert = Database['public']['Tables']['habits_v2']['Insert'];
 type HabitLogV2Insert = Database['public']['Tables']['habit_logs_v2']['Insert'];
@@ -26,6 +27,20 @@ type HabitEnvironmentPatch = Pick<
   HabitV2Insert,
   'environment_context' | 'environment_score' | 'environment_risk_tags' | 'environment_last_audited_at'
 >;
+
+export const ACTIVE_HABIT_STATUSES: HabitLifecycleStatus[] = ['active'];
+export const INACTIVE_HABIT_STATUSES: HabitLifecycleStatus[] = ['paused', 'deactivated', 'archived'];
+
+export function getHabitLifecycleStatus(habit: Pick<HabitV2Row, 'status' | 'archived'>): HabitLifecycleStatus {
+  if (habit.status) {
+    return habit.status;
+  }
+  return habit.archived ? 'archived' : 'active';
+}
+
+export function isHabitLifecycleActive(habit: Pick<HabitV2Row, 'status' | 'archived'>): boolean {
+  return getHabitLifecycleStatus(habit) === 'active';
+}
 
 function buildHabitEnvironmentPatch(input: {
   environment_context?: HabitV2Insert['environment_context'] | null;
@@ -73,12 +88,18 @@ function buildHabitEnvironmentPatch(input: {
  * Filters by user_id automatically via RLS policies.
  * Returns habits ordered by creation date (newest first).
  */
-export async function listHabitsV2(): Promise<ServiceResponse<HabitV2Row[]>> {
+export async function listHabitsV2(params?: { includeInactive?: boolean }): Promise<ServiceResponse<HabitV2Row[]>> {
   const supabase = getSupabaseClient();
-  return supabase
+  let query = supabase
     .from('habits_v2')
     .select('*')
-    .eq('archived', false)
+    .eq('archived', false);
+
+  if (!params?.includeInactive) {
+    query = query.eq('status', 'active');
+  }
+
+  return query
     .order('created_at', { ascending: false })
     .returns<HabitV2Row[]>();
 }
@@ -123,6 +144,12 @@ export async function createHabitV2(
   const payload: HabitV2Insert = {
     ...input,
     user_id: userId,
+    status: input.status ?? 'active',
+    paused_at: input.paused_at ?? null,
+    paused_reason: input.paused_reason ?? null,
+    resume_on: input.resume_on ?? null,
+    deactivated_at: input.deactivated_at ?? null,
+    deactivated_reason: input.deactivated_reason ?? null,
     ...buildHabitEnvironmentPatch(input),
   };
 
@@ -200,7 +227,8 @@ export async function listHabitStreaksV2(
     .from('habits_v2')
     .select('id')
     .eq('user_id', userId)
-    .eq('archived', false);
+    .eq('archived', false)
+    .eq('status', 'active');
   
   if (habitsError) {
     return { data: null, error: habitsError };
@@ -284,6 +312,12 @@ export async function quickAddDailyHabit(params: {
     domain_key: params.domainKey ?? null,
     goal_id: params.goalId ?? null,
     archived: false,
+    status: 'active',
+    paused_at: null,
+    paused_reason: null,
+    resume_on: null,
+    deactivated_at: null,
+    deactivated_reason: null,
     target_num: null,
     target_unit: null,
   };
@@ -303,7 +337,15 @@ export async function archiveHabitV2(habitId: string): Promise<ServiceResponse<n
   
   const { error } = await supabase
     .from('habits_v2')
-    .update({ archived: true })
+    .update({
+      archived: true,
+      status: 'archived',
+      paused_at: null,
+      paused_reason: null,
+      resume_on: null,
+      deactivated_at: null,
+      deactivated_reason: null,
+    })
     .eq('id', habitId);
   
   return { data: null, error };
@@ -611,4 +653,71 @@ export async function recordHabitCompletion(
   }
   
   return { data: { completed: true, wasAlreadyCompleted: false }, error: null };
+}
+
+export async function pauseHabitV2(
+  habitId: string,
+  options?: { reason?: string | null; resumeOn?: string | null },
+): Promise<ServiceResponse<HabitV2Row>> {
+  const supabase = getSupabaseClient();
+
+  return supabase
+    .from('habits_v2')
+    .update({
+      status: 'paused',
+      paused_at: new Date().toISOString(),
+      paused_reason: options?.reason ?? null,
+      resume_on: options?.resumeOn ?? null,
+      deactivated_at: null,
+      deactivated_reason: null,
+      archived: false,
+    })
+    .eq('id', habitId)
+    .select()
+    .single();
+}
+
+export async function resumeHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
+  const supabase = getSupabaseClient();
+
+  return supabase
+    .from('habits_v2')
+    .update({
+      status: 'active',
+      paused_at: null,
+      paused_reason: null,
+      resume_on: null,
+      deactivated_at: null,
+      deactivated_reason: null,
+      archived: false,
+    })
+    .eq('id', habitId)
+    .select()
+    .single();
+}
+
+export async function deactivateHabitV2(
+  habitId: string,
+  options?: { reason?: string | null },
+): Promise<ServiceResponse<HabitV2Row>> {
+  const supabase = getSupabaseClient();
+
+  return supabase
+    .from('habits_v2')
+    .update({
+      status: 'deactivated',
+      deactivated_at: new Date().toISOString(),
+      deactivated_reason: options?.reason ?? null,
+      paused_at: null,
+      paused_reason: null,
+      resume_on: null,
+      archived: false,
+    })
+    .eq('id', habitId)
+    .select()
+    .single();
+}
+
+export async function reactivateHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
+  return resumeHabitV2(habitId);
 }
