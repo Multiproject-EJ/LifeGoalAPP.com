@@ -153,6 +153,13 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     habitId: string;
     habitTitle: string;
   } | null>(null);
+  const [lifecycleDialog, setLifecycleDialog] = useState<{
+    habitId: string;
+    habitTitle: string;
+    action: 'pause' | 'deactivate';
+  } | null>(null);
+  const [lifecycleReason, setLifecycleReason] = useState('');
+  const [lifecycleResumeOn, setLifecycleResumeOn] = useState('');
   
   // State for AI-enhanced rationales (by habit ID)
   const [enhancedRationales, setEnhancedRationales] = useState<Record<string, EnhancedRationaleResult>>({});
@@ -583,6 +590,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const handleLifecycleAction = async (
     habit: HabitV2Row,
     action: 'pause' | 'resume' | 'deactivate' | 'reactivate',
+    options?: { reason?: string; resumeOn?: string },
   ) => {
     if (lifecycleUpdatingHabitIds.has(habit.id)) {
       return;
@@ -595,11 +603,14 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       const actionResult = await (async () => {
         switch (action) {
           case 'pause':
-            return pauseHabitV2(habit.id);
+            return pauseHabitV2(habit.id, {
+              reason: options?.reason,
+              resumeOn: options?.resumeOn || null,
+            });
           case 'resume':
             return resumeHabitV2(habit.id);
           case 'deactivate':
-            return deactivateHabitV2(habit.id);
+            return deactivateHabitV2(habit.id, { reason: options?.reason });
           case 'reactivate':
             return reactivateHabitV2(habit.id);
         }
@@ -635,6 +646,36 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         return next;
       });
     }
+  };
+
+  const handleOpenLifecycleDialog = (habit: HabitV2Row, action: 'pause' | 'deactivate') => {
+    setLifecycleDialog({
+      habitId: habit.id,
+      habitTitle: habit.title,
+      action,
+    });
+    setLifecycleReason('');
+    setLifecycleResumeOn('');
+  };
+
+  const handleConfirmLifecycleDialog = async () => {
+    if (!lifecycleDialog) {
+      return;
+    }
+
+    const habit = habits.find((entry) => entry.id === lifecycleDialog.habitId);
+    if (!habit) {
+      setLifecycleDialog(null);
+      return;
+    }
+
+    await handleLifecycleAction(habit, lifecycleDialog.action, {
+      reason: lifecycleReason.trim() || undefined,
+      resumeOn: lifecycleDialog.action === 'pause' ? lifecycleResumeOn || undefined : undefined,
+    });
+    setLifecycleDialog(null);
+    setLifecycleReason('');
+    setLifecycleResumeOn('');
   };
 
   // Handler for confirming the archive action
@@ -884,7 +925,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
             <>
               <button
                 type="button"
-                onClick={() => void handleLifecycleAction(habit, 'pause')}
+                onClick={() => handleOpenLifecycleDialog(habit, 'pause')}
                 disabled={isLifecycleUpdating}
                 style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.45rem 0.75rem', background: 'white', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
               >
@@ -892,7 +933,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               </button>
               <button
                 type="button"
-                onClick={() => void handleLifecycleAction(habit, 'deactivate')}
+                onClick={() => handleOpenLifecycleDialog(habit, 'deactivate')}
                 disabled={isLifecycleUpdating}
                 style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.45rem 0.75rem', background: '#f8fafc', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
               >
@@ -2493,6 +2534,126 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       )}
 
       {/* Archive Confirmation Dialog */}
+      {lifecycleDialog && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => {
+            setLifecycleDialog(null);
+            setLifecycleReason('');
+            setLifecycleResumeOn('');
+          }}
+        >
+          <div
+            role="dialog"
+            aria-labelledby="lifecycle-dialog-title"
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '2rem',
+              maxWidth: '420px',
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="lifecycle-dialog-title" style={{ margin: '0 0 0.75rem 0', fontSize: '1.125rem' }}>
+              {lifecycleDialog.action === 'pause' ? 'Pause habit?' : 'Deactivate habit?'}
+            </h3>
+            <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>
+              {lifecycleDialog.action === 'pause'
+                ? `Pause "${lifecycleDialog.habitTitle}" and remove it from today's active checklist until you resume it.`
+                : `Deactivate "${lifecycleDialog.habitTitle}" and move it out of the active habit list while keeping its history.`}
+            </p>
+
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+              Reason (optional)
+            </label>
+            <textarea
+              value={lifecycleReason}
+              onChange={(e) => setLifecycleReason(e.target.value)}
+              placeholder={lifecycleDialog.action === 'pause' ? 'Why are you pausing this habit?' : 'Why are you deactivating this habit?'}
+              style={{
+                width: '100%',
+                minHeight: '90px',
+                padding: '0.75rem',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                marginBottom: lifecycleDialog.action === 'pause' ? '1rem' : '1.5rem',
+              }}
+            />
+
+            {lifecycleDialog.action === 'pause' && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+                  Resume on (optional)
+                </label>
+                <input
+                  type="date"
+                  value={lifecycleResumeOn}
+                  onChange={(e) => setLifecycleResumeOn(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setLifecycleDialog(null);
+                  setLifecycleReason('');
+                  setLifecycleResumeOn('');
+                }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleConfirmLifecycleDialog()}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: lifecycleDialog.action === 'pause' ? '#f59e0b' : '#334155',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {lifecycleDialog.action === 'pause' ? 'Pause habit' : 'Deactivate habit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {archiveConfirmation && (
         <div 
           style={{
