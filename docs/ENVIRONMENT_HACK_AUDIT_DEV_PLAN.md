@@ -4,20 +4,20 @@
 
 A lot of goal and habit failure in this app’s domain is not motivation failure — it is **environment mismatch** (phone nearby, missing cue, no prep, wrong time/place, friction too high). The repo already has pieces we can build on:
 
-- Goals already support strategy types including `friction_removal` and have a health/adaptation engine. 
+- Goals already support strategy types including `friction_removal` and have a health/adaptation engine.
 - Habits already capture `habit_environment` and track adherence/risk.
 - There is existing telemetry + AI-assist infrastructure to coach users with contextual suggestions.
 
 This plan proposes an integrated **Environment Hack / Audit** layer that plugs directly into:
-1. Goal setup (LifeGoalInputDialog/GoalWorkspace), and
-2. Habit setup + optimization (HabitWizard/HabitsModule).
+1. Goal setup (`LifeGoalInputDialog` / `GoalWorkspace`), and
+2. Habit setup + optimization (`HabitWizard` / `HabitsModule`).
 
 ---
 
 ## Current repo audit (implementation baseline)
 
 ## 1) Goal setup and quality engine already exist
-- Goal creation flow starts in `GoalWorkspace` and saves via `insertGoal` plus optional steps/alerts. 
+- Goal creation flow starts in `GoalWorkspace` and saves via `insertGoal` plus optional steps/alerts.
 - Plan quality is computed deterministically in `computePlanQuality` and stored on `goals.plan_quality_score` + `plan_quality_breakdown`.
 - Goal health uses 14-day signals + friction keywords (`stuck`, `unclear`, `overwhelmed`) and returns recommended adaptation actions.
 
@@ -54,6 +54,13 @@ When creating or strengthening a goal/habit, users should leave with:
 ## UX principle
 Environment planning must stay lightweight (60–120 seconds), not become another heavy form.
 
+## Experience principles
+- **Optional, not blocking:** creation must always succeed without environment data.
+- **Prominent, not hidden:** frame the feature as a success-strengthening upgrade card.
+- **Mobile-first:** one decision at a time, stacked cards/bottom sheet, large touch targets, low typing.
+- **Visual and fun:** chips, iconography, subtle progress animation, positive language.
+- **Private and trustworthy:** show “private to you,” make AI preview-only until confirmed, preserve editability.
+
 ## Access model (important)
 This feature should be intentionally dual-path:
 
@@ -64,15 +71,43 @@ AI is an enhancement, not a requirement. Every user should still get high-qualit
 
 ---
 
+## Mobile-first UX / UI direction
+
+### Positioning
+Do **not** present this as compliance or extra paperwork. Position it as:
+- **Strengthen this goal**
+- **Make this habit easier**
+- **Build your success setup**
+- **Boost follow-through**
+
+### Interaction model
+Use a two-path pattern in both flows:
+- **Primary CTA:** save goal / create habit
+- **Secondary upgrade CTA:** strengthen with environment audit
+- **Secondary dismissal:** skip for now
+
+### Visual language
+- Use a **5-step strength meter** instead of a raw score.
+- Use chips + icons for cue, blocker, hack, and fallback selection.
+- Use supportive copy such as “What usually gets in the way?” instead of shame-heavy phrasing.
+- Reveal one section at a time to keep the flow lightweight on smaller screens.
+
+### Emotional design
+- Celebrate “minimum version” as a resilience move, not a compromise.
+- Show “fragile / usable / strong” only as coaching labels beneath the meter.
+- Reward completion with subtle motion and an immediate practical suggestion.
+
+---
+
 ## MVP scope (recommended)
 
 ## A) Goal setup: “Environment Audit Card”
 Add an optional-but-prominent card in goal creation/edit flow:
-- **Primary context**: Where will this happen most often?
-- **Trigger/cue**: What starts this behavior?
-- **Friction blocker**: Biggest likely obstacle?
-- **Hack plan**: If blocker appears, what exact workaround?
-- **Fallback floor**: 2-minute minimum version.
+- **Primary context:** Where will this happen most often?
+- **Trigger/cue:** What starts this behavior?
+- **Friction blocker:** Biggest likely obstacle?
+- **Hack plan:** If blocker appears, what exact workaround?
+- **Fallback floor:** 2-minute minimum version.
 
 Output:
 - `goal_environment_score` (0–5),
@@ -111,46 +146,234 @@ Selection UX:
 
 ---
 
+## Concrete mobile wireframe spec
+
+## Shared component anatomy: `EnvironmentStrengthCard`
+- Title: **Make this easier to follow**
+- Subtitle: “Optional setup that improves success odds”
+- 5-dot or segmented **strength meter**
+- Four tappable sections: **Place**, **Cue**, **Blocker**, **Fallback**
+- Suggested hacks row
+- Footer actions: **Save setup** and **Skip for now**
+
+## Goal flow wireframe
+### Collapsed state
+- Header row with title + `0/5` strength indicator
+- Supporting text: “Add a cue, blocker plan, and backup version”
+- Actions: `Start`, `Skip for now`
+
+### Expanded mobile state
+Present as a bottom sheet or full-height card stack:
+1. **Where will this happen most often?**
+   - suggested chips: Home, Desk, Gym, Commute, Custom
+2. **What will trigger it?**
+   - chips: After coffee, At 7:00 AM, After work, When I open laptop, Custom
+3. **What usually gets in the way?**
+   - chips: Phone, Low energy, No time, Forgetting, Clutter, Custom
+4. **Choose a fix + minimum version**
+   - quick hacks + editable fallback field
+
+### Completion state
+- Meter updates to `4/5 Strong setup`
+- Suggested copy: “Recommended strategy: Friction Removal” when score <= 2
+- Show top 3 deterministic hack chips with one-tap save
+
+## Habit flow wireframe
+Integrate in the reminder/target area as an optional section:
+- Section label: **Make this habit easier (optional)**
+- Inline chips for cue type + blocker type
+- Quick hack carousel under the selected blocker
+- Auto-suggest “bad day version” based on habit type
+- Persist legacy `habitEnvironment` free text in a collapsible “notes” field for continuity
+
+## Accessibility / mobile constraints
+- Touch targets at least 44px high.
+- Never require more than one text field per screen.
+- Respect reduced-motion settings for success animations.
+- Keep critical actions visible above the keyboard on small screens.
+
+---
+
+## Component architecture proposal
+
+## New UI building blocks
+- `src/features/environment/components/EnvironmentStrengthCard.tsx`
+- `src/features/environment/components/EnvironmentAuditSheet.tsx`
+- `src/features/environment/components/EnvironmentMeter.tsx`
+- `src/features/environment/components/EnvironmentHackChips.tsx`
+- `src/features/environment/components/FallbackTierPicker.tsx`
+
+## Shared state / domain layer
+- `src/features/environment/environmentAudit.ts`
+- `src/features/environment/environmentSchema.ts`
+- `src/features/environment/environmentRecommendations.ts`
+- `src/features/environment/environmentTelemetry.ts`
+
+## Responsibilities
+### `environmentSchema.ts`
+- canonical TypeScript shape for `environment_context`
+- normalization helpers for goals and habits
+- backwards-compatible mapping from `habitEnvironment` text
+
+### `environmentAudit.ts`
+- deterministic score calculation
+- label/banding helper (`fragile`, `usable`, `strong`)
+- completeness helpers for meter rendering
+- pure functions only for easy testing
+
+### `environmentRecommendations.ts`
+- risk tag inference
+- non-AI hack lookup
+- “recommended goal strategy” bridge (`friction_removal`, `reduce_workload`, etc.)
+
+### Container integration
+- `LifeGoalInputDialog` should mount the shared card in a goal-specific wrapper.
+- `GoalWorkspace` should read/write `environment_context`, `environment_score`, and recommendation state.
+- `HabitWizard` should mount the shared card with habit-specific presets and preserve `habitEnvironment` text.
+- `HabitsModule` should surface re-audit prompts and edit affordances.
+
+## Suggested data shape (`environment_context`)
+```ts
+export interface EnvironmentContextV1 {
+  version: 1;
+  place?: string;
+  cue?: {
+    type?: 'time' | 'location' | 'event' | 'person' | 'custom';
+    label?: string;
+  };
+  blocker?: {
+    label?: string;
+    tags?: string[];
+  };
+  hackPlan?: {
+    summary?: string;
+    selectedHackIds?: string[];
+  };
+  fallback?: {
+    label?: string;
+    durationMinutes?: number | null;
+  };
+  source?: 'setup' | 'edit' | 'weekly_review' | 'ai';
+  updatedAt?: string;
+}
+```
+
+This JSON shape should stay intentionally compact so it is:
+- easy to version,
+- shared by goals and habits,
+- safe to render in mobile UI,
+- and flexible enough for deterministic plus AI-assisted suggestions.
+
+---
+
 ## Data model proposal
+
+## Preferred persistence strategy
+Use a **hybrid storage model**:
+1. **Fast-path nullable columns** on `goals` and `habits_v2` for current score / current context.
+2. **Dedicated `environment_audits` table** for append-only history.
+
+This is the best fit for the current repo because it keeps reads simple for core UI while preserving auditability and re-audit history.
 
 ## New columns (fast path)
 
 ### `goals`
-- `environment_context` `jsonb` nullable
-- `environment_score` `int` nullable (0–5)
-- `environment_last_audited_at` `timestamptz` nullable
+- `environment_context jsonb` nullable
+- `environment_score int` nullable (`CHECK BETWEEN 0 AND 5`)
+- `environment_last_audited_at timestamptz` nullable
 
 ### `habits_v2`
-- `environment_context` `jsonb` nullable
-- `environment_score` `int` nullable (0–5)
-- `environment_risk_tags` `text[]` nullable
-- `environment_last_audited_at` `timestamptz` nullable
+- `environment_context jsonb` nullable
+- `environment_score int` nullable (`CHECK BETWEEN 0 AND 5`)
+- `environment_risk_tags text[]` nullable default `'{}'::text[]`
+- `environment_last_audited_at timestamptz` nullable
 
 ## New audit table
 ### `environment_audits`
-- `id uuid pk`
-- `user_id uuid`
-- `entity_type text check in ('goal','habit')`
-- `entity_id uuid`
+- `id uuid pk default gen_random_uuid()`
+- `user_id uuid not null references auth.users(id) on delete cascade`
+- `goal_id uuid null references goals(id) on delete cascade`
+- `habit_id uuid null references habits_v2(id) on delete cascade`
+- `entity_type text generated or checked to be ('goal','habit')`
 - `audit_source text` (`setup`, `weekly_review`, `ai_prompt`, `manual_edit`)
 - `score_before int null`
 - `score_after int null`
-- `risk_tags text[] null`
+- `risk_tags text[] not null default '{}'::text[]`
 - `before_state jsonb null`
 - `after_state jsonb null`
 - `created_at timestamptz default now()`
 
-RLS: mirror existing user-owned patterns used in goals/habits tables.
+### Integrity rules
+- exactly one of `goal_id` / `habit_id` must be non-null,
+- `entity_type` must match the populated foreign key,
+- scores should stay within 0–5,
+- index by `(goal_id, created_at desc)`, `(habit_id, created_at desc)`, and `(user_id, created_at desc)`.
+
+### RLS
+Mirror existing user-owned patterns used in goals/habits tables:
+- select only own rows,
+- insert only rows with own `user_id`,
+- no cross-user reads/writes.
+
+---
+
+## Supabase migration plan (recommended implementation)
+
+Create a dedicated migration such as `supabase/migrations/0185_environment_audit_foundations.sql` with the following structure:
+
+1. **Alter `public.goals`**
+   - add `environment_context jsonb`
+   - add `environment_score integer check (environment_score between 0 and 5)`
+   - add `environment_last_audited_at timestamptz`
+
+2. **Alter `public.habits_v2`**
+   - add `environment_context jsonb`
+   - add `environment_score integer check (environment_score between 0 and 5)`
+   - add `environment_risk_tags text[] not null default '{}'::text[]`
+   - add `environment_last_audited_at timestamptz`
+
+3. **Create `public.environment_audits`**
+   - include `goal_id` + `habit_id` nullable foreign keys
+   - enforce exclusive ownership with a `CHECK`
+   - use `audit_source` check for known sources
+   - use `score_before` / `score_after` checks for 0–5
+
+4. **Add comments**
+   - document each new column and table for maintainability
+
+5. **Add indexes**
+   - `idx_environment_audits_goal_id_created_at`
+   - `idx_environment_audits_habit_id_created_at`
+   - `idx_environment_audits_user_id_created_at`
+   - optional GIN indexes later only if JSON querying becomes real product need
+
+6. **Enable RLS + policies**
+   - `SELECT` own rows
+   - `INSERT` own rows
+   - defer update/delete policies unless product truly needs mutable history; prefer append-only audit semantics
+
+7. **Backfill (light touch only)**
+   - set `habits_v2.environment_context` from legacy `habit_environment` only if/when needed in app code, not necessarily in SQL
+   - do **not** force a risky mass backfill in the migration; keep rollout nullable-first
+
+8. **Regenerate DB types**
+   - update `src/lib/database.types.ts` after applying migration locally
+
+## Why this is the best migration approach
+- It preserves existing goal/habit reads without forcing joins.
+- It keeps environment history append-only and auditable.
+- It remains safe for phased rollout because every new field is nullable or defaulted.
+- It avoids over-engineering with a separate “environment profile” table before product usage is proven.
 
 ---
 
 ## Scoring model (deterministic v1)
 
 Compute `environment_score` as 0–5 with 1 point each:
-1. **Specific place** exists (>= 3 words).
+1. **Specific place** exists (>= 3 words or selected structured place + optional detail).
 2. **Clear cue/trigger** exists.
 3. **Known blocker identified**.
-4. **If-then hack written** (`If <blocker>, then <action>` shape heuristic).
+4. **If-then hack written** (`If <blocker>, then <action>` shape heuristic or selected deterministic hack).
 5. **Fallback floor defined** (<= 10 min / clearly smaller).
 
 Banding:
@@ -165,6 +388,7 @@ Alongside score, return a lightweight non-AI recommendation object:
 - `primaryRiskTag`
 - `topHackSuggestions[]` (from built-in hack library)
 - `fallbackSuggestion`
+- `recommendedStrategy` (`friction_removal` when environment risk is dominant)
 
 This gives all users immediate actionable advice even if AI is disabled, unavailable, or not subscribed.
 
@@ -180,10 +404,10 @@ This gives all users immediate actionable advice even if AI is disabled, unavail
 
 ### Changes
 - Add `environment` subsection to `LifeGoalFormData`.
-- Add UI fields/chips in guided/basic tab.
-- Live-calculate and render environment score badge near strategy picker.
+- Mount `EnvironmentStrengthCard` in guided/basic tab.
+- Live-calculate and render environment meter near strategy picker.
 - On save, include environment payload in goal insert/update.
-- If score <=2, prompt: “Use Friction Removal strategy?” one-tap switch.
+- If score <= 2, prompt: “Use Friction Removal strategy?” one-tap switch.
 
 ## 2) Frontend (habits)
 
@@ -196,33 +420,40 @@ This gives all users immediate actionable advice even if AI is disabled, unavail
 - Keep existing `habitEnvironment` text for backward compatibility; map richer fields into JSON context.
 - Add risk-tag chips + quick hacks.
 - Persist environment score and metadata on create/update.
+- Add a lightweight “re-audit” entry point in edit/review surfaces.
 
 ## 3) Shared domain logic
 
 ### New module(s)
-- `src/features/goals/environmentAudit.ts` (or shared `src/features/execution/environmentAudit.ts`)
+- `src/features/environment/environmentAudit.ts`
+- `src/features/environment/environmentSchema.ts`
+- `src/features/environment/environmentRecommendations.ts`
 
 ### Responsibilities
 - scoring function,
 - normalization,
 - risk tag inference,
-- recommendation helper (`friction_removal`, `reduce_workload`, etc. bridge).
+- recommendation helper,
+- low-score strategy bridging.
 
 ## 4) Services / persistence
 
 ### Files to extend
 - `src/services/goals.ts`
 - `src/services/habitsV2.ts`
-- new `src/services/environmentAudits.ts`
+- `src/services/environmentAudits.ts`
+- `src/services/demoData.ts`
 
 ### Changes
 - include score/context fields in insert/update payloads,
 - write audit events on each meaningful environment update,
-- keep demo-mode compatibility by extending `src/services/demoData.ts`.
+- keep demo-mode compatibility,
+- keep save flows resilient when environment data is omitted.
 
 ## 5) Database typing + migrations
 - add migration(s) for new columns/table,
-- regenerate/update `src/lib/database.types.ts`.
+- regenerate/update `src/lib/database.types.ts`,
+- add unit coverage around serialization / normalization helpers.
 
 ---
 
@@ -253,17 +484,20 @@ Failure handling:
 ## Phase 1 — Foundations (DB + deterministic scoring)
 - migrations + types,
 - scoring utilities + unit tests,
-- service layer write/read support.
+- service layer write/read support,
+- shared schema module.
 
 ## Phase 2 — Setup UI integration
 - goal dialog environment card,
 - habit wizard strength check,
-- low-score intervention prompts.
+- low-score intervention prompts,
+- mobile bottom-sheet/card-stack UX.
 
 ## Phase 3 — Audit + coaching loop
 - `environment_audits` writes,
 - weekly re-audit prompts,
-- telemetry dashboard hooks.
+- telemetry dashboard hooks,
+- stale environment nudges.
 
 ## Phase 4 — AI enhancement (optional)
 - contextual hack generation,
@@ -289,9 +523,10 @@ Add events:
 - `environment_non_ai_hack_applied`
 
 Metadata examples:
-- `entityType`, `entityId`, `scoreBefore`, `scoreAfter`, `riskTags`, `source`, `usedAi`.
+- `entityType`, `entityId`, `scoreBefore`, `scoreAfter`, `riskTags`, `source`, `usedAi`
 - `accessTier` (`free` | `premium`)
 - `suggestionSource` (`deterministic` | `ai`)
+- `surface` (`goal_create`, `goal_edit`, `habit_create`, `weekly_review`)
 
 ---
 
@@ -308,6 +543,8 @@ Metadata examples:
 9. Free users still receive deterministic hack suggestions (no AI dependency).
 10. Premium users can request AI ideas and apply them.
 11. AI failure path gracefully falls back to non-AI recommendations.
+12. Mobile layout keeps primary actions visible on 320–390px widths.
+13. Reduced-motion mode still communicates score changes accessibly.
 
 ---
 
@@ -315,8 +552,10 @@ Metadata examples:
 
 - **Form bloat risk:** Keep fields compact with chips + progressive disclosure.
 - **Data fragmentation:** Use one canonical JSON schema for environment context across goals/habits.
-- **Migration complexity:** Ship nullable columns first; backfill later.
+- **Migration complexity:** Ship nullable columns first; backfill later only if justified.
 - **AI reliability variance:** deterministic scoring remains source of truth.
+- **Mobile clutter:** use bottom sheet / one-card-at-a-time UX and cap visible choices.
+- **Over-collection risk:** keep environment data practical and optional; avoid sensitive surveillance-style prompts.
 
 ---
 
@@ -324,11 +563,12 @@ Metadata examples:
 
 1. **ENV-1**: Add DB columns + `environment_audits` table + RLS.
 2. **ENV-2**: Add `environmentAudit` scoring utility + tests.
-3. **ENV-3**: Extend goal form/types/save path for environment fields.
-4. **ENV-4**: Extend habit wizard/types/save path for structured environment context.
-5. **ENV-5**: Persist audit events + telemetry.
-6. **ENV-6**: Weekly re-audit prompt in habit/goal review surfaces.
-7. **ENV-7 (optional)**: AI hack suggestions + acceptance UX.
+3. **ENV-3**: Build shared `EnvironmentStrengthCard` + meter + hack chips.
+4. **ENV-4**: Extend goal form/types/save path for environment fields.
+5. **ENV-5**: Extend habit wizard/types/save path for structured environment context.
+6. **ENV-6**: Persist audit events + telemetry.
+7. **ENV-7**: Weekly re-audit prompt in habit/goal review surfaces.
+8. **ENV-8 (optional)**: AI hack suggestions + acceptance UX.
 
 ---
 
@@ -338,4 +578,5 @@ Metadata examples:
 - System computes and displays environment score deterministically.
 - Low-score setups trigger concrete friction-removal guidance.
 - All environment changes are auditable via DB events.
+- The feature feels optional, visual, and mobile-friendly rather than like a long form.
 - No regressions in demo mode or existing setup flows.
