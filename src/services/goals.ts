@@ -5,6 +5,12 @@ import {
   computePlanQuality,
   toPlanQualityBreakdownJson,
 } from '../features/goals/planQuality';
+import { computeEnvironmentAudit } from '../features/environment/environmentAudit';
+import { buildEnvironmentRecommendations } from '../features/environment/environmentRecommendations';
+import {
+  environmentContextToJson,
+  normalizeEnvironmentContext,
+} from '../features/environment/environmentSchema';
 import {
   DEMO_USER_ID,
   addDemoGoal,
@@ -17,6 +23,7 @@ import {
   createGoalSnapshot,
   inferSnapshotType,
 } from './goalSnapshots';
+import { insertEnvironmentAudit } from './environmentAudits';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type GoalInsert = Database['public']['Tables']['goals']['Insert'];
@@ -44,6 +51,46 @@ function buildPlanQualityPatch(goal: GoalInsert | GoalUpdate): Pick<GoalUpdate, 
   };
 }
 
+function hasEnvironmentFields(goal: GoalInsert | GoalUpdate): boolean {
+  return 'environment_context' in goal || 'environment_score' in goal || 'environment_last_audited_at' in goal;
+}
+
+function buildGoalEnvironmentPatch(
+  goal: GoalInsert | GoalUpdate,
+): Pick<GoalUpdate, 'environment_context' | 'environment_score' | 'environment_last_audited_at'> {
+  if (!hasEnvironmentFields(goal)) {
+    return {};
+  }
+
+  if (goal.environment_context === null) {
+    return {
+      environment_context: null,
+      environment_score: null,
+      environment_last_audited_at: null,
+    };
+  }
+
+  const normalizedContext = normalizeEnvironmentContext(goal.environment_context ?? null, {
+    source: 'edit',
+  });
+
+  if (!normalizedContext) {
+    return {
+      environment_context: null,
+      environment_score: null,
+      environment_last_audited_at: null,
+    };
+  }
+
+  const audit = computeEnvironmentAudit(normalizedContext);
+
+  return {
+    environment_context: environmentContextToJson(normalizedContext),
+    environment_score: audit.score,
+    environment_last_audited_at: goal.environment_last_audited_at ?? new Date().toISOString(),
+  };
+}
+
 export async function fetchGoals(): Promise<ServiceResponse<GoalRow[]>> {
   if (!canUseSupabaseData()) {
     return { data: getDemoGoals(DEMO_USER_ID), error: null };
@@ -61,6 +108,7 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
   const payloadWithQuality = {
     ...payload,
     ...buildPlanQualityPatch(payload),
+    ...buildGoalEnvironmentPatch(payload),
   };
 
   if (!canUseSupabaseData()) {
@@ -75,6 +123,9 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
     .single<GoalRow>();
 
   if (data) {
+    const afterEnvironment = normalizeEnvironmentContext(data.environment_context ?? null);
+    const recommendations = buildEnvironmentRecommendations(afterEnvironment);
+
     const snapshotType = inferSnapshotType(null, data);
     await createGoalSnapshot({
       goal_id: data.id,
@@ -87,6 +138,19 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
         source: 'goals.insert',
       },
     });
+
+    if (afterEnvironment) {
+      await insertEnvironmentAudit({
+        userId: data.user_id,
+        goalId: data.id,
+        auditSource: 'setup',
+        scoreBefore: null,
+        scoreAfter: data.environment_score,
+        riskTags: recommendations.riskTags,
+        beforeState: null,
+        afterState: afterEnvironment,
+      });
+    }
   }
 
   return { data: data ?? null, error };
@@ -103,6 +167,7 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
     const record = updateDemoGoal(id, {
       ...payload,
       ...buildPlanQualityPatch(mergedGoalForScoring),
+      ...buildGoalEnvironmentPatch(mergedGoalForScoring),
     });
     return { data: record, error: null };
   }
@@ -125,12 +190,17 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
     .update({
       ...payload,
       ...buildPlanQualityPatch(mergedGoalForScoring),
+      ...buildGoalEnvironmentPatch(mergedGoalForScoring),
     })
     .eq('id', id)
     .select()
     .single<GoalRow>();
 
   if (data) {
+    const beforeEnvironment = normalizeEnvironmentContext(beforeState?.environment_context ?? null);
+    const afterEnvironment = normalizeEnvironmentContext(data.environment_context ?? null);
+    const recommendations = buildEnvironmentRecommendations(afterEnvironment);
+
     const snapshotType = inferSnapshotType(beforeState ?? null, data);
     await createGoalSnapshot({
       goal_id: data.id,
@@ -143,6 +213,19 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
         source: 'goals.update',
       },
     });
+
+    if (beforeEnvironment || afterEnvironment) {
+      await insertEnvironmentAudit({
+        userId: data.user_id,
+        goalId: data.id,
+        auditSource: 'manual_edit',
+        scoreBefore: beforeState?.environment_score ?? null,
+        scoreAfter: data.environment_score,
+        riskTags: recommendations.riskTags,
+        beforeState: beforeEnvironment,
+        afterState: afterEnvironment,
+      });
+    }
   }
 
   return { data: data ?? null, error };

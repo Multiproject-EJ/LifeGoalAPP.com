@@ -1,7 +1,14 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import { computeEnvironmentAudit } from '../features/environment/environmentAudit';
+import { buildEnvironmentRecommendations } from '../features/environment/environmentRecommendations';
+import {
+  environmentContextToJson,
+  normalizeEnvironmentContext,
+} from '../features/environment/environmentSchema';
 import { getISOWeekBounds } from '../features/habits/scheduleInterpreter';
+import { insertEnvironmentAudit } from './environmentAudits';
 
 export type HabitV2Row = Database['public']['Tables']['habits_v2']['Row'];
 export type HabitLogV2Row = Database['public']['Tables']['habit_logs_v2']['Row'];
@@ -14,6 +21,52 @@ type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+type HabitEnvironmentPatch = Pick<
+  HabitV2Insert,
+  'environment_context' | 'environment_score' | 'environment_risk_tags' | 'environment_last_audited_at'
+>;
+
+function buildHabitEnvironmentPatch(input: {
+  environment_context?: HabitV2Insert['environment_context'] | null;
+  environment_score?: number | null;
+  environment_risk_tags?: string[] | null;
+  environment_last_audited_at?: string | null;
+  habit_environment?: string | null;
+}): HabitEnvironmentPatch {
+  if (input.environment_context === null) {
+    return {
+      environment_context: null,
+      environment_score: null,
+      environment_risk_tags: [],
+      environment_last_audited_at: null,
+    };
+  }
+
+  const normalizedContext = normalizeEnvironmentContext(input.environment_context ?? null, {
+    fallbackText: input.habit_environment ?? null,
+    source: 'edit',
+  });
+
+  if (!normalizedContext) {
+    return {
+      environment_context: null,
+      environment_score: null,
+      environment_risk_tags: input.environment_risk_tags ?? [],
+      environment_last_audited_at: null,
+    };
+  }
+
+  const audit = computeEnvironmentAudit(normalizedContext);
+  const recommendations = buildEnvironmentRecommendations(normalizedContext);
+
+  return {
+    environment_context: environmentContextToJson(normalizedContext),
+    environment_score: audit.score,
+    environment_risk_tags: recommendations.riskTags,
+    environment_last_audited_at: input.environment_last_audited_at ?? new Date().toISOString(),
+  };
+}
 
 /**
  * List all habits for the current authenticated user.
@@ -70,13 +123,36 @@ export async function createHabitV2(
   const payload: HabitV2Insert = {
     ...input,
     user_id: userId,
+    ...buildHabitEnvironmentPatch(input),
   };
-  
-  return supabase
+
+  const result = await supabase
     .from('habits_v2')
     .insert(payload)
     .select()
     .single();
+
+  if (result.data) {
+    const environment = normalizeEnvironmentContext(result.data.environment_context ?? null, {
+      fallbackText: result.data.habit_environment,
+    });
+
+    if (environment) {
+      const recommendations = buildEnvironmentRecommendations(environment);
+      await insertEnvironmentAudit({
+        userId: result.data.user_id,
+        habitId: result.data.id,
+        auditSource: 'setup',
+        scoreBefore: null,
+        scoreAfter: result.data.environment_score,
+        riskTags: recommendations.riskTags,
+        beforeState: null,
+        afterState: environment,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -311,16 +387,62 @@ export async function updateHabitV2(
     schedule?: Database['public']['Tables']['habits_v2']['Row']['schedule'];
     target_num?: number | null;
     goal_id?: string | null;
+    environment_context?: Database['public']['Tables']['habits_v2']['Row']['environment_context'];
+    environment_score?: number | null;
+    environment_risk_tags?: string[];
+    environment_last_audited_at?: string | null;
+    habit_environment?: string | null;
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
-  
-  return supabase
+
+  const { data: beforeState } = await supabase
     .from('habits_v2')
-    .update(updates)
+    .select('*')
+    .eq('id', habitId)
+    .maybeSingle<HabitV2Row>();
+
+  const result = await supabase
+    .from('habits_v2')
+    .update({
+      ...updates,
+      ...buildHabitEnvironmentPatch({
+        environment_context: updates.environment_context ?? beforeState?.environment_context ?? null,
+        environment_score: updates.environment_score ?? beforeState?.environment_score ?? null,
+        environment_risk_tags: updates.environment_risk_tags ?? beforeState?.environment_risk_tags ?? [],
+        environment_last_audited_at:
+          updates.environment_last_audited_at ?? beforeState?.environment_last_audited_at ?? null,
+        habit_environment: updates.habit_environment ?? beforeState?.habit_environment ?? null,
+      }),
+    })
     .eq('id', habitId)
     .select()
     .single();
+
+  if (result.data) {
+    const beforeEnvironment = normalizeEnvironmentContext(beforeState?.environment_context ?? null, {
+      fallbackText: beforeState?.habit_environment ?? null,
+    });
+    const afterEnvironment = normalizeEnvironmentContext(result.data.environment_context ?? null, {
+      fallbackText: result.data.habit_environment,
+    });
+
+    if (beforeEnvironment || afterEnvironment) {
+      const recommendations = buildEnvironmentRecommendations(afterEnvironment);
+      await insertEnvironmentAudit({
+        userId: result.data.user_id,
+        habitId: result.data.id,
+        auditSource: 'manual_edit',
+        scoreBefore: beforeState?.environment_score ?? null,
+        scoreAfter: result.data.environment_score,
+        riskTags: recommendations.riskTags,
+        beforeState: beforeEnvironment,
+        afterState: afterEnvironment,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -342,16 +464,62 @@ export async function updateHabitFullV2(
     schedule?: Database['public']['Tables']['habits_v2']['Row']['schedule'];
     autoprog?: Database['public']['Tables']['habits_v2']['Row']['autoprog'];
     goal_id?: string | null;
+    habit_environment?: string | null;
+    environment_context?: Database['public']['Tables']['habits_v2']['Row']['environment_context'];
+    environment_score?: number | null;
+    environment_risk_tags?: string[];
+    environment_last_audited_at?: string | null;
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
-  
-  return supabase
+
+  const { data: beforeState } = await supabase
     .from('habits_v2')
-    .update(updates)
+    .select('*')
+    .eq('id', habitId)
+    .maybeSingle<HabitV2Row>();
+
+  const result = await supabase
+    .from('habits_v2')
+    .update({
+      ...updates,
+      ...buildHabitEnvironmentPatch({
+        environment_context: updates.environment_context ?? beforeState?.environment_context ?? null,
+        environment_score: updates.environment_score ?? beforeState?.environment_score ?? null,
+        environment_risk_tags: updates.environment_risk_tags ?? beforeState?.environment_risk_tags ?? [],
+        environment_last_audited_at:
+          updates.environment_last_audited_at ?? beforeState?.environment_last_audited_at ?? null,
+        habit_environment: updates.habit_environment ?? beforeState?.habit_environment ?? null,
+      }),
+    })
     .eq('id', habitId)
     .select()
     .single();
+
+  if (result.data) {
+    const beforeEnvironment = normalizeEnvironmentContext(beforeState?.environment_context ?? null, {
+      fallbackText: beforeState?.habit_environment ?? null,
+    });
+    const afterEnvironment = normalizeEnvironmentContext(result.data.environment_context ?? null, {
+      fallbackText: result.data.habit_environment,
+    });
+
+    if (beforeEnvironment || afterEnvironment) {
+      const recommendations = buildEnvironmentRecommendations(afterEnvironment);
+      await insertEnvironmentAudit({
+        userId: result.data.user_id,
+        habitId: result.data.id,
+        auditSource: 'manual_edit',
+        scoreBefore: beforeState?.environment_score ?? null,
+        scoreAfter: result.data.environment_score,
+        riskTags: recommendations.riskTags,
+        beforeState: beforeEnvironment,
+        afterState: afterEnvironment,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**

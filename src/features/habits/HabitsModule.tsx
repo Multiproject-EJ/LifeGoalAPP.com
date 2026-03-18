@@ -4,6 +4,7 @@ import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
+import { environmentContextToJson, normalizeEnvironmentContext } from '../environment/environmentSchema';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress, getEveryNDaysNextDue } from './scheduleInterpreter';
@@ -38,6 +39,43 @@ type HabitsModuleProps = {
   session: Session;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
+
+function getHabitEnvironmentReviewPrompt(habit: HabitV2Row): { title: string; detail: string; tone: '#0f766e' | '#92400e' | '#1d4ed8' } {
+  const lastAuditedAt = habit.environment_last_audited_at ? new Date(habit.environment_last_audited_at) : null;
+  const isStale = lastAuditedAt
+    ? (Date.now() - lastAuditedAt.getTime()) / (1000 * 60 * 60 * 24) >= 30
+    : false;
+
+  if (habit.environment_score === null) {
+    return {
+      title: 'Environment setup missing',
+      detail: 'Add a cue, blocker fix, and fallback to make this habit easier to keep.',
+      tone: '#1d4ed8',
+    };
+  }
+
+  if (habit.environment_score <= 2) {
+    return {
+      title: `Environment score ${habit.environment_score}/5`,
+      detail: 'This setup looks fragile. Re-audit the habit environment and save a smaller fallback version.',
+      tone: '#92400e',
+    };
+  }
+
+  if (isStale) {
+    return {
+      title: 'Environment audit is stale',
+      detail: 'This habit has not been re-audited in 30+ days. Refresh the setup if your routine has changed.',
+      tone: '#92400e',
+    };
+  }
+
+  return {
+    title: `Environment score ${habit.environment_score}/5`,
+    detail: 'This habit has a recent environment setup on file.',
+    tone: '#0f766e',
+  };
+}
 
 export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) {
   const isMobileLayout = useMediaQuery('(max-width: 768px)');
@@ -650,6 +688,11 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       remindersEnabled: false,
       reminderTimes: [],
       habitEnvironment: habit.habit_environment ?? undefined,
+      environmentContext: normalizeEnvironmentContext(habit.environment_context ?? null, {
+        fallbackText: habit.habit_environment ?? undefined,
+      }),
+      environmentScore: habit.environment_score ?? null,
+      environmentRiskTags: habit.environment_risk_tags ?? [],
       doneIshThreshold:
         habit.type === 'quantity'
           ? ((habit.done_ish_config as DoneIshConfig | null)?.quantityThresholdPercent ?? 80)
@@ -724,6 +767,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
+          environment_context: environmentContextToJson(draft.environmentContext ?? null),
+          environment_score: draft.environmentScore ?? null,
+          environment_risk_tags: draft.environmentRiskTags ?? [],
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
           autoprog: {
             ...(existingAutoprog ?? buildDefaultAutoProgressState({
@@ -797,6 +843,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           target_unit: draft.targetUnit ?? null,
           schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
+          environment_context: environmentContextToJson(draft.environmentContext ?? null),
+          environment_score: draft.environmentScore ?? null,
+          environment_risk_tags: draft.environmentRiskTags ?? [],
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Insert']['done_ish_config'],
           autoprog: buildDefaultAutoProgressState({
             schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
@@ -1085,12 +1134,16 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
             <ul className="habits-mobile-list">
               {habits.map((habit) => {
                 const isDone = todayLogs.some((log) => log.habit_id === habit.id);
+                const environmentPrompt = getHabitEnvironmentReviewPrompt(habit);
                 return (
                   <li key={habit.id} className="habits-mobile-list__item">
                     <div className="habits-mobile-list__line">
                       <span className="habits-mobile-list__title">{habit.emoji ? `${habit.emoji} ` : ''}{habit.title}</span>
                       <span className="habits-mobile-list__status">{isDone ? 'Done' : 'Pending'}</span>
                     </div>
+                    <p style={{ margin: '0.35rem 0 0', fontSize: '0.8rem', color: environmentPrompt.tone }}>
+                      {environmentPrompt.title}
+                    </p>
                     <div className="habits-mobile-list__actions">
                       <button type="button" onClick={() => handleEditHabit(habit)}>Edit</button>
                       {!isDone ? <button type="button" onClick={() => handleMarkHabitDone(habit.id, habit.type)}>Log</button> : null}
@@ -1466,6 +1519,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                 const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
                 const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
                 const suggestion = performanceSuggestions[habit.id];
+                const environmentPrompt = getHabitEnvironmentReviewPrompt(habit);
                 const recommendedDownshift = downshiftTier && suggestion?.suggestedAction === 'ease';
                 const canUpgrade = upgradeTier && suggestion?.suggestedAction === 'progress';
                 const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
@@ -1565,6 +1619,39 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                       <div>
                         <strong>Schedule:</strong> Custom schedule
                       </div>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: '0.85rem',
+                        marginBottom: '0.85rem',
+                        padding: '0.85rem 1rem',
+                        borderRadius: '12px',
+                        border: `1px solid ${environmentPrompt.tone}33`,
+                        background: `${environmentPrompt.tone}12`,
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, color: environmentPrompt.tone, marginBottom: '0.25rem' }}>
+                        {environmentPrompt.title}
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '0.6rem' }}>
+                        {environmentPrompt.detail}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleEditHabit(habit)}
+                        style={{
+                          border: '1px solid #cbd5e1',
+                          background: '#fff',
+                          color: '#334155',
+                          borderRadius: '8px',
+                          padding: '0.45rem 0.75rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Re-audit setup
+                      </button>
                     </div>
 
                     <div className="habit-card__autoprog">
