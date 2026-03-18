@@ -608,7 +608,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         throw new Error(actionResult.error?.message ?? 'Unable to update habit lifecycle.');
       }
 
-      setHabits((prev) => prev.map((entry) => (entry.id === habit.id ? actionResult.data : entry)));
+      const updatedHabit = actionResult.data;
+      setHabits((prev) => prev.map((entry) => (entry.id === habit.id ? updatedHabit : entry)));
 
       const messageMap: Record<typeof action, string> = {
         pause: 'Habit paused.',
