@@ -1,5 +1,6 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import { fetchHabitReminderPrefs } from './habitReminderPrefs';
+import { listHabitsV2, isHabitLifecycleActive } from './habitsV2';
 import { formatTime, formatDateKey, parseTimeToDate } from './habitAlertUtils';
 
 type HabitAlertRow = {
@@ -86,6 +87,12 @@ export async function getHabitAlertsForDate(
   habitId: string,
   _date: Date
 ): Promise<HabitAlertRow[]> {
+  const { data: habits } = await listHabitsV2({ includeInactive: true });
+  const matchingHabit = (habits ?? []).find((habit) => habit.id === habitId);
+  if (!matchingHabit || !isHabitLifecycleActive(matchingHabit)) {
+    return [];
+  }
+
   const { data: prefs, error } = await fetchHabitReminderPrefs();
   if (error || !prefs) {
     return [];
@@ -166,6 +173,13 @@ export async function getNextAlertTime(habitId: string): Promise<Date | null> {
  * See: /supabase/functions/send-reminders for server-side dispatch.
  */
 export async function scheduleHabitNotifications(habitId: string, userId?: string): Promise<void> {
+  const { data: habits } = await listHabitsV2({ includeInactive: true });
+  const matchingHabit = (habits ?? []).find((habit) => habit.id === habitId);
+  if (!matchingHabit || !isHabitLifecycleActive(matchingHabit)) {
+    await cancelHabitNotifications(habitId);
+    return;
+  }
+
   const { data: prefs } = await fetchHabitReminderPrefs();
   if (!prefs) return;
   const pref = prefs.find((p) => p.habit_id === habitId);
@@ -232,10 +246,14 @@ export async function scheduleHabitReminders(userId: string): Promise<ScheduledR
   const { data: prefs, error } = await fetchHabitReminderPrefs();
   if (error || !prefs) return [];
 
+  const { data: habits } = await listHabitsV2({ includeInactive: true });
+  const activeHabitIds = new Set((habits ?? []).filter((habit) => isHabitLifecycleActive(habit)).map((habit) => habit.id));
+  const activePrefs = prefs.filter((pref) => activeHabitIds.has(pref.habit_id));
+
   const now = new Date();
   const reminders: ScheduledReminder[] = [];
 
-  for (const pref of prefs) {
+  for (const pref of activePrefs) {
     if (!pref.enabled || !pref.preferred_time) continue;
 
     const scheduledAt = nextOccurrenceOf(pref.preferred_time);
@@ -255,7 +273,7 @@ export async function scheduleHabitReminders(userId: string): Promise<ScheduledR
 
   // Streak warning at 17:00 for the first enabled habit — ensures streak_warning
   // is represented in the schedule for parity with getDemoMockScheduledReminders().
-  const firstEnabledPref = prefs.find((p) => p.enabled);
+  const firstEnabledPref = activePrefs.find((p) => p.enabled);
   const streakAt = nextOccurrenceOf('17:00');
   if (firstEnabledPref && streakAt) {
     reminders.push({

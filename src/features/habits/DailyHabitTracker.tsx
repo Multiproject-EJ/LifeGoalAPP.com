@@ -38,7 +38,7 @@ import {
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
-import { archiveHabitV2, updateHabitFullV2, type HabitV2Row } from '../../services/habitsV2';
+import { archiveHabitV2, updateHabitFullV2, pauseHabitV2, deactivateHabitV2, type HabitV2Row } from '../../services/habitsV2';
 import {
   AUTO_PROGRESS_TIERS,
   AUTO_PROGRESS_UPGRADE_RULES,
@@ -3848,6 +3848,54 @@ export function DailyHabitTracker({
         return;
       }
 
+      if (action === 'pause') {
+        const { error } = await pauseHabitV2(habit.id, { reason: 'review_pause' });
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        await awardHabitRecoveryXp({
+          habitId: habit.id,
+          rewardKey: `review-completed:${reviewCycleKey}`,
+          xp: XP_REWARDS.HABIT_REVIEW_COMPLETED,
+          sourceType: 'habit_review_completed',
+          description: 'Completed a Habit Review decision',
+        });
+
+        setHabits((prev) => prev.filter((entry) => entry.id !== habit.id));
+        setCompletions((prev) => {
+          const next = { ...prev };
+          delete next[habit.id];
+          return next;
+        });
+        setErrorMessage(`Paused "${habit.name}" and removed it from today until you resume it.`);
+        return;
+      }
+
+      if (action === 'replace') {
+        const { error } = await deactivateHabitV2(habit.id, { reason: 'review_replace' });
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        await awardHabitRecoveryXp({
+          habitId: habit.id,
+          rewardKey: `review-completed:${reviewCycleKey}`,
+          xp: XP_REWARDS.HABIT_REVIEW_COMPLETED,
+          sourceType: 'habit_review_completed',
+          description: 'Completed a Habit Review decision',
+        });
+
+        setHabits((prev) => prev.filter((entry) => entry.id !== habit.id));
+        setCompletions((prev) => {
+          const next = { ...prev };
+          delete next[habit.id];
+          return next;
+        });
+        setErrorMessage(`Deactivated "${habit.name}" so you can replace it with a better fit.`);
+        return;
+      }
+
       const nextReviewReason = action;
       const { data, error } = await updateHabitFullV2(habit.id, {
         autoprog: {
@@ -3874,17 +3922,12 @@ export function DailyHabitTracker({
         );
       }
 
-      if (action === 'redesign' || action === 'replace') {
+      if (action === 'redesign') {
         setExpandedHabits((prev) => ({ ...prev, [habit.id]: true }));
         await generateReviewRedesignDraft(habit, action);
       }
 
-      const messages: Record<Exclude<HabitReviewAction, 'archive'>, string> = {
-        pause: `Marked "${habit.name}" as paused for review.`,
-        redesign: `Marked "${habit.name}" for redesign.`,
-        replace: `Marked "${habit.name}" to be replaced.`,
-      };
-      setErrorMessage(messages[action]);
+      setErrorMessage(`Marked "${habit.name}" for redesign.`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update this habit right now.');
     } finally {
@@ -4355,6 +4398,7 @@ export function DailyHabitTracker({
       title: habit.name,
       emoji: habit.emoji ?? null,
       type: habit.type ?? 'boolean',
+      status: 'active',
       target_num: habit.target_num ?? null,
       target_unit: habit.target_unit ?? null,
       schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
@@ -4362,6 +4406,11 @@ export function DailyHabitTracker({
       start_date: null,
       archived: null,
       created_at: null,
+      paused_at: null,
+      paused_reason: null,
+      resume_on: null,
+      deactivated_at: null,
+      deactivated_reason: null,
       autoprog: habit.autoprog ?? null,
       domain_key: null,
       goal_id: habit.goal?.id ?? null,
