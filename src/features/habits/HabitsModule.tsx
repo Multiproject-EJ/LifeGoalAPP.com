@@ -212,6 +212,11 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     [habits],
   );
 
+  const resumeReadyHabits = useMemo(
+    () => inactiveHabits.filter((habit) => isHabitReadyToResume(habit)),
+    [inactiveHabits],
+  );
+
   // Load habits and today's logs on mount
   useEffect(() => {
     if (!session) return;
@@ -698,6 +703,16 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     setLifecycleDialog(null);
     setLifecycleReason('');
     setLifecycleResumeOn('');
+  };
+
+  const handleResumeReadyHabits = async () => {
+    if (!resumeReadyHabits.length) {
+      return;
+    }
+
+    for (const habit of resumeReadyHabits) {
+      await handleLifecycleAction(habit, 'resume');
+    }
   };
 
   // Handler for confirming the archive action
@@ -1872,6 +1887,47 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
               <div>
                 <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Inactive habits ({inactiveHabits.length})</h3>
+                {resumeReadyHabits.length > 0 ? (
+                  <div
+                    style={{
+                      border: '1px solid #86efac',
+                      background: '#f0fdf4',
+                      borderRadius: '10px',
+                      padding: '0.9rem 1rem',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 700, color: '#166534', marginBottom: '0.2rem' }}>
+                        {resumeReadyHabits.length} habit{resumeReadyHabits.length === 1 ? '' : 's'} ready to resume
+                      </div>
+                      <div style={{ color: '#166534', fontSize: '0.875rem' }}>
+                        {resumeReadyHabits.map((habit) => habit.title).join(', ')}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleResumeReadyHabits()}
+                      disabled={resumeReadyHabits.some((habit) => lifecycleUpdatingHabitIds.has(habit.id))}
+                      style={{
+                        border: 'none',
+                        borderRadius: '8px',
+                        background: '#16a34a',
+                        color: 'white',
+                        padding: '0.6rem 0.9rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Resume all due today
+                    </button>
+                  </div>
+                ) : null}
                 {inactiveHabits.length === 0 ? (
                   <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
                     No paused or deactivated habits.
