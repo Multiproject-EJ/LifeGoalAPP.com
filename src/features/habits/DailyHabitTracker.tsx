@@ -39,6 +39,7 @@ import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
 import { archiveHabitV2, updateHabitFullV2, pauseHabitV2, deactivateHabitV2, type HabitV2Row } from '../../services/habitsV2';
+import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import {
   AUTO_PROGRESS_TIERS,
   AUTO_PROGRESS_UPGRADE_RULES,
@@ -3829,6 +3830,7 @@ export function DailyHabitTracker({
         if (error) {
           throw new Error(error.message);
         }
+        await cancelHabitNotifications(habit.id);
 
         await awardHabitRecoveryXp({
           habitId: habit.id,
@@ -3853,6 +3855,7 @@ export function DailyHabitTracker({
         if (error) {
           throw new Error(error.message);
         }
+        await cancelHabitNotifications(habit.id);
 
         await awardHabitRecoveryXp({
           habitId: habit.id,
@@ -3877,6 +3880,7 @@ export function DailyHabitTracker({
         if (error) {
           throw new Error(error.message);
         }
+        await cancelHabitNotifications(habit.id);
 
         await awardHabitRecoveryXp({
           habitId: habit.id,

@@ -14,6 +14,7 @@ import { buildSuggestion, type HabitSuggestion } from './suggestionsEngine';
 import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRationale';
 import type { Database } from '../../lib/database.types';
 import type { TimerLaunchContext } from '../timer/timerSession';
+import { scheduleHabitNotifications, cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import './HabitsModule.css';
 import {
   AUTO_PROGRESS_TIERS,
@@ -610,6 +611,12 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
       const updatedHabit = actionResult.data;
       setHabits((prev) => prev.map((entry) => (entry.id === habit.id ? updatedHabit : entry)));
+
+      if (action === 'resume' || action === 'reactivate') {
+        await scheduleHabitNotifications(habit.id, session.user.id);
+      } else {
+        await cancelHabitNotifications(habit.id);
+      }
 
       const messageMap: Record<typeof action, string> = {
         pause: 'Habit paused.',
