@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
 import type { GoalStatusTag } from '../features/goals/goalStatus';
@@ -22,6 +22,10 @@ import { getAiCoachAccess } from '../services/aiCoachAccess';
 import { recordTelemetryEvent } from '../services/telemetry';
 import { AI_FEATURE_ICON } from '../constants/ai';
 import { resolveGoalCoachExperimentVariant } from '../features/goals/goalCoachExperiments';
+import { EnvironmentStrengthCard } from '../features/environment/components';
+import { computeEnvironmentAudit } from '../features/environment/environmentAudit';
+import { buildEnvironmentRecommendations } from '../features/environment/environmentRecommendations';
+import type { EnvironmentContextV1 } from '../features/environment/environmentSchema';
 
 type LifeGoalStep = {
   id: string;
@@ -56,6 +60,7 @@ type LifeGoalFormData = {
   timingNotes: string;
   statusTag: GoalStatusTag;
   strategyType: GoalStrategyType;
+  environmentContext: EnvironmentContextV1 | null;
   steps: LifeGoalStep[];
   alerts: LifeGoalAlert[];
 };
@@ -99,6 +104,7 @@ export function LifeGoalInputDialog({
     timingNotes: '',
     statusTag: DEFAULT_GOAL_STATUS,
     strategyType: DEFAULT_GOAL_STRATEGY,
+    environmentContext: null,
     steps: [],
     alerts: [],
   }));
@@ -137,6 +143,11 @@ export function LifeGoalInputDialog({
   const [existingGoalsStructured, setExistingGoalsStructured] = useState<GoalCoachContextGoal[]>([]);
   const [goalEvolutionSummary, setGoalEvolutionSummary] = useState<string | null>(null);
   const [goalEvolutionEvents, setGoalEvolutionEvents] = useState<GoalCoachContextEvolutionEvent[]>([]);
+  const environmentAudit = useMemo(() => computeEnvironmentAudit(formData.environmentContext), [formData.environmentContext]);
+  const environmentRecommendations = useMemo(
+    () => buildEnvironmentRecommendations(formData.environmentContext),
+    [formData.environmentContext],
+  );
   const aiCoachAccess = getAiCoachAccess(session);
   const goalCoachVariant = resolveGoalCoachExperimentVariant();
   const buildCoachMessagesPayload = useCallback(
@@ -195,6 +206,8 @@ export function LifeGoalInputDialog({
       estimatedDurationDays: '',
       timingNotes: '',
       statusTag: DEFAULT_GOAL_STATUS,
+      strategyType: DEFAULT_GOAL_STRATEGY,
+      environmentContext: null,
       steps: [],
       alerts: [],
     }));
@@ -704,6 +717,7 @@ export function LifeGoalInputDialog({
         timingNotes: '',
         statusTag: DEFAULT_GOAL_STATUS,
         strategyType: DEFAULT_GOAL_STRATEGY,
+        environmentContext: null,
         steps: [],
         alerts: [],
       });
@@ -974,6 +988,28 @@ export function LifeGoalInputDialog({
                   />
                 )}
               </div>
+
+              <EnvironmentStrengthCard
+                value={formData.environmentContext}
+                onChange={(environmentContext) => setFormData((current) => ({ ...current, environmentContext }))}
+                title="Strengthen this goal"
+                subtitle="Optional setup that improves follow-through in about a minute."
+                legacyNoteLabel="Support notes"
+                onApplyRecommendedStrategy={
+                  environmentRecommendations.recommendedStrategy === 'friction_removal'
+                    ? () => setFormData((current) => ({ ...current, strategyType: 'friction_removal' }))
+                    : undefined
+                }
+                recommendedStrategyActive={formData.strategyType === 'friction_removal'}
+              />
+              {environmentAudit.score > 0 && (
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}>
+                  Environment strength is <strong>{environmentAudit.score}/5</strong>.
+                  {environmentRecommendations.recommendedStrategy === 'friction_removal' && formData.strategyType !== 'friction_removal'
+                    ? ' This setup looks fragile, so Friction Removal is recommended.'
+                    : ' You can still save this goal even if you leave the rest blank.'}
+                </p>
+              )}
             </div>
           )}
 

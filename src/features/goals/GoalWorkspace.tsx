@@ -34,6 +34,7 @@ import { getDemoHabitsForUser, getDemoVisionImages } from '../../services/demoDa
 import type { GoalHealthResult } from './goalHealth';
 import { evaluateGoalHealthFromSignals } from '../../services/goalExecution';
 import { GoalDoctorCard } from '../../components/GoalDoctorCard';
+import type { EnvironmentContextV1 } from '../environment/environmentSchema';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
@@ -68,6 +69,7 @@ type LifeGoalFormData = {
   timingNotes: string;
   statusTag: GoalStatusTag;
   strategyType: GoalStrategyType;
+  environmentContext: EnvironmentContextV1 | null;
   steps: Array<{
     id: string;
     title: string;
@@ -657,6 +659,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
           timing_notes: formData.timingNotes || null,
           status_tag: formData.statusTag,
           goal_strategy_type: formData.strategyType ?? 'standard',
+          environment_context: formData.environmentContext as Parameters<typeof insertGoal>[0]['environment_context'],
         };
 
         const { data: goal, error: goalError } = await insertGoal(goalPayload as Parameters<typeof insertGoal>[0]);
