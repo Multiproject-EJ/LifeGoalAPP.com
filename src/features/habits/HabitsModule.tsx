@@ -217,6 +217,16 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     [inactiveHabits],
   );
 
+  const pausedHabits = useMemo(
+    () => inactiveHabits.filter((habit) => getHabitLifecycleStatus(habit) === 'paused'),
+    [inactiveHabits],
+  );
+
+  const deactivatedHabits = useMemo(
+    () => inactiveHabits.filter((habit) => getHabitLifecycleStatus(habit) === 'deactivated'),
+    [inactiveHabits],
+  );
+
   // Load habits and today's logs on mount
   useEffect(() => {
     if (!session) return;
@@ -974,24 +984,58 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
           {lifecycleStatus === 'active' ? (
-            <>
-              <button
-                type="button"
-                onClick={() => handleOpenLifecycleDialog(habit, 'pause')}
-                disabled={isLifecycleUpdating}
-                style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.45rem 0.75rem', background: 'white', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '0.75rem',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  border: '1px solid #fde68a',
+                  borderRadius: '10px',
+                  background: '#fffbeb',
+                  padding: '0.75rem',
+                }}
               >
-                {isLifecycleUpdating ? 'Updating…' : 'Pause'}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleOpenLifecycleDialog(habit, 'deactivate')}
-                disabled={isLifecycleUpdating}
-                style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.45rem 0.75rem', background: '#f8fafc', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
+                <div style={{ fontWeight: 700, color: '#92400e', marginBottom: '0.25rem' }}>Pause</div>
+                <div style={{ color: '#92400e', fontSize: '0.8125rem', marginBottom: '0.6rem', lineHeight: 1.45 }}>
+                  Use this when you plan to bring the habit back. It leaves the habit intact and can mark a future date when it is ready for manual resume.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenLifecycleDialog(habit, 'pause')}
+                  disabled={isLifecycleUpdating}
+                  style={{ border: '1px solid #f59e0b', borderRadius: '6px', padding: '0.45rem 0.75rem', background: 'white', color: '#92400e', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer', width: '100%' }}
+                >
+                  {isLifecycleUpdating ? 'Updating…' : 'Pause habit'}
+                </button>
+              </div>
+
+              <div
+                style={{
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '10px',
+                  background: '#f8fafc',
+                  padding: '0.75rem',
+                }}
               >
-                Deactivate
-              </button>
-            </>
+                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>Deactivate</div>
+                <div style={{ color: '#475569', fontSize: '0.8125rem', marginBottom: '0.6rem', lineHeight: 1.45 }}>
+                  Use this when the habit is no longer part of your routine for now. It moves out of the active list but keeps your history so you can reactivate later.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenLifecycleDialog(habit, 'deactivate')}
+                  disabled={isLifecycleUpdating}
+                  style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.45rem 0.75rem', background: 'white', color: '#334155', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer', width: '100%' }}
+                >
+                  {isLifecycleUpdating ? 'Updating…' : 'Deactivate habit'}
+                </button>
+              </div>
+            </div>
           ) : (
             <button
               type="button"
@@ -1022,6 +1066,32 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               {isUpdatingAutoProgress ? 'Adjusting…' : `Upgrade to ${AUTO_PROGRESS_TIERS[upgradeTier].label}`}
             </button>
           )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderInactiveHabitSection = (
+    title: string,
+    habitsToRender: HabitV2Row[],
+    description: string,
+  ) => {
+    if (!habitsToRender.length) {
+      return null;
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div>
+          <div style={{ fontWeight: 700, color: '#0f172a' }}>
+            {title} ({habitsToRender.length})
+          </div>
+          <div style={{ color: '#64748b', fontSize: '0.8125rem', marginTop: '0.2rem' }}>
+            {description}
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {habitsToRender.map(renderHabitCard)}
         </div>
       </div>
     );
@@ -1887,6 +1957,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
               <div>
                 <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Inactive habits ({inactiveHabits.length})</h3>
+                <p style={{ color: '#64748b', margin: '0 0 0.75rem 0', fontSize: '0.875rem', lineHeight: 1.5 }}>
+                  Paused habits are temporary and can be resumed anytime. Deactivated habits are parked outside your active routine, but their history is still saved here for later reactivation.
+                </p>
                 {resumeReadyHabits.length > 0 ? (
                   <div
                     style={{
@@ -1908,6 +1981,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                       </div>
                       <div style={{ color: '#166534', fontSize: '0.875rem' }}>
                         {resumeReadyHabits.map((habit) => habit.title).join(', ')}
+                      </div>
+                      <div style={{ color: '#166534', fontSize: '0.8125rem', marginTop: '0.35rem' }}>
+                        “Resume on” does not auto-reactivate habits — it flags them here so you can decide when to bring them back.
                       </div>
                     </div>
                     <button
@@ -1933,8 +2009,17 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                     No paused or deactivated habits.
                   </p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {inactiveHabits.map(renderHabitCard)}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {renderInactiveHabitSection(
+                      'Paused habits',
+                      pausedHabits,
+                      'Temporary holds for habits you plan to resume.',
+                    )}
+                    {renderInactiveHabitSection(
+                      'Deactivated habits',
+                      deactivatedHabits,
+                      'Habits removed from your active routine while keeping their record and history.',
+                    )}
                   </div>
                 )}
               </div>
@@ -2665,6 +2750,22 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                 ? `Pause "${lifecycleDialog.habitTitle}" and remove it from today's active checklist until you resume it.`
                 : `Deactivate "${lifecycleDialog.habitTitle}" and move it out of the active habit list while keeping its history.`}
             </p>
+            <div
+              style={{
+                borderRadius: '8px',
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                background: lifecycleDialog.action === 'pause' ? '#fffbeb' : '#f8fafc',
+                border: lifecycleDialog.action === 'pause' ? '1px solid #fde68a' : '1px solid #cbd5e1',
+                color: lifecycleDialog.action === 'pause' ? '#92400e' : '#475569',
+                fontSize: '0.8125rem',
+                lineHeight: 1.5,
+              }}
+            >
+              {lifecycleDialog.action === 'pause'
+                ? 'Best for temporary breaks. You can optionally choose a “resume on” date below to mark when this habit should be ready for manual resume.'
+                : 'Best for habits you are stepping away from longer-term. The habit leaves the active routine, keeps its history, and can still be reactivated later.'}
+            </div>
 
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
               Reason (optional)
@@ -2691,10 +2792,14 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
                   Resume on (optional)
                 </label>
+                <p style={{ margin: '0 0 0.5rem 0', color: '#64748b', fontSize: '0.8125rem', lineHeight: 1.45 }}>
+                  This date does not automatically resume the habit. It simply marks when the habit should show as ready for you to resume manually.
+                </p>
                 <input
                   type="date"
                   value={lifecycleResumeOn}
                   onChange={(e) => setLifecycleResumeOn(e.target.value)}
+                  min={new Date().toISOString().slice(0, 10)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
