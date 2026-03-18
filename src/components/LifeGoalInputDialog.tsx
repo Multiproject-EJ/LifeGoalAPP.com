@@ -26,6 +26,10 @@ import { EnvironmentStrengthCard } from '../features/environment/components';
 import { computeEnvironmentAudit } from '../features/environment/environmentAudit';
 import { buildEnvironmentRecommendations } from '../features/environment/environmentRecommendations';
 import type { EnvironmentContextV1 } from '../features/environment/environmentSchema';
+import {
+  generateEnvironmentAiSuggestions,
+  type EnvironmentAiIdea,
+} from '../services/environmentAiSuggestions';
 
 type LifeGoalStep = {
   id: string;
@@ -143,6 +147,10 @@ export function LifeGoalInputDialog({
   const [existingGoalsStructured, setExistingGoalsStructured] = useState<GoalCoachContextGoal[]>([]);
   const [goalEvolutionSummary, setGoalEvolutionSummary] = useState<string | null>(null);
   const [goalEvolutionEvents, setGoalEvolutionEvents] = useState<GoalCoachContextEvolutionEvent[]>([]);
+  const [environmentIdeas, setEnvironmentIdeas] = useState<EnvironmentAiIdea[]>([]);
+  const [environmentIdeasLoading, setEnvironmentIdeasLoading] = useState(false);
+  const [environmentIdeasError, setEnvironmentIdeasError] = useState<string | null>(null);
+  const [environmentIdeasSource, setEnvironmentIdeasSource] = useState<'openai' | 'fallback' | 'unavailable' | null>(null);
   const environmentAudit = useMemo(() => computeEnvironmentAudit(formData.environmentContext), [formData.environmentContext]);
   const environmentRecommendations = useMemo(
     () => buildEnvironmentRecommendations(formData.environmentContext),
@@ -191,6 +199,89 @@ export function LifeGoalInputDialog({
     [session?.user?.id],
   );
 
+  const handleGenerateEnvironmentIdeas = useCallback(async () => {
+    const userId = session?.user?.id;
+    setEnvironmentIdeasLoading(true);
+    setEnvironmentIdeasError(null);
+
+    try {
+      const result = await generateEnvironmentAiSuggestions({
+        entityType: 'goal',
+        title: formData.title,
+        description: formData.description,
+        context: formData.environmentContext,
+      });
+
+      setEnvironmentIdeas(result.ideas);
+      setEnvironmentIdeasSource(result.source);
+      setEnvironmentIdeasError(result.error);
+
+      if (userId) {
+        void recordTelemetryEvent({
+          userId,
+          eventType: 'environment_ai_ideas_requested',
+          metadata: {
+            entityType: 'goal',
+            source: result.source,
+            ideaCount: result.ideas.length,
+            surface: 'goal_create',
+            usedAi: result.source === 'openai',
+          },
+        });
+      }
+    } finally {
+      setEnvironmentIdeasLoading(false);
+    }
+  }, [formData.description, formData.environmentContext, formData.title, session?.user?.id]);
+
+  const applyEnvironmentIdea = useCallback((idea: EnvironmentAiIdea) => {
+    setFormData((current) => ({
+      ...current,
+      environmentContext: {
+        version: 1,
+        ...(current.environmentContext ?? {}),
+        hackPlan: {
+          ...(current.environmentContext?.hackPlan ?? {}),
+          summary:
+            current.environmentContext?.blocker?.label
+              ? `If ${current.environmentContext.blocker.label}, then ${idea.setupSteps[0] ?? idea.title.toLowerCase()}.`
+              : idea.setupSteps[0] ?? idea.title,
+        },
+        fallback: {
+          ...(current.environmentContext?.fallback ?? {}),
+          label: current.environmentContext?.fallback?.label ?? idea.fallbackVersion,
+        },
+        legacyNote: [current.environmentContext?.legacyNote, idea.why].filter(Boolean).join(' • '),
+      },
+    }));
+
+    const userId = session?.user?.id;
+    if (userId) {
+      void recordTelemetryEvent({
+        userId,
+        eventType: 'environment_ai_ideas_applied',
+        metadata: {
+          entityType: 'goal',
+          title: idea.title,
+          source: environmentIdeasSource ?? 'unavailable',
+          surface: 'goal_create',
+          usedAi: environmentIdeasSource === 'openai',
+        },
+      });
+
+      void recordTelemetryEvent({
+        userId,
+        eventType: 'environment_hack_applied',
+        metadata: {
+          entityType: 'goal',
+          title: idea.title,
+          suggestionSource: environmentIdeasSource === 'openai' ? 'ai' : 'deterministic',
+          surface: 'goal_create',
+        },
+      });
+    }
+  }, [environmentIdeasSource, session?.user?.id]);
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -227,6 +318,10 @@ export function LifeGoalInputDialog({
       enabled: true,
     });
     setActiveTab('basic');
+    setEnvironmentIdeas([]);
+    setEnvironmentIdeasLoading(false);
+    setEnvironmentIdeasError(null);
+    setEnvironmentIdeasSource(null);
   }, [initialCategory, initialPromptTitle, isOpen]);
 
   useEffect(() => {
@@ -1009,6 +1104,62 @@ export function LifeGoalInputDialog({
                     ? ' This setup looks fragile, so Friction Removal is recommended.'
                     : ' You can still save this goal even if you leave the rest blank.'}
                 </p>
+              )}
+              {aiCoachAccess.goals && (
+                <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.25rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => void handleGenerateEnvironmentIdeas()}
+                    disabled={environmentIdeasLoading || !formData.title.trim()}
+                    style={{
+                      justifySelf: 'start',
+                      padding: '0.65rem 0.9rem',
+                      borderRadius: '10px',
+                      border: '1px solid #c7d2fe',
+                      background: '#eef2ff',
+                      color: '#4338ca',
+                      fontWeight: 700,
+                      cursor: environmentIdeasLoading || !formData.title.trim() ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {environmentIdeasLoading ? `${AI_FEATURE_ICON} Generating ideas…` : `${AI_FEATURE_ICON} Ask AI for environment ideas`}
+                  </button>
+                  {environmentIdeasError ? <p style={{ margin: 0, color: '#b91c1c', fontSize: '0.85rem' }}>{environmentIdeasError}</p> : null}
+                  {environmentIdeas.length > 0 && (
+                    <div style={{ display: 'grid', gap: '0.75rem' }}>
+                      <p style={{ margin: 0, color: '#475569', fontSize: '0.85rem' }}>
+                        Review before applying. Source: {environmentIdeasSource === 'openai' ? 'AI' : 'deterministic fallback'}.
+                      </p>
+                      {environmentIdeas.map((idea) => (
+                        <div key={`${idea.title}-${idea.fallbackVersion}`} style={{ border: '1px solid #cbd5e1', borderRadius: '12px', padding: '0.85rem' }}>
+                          <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '0.25rem' }}>{idea.title}</div>
+                          <div style={{ color: '#475569', fontSize: '0.9rem', marginBottom: '0.45rem' }}>{idea.why}</div>
+                          <ul style={{ margin: '0 0 0.6rem', paddingLeft: '1rem', color: '#334155' }}>
+                            {idea.setupSteps.map((step, index) => <li key={index}>{step}</li>)}
+                          </ul>
+                          <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.55rem' }}>
+                            <strong>Fallback:</strong> {idea.fallbackVersion}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => applyEnvironmentIdea(idea)}
+                            style={{
+                              border: '1px solid #4f46e5',
+                              background: '#fff',
+                              color: '#3730a3',
+                              borderRadius: '8px',
+                              padding: '0.45rem 0.75rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Apply this idea
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
