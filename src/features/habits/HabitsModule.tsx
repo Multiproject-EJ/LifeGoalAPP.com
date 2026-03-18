@@ -77,6 +77,18 @@ function getHabitEnvironmentReviewPrompt(habit: HabitV2Row): { title: string; de
   };
 }
 
+function isHabitReadyToResume(habit: HabitV2Row): boolean {
+  if (getHabitLifecycleStatus(habit) !== 'paused' || !habit.resume_on) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const resumeOn = new Date(habit.resume_on);
+  resumeOn.setHours(0, 0, 0, 0);
+  return resumeOn.getTime() <= today.getTime();
+}
+
 export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) {
   const isMobileLayout = useMediaQuery('(max-width: 768px)');
   const [mobileHabitPanel, setMobileHabitPanel] = useState<'menu' | 'create' | 'manage' | 'coach'>('menu');
@@ -186,7 +198,17 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   );
 
   const inactiveHabits = useMemo(
-    () => habits.filter((habit) => getHabitLifecycleStatus(habit) !== 'active'),
+    () =>
+      habits
+        .filter((habit) => getHabitLifecycleStatus(habit) !== 'active')
+        .sort((a, b) => {
+          const aReady = isHabitReadyToResume(a) ? 1 : 0;
+          const bReady = isHabitReadyToResume(b) ? 1 : 0;
+          if (aReady !== bReady) {
+            return bReady - aReady;
+          }
+          return a.title.localeCompare(b.title);
+        }),
     [habits],
   );
 
@@ -792,6 +814,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
     const lifecycleStatus = getHabitLifecycleStatus(habit);
     const isLifecycleUpdating = lifecycleUpdatingHabitIds.has(habit.id);
+    const readyToResume = isHabitReadyToResume(habit);
 
     return (
       <div
@@ -915,6 +938,20 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           {lifecycleStatus === 'paused' && habit.resume_on ? (
             <div><strong>Resume on:</strong> {new Date(habit.resume_on).toLocaleDateString()}</div>
           ) : null}
+          {lifecycleStatus === 'paused' && habit.paused_reason ? (
+            <div><strong>Pause reason:</strong> {habit.paused_reason}</div>
+          ) : null}
+          {lifecycleStatus === 'deactivated' && habit.deactivated_reason ? (
+            <div><strong>Why deactivated:</strong> {habit.deactivated_reason}</div>
+          ) : null}
+          {lifecycleStatus === 'deactivated' && habit.deactivated_at ? (
+            <div><strong>Deactivated:</strong> {new Date(habit.deactivated_at).toLocaleDateString()}</div>
+          ) : null}
+          {readyToResume ? (
+            <div style={{ color: '#166534', fontWeight: 600 }}>
+              Ready to resume today.
+            </div>
+          ) : null}
           <div style={{ marginTop: '0.25rem', color: environmentPrompt.tone }}>
             <strong>{environmentPrompt.title}:</strong> {environmentPrompt.detail}
           </div>
@@ -947,7 +984,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               disabled={isLifecycleUpdating}
               style={{ border: '1px solid #bfdbfe', borderRadius: '6px', padding: '0.45rem 0.75rem', background: '#eff6ff', color: '#1d4ed8', cursor: isLifecycleUpdating ? 'not-allowed' : 'pointer' }}
             >
-              {isLifecycleUpdating ? 'Updating…' : lifecycleStatus === 'paused' ? 'Resume' : 'Reactivate'}
+              {isLifecycleUpdating ? 'Updating…' : lifecycleStatus === 'paused' ? (readyToResume ? 'Resume today' : 'Resume') : 'Reactivate'}
             </button>
           )}
           {recommendedDownshift && (
