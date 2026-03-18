@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 export type CelebrationAnimationProps = {
@@ -151,12 +151,18 @@ export function CelebrationAnimation({
   const [backdropFadingOut, setBackdropFadingOut] = useState(false);
   const [isFlying, setIsFlying] = useState(false);
   const [targetPulsing, setTargetPulsing] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+  const animationStartedRef = useRef(false);
 
   const config = ICON_CONFIGS[type];
   const timing = getTiming(type);
   const allowBackdrop = type !== 'habit' && type !== 'action';
   const allowXP = type !== 'habit' && type !== 'action';
   const targetElement = targetElementProp ?? config.target;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   const cleanup = useCallback(() => {
     setIcons([]);
@@ -165,10 +171,15 @@ export function CelebrationAnimation({
     setBackdropFadingOut(false);
     setIsFlying(false);
     setTargetPulsing(false);
-    onComplete?.();
-  }, [onComplete]);
+    onCompleteRef.current?.();
+  }, []);
 
   useEffect(() => {
+    if (animationStartedRef.current) {
+      return;
+    }
+    animationStartedRef.current = true;
+
     // Generate random icons with initial delay
     const newIcons: IconInstance[] = [];
     for (let i = 0; i < config.count; i++) {
@@ -222,6 +233,11 @@ export function CelebrationAnimation({
       cleanup();
     }, timing.CLEANUP_DELAY);
 
+    // Hard-stop guard so celebrations can never linger if parent renders frequently.
+    const hardStopTimeout = setTimeout(() => {
+      cleanup();
+    }, Math.max(timing.CLEANUP_DELAY + 250, 3500));
+
     return () => {
       if (backdropTimeout) {
         clearTimeout(backdropTimeout);
@@ -237,6 +253,7 @@ export function CelebrationAnimation({
         clearTimeout(xpTimeout);
       }
       clearTimeout(cleanupTimeout);
+      clearTimeout(hardStopTimeout);
     };
   }, [config, cleanup, origin, timing, allowBackdrop, allowXP, type]);
 
