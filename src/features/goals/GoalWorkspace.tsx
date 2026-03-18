@@ -34,7 +34,8 @@ import { getDemoHabitsForUser, getDemoVisionImages } from '../../services/demoDa
 import type { GoalHealthResult } from './goalHealth';
 import { evaluateGoalHealthFromSignals } from '../../services/goalExecution';
 import { GoalDoctorCard } from '../../components/GoalDoctorCard';
-import type { EnvironmentContextV1 } from '../environment/environmentSchema';
+import { EnvironmentStrengthCard } from '../environment/components';
+import { normalizeEnvironmentContext, type EnvironmentContextV1 } from '../environment/environmentSchema';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
@@ -56,6 +57,7 @@ type GoalDraft = {
   progressNotes: string;
   statusTag: GoalStatusTag;
   strategyType: GoalStrategyType;
+  environmentContext: EnvironmentContextV1 | null;
 };
 
 // Type definition matching LifeGoalInputDialog's form data structure
@@ -105,7 +107,45 @@ const initialDraft: GoalDraft = {
   progressNotes: '',
   statusTag: defaultStatusTag,
   strategyType: 'standard',
+  environmentContext: null,
 };
+
+function getEnvironmentReviewPrompt(goal: GoalRow): { title: string; detail: string; tone: '#0f766e' | '#92400e' | '#1d4ed8' } {
+  const lastAuditedAt = goal.environment_last_audited_at ? new Date(goal.environment_last_audited_at) : null;
+  const isStale = lastAuditedAt
+    ? (Date.now() - lastAuditedAt.getTime()) / (1000 * 60 * 60 * 24) >= 30
+    : false;
+
+  if (goal.environment_score === null) {
+    return {
+      title: 'Environment setup missing',
+      detail: 'This goal has no cue/blocker/fallback setup yet. Add one during review to make follow-through easier.',
+      tone: '#1d4ed8',
+    };
+  }
+
+  if (goal.environment_score <= 2) {
+    return {
+      title: `Environment score ${goal.environment_score}/5`,
+      detail: 'This setup looks fragile. Re-audit the environment and tighten the cue, blocker fix, or fallback.',
+      tone: '#92400e',
+    };
+  }
+
+  if (isStale) {
+    return {
+      title: 'Environment audit is stale',
+      detail: 'This setup was last audited over 30 days ago. A quick refresh could keep it aligned with your current routine.',
+      tone: '#92400e',
+    };
+  }
+
+  return {
+    title: `Environment score ${goal.environment_score}/5`,
+    detail: 'This goal has a recent environment setup on file.',
+    tone: '#0f766e',
+  };
+}
 
 export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach }: GoalWorkspaceProps) {
   const { isConfigured } = useSupabaseAuth();
@@ -476,6 +516,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
       progressNotes: goal.progress_notes ?? '',
       statusTag: normalizeGoalStatus(goal.status_tag),
       strategyType: normalizeGoalStrategy((goal as GoalRowWithStrategy).goal_strategy_type),
+      environmentContext: normalizeEnvironmentContext(goal.environment_context ?? null),
     });
   };
 
@@ -530,6 +571,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
         progress_notes: editDraft.progressNotes.trim() || null,
         status_tag: editDraft.statusTag,
         goal_strategy_type: editDraft.strategyType ?? 'standard',
+        environment_context: editDraft.environmentContext as Database['public']['Tables']['goals']['Update']['environment_context'],
       } as Database['public']['Tables']['goals']['Update'];
 
       const { data, error } = await updateGoal(editingGoalId, payload);
@@ -1041,6 +1083,15 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
                               placeholder="Summarize learnings, blockers, or wins."
                             />
                           </label>
+                          <EnvironmentStrengthCard
+                            value={editDraft.environmentContext}
+                            onChange={(environmentContext) => setEditDraft((current) => ({ ...current, environmentContext }))}
+                            title="Re-audit this goal"
+                            subtitle="Refresh the cue, blocker fix, and fallback if this goal is drifting."
+                            legacyNoteLabel="Review notes"
+                            onApplyRecommendedStrategy={() => setEditDraft((current) => ({ ...current, strategyType: 'friction_removal' }))}
+                            recommendedStrategyActive={editDraft.strategyType === 'friction_removal'}
+                          />
                           <div className="goal-card__editor-actions">
                             <button
                               type="submit"
@@ -1122,6 +1173,27 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
                             }}
                             onAskCoach={(prompt) => onNavigateToAiCoach?.(prompt)}
                           />
+
+                          {(() => {
+                            const prompt = getEnvironmentReviewPrompt(goal);
+                            return (
+                              <div
+                                style={{
+                                  marginTop: '0.75rem',
+                                  marginBottom: '0.75rem',
+                                  border: `1px solid ${prompt.tone}33`,
+                                  background: `${prompt.tone}12`,
+                                  borderRadius: '12px',
+                                  padding: '0.85rem 1rem',
+                                }}
+                              >
+                                <div style={{ fontWeight: 700, color: prompt.tone, marginBottom: '0.2rem' }}>
+                                  {prompt.title}
+                                </div>
+                                <div style={{ color: '#475569', fontSize: '0.9rem' }}>{prompt.detail}</div>
+                              </div>
+                            );
+                          })()}
 
                           {goal.description ? <p>{goal.description}</p> : null}
                           {goal.progress_notes ? (
