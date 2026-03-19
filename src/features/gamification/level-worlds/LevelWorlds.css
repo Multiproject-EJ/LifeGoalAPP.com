@@ -5,6 +5,8 @@
 .level-worlds-hub {
   position: fixed;
   inset: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
   display: flex;
   flex-direction: column;
@@ -632,7 +634,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 1rem;
+  padding: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.35rem)) max(1rem, calc(env(safe-area-inset-right, 0px) + 1rem)) 1rem max(1rem, calc(env(safe-area-inset-left, 0px) + 1rem));
   border-radius: 16px;
   background: linear-gradient(160deg, rgba(12, 26, 36, 0.9), rgba(6, 18, 28, 0.85));
   border: 1px solid rgba(145, 206, 230, 0.5);
@@ -1092,6 +1094,7 @@
 .island-run-board {
   position: relative;
   height: min(76vh, 680px);
+  height: min(76dvh, 680px);
   min-height: 520px;
   border-radius: 18px;
   overflow: hidden;
@@ -1102,6 +1105,7 @@
 
 .island-run-board--hud-collapsed {
   height: min(88vh, 820px);
+  height: min(88dvh, 820px);
   min-height: 620px;
 }
 
@@ -2803,4 +2807,11 @@
   font-size: 0.86rem;
   color: rgba(200, 240, 255, 0.9);
   font-weight: 600;
+}
+
+
+@media (display-mode: fullscreen) {
+  .island-run-prototype__header {
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  }
 }
