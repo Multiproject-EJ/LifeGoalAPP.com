@@ -14589,7 +14589,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 [data-theme='flow-night'] .mobile-habit-home {
   background:
     linear-gradient(180deg, rgba(2, 6, 23, 0.6) 0%, rgba(15, 23, 42, 0.7) 55%, rgba(2, 6, 23, 0.88) 100%),
-    url('./assets/HalloweenNight.webp') center top / 100% auto no-repeat;
+    url('/Holiday%20Themes/HalloweenNight.webp') center top / 100% auto no-repeat;
   color: #e2e8f0;
 }
 

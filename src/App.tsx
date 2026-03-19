@@ -64,6 +64,7 @@ import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
+import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import {
   isIslandRunEntryDebugEnabled,
   logIslandRunEntryDebug,
@@ -417,6 +418,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [islandTimeLabelForOverlay, setIslandTimeLabelForOverlay] = useState('—');
   const [heartsResetAtMs, setHeartsResetAtMs] = useState<number | undefined>(undefined);
   const [eggHatchResetAtMs, setEggHatchResetAtMs] = useState<number | undefined>(undefined);
+  const [currentIslandBackgroundSrc, setCurrentIslandBackgroundSrc] = useState(() => getIslandBackgroundImageSrc(1));
   const spinWinResetAtMs = useMemo(() => {
     const now = new Date();
     const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
@@ -431,9 +433,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setIslandTimeLabelForOverlay('—');
           setHeartsResetAtMs(undefined);
           setEggHatchResetAtMs(undefined);
+          setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
           return;
         }
-        const state = JSON.parse(raw) as { islandStartedAtMs?: number; islandExpiresAtMs?: number; activeEggSetAtMs?: number; activeEggHatchDurationMs?: number };
+        const state = JSON.parse(raw) as {
+          islandStartedAtMs?: number;
+          islandExpiresAtMs?: number;
+          activeEggSetAtMs?: number;
+          activeEggHatchDurationMs?: number;
+          currentIslandNumber?: number;
+        };
+        setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(state?.currentIslandNumber ?? 1));
         const expiresAtMs = state?.islandExpiresAtMs;
         if (expiresAtMs) {
           const remaining = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
@@ -460,6 +470,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         setIslandTimeLabelForOverlay('—');
         setHeartsResetAtMs(undefined);
         setEggHatchResetAtMs(undefined);
+        setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
       }
     }
     computeLabel();
@@ -4008,6 +4019,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           diamondBalance={goldBreakdown.diamonds}
           goldBalance={goldBreakdown.goldRemainder}
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
+          islandSceneSrc={currentIslandBackgroundSrc}
           islandTimeLabel={islandTimeLabelForOverlay}
           spinWinResetAtMs={spinWinResetAtMs}
           heartsResetAtMs={heartsResetAtMs}
@@ -4293,6 +4305,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         diamondBalance={goldBreakdown.diamonds}
         goldBalance={goldBreakdown.goldRemainder}
         spinsRemaining={dailyTreatsInventory.spinsRemaining}
+        islandSceneSrc={currentIslandBackgroundSrc}
         islandTimeLabel={islandTimeLabelForOverlay}
         spinWinResetAtMs={spinWinResetAtMs}
         heartsResetAtMs={heartsResetAtMs}
