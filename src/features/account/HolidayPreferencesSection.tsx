@@ -29,6 +29,12 @@ export const HOLIDAY_OPTIONS = [
     description: 'Spring pastels and soft gradients.',
   },
   {
+    id: 'eid_mubarak',
+    label: 'Eid Mubarak',
+    emoji: '🌙',
+    description: 'Lantern glow, crescent nights, and celebratory gold accents.',
+  },
+  {
     id: 'halloween',
     label: 'Halloween',
     emoji: '🎃',

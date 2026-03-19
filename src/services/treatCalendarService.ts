@@ -10,6 +10,7 @@ export type HolidayKey =
   | 'valentines_day'
   | 'st_patricks_day'
   | 'easter'
+  | 'eid_mubarak'
   | 'halloween'
   | 'thanksgiving'
   | 'hanukkah'
@@ -138,6 +139,12 @@ export type AdventMeta = {
   emojis: string[];
 };
 
+export type ActiveAdventMetaResult = {
+  meta: AdventMeta;
+  daysRemaining: number;
+  cycleKey: string;
+};
+
 const ADVENT_META: AdventMeta[] = [
   {
     theme_name: 'Christmas Advent',
@@ -164,6 +171,16 @@ const ADVENT_META: AdventMeta[] = [
     countdownStart: { month: 2, day: 18 },
     holidayDate: { month: 3, day: 25 },
     emojis: ['🐣', '🌸', '🥚', '🐰', '🌷', '🦋', '🌼', '🍀', '✨', '🌈'],
+  },
+  {
+    // Eid al-Fitr is lunar and shifts each year. This demo window is an
+    // approximation; production seasons should seed the exact date per year.
+    theme_name: 'Eid Mubarak Countdown',
+    displayName: 'Eid Mubarak',
+    holiday_key: 'eid_mubarak',
+    countdownStart: { month: 2, day: 30 },
+    holidayDate: { month: 3, day: 10 },
+    emojis: ['🌙', '🕌', '✨', '🤲', '⭐', '🕯️', '🌟', '💛', '🎉', '🪔'],
   },
   {
     theme_name: 'Valentine\'s Countdown',
@@ -248,7 +265,7 @@ function isInCountdownWindow(
  */
 export function getActiveAdventMeta(
   enabledHolidays?: Set<string>,
-): { meta: AdventMeta; daysRemaining: number } | null {
+): ActiveAdventMetaResult | null {
   const today = new Date();
   const todayM = today.getMonth();
   const todayD = today.getDate();
@@ -274,9 +291,24 @@ export function getActiveAdventMeta(
       Math.round((holidayLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24)),
     );
 
-    return { meta, daysRemaining };
+    return {
+      meta,
+      daysRemaining,
+      cycleKey: getAdventCycleKey(meta, today),
+    };
   }
   return null;
+}
+
+export function getAdventCycleKey(meta: AdventMeta, referenceDate: Date = new Date()): string {
+  const year = referenceDate.getFullYear();
+  const crossesYearBoundary = meta.holidayDate.month < meta.countdownStart.month;
+  const startYear =
+    crossesYearBoundary && referenceDate.getMonth() <= meta.holidayDate.month
+      ? year - 1
+      : year;
+
+  return `${meta.holiday_key}:${startYear}-${String(meta.countdownStart.month + 1).padStart(2, '0')}-${String(meta.countdownStart.day).padStart(2, '0')}`;
 }
 
 /**
