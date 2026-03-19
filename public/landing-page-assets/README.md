@@ -2,7 +2,7 @@
 
 Static image assets for the HabitGame world-site landing page (`/`).
 
-All assets are served from `/world-assets/` at runtime. Placeholder 1×1 WebP
+All assets are served from `/landing-page-assets/` at runtime. Placeholder 1×1 WebP
 files exist for each asset so the build pipeline works immediately; replace each
 file with the final designed art asset before production launch.
 
@@ -93,10 +93,10 @@ Each placeholder file is a valid 1×1 WebP pixel. To replace:
 
 ```sh
 # macOS / Linux
-cp designed-hero-bg.webp public/world-assets/world-bg-main.webp
+cp designed-hero-bg.webp public/landing-page-assets/world-bg-main.webp
 
 # Verify file size
-du -h public/world-assets/world-bg-main.webp
+du -h public/landing-page-assets/world-bg-main.webp
 ```
 
 The build pipeline picks up changes automatically; no code changes are required

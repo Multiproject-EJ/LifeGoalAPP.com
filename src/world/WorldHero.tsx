@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { LazyImage } from './LazyImage.tsx';
 
 /** Static path for the primary hero background asset (eagerly preloaded). */
-const HERO_BG_SRC = '/world-assets/world-bg-main.webp';
+const HERO_BG_SRC = '/landing-page-assets/world-bg-main.webp';
 
 interface WorldHeroProps {
   children?: React.ReactNode;
@@ -68,7 +68,7 @@ export function WorldHero({ children }: WorldHeroProps) {
       {/* Layer 2 — Blur depth overlay (lazy) */}
       <div className="world-hero__blur-layer" aria-hidden="true">
         <LazyImage
-          src="/world-assets/world-bg-blur.webp"
+          src="/landing-page-assets/world-bg-blur.webp"
           alt=""
           className="world-hero__blur-img"
         />
@@ -80,7 +80,7 @@ export function WorldHero({ children }: WorldHeroProps) {
       {/* Layer 4 — Glass panel behind main content area (image + CSS fallback) */}
       <div className="world-hero__glass-panel" aria-hidden="true">
         <LazyImage
-          src="/world-assets/panel-glass-xl.webp"
+          src="/landing-page-assets/panel-glass-xl.webp"
           alt=""
           className="world-hero__panel-img"
         />
@@ -89,7 +89,7 @@ export function WorldHero({ children }: WorldHeroProps) {
       {/* Layer 5 — Bottom glow (image + CSS radial gradient fallback) */}
       <div className="world-hero__bottom-glow" aria-hidden="true">
         <LazyImage
-          src="/world-assets/fx-bottom-glow.webp"
+          src="/landing-page-assets/fx-bottom-glow.webp"
           alt=""
           className="world-hero__glow-img"
         />

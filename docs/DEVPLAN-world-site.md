@@ -115,7 +115,7 @@ Treat PWA behavior as a protected subsystem while adding the world-site layer:
   /app                # app-shell route wrappers/adapters (auth-required)
   /auth               # login-related route components
 /public
-  /world-assets       # static world images (WebP, compressed)
+  /landing-page-assets  # static landing page images (WebP, compressed)
 /docs
   DEVPLAN-world-site.md
   world-site-baseline.md
@@ -373,7 +373,7 @@ Shift from CSS-only to image-led “game lobby” visual language.
 10. `world-bg-blur.webp`
 
 ### Tasks
-- [x] Add `/public/world-assets/` pipeline.
+- [x] Add `/public/landing-page-assets/` pipeline.
 - [x] Preload only primary background.
 - [x] Lazy-load secondary assets via intersection observer.
 - [x] Build `WorldHero` using image layers.
@@ -478,8 +478,8 @@ Support sharing/indexing/trust.
 - [x] Add `/privacy`, `/terms`, `/support` pages.
 - [x] Add base SEO metadata + OG image for `/`.
 
-> **Note:** The OG image asset (`/world-assets/og-image.png`, 1200×630) is referenced in the meta
-> tags but still needs to be designed and added. The path is `/public/world-assets/og-image.png`.
+> **Note:** The OG image asset (`/landing-page-assets/og-image.png`, 1200×630) is referenced in the meta
+> tags but still needs to be designed and added. The path is `/public/landing-page-assets/og-image.png`.
 
 ### Definition of done
 - Shared links render polished previews.
@@ -617,7 +617,7 @@ Use this as the “build now” micro-spec once decisions are locked.
 - `src/app/AppRoute.tsx` (wrapper that mounts existing app shell)
 - `src/routes/resolveRoute.ts` (minimal pathname switchboard)
 - `src/main.tsx` or `src/App.tsx` (route-entry integration)
-- `public/world-assets/world-bg-main.webp` (initial Tier-1 visual)
+- `public/landing-page-assets/world-bg-main.webp` (initial Tier-1 visual)
 
 ### Minimal acceptance tests (manual)
 
