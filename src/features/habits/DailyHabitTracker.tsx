@@ -38,7 +38,8 @@ import {
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
-import { archiveHabitV2, updateHabitFullV2, type HabitV2Row } from '../../services/habitsV2';
+import { archiveHabitV2, updateHabitFullV2, pauseHabitV2, deactivateHabitV2, type HabitV2Row } from '../../services/habitsV2';
+import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import {
   AUTO_PROGRESS_TIERS,
   AUTO_PROGRESS_UPGRADE_RULES,
@@ -415,6 +416,7 @@ export function DailyHabitTracker({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
+  const [lifecycleActionHabitIds, setLifecycleActionHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiDraftByHabitId, setReviewAiDraftByHabitId] = useState<Record<string, HabitReviewAiDraft>>({});
   const [analysisHabitId, setAnalysisHabitId] = useState<string | null>(null);
@@ -3829,6 +3831,7 @@ export function DailyHabitTracker({
         if (error) {
           throw new Error(error.message);
         }
+        await cancelHabitNotifications(habit.id);
 
         await awardHabitRecoveryXp({
           habitId: habit.id,
@@ -3845,6 +3848,56 @@ export function DailyHabitTracker({
           return next;
         });
         setErrorMessage(`Archived "${habit.name}".`);
+        return;
+      }
+
+      if (action === 'pause') {
+        const { error } = await pauseHabitV2(habit.id, { reason: 'review_pause' });
+        if (error) {
+          throw new Error(error.message);
+        }
+        await cancelHabitNotifications(habit.id);
+
+        await awardHabitRecoveryXp({
+          habitId: habit.id,
+          rewardKey: `review-completed:${reviewCycleKey}`,
+          xp: XP_REWARDS.HABIT_REVIEW_COMPLETED,
+          sourceType: 'habit_review_completed',
+          description: 'Completed a Habit Review decision',
+        });
+
+        setHabits((prev) => prev.filter((entry) => entry.id !== habit.id));
+        setCompletions((prev) => {
+          const next = { ...prev };
+          delete next[habit.id];
+          return next;
+        });
+        setErrorMessage(`Paused "${habit.name}" and removed it from today until you resume it.`);
+        return;
+      }
+
+      if (action === 'replace') {
+        const { error } = await deactivateHabitV2(habit.id, { reason: 'review_replace' });
+        if (error) {
+          throw new Error(error.message);
+        }
+        await cancelHabitNotifications(habit.id);
+
+        await awardHabitRecoveryXp({
+          habitId: habit.id,
+          rewardKey: `review-completed:${reviewCycleKey}`,
+          xp: XP_REWARDS.HABIT_REVIEW_COMPLETED,
+          sourceType: 'habit_review_completed',
+          description: 'Completed a Habit Review decision',
+        });
+
+        setHabits((prev) => prev.filter((entry) => entry.id !== habit.id));
+        setCompletions((prev) => {
+          const next = { ...prev };
+          delete next[habit.id];
+          return next;
+        });
+        setErrorMessage(`Deactivated "${habit.name}" so you can replace it with a better fit.`);
         return;
       }
 
@@ -3874,17 +3927,12 @@ export function DailyHabitTracker({
         );
       }
 
-      if (action === 'redesign' || action === 'replace') {
+      if (action === 'redesign') {
         setExpandedHabits((prev) => ({ ...prev, [habit.id]: true }));
         await generateReviewRedesignDraft(habit, action);
       }
 
-      const messages: Record<Exclude<HabitReviewAction, 'archive'>, string> = {
-        pause: `Marked "${habit.name}" as paused for review.`,
-        redesign: `Marked "${habit.name}" for redesign.`,
-        replace: `Marked "${habit.name}" to be replaced.`,
-      };
-      setErrorMessage(messages[action]);
+      setErrorMessage(`Marked "${habit.name}" for redesign.`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update this habit right now.');
     } finally {
@@ -3941,6 +3989,68 @@ export function DailyHabitTracker({
     setEditError(null);
     setCreatingGoal(false);
   };
+
+  const handleTodayLifecycleAction = useCallback(
+    async (habit: HabitWithGoal, action: 'pause' | 'deactivate') => {
+      if (!isConfigured || isDemoExperience) {
+        setErrorMessage('Connect Supabase to update habit lifecycle.');
+        return;
+      }
+      if (lifecycleActionHabitIds.has(habit.id)) {
+        return;
+      }
+
+      const confirmed = window.confirm(
+        action === 'pause'
+          ? `Pause "${habit.name}" and remove it from today's checklist until you resume it?`
+          : `Deactivate "${habit.name}" and move it out of your active habits while keeping its history?`,
+      );
+      if (!confirmed) {
+        return;
+      }
+
+      setLifecycleActionHabitIds((prev) => new Set(prev).add(habit.id));
+      setErrorMessage(null);
+
+      try {
+        const result =
+          action === 'pause'
+            ? await pauseHabitV2(habit.id, { reason: 'today_screen_pause' })
+            : await deactivateHabitV2(habit.id, { reason: 'today_screen_deactivate' });
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+
+        await cancelHabitNotifications(habit.id);
+
+        setHabits((prev) => prev.filter((entry) => entry.id !== habit.id));
+        setCompletions((prev) => {
+          const next = { ...prev };
+          delete next[habit.id];
+          return next;
+        });
+        setExpandedHabits((prev) => {
+          const next = { ...prev };
+          delete next[habit.id];
+          return next;
+        });
+        setErrorMessage(
+          action === 'pause'
+            ? `Paused "${habit.name}" and removed it from today until you resume it.`
+            : `Deactivated "${habit.name}" and removed it from today's active habits.`,
+        );
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to update the habit lifecycle.');
+      } finally {
+        setLifecycleActionHabitIds((prev) => {
+          const next = new Set(prev);
+          next.delete(habit.id);
+          return next;
+        });
+      }
+    },
+    [isConfigured, isDemoExperience, lifecycleActionHabitIds],
+  );
 
   const handleCreateGoalFromHabit = async () => {
     if (!editHabit) return;
@@ -4355,6 +4465,7 @@ export function DailyHabitTracker({
       title: habit.name,
       emoji: habit.emoji ?? null,
       type: habit.type ?? 'boolean',
+      status: 'active',
       target_num: habit.target_num ?? null,
       target_unit: habit.target_unit ?? null,
       schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
@@ -4362,6 +4473,11 @@ export function DailyHabitTracker({
       start_date: null,
       archived: null,
       created_at: null,
+      paused_at: null,
+      paused_reason: null,
+      resume_on: null,
+      deactivated_at: null,
+      deactivated_reason: null,
       autoprog: habit.autoprog ?? null,
       domain_key: null,
       goal_id: habit.goal?.id ?? null,
@@ -5111,6 +5227,28 @@ export function DailyHabitTracker({
                       }}
                     >
                       ✏️ Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="habit-checklist__edit-btn"
+                      disabled={lifecycleActionHabitIds.has(habit.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleTodayLifecycleAction(habit, 'pause');
+                      }}
+                    >
+                      {lifecycleActionHabitIds.has(habit.id) ? 'Updating…' : '⏸️ Pause'}
+                    </button>
+                    <button
+                      type="button"
+                      className="habit-checklist__edit-btn"
+                      disabled={lifecycleActionHabitIds.has(habit.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleTodayLifecycleAction(habit, 'deactivate');
+                      }}
+                    >
+                      {lifecycleActionHabitIds.has(habit.id) ? 'Updating…' : '🛑 Deactivate'}
                     </button>
                     <div className="habit-checklist__skip-wrap">
                       <button
