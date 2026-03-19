@@ -2415,7 +2415,7 @@ export function DailyHabitTracker({
       </div>
     </div>
   ) : null;
-  const habitVisionPreviewModal = visionPreviewImage ? (
+  const habitVisionPreviewModalContent = visionPreviewImage ? (
     <div className="habit-vision-modal" onClick={() => setVisionPreviewImage(null)}>
       <div className="habit-vision-modal__content" onClick={(event) => event.stopPropagation()}>
         <button
@@ -2426,17 +2426,25 @@ export function DailyHabitTracker({
         >
           ×
         </button>
-        <img
-          className="habit-vision-modal__image"
-          src={visionPreviewImage.publicUrl}
-          alt={visionPreviewImage.caption ? `Vision board: ${visionPreviewImage.caption}` : 'Vision board inspiration'}
-        />
+        <div className="habit-vision-modal__image-frame">
+          <img
+            className="habit-vision-modal__image"
+            src={visionPreviewImage.publicUrl}
+            alt={visionPreviewImage.caption ? `Vision board: ${visionPreviewImage.caption}` : 'Vision board inspiration'}
+          />
+        </div>
         {visionPreviewImage.caption ? (
           <p className="habit-vision-modal__caption">{visionPreviewImage.caption}</p>
         ) : null}
+        <p className="habit-vision-modal__hint">Tap outside the card or press × to close.</p>
       </div>
     </div>
   ) : null;
+  const habitVisionPreviewModal = habitVisionPreviewModalContent
+    ? modalRoot
+      ? createPortal(habitVisionPreviewModalContent, modalRoot)
+      : habitVisionPreviewModalContent
+    : null;
 
   useEffect(() => {
     onVisionRewardOpenChange?.(isVisionRewardOpen);
