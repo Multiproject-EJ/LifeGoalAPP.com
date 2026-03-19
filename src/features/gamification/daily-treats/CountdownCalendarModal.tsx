@@ -10,8 +10,10 @@ import {
 import { ScratchCardReveal } from './ScratchCardReveal';
 import { awardDailyTreatGold } from '../../../services/dailyTreats';
 import {
+  buildPreviewAdventMeta,
   getActiveAdventMeta,
   getAdventDoorCount,
+  type HolidayKey,
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
 import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
@@ -20,6 +22,7 @@ type CountdownCalendarModalProps = {
   isOpen: boolean;
   onClose: () => void;
   userId?: string;
+  previewHolidayKey?: HolidayKey | null;
 };
 
 const fallbackState: ScratchCardState = {
@@ -48,6 +51,7 @@ export const CountdownCalendarModal = ({
   isOpen,
   onClose,
   userId,
+  previewHolidayKey,
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
   const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
@@ -60,6 +64,11 @@ export const CountdownCalendarModal = ({
     setScratchState(loadScratchCardState(userId));
 
     const loadAdvent = async () => {
+      if (previewHolidayKey) {
+        setActiveAdvent(buildPreviewAdventMeta(previewHolidayKey));
+        return;
+      }
+
       let enabledHolidays: Set<string> | undefined;
       if (userId) {
         const { data, error } = await fetchHolidayPreferences(userId);
@@ -76,7 +85,7 @@ export const CountdownCalendarModal = ({
     };
 
     void loadAdvent();
-  }, [isOpen, userId]);
+  }, [isOpen, previewHolidayKey, userId]);
 
   useEffect(() => {
     if (!revealResult || !userId) return;

@@ -4,6 +4,7 @@ import { getHolidayThemeAssets } from '../services/holidayThemeAssets';
 type HolidaySeasonDialogProps = {
   activeHoliday: ActiveAdventMetaResult | null;
   isOpen: boolean;
+  isPreview?: boolean;
   onClose: () => void;
   onOpenCalendar: () => void;
 };
@@ -11,6 +12,7 @@ type HolidaySeasonDialogProps = {
 export function HolidaySeasonDialog({
   activeHoliday,
   isOpen,
+  isPreview = false,
   onClose,
   onOpenCalendar,
 }: HolidaySeasonDialogProps) {
@@ -23,7 +25,9 @@ export function HolidaySeasonDialog({
     : undefined;
 
   const countdownLabel =
-    daysRemaining === 0
+    isPreview
+      ? `Developer preview for ${meta.displayName}.`
+      : daysRemaining === 0
       ? `Today is ${meta.displayName}!`
       : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} until ${meta.displayName}.`;
 
@@ -40,7 +44,7 @@ export function HolidaySeasonDialog({
           ×
         </button>
         <div className="holiday-season-dialog__content">
-          <p className="holiday-season-dialog__eyebrow">Holiday season is here</p>
+          <p className="holiday-season-dialog__eyebrow">{isPreview ? 'Developer preview' : 'Holiday season is here'}</p>
           <h2 className="holiday-season-dialog__title">
             {meta.emojis[0]} {meta.theme_name}
           </h2>

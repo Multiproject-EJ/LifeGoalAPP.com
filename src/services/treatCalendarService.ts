@@ -311,6 +311,24 @@ export function getAdventCycleKey(meta: AdventMeta, referenceDate: Date = new Da
   return `${meta.holiday_key}:${startYear}-${String(meta.countdownStart.month + 1).padStart(2, '0')}-${String(meta.countdownStart.day).padStart(2, '0')}`;
 }
 
+export function getAdventMetaByHolidayKey(holidayKey: HolidayKey): AdventMeta | null {
+  return ADVENT_META.find((meta) => meta.holiday_key === holidayKey) ?? null;
+}
+
+export function buildPreviewAdventMeta(
+  holidayKey: HolidayKey,
+  referenceDate: Date = new Date(),
+): ActiveAdventMetaResult | null {
+  const meta = getAdventMetaByHolidayKey(holidayKey);
+  if (!meta) return null;
+
+  return {
+    meta,
+    daysRemaining: 0,
+    cycleKey: `preview:${getAdventCycleKey(meta, referenceDate)}`,
+  };
+}
+
 /**
  * Compute the total number of advent doors for a given meta entry.
  * This is the inclusive day count from countdownStart to holidayDate.

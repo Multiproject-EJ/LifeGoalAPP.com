@@ -67,7 +67,8 @@ import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBo
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
-import { getActiveAdventMeta, type ActiveAdventMetaResult } from './services/treatCalendarService';
+import { buildPreviewAdventMeta, getActiveAdventMeta, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
+import { HOLIDAY_PREVIEW_LAUNCH_EVENT, type HolidayPreviewLaunchDetail } from './services/holidayPreviewEvents';
 import {
   isIslandRunEntryDebugEnabled,
   logIslandRunEntryDebug,
@@ -504,6 +505,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
   const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
   const [showHolidaySeasonDialog, setShowHolidaySeasonDialog] = useState(false);
+  const [holidayPreviewKey, setHolidayPreviewKey] = useState<HolidayKey | null>(null);
+  const [isHolidaySeasonDialogPreview, setIsHolidaySeasonDialogPreview] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
@@ -1067,6 +1070,37 @@ export default function App({ forceAuthOnMount }: AppProps) {
       isMounted = false;
     };
   }, [activeSession?.user?.id]);
+
+  useEffect(() => {
+    const handleHolidayPreviewLaunch = (event: Event) => {
+      const customEvent = event as CustomEvent<HolidayPreviewLaunchDetail>;
+      const { holidayKey, mode } = customEvent.detail ?? {};
+      if (!holidayKey || !mode) return;
+
+      const previewHoliday = buildPreviewAdventMeta(holidayKey);
+      if (!previewHoliday) return;
+
+      setActiveHolidaySeason(previewHoliday);
+
+      if (mode === 'intro') {
+        setHolidayPreviewKey(null);
+        setIsHolidaySeasonDialogPreview(true);
+        setShowCalendarPlaceholder(false);
+        setShowHolidaySeasonDialog(true);
+        return;
+      }
+
+      setIsHolidaySeasonDialogPreview(false);
+      setShowHolidaySeasonDialog(false);
+      setHolidayPreviewKey(holidayKey);
+      setShowCalendarPlaceholder(true);
+    };
+
+    window.addEventListener(HOLIDAY_PREVIEW_LAUNCH_EVENT, handleHolidayPreviewLaunch as EventListener);
+    return () => {
+      window.removeEventListener(HOLIDAY_PREVIEW_LAUNCH_EVENT, handleHolidayPreviewLaunch as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const userId = activeSession?.user?.id;
@@ -3967,8 +4001,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const countdownCalendarModal = (
     <CountdownCalendarModal
       isOpen={showCalendarPlaceholder}
-      onClose={() => handleRewardModalClose(() => setShowCalendarPlaceholder(false))}
+      onClose={() => handleRewardModalClose(() => {
+        setShowCalendarPlaceholder(false);
+        setHolidayPreviewKey(null);
+      })}
       userId={activeSession?.user?.id}
+      previewHolidayKey={holidayPreviewKey}
     />
   );
 
@@ -4313,9 +4351,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
       <HolidaySeasonDialog
         activeHoliday={activeHolidaySeason}
         isOpen={showHolidaySeasonDialog}
-        onClose={() => setShowHolidaySeasonDialog(false)}
+        isPreview={isHolidaySeasonDialogPreview}
+        onClose={() => {
+          setShowHolidaySeasonDialog(false);
+          setIsHolidaySeasonDialogPreview(false);
+        }}
         onOpenCalendar={() => {
           setShowHolidaySeasonDialog(false);
+          setHolidayPreviewKey(isHolidaySeasonDialogPreview ? activeHolidaySeason?.meta.holiday_key ?? null : null);
+          setIsHolidaySeasonDialogPreview(false);
           setShowCalendarPlaceholder(true);
         }}
       />
