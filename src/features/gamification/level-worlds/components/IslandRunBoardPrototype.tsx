@@ -2692,33 +2692,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   return (
     <section className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}>
-      <header className="island-run-prototype__header">
-        <h2 className="island-run-prototype__title">
-          <span>🏝️ Island Run</span>
-          <span className="island-run-prototype__title-actions">
-            {!isHudCollapsed && (
-              <button
-                type="button"
-                className="island-run-prototype__dev-toggle"
-                aria-expanded={isDevPanelOpen}
-                aria-controls="island-run-dev-panel"
-                onClick={() => setIsDevPanelOpen((v) => !v)}
-              >
-                {isDevPanelOpen ? '▲ Hide dev info' : '▼ Dev info'}
-              </button>
-            )}
-            <button
-              type="button"
-              className="island-run-prototype__dev-toggle"
-              aria-expanded={!isHudCollapsed}
-              aria-controls="island-run-main-hud"
-              onClick={() => setIsHudCollapsed((value) => !value)}
-            >
-              {isHudCollapsed ? '▼ Show HUD' : '▲ Hide HUD'}
-            </button>
-          </span>
-        </h2>
-        {!isHudCollapsed && <div id="island-run-main-hud">
+      {!isHudCollapsed ? (
+        <header className="island-run-prototype__header">
+          <div id="island-run-main-hud">
         <div className="island-run-prototype__always-controls">
           <button
             type="button"
@@ -2987,8 +2963,39 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>
           </div>
         )}
-        </div>}
-      </header>
+          </div>
+        </header>
+      ) : null}
+
+      <div className="island-run-prototype__bottom-dock">
+        <div className="island-run-prototype__bottom-dock-titlegroup">
+          <h2 className="island-run-prototype__title">
+            <span>🏝️ Island Run</span>
+          </h2>
+          <span className="island-run-prototype__title-actions">
+            {!isHudCollapsed && (
+              <button
+                type="button"
+                className="island-run-prototype__dev-toggle"
+                aria-expanded={isDevPanelOpen}
+                aria-controls="island-run-dev-panel"
+                onClick={() => setIsDevPanelOpen((v) => !v)}
+              >
+                {isDevPanelOpen ? '▲ Hide dev info' : '▼ Dev info'}
+              </button>
+            )}
+            <button
+              type="button"
+              className="island-run-prototype__dev-toggle island-run-prototype__dev-toggle--primary"
+              aria-expanded={!isHudCollapsed}
+              aria-controls="island-run-main-hud"
+              onClick={() => setIsHudCollapsed((value) => !value)}
+            >
+              {isHudCollapsed ? '▼ Show HUD' : '▲ Hide HUD'}
+            </button>
+          </span>
+        </div>
+      </div>
 
       <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${!isIslandBackgroundAvailable ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''}`}>
         {isIslandBackgroundAvailable && (

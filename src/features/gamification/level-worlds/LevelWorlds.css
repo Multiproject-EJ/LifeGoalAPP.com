@@ -5,6 +5,8 @@
 .level-worlds-hub {
   position: fixed;
   inset: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
   display: flex;
   flex-direction: column;
@@ -632,7 +634,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 1rem;
+  padding: 0.9rem 1rem 0.85rem;
   border-radius: 16px;
   background: linear-gradient(160deg, rgba(12, 26, 36, 0.9), rgba(6, 18, 28, 0.85));
   border: 1px solid rgba(145, 206, 230, 0.5);
@@ -650,7 +652,7 @@
 .island-run-prototype__title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.6rem;
 }
 
@@ -658,6 +660,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .island-run-prototype--hud-collapsed {
@@ -666,6 +670,33 @@
 
 .island-run-prototype--hud-collapsed .island-run-prototype__header {
   padding: 0.55rem 0.75rem;
+}
+
+.island-run-prototype__bottom-dock {
+  position: sticky;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  z-index: 15;
+  display: flex;
+  justify-content: center;
+  margin-top: -5.5rem;
+  padding: 0 0.75rem calc(env(safe-area-inset-bottom, 0px) + 0.25rem);
+  pointer-events: none;
+}
+
+.island-run-prototype__bottom-dock-titlegroup {
+  width: min(100%, 420px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(5, 16, 30, 0.88), rgba(10, 26, 45, 0.82));
+  border: 1px solid rgba(145, 206, 230, 0.45);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: auto;
 }
 
 .island-run-prototype__hud-grid {
@@ -705,12 +736,17 @@
 .island-run-prototype__dev-toggle {
   font-size: 0.72rem;
   padding: 0.2rem 0.6rem;
-  border-radius: 6px;
+  border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.2);
   background: rgba(255,255,255,0.07);
   color: #94a3b8;
   cursor: pointer;
-  margin-left: 0.5rem;
+}
+
+.island-run-prototype__dev-toggle--primary {
+  color: #dff7ff;
+  border-color: rgba(149, 224, 255, 0.45);
+  background: linear-gradient(180deg, rgba(46, 133, 255, 0.45), rgba(12, 74, 160, 0.55));
 }
 
 .island-run-prototype__always-controls {
@@ -1092,6 +1128,7 @@
 .island-run-board {
   position: relative;
   height: min(76vh, 680px);
+  height: min(76dvh, 680px);
   min-height: 520px;
   border-radius: 18px;
   overflow: hidden;
@@ -1102,6 +1139,7 @@
 
 .island-run-board--hud-collapsed {
   height: min(88vh, 820px);
+  height: min(88dvh, 820px);
   min-height: 620px;
 }
 
@@ -2803,4 +2841,26 @@
   font-size: 0.86rem;
   color: rgba(200, 240, 255, 0.9);
   font-weight: 600;
+}
+
+
+@media (max-width: 640px) {
+  .island-run-prototype__bottom-dock {
+    margin-top: -4.75rem;
+    padding-inline: 0.5rem;
+  }
+
+  .island-run-prototype__bottom-dock-titlegroup {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .island-run-prototype__title-actions {
+    width: 100%;
+  }
+
+  .island-run-prototype__title-actions .island-run-prototype__dev-toggle {
+    flex: 1 1 0;
+    text-align: center;
+  }
 }
