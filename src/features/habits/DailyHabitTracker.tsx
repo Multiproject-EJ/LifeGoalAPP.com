@@ -519,7 +519,6 @@ export function DailyHabitTracker({
   const [isVisionRewardSelecting, setIsVisionRewardSelecting] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
-  const [shouldShowClaimedVisionRewardPreview, setShouldShowClaimedVisionRewardPreview] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
   const [visionStarCount, setVisionStarCount] = useState(0);
   const [isVisionVisualizationOpen, setIsVisionVisualizationOpen] = useState(false);
@@ -1558,7 +1557,6 @@ export function DailyHabitTracker({
       });
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
-      setShouldShowClaimedVisionRewardPreview(true);
       saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
 
       const persistImageUrl =
@@ -2482,12 +2480,10 @@ export function DailyHabitTracker({
     if (storedReward) {
       setVisionReward(storedReward);
       setVisionRewardDate(activeDate);
-      setShouldShowClaimedVisionRewardPreview(false);
       return;
     }
     setVisionReward(null);
     setVisionRewardDate(null);
-    setShouldShowClaimedVisionRewardPreview(false);
   }, [activeDate, session.user.id]);
 
   useEffect(() => {
@@ -4273,12 +4269,6 @@ export function DailyHabitTracker({
                     </span>
                   ) : null}
                 </div>
-              ) : visionRewardForDay && shouldShowClaimedVisionRewardPreview ? (
-                <img
-                  className="habit-day-nav__bonus-image"
-                  src={visionRewardForDay.imageUrl}
-                  alt={visionRewardForDay.caption ? `Vision board: ${visionRewardForDay.caption}` : 'Vision board inspiration'}
-                />
               ) : (
                 <span
                   className={`habit-day-nav__bonus-placeholder ${
@@ -4288,9 +4278,6 @@ export function DailyHabitTracker({
                   {hasClaimedVisionStar ? 'Vision star claimed today.' : ''}
                 </span>
               )}
-              {visionRewardForDay?.caption && shouldShowClaimedVisionRewardPreview && !shouldShowOfferBonus ? (
-                <span className="habit-day-nav__bonus-caption">{visionRewardForDay.caption}</span>
-              ) : null}
             </div>
             {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
           </div>
