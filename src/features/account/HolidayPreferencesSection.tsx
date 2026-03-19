@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { HolidayPreferences } from '../../services/holidayPreferences';
 import { fetchHolidayPreferences, upsertHolidayPreferences } from '../../services/holidayPreferences';
+import { dispatchHolidayPreviewLaunch } from '../../services/holidayPreviewEvents';
+import type { HolidayKey } from '../../services/treatCalendarService';
 
 export const HOLIDAY_OPTIONS = [
   {
@@ -27,6 +29,12 @@ export const HOLIDAY_OPTIONS = [
     label: 'Easter',
     emoji: '🐣',
     description: 'Spring pastels and soft gradients.',
+  },
+  {
+    id: 'eid_mubarak',
+    label: 'Eid Mubarak',
+    emoji: '🌙',
+    description: 'Lantern glow, crescent nights, and celebratory gold accents.',
   },
   {
     id: 'halloween',
@@ -175,6 +183,22 @@ export function HolidayPreferencesSection({ session, isDemoExperience }: Holiday
                 </label>
               </div>
               <p className="holiday-preferences__description">{holiday.description}</p>
+              <div className="holiday-preferences__preview-actions">
+                <button
+                  type="button"
+                  className="holiday-preferences__preview-button"
+                  onClick={() => dispatchHolidayPreviewLaunch({ holidayKey: holiday.id as HolidayKey, mode: 'intro' })}
+                >
+                  Preview intro
+                </button>
+                <button
+                  type="button"
+                  className="holiday-preferences__preview-button holiday-preferences__preview-button--secondary"
+                  onClick={() => dispatchHolidayPreviewLaunch({ holidayKey: holiday.id as HolidayKey, mode: 'calendar' })}
+                >
+                  Preview calendar
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -10,16 +10,19 @@ import {
 import { ScratchCardReveal } from './ScratchCardReveal';
 import { awardDailyTreatGold } from '../../../services/dailyTreats';
 import {
+  buildPreviewAdventMeta,
   getActiveAdventMeta,
   getAdventDoorCount,
-  type AdventMeta,
+  type HolidayKey,
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
+import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
   onClose: () => void;
   userId?: string;
+  previewHolidayKey?: HolidayKey | null;
 };
 
 const fallbackState: ScratchCardState = {
@@ -36,6 +39,7 @@ const HOLIDAY_THEME: Record<string, string> = {
   christmas:        'christmas',
   halloween:        'halloween',
   easter:           'easter',
+  eid_mubarak:      'eid-mubarak',
   valentines_day:   'valentines',
   new_year:         'new-year',
   thanksgiving:     'thanksgiving',
@@ -47,13 +51,11 @@ export const CountdownCalendarModal = ({
   isOpen,
   onClose,
   userId,
+  previewHolidayKey,
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
   const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
-  const [activeAdvent, setActiveAdvent] = useState<{
-    meta: AdventMeta;
-    daysRemaining: number;
-  } | null | undefined>(undefined); // undefined = loading
+  const [activeAdvent, setActiveAdvent] = useState<ReturnType<typeof getActiveAdventMeta> | undefined>(undefined); // undefined = loading
 
   // Load holiday preferences then derive the active advent window
   useEffect(() => {
@@ -62,6 +64,11 @@ export const CountdownCalendarModal = ({
     setScratchState(loadScratchCardState(userId));
 
     const loadAdvent = async () => {
+      if (previewHolidayKey) {
+        setActiveAdvent(buildPreviewAdventMeta(previewHolidayKey));
+        return;
+      }
+
       let enabledHolidays: Set<string> | undefined;
       if (userId) {
         const { data, error } = await fetchHolidayPreferences(userId);
@@ -78,7 +85,7 @@ export const CountdownCalendarModal = ({
     };
 
     void loadAdvent();
-  }, [isOpen, userId]);
+  }, [isOpen, previewHolidayKey, userId]);
 
   useEffect(() => {
     if (!revealResult || !userId) return;
@@ -136,6 +143,7 @@ export const CountdownCalendarModal = ({
   const { meta, daysRemaining } = activeAdvent;
   const totalDoors = getAdventDoorCount(meta);
   const themeMod = HOLIDAY_THEME[meta.holiday_key] ?? 'generic';
+  const { calendarBackgroundUrl } = getHolidayThemeAssets(meta.holiday_key);
 
   // Cap the active day to the advent door count (advent windows are shorter than calendar months)
   const activeDay = Math.min(resolvedState.dayInCycle, totalDoors);
@@ -159,7 +167,18 @@ export const CountdownCalendarModal = ({
       aria-label={`${meta.theme_name} advent calendar`}
     >
       <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
-      <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
+      <div
+        className={`daily-treats-modal__dialog daily-treats-calendar__dialog${
+          calendarBackgroundUrl ? ' daily-treats-calendar__dialog--image' : ''
+        }`}
+        style={
+          calendarBackgroundUrl
+            ? {
+                backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.88)), url(${calendarBackgroundUrl})`,
+              }
+            : undefined
+        }
+      >
         <button
           type="button"
           className="daily-treats-modal__close"

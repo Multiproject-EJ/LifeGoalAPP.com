@@ -53,6 +53,7 @@ import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
+import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
 import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
@@ -64,6 +65,10 @@ import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
+import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
+import { fetchHolidayPreferences } from './services/holidayPreferences';
+import { buildPreviewAdventMeta, getActiveAdventMeta, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
+import { HOLIDAY_PREVIEW_LAUNCH_EVENT, type HolidayPreviewLaunchDetail } from './services/holidayPreviewEvents';
 import {
   isIslandRunEntryDebugEnabled,
   logIslandRunEntryDebug,
@@ -417,6 +422,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [islandTimeLabelForOverlay, setIslandTimeLabelForOverlay] = useState('—');
   const [heartsResetAtMs, setHeartsResetAtMs] = useState<number | undefined>(undefined);
   const [eggHatchResetAtMs, setEggHatchResetAtMs] = useState<number | undefined>(undefined);
+  const [currentIslandBackgroundSrc, setCurrentIslandBackgroundSrc] = useState(() => getIslandBackgroundImageSrc(1));
   const spinWinResetAtMs = useMemo(() => {
     const now = new Date();
     const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
@@ -431,9 +437,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setIslandTimeLabelForOverlay('—');
           setHeartsResetAtMs(undefined);
           setEggHatchResetAtMs(undefined);
+          setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
           return;
         }
-        const state = JSON.parse(raw) as { islandStartedAtMs?: number; islandExpiresAtMs?: number; activeEggSetAtMs?: number; activeEggHatchDurationMs?: number };
+        const state = JSON.parse(raw) as {
+          islandStartedAtMs?: number;
+          islandExpiresAtMs?: number;
+          activeEggSetAtMs?: number;
+          activeEggHatchDurationMs?: number;
+          currentIslandNumber?: number;
+        };
+        setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(state?.currentIslandNumber ?? 1));
         const expiresAtMs = state?.islandExpiresAtMs;
         if (expiresAtMs) {
           const remaining = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
@@ -460,6 +474,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         setIslandTimeLabelForOverlay('—');
         setHeartsResetAtMs(undefined);
         setEggHatchResetAtMs(undefined);
+        setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
       }
     }
     computeLabel();
@@ -488,6 +503,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
+  const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
+  const [showHolidaySeasonDialog, setShowHolidaySeasonDialog] = useState(false);
+  const [holidayPreviewKey, setHolidayPreviewKey] = useState<HolidayKey | null>(null);
+  const [isHolidaySeasonDialogPreview, setIsHolidaySeasonDialogPreview] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
@@ -998,6 +1017,90 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     return createDemoSession();
   }, [supabaseSession, demoProfile]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHolidaySeason = async () => {
+      const userId = activeSession?.user?.id;
+      if (!userId) {
+        if (!isMounted) return;
+        setActiveHolidaySeason(null);
+        setShowHolidaySeasonDialog(false);
+        return;
+      }
+
+      const { data, error } = await fetchHolidayPreferences(userId);
+      if (!isMounted || error || !data?.holidays) {
+        if (isMounted) {
+          setActiveHolidaySeason(null);
+          setShowHolidaySeasonDialog(false);
+        }
+        return;
+      }
+
+      const enabledHolidays = new Set(
+        Object.entries(data.holidays)
+          .filter(([, isEnabled]) => isEnabled)
+          .map(([holidayKey]) => holidayKey),
+      );
+
+      const activeHoliday = getActiveAdventMeta(enabledHolidays);
+      setActiveHolidaySeason(activeHoliday);
+
+      if (!activeHoliday) {
+        setShowHolidaySeasonDialog(false);
+        return;
+      }
+
+      const introStorageKey = `lifegoal:holiday-season-dialog-seen:${activeHoliday.cycleKey}`;
+      const hasSeenDialog = window.localStorage.getItem(introStorageKey) === '1';
+      if (hasSeenDialog) {
+        setShowHolidaySeasonDialog(false);
+        return;
+      }
+
+      window.localStorage.setItem(introStorageKey, '1');
+      setShowHolidaySeasonDialog(true);
+    };
+
+    void loadHolidaySeason();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeSession?.user?.id]);
+
+  useEffect(() => {
+    const handleHolidayPreviewLaunch = (event: Event) => {
+      const customEvent = event as CustomEvent<HolidayPreviewLaunchDetail>;
+      const { holidayKey, mode } = customEvent.detail ?? {};
+      if (!holidayKey || !mode) return;
+
+      const previewHoliday = buildPreviewAdventMeta(holidayKey);
+      if (!previewHoliday) return;
+
+      setActiveHolidaySeason(previewHoliday);
+
+      if (mode === 'intro') {
+        setHolidayPreviewKey(null);
+        setIsHolidaySeasonDialogPreview(true);
+        setShowCalendarPlaceholder(false);
+        setShowHolidaySeasonDialog(true);
+        return;
+      }
+
+      setIsHolidaySeasonDialogPreview(false);
+      setShowHolidaySeasonDialog(false);
+      setHolidayPreviewKey(holidayKey);
+      setShowCalendarPlaceholder(true);
+    };
+
+    window.addEventListener(HOLIDAY_PREVIEW_LAUNCH_EVENT, handleHolidayPreviewLaunch as EventListener);
+    return () => {
+      window.removeEventListener(HOLIDAY_PREVIEW_LAUNCH_EVENT, handleHolidayPreviewLaunch as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const userId = activeSession?.user?.id;
@@ -3898,8 +4001,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const countdownCalendarModal = (
     <CountdownCalendarModal
       isOpen={showCalendarPlaceholder}
-      onClose={() => handleRewardModalClose(() => setShowCalendarPlaceholder(false))}
+      onClose={() => handleRewardModalClose(() => {
+        setShowCalendarPlaceholder(false);
+        setHolidayPreviewKey(null);
+      })}
       userId={activeSession?.user?.id}
+      previewHolidayKey={holidayPreviewKey}
     />
   );
 
@@ -4008,6 +4115,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           diamondBalance={goldBreakdown.diamonds}
           goldBalance={goldBreakdown.goldRemainder}
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
+          islandSceneSrc={currentIslandBackgroundSrc}
           islandTimeLabel={islandTimeLabelForOverlay}
           spinWinResetAtMs={spinWinResetAtMs}
           heartsResetAtMs={heartsResetAtMs}
@@ -4240,6 +4348,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {mobileMenuOverlay}
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
+      <HolidaySeasonDialog
+        activeHoliday={activeHolidaySeason}
+        isOpen={showHolidaySeasonDialog}
+        isPreview={isHolidaySeasonDialogPreview}
+        onClose={() => {
+          setShowHolidaySeasonDialog(false);
+          setIsHolidaySeasonDialogPreview(false);
+        }}
+        onOpenCalendar={() => {
+          setShowHolidaySeasonDialog(false);
+          setHolidayPreviewKey(isHolidaySeasonDialogPreview ? activeHolidaySeason?.meta.holiday_key ?? null : null);
+          setIsHolidaySeasonDialogPreview(false);
+          setShowCalendarPlaceholder(true);
+        }}
+      />
 
       {/* Game Board Overlay */}
       <GameBoardOverlay
@@ -4293,6 +4416,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         diamondBalance={goldBreakdown.diamonds}
         goldBalance={goldBreakdown.goldRemainder}
         spinsRemaining={dailyTreatsInventory.spinsRemaining}
+        islandSceneSrc={currentIslandBackgroundSrc}
         islandTimeLabel={islandTimeLabelForOverlay}
         spinWinResetAtMs={spinWinResetAtMs}
         heartsResetAtMs={heartsResetAtMs}

@@ -7,8 +7,8 @@ import boardIconsRight3 from '../assets/board_icons_right3.webp';
 import spinWheelImg from '../assets/Daily_treats_spinnwheel.webp';
 import heartsImg from '../assets/Daily_treats_hearts.webp';
 import hatchImg from '../assets/Daily_treat_calendar_closed.webp';
-import islandScenePlaceholder from '../assets/HalloweenNight.webp';
 import '../styles/game-board-overlay.css';
+import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
 
 function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {
   if (!resetAtMs) return '';
@@ -49,6 +49,7 @@ type GameBoardOverlayProps = {
   spinWinResetAtMs?: number;
   heartsResetAtMs?: number;
   hatcheryResetAtMs?: number;
+  islandSceneSrc?: string;
 };
 
 export function GameBoardOverlay({
@@ -75,6 +76,7 @@ export function GameBoardOverlay({
   spinWinResetAtMs,
   heartsResetAtMs,
   hatcheryResetAtMs,
+  islandSceneSrc = getIslandBackgroundImageSrc(1),
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -124,10 +126,10 @@ export function GameBoardOverlay({
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
       <div className="game-board-overlay__content">
-        {/* Island background scene — placeholder art, swap for island-specific webp when available */}
+        {/* Island background scene */}
         <div className="game-board-overlay__island-scene" aria-hidden="true">
           <img
-            src={islandScenePlaceholder}
+            src={islandSceneSrc}
             alt=""
             className="game-board-overlay__island-scene-img"
           />
