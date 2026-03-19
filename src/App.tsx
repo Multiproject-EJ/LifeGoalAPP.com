@@ -53,6 +53,7 @@ import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
+import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
 import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
@@ -65,6 +66,8 @@ import { CountdownCalendarModal } from './features/gamification/daily-treats/Cou
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
+import { fetchHolidayPreferences } from './services/holidayPreferences';
+import { getActiveAdventMeta, type ActiveAdventMetaResult } from './services/treatCalendarService';
 import {
   isIslandRunEntryDebugEnabled,
   logIslandRunEntryDebug,
@@ -499,6 +502,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
+  const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
+  const [showHolidaySeasonDialog, setShowHolidaySeasonDialog] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
@@ -1009,6 +1014,59 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     return createDemoSession();
   }, [supabaseSession, demoProfile]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHolidaySeason = async () => {
+      const userId = activeSession?.user?.id;
+      if (!userId) {
+        if (!isMounted) return;
+        setActiveHolidaySeason(null);
+        setShowHolidaySeasonDialog(false);
+        return;
+      }
+
+      const { data, error } = await fetchHolidayPreferences(userId);
+      if (!isMounted || error || !data?.holidays) {
+        if (isMounted) {
+          setActiveHolidaySeason(null);
+          setShowHolidaySeasonDialog(false);
+        }
+        return;
+      }
+
+      const enabledHolidays = new Set(
+        Object.entries(data.holidays)
+          .filter(([, isEnabled]) => isEnabled)
+          .map(([holidayKey]) => holidayKey),
+      );
+
+      const activeHoliday = getActiveAdventMeta(enabledHolidays);
+      setActiveHolidaySeason(activeHoliday);
+
+      if (!activeHoliday) {
+        setShowHolidaySeasonDialog(false);
+        return;
+      }
+
+      const introStorageKey = `lifegoal:holiday-season-dialog-seen:${activeHoliday.cycleKey}`;
+      const hasSeenDialog = window.localStorage.getItem(introStorageKey) === '1';
+      if (hasSeenDialog) {
+        setShowHolidaySeasonDialog(false);
+        return;
+      }
+
+      window.localStorage.setItem(introStorageKey, '1');
+      setShowHolidaySeasonDialog(true);
+    };
+
+    void loadHolidaySeason();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeSession?.user?.id]);
 
   useEffect(() => {
     const userId = activeSession?.user?.id;
@@ -4252,6 +4310,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {mobileMenuOverlay}
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
+      <HolidaySeasonDialog
+        activeHoliday={activeHolidaySeason}
+        isOpen={showHolidaySeasonDialog}
+        onClose={() => setShowHolidaySeasonDialog(false)}
+        onOpenCalendar={() => {
+          setShowHolidaySeasonDialog(false);
+          setShowCalendarPlaceholder(true);
+        }}
+      />
 
       {/* Game Board Overlay */}
       <GameBoardOverlay
