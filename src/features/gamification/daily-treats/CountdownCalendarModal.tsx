@@ -12,9 +12,9 @@ import { awardDailyTreatGold } from '../../../services/dailyTreats';
 import {
   getActiveAdventMeta,
   getAdventDoorCount,
-  type AdventMeta,
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
+import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
@@ -36,6 +36,7 @@ const HOLIDAY_THEME: Record<string, string> = {
   christmas:        'christmas',
   halloween:        'halloween',
   easter:           'easter',
+  eid_mubarak:      'eid-mubarak',
   valentines_day:   'valentines',
   new_year:         'new-year',
   thanksgiving:     'thanksgiving',
@@ -50,10 +51,7 @@ export const CountdownCalendarModal = ({
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
   const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
-  const [activeAdvent, setActiveAdvent] = useState<{
-    meta: AdventMeta;
-    daysRemaining: number;
-  } | null | undefined>(undefined); // undefined = loading
+  const [activeAdvent, setActiveAdvent] = useState<ReturnType<typeof getActiveAdventMeta> | undefined>(undefined); // undefined = loading
 
   // Load holiday preferences then derive the active advent window
   useEffect(() => {
@@ -136,6 +134,7 @@ export const CountdownCalendarModal = ({
   const { meta, daysRemaining } = activeAdvent;
   const totalDoors = getAdventDoorCount(meta);
   const themeMod = HOLIDAY_THEME[meta.holiday_key] ?? 'generic';
+  const { calendarBackgroundUrl } = getHolidayThemeAssets(meta.holiday_key);
 
   // Cap the active day to the advent door count (advent windows are shorter than calendar months)
   const activeDay = Math.min(resolvedState.dayInCycle, totalDoors);
@@ -159,7 +158,18 @@ export const CountdownCalendarModal = ({
       aria-label={`${meta.theme_name} advent calendar`}
     >
       <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
-      <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
+      <div
+        className={`daily-treats-modal__dialog daily-treats-calendar__dialog${
+          calendarBackgroundUrl ? ' daily-treats-calendar__dialog--image' : ''
+        }`}
+        style={
+          calendarBackgroundUrl
+            ? {
+                backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.88)), url(${calendarBackgroundUrl})`,
+              }
+            : undefined
+        }
+      >
         <button
           type="button"
           className="daily-treats-modal__close"
