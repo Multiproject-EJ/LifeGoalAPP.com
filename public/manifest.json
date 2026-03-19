@@ -4,7 +4,7 @@
   "description": "Track your life goals and daily habits with push notification reminders",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0a0e1a",
   "theme_color": "#0a0e1a",

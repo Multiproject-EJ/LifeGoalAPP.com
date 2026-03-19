@@ -4,7 +4,7 @@
   "description": "A premium progressive web app for setting goals, tracking habits, and visualizing progress with beautiful glass morphism design.",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0a0e1a",
   "theme_color": "#0a0e1a",
