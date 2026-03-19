@@ -1563,18 +1563,35 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               {habits.map((habit) => {
                 const isDone = todayLogs.some((log) => log.habit_id === habit.id);
                 const environmentPrompt = getHabitEnvironmentReviewPrompt(habit);
+                const lifecycleStatus = getHabitLifecycleStatus(habit);
+                const isActiveHabit = lifecycleStatus === 'active';
                 return (
                   <li key={habit.id} className="habits-mobile-list__item">
                     <div className="habits-mobile-list__line">
                       <span className="habits-mobile-list__title">{habit.emoji ? `${habit.emoji} ` : ''}{habit.title}</span>
-                      <span className="habits-mobile-list__status">{isDone ? 'Done' : 'Pending'}</span>
+                      <span className="habits-mobile-list__status">
+                        {isActiveHabit ? (isDone ? 'Done' : 'Pending') : lifecycleStatus.replace('_', ' ')}
+                      </span>
                     </div>
                     <p style={{ margin: '0.35rem 0 0', fontSize: '0.8rem', color: environmentPrompt.tone }}>
                       {environmentPrompt.title}
                     </p>
                     <div className="habits-mobile-list__actions">
                       <button type="button" onClick={() => handleEditHabit(habit)}>Edit</button>
-                      {!isDone ? <button type="button" onClick={() => handleMarkHabitDone(habit.id, habit.type)}>Log</button> : null}
+                      {isActiveHabit && !isDone ? <button type="button" onClick={() => handleMarkHabitDone(habit.id, habit.type)}>Log</button> : null}
+                      {isActiveHabit ? (
+                        <>
+                          <button type="button" onClick={() => handleOpenLifecycleDialog(habit, 'pause')}>Pause</button>
+                          <button type="button" onClick={() => handleOpenLifecycleDialog(habit, 'deactivate')}>Deactivate</button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void handleLifecycleAction(habit, lifecycleStatus === 'paused' ? 'resume' : 'reactivate')}
+                        >
+                          {lifecycleStatus === 'paused' ? 'Resume' : 'Reactivate'}
+                        </button>
+                      )}
                       <button type="button" onClick={() => handleArchiveHabit(habit.id)}>Archive</button>
                     </div>
                   </li>
