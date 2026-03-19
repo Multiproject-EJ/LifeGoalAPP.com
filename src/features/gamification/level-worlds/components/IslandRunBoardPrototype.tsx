@@ -11,6 +11,7 @@ import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
 } from '../services/islandBoardThemes';
+import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
@@ -222,11 +223,6 @@ function preloadThemeAssets(theme: IslandBoardTheme) {
     image.decoding = 'async';
     image.src = url;
   });
-}
-
-function getIslandBackgroundImageSrc(islandNumber: number) {
-  const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
-  return `/assets/islands/backgrounds/level-bg-${String(safeIsland).padStart(2, '0')}.webp`;
 }
 
 function getStopIcon(kind: string, stopId: string) {
