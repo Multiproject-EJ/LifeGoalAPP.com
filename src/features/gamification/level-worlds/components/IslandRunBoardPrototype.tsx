@@ -8,8 +8,6 @@ import {
   type TileAnchor,
 } from '../services/islandBoardLayout';
 import {
-  ISLAND_BOARD_THEMES,
-  getIslandBoardThemeById,
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
 } from '../services/islandBoardThemes';
@@ -218,12 +216,17 @@ function formatClock(seconds: number) {
 }
 
 function preloadThemeAssets(theme: IslandBoardTheme) {
-  const urls = [theme.backgroundImage, theme.depthMaskImage, theme.pathOverlayImage].filter(Boolean) as string[];
+  const urls = [theme.depthMaskImage, theme.pathOverlayImage].filter(Boolean) as string[];
   urls.forEach((url) => {
     const image = new Image();
     image.decoding = 'async';
     image.src = url;
   });
+}
+
+function getIslandBackgroundImageSrc(islandNumber: number) {
+  const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
+  return `/assets/islands/backgrounds/level-bg-${String(safeIsland).padStart(2, '0')}.webp`;
 }
 
 function getStopIcon(kind: string, stopId: string) {
@@ -278,7 +281,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
   const showQaHooks = useMemo(() => new URLSearchParams(window.location.search).get('islandRunQa') === '1', []);
-  const [themeOverrideId, setThemeOverrideId] = useState<IslandBoardTheme['id'] | null>(null);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
@@ -292,10 +294,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
-  const activeTheme = useMemo(() => {
-    if (themeOverrideId) return getIslandBoardThemeById(themeOverrideId);
-    return getIslandBoardThemeForIslandNumber(islandNumber);
-  }, [islandNumber, themeOverrideId]);
+  const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandNumber), [islandNumber]);
+  const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandNumber), [islandNumber]);
+  const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [step1PromptedIsland, setStep1PromptedIsland] = useState<number | null>(null);
@@ -361,38 +362,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(`island_run_theme_override_${session.user.id}`);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { themeId?: IslandBoardTheme['id'] | null };
-      if (!parsed?.themeId) return;
-      if (ISLAND_BOARD_THEMES.some((theme) => theme.id === parsed.themeId)) {
-        setThemeOverrideId(parsed.themeId);
-      }
-    } catch {
-      // no-op: keep auto theme fallback
-    }
-  }, [session.user.id]);
-
-  useEffect(() => {
-    try {
-      const key = `island_run_theme_override_${session.user.id}`;
-      if (!themeOverrideId) {
-        window.localStorage.removeItem(key);
-      } else {
-        window.localStorage.setItem(key, JSON.stringify({ themeId: themeOverrideId }));
-      }
-    } catch {
-      // no-op: localStorage unavailable
-    }
-  }, [session.user.id, themeOverrideId]);
-
-  useEffect(() => {
     preloadThemeAssets(activeTheme);
-    const activeIndex = ISLAND_BOARD_THEMES.findIndex((theme) => theme.id === activeTheme.id);
-    const nextTheme = ISLAND_BOARD_THEMES[(activeIndex + 1) % ISLAND_BOARD_THEMES.length];
-    if (nextTheme) preloadThemeAssets(nextTheme);
   }, [activeTheme]);
+
+  useEffect(() => {
+    setIsIslandBackgroundAvailable(true);
+  }, [islandBackgroundSrc]);
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
@@ -2934,24 +2909,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           </div>
         </div>
         {/* M9-COMPLETE: Home Island panel is now a persistent HUD overlay — see 🏠 button in always-controls */}
-        <div className="island-run-prototype__controls" aria-label={`Theme controls (active: ${activeTheme.label})`}>
-          {ISLAND_BOARD_THEMES.map((theme) => (
-            <button
-              key={theme.id}
-              type="button"
-              className={`island-run-prototype__scene-btn ${activeTheme.id === theme.id ? 'island-run-prototype__scene-btn--active' : ''}`}
-              onClick={() => setThemeOverrideId(theme.id)}
-            >
-              {theme.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={`island-run-prototype__scene-btn ${themeOverrideId === null ? 'island-run-prototype__scene-btn--active' : ''}`}
-            onClick={() => setThemeOverrideId(null)}
-          >
-            Auto theme
-          </button>
+        <div className="island-run-prototype__controls" aria-label={`Board controls (scene: ${activeTheme.label})`}>
           <button type="button" className="island-run-prototype__debug-btn" onClick={() => setShowDebug((value) => !value)}>
             {showDebug ? 'Hide' : 'Show'} anchor/depth debug
           </button>
@@ -3032,13 +2990,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         </div>}
       </header>
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''}`}>
-        <img
-          className="island-run-board__bg"
-          src={activeTheme.backgroundImage}
-          alt=""
-          aria-hidden="true"
-        />
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${!isIslandBackgroundAvailable ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''}`}>
+        {isIslandBackgroundAvailable && (
+          <img
+            key={islandBackgroundSrc}
+            className="island-run-board__bg"
+            src={islandBackgroundSrc}
+            alt=""
+            aria-hidden="true"
+            onError={() => setIsIslandBackgroundAvailable(false)}
+          />
+        )}
 
         {activeTheme.pathOverlayImage && (
           <img

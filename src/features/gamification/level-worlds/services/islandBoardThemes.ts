@@ -2,7 +2,6 @@ export type IslandBoardTheme = {
   id: 'lighthouse_day' | 'sunset_harbor' | 'moon_tide';
   label: string;
   sceneClass: 'scene-1' | 'scene-2' | 'scene-3';
-  backgroundImage: string;
   depthMaskImage: string;
   pathOverlayImage?: string;
   tileThemeId: string;
@@ -14,7 +13,6 @@ export const ISLAND_BOARD_THEMES: IslandBoardTheme[] = [
     id: 'lighthouse_day',
     label: 'Lighthouse Day',
     sceneClass: 'scene-1',
-    backgroundImage: '/assets/islands/backgrounds/bg_001.svg',
     depthMaskImage: '/assets/islands/depth/depth_mask_001.svg',
     pathOverlayImage: '/assets/islands/path/path_overlay_001.svg',
     tileThemeId: 'lighthouse_day',
@@ -24,7 +22,6 @@ export const ISLAND_BOARD_THEMES: IslandBoardTheme[] = [
     id: 'sunset_harbor',
     label: 'Sunset Harbor',
     sceneClass: 'scene-2',
-    backgroundImage: '/assets/islands/backgrounds/bg_002.svg',
     depthMaskImage: '/assets/islands/depth/depth_mask_002.svg',
     pathOverlayImage: '/assets/islands/path/path_overlay_002.svg',
     tileThemeId: 'sunset_harbor',
@@ -34,7 +31,6 @@ export const ISLAND_BOARD_THEMES: IslandBoardTheme[] = [
     id: 'moon_tide',
     label: 'Moon Tide',
     sceneClass: 'scene-3',
-    backgroundImage: '/assets/islands/backgrounds/bg_003.svg',
     depthMaskImage: '/assets/islands/depth/depth_mask_003.svg',
     pathOverlayImage: '/assets/islands/path/path_overlay_003.svg',
     tileThemeId: 'moon_tide',

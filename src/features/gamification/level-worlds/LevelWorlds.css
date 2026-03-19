@@ -1145,6 +1145,10 @@
   background: radial-gradient(circle at 52% 48%, #63cbdb 0%, #4394c2 19%, #6f8b7f 44%, #67546f 63%, #2f2135 100%);
 }
 
+.island-run-board--no-bg {
+  background: #000 !important;
+}
+
 .island-run-board__path,
 .island-run-board__tiles,
 .island-debug-overlay,

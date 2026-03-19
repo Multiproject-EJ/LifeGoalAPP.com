@@ -202,7 +202,7 @@ This combination converts extremely well for game-style products.
 
 ## Asset Pipeline (future)
 
-When visual pack work begins, assets go in `/public/world-assets/`:
+When visual pack work begins, assets go in `/public/landing-page-assets/`:
 
 Priority list:
 1. world-bg-main.webp (hero background)
