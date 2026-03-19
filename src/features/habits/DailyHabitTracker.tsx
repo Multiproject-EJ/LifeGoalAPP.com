@@ -2415,7 +2415,7 @@ export function DailyHabitTracker({
       </div>
     </div>
   ) : null;
-  const habitVisionPreviewModal = visionPreviewImage ? (
+  const habitVisionPreviewModalContent = visionPreviewImage ? (
     <div className="habit-vision-modal" onClick={() => setVisionPreviewImage(null)}>
       <div className="habit-vision-modal__content" onClick={(event) => event.stopPropagation()}>
         <button
@@ -2426,17 +2426,25 @@ export function DailyHabitTracker({
         >
           ×
         </button>
-        <img
-          className="habit-vision-modal__image"
-          src={visionPreviewImage.publicUrl}
-          alt={visionPreviewImage.caption ? `Vision board: ${visionPreviewImage.caption}` : 'Vision board inspiration'}
-        />
+        <div className="habit-vision-modal__image-frame">
+          <img
+            className="habit-vision-modal__image"
+            src={visionPreviewImage.publicUrl}
+            alt={visionPreviewImage.caption ? `Vision board: ${visionPreviewImage.caption}` : 'Vision board inspiration'}
+          />
+        </div>
         {visionPreviewImage.caption ? (
           <p className="habit-vision-modal__caption">{visionPreviewImage.caption}</p>
         ) : null}
+        <p className="habit-vision-modal__hint">Tap outside the card or press × to close.</p>
       </div>
     </div>
   ) : null;
+  const habitVisionPreviewModal = habitVisionPreviewModalContent
+    ? modalRoot
+      ? createPortal(habitVisionPreviewModalContent, modalRoot)
+      : habitVisionPreviewModalContent
+    : null;
 
   useEffect(() => {
     onVisionRewardOpenChange?.(isVisionRewardOpen);
@@ -4999,371 +5007,369 @@ export function DailyHabitTracker({
                   }`}
                   id={detailPanelId}
                 >
-                  <p className="habit-checklist__meta">
-                    Life wheel • {domainLabel ?? 'Unassigned'}
-                  </p>
-                  <p className="habit-checklist__meta habit-checklist__meta--secondary">
-                    Goal • {goalLabel}
-                  </p>
-                  {lastCompletedText ? (
-                    <p className="habit-checklist__note">{lastCompletedText}</p>
-                  ) : null}
-                  {linkedVisionImage ? (
-                    <button
-                      type="button"
-                      className="habit-checklist__vision-preview"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setVisionPreviewImage(linkedVisionImage);
-                      }}
-                      aria-label={`View vision board image for ${habit.name}`}
-                    >
-                      <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
-                    </button>
-                  ) : null}
-                  {/* Habit Environment summary */}
-                  {habit.habit_environment ? (
-                    <div className="habit-checklist__environment">
-                      <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
-                      <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
-                    </div>
-                  ) : null}
-                  {/* Progress bar for done-ish completions */}
-                  {state?.progressState === 'doneIsh' && state?.completionPercentage && (
-                    <div className="habit-checklist__progress">
-                      <div className="progress-bar-container">
-                        <div
-                          className="progress-bar-fill doneish"
-                          style={{ width: `${state.completionPercentage}%` }}
-                        />
-                      </div>
-                      <p className="habit-checklist__progress-text">
-                        {state.completionPercentage}% complete
-                      </p>
-                    </div>
-                  )}
-                  {state?.loggedStage ? (
-                    <p className="habit-checklist__note" style={{ marginTop: 0 }}>
-                      Logged stage: <strong>{AUTO_PROGRESS_STAGE_LABELS[state.loggedStage]}</strong>
-                    </p>
-                  ) : null}
-                  {scalePlan.enabled ? (
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '0.5rem',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        marginBottom: '0.5rem',
-                      }}
-                    >
-                      <span style={{ fontSize: '0.7rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase' }}>
-                        Log as
-                      </span>
-                      {SCALE_STAGE_ORDER.map((stage) => {
-                        const stageInfo = scalePlan.stages[stage];
-                        return (
-                          <button
-                            key={`${habit.id}-${stage}`}
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleLogHabitAtStage(habit, stage);
-                            }}
-                            disabled={isSaving}
-                            style={{
-                              border: stage === autoProgressState.tier ? '1px solid #6366f1' : '1px solid #cbd5e1',
-                              background: stage === autoProgressState.tier ? '#eef2ff' : '#fff',
-                              borderRadius: '999px',
-                              padding: '0.25rem 0.6rem',
-                              fontSize: '0.7rem',
-                              fontWeight: 600,
-                              color: '#1e293b',
-                              cursor: isSaving ? 'not-allowed' : 'pointer',
-                              opacity: isSaving ? 0.6 : 1,
-                            }}
-                            title={`Log as ${AUTO_PROGRESS_STAGE_LABELS[stage]}: ${stageInfo.label}`}
-                          >
-                            {AUTO_PROGRESS_STAGE_LABELS[stage]} · {stageInfo.completionPercent}%
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                  {autoProgressPanels[habit.id] ? (
-                    <div className="habit-checklist__autoprog">
-                      <div className="habit-checklist__autoprog-header">
-                        <div>
-                          <p className="habit-checklist__autoprog-label">Difficulty stage</p>
-                          <p className="habit-checklist__autoprog-tier">
-                            {AUTO_PROGRESS_STAGE_LABELS[autoProgressState.tier]}
-                          </p>
-                          <p className="habit-checklist__autoprog-description">
-                            {AUTO_PROGRESS_TIERS[autoProgressState.tier].description}
-                          </p>
-                        </div>
-                        {autoProgressState.lastShiftAt ? (
-                          <span className="habit-checklist__autoprog-meta">
-                            Last shift: {new Date(autoProgressState.lastShiftAt).toLocaleDateString()}
-                          </span>
-                        ) : null}
-                      </div>
-                      <div className="habit-checklist__autoprog-stats">
-                        <span>Streak: {formatStreakValue(streakDays)}</span>
-                        <span>
-                          30-day adherence: {adherenceSnapshot ? `${adherencePercent}%` : '—'}
-                        </span>
-                      </div>
-                      {suggestedDownshiftStage ? (
-                        <div
-                          className="habit-checklist__autoprog-locked"
-                          style={{ color: '#92400e', background: '#fef3c7', borderColor: '#fcd34d', display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between' }}
+                  <section className="habit-checklist__detail-block habit-checklist__detail-block--info" aria-label="Habit info">
+                    <div className="habit-checklist__detail-block-header">
+                      <span className="habit-checklist__detail-block-label">Info</span>
+                      {linkedVisionImage ? (
+                        <button
+                          type="button"
+                          className="habit-checklist__vision-preview"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setVisionPreviewImage(linkedVisionImage);
+                          }}
+                          aria-label={`View vision board image for ${habit.name}`}
                         >
+                          <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className="habit-checklist__meta-group">
+                      <p className="habit-checklist__meta">
+                        Life wheel • {domainLabel ?? 'Unassigned'}
+                      </p>
+                      <p className="habit-checklist__meta habit-checklist__meta--secondary">
+                        Goal • {goalLabel}
+                      </p>
+                      {lastCompletedText ? (
+                        <p className="habit-checklist__note">{lastCompletedText}</p>
+                      ) : null}
+                    </div>
+                    {habit.habit_environment ? (
+                      <div className="habit-checklist__environment">
+                        <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
+                        <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
+                      </div>
+                    ) : null}
+                  </section>
+                  <section className="habit-checklist__detail-block habit-checklist__detail-block--progress" aria-label="Habit progress">
+                    <div className="habit-checklist__detail-block-header">
+                      <span className="habit-checklist__detail-block-label">Progress</span>
+                    </div>
+                    {state?.progressState === 'doneIsh' && state?.completionPercentage && (
+                      <div className="habit-checklist__progress">
+                        <div className="progress-bar-container">
+                          <div
+                            className="progress-bar-fill doneish"
+                            style={{ width: `${state.completionPercentage}%` }}
+                          />
+                        </div>
+                        <p className="habit-checklist__progress-text">
+                          {state.completionPercentage}% complete
+                        </p>
+                      </div>
+                    )}
+                    {state?.loggedStage ? (
+                      <p className="habit-checklist__note" style={{ marginTop: 0 }}>
+                        Logged stage: <strong>{AUTO_PROGRESS_STAGE_LABELS[state.loggedStage]}</strong>
+                      </p>
+                    ) : null}
+                    {scalePlan.enabled ? (
+                      <div className="habit-checklist__stage-group">
+                        <span className="habit-checklist__stage-group-label">Log as</span>
+                        <div className="habit-checklist__stage-actions">
+                          {SCALE_STAGE_ORDER.map((stage) => {
+                            const stageInfo = scalePlan.stages[stage];
+                            return (
+                              <button
+                                key={`${habit.id}-${stage}`}
+                                type="button"
+                                className={`habit-checklist__stage-chip ${
+                                  stage === autoProgressState.tier ? 'habit-checklist__stage-chip--active' : ''
+                                }`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void handleLogHabitAtStage(habit, stage);
+                                }}
+                                disabled={isSaving}
+                                title={`Log as ${AUTO_PROGRESS_STAGE_LABELS[stage]}: ${stageInfo.label}`}
+                              >
+                                {AUTO_PROGRESS_STAGE_LABELS[stage]} · {stageInfo.completionPercent}%
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                    {autoProgressPanels[habit.id] ? (
+                      <div className="habit-checklist__autoprog">
+                        <div className="habit-checklist__autoprog-header">
+                          <div>
+                            <p className="habit-checklist__autoprog-label">Difficulty stage</p>
+                            <p className="habit-checklist__autoprog-tier">
+                              {AUTO_PROGRESS_STAGE_LABELS[autoProgressState.tier]}
+                            </p>
+                            <p className="habit-checklist__autoprog-description">
+                              {AUTO_PROGRESS_TIERS[autoProgressState.tier].description}
+                            </p>
+                          </div>
+                          {autoProgressState.lastShiftAt ? (
+                            <span className="habit-checklist__autoprog-meta">
+                              Last shift: {new Date(autoProgressState.lastShiftAt).toLocaleDateString()}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="habit-checklist__autoprog-stats">
+                          <span>Streak: {formatStreakValue(streakDays)}</span>
                           <span>
-                            Low adherence detected. Consider a temporary reset to {AUTO_PROGRESS_STAGE_LABELS[suggestedDownshiftStage]} to protect momentum.
+                            30-day adherence: {adherenceSnapshot ? `${adherencePercent}%` : '—'}
                           </span>
+                        </div>
+                        {suggestedDownshiftStage ? (
+                          <div
+                            className="habit-checklist__autoprog-locked"
+                            style={{ color: '#92400e', background: '#fef3c7', borderColor: '#fcd34d', display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between' }}
+                          >
+                            <span>
+                              Low adherence detected. Consider a temporary reset to {AUTO_PROGRESS_STAGE_LABELS[suggestedDownshiftStage]} to protect momentum.
+                            </span>
+                            <button
+                              type="button"
+                              className="habit-checklist__autoprog-button"
+                              disabled={isUpdatingAutoProgress}
+                              onClick={() => {
+                                void handleAutoProgressShift(habit, suggestedDownshiftStage, 'downshift');
+                                if (session?.user?.id) {
+                                  void recordTelemetryEvent({
+                                    userId: session.user.id,
+                                    eventType: 'habit_stage_recommendation_applied',
+                                    metadata: {
+                                      habitId: habit.id,
+                                      toStage: suggestedDownshiftStage,
+                                      adherencePercent,
+                                    },
+                                  });
+                                }
+                              }}
+                            >
+                              Apply now
+                            </button>
+                          </div>
+                        ) : null}
+                        <div className="habit-checklist__autoprog-actions">
                           <button
                             type="button"
                             className="habit-checklist__autoprog-button"
-                            disabled={isUpdatingAutoProgress}
+                            disabled={!downshiftTier || isUpdatingAutoProgress}
                             onClick={() => {
-                              void handleAutoProgressShift(habit, suggestedDownshiftStage, 'downshift');
-                              if (session?.user?.id) {
-                                void recordTelemetryEvent({
-                                  userId: session.user.id,
-                                  eventType: 'habit_stage_recommendation_applied',
-                                  metadata: {
-                                    habitId: habit.id,
-                                    toStage: suggestedDownshiftStage,
-                                    adherencePercent,
-                                  },
-                                });
-                              }
+                              if (!downshiftTier) return;
+                              void handleAutoProgressShift(habit, downshiftTier, 'downshift');
                             }}
                           >
-                            Apply now
+                            {downshiftTier
+                              ? `Reset to ${AUTO_PROGRESS_STAGE_LABELS[downshiftTier]}`
+                              : 'At easiest stage'}
+                          </button>
+                          <button
+                            type="button"
+                            className="habit-checklist__autoprog-button habit-checklist__autoprog-button--primary"
+                            disabled={!upgradeTier || !canUpgrade || isUpdatingAutoProgress}
+                            onClick={() => {
+                              if (!upgradeTier) return;
+                              void handleAutoProgressShift(habit, upgradeTier, 'upgrade');
+                            }}
+                          >
+                            {upgradeTier
+                              ? `Progress to ${AUTO_PROGRESS_STAGE_LABELS[upgradeTier]}`
+                              : 'At hardest stage'}
                           </button>
                         </div>
-                      ) : null}
-                      <div className="habit-checklist__autoprog-actions">
-                        <button
-                          type="button"
-                          className="habit-checklist__autoprog-button"
-                          disabled={!downshiftTier || isUpdatingAutoProgress}
-                          onClick={() => {
-                            if (!downshiftTier) return;
-                            void handleAutoProgressShift(habit, downshiftTier, 'downshift');
-                          }}
-                        >
-                          {downshiftTier
-                            ? `Reset to ${AUTO_PROGRESS_STAGE_LABELS[downshiftTier]}`
-                            : 'At easiest stage'}
-                        </button>
-                        <button
-                          type="button"
-                          className="habit-checklist__autoprog-button habit-checklist__autoprog-button--primary"
-                          disabled={!upgradeTier || !canUpgrade || isUpdatingAutoProgress}
-                          onClick={() => {
-                            if (!upgradeTier) return;
-                            void handleAutoProgressShift(habit, upgradeTier, 'upgrade');
-                          }}
-                        >
-                          {upgradeTier
-                            ? `Progress to ${AUTO_PROGRESS_STAGE_LABELS[upgradeTier]}`
-                            : 'At hardest stage'}
-                        </button>
-                      </div>
-                      <p className="habit-checklist__autoprog-rules">
-                        Upgrade rule: {AUTO_PROGRESS_UPGRADE_RULES.minStreakDays}-day streak and{' '}
-                        {AUTO_PROGRESS_UPGRADE_RULES.minAdherence30}% 30-day adherence.
-                      </p>
-                      {upgradeTier && !canUpgrade ? (
-                        <p className="habit-checklist__autoprog-locked">
-                          Keep logging to unlock the next stage.
+                        <p className="habit-checklist__autoprog-rules">
+                          Upgrade rule: {AUTO_PROGRESS_UPGRADE_RULES.minStreakDays}-day streak and{' '}
+                          {AUTO_PROGRESS_UPGRADE_RULES.minAdherence30}% 30-day adherence.
                         </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  <div className="habit-checklist__detail-actions">
-                    {/* Done-ish button for boolean habits - moved to left */}
-                    {!isCompleted && scheduledToday && habit.type === 'boolean' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                        <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Done-ish</span>
-                        <button
-                          type="button"
-                          className="habit-checklist__doneish-button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDoneIshCompletion(habit, null);
-                          }}
-                          disabled={isSaving}
-                          aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
-                        >
-                          ✨
-                        </button>
+                        {upgradeTier && !canUpgrade ? (
+                          <p className="habit-checklist__autoprog-locked">
+                            Keep logging to unlock the next stage.
+                          </p>
+                        ) : null}
                       </div>
-                    )}
-                    {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
-                    {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
-                    {isUpdatingAutoProgress ? (
-                      <span className="habit-checklist__saving">Updating stage…</span>
                     ) : null}
-                    <button
-                      type="button"
-                      className="habit-checklist__alert-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAlertConfigHabit({ id: habit.id, name: habit.name });
-                      }}
-                    >
-                      🔔 Alerts
-                    </button>
-                    <button
-                      type="button"
-                      className="habit-checklist__edit-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenEdit(habit);
-                      }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="habit-checklist__edit-btn"
-                      disabled={lifecycleActionHabitIds.has(habit.id)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void handleTodayLifecycleAction(habit, 'pause');
-                      }}
-                    >
-                      {lifecycleActionHabitIds.has(habit.id) ? 'Updating…' : '⏸️ Pause'}
-                    </button>
-                    <button
-                      type="button"
-                      className="habit-checklist__edit-btn"
-                      disabled={lifecycleActionHabitIds.has(habit.id)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void handleTodayLifecycleAction(habit, 'deactivate');
-                      }}
-                    >
-                      {lifecycleActionHabitIds.has(habit.id) ? 'Updating…' : '🛑 Deactivate'}
-                    </button>
-                    <div className="habit-checklist__skip-wrap">
+                  </section>
+                  <section className="habit-checklist__detail-block habit-checklist__detail-block--manage" aria-label="Habit actions">
+                    <div className="habit-checklist__detail-block-header">
+                      <span className="habit-checklist__detail-block-label">Manage</span>
+                    </div>
+                    <div className="habit-checklist__detail-actions">
+                      {!isCompleted && scheduledToday && habit.type === 'boolean' && (
+                        <div className="habit-checklist__doneish-wrap">
+                          <span className="habit-checklist__doneish-label">Done-ish</span>
+                          <button
+                            type="button"
+                            className="habit-checklist__doneish-button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleDoneIshCompletion(habit, null);
+                            }}
+                            disabled={isSaving}
+                            aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
+                          >
+                            ✨
+                          </button>
+                        </div>
+                      )}
+                      {!scheduledToday ? <span className="habit-checklist__pill">Rest day</span> : null}
+                      {isSaving ? <span className="habit-checklist__saving">Updating…</span> : null}
+                      {isUpdatingAutoProgress ? (
+                        <span className="habit-checklist__saving">Updating stage…</span>
+                      ) : null}
                       <button
                         type="button"
-                        className="habit-checklist__skip-btn"
-                        aria-expanded={skipMenuHabitId === habit.id}
-                        aria-haspopup="true"
-                        disabled={isSkipDisabled}
+                        className="habit-checklist__alert-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isSkipDisabled) {
-                            return;
-                          }
-                          handleToggleSkipMenu(habit.id);
+                          setAlertConfigHabit({ id: habit.id, name: habit.name });
                         }}
                       >
-                        {isSkipDisabled ? '⏳ Offer active' : '⏭️ Skip'}
+                        🔔 Alerts
                       </button>
-                      {skipMenuHabitId === habit.id ? (
-                        <div
-                          className="habit-checklist__skip-menu"
-                          ref={skipMenuRef}
-                          role="menu"
-                          onClick={(event) => event.stopPropagation()}
+                      <button
+                        type="button"
+                        className="habit-checklist__edit-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEdit(habit);
+                        }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-checklist__edit-btn"
+                        disabled={lifecycleActionHabitIds.has(habit.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleTodayLifecycleAction(habit, 'pause');
+                        }}
+                      >
+                        {lifecycleActionHabitIds.has(habit.id) ? 'Updating…' : '⏸️ Pause'}
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-checklist__edit-btn"
+                        disabled={lifecycleActionHabitIds.has(habit.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleTodayLifecycleAction(habit, 'deactivate');
+                        }}
+                      >
+                        {lifecycleActionHabitIds.has(habit.id) ? 'Updating…' : '🛑 Deactivate'}
+                      </button>
+                      <div className="habit-checklist__skip-wrap">
+                        <button
+                          type="button"
+                          className="habit-checklist__skip-btn"
+                          aria-expanded={skipMenuHabitId === habit.id}
+                          aria-haspopup="true"
+                          disabled={isSkipDisabled}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isSkipDisabled) {
+                              return;
+                            }
+                            handleToggleSkipMenu(habit.id);
+                          }}
                         >
-                          <button
-                            type="button"
-                            className="habit-checklist__skip-option"
-                            onClick={() => void handleLogHabitSkip(habit)}
-                            disabled={skipSaving}
+                          {isSkipDisabled ? '⏳ Offer active' : '⏭️ Skip'}
+                        </button>
+                        {skipMenuHabitId === habit.id ? (
+                          <div
+                            className="habit-checklist__skip-menu"
+                            ref={skipMenuRef}
+                            role="menu"
+                            onClick={(event) => event.stopPropagation()}
                           >
-                            ⏭️ Skip — intentional
-                          </button>
-                          <button
-                            type="button"
-                            className="habit-checklist__skip-option"
-                            onClick={() => setSkipReasonHabitId(habit.id)}
-                            disabled={skipSaving}
-                          >
-                            ⏭️ Skip — add reason
-                          </button>
-                          <button
-                            type="button"
-                            className="habit-checklist__skip-option habit-checklist__skip-option--missed"
-                            onClick={() => void handleLogHabitMissed(habit)}
-                            disabled={skipSaving}
-                          >
-                            ❌ Missed — unintentional
-                          </button>
-                          {skipReasonHabitId === habit.id ? (
-                            <div className="habit-checklist__skip-reason">
-                              <label>
-                                <span className="sr-only">Reason for skipping</span>
-                                <textarea
-                                  rows={3}
-                                  value={skipReason}
-                                  placeholder="Why are you skipping this habit?"
-                                  onChange={(event) => setSkipReason(event.target.value)}
-                                  disabled={skipSaving}
-                                />
-                              </label>
-                              <div className="habit-checklist__skip-reason-actions">
-                                <button
-                                  type="button"
-                                  className="habit-checklist__skip-confirm"
-                                  onClick={() => {
-                                    if (!skipReason.trim()) {
-                                      setSkipError('Add a reason to log this skip.');
-                                      return;
-                                    }
-                                    void handleLogHabitSkip(habit, skipReason);
-                                  }}
-                                  disabled={skipSaving}
-                                >
-                                  {skipSaving ? 'Saving…' : 'Log skip'}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="habit-checklist__skip-cancel"
-                                  onClick={() => {
-                                    setSkipReasonHabitId(null);
-                                    setSkipReason('');
-                                    setSkipError(null);
-                                  }}
-                                  disabled={skipSaving}
-                                >
-                                  Cancel
-                                </button>
+                            <button
+                              type="button"
+                              className="habit-checklist__skip-option"
+                              onClick={() => void handleLogHabitSkip(habit)}
+                              disabled={skipSaving}
+                            >
+                              ⏭️ Skip — intentional
+                            </button>
+                            <button
+                              type="button"
+                              className="habit-checklist__skip-option"
+                              onClick={() => setSkipReasonHabitId(habit.id)}
+                              disabled={skipSaving}
+                            >
+                              ⏭️ Skip — add reason
+                            </button>
+                            <button
+                              type="button"
+                              className="habit-checklist__skip-option habit-checklist__skip-option--missed"
+                              onClick={() => void handleLogHabitMissed(habit)}
+                              disabled={skipSaving}
+                            >
+                              ❌ Missed — unintentional
+                            </button>
+                            {skipReasonHabitId === habit.id ? (
+                              <div className="habit-checklist__skip-reason">
+                                <label>
+                                  <span className="sr-only">Reason for skipping</span>
+                                  <textarea
+                                    rows={3}
+                                    value={skipReason}
+                                    placeholder="Why are you skipping this habit?"
+                                    onChange={(event) => setSkipReason(event.target.value)}
+                                    disabled={skipSaving}
+                                  />
+                                </label>
+                                <div className="habit-checklist__skip-reason-actions">
+                                  <button
+                                    type="button"
+                                    className="habit-checklist__skip-confirm"
+                                    onClick={() => {
+                                      if (!skipReason.trim()) {
+                                        setSkipError('Add a reason to log this skip.');
+                                        return;
+                                      }
+                                      void handleLogHabitSkip(habit, skipReason);
+                                    }}
+                                    disabled={skipSaving}
+                                  >
+                                    {skipSaving ? 'Saving…' : 'Log skip'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="habit-checklist__skip-cancel"
+                                    onClick={() => {
+                                      setSkipReasonHabitId(null);
+                                      setSkipReason('');
+                                      setSkipError(null);
+                                    }}
+                                    disabled={skipSaving}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ) : null}
-                          {skipError ? (
-                            <p className="habit-checklist__skip-error">{skipError}</p>
-                          ) : null}
-                        </div>
-                      ) : null}
+                            ) : null}
+                            {skipError ? (
+                              <p className="habit-checklist__skip-error">{skipError}</p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        className={`habit-checklist__autoprog-toggle ${
+                          autoProgressPanels[habit.id] ? 'habit-checklist__autoprog-toggle--active' : ''
+                        }`}
+                        aria-pressed={autoProgressPanels[habit.id] ?? false}
+                        aria-label="Toggle difficulty stage card"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setAutoProgressPanels((prev) => ({
+                            ...prev,
+                            [habit.id]: !prev[habit.id],
+                          }));
+                        }}
+                      >
+                        <span className="habit-checklist__autoprog-toggle-dot" aria-hidden="true" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      className={`habit-checklist__autoprog-toggle ${
-                        autoProgressPanels[habit.id] ? 'habit-checklist__autoprog-toggle--active' : ''
-                      }`}
-                      aria-pressed={autoProgressPanels[habit.id] ?? false}
-                      aria-label="Toggle difficulty stage card"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setAutoProgressPanels((prev) => ({
-                          ...prev,
-                          [habit.id]: !prev[habit.id],
-                        }));
-                      }}
-                    >
-                      <span className="habit-checklist__autoprog-toggle-dot" aria-hidden="true" />
-                    </button>
-                  </div>
+                  </section>
                 </div>
               </li>
             );

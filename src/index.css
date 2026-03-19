@@ -6866,6 +6866,68 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: rgba(226, 232, 240, 0.8);
 }
 
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__detail-block {
+  background: rgba(15, 23, 42, 0.46);
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__detail-block-label,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__stage-group-label,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__doneish-label {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__stage-chip {
+  background: rgba(15, 23, 42, 0.68);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #e2e8f0;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__stage-chip--active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(129, 140, 248, 0.7);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__doneish-wrap {
+  background: rgba(15, 23, 42, 0.62);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
 .habit-checklist__name {
   font-weight: 700;
   font-size: 1rem;
@@ -6912,6 +6974,35 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-top: 1px dashed rgba(15, 23, 42, 0.1);
   margin-top: 0.35rem;
   overflow: visible;
+}
+
+.habit-checklist__detail-block {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+}
+
+.habit-checklist__detail-block-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.habit-checklist__detail-block-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.habit-checklist__meta-group {
+  display: grid;
+  gap: 0.25rem;
 }
 
 .habit-checklist__meta {
@@ -7015,9 +7106,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__vision-preview {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   padding: 0;
   border: 1px solid rgba(15, 23, 42, 0.1);
   background: #fff;
@@ -7027,9 +7118,53 @@ html.platform-ipad .workspace-shell__menu-edge {
   justify-content: center;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
   cursor: pointer;
-  float: right;
-  margin-left: 0.75rem;
-  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.habit-checklist__stage-group {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.habit-checklist__stage-group-label {
+  font-size: 0.72rem;
+  color: #475569;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.habit-checklist__stage-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.habit-checklist__stage-chip {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.habit-checklist__stage-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #94a3b8;
+}
+
+.habit-checklist__stage-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.habit-checklist__stage-chip--active {
+  border-color: #6366f1;
+  background: #eef2ff;
 }
 
 .habit-checklist__vision-preview img {
@@ -7166,7 +7301,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-habit-home .habit-checklist__detail-actions {
-  gap: 0.25rem;
+  gap: 0.4rem;
 }
 
 .mobile-habit-home .habit-checklist__alert-btn,
@@ -7183,9 +7318,28 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-checklist__detail-actions {
   display: flex;
-  gap: 0.35rem;
-  flex-wrap: nowrap;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   align-items: center;
+}
+
+.habit-checklist__doneish-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.habit-checklist__doneish-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
 }
 
 .habit-checklist__autoprog-toggle {
@@ -7279,13 +7433,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   justify-content: center;
   padding: 1.5rem;
   z-index: 12000;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .habit-vision-modal__content {
   position: relative;
   background: rgba(255, 255, 255, 0.98);
   border-radius: 24px;
-  padding: 1.5rem;
+  padding: 1rem 1rem 1.25rem;
   width: min(520px, 92vw);
   max-height: 90vh;
   display: flex;
@@ -7294,7 +7451,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   justify-content: center;
   gap: 0.75rem;
   box-shadow: 0 24px 50px rgba(15, 23, 42, 0.35);
+  overflow: visible;
+}
+
+.habit-vision-modal__image-frame {
+  width: 100%;
   overflow: hidden;
+  border-radius: 20px;
 }
 
 .habit-vision-modal__image {
@@ -7309,25 +7472,54 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.95rem;
   color: rgba(15, 23, 42, 0.75);
   text-align: center;
+  max-width: 26ch;
 }
 
 .habit-vision-modal__close {
   position: absolute;
-  top: -18px;
-  right: -18px;
-  width: 48px;
-  height: 48px;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   border: none;
   background: rgba(15, 23, 42, 0.95);
   color: #fff;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+  z-index: 1;
+}
+
+.habit-vision-modal__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(15, 23, 42, 0.55);
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .habit-vision-modal {
+    align-items: flex-start;
+    padding:
+      max(1rem, calc(env(safe-area-inset-top, 0px) + 0.75rem))
+      1rem
+      max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem));
+  }
+
+  .habit-vision-modal__content {
+    width: min(100%, 28rem);
+    margin: 0 auto;
+    max-height: none;
+  }
+
+  .habit-vision-modal__image {
+    max-height: min(52vh, 26rem);
+  }
 }
 
 .habit-checklist__skip-reason-actions {
