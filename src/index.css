@@ -5751,19 +5751,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #0f172a;
 }
 
-.habit-day-nav__bonus-image {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  object-fit: cover;
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.15);
-}
-
-.habit-day-nav--compact .habit-day-nav__bonus-image {
-  width: 38px;
-  height: 38px;
-}
-
 .habit-day-nav__bonus-placeholder {
   font-size: 0.75rem;
   color: #64748b;
@@ -5846,12 +5833,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   transform: translateY(-4px);
   pointer-events: none;
   overflow: hidden;
-}
-
-.habit-day-nav__bonus-caption {
-  font-size: 0.72rem;
-  color: #475569;
-  font-weight: 600;
 }
 
 .habit-day-nav__bonus-error {

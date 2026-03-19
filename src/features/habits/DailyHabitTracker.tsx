@@ -4269,12 +4269,6 @@ export function DailyHabitTracker({
                     </span>
                   ) : null}
                 </div>
-              ) : visionRewardForDay ? (
-                <img
-                  className="habit-day-nav__bonus-image"
-                  src={visionRewardForDay.imageUrl}
-                  alt={visionRewardForDay.caption ? `Vision board: ${visionRewardForDay.caption}` : 'Vision board inspiration'}
-                />
               ) : (
                 <span
                   className={`habit-day-nav__bonus-placeholder ${
@@ -4284,9 +4278,6 @@ export function DailyHabitTracker({
                   {hasClaimedVisionStar ? 'Vision star claimed today.' : ''}
                 </span>
               )}
-              {visionRewardForDay?.caption && !shouldShowOfferBonus ? (
-                <span className="habit-day-nav__bonus-caption">{visionRewardForDay.caption}</span>
-              ) : null}
             </div>
             {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
           </div>
