@@ -1372,6 +1372,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       : rollButtonMode === 'roll'
         ? 'Roll (2 dice)'
         : `Convert 1 heart → ${dicePerHeart} dice`;
+  const compactRollButtonLabel = rollButtonMode === 'rolling'
+    ? 'Rolling...'
+    : rollButtonMode === 'step1'
+      ? 'Stop 1'
+      : rollButtonMode === 'roll'
+        ? 'Roll'
+        : 'Convert';
 
   const openStep1Stop = () => {
     if (!step1Stop?.stopId) return;
@@ -3097,69 +3104,58 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
-          <div className="island-run-prototype__footer-heading">
-            <div>
-              <h2 className="island-run-prototype__title">
-                <span>🏝️ Island Run</span>
-              </h2>
-              <p className="island-run-prototype__footer-caption">Roll dice, track resources, and manage your run.</p>
-            </div>
-            <span className="island-run-prototype__title-actions">
-              {!isHudCollapsed && (
-                <button
-                  type="button"
-                  className="island-run-prototype__dev-toggle"
-                  aria-expanded={isDevPanelOpen}
-                  aria-controls="island-run-dev-panel"
-                  onClick={() => setIsDevPanelOpen((v) => !v)}
-                >
-                  {isDevPanelOpen ? '▲ Hide dev info' : '▼ Dev info'}
-                </button>
-              )}
-              <button
-                type="button"
-                className="island-run-prototype__dev-toggle island-run-prototype__dev-toggle--primary"
-                aria-expanded={!isHudCollapsed}
-                aria-controls="island-run-main-hud"
-                onClick={() => setIsHudCollapsed((value) => !value)}
-              >
-                {isHudCollapsed ? '▼ Show HUD' : '▲ Hide HUD'}
-              </button>
-            </span>
-          </div>
-
           <div className="island-run-prototype__footer-stats" aria-label="Run resources">
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
-            <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
-          </div>
-
-          <div className="island-run-prototype__footer-controls">
+            {spinTokens > 0 && (
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
+            )}
             <div className="island-run-prototype__footer-dice" aria-label="Dice result">
               {diceThrowDisplay}
             </div>
-            <div className="island-run-prototype__footer-actions">
-              <button
-                type="button"
-                className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-                onClick={step1Complete ? () => void handleRoll() : openStep1Stop}
-                disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll) || showTravelOverlay}
-              >
-                {rollButtonLabel}
-              </button>
+          </div>
+
+          <div className="island-run-prototype__footer-actions">
+            {spinTokens > 0 && (
               <button
                 type="button"
                 className="island-run-prototype__spin-btn island-run-prototype__spin-btn--footer"
                 onClick={() => void handleSpin()}
                 disabled={isRolling || spinTokens < 1 || showFirstRunCelebration}
               >
-                Spin ({spinTokens})
+                Spin
               </button>
-            </div>
+            )}
+            <button
+              type="button"
+              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+              onClick={step1Complete ? () => void handleRoll() : openStep1Stop}
+              disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll) || showTravelOverlay}
+            >
+              {compactRollButtonLabel}
+            </button>
+            {!isHudCollapsed && (
+              <button
+                type="button"
+                className="island-run-prototype__dev-toggle"
+                aria-expanded={isDevPanelOpen}
+                aria-controls="island-run-dev-panel"
+                onClick={() => setIsDevPanelOpen((v) => !v)}
+              >
+                {isDevPanelOpen ? 'Dev ▲' : 'Dev ▼'}
+              </button>
+            )}
+            <button
+              type="button"
+              className="island-run-prototype__dev-toggle island-run-prototype__dev-toggle--primary island-run-prototype__dev-toggle--footer"
+              aria-expanded={!isHudCollapsed}
+              aria-controls="island-run-main-hud"
+              onClick={() => setIsHudCollapsed((value) => !value)}
+            >
+              {isHudCollapsed ? 'HUD' : 'Hide HUD'}
+            </button>
           </div>
-
-          <p className="island-run-prototype__footer-feed" aria-live="polite" role="status">{landingText}</p>
         </div>
       </div>
 
