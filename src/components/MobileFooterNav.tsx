@@ -549,22 +549,17 @@ export function MobileFooterNav({
             const isActive = item.id === activeId;
             const pointsBadgeValue = showPointsBadges ? pointsBadges[item.id] : undefined;
             const isEnergyItem = item.id === 'breathing-space' && Boolean(onEnergySelect);
-            const energyMenuModeClass = isDiodeActive
-              ? ' mobile-footer-nav__energy-menu--fan'
-              : ' mobile-footer-nav__energy-menu--popover';
             return (
               <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}`}>
                 {isEnergyItem ? (
                   <div
                     className={`mobile-footer-nav__energy-menu${
                       isEnergyMenuOpen ? ' mobile-footer-nav__energy-menu--open' : ''
-                    }${energyMenuModeClass}`}
+                    }`}
                   >
                     <button
                       type="button"
-                      className={`mobile-footer-nav__energy-button${
-                        isDiodeActive ? ' mobile-footer-nav__energy-button--fan' : ' mobile-footer-nav__energy-button--popover'
-                      }`}
+                      className="mobile-footer-nav__energy-button"
                       onClick={() => {
                         revealControllerUI();
                         onEnergySelect?.('mind');
@@ -576,9 +571,7 @@ export function MobileFooterNav({
                     </button>
                     <button
                       type="button"
-                      className={`mobile-footer-nav__energy-button${
-                        isDiodeActive ? ' mobile-footer-nav__energy-button--fan' : ' mobile-footer-nav__energy-button--popover'
-                      }`}
+                      className="mobile-footer-nav__energy-button"
                       onClick={() => {
                         revealControllerUI();
                         onEnergySelect?.('body');
