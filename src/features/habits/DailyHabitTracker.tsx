@@ -4796,8 +4796,12 @@ export function DailyHabitTracker({
       (habit) => (habitHealthByHabitId[habit.id] ?? 'active') !== 'in_review',
     );
     const baseHabits = nonReviewHabits;
-    const completedHabits = baseHabits.filter((habit) => Boolean(completions[habit.id]?.completed));
-    const activeHabits = baseHabits.filter((habit) => !completions[habit.id]?.completed);
+    const isArchivedFromActiveList = (habitId: string) => {
+      const completion = completions[habitId];
+      return Boolean(completion?.completed) || completion?.progressState === 'skipped';
+    };
+    const completedHabits = baseHabits.filter((habit) => isArchivedFromActiveList(habit.id));
+    const activeHabits = baseHabits.filter((habit) => !isArchivedFromActiveList(habit.id));
     const visibleHabits = showCompletedHabits
       ? [...activeHabits, ...completedHabits]
       : activeHabits;
@@ -5393,8 +5397,8 @@ export function DailyHabitTracker({
           >
             <span className="habit-checklist__toggle-text">
               {showCompletedHabits
-                ? 'Hide completed habits'
-                : `Show completed habits (${completedHabits.length})`}
+                ? 'Hide completed / skipped habits'
+                : `Show completed / skipped habits (${completedHabits.length})`}
             </span>
             <span
               className={`habit-checklist__toggle-icon ${
