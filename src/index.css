@@ -7397,6 +7397,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   z-index: 5;
 }
 
+@media (max-width: 720px) {
+  .habit-checklist__skip-menu {
+    left: 0;
+    right: auto;
+    min-width: min(200px, calc(100vw - 2rem));
+    max-width: min(18rem, calc(100vw - 2rem));
+  }
+}
+
 .habit-checklist__skip-option {
   border: none;
   background: rgba(14, 165, 233, 0.1);
