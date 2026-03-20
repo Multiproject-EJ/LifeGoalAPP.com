@@ -138,6 +138,7 @@ type DailyHabitTrackerProps = {
   onOpenSpinWheel?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   forceCompactView?: boolean;
+  preferredCompactView?: boolean;
   hideTimeBoundOffers?: boolean;
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
@@ -405,6 +406,7 @@ export function DailyHabitTracker({
   onOpenSpinWheel,
   onOpenIslandRunStop,
   forceCompactView = false,
+  preferredCompactView,
   hideTimeBoundOffers = false,
   pendingOfferToOpen,
   onPendingOfferHandled,
@@ -487,13 +489,17 @@ export function DailyHabitTracker({
   const [skipError, setSkipError] = useState<string | null>(null);
   const skipMenuRef = useRef<HTMLDivElement | null>(null);
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
-  const [isCompactView, setIsCompactView] = useState(forceCompactView);
+  const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
 
   useEffect(() => {
+    if (typeof preferredCompactView === 'boolean') {
+      setIsCompactView(preferredCompactView);
+      return;
+    }
     if (forceCompactView) {
       setIsCompactView(true);
     }
-  }, [forceCompactView]);
+  }, [forceCompactView, preferredCompactView]);
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
   const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());

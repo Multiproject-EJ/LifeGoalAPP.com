@@ -1025,6 +1025,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileMenuImageActive(nextIsActive);
     triggerMobileMenuFlash();
 
+    if (nextIsActive) {
+      setActiveWorkspaceNav('planning');
+      setShowMobileHome(true);
+      setIsMobileMenuOpen(false);
+      setShowGameBoardOverlay(false);
+      setShowMobileGamification(false);
+    }
+
     const userId = activeSession?.user?.id;
     if (!userId) {
       return;
@@ -4098,6 +4106,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setShowLevelWorldsFromEntry(true);
           }}
           forceCompactView={!isGameModeActive}
+          preferredCompactView={!isGameModeActive}
           hideTimeBoundOffers={!isGameModeActive}
         />
         {!showZenGardenFullScreen && (
