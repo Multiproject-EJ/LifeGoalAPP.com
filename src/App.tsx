@@ -61,6 +61,7 @@ import { PointsBadge } from './components/PointsBadge';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
 import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
+import { updateGamificationEnabled } from './services/gamificationPrefs';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
 import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
@@ -614,6 +615,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     profile: gamificationProfile,
     enabled: gamificationEnabled,
     loading: gamificationLoading,
+    refreshProfile: refreshGamificationProfile,
   } = useGamification(supabaseSession);
 
   const goldBalance = gamificationProfile?.total_points ?? 0;
@@ -644,6 +646,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   
   const microTestBadge = useMicroTestBadge(microTestPlayerState);
   
+
   const mobileMenuPointsBadges = useMemo(() => {
     const badges: Record<string, string> = {};
     if (goldBalance > 0) {
@@ -1017,6 +1020,34 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     return createDemoSession();
   }, [supabaseSession, demoProfile]);
+
+  const handleGameModePreferenceChange = useCallback(async (nextIsActive: boolean) => {
+    setIsMobileMenuImageActive(nextIsActive);
+    triggerMobileMenuFlash();
+
+    if (nextIsActive) {
+      setActiveWorkspaceNav('planning');
+      setShowMobileHome(true);
+      setIsMobileMenuOpen(false);
+      setShowGameBoardOverlay(false);
+      setShowMobileGamification(false);
+    }
+
+    const userId = activeSession?.user?.id;
+    if (!userId) {
+      return;
+    }
+
+    const { error } = await updateGamificationEnabled(userId, nextIsActive);
+    if (error) {
+      console.error('Failed to sync Game of Life mode:', error);
+    }
+    await refreshGamificationProfile();
+  }, [activeSession?.user?.id, refreshGamificationProfile]);
+
+  useEffect(() => {
+    setIsMobileMenuImageActive(gamificationEnabled);
+  }, [gamificationEnabled]);
 
   useEffect(() => {
     let isMounted = true;
@@ -2009,13 +2040,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsEnergyMenuOpen(false);
     setIsMobileFooterCollapsed(false);
     setIsMobileFooterSnapActive(false);
+
+    if (!isMobileMenuImageActive) {
+      setShowGameBoardOverlay(false);
+      setShowMobileGamification(true);
+      return;
+    }
+
+    setShowMobileGamification(false);
     setShowGameBoardOverlay((previous) => !previous);
   };
 
   const handleMobileGameStatusHoldToggle = () => {
     const nextIsActive = !isMobileMenuImageActive;
-    setIsMobileMenuImageActive(nextIsActive);
-    triggerMobileMenuFlash();
+    void handleGameModePreferenceChange(nextIsActive);
   };
 
   const handleJournalNavigation = useCallback((navId: string) => {
@@ -3063,8 +3101,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       aria-label="Toggle diode indicator"
                       onClick={() => {
                         const nextIsActive = !isMobileMenuImageActive;
-                        setIsMobileMenuImageActive(nextIsActive);
-                        triggerMobileMenuFlash();
+                        void handleGameModePreferenceChange(nextIsActive);
                       }}
                     />
                     <span
@@ -3544,9 +3581,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 aria-label="Toggle diode indicator"
                 onClick={() => {
                   const nextIsActive = !isMobileMenuImageActive;
-                  setIsMobileMenuImageActive(nextIsActive);
                   setShowMobileGamification(false);
-                  triggerMobileMenuFlash();
+                  void handleGameModePreferenceChange(nextIsActive);
                 }}
               />
               <button
@@ -4069,6 +4105,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setIslandRunOpenStopParam(stopId);
             setShowLevelWorldsFromEntry(true);
           }}
+          forceCompactView={!isGameModeActive}
+          preferredCompactView={!isGameModeActive}
+          hideTimeBoundOffers={!isGameModeActive}
         />
         {!showZenGardenFullScreen && (
           <MobileFooterNav

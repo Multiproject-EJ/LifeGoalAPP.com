@@ -14,6 +14,9 @@ type MobileHabitHomeProps = {
   onOpenLuckyRoll?: () => void;
   onOpenSpinWheel?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
+  forceCompactView?: boolean;
+  preferredCompactView?: boolean;
+  hideTimeBoundOffers?: boolean;
 };
 
 export function MobileHabitHome({
@@ -27,6 +30,9 @@ export function MobileHabitHome({
   onOpenLuckyRoll,
   onOpenSpinWheel,
   onOpenIslandRunStop,
+  forceCompactView = false,
+  preferredCompactView,
+  hideTimeBoundOffers = false,
 }: MobileHabitHomeProps) {
   return (
     <div className="mobile-habit-home">
@@ -42,6 +48,9 @@ export function MobileHabitHome({
         onOpenLuckyRoll={onOpenLuckyRoll}
         onOpenSpinWheel={onOpenSpinWheel}
         onOpenIslandRunStop={onOpenIslandRunStop}
+        forceCompactView={forceCompactView}
+        preferredCompactView={preferredCompactView}
+        hideTimeBoundOffers={hideTimeBoundOffers}
       />
     </div>
   );
