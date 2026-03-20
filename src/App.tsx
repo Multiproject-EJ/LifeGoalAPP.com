@@ -2494,16 +2494,58 @@ export default function App({ forceAuthOnMount }: AppProps) {
     });
   }, [activeSession, logIslandRunEntryDebug, showLevelWorldsFromEntry]);
 
+  const shouldLockAppScroll = showGameBoardOverlay || showLuckyRoll || showLevelWorldsFromEntry;
+
   useEffect(() => {
-    if (showLevelWorldsFromEntry) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+    if (!shouldLockAppScroll) {
+      return undefined;
     }
+
+    const body = document.body;
+    const html = document.documentElement;
+    const root = document.getElementById('root');
+    const scrollY = window.scrollY;
+
+    const previousBodyOverflow = body.style.overflow;
+    const previousBodyPosition = body.style.position;
+    const previousBodyTop = body.style.top;
+    const previousBodyWidth = body.style.width;
+    const previousBodyTouchAction = body.style.touchAction;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousHtmlOverscrollBehavior = html.style.overscrollBehavior;
+    const previousRootOverflow = root?.style.overflow ?? '';
+    const previousRootHeight = root?.style.height ?? '';
+
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.touchAction = 'none';
+    html.style.overflow = 'hidden';
+    html.style.overscrollBehavior = 'none';
+
+    if (root) {
+      root.style.overflow = 'hidden';
+      root.style.height = '100vh';
+    }
+
     return () => {
-      document.body.style.overflow = '';
+      body.style.overflow = previousBodyOverflow;
+      body.style.position = previousBodyPosition;
+      body.style.top = previousBodyTop;
+      body.style.width = previousBodyWidth;
+      body.style.touchAction = previousBodyTouchAction;
+      html.style.overflow = previousHtmlOverflow;
+      html.style.overscrollBehavior = previousHtmlOverscrollBehavior;
+
+      if (root) {
+        root.style.overflow = previousRootOverflow;
+        root.style.height = previousRootHeight;
+      }
+
+      window.scrollTo(0, scrollY);
     };
-  }, [showLevelWorldsFromEntry]);
+  }, [shouldLockAppScroll]);
 
   const handleCloseWorkspaceSetup = () => {
     setShowWorkspaceSetup(false);
