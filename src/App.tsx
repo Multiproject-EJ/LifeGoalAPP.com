@@ -647,26 +647,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const microTestBadge = useMicroTestBadge(microTestPlayerState);
   
 
-  const handleGameModePreferenceChange = useCallback(async (nextIsActive: boolean) => {
-    setIsMobileMenuImageActive(nextIsActive);
-    triggerMobileMenuFlash();
-
-    const userId = activeSession?.user?.id;
-    if (!userId) {
-      return;
-    }
-
-    const { error } = await updateGamificationEnabled(userId, nextIsActive);
-    if (error) {
-      console.error('Failed to sync Game of Life mode:', error);
-    }
-    await refreshGamificationProfile();
-  }, [activeSession?.user?.id, refreshGamificationProfile]);
-
-  useEffect(() => {
-    setIsMobileMenuImageActive(gamificationEnabled);
-  }, [gamificationEnabled]);
-
   const mobileMenuPointsBadges = useMemo(() => {
     const badges: Record<string, string> = {};
     if (goldBalance > 0) {
@@ -1040,6 +1020,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     return createDemoSession();
   }, [supabaseSession, demoProfile]);
+
+  const handleGameModePreferenceChange = useCallback(async (nextIsActive: boolean) => {
+    setIsMobileMenuImageActive(nextIsActive);
+    triggerMobileMenuFlash();
+
+    const userId = activeSession?.user?.id;
+    if (!userId) {
+      return;
+    }
+
+    const { error } = await updateGamificationEnabled(userId, nextIsActive);
+    if (error) {
+      console.error('Failed to sync Game of Life mode:', error);
+    }
+    await refreshGamificationProfile();
+  }, [activeSession?.user?.id, refreshGamificationProfile]);
+
+  useEffect(() => {
+    setIsMobileMenuImageActive(gamificationEnabled);
+  }, [gamificationEnabled]);
 
   useEffect(() => {
     let isMounted = true;

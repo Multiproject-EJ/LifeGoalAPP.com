@@ -404,6 +404,8 @@ export function DailyHabitTracker({
   onOpenLuckyRoll,
   onOpenSpinWheel,
   onOpenIslandRunStop,
+  forceCompactView = false,
+  hideTimeBoundOffers = false,
   pendingOfferToOpen,
   onPendingOfferHandled,
 }: DailyHabitTrackerProps) {
