@@ -14,6 +14,34 @@
   z-index: 1000;
 }
 
+.level-worlds-island-run-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 0.9rem)
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    calc(env(safe-area-inset-bottom, 0px) + 0.75rem)
+    max(0.75rem, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+}
+
+.level-worlds-island-run-shell__back-button {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 0.9rem);
+  left: max(0.75rem, env(safe-area-inset-left, 0px));
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+}
+
 /* === Header === */
 .level-worlds-header {
   padding: 1rem;
@@ -628,6 +656,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.95rem;
+  min-height: 100%;
 }
 
 .island-run-prototype__header {
@@ -654,6 +683,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0.6rem;
+  margin: 0;
 }
 
 .island-run-prototype__title-actions {
@@ -672,31 +702,60 @@
   padding: 0.55rem 0.75rem;
 }
 
-.island-run-prototype__bottom-dock {
+.island-run-prototype__footer {
   position: sticky;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
-  z-index: 15;
-  display: flex;
-  justify-content: center;
-  margin-top: -5.5rem;
-  padding: 0 0.75rem calc(env(safe-area-inset-bottom, 0px) + 0.25rem);
-  pointer-events: none;
+  bottom: 0;
+  z-index: 18;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 0.4rem);
 }
 
-.island-run-prototype__bottom-dock-titlegroup {
-  width: min(100%, 420px);
+.island-run-prototype__footer-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.7rem 0.9rem;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  min-height: 4.5rem;
   border-radius: 18px;
-  background: linear-gradient(160deg, rgba(5, 16, 30, 0.88), rgba(10, 26, 45, 0.82));
+  background: linear-gradient(160deg, rgba(5, 16, 30, 0.94), rgba(10, 26, 45, 0.92));
   border: 1px solid rgba(145, 206, 230, 0.45);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  pointer-events: auto;
+}
+
+.island-run-prototype__footer-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.island-run-prototype__footer-dice {
+  flex: 0 0 auto;
+}
+
+.island-run-prototype__footer-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.island-run-prototype__footer .island-run-prototype__stat-chip,
+.island-run-prototype__footer .island-run-prototype__dice-throw {
+  min-height: 2.1rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+.island-run-prototype__roll-btn--footer {
+  min-width: 6.2rem;
+  min-height: 2.35rem;
+  padding-inline: 0.9rem;
 }
 
 .island-run-prototype__hud-grid {
@@ -1042,6 +1101,15 @@
   color: #fff0bb;
 }
 
+.island-run-prototype__spin-btn--footer {
+  min-width: 4.6rem;
+  min-height: 2.35rem;
+}
+
+.island-run-prototype__dev-toggle--footer {
+  min-height: 2.2rem;
+}
+
 @keyframes island-run-dice-jitter {
   0% {
     transform: translateY(0) rotate(0deg) scale(1);
@@ -1193,21 +1261,6 @@
 .island-run-board__depth-mask {
   position: absolute;
   inset: 0;
-}
-
-.island-run-board__dice-dock {
-  position: absolute;
-  left: 50%;
-  bottom: 1.3rem;
-  transform: translateX(-50%);
-  z-index: 9;
-  pointer-events: none;
-}
-
-.island-run-board__dice-dock .island-run-prototype__dice-throw {
-  background: rgba(7, 20, 30, 0.78);
-  border-color: rgba(179, 225, 244, 0.48);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(212, 244, 255, 0.18) inset;
 }
 
 .island-run-board__bg {
@@ -2845,22 +2898,36 @@
 
 
 @media (max-width: 640px) {
-  .island-run-prototype__bottom-dock {
-    margin-top: -4.75rem;
-    padding-inline: 0.5rem;
+  .level-worlds-island-run-shell {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
   }
 
-  .island-run-prototype__bottom-dock-titlegroup {
-    align-items: stretch;
-    flex-direction: column;
+  .island-run-prototype__footer-main {
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    min-height: 4rem;
   }
 
-  .island-run-prototype__title-actions {
-    width: 100%;
+  .island-run-prototype__footer-stats {
+    gap: 0.35rem;
   }
 
-  .island-run-prototype__title-actions .island-run-prototype__dev-toggle {
-    flex: 1 1 0;
-    text-align: center;
+  .island-run-prototype__footer .island-run-prototype__stat-chip,
+  .island-run-prototype__footer .island-run-prototype__dice-throw,
+  .island-run-prototype__footer .island-run-prototype__dev-toggle,
+  .island-run-prototype__roll-btn--footer,
+  .island-run-prototype__spin-btn--footer {
+    min-height: 2rem;
+    font-size: 0.69rem;
+  }
+
+  .island-run-prototype__roll-btn--footer {
+    min-width: 5.1rem;
+    padding-inline: 0.72rem;
+  }
+
+  .island-run-prototype__spin-btn--footer,
+  .island-run-prototype__dev-toggle--footer {
+    min-width: 3.9rem;
   }
 }

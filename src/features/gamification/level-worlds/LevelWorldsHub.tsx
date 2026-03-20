@@ -193,23 +193,11 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
   // Production path: Island Run is the primary surface.
   if (isIslandRunPrototype) {
     return (
-      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div className="level-worlds-island-run-shell">
         <button
           onClick={onClose}
           aria-label="Back to main app"
-          style={{
-            position: 'absolute',
-            top: '0.75rem',
-            left: '0.75rem',
-            zIndex: 100,
-            background: 'rgba(0,0,0,0.55)',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.25)',
-            borderRadius: '8px',
-            padding: '0.35rem 0.75rem',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-          }}
+          className="level-worlds-island-run-shell__back-button"
         >
           ← Back
         </button>
