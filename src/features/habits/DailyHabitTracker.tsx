@@ -137,6 +137,8 @@ type DailyHabitTrackerProps = {
   onOpenLuckyRoll?: () => void;
   onOpenSpinWheel?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
+  forceCompactView?: boolean;
+  hideTimeBoundOffers?: boolean;
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
 };
@@ -483,7 +485,13 @@ export function DailyHabitTracker({
   const [skipError, setSkipError] = useState<string | null>(null);
   const skipMenuRef = useRef<HTMLDivElement | null>(null);
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
-  const [isCompactView, setIsCompactView] = useState(false);
+  const [isCompactView, setIsCompactView] = useState(forceCompactView);
+
+  useEffect(() => {
+    if (forceCompactView) {
+      setIsCompactView(true);
+    }
+  }, [forceCompactView]);
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
   const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());
@@ -4850,7 +4858,9 @@ export function DailyHabitTracker({
             </ul>
           </section>
         ) : null}
-        <TimeBoundOfferRow offers={timeBoundOffers} onOfferClick={handleTimeBoundOfferClick} />
+        {!hideTimeBoundOffers ? (
+          <TimeBoundOfferRow offers={timeBoundOffers} onOfferClick={handleTimeBoundOfferClick} />
+        ) : null}
         {isTimeLimitedOfferActive && offerHabitIds.size > 0 ? (
           <div className="habit-checklist__offer">
             <div>
@@ -5812,6 +5822,17 @@ export function DailyHabitTracker({
     };
 
     const handleCompactToggle = () => {
+      if (forceCompactView) {
+        setIsCompactView(true);
+        setIsCompactToggleLabelVisible(true);
+        if (compactToggleLabelTimeoutRef.current) {
+          window.clearTimeout(compactToggleLabelTimeoutRef.current);
+        }
+        compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
+          setIsCompactToggleLabelVisible(false);
+        }, 2200);
+        return;
+      }
       setIsCompactView((previous) => !previous);
       setIsCompactToggleLabelVisible(true);
       if (compactToggleLabelTimeoutRef.current) {
