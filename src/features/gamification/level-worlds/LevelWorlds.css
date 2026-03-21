@@ -828,7 +828,7 @@
   gap: 0.44rem;
   flex-wrap: wrap;
   color: #d5f8ff;
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.24;
 }
 
@@ -1052,7 +1052,7 @@
 .island-run-prototype__booster-btn {
   min-height: 38px;
   padding: 0.34rem 0.78rem;
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.2;
   border-radius: 999px;
   border: 1px solid rgba(182, 231, 248, 0.38);
@@ -1695,7 +1695,7 @@
 .island-stop-modal p {
   margin: 0;
   color: rgba(185, 232, 247, 0.92);
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.38;
 }
 
@@ -1774,7 +1774,7 @@
   background: rgba(26, 61, 80, 0.9);
   color: #ecfbff;
   font-weight: 620;
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.2;
   padding: 0.34rem 0.84rem;
 }
@@ -2029,6 +2029,9 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.45rem;
   margin: 0.35rem 0 0.55rem;
+  padding: 0.35rem 0.25rem 0.15rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(10, 25, 38, 0.46), rgba(8, 20, 31, 0.18));
 }
 
 .island-hatchery-card__timeline-step {
@@ -2055,12 +2058,12 @@
 }
 
 .island-hatchery-card__timeline-dot {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 800;
   border: 1px solid rgba(162, 228, 255, 0.4);
   background: rgba(10, 25, 38, 0.82);
@@ -2074,9 +2077,10 @@
 }
 
 .island-hatchery-card__timeline-step--complete .island-hatchery-card__timeline-dot {
-  background: rgba(62, 154, 112, 0.94);
+  background: linear-gradient(180deg, rgba(68, 176, 128, 0.98), rgba(46, 128, 91, 0.96));
   border-color: rgba(159, 255, 204, 0.72);
   color: #f4fffa;
+  box-shadow: 0 0 18px rgba(88, 214, 160, 0.18);
 }
 
 .island-hatchery-card__timeline-step--complete::after,
@@ -2085,14 +2089,31 @@
 }
 
 .island-hatchery-card__timeline-step--current .island-hatchery-card__timeline-dot {
-  background: rgba(48, 115, 170, 0.94);
-  border-color: rgba(145, 229, 255, 0.9);
+  background: linear-gradient(180deg, rgba(79, 149, 216, 1), rgba(42, 95, 158, 0.98));
+  border-color: rgba(145, 229, 255, 0.95);
   color: #f6fdff;
-  box-shadow: 0 0 0 3px rgba(111, 205, 255, 0.16), 0 0 18px rgba(111, 205, 255, 0.2);
+  box-shadow: 0 0 0 4px rgba(111, 205, 255, 0.16), 0 0 24px rgba(111, 205, 255, 0.32);
+  animation: island-hatchery-timeline-pulse 1.8s ease-in-out infinite;
 }
 
 .island-hatchery-card__timeline-step--current .island-hatchery-card__timeline-label {
   color: #e9fbff;
+}
+
+.island-hatchery-card__timeline-step--upcoming .island-hatchery-card__timeline-dot {
+  opacity: 0.78;
+  background: rgba(7, 20, 31, 0.82);
+}
+
+@keyframes island-hatchery-timeline-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(111, 205, 255, 0.16), 0 0 24px rgba(111, 205, 255, 0.28);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 7px rgba(111, 205, 255, 0.14), 0 0 34px rgba(111, 205, 255, 0.38);
+  }
 }
 
 .island-hatchery-card__state--ready .island-hatchery-card__headline {
@@ -2136,7 +2157,7 @@
 /* M12Z: hatchery-card buttons inside stop modals inherit consistent sizing/weight */
 .island-stop-modal .island-hatchery-card button:not(.island-stop-modal__btn) {
   min-height: 40px;
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 640;
 }
 
@@ -2279,7 +2300,7 @@
   margin: 0.18rem 0 0;
   padding: 0.22rem 0.5rem;
   color: #caf3ff;
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.4;
   min-height: 1.4em;
   opacity: 0.88;

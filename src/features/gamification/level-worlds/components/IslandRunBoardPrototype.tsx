@@ -204,10 +204,10 @@ type OrbitStopVisual = {
 };
 
 const HATCHERY_TIMELINE_STEPS = [
-  { id: 'set', label: 'Set' },
-  { id: 'glow', label: 'Glow' },
-  { id: 'crack', label: 'Crack' },
-  { id: 'hatch', label: 'Hatch' },
+  { id: 'set', label: 'Set', icon: '🥚' },
+  { id: 'glow', label: 'Glow', icon: '✨' },
+  { id: 'crack', label: 'Crack', icon: '💥' },
+  { id: 'hatch', label: 'Hatch', icon: '🐣' },
 ] as const;
 
 const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
@@ -3419,7 +3419,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                             : 'upcoming';
                         return (
                           <div key={step.id} className={`island-hatchery-card__timeline-step island-hatchery-card__timeline-step--${stepState}`}>
-                            <span className="island-hatchery-card__timeline-dot" aria-hidden="true">{stepState === 'complete' ? '✓' : stepNumber}</span>
+                            <span className="island-hatchery-card__timeline-dot" aria-hidden="true">{stepState === 'complete' ? '✓' : step.icon}</span>
                             <span className="island-hatchery-card__timeline-label">{step.label}</span>
                           </div>
                         );
@@ -3448,7 +3448,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                             : 'upcoming';
                         return (
                           <div key={step.id} className={`island-hatchery-card__timeline-step island-hatchery-card__timeline-step--${stepState}`}>
-                            <span className="island-hatchery-card__timeline-dot" aria-hidden="true">{stepState === 'complete' ? '✓' : stepNumber}</span>
+                            <span className="island-hatchery-card__timeline-dot" aria-hidden="true">{stepState === 'complete' ? '✓' : step.icon}</span>
                             <span className="island-hatchery-card__timeline-label">{step.label}</span>
                           </div>
                         );
