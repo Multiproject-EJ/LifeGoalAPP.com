@@ -1,0 +1,217 @@
+.habit-pause-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.56);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1100;
+}
+
+.habit-pause-dialog {
+  width: min(100%, 32rem);
+  max-height: min(92vh, 48rem);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 1.5rem 1.5rem 1rem 1rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+  padding: 0.9rem 0.9rem 1rem;
+}
+
+.habit-pause-dialog__handle {
+  width: 3rem;
+  height: 0.3125rem;
+  border-radius: 999px;
+  background: #cbd5e1;
+  margin: 0 auto 0.75rem;
+}
+
+.habit-pause-dialog__header {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.habit-pause-dialog__title {
+  margin: 0;
+  font-size: 1.125rem;
+  color: #0f172a;
+}
+
+.habit-pause-dialog__subtitle {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.habit-pause-dialog__close {
+  border: none;
+  background: #f1f5f9;
+  color: #334155;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.habit-pause-dialog__callout,
+.habit-pause-dialog__summary {
+  margin-top: 0.9rem;
+  border-radius: 1rem;
+  padding: 0.85rem 0.95rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.habit-pause-dialog__callout {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.habit-pause-dialog__summary {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.habit-pause-dialog__preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.habit-pause-dialog__preset {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  min-height: 4.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.habit-pause-dialog__preset--active {
+  border-color: #6366f1;
+  background: #eef2ff;
+  box-shadow: inset 0 0 0 1px #6366f1;
+}
+
+.habit-pause-dialog__preset-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.habit-pause-dialog__preset-description {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.habit-pause-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.habit-pause-dialog__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.habit-pause-dialog__input,
+.habit-pause-dialog__textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.95rem;
+  padding: 0.85rem 0.9rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.habit-pause-dialog__textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.habit-pause-dialog__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.habit-pause-dialog__primary,
+.habit-pause-dialog__secondary {
+  flex: 1;
+  border: none;
+  border-radius: 999px;
+  padding: 0.9rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.habit-pause-dialog__primary {
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #fff;
+}
+
+.habit-pause-dialog__secondary {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.habit-pause-dialog__primary:disabled,
+.habit-pause-dialog__secondary:disabled,
+.habit-pause-dialog__close:disabled,
+.habit-pause-dialog__preset:disabled,
+.habit-pause-dialog__input:disabled,
+.habit-pause-dialog__textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (min-width: 769px) {
+  .habit-pause-dialog__overlay {
+    align-items: center;
+    padding: 1.5rem;
+  }
+
+  .habit-pause-dialog {
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .habit-pause-dialog__overlay {
+    padding: 0.5rem;
+  }
+
+  .habit-pause-dialog {
+    width: 100%;
+    border-radius: 1.25rem 1.25rem 0.75rem 0.75rem;
+  }
+
+  .habit-pause-dialog__preset-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .habit-pause-dialog__actions {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.92), #fff 28%);
+    padding-top: 0.5rem;
+  }
+}
