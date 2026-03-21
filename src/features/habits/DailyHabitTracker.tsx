@@ -4194,7 +4194,8 @@ export function DailyHabitTracker({
     const shouldGlowBonus = Boolean(
       visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
     );
-    const shouldHideBonus = !shouldShowOfferBonus && bonusPlaceholderText.length === 0;
+    const shouldHideBonus = !shouldShowOfferBonus;
+    const hasVisibleCompactNavContent = showNavigationControls || !shouldHideBonus || Boolean(visionRewardError);
     const bonusClasses = ['habit-day-nav__bonus'];
 
     if (shouldGlowBonus && !shouldHideBonus) {
@@ -4203,6 +4204,10 @@ export function DailyHabitTracker({
 
     if (shouldHideBonus) {
       bonusClasses.push('habit-day-nav__bonus--hidden');
+    }
+
+    if (isCompactVariant && !hasVisibleCompactNavContent) {
+      return null;
     }
 
     return (
@@ -4293,11 +4298,7 @@ export function DailyHabitTracker({
                     </span>
                   ) : null}
                 </div>
-              ) : (
-                <span className="habit-day-nav__bonus-placeholder">
-                  {bonusPlaceholderText}
-                </span>
-              )}
+              ) : null}
             </div>
             {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
           </div>
