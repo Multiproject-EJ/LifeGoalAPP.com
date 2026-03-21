@@ -203,6 +203,13 @@ type OrbitStopVisual = {
   stopId?: string;
 };
 
+const HATCHERY_TIMELINE_STEPS = [
+  { id: 'set', label: 'Set' },
+  { id: 'glow', label: 'Glow' },
+  { id: 'crack', label: 'Crack' },
+  { id: 'hatch', label: 'Hatch' },
+] as const;
+
 const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
   back: '#50a5ff',
   mid: '#ffe066',
@@ -1267,6 +1274,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   }, [islandEggEntry]);
 
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
+  const hatcheryTimelineStage = useMemo(() => {
+    if (readyAnimal || islandEggSlotUsed) return HATCHERY_TIMELINE_STEPS.length;
+    if (!activeEgg) return 1;
+    return Math.min(HATCHERY_TIMELINE_STEPS.length, Math.max(1, eggStage));
+  }, [activeEgg, eggStage, islandEggSlotUsed, readyAnimal]);
 
   useEffect(() => {
     setIslandRunDebugRuntimeSnapshotProvider(() => ({
@@ -3397,6 +3409,22 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     <p className="island-hatchery-card__copy">
                       Your <strong>{activeEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
                     </p>
+                    <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
+                      {HATCHERY_TIMELINE_STEPS.map((step, index) => {
+                        const stepNumber = index + 1;
+                        const stepState = hatcheryTimelineStage > stepNumber
+                          ? 'complete'
+                          : hatcheryTimelineStage === stepNumber
+                            ? 'current'
+                            : 'upcoming';
+                        return (
+                          <div key={step.id} className={`island-hatchery-card__timeline-step island-hatchery-card__timeline-step--${stepState}`}>
+                            <span className="island-hatchery-card__timeline-dot" aria-hidden="true">{stepState === 'complete' ? '✓' : stepNumber}</span>
+                            <span className="island-hatchery-card__timeline-label">{step.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                     <p style={{ fontSize: '0.8rem', opacity: 0.55 }}>💡 The egg keeps incubating even while you travel.</p>
                   </div>
                 ) : (
@@ -3410,6 +3438,22 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     <p className="island-hatchery-card__copy">
                       Set an egg now to earn rewards. The tier is a surprise — hatch time is a secret too!
                     </p>
+                    <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
+                      {HATCHERY_TIMELINE_STEPS.map((step, index) => {
+                        const stepNumber = index + 1;
+                        const stepState = hatcheryTimelineStage > stepNumber
+                          ? 'complete'
+                          : hatcheryTimelineStage === stepNumber
+                            ? 'current'
+                            : 'upcoming';
+                        return (
+                          <div key={step.id} className={`island-hatchery-card__timeline-step island-hatchery-card__timeline-step--${stepState}`}>
+                            <span className="island-hatchery-card__timeline-dot" aria-hidden="true">{stepState === 'complete' ? '✓' : stepNumber}</span>
+                            <span className="island-hatchery-card__timeline-label">{step.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                     <div className="island-hatchery-card__actions">
                       <button
                         type="button"
