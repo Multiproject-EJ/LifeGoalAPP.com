@@ -334,6 +334,61 @@ export function downloadIslandRunExportableDebugLog() {
   return { filename, eventCount: evidence.events.length, networkCount: evidence.network.length };
 }
 
+export function getIslandRunExportableDebugLogText() {
+  const evidence = collectDebugEvidence();
+  const lines: string[] = [
+    'Island Run Debug Log',
+    `Generated At: ${evidence.generatedAt}`,
+    `Visibility: ${evidence.visibilityState}`,
+    `Path: ${evidence.location.pathname}${evidence.location.search}${evidence.location.hash}`,
+    `User Agent: ${evidence.environment.userAgent}`,
+    `Language: ${evidence.environment.language}`,
+    `Viewport: ${evidence.environment.viewport.width}x${evidence.environment.viewport.height} @${evidence.environment.viewport.devicePixelRatio}x`,
+    `Screen: ${evidence.environment.screen.width}x${evidence.environment.screen.height}`,
+    '',
+    'Runtime Snapshot:',
+    JSON.stringify(evidence.runtimeSnapshot ?? {}, null, 2),
+    '',
+    `Events (${evidence.events.length}):`,
+  ];
+
+  evidence.events.forEach((event, index) => {
+    lines.push(
+      `${index + 1}. [${event.timestamp}] ${event.stage}`,
+      `   route=${event.pathname}${event.search}${event.hash}`,
+      `   payload=${JSON.stringify(event.payload ?? {}, null, 2)}`,
+    );
+  });
+
+  lines.push('', `Network (${evidence.network.length}):`);
+
+  evidence.network.forEach((entry, index) => {
+    lines.push(
+      `${index + 1}. ${entry.initiatorType || 'unknown'} ${entry.name}`,
+      `   start=${entry.startTime}ms duration=${entry.duration}ms transferSize=${entry.transferSize ?? 'n/a'}`,
+    );
+  });
+
+  return lines.join('\n');
+}
+
+export function downloadIslandRunExportableDebugLogText() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename = `island-run-debug-log-${stamp}.txt`;
+  const blob = new Blob([getIslandRunExportableDebugLogText()], { type: 'text/plain;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
+  return { filename };
+}
+
 function findNextEventIndex(
   events: IslandRunEntryDebugEntry[],
   startIndex: number,

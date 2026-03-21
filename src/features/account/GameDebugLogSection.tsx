@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   clearIslandRunExportableDebugLog,
   downloadIslandRunExportableDebugLog,
+  downloadIslandRunExportableDebugLogText,
   getIslandRunExportableDebugLog,
 } from '../gamification/level-worlds/services/islandRunEntryDebug';
 
@@ -21,6 +22,16 @@ export function GameDebugLogSection() {
     setMessage(`Exported ${result.filename} with ${result.eventCount} log events.`);
   };
 
+  const handleExportText = () => {
+    const result = downloadIslandRunExportableDebugLogText();
+    if (!result) {
+      setMessage('Text log export is unavailable in this environment.');
+      return;
+    }
+
+    setMessage(`Exported ${result.filename} as a shareable text log.`);
+  };
+
   const handleClear = () => {
     clearIslandRunExportableDebugLog();
     setMessage('Cleared the saved Island Run debug log on this device.');
@@ -31,7 +42,7 @@ export function GameDebugLogSection() {
       <p className="account-panel__eyebrow">Game logs</p>
       <h3 id="game-debug-log">Island Run debug log</h3>
       <p className="account-panel__hint">
-        Export recent Island Run events, browser errors, stack traces, runtime snapshots, and matching network traces into a JSON file you can share for debugging.
+        Export recent Island Run events, browser errors, stack traces, runtime snapshots, and matching network traces as JSON or plain text so it is easy to share for debugging.
       </p>
       <dl className="account-panel__details">
         <div>
@@ -53,7 +64,14 @@ export function GameDebugLogSection() {
           className="btn btn--primary"
           onClick={handleExport}
         >
-          Export debug log
+          Export JSON log
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={handleExportText}
+        >
+          Export text log
         </button>
         <button
           type="button"
