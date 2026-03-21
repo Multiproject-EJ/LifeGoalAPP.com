@@ -30,6 +30,20 @@ type IslandRunEntryDebugNetworkEntry = {
   transferSize?: number;
 };
 
+type IslandRunDebugEnvironment = {
+  userAgent: string;
+  language: string;
+  viewport: {
+    width: number;
+    height: number;
+    devicePixelRatio: number;
+  };
+  screen: {
+    width: number;
+    height: number;
+  };
+};
+
 type IslandRunEntryDebugEvidence = {
   generatedAt: string;
   location: {
@@ -38,9 +52,13 @@ type IslandRunEntryDebugEvidence = {
     hash: string;
   };
   visibilityState: string;
+  environment: IslandRunDebugEnvironment;
+  runtimeSnapshot?: Record<string, unknown>;
   events: IslandRunEntryDebugEntry[];
   network: IslandRunEntryDebugNetworkEntry[];
 };
+
+export type IslandRunExportableDebugLog = IslandRunEntryDebugEvidence;
 
 type IslandRunProgressionAssertionCheck = {
   name: string;
@@ -194,11 +212,64 @@ function collectNetworkEntries(): IslandRunEntryDebugNetworkEntry[] {
   return resources;
 }
 
+let islandRunRuntimeSnapshotProvider: (() => Record<string, unknown> | undefined) | null = null;
+
+export function setIslandRunDebugRuntimeSnapshotProvider(
+  provider: (() => Record<string, unknown> | undefined) | null,
+) {
+  islandRunRuntimeSnapshotProvider = provider;
+}
+
+function collectEnvironmentSnapshot(): IslandRunDebugEnvironment {
+  if (typeof window === 'undefined') {
+    return {
+      userAgent: 'unknown',
+      language: 'unknown',
+      viewport: {
+        width: 0,
+        height: 0,
+        devicePixelRatio: 1,
+      },
+      screen: {
+        width: 0,
+        height: 0,
+      },
+    };
+  }
+
+  return {
+    userAgent: window.navigator.userAgent,
+    language: window.navigator.language,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio || 1,
+    },
+    screen: {
+      width: window.screen?.width ?? 0,
+      height: window.screen?.height ?? 0,
+    },
+  };
+}
+
+function collectRuntimeSnapshot() {
+  try {
+    return islandRunRuntimeSnapshotProvider?.();
+  } catch (error) {
+    return {
+      runtimeSnapshotError:
+        error instanceof Error ? error.message : typeof error === 'string' ? error : 'unknown_runtime_snapshot_error',
+    };
+  }
+}
+
 function collectDebugEvidence(): IslandRunEntryDebugEvidence {
   return {
     generatedAt: new Date().toISOString(),
     location: getLocationSnapshot(),
     visibilityState: typeof document === 'undefined' ? 'unknown' : document.visibilityState,
+    environment: collectEnvironmentSnapshot(),
+    runtimeSnapshot: collectRuntimeSnapshot(),
     events: readDebugBuffer(),
     network: collectNetworkEntries(),
   };
@@ -219,8 +290,6 @@ export function isIslandRunEntryDebugEnabled(search?: string) {
 }
 
 export function logIslandRunEntryDebug(stage: string, payload?: IslandRunEntryDebugPayload) {
-  if (!isIslandRunEntryDebugEnabled()) return;
-
   const entry: IslandRunEntryDebugEntry = {
     stage,
     timestamp: new Date().toISOString(),
@@ -231,10 +300,38 @@ export function logIslandRunEntryDebug(stage: string, payload?: IslandRunEntryDe
   const nextBuffer = [...readDebugBuffer(), entry];
   writeDebugBuffer(nextBuffer);
 
-  console.info('[IslandRunEntryDebug]', {
-    ...entry,
-    ...(payload ?? {}),
-  });
+  if (isIslandRunEntryDebugEnabled()) {
+    console.info('[IslandRunEntryDebug]', {
+      ...entry,
+      ...(payload ?? {}),
+    });
+  }
+}
+
+export function getIslandRunExportableDebugLog(): IslandRunExportableDebugLog {
+  return collectDebugEvidence();
+}
+
+export function clearIslandRunExportableDebugLog() {
+  writeDebugBuffer([]);
+}
+
+export function downloadIslandRunExportableDebugLog() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
+
+  const evidence = collectDebugEvidence();
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename = `island-run-debug-log-${stamp}.json`;
+  const blob = new Blob([JSON.stringify(evidence, null, 2)], { type: 'application/json' });
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
+  return { filename, eventCount: evidence.events.length, networkCount: evidence.network.length };
 }
 
 function findNextEventIndex(
@@ -433,6 +530,9 @@ function installGlobalDebugListeners() {
       source: event.filename,
       line: event.lineno,
       column: event.colno,
+      stack: event.error instanceof Error ? event.error.stack : undefined,
+      errorName: event.error instanceof Error ? event.error.name : undefined,
+      runtimeSnapshot: collectRuntimeSnapshot(),
     });
   });
 
@@ -445,6 +545,9 @@ function installGlobalDebugListeners() {
           : typeof reason === 'string'
             ? reason
             : 'unknown_rejection_reason',
+      stack: reason instanceof Error ? reason.stack : undefined,
+      errorName: reason instanceof Error ? reason.name : undefined,
+      runtimeSnapshot: collectRuntimeSnapshot(),
     });
   });
 
@@ -600,4 +703,5 @@ function installDebugWindowHelpers() {
   });
 }
 
+installGlobalDebugListeners();
 installDebugWindowHelpers();
