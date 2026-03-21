@@ -222,6 +222,10 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function areStringArraysEqual(left: string[], right: string[]) {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
 function preloadThemeAssets(theme: IslandBoardTheme) {
   const urls = [theme.depthMaskImage, theme.pathOverlayImage].filter(Boolean) as string[];
   urls.forEach((url) => {
@@ -980,7 +984,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (!hasHydratedRuntimeState) return;
     const persistedStops = runtimeState.completedStopsByIsland?.[String(islandNumber)];
     if (Array.isArray(persistedStops)) {
-      setCompletedStops(persistedStops.filter((x): x is string => typeof x === 'string'));
+      const sanitizedStops = persistedStops.filter((x): x is string => typeof x === 'string');
+      setCompletedStops((current) => (areStringArraysEqual(current, sanitizedStops) ? current : sanitizedStops));
       return;
     }
 
@@ -990,14 +995,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       if (raw) {
         const parsed = JSON.parse(raw) as unknown;
         if (Array.isArray(parsed)) {
-          setCompletedStops(parsed.filter((x): x is string => typeof x === 'string'));
+          const sanitizedStops = parsed.filter((x): x is string => typeof x === 'string');
+          setCompletedStops((current) => (areStringArraysEqual(current, sanitizedStops) ? current : sanitizedStops));
           return;
         }
       }
     } catch {
       // ignore storage errors
     }
-    setCompletedStops([]);
+    setCompletedStops((current) => (current.length === 0 ? current : []));
   }, [hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session.user.id]);
 
   // M11D: persist completedStops to both localStorage and Supabase runtime state
@@ -1010,6 +1016,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       // ignore storage errors
     }
     const islandKey = String(islandNumber);
+    const persistedStops = runtimeState.completedStopsByIsland?.[islandKey] ?? [];
+    if (areStringArraysEqual(persistedStops, completedStops)) {
+      return;
+    }
     const patch = { [islandKey]: completedStops };
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -1025,7 +1035,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         ...patch,
       },
     }));
-  }, [client, completedStops, hasHydratedRuntimeState, islandNumber, session]);
+  }, [client, completedStops, hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session]);
 
   // M8-COMPLETE: persist diamonds to localStorage (permanent cross-island balance)
   useEffect(() => {
@@ -1155,11 +1165,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       const verticalPadding = 44;
       const labelOffsetY = index % 2 === 0 ? -38 : 38;
 
+      let visualX = clamp(position.x, horizontalPadding, boardSize.width - horizontalPadding);
+      let visualY = clamp(position.y, verticalPadding, boardSize.height - verticalPadding);
+
+      const overlapsBackButtonZone = visualX < 112 && visualY < 128;
+      if (overlapsBackButtonZone) {
+        visualX = Math.max(visualX, 100);
+        visualY = Math.max(visualY, 152);
+      }
+
       return {
         id: stop.stopId,
         label: stop.title.replace(/^\S+\s/, ''),
-        x: clamp(position.x, horizontalPadding, boardSize.width - horizontalPadding),
-        y: clamp(position.y, verticalPadding, boardSize.height - verticalPadding),
+        x: visualX,
+        y: visualY,
         state: stopStateMap.get(stop.stopId) ?? 'active',
         icon: getStopIcon(stop.kind, stop.stopId),
         labelOffsetY,
