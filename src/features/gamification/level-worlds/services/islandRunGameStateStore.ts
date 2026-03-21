@@ -46,9 +46,75 @@ export interface IslandRunGameStateRecord {
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
+const ISLAND_RUN_REMOTE_BACKOFF_MS = 60 * 1000;
 
 function getStorageKey(userId: string) {
   return `island_run_runtime_state_${userId}`;
+}
+
+function getRemoteBackoffStorageKey(userId: string) {
+  return `${getStorageKey(userId)}_remote_backoff_until`;
+}
+
+function isTransportLikeRuntimeStateError(error: { message?: string | null; code?: string | null } | null | undefined): boolean {
+  if (!error) return false;
+
+  const normalizedMessage = typeof error.message === 'string' ? error.message.trim().toLowerCase() : '';
+  const normalizedCode = typeof error.code === 'string' ? error.code.trim().toLowerCase() : '';
+
+  if (!normalizedMessage && !normalizedCode) return true;
+
+  return [
+    normalizedMessage === 'load failed',
+    normalizedMessage === 'failed to fetch',
+    normalizedMessage.includes('networkerror'),
+    normalizedMessage.includes('network request failed'),
+    normalizedMessage.includes('fetch failed'),
+    normalizedMessage.includes('load failed'),
+    normalizedCode === 'failed_to_fetch',
+    normalizedCode === 'network_error',
+  ].some(Boolean);
+}
+
+function getRemoteBackoffUntil(userId: string): number | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(getRemoteBackoffStorageKey(userId));
+    if (!raw) return null;
+
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed) || parsed <= Date.now()) {
+      window.localStorage.removeItem(getRemoteBackoffStorageKey(userId));
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function setRemoteBackoffUntil(userId: string, backoffUntil: number | null) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const storageKey = getRemoteBackoffStorageKey(userId);
+    if (backoffUntil === null) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+
+    window.localStorage.setItem(storageKey, String(backoffUntil));
+  } catch {
+    // ignore local persistence failures in prototype mode
+  }
+}
+
+function activateRemoteBackoff(userId: string): number {
+  const backoffUntil = Date.now() + ISLAND_RUN_REMOTE_BACKOFF_MS;
+  setRemoteBackoffUntil(userId, backoffUntil);
+  return backoffUntil;
 }
 
 function getDefaultRecord(): IslandRunGameStateRecord {
@@ -190,6 +256,18 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     return { record: fallback, source: 'fallback_demo_or_no_client' };
   }
 
+  const remoteBackoffUntil = getRemoteBackoffUntil(session.user.id);
+  if (remoteBackoffUntil !== null) {
+    logIslandRunEntryDebug('runtime_state_hydrate_skipped_remote', {
+      userId: session.user.id,
+      reason: 'remote_backoff_active',
+      backoffUntil: new Date(remoteBackoffUntil).toISOString(),
+      fallbackCurrentIslandNumber: fallback.currentIslandNumber,
+      fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
+    });
+    return { record: fallback, source: 'fallback_query_error' };
+  }
+
   logIslandRunEntryDebug('runtime_state_hydrate_query_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
@@ -204,10 +282,15 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     .maybeSingle();
 
   if (error) {
+    const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error);
+    const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
+
     logIslandRunEntryDebug('runtime_state_hydrate_query_error', {
       userId: session.user.id,
       message: error.message,
       code: error.code ?? null,
+      remoteBackoffTriggered,
+      remoteBackoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
       fallbackCurrentIslandNumber: fallback.currentIslandNumber,
       fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
@@ -255,6 +338,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     }
   }
 
+  setRemoteBackoffUntil(session.user.id, null);
+
   logIslandRunEntryDebug('runtime_state_hydrate_query_success', {
     userId: session.user.id,
     source: 'table',
@@ -298,6 +383,18 @@ export async function writeIslandRunGameStateRecord(options: {
     return { ok: true };
   }
 
+  const remoteBackoffUntil = getRemoteBackoffUntil(session.user.id);
+  if (remoteBackoffUntil !== null) {
+    logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
+      userId: session.user.id,
+      reason: 'remote_backoff_active',
+      backoffUntil: new Date(remoteBackoffUntil).toISOString(),
+      currentIslandNumber: record.currentIslandNumber,
+      bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
+    });
+    return { ok: true };
+  }
+
   logIslandRunEntryDebug('runtime_state_persist_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
@@ -332,15 +429,27 @@ export async function writeIslandRunGameStateRecord(options: {
   );
 
   if (error) {
+    const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error);
+    const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
+
     logIslandRunEntryDebug('runtime_state_persist_error', {
       userId: session.user.id,
       message: error.message,
       code: error.code ?? null,
+      remoteBackoffTriggered,
+      remoteBackoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
       currentIslandNumber: record.currentIslandNumber,
       bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
     });
+
+    if (remoteBackoffTriggered) {
+      return { ok: true };
+    }
+
     return { ok: false, errorMessage: error.message };
   }
+
+  setRemoteBackoffUntil(session.user.id, null);
 
   logIslandRunEntryDebug('runtime_state_persist_success', {
     userId: session.user.id,
