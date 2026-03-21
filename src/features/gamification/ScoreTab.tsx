@@ -146,6 +146,12 @@ export function ScoreTab({
     });
   }, [rewardCategory, rewardCooldown, rewardCost, rewardDescription, rewardTitle]);
 
+  useEffect(() => {
+    if (initialActiveTab) {
+      setActiveTab(initialActiveTab);
+    }
+  }, [initialActiveTab]);
+
   const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard') => {
     setActiveTab(tab);
     onActiveTabChange?.(tab);
@@ -604,76 +610,6 @@ export function ScoreTab({
             <p className="score-tab__eyebrow">Score hub</p>
             <h2 className="score-tab__headline">Score hub</h2>
           </div>
-        </div>
-        <div className="score-tab__tabs" aria-label="Score shortcuts">
-          <button
-            type="button"
-            className={`score-tab__tab${activeTab === 'home' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => handleTabChange('home')}
-          >
-            Hub
-          </button>
-          <button
-            type="button"
-            className="score-tab__tab score-tab__tab--primary"
-            onClick={onNavigateToAchievements}
-          >
-            Achievements
-          </button>
-          <button
-            type="button"
-            className={`score-tab__tab${activeTab === 'bank' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => {
-              handleTabChange('bank');
-              onNavigateToBank?.();
-            }}
-          >
-            <span className="score-tab__tab-icon" aria-hidden="true">🏦</span>
-            Bank
-          </button>
-          <button
-            type="button"
-            className={`score-tab__tab${activeTab === 'leaderboard' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => {
-              handleTabChange('leaderboard');
-            }}
-          >
-            <span className="score-tab__tab-icon" aria-hidden="true">🥇</span>
-            Leaderboard
-          </button>
-          <button
-            type="button"
-            className={`score-tab__tab${activeTab === 'shop' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => {
-              handleTabChange('shop');
-              onNavigateToShop?.();
-            }}
-          >
-            <span className="score-tab__tab-icon" aria-hidden="true">🛍️</span>
-            Player Shop
-          </button>
-          <button
-            type="button"
-            className={`score-tab__tab${activeTab === 'zen' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => {
-              handleTabChange('zen');
-              onNavigateToZenGarden?.();
-            }}
-          >
-            <span className="score-tab__tab-icon" aria-hidden="true">🪷</span>
-            Zen Garden
-          </button>
-          <button
-            type="button"
-            className={`score-tab__tab${activeTab === 'garage' ? ' score-tab__tab--active' : ''}`}
-            onClick={() => {
-              handleTabChange('garage');
-              onNavigateToGarage?.();
-            }}
-          >
-            <span className="score-tab__tab-icon" aria-hidden="true">🚀</span>
-            Garage
-          </button>
         </div>
       </header>
 

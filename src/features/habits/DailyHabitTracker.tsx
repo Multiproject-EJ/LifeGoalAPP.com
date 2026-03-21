@@ -1808,6 +1808,9 @@ export function DailyHabitTracker({
     [habits, offerPriceByHabitId, timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
   );
   const shouldShowOfferBonus = hasClaimedVisionStar && isTimeLimitedOfferActive;
+  const bonusPlaceholderText = hasClaimedVisionStar && !shouldFadeTrackingMeta
+    ? 'Vision star claimed today.'
+    : '';
   const luckyRollDoneForToday = useMemo(() => {
     try {
       const raw = window.localStorage.getItem(`gol_lucky_roll_state_${session.user.id}`);
