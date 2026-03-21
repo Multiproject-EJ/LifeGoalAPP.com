@@ -1991,10 +1991,13 @@
 }
 
 .island-hatchery-card__stage-art {
-  width: clamp(88px, 24vw, 120px);
-  height: clamp(88px, 24vw, 120px);
+  display: block;
+  width: min(100%, clamp(180px, 52vw, 280px));
+  height: auto;
+  max-height: min(34dvh, 280px);
   object-fit: contain;
-  margin: 0.2rem 0;
+  align-self: center;
+  margin: 0.1rem auto 0.55rem;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
 }
 

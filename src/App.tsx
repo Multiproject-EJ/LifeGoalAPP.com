@@ -495,6 +495,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
+  const [reopenGameBoardOverlayOnLevelWorldsClose, setReopenGameBoardOverlayOnLevelWorldsClose] = useState(false);
   const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return (
@@ -4077,7 +4078,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
       >
         <LevelWorldsHub
           session={activeSession}
-          onClose={() => setShowLevelWorldsFromEntry(false)}
+          onClose={() => {
+            setShowLevelWorldsFromEntry(false);
+            if (reopenGameBoardOverlayOnLevelWorldsClose) {
+              setShowGameBoardOverlay(true);
+              setReopenGameBoardOverlayOnLevelWorldsClose(false);
+            }
+          }}
         />
       </RecoverableErrorBoundary>
     </div>
@@ -4117,6 +4124,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
           onOpenIslandRunStop={(stopId) => {
             setIslandRunOpenStopParam(stopId);
+            setReopenGameBoardOverlayOnLevelWorldsClose(false);
             setShowLevelWorldsFromEntry(true);
           }}
           forceCompactView={!isGameModeActive}
@@ -4161,7 +4169,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onClose={() => setShowGameBoardOverlay(false)}
           onPlayClick={() => {
             setShowGameBoardOverlay(false);
-            window.location.href = '/level-worlds.html?level=1';
+            setReopenGameBoardOverlayOnLevelWorldsClose(true);
+            setShowLevelWorldsFromEntry(true);
           }}
           onTopbarClick={() => {
             setShowGameBoardOverlay(false);
@@ -4465,7 +4474,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onClose={() => setShowGameBoardOverlay(false)}
         onPlayClick={() => {
           setShowGameBoardOverlay(false);
-          window.location.href = '/level-worlds.html?level=1';
+          setReopenGameBoardOverlayOnLevelWorldsClose(true);
+          setShowLevelWorldsFromEntry(true);
         }}
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);
