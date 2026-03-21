@@ -30,7 +30,7 @@ import {
   resolveCollectibleForClaim,
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
-import type { PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import { writeIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import {
   rollEggTierWeighted,
   getRandomHatchDelayMs,
@@ -1658,17 +1658,22 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     const nextCompletedStops = activeStopId === 'hatchery' && !completedStops.includes('hatchery')
       ? [...completedStops, 'hatchery']
       : completedStops;
-    const persistResult = await persistIslandRunRuntimeStatePatch({
+    const nextRuntimeState = {
+      ...runtimeState,
+      activeEggTier: tier,
+      activeEggSetAtMs: start,
+      activeEggHatchDurationMs: hatchDurationMs,
+      activeEggIsDormant: false,
+      perIslandEggs: { ...runtimeState.perIslandEggs, [islandKey]: ledgerEntry },
+      completedStopsByIsland: {
+        ...runtimeState.completedStopsByIsland,
+        [islandKey]: nextCompletedStops,
+      },
+    };
+    const persistResult = await writeIslandRunGameStateRecord({
       session,
       client,
-      patch: {
-        activeEggTier: tier,
-        activeEggSetAtMs: start,
-        activeEggHatchDurationMs: hatchDurationMs,
-        activeEggIsDormant: false,
-        perIslandEggs: { [islandKey]: ledgerEntry },
-        completedStopsByIsland: { [islandKey]: nextCompletedStops },
-      },
+      record: nextRuntimeState,
     });
 
     if (!persistResult.ok) {
@@ -1691,18 +1696,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     });
     logIslandRunEntryDebug('island_egg_set', { tier, source: 'island_hatchery' });
-    setRuntimeState((current) => ({
-      ...current,
-      activeEggTier: tier,
-      activeEggSetAtMs: start,
-      activeEggHatchDurationMs: hatchDurationMs,
-      activeEggIsDormant: false,
-      perIslandEggs: { ...current.perIslandEggs, [islandKey]: ledgerEntry },
-      completedStopsByIsland: {
-        ...current.completedStopsByIsland,
-        [islandKey]: nextCompletedStops,
-      },
-    }));
+    setRuntimeState(nextRuntimeState);
 
     if (activeStopId === 'hatchery') {
       if (!completedStops.includes('hatchery')) {
