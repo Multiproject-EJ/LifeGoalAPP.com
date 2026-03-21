@@ -1638,26 +1638,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   };
 
   // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
-  const handleSetEgg = () => {
+  const handleSetEgg = async () => {
     const start = Date.now();
     const tier = rollEggTierWeighted();
     const hatchDurationMs = getRandomHatchDelayMs(IS_DEV_TIMER);
-    setActiveEgg({ tier, setAtMs: start, hatchAtMs: start + hatchDurationMs });
-    // M10B: egg_set sound + haptic
-    playIslandRunSound('egg_set');
-    triggerIslandRunHaptic('egg_set');
-    // M9G: home_egg_set telemetry + debug marker
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'home_egg_set',
-        tier,
-        source: 'home_hatchery',
-      },
-    });
-    logIslandRunEntryDebug('home_egg_set', { tier, source: 'home_hatchery' });
-    // M13: write ledger entry for current island
+    const nextActiveEgg = { tier, setAtMs: start, hatchAtMs: start + hatchDurationMs };
     const islandKey = String(islandNumber);
     const ledgerEntry: PerIslandEggEntry = {
       tier,
@@ -1666,7 +1651,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       status: 'incubating',
       location: 'island',
     };
-    void persistIslandRunRuntimeStatePatch({
+    const nextCompletedStops = activeStopId === 'hatchery' && !completedStops.includes('hatchery')
+      ? [...completedStops, 'hatchery']
+      : completedStops;
+    const persistResult = await persistIslandRunRuntimeStatePatch({
       session,
       client,
       patch: {
@@ -1675,11 +1663,40 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         activeEggHatchDurationMs: hatchDurationMs,
         activeEggIsDormant: false,
         perIslandEggs: { [islandKey]: ledgerEntry },
+        completedStopsByIsland: { [islandKey]: nextCompletedStops },
       },
     });
+
+    if (!persistResult.ok) {
+      setLandingText(`Could not set egg: ${persistResult.errorMessage}`);
+      return;
+    }
+
+    setActiveEgg(nextActiveEgg);
+    // M10B: egg_set sound + haptic
+    playIslandRunSound('egg_set');
+    triggerIslandRunHaptic('egg_set');
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_egg_set',
+        tier,
+        source: 'island_hatchery',
+      },
+    });
+    logIslandRunEntryDebug('island_egg_set', { tier, source: 'island_hatchery' });
     setRuntimeState((current) => ({
       ...current,
+      activeEggTier: tier,
+      activeEggSetAtMs: start,
+      activeEggHatchDurationMs: hatchDurationMs,
+      activeEggIsDormant: false,
       perIslandEggs: { ...current.perIslandEggs, [islandKey]: ledgerEntry },
+      completedStopsByIsland: {
+        ...current.completedStopsByIsland,
+        [islandKey]: nextCompletedStops,
+      },
     }));
 
     if (activeStopId === 'hatchery') {
@@ -1687,7 +1704,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         awardShards('stop_complete');
         awardWalletShards(1);
       }
-      setCompletedStops((current) => (current.includes('hatchery') ? current : [...current, 'hatchery']));
+      setCompletedStops(nextCompletedStops);
       setLandingText(`Egg set! Hatchery stop completed with a ${tier} egg now incubating.`);
       setActiveStopId(null);
     }
