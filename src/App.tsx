@@ -347,7 +347,7 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'player-avatar', // Moved to quick actions section
 ] as const;
 
-const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account']);
+const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 const ONBOARDING_NUDGE_KEY = 'gol_onboarding_nudge_at';
@@ -400,6 +400,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const isMobileExperience = isMobileViewport || !isDesktopUiResearchPreviewEnabled;
   const [showMobileHome, setShowMobileHome] = useState(false);
   const [actionsLauncherResetSignal, setActionsLauncherResetSignal] = useState(0);
+  const [actionsTabView, setActionsTabView] = useState<'launcher' | 'tasks'>(isMobileExperience ? 'launcher' : 'tasks');
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
   const [workspaceStats, setWorkspaceStats] = useState<WorkspaceStats | null>(null);
   const [workspaceProfileLoading, setWorkspaceProfileLoading] = useState(false);
@@ -896,7 +897,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
     mobileActiveNavId !== null &&
-    MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId);
+    (MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
+      (mobileActiveNavId === 'actions' && actionsTabView === 'tasks'));
   const shouldAllowFooterCollapse = isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
 
   const scheduleMobileFooterCollapse = useCallback(() => {
@@ -1001,6 +1003,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     setIsMobileFooterCollapsed(true);
   }, [isVisionRewardOpen, isMobileMenuImageActive, isMobileExperience]);
+
+  useEffect(() => {
+    if (!isMobileExperience) {
+      setActionsTabView('tasks');
+      return;
+    }
+
+    if (activeWorkspaceNav !== 'actions') {
+      return;
+    }
+
+    setActionsTabView((current) => (current === 'tasks' ? current : 'launcher'));
+  }, [activeWorkspaceNav, isMobileExperience]);
 
   const isDemoMode = mode === 'demo';
   const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
@@ -2815,6 +2830,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               isMobileView={isMobileExperience}
               resetToLauncherSignal={actionsLauncherResetSignal}
+              onViewChange={setActionsTabView}
             />
           </div>
         );
