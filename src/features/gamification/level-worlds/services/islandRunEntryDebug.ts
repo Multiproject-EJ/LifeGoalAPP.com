@@ -42,6 +42,8 @@ type IslandRunEntryDebugEvidence = {
   network: IslandRunEntryDebugNetworkEntry[];
 };
 
+export type IslandRunExportableDebugLog = IslandRunEntryDebugEvidence;
+
 type IslandRunProgressionAssertionCheck = {
   name: string;
   passed: boolean;
@@ -219,8 +221,6 @@ export function isIslandRunEntryDebugEnabled(search?: string) {
 }
 
 export function logIslandRunEntryDebug(stage: string, payload?: IslandRunEntryDebugPayload) {
-  if (!isIslandRunEntryDebugEnabled()) return;
-
   const entry: IslandRunEntryDebugEntry = {
     stage,
     timestamp: new Date().toISOString(),
@@ -231,10 +231,38 @@ export function logIslandRunEntryDebug(stage: string, payload?: IslandRunEntryDe
   const nextBuffer = [...readDebugBuffer(), entry];
   writeDebugBuffer(nextBuffer);
 
-  console.info('[IslandRunEntryDebug]', {
-    ...entry,
-    ...(payload ?? {}),
-  });
+  if (isIslandRunEntryDebugEnabled()) {
+    console.info('[IslandRunEntryDebug]', {
+      ...entry,
+      ...(payload ?? {}),
+    });
+  }
+}
+
+export function getIslandRunExportableDebugLog(): IslandRunExportableDebugLog {
+  return collectDebugEvidence();
+}
+
+export function clearIslandRunExportableDebugLog() {
+  writeDebugBuffer([]);
+}
+
+export function downloadIslandRunExportableDebugLog() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
+
+  const evidence = collectDebugEvidence();
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename = `island-run-debug-log-${stamp}.json`;
+  const blob = new Blob([JSON.stringify(evidence, null, 2)], { type: 'application/json' });
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
+  return { filename, eventCount: evidence.events.length, networkCount: evidence.network.length };
 }
 
 function findNextEventIndex(
@@ -600,4 +628,5 @@ function installDebugWindowHelpers() {
   });
 }
 
+installGlobalDebugListeners();
 installDebugWindowHelpers();
