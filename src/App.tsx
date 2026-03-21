@@ -495,6 +495,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
+  const [reopenGameBoardOverlayOnLevelWorldsClose, setReopenGameBoardOverlayOnLevelWorldsClose] = useState(false);
   const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return (
@@ -4070,14 +4071,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
     >
       <RecoverableErrorBoundary
         fallback={null}
-        onError={(error) => {
+        onError={(error, errorInfo) => {
+          logIslandRunEntryDebug('level_worlds_entry_boundary_error', {
+            message: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+            reopenGameBoardOverlayOnLevelWorldsClose,
+          });
           console.error('[LevelWorldsEntryModal] render failed; closing modal to keep app usable.', error);
           setShowLevelWorldsFromEntry(false);
         }}
       >
         <LevelWorldsHub
           session={activeSession}
-          onClose={() => setShowLevelWorldsFromEntry(false)}
+          onClose={() => {
+            setShowLevelWorldsFromEntry(false);
+            if (reopenGameBoardOverlayOnLevelWorldsClose) {
+              setShowGameBoardOverlay(true);
+              setReopenGameBoardOverlayOnLevelWorldsClose(false);
+            }
+          }}
         />
       </RecoverableErrorBoundary>
     </div>
@@ -4117,6 +4130,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
           onOpenIslandRunStop={(stopId) => {
             setIslandRunOpenStopParam(stopId);
+            setReopenGameBoardOverlayOnLevelWorldsClose(false);
             setShowLevelWorldsFromEntry(true);
           }}
           forceCompactView={!isGameModeActive}
@@ -4161,7 +4175,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onClose={() => setShowGameBoardOverlay(false)}
           onPlayClick={() => {
             setShowGameBoardOverlay(false);
-            window.location.href = '/level-worlds.html?level=1';
+            setReopenGameBoardOverlayOnLevelWorldsClose(true);
+            setShowLevelWorldsFromEntry(true);
           }}
           onTopbarClick={() => {
             setShowGameBoardOverlay(false);
@@ -4465,7 +4480,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onClose={() => setShowGameBoardOverlay(false)}
         onPlayClick={() => {
           setShowGameBoardOverlay(false);
-          window.location.href = '/level-worlds.html?level=1';
+          setReopenGameBoardOverlayOnLevelWorldsClose(true);
+          setShowLevelWorldsFromEntry(true);
         }}
         onTopbarClick={() => {
           setShowGameBoardOverlay(false);

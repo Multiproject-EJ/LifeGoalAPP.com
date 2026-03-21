@@ -3,7 +3,7 @@ import { isDemoSession } from '../../../../services/demoSession';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
-export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
+export type PerIslandEggStatus = 'incubating' | 'ready' | 'animal_ready' | 'collected' | 'sold' | 'animal_sold';
 
 /** Where an egg lives: on a specific island, on the Home Island, or dormant (hatched but uncollected). */
 export type PerIslandEggLocation = 'island' | 'home' | 'dormant';
@@ -17,6 +17,8 @@ export interface PerIslandEggEntry {
   location?: PerIslandEggLocation;
   /** Unix ms timestamp when the egg was collected or sold. */
   openedAt?: number;
+  /** Unix ms timestamp when the hatched animal was collected from the egg. */
+  animalCollectedAtMs?: number;
 }
 
 /** Key = island number (as string), value = egg entry */
