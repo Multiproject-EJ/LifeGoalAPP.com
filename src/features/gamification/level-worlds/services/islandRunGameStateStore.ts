@@ -56,11 +56,19 @@ function getRemoteBackoffStorageKey(userId: string) {
   return `${getStorageKey(userId)}_remote_backoff_until`;
 }
 
+function getNormalizedRuntimeStateError(error: { message?: string | null; code?: string | null } | null | undefined) {
+  return {
+    message: typeof error?.message === 'string' ? error.message.trim().toLowerCase() : '',
+    code: typeof error?.code === 'string' ? error.code.trim().toLowerCase() : '',
+  };
+}
+
 function isTransportLikeRuntimeStateError(error: { message?: string | null; code?: string | null } | null | undefined): boolean {
   if (!error) return false;
 
-  const normalizedMessage = typeof error.message === 'string' ? error.message.trim().toLowerCase() : '';
-  const normalizedCode = typeof error.code === 'string' ? error.code.trim().toLowerCase() : '';
+  const normalizedError = getNormalizedRuntimeStateError(error);
+  const normalizedMessage = normalizedError.message;
+  const normalizedCode = normalizedError.code;
 
   if (!normalizedMessage && !normalizedCode) return true;
 
@@ -73,6 +81,22 @@ function isTransportLikeRuntimeStateError(error: { message?: string | null; code
     normalizedMessage.includes('load failed'),
     normalizedCode === 'failed_to_fetch',
     normalizedCode === 'network_error',
+  ].some(Boolean);
+}
+
+function isSchemaMismatchRuntimeStateError(error: { message?: string | null; code?: string | null } | null | undefined): boolean {
+  if (!error) return false;
+
+  const normalizedError = getNormalizedRuntimeStateError(error);
+  const normalizedMessage = normalizedError.message;
+  const normalizedCode = normalizedError.code;
+
+  return [
+    normalizedCode === '42703',
+    normalizedCode === 'pgrst204',
+    normalizedMessage.includes('does not exist'),
+    normalizedMessage.includes('could not find the'),
+    normalizedMessage.includes('schema cache'),
   ].some(Boolean);
 }
 
@@ -282,7 +306,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     .maybeSingle();
 
   if (error) {
-    const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error);
+    const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error) || isSchemaMismatchRuntimeStateError(error);
     const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
 
     logIslandRunEntryDebug('runtime_state_hydrate_query_error', {
@@ -429,7 +453,7 @@ export async function writeIslandRunGameStateRecord(options: {
   );
 
   if (error) {
-    const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error);
+    const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error) || isSchemaMismatchRuntimeStateError(error);
     const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
 
     logIslandRunEntryDebug('runtime_state_persist_error', {
