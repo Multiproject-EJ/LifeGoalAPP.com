@@ -1041,6 +1041,7 @@ export interface Database {
           first_run_claimed: boolean;
           daily_hearts_claimed_day_key: string | null;
           current_island_number: number;
+          cycle_index: number;
           boss_trial_resolved_island_number: number | null;
           completed_stops_by_island: Json;
           created_at: string;
@@ -1051,6 +1052,7 @@ export interface Database {
           first_run_claimed?: boolean;
           daily_hearts_claimed_day_key?: string | null;
           current_island_number?: number;
+          cycle_index?: number;
           boss_trial_resolved_island_number?: number | null;
           completed_stops_by_island?: Json;
           created_at?: string;
@@ -1061,6 +1063,7 @@ export interface Database {
           first_run_claimed?: boolean;
           daily_hearts_claimed_day_key?: string | null;
           current_island_number?: number;
+          cycle_index?: number;
           boss_trial_resolved_island_number?: number | null;
           completed_stops_by_island?: Json;
           created_at?: string;
