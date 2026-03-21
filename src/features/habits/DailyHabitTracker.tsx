@@ -4195,6 +4195,15 @@ export function DailyHabitTracker({
       visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
     );
     const shouldHideBonus = !shouldShowOfferBonus && bonusPlaceholderText.length === 0;
+    const bonusClasses = ['habit-day-nav__bonus'];
+
+    if (shouldGlowBonus && !shouldHideBonus) {
+      bonusClasses.push('habit-day-nav__bonus--super-boost');
+    }
+
+    if (shouldHideBonus) {
+      bonusClasses.push('habit-day-nav__bonus--hidden');
+    }
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
@@ -4272,11 +4281,7 @@ export function DailyHabitTracker({
                 </div>
               </>
             )}
-            <div
-              className={`habit-day-nav__bonus ${
-                shouldGlowBonus ? 'habit-day-nav__bonus--super-boost' : ''
-              } ${shouldHideBonus ? 'habit-day-nav__bonus--hidden' : ''}`}
-            >
+            <div className={bonusClasses.join(' ')}>
               {shouldShowOfferBonus ? (
                 <div className="habit-day-nav__bonus-offer">
                   <span className="habit-day-nav__bonus-offer-title">{timeLimitedOfferCopy.eyebrow}</span>
