@@ -303,6 +303,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [step1PromptedIsland, setStep1PromptedIsland] = useState<number | null>(null);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
+  const [isSettingEgg, setIsSettingEgg] = useState(false);
   const [nowMs, setNowMs] = useState(Date.now());
   const [showOnboardingBooster, setShowOnboardingBooster] = useState(false);
   const [boosterName, setBoosterName] = useState('');
@@ -1639,6 +1640,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
   const handleSetEgg = async () => {
+    if (isSettingEgg) return;
+    setIsSettingEgg(true);
+    setLandingText('Setting egg...');
     const start = Date.now();
     const tier = rollEggTierWeighted();
     const hatchDurationMs = getRandomHatchDelayMs(IS_DEV_TIMER);
@@ -1669,6 +1673,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
     if (!persistResult.ok) {
       setLandingText(`Could not set egg: ${persistResult.errorMessage}`);
+      setIsSettingEgg(false);
       return;
     }
 
@@ -1708,6 +1713,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setLandingText(`Egg set! Hatchery stop completed with a ${tier} egg now incubating.`);
       setActiveStopId(null);
     }
+    setIsSettingEgg(false);
   };
 
   const handleCollectAnimal = () => {
@@ -3358,8 +3364,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                         type="button"
                         className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                         onClick={handleSetEgg}
+                        disabled={isSettingEgg}
                       >
-                        🥚 Set Egg
+                        {isSettingEgg ? 'Setting Egg...' : '🥚 Set Egg'}
                       </button>
                     </div>
                   </div>
