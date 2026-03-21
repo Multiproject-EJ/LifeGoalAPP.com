@@ -39,6 +39,7 @@ type ActionsTabProps = {
   showPointsBadges?: boolean;
   isMobileView?: boolean;
   resetToLauncherSignal?: number;
+  onViewChange?: (view: 'launcher' | 'tasks') => void;
 };
 
 type StatusMessage = {
@@ -53,6 +54,7 @@ export function ActionsTab({
   showPointsBadges = false,
   isMobileView = false,
   resetToLauncherSignal = 0,
+  onViewChange,
 }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
   const {
@@ -394,6 +396,10 @@ export function ActionsTab({
   }, [lastDeletedAction]);
 
   useEffect(() => {
+    onViewChange?.(activeView);
+  }, [activeView, onViewChange]);
+
+  useEffect(() => {
     if (isMobileView) {
       setActiveView('launcher');
       return;
@@ -509,7 +515,7 @@ export function ActionsTab({
     <div className="actions-tab">
       <header className="actions-tab__header">
         <div className="actions-tab__header-content">
-          <h2 className="actions-tab__title">Actions</h2>
+          <h2 className="actions-tab__title">Tasks</h2>
           <p className="actions-tab__subtitle">
             Your 3-day rolling todo list
           </p>
