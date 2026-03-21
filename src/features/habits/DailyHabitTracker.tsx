@@ -1808,6 +1808,9 @@ export function DailyHabitTracker({
     [habits, offerPriceByHabitId, timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
   );
   const shouldShowOfferBonus = hasClaimedVisionStar && isTimeLimitedOfferActive;
+  const bonusPlaceholderText = hasClaimedVisionStar && !shouldFadeTrackingMeta
+    ? 'Vision star claimed today.'
+    : '';
   const luckyRollDoneForToday = useMemo(() => {
     try {
       const raw = window.localStorage.getItem(`gol_lucky_roll_state_${session.user.id}`);
@@ -4191,7 +4194,16 @@ export function DailyHabitTracker({
     const shouldGlowBonus = Boolean(
       visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
     );
-    const shouldHideBonus = shouldFadeTrackingMeta && hasClaimedVisionStar && !shouldShowOfferBonus;
+    const shouldHideBonus = !shouldShowOfferBonus && bonusPlaceholderText.length === 0;
+    const bonusClasses = ['habit-day-nav__bonus'];
+
+    if (shouldGlowBonus && !shouldHideBonus) {
+      bonusClasses.push('habit-day-nav__bonus--super-boost');
+    }
+
+    if (shouldHideBonus) {
+      bonusClasses.push('habit-day-nav__bonus--hidden');
+    }
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
@@ -4269,11 +4281,7 @@ export function DailyHabitTracker({
                 </div>
               </>
             )}
-            <div
-              className={`habit-day-nav__bonus ${
-                shouldGlowBonus ? 'habit-day-nav__bonus--super-boost' : ''
-              } ${shouldHideBonus ? 'habit-day-nav__bonus--hidden' : ''}`}
-            >
+            <div className={bonusClasses.join(' ')}>
               {shouldShowOfferBonus ? (
                 <div className="habit-day-nav__bonus-offer">
                   <span className="habit-day-nav__bonus-offer-title">{timeLimitedOfferCopy.eyebrow}</span>
@@ -4286,12 +4294,8 @@ export function DailyHabitTracker({
                   ) : null}
                 </div>
               ) : (
-                <span
-                  className={`habit-day-nav__bonus-placeholder ${
-                    hasClaimedVisionStar && shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''
-                  }`}
-                >
-                  {hasClaimedVisionStar ? 'Vision star claimed today.' : ''}
+                <span className="habit-day-nav__bonus-placeholder">
+                  {bonusPlaceholderText}
                 </span>
               )}
             </div>
