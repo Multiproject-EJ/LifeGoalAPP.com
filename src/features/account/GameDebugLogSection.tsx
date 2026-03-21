@@ -31,7 +31,7 @@ export function GameDebugLogSection() {
       <p className="account-panel__eyebrow">Game logs</p>
       <h3 id="game-debug-log">Island Run debug log</h3>
       <p className="account-panel__hint">
-        Export recent Island Run events, browser errors, and matching network traces into a JSON file you can share for debugging.
+        Export recent Island Run events, browser errors, stack traces, runtime snapshots, and matching network traces into a JSON file you can share for debugging.
       </p>
       <dl className="account-panel__details">
         <div>

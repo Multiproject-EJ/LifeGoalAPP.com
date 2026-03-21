@@ -4071,7 +4071,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     >
       <RecoverableErrorBoundary
         fallback={null}
-        onError={(error) => {
+        onError={(error, errorInfo) => {
+          logIslandRunEntryDebug('level_worlds_entry_boundary_error', {
+            message: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+            reopenGameBoardOverlayOnLevelWorldsClose,
+          });
           console.error('[LevelWorldsEntryModal] render failed; closing modal to keep app usable.', error);
           setShowLevelWorldsFromEntry(false);
         }}

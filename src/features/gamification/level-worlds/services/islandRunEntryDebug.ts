@@ -30,6 +30,20 @@ type IslandRunEntryDebugNetworkEntry = {
   transferSize?: number;
 };
 
+type IslandRunDebugEnvironment = {
+  userAgent: string;
+  language: string;
+  viewport: {
+    width: number;
+    height: number;
+    devicePixelRatio: number;
+  };
+  screen: {
+    width: number;
+    height: number;
+  };
+};
+
 type IslandRunEntryDebugEvidence = {
   generatedAt: string;
   location: {
@@ -38,6 +52,8 @@ type IslandRunEntryDebugEvidence = {
     hash: string;
   };
   visibilityState: string;
+  environment: IslandRunDebugEnvironment;
+  runtimeSnapshot?: Record<string, unknown>;
   events: IslandRunEntryDebugEntry[];
   network: IslandRunEntryDebugNetworkEntry[];
 };
@@ -196,11 +212,64 @@ function collectNetworkEntries(): IslandRunEntryDebugNetworkEntry[] {
   return resources;
 }
 
+let islandRunRuntimeSnapshotProvider: (() => Record<string, unknown> | undefined) | null = null;
+
+export function setIslandRunDebugRuntimeSnapshotProvider(
+  provider: (() => Record<string, unknown> | undefined) | null,
+) {
+  islandRunRuntimeSnapshotProvider = provider;
+}
+
+function collectEnvironmentSnapshot(): IslandRunDebugEnvironment {
+  if (typeof window === 'undefined') {
+    return {
+      userAgent: 'unknown',
+      language: 'unknown',
+      viewport: {
+        width: 0,
+        height: 0,
+        devicePixelRatio: 1,
+      },
+      screen: {
+        width: 0,
+        height: 0,
+      },
+    };
+  }
+
+  return {
+    userAgent: window.navigator.userAgent,
+    language: window.navigator.language,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio || 1,
+    },
+    screen: {
+      width: window.screen?.width ?? 0,
+      height: window.screen?.height ?? 0,
+    },
+  };
+}
+
+function collectRuntimeSnapshot() {
+  try {
+    return islandRunRuntimeSnapshotProvider?.();
+  } catch (error) {
+    return {
+      runtimeSnapshotError:
+        error instanceof Error ? error.message : typeof error === 'string' ? error : 'unknown_runtime_snapshot_error',
+    };
+  }
+}
+
 function collectDebugEvidence(): IslandRunEntryDebugEvidence {
   return {
     generatedAt: new Date().toISOString(),
     location: getLocationSnapshot(),
     visibilityState: typeof document === 'undefined' ? 'unknown' : document.visibilityState,
+    environment: collectEnvironmentSnapshot(),
+    runtimeSnapshot: collectRuntimeSnapshot(),
     events: readDebugBuffer(),
     network: collectNetworkEntries(),
   };
@@ -461,6 +530,9 @@ function installGlobalDebugListeners() {
       source: event.filename,
       line: event.lineno,
       column: event.colno,
+      stack: event.error instanceof Error ? event.error.stack : undefined,
+      errorName: event.error instanceof Error ? event.error.name : undefined,
+      runtimeSnapshot: collectRuntimeSnapshot(),
     });
   });
 
@@ -473,6 +545,9 @@ function installGlobalDebugListeners() {
           : typeof reason === 'string'
             ? reason
             : 'unknown_rejection_reason',
+      stack: reason instanceof Error ? reason.stack : undefined,
+      errorName: reason instanceof Error ? reason.name : undefined,
+      runtimeSnapshot: collectRuntimeSnapshot(),
     });
   });
 

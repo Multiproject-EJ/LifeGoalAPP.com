@@ -40,7 +40,7 @@ import {
   rollEggRewards,
   type EggTier,
 } from '../services/eggService';
-import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
+import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import {
@@ -1248,6 +1248,44 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   }, [islandEggEntry]);
 
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
+
+  useEffect(() => {
+    setIslandRunDebugRuntimeSnapshotProvider(() => ({
+      islandNumber,
+      activeStopId,
+      activeEgg,
+      readyAnimal,
+      eggStage,
+      completedStops,
+      hearts,
+      coins,
+      dicePool,
+      spinTokens,
+      tokenIndex,
+      showTravelOverlay,
+      landingText,
+      timeLeftSec,
+    }));
+
+    return () => {
+      setIslandRunDebugRuntimeSnapshotProvider(null);
+    };
+  }, [
+    islandNumber,
+    activeStopId,
+    activeEgg,
+    readyAnimal,
+    eggStage,
+    completedStops,
+    hearts,
+    coins,
+    dicePool,
+    spinTokens,
+    tokenIndex,
+    showTravelOverlay,
+    landingText,
+    timeLeftSec,
+  ]);
 
   // M9-COMPLETE: home egg stage — computed independently of island egg
   const homeEggStage = useMemo(() => {
