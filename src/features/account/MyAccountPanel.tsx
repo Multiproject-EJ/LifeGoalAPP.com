@@ -5,6 +5,7 @@ import { ThemeSelector } from '../../components/ThemeSelector';
 import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel, ReminderAnalyticsDashboard } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
 import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
+import { GameDebugLogSection } from './GameDebugLogSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
@@ -510,7 +511,7 @@ export function MyAccountPanel({
           title="Developer & Analytics Tools"
           description="Advanced settings for workspace data, analytics, debugging, and testing"
           icon="🔧"
-          itemCount={6}
+          itemCount={7}
           onClick={() => setFolder1Open(true)}
         />
       </section>
@@ -621,6 +622,8 @@ export function MyAccountPanel({
             </dl>
           ) : null}
         </section>
+
+        <GameDebugLogSection />
 
         <ReminderAnalyticsDashboard session={session} />
 

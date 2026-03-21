@@ -1325,8 +1325,8 @@
 
 .island-orbit-stop {
   position: absolute;
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.7);
@@ -1336,6 +1336,7 @@
   padding: 0;
   display: grid;
   place-items: center;
+  cursor: pointer;
 }
 
 .island-orbit-stop__icon {
@@ -1360,6 +1361,7 @@
   white-space: nowrap;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.52);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
 }
 
 .island-orbit-stop--scene-1 .island-orbit-stop__label,
@@ -1991,10 +1993,13 @@
 }
 
 .island-hatchery-card__stage-art {
-  width: clamp(88px, 24vw, 120px);
-  height: clamp(88px, 24vw, 120px);
+  display: block;
+  width: min(100%, clamp(180px, 52vw, 280px));
+  height: auto;
+  max-height: min(34dvh, 280px);
   object-fit: contain;
-  margin: 0.2rem 0;
+  align-self: center;
+  margin: 0.1rem auto 0.55rem;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
 }
 
