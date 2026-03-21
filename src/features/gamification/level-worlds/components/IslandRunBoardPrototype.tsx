@@ -1165,11 +1165,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       const verticalPadding = 44;
       const labelOffsetY = index % 2 === 0 ? -38 : 38;
 
+      let visualX = clamp(position.x, horizontalPadding, boardSize.width - horizontalPadding);
+      let visualY = clamp(position.y, verticalPadding, boardSize.height - verticalPadding);
+
+      const overlapsBackButtonZone = visualX < 112 && visualY < 128;
+      if (overlapsBackButtonZone) {
+        visualX = Math.max(visualX, 100);
+        visualY = Math.max(visualY, 152);
+      }
+
       return {
         id: stop.stopId,
         label: stop.title.replace(/^\S+\s/, ''),
-        x: clamp(position.x, horizontalPadding, boardSize.width - horizontalPadding),
-        y: clamp(position.y, verticalPadding, boardSize.height - verticalPadding),
+        x: visualX,
+        y: visualY,
         state: stopStateMap.get(stop.stopId) ?? 'active',
         icon: getStopIcon(stop.kind, stop.stopId),
         labelOffsetY,
