@@ -20,6 +20,7 @@ import {
 } from '../../services/habitsV2';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress } from './scheduleInterpreter';
 import { updateSpinsAvailable } from '../../services/dailySpin';
+import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
@@ -118,6 +119,8 @@ export function UnifiedTodayView({
     setError(null);
 
     try {
+      await autoResumeDueHabits(session.user.id);
+
       // Load habits
       const { data: habitsData, error: habitsError } = await listHabitsV2();
       if (habitsError) throw new Error(habitsError.message);

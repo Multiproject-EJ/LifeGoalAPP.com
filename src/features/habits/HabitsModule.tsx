@@ -15,6 +15,7 @@ import { buildEnhancedRationale, type EnhancedRationaleResult } from './aiRation
 import type { Database } from '../../lib/database.types';
 import type { TimerLaunchContext } from '../timer/timerSession';
 import { scheduleHabitNotifications, cancelHabitNotifications } from '../../services/habitAlertNotifications';
+import { autoResumeDueHabits, isHabitReadyToResume } from '../../services/habitLifecycleAutoResume';
 import './HabitsModule.css';
 import {
   AUTO_PROGRESS_TIERS,
@@ -31,6 +32,7 @@ import {
   DEFAULT_DONEISH_CONFIG,
 } from './progressGrading';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { HabitPauseDialog } from './HabitPauseDialog';
 
 // Check if habit suggestions feature is enabled via environment variable
 const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
@@ -75,18 +77,6 @@ function getHabitEnvironmentReviewPrompt(habit: HabitV2Row): { title: string; de
     detail: 'This habit has a recent environment setup on file.',
     tone: '#0f766e',
   };
-}
-
-function isHabitReadyToResume(habit: HabitV2Row): boolean {
-  if (getHabitLifecycleStatus(habit) !== 'paused' || !habit.resume_on) {
-    return false;
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const resumeOn = new Date(habit.resume_on);
-  resumeOn.setHours(0, 0, 0, 0);
-  return resumeOn.getTime() <= today.getTime();
 }
 
 export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) {
@@ -172,6 +162,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   } | null>(null);
   const [lifecycleReason, setLifecycleReason] = useState('');
   const [lifecycleResumeOn, setLifecycleResumeOn] = useState('');
+  const [lifecycleSaving, setLifecycleSaving] = useState(false);
   
   // State for AI-enhanced rationales (by habit ID)
   const [enhancedRationales, setEnhancedRationales] = useState<Record<string, EnhancedRationaleResult>>({});
@@ -238,6 +229,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       setStreaksError(null);
 
       try {
+        await autoResumeDueHabits(session.user.id);
+
         // Load habits
         const { data: habitsData, error: habitsError } = await listHabitsV2({ includeInactive: true });
         if (habitsError) {
@@ -695,7 +688,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     setLifecycleResumeOn('');
   };
 
-  const handleConfirmLifecycleDialog = async () => {
+  const handleConfirmLifecycleDialog = async (overrideOptions?: { reason?: string; resumeOn?: string | null }) => {
     if (!lifecycleDialog) {
       return;
     }
@@ -706,13 +699,21 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       return;
     }
 
-    await handleLifecycleAction(habit, lifecycleDialog.action, {
-      reason: lifecycleReason.trim() || undefined,
-      resumeOn: lifecycleDialog.action === 'pause' ? lifecycleResumeOn || undefined : undefined,
-    });
-    setLifecycleDialog(null);
-    setLifecycleReason('');
-    setLifecycleResumeOn('');
+    setLifecycleSaving(true);
+    try {
+      const nextReason = overrideOptions?.reason ?? lifecycleReason.trim();
+      const nextResumeOn = overrideOptions?.resumeOn ?? lifecycleResumeOn;
+
+      await handleLifecycleAction(habit, lifecycleDialog.action, {
+        reason: nextReason || undefined,
+        resumeOn: lifecycleDialog.action === 'pause' ? nextResumeOn || undefined : undefined,
+      });
+      setLifecycleDialog(null);
+      setLifecycleReason('');
+      setLifecycleResumeOn('');
+    } finally {
+      setLifecycleSaving(false);
+    }
   };
 
   const handleResumeReadyHabits = async () => {
@@ -1002,7 +1003,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               >
                 <div style={{ fontWeight: 700, color: '#92400e', marginBottom: '0.25rem' }}>Pause</div>
                 <div style={{ color: '#92400e', fontSize: '0.8125rem', marginBottom: '0.6rem', lineHeight: 1.45 }}>
-                  Use this when you plan to bring the habit back. It leaves the habit intact and can mark a future date when it is ready for manual resume.
+                  Use this when you plan to bring the habit back. It leaves the habit intact, and if you choose a return date the app will auto-resume it on that day.
                 </div>
                 <button
                   type="button"
@@ -2000,7 +2001,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                         {resumeReadyHabits.map((habit) => habit.title).join(', ')}
                       </div>
                       <div style={{ color: '#166534', fontSize: '0.8125rem', marginTop: '0.35rem' }}>
-                        “Resume on” does not auto-reactivate habits — it flags them here so you can decide when to bring them back.
+                        Due-date resumes now happen automatically when the app refreshes. Use this list if an older paused habit still needs a manual resume.
                       </div>
                     </div>
                     <button
@@ -2729,11 +2730,37 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       )}
 
       {/* Archive Confirmation Dialog */}
-      {lifecycleDialog && (
-        <div
+      {lifecycleDialog?.action === 'pause' ? (
+        <HabitPauseDialog
+          open
+          habitTitle={lifecycleDialog.habitTitle}
+          initialReason={lifecycleReason}
+          initialResumeOn={lifecycleResumeOn}
+          saving={lifecycleSaving}
+          onClose={() => {
+            if (lifecycleSaving) {
+              return;
+            }
+            setLifecycleDialog(null);
+            setLifecycleReason('');
+            setLifecycleResumeOn('');
+          }}
+          onConfirm={async ({ reason, resumeOn }) => {
+            setLifecycleReason(reason ?? '');
+            setLifecycleResumeOn(resumeOn ?? '');
+            await handleConfirmLifecycleDialog({ reason, resumeOn });
+          }}
+        />
+      ) : null}
+
+      {lifecycleDialog?.action === 'deactivate' && (
+        <div 
           style={{
             position: 'fixed',
-            inset: 0,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             background: 'rgba(0, 0, 0, 0.5)',
             display: 'flex',
             alignItems: 'center',
@@ -2741,9 +2768,11 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
             zIndex: 1000,
           }}
           onClick={() => {
+            if (lifecycleSaving) {
+              return;
+            }
             setLifecycleDialog(null);
             setLifecycleReason('');
-            setLifecycleResumeOn('');
           }}
         >
           <div
@@ -2760,28 +2789,24 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="lifecycle-dialog-title" style={{ margin: '0 0 0.75rem 0', fontSize: '1.125rem' }}>
-              {lifecycleDialog.action === 'pause' ? 'Pause habit?' : 'Deactivate habit?'}
+              Deactivate habit?
             </h3>
             <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>
-              {lifecycleDialog.action === 'pause'
-                ? `Pause "${lifecycleDialog.habitTitle}" and remove it from today's active checklist until you resume it.`
-                : `Deactivate "${lifecycleDialog.habitTitle}" and move it out of the active habit list while keeping its history.`}
+              {`Deactivate "${lifecycleDialog.habitTitle}" and move it out of the active habit list while keeping its history.`}
             </p>
             <div
               style={{
                 borderRadius: '8px',
                 padding: '0.75rem',
                 marginBottom: '1rem',
-                background: lifecycleDialog.action === 'pause' ? '#fffbeb' : '#f8fafc',
-                border: lifecycleDialog.action === 'pause' ? '1px solid #fde68a' : '1px solid #cbd5e1',
-                color: lifecycleDialog.action === 'pause' ? '#92400e' : '#475569',
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                color: '#475569',
                 fontSize: '0.8125rem',
                 lineHeight: 1.5,
               }}
             >
-              {lifecycleDialog.action === 'pause'
-                ? 'Best for temporary breaks. You can optionally choose a “resume on” date below to mark when this habit should be ready for manual resume.'
-                : 'Best for habits you are stepping away from longer-term. The habit leaves the active routine, keeps its history, and can still be reactivated later.'}
+              Best for habits you are stepping away from longer-term. The habit leaves the active routine, keeps its history, and can still be reactivated later.
             </div>
 
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
@@ -2790,7 +2815,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
             <textarea
               value={lifecycleReason}
               onChange={(e) => setLifecycleReason(e.target.value)}
-              placeholder={lifecycleDialog.action === 'pause' ? 'Why are you pausing this habit?' : 'Why are you deactivating this habit?'}
+              placeholder="Why are you deactivating this habit?"
               style={{
                 width: '100%',
                 minHeight: '90px',
@@ -2800,41 +2825,18 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                 fontSize: '0.875rem',
                 resize: 'vertical',
                 boxSizing: 'border-box',
-                marginBottom: lifecycleDialog.action === 'pause' ? '1rem' : '1.5rem',
+                marginBottom: '1.5rem',
               }}
             />
-
-            {lifecycleDialog.action === 'pause' && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
-                  Resume on (optional)
-                </label>
-                <p style={{ margin: '0 0 0.5rem 0', color: '#64748b', fontSize: '0.8125rem', lineHeight: 1.45 }}>
-                  This date does not automatically resume the habit. It simply marks when the habit should show as ready for you to resume manually.
-                </p>
-                <input
-                  type="date"
-                  value={lifecycleResumeOn}
-                  onChange={(e) => setLifecycleResumeOn(e.target.value)}
-                  min={new Date().toISOString().slice(0, 10)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-            )}
 
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => {
+                  if (lifecycleSaving) {
+                    return;
+                  }
                   setLifecycleDialog(null);
                   setLifecycleReason('');
-                  setLifecycleResumeOn('');
                 }}
                 style={{
                   padding: '0.5rem 1rem',
@@ -2846,6 +2848,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                   fontWeight: 500,
                   cursor: 'pointer',
                 }}
+                disabled={lifecycleSaving}
               >
                 Cancel
               </button>
@@ -2853,7 +2856,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                 onClick={() => void handleConfirmLifecycleDialog()}
                 style={{
                   padding: '0.5rem 1rem',
-                  background: lifecycleDialog.action === 'pause' ? '#f59e0b' : '#334155',
+                  background: '#334155',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
@@ -2861,8 +2864,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
                   fontWeight: 600,
                   cursor: 'pointer',
                 }}
+                disabled={lifecycleSaving}
               >
-                {lifecycleDialog.action === 'pause' ? 'Pause habit' : 'Deactivate habit'}
+                {lifecycleSaving ? 'Updating…' : 'Deactivate habit'}
               </button>
             </div>
           </div>

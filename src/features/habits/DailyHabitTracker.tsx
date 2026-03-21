@@ -39,6 +39,7 @@ import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
 import { archiveHabitV2, updateHabitFullV2, pauseHabitV2, deactivateHabitV2, type HabitV2Row } from '../../services/habitsV2';
+import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import {
   AUTO_PROGRESS_TIERS,
@@ -107,6 +108,7 @@ import {
 } from '../../services/commitmentContracts';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
+import { HabitPauseDialog } from './HabitPauseDialog';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -423,6 +425,7 @@ export function DailyHabitTracker({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
   const [lifecycleActionHabitIds, setLifecycleActionHabitIds] = useState<Set<string>>(new Set());
+  const [todayPauseDialogHabit, setTodayPauseDialogHabit] = useState<HabitWithGoal | null>(null);
   const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiDraftByHabitId, setReviewAiDraftByHabitId] = useState<Record<string, HabitReviewAiDraft>>({});
   const [analysisHabitId, setAnalysisHabitId] = useState<string | null>(null);
@@ -2797,6 +2800,10 @@ export function DailyHabitTracker({
     // 4. Add RLS policies to ensure users can only access their own monthly data
 
     try {
+      if (!isDemoExperience) {
+        await autoResumeDueHabits(session.user.id);
+      }
+
       const { data: habitData, error: habitError } = await fetchHabitsForUser(session.user.id);
       if (habitError) throw habitError;
 
@@ -4018,7 +4025,7 @@ export function DailyHabitTracker({
   };
 
   const handleTodayLifecycleAction = useCallback(
-    async (habit: HabitWithGoal, action: 'pause' | 'deactivate') => {
+    async (habit: HabitWithGoal, action: 'pause' | 'deactivate', options?: { reason?: string; resumeOn?: string | null }) => {
       if (!isConfigured || isDemoExperience) {
         setErrorMessage('Connect Supabase to update habit lifecycle.');
         return;
@@ -4027,11 +4034,15 @@ export function DailyHabitTracker({
         return;
       }
 
-      const confirmed = window.confirm(
+      if (action === 'pause' && !options) {
+        setTodayPauseDialogHabit(habit);
+        return;
+      }
+
+      const confirmed =
         action === 'pause'
-          ? `Pause "${habit.name}" and remove it from today's checklist until you resume it?`
-          : `Deactivate "${habit.name}" and move it out of your active habits while keeping its history?`,
-      );
+          ? true
+          : window.confirm(`Deactivate "${habit.name}" and move it out of your active habits while keeping its history?`);
       if (!confirmed) {
         return;
       }
@@ -4042,7 +4053,10 @@ export function DailyHabitTracker({
       try {
         const result =
           action === 'pause'
-            ? await pauseHabitV2(habit.id, { reason: 'today_screen_pause' })
+            ? await pauseHabitV2(habit.id, {
+                reason: options?.reason ?? 'today_screen_pause',
+                resumeOn: options?.resumeOn ?? null,
+              })
             : await deactivateHabitV2(habit.id, { reason: 'today_screen_deactivate' });
         if (result.error) {
           throw new Error(result.error.message);
@@ -4061,9 +4075,12 @@ export function DailyHabitTracker({
           delete next[habit.id];
           return next;
         });
+        setTodayPauseDialogHabit((current) => (current?.id === habit.id ? null : current));
         setErrorMessage(
           action === 'pause'
-            ? `Paused "${habit.name}" and removed it from today until you resume it.`
+            ? options?.resumeOn
+              ? `Paused "${habit.name}" until ${new Date(`${options.resumeOn}T00:00:00`).toLocaleDateString()}. It will return automatically on that date.`
+              : `Paused "${habit.name}" until you resume it from the Habits tab.`
             : `Deactivated "${habit.name}" and removed it from today's active habits.`,
         );
       } catch (error) {
@@ -7105,6 +7122,25 @@ export function DailyHabitTracker({
         {habitVisionPreviewModal}
         {alertConfigModal}
         {editHabitModal}
+        {todayPauseDialogHabit ? (
+          <HabitPauseDialog
+            open
+            habitTitle={todayPauseDialogHabit.name}
+            saving={lifecycleActionHabitIds.has(todayPauseDialogHabit.id)}
+            onClose={() => {
+              if (lifecycleActionHabitIds.has(todayPauseDialogHabit.id)) {
+                return;
+              }
+              setTodayPauseDialogHabit(null);
+            }}
+            onConfirm={async ({ reason, resumeOn }) => {
+              await handleTodayLifecycleAction(todayPauseDialogHabit, 'pause', {
+                reason: reason ?? 'today_screen_pause',
+                resumeOn: resumeOn ?? null,
+              });
+            }}
+          />
+        ) : null}
         {/* Celebration animation for habit completion */}
         {showCelebration && (
           <CelebrationAnimation
@@ -7387,6 +7423,26 @@ export function DailyHabitTracker({
           </div>
         </div>
       )}
+
+      {todayPauseDialogHabit ? (
+        <HabitPauseDialog
+          open
+          habitTitle={todayPauseDialogHabit.name}
+          saving={lifecycleActionHabitIds.has(todayPauseDialogHabit.id)}
+          onClose={() => {
+            if (lifecycleActionHabitIds.has(todayPauseDialogHabit.id)) {
+              return;
+            }
+            setTodayPauseDialogHabit(null);
+          }}
+          onConfirm={async ({ reason, resumeOn }) => {
+            await handleTodayLifecycleAction(todayPauseDialogHabit, 'pause', {
+              reason: reason ?? 'today_screen_pause',
+              resumeOn: resumeOn ?? null,
+            });
+          }}
+        />
+      ) : null}
 
       {/* Celebration animation for habit completion */}
       {showCelebration && (
