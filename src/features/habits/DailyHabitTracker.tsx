@@ -4191,7 +4191,21 @@ export function DailyHabitTracker({
     const shouldGlowBonus = Boolean(
       visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
     );
-    const shouldHideBonus = shouldFadeTrackingMeta && hasClaimedVisionStar && !shouldShowOfferBonus;
+    const shouldHideBonus = !shouldShowOfferBonus;
+    const hasVisibleCompactNavContent = showNavigationControls || !shouldHideBonus || Boolean(visionRewardError);
+    const bonusClasses = ['habit-day-nav__bonus'];
+
+    if (shouldGlowBonus && !shouldHideBonus) {
+      bonusClasses.push('habit-day-nav__bonus--super-boost');
+    }
+
+    if (shouldHideBonus) {
+      bonusClasses.push('habit-day-nav__bonus--hidden');
+    }
+
+    if (isCompactVariant && !hasVisibleCompactNavContent) {
+      return null;
+    }
 
     return (
       <div className={navClasses.join(' ')} role="group" aria-label="Choose day to track habits">
@@ -4269,11 +4283,7 @@ export function DailyHabitTracker({
                 </div>
               </>
             )}
-            <div
-              className={`habit-day-nav__bonus ${
-                shouldGlowBonus ? 'habit-day-nav__bonus--super-boost' : ''
-              } ${shouldHideBonus ? 'habit-day-nav__bonus--hidden' : ''}`}
-            >
+            <div className={bonusClasses.join(' ')}>
               {shouldShowOfferBonus ? (
                 <div className="habit-day-nav__bonus-offer">
                   <span className="habit-day-nav__bonus-offer-title">{timeLimitedOfferCopy.eyebrow}</span>
@@ -4285,15 +4295,7 @@ export function DailyHabitTracker({
                     </span>
                   ) : null}
                 </div>
-              ) : (
-                <span
-                  className={`habit-day-nav__bonus-placeholder ${
-                    hasClaimedVisionStar && shouldFadeTrackingMeta ? 'habit-day-nav__fade' : ''
-                  }`}
-                >
-                  {hasClaimedVisionStar ? 'Vision star claimed today.' : ''}
-                </span>
-              )}
+              ) : null}
             </div>
             {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
           </div>
