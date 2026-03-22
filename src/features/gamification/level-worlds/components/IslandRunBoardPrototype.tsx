@@ -624,6 +624,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    const persistedStops = runtimeState.completedStopsByIsland?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? [];
     if (OPEN_HATCHERY_ON_LOAD) {
       if (shouldAutoOpenIslandStopOnLoad({
         requestedStopId: 'hatchery',
