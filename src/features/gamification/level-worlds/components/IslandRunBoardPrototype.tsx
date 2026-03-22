@@ -626,6 +626,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    const persistedStops = runtimeState.completedStopsByIsland?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? [];
     if (OPEN_HATCHERY_ON_LOAD) {
       if (shouldAutoOpenIslandStopOnLoad({
         requestedStopId: 'hatchery',
@@ -3110,6 +3111,178 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         collected_creatures: collectedCreatures.length,
       },
     });
+  };
+
+  const closeSanctuaryPanel = () => {
+    setShowSanctuaryPanel(false);
+    setSelectedSanctuaryCreatureId(null);
+    setSanctuaryFeedback(null);
+  };
+
+  const handleSetActiveCompanion = (creatureId: string | null) => {
+    setActiveCompanionId(creatureId);
+    saveActiveCompanionId(session.user.id, creatureId);
+    const selected = creatureId ? collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null : null;
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'sanctuary_active_companion_changed',
+        island_number: islandNumber,
+        creature_id: selected?.creature.id ?? null,
+        creature_name: selected?.creature.name ?? null,
+        active: Boolean(selected),
+      },
+    });
+    logIslandRunEntryDebug('sanctuary_active_companion_changed', {
+      islandNumber,
+      creatureId: selected?.creature.id ?? null,
+      creatureName: selected?.creature.name ?? null,
+      active: Boolean(selected),
+    });
+    setLandingText(
+      selected
+        ? `${selected.creature.name} is now your active companion.`
+        : 'Active companion cleared.',
+    );
+  };
+
+
+  const handleOpenSanctuaryCreature = (creatureId: string) => {
+    setSelectedSanctuaryCreatureId(creatureId);
+    setSanctuaryFeedback(null);
+    setSanctuaryClockMs(Date.now());
+  };
+
+  const handleFeedSanctuaryCreature = (creatureId: string, treatType: CreatureTreatType) => {
+    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+    if (!target) return;
+    const nowMs = Date.now();
+    const nextFeedAtMs = target.lastFedAtMs ? target.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS : 0;
+    if (nextFeedAtMs > nowMs) {
+      setSanctuaryFeedback(`${target.creature.name} is still full. Feed again in ${formatCooldownRemaining(nextFeedAtMs - nowMs)}.`);
+      setSanctuaryClockMs(nowMs);
+      return;
+    }
+    const treatOption = CREATURE_TREAT_OPTIONS.find((option) => option.type === treatType);
+    if (!treatOption) return;
+    if (creatureTreatInventory[treatType] <= 0) {
+      setSanctuaryFeedback(`No ${treatOption.label.toLowerCase()} left. Earn more by collecting creatures.`);
+      return;
+    }
+    setCreatureTreatInventory(spendCreatureTreatForUser(session.user.id, treatType));
+    const previousBondLevel = target.bondLevel;
+    setCreatureCollection(feedCreatureForUser({
+      userId: session.user.id,
+      creatureId,
+      fedAtMs: nowMs,
+      xpGain: treatOption.xpGain,
+    }));
+    setSanctuaryClockMs(nowMs);
+    const nextBondXp = target.bondXp + treatOption.xpGain;
+    const nextBondLevel = Math.floor(nextBondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
+    const rewardPreview = getBondMilestoneReward(nextBondLevel);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'sanctuary_creature_fed',
+        island_number: islandNumber,
+        creature_id: target.creature.id,
+        creature_name: target.creature.name,
+        treat_type: treatType,
+        xp_gain: treatOption.xpGain,
+        previous_bond_level: previousBondLevel,
+        next_bond_level: nextBondLevel,
+      },
+    });
+    logIslandRunEntryDebug('sanctuary_creature_fed', {
+      islandNumber,
+      creatureId: target.creature.id,
+      creatureName: target.creature.name,
+      treatType,
+      xpGain: treatOption.xpGain,
+      previousBondLevel,
+      nextBondLevel,
+    });
+    setSanctuaryFeedback(
+      nextBondLevel > previousBondLevel
+        ? rewardPreview
+          ? `${target.creature.name} loved the ${treatOption.label.toLowerCase()} and reached bond level ${nextBondLevel}! ${rewardPreview.label} is ready to claim.`
+          : `${target.creature.name} loved the ${treatOption.label.toLowerCase()} and reached bond level ${nextBondLevel}!`
+        : `Fed ${target.creature.name} a ${treatOption.label.toLowerCase()}. Bond progress increased by ${treatOption.xpGain}.`,
+    );
+    setLandingText(`${target.creature.name} enjoyed a ${treatOption.label.toLowerCase()} and feels closer to you.`);
+    playIslandRunSound('encounter_resolve');
+    triggerIslandRunHaptic('reward_claim');
+  };
+
+
+  const handleClaimSanctuaryBondReward = (creatureId: string, milestoneLevel: number) => {
+    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+    const reward = getBondMilestoneReward(milestoneLevel);
+    if (!target || !reward) return;
+    const unclaimedMilestones = getUnclaimedBondMilestones(target);
+    if (!unclaimedMilestones.includes(milestoneLevel)) return;
+
+    setCreatureCollection(claimCreatureBondMilestoneForUser({
+      userId: session.user.id,
+      creatureId,
+      milestoneLevel,
+    }));
+
+    const rewardCoins = reward.coins ?? 0;
+    const rewardHearts = reward.hearts ?? 0;
+    const rewardSpinTokens = reward.spinTokens ?? 0;
+
+    if (rewardCoins > 0) {
+      setCoins((current) => current + rewardCoins);
+      void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
+    }
+    if (rewardHearts > 0) {
+      setHearts((current) => Math.min(MAX_HEARTS, current + rewardHearts));
+      void awardHearts(session.user.id, rewardHearts, 'shooter_blitz', 'Island Run creature bond milestone');
+    }
+    if (rewardSpinTokens > 0) {
+      setSpinTokens((current) => current + rewardSpinTokens);
+    }
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'sanctuary_bond_reward_claimed',
+        island_number: islandNumber,
+        creature_id: target.creature.id,
+        creature_name: target.creature.name,
+        milestone_level: milestoneLevel,
+        reward_coins: rewardCoins,
+        reward_hearts: rewardHearts,
+        reward_spin_tokens: rewardSpinTokens,
+      },
+    });
+    logIslandRunEntryDebug('sanctuary_bond_reward_claimed', {
+      islandNumber,
+      creatureId: target.creature.id,
+      creatureName: target.creature.name,
+      milestoneLevel,
+      rewardCoins,
+      rewardHearts,
+      rewardSpinTokens,
+    });
+    setSanctuaryFeedback(`${target.creature.name} claimed ${reward.label}: ${reward.summary}.`);
+    setLandingText(`${target.creature.name} bond milestone claimed: ${reward.summary}.`);
+    playIslandRunSound('market_purchase_success');
+    triggerIslandRunHaptic('reward_claim');
+  };
+
+  const handleStoryRewardClaim = (coinsReward: number) => {
+    if (coinsReward <= 0) {
+      return;
+    }
+    setCoins((current) => current + coinsReward);
+    void awardGold(session.user.id, coinsReward, 'shooter_blitz', 'island_story_episode_reward');
+    setLandingText(`Story reward claimed: +${coinsReward} coins.`);
   };
 
   const closeSanctuaryPanel = () => {
