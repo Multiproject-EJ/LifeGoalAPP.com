@@ -32,5 +32,5 @@ for (const suite of suites) {
 console.log(`\nIsland Run tests complete: ${passed} passed, ${failed} failed.`);
 
 if (failed > 0) {
-  process.exitCode = 1;
+  throw new Error(`Island Run tests failed: ${failed} case${failed === 1 ? '' : 's'} failing.`);
 }
