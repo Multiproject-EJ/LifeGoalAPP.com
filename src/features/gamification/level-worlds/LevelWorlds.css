@@ -1962,6 +1962,72 @@
   margin: 0.25rem 0;
 }
 
+.island-stop-modal__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.island-stop-modal__help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(163, 231, 255, 0.42);
+  background: rgba(127, 201, 233, 0.16);
+  color: #d5f8ff;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.island-stop-modal__help-btn:hover:not(:disabled) {
+  background: rgba(127, 201, 233, 0.28);
+  border-color: rgba(163, 231, 255, 0.62);
+  transform: translateY(-1px);
+}
+
+.island-stop-modal__help-btn:focus-visible {
+  outline: 2px solid rgba(170, 236, 255, 0.96);
+  outline-offset: 2px;
+}
+
+.island-stop-modal__help-card {
+  margin-top: 0.55rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(145, 225, 255, 0.32);
+  background: rgba(11, 31, 46, 0.78);
+  color: rgba(221, 245, 255, 0.92);
+}
+
+.island-stop-modal__help-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 760;
+  color: #f0fcff;
+}
+
+.island-stop-modal__help-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.28rem;
+  color: rgba(205, 236, 248, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.42;
+}
+
+.island-stop-modal__help-list li {
+  margin: 0;
+}
+
 .island-hatchery-card__actions {
   display: flex;
   flex-wrap: wrap;
