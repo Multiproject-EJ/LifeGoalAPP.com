@@ -1789,12 +1789,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     [activeCompanionId, collectedCreatures],
   );
   const activeCompanionBonus = useMemo(
-    () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature) : null),
+    () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature, activeCompanion.bondLevel) : null),
     [activeCompanion],
   );
   const selectedSanctuaryCreature = useMemo(
     () => collectedCreatures.find((creature) => creature.creatureId === selectedSanctuaryCreatureId) ?? null,
     [collectedCreatures, selectedSanctuaryCreatureId],
+  );
+  const selectedSanctuaryCreatureBonus = useMemo(
+    () => (selectedSanctuaryCreature ? getCompanionBonusForCreature(selectedSanctuaryCreature.creature, selectedSanctuaryCreature.bondLevel) : null),
+    [selectedSanctuaryCreature],
   );
 
   useEffect(() => {
@@ -4142,9 +4146,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   />
                 </div>
                 <p className="island-run-sanctuary-card__meta">
-                  Companion bonus: <strong>{getCompanionBonusForCreature(selectedSanctuaryCreature.creature).label}</strong>
+                  Companion bonus: <strong>{selectedSanctuaryCreatureBonus?.label ?? '—'}</strong>
                 </p>
-                <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(selectedSanctuaryCreature.creature).description}</p>
+                <p className="island-run-sanctuary-card__meta">{selectedSanctuaryCreatureBonus?.description}</p>
+                <p className="island-run-sanctuary-card__meta">
+                  Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
+                </p>
                 <div className="island-hatchery-card__actions">
                   <button
                     type="button"
@@ -4211,9 +4218,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Bond level: <strong>{creature.bondLevel}</strong> · Progress <strong>{creature.bondXp % CREATURE_BOND_XP_PER_LEVEL}/{CREATURE_BOND_XP_PER_LEVEL}</strong></p>
                       <p className="island-run-sanctuary-card__meta">
-                        Companion bonus: <strong>{getCompanionBonusForCreature(creature.creature).label}</strong>
+                        Companion bonus: <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).label}</strong>
                       </p>
-                      <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(creature.creature).description}</p>
+                      <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(creature.creature, creature.bondLevel).description}</p>
+                      <p className="island-run-sanctuary-card__meta">
+                        Next boost at bond level <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).nextBondMilestoneLevel}</strong>
+                      </p>
                       <div className="island-run-sanctuary-card__progress" aria-hidden="true">
                         <span
                           className="island-run-sanctuary-card__progress-fill"

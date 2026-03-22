@@ -13,6 +13,19 @@ export interface CreatureCompanionBonus {
   amount: number;
   label: string;
   description: string;
+  bondLevel: number;
+  nextBondMilestoneLevel: number;
+}
+
+function getScaledBonusAmount(baseAmount: number, bondLevel: number, growthStep: number): number {
+  const safeBondLevel = Math.max(1, Math.floor(bondLevel));
+  const bonusSteps = Math.floor((safeBondLevel - 1) / growthStep);
+  return baseAmount + bonusSteps;
+}
+
+function getNextBondMilestoneLevel(bondLevel: number, growthStep: number): number {
+  const safeBondLevel = Math.max(1, Math.floor(bondLevel));
+  return Math.floor((safeBondLevel - 1) / growthStep) * growthStep + growthStep + 1;
 }
 
 const COMMON_CREATURES: CreatureDefinition[] = [
@@ -96,27 +109,36 @@ export function selectCreatureForEgg(options: {
   return pool[index] ?? pool[0];
 }
 
-export function getCompanionBonusForCreature(creature: CreatureDefinition): CreatureCompanionBonus {
+export function getCompanionBonusForCreature(creature: CreatureDefinition, bondLevel = 1): CreatureCompanionBonus {
   if (['Guardian', 'Caregiver', 'Mentor', 'Peacemaker'].includes(creature.affinity)) {
+    const amount = getScaledBonusAmount(1, bondLevel, 5);
     return {
       effect: 'bonus_heart',
-      amount: 1,
-      label: '+1 Heart',
-      description: 'Supportive companion — grants +1 heart at the start of each island.',
+      amount,
+      label: `+${amount} Heart${amount === 1 ? '' : 's'}` ,
+      description: `Supportive companion — grants +${amount} heart${amount === 1 ? '' : 's'} at the start of each island. Grows every 5 bond levels.`,
+      bondLevel: Math.max(1, Math.floor(bondLevel)),
+      nextBondMilestoneLevel: getNextBondMilestoneLevel(bondLevel, 5),
     };
   }
   if (['Explorer', 'Visionary', 'Creator', 'Catalyst'].includes(creature.affinity)) {
+    const amount = getScaledBonusAmount(1, bondLevel, 5);
     return {
       effect: 'bonus_spin',
-      amount: 1,
-      label: '+1 Spin',
-      description: 'Momentum companion — grants +1 spin token at the start of each island.',
+      amount,
+      label: `+${amount} Spin${amount === 1 ? '' : 's'}`,
+      description: `Momentum companion — grants +${amount} spin token${amount === 1 ? '' : 's'} at the start of each island. Grows every 5 bond levels.`,
+      bondLevel: Math.max(1, Math.floor(bondLevel)),
+      nextBondMilestoneLevel: getNextBondMilestoneLevel(bondLevel, 5),
     };
   }
+  const amount = 4 + (Math.floor((Math.max(1, Math.floor(bondLevel)) - 1) / 3) * 2);
   return {
     effect: 'bonus_dice',
-    amount: 4,
-    label: '+4 Dice',
-    description: 'Steady companion — grants +4 dice at the start of each island.',
+    amount,
+    label: `+${amount} Dice`,
+    description: `Steady companion — grants +${amount} dice at the start of each island. Grows by +2 every 3 bond levels.`,
+    bondLevel: Math.max(1, Math.floor(bondLevel)),
+    nextBondMilestoneLevel: getNextBondMilestoneLevel(bondLevel, 3),
   };
 }
