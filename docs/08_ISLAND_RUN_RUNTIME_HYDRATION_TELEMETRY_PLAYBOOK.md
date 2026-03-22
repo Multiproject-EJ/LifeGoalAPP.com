@@ -11,6 +11,17 @@ This playbook covers client telemetry emitted during Island Run runtime-state hy
 - Success stage: `island_run_runtime_state_hydrated`
 - Unexpected failure stage: `island_run_runtime_state_hydration_failed_unexpected`
 
+## Success metadata fields to inspect
+- `source`
+- `current_island_number`
+- `boss_trial_resolved_island_number`
+- `cycle_index`
+- `token_index`
+- `hearts`
+- `coins`
+- `spin_tokens`
+- `dice_pool`
+
 ## Hydration source values (success event)
 - `table`
 - `fallback_demo_or_no_client`
@@ -43,3 +54,6 @@ This playbook covers client telemetry emitted during Island Run runtime-state hy
 - `minHydrationEvents24h = 20` (guardrail to avoid low-volume false positives)
 
 These defaults are represented in code (`ISLAND_RUN_RUNTIME_HYDRATION_ALERT_DEFAULTS`) and mirrored in SQL seed queries.
+
+## Debug helper
+- When `?debugBoard=1` or QA hooks are enabled, use `window.__islandRunEntryDebugRuntimeStateSummary()` to inspect the latest hydration and persist-success payloads from the in-browser debug buffer.
