@@ -173,7 +173,7 @@
 - [ ] **Stop icon art** — custom stop icon art not yet present
 
 #### Backend / Data
-- [ ] **Full per-run state persistence** — in-flight state (current token index, per-stop completion flags, current hearts/coins/spin tokens) is held in React `useState` and lost on page reload; only `currentIslandNumber`, `bossTrialResolvedIslandNumber`, and egg state are persisted to Supabase
+- [~] **Full per-run state persistence** — stop flags, token index, hearts/coins/spin tokens, and dice pool now persist in runtime-state storage; broader integration verification and live-schema confirmation still remain
 - [ ] **`island_run_runtime_state` migration** — table schema needs to be confirmed applied (migration file lives in `sql/` or `supabase/`); no automated migration CI check
 - [ ] **Backend tables for stop objectives** — no Supabase tables for stop-level completion records, encounter outcomes, or market purchase history beyond the prototype markers
 - [ ] **RLS policies** — `island_run_runtime_state` RLS is specified in docs but needs explicit verification against the live schema
@@ -203,7 +203,7 @@
 | 2 | **M11B** | First real minigame wired through the M11A framework (e.g. `ShooterBlitz` → minigame stop) | `IslandRunBoardPrototype.tsx`, `ShooterBlitz` |
 | 3 | **M3B** | Utility stop — real objective (e.g. shield / recovery action) wired and clearable | `IslandRunBoardPrototype.tsx`, `islandRunStops.ts` |
 | 4 | **M6B** | Encounter tile — real mini-challenge content, reward table, and rarity weight | `IslandRunBoardPrototype.tsx`, `islandBoardTileMap.ts` |
-| 5 | **M13A** | Full per-run state persistence — persist token index, stop flags, hearts, coins, spin tokens to Supabase on every mutation | `islandRunRuntimeState.ts`, `islandRunGameStateStore.ts`, new migration |
+| 5 | **M13A** | Full per-run state persistence — persist token index, stop flags, hearts, coins, spin tokens, and dice pool to Supabase on every mutation *(storage/runtime wiring landed; final integration verification remains)* | `islandRunRuntimeState.ts`, `islandRunGameStateStore.ts`, new migration |
 | 6 | **M14A** | Island background art pipeline — add 3 placeholder `bg_*.webp` + `depth_mask_*.png` for islands 1–3; wire into `IslandRunBoardPrototype` renderer | `public/assets/islands/`, `IslandRunBoardPrototype.tsx` |
 | 7 | **M15A** | Audio files — add 4 core SFX (`sfx_dice_roll`, `sfx_tile_land`, `sfx_boss_resolve`, `sfx_island_clear`); activate `playIslandRunSound` for those events | `public/assets/audio/sfx/`, `islandRunAudio.ts` |
 | 8 | **M16A** | Real stop objectives for habit / check-in stops — query live habit completion data; unlock stop clear only when criteria met | `islandRunStops.ts`, habits feature API |
