@@ -620,8 +620,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    const persistedStops = runtimeState.completedStopsByIsland?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? [];
     if (OPEN_HATCHERY_ON_LOAD) {
-      setActiveStopId('hatchery');
+      if (!persistedStops.includes('hatchery')) {
+        setActiveStopId('hatchery');
+      }
       // Clean the URL param without a reload
       const url = new URL(window.location.href);
       url.searchParams.delete('openHatchery');
@@ -636,7 +639,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       url.searchParams.delete('openIslandStop');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [hasHydratedRuntimeState]);
+  }, [hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, runtimeState.currentIslandNumber]);
 
   useEffect(() => {
     logIslandRunEntryDebug('island_run_board_mount', {
@@ -2025,6 +2028,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    const nextCompletedStops = completedStops.includes('hatchery')
+      ? completedStops
+      : [...completedStops, 'hatchery'];
     const collectedEntry: PerIslandEggEntry = existingEntry
       ? { ...existingEntry, status: 'collected', openedAt: nowTs, location: 'island' }
       : {
@@ -2068,12 +2074,21 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         activeEggHatchDurationMs: null,
         activeEggIsDormant: false,
         perIslandEggs: { [islandKey]: collectedEntry },
+        completedStopsByIsland: { [islandKey]: nextCompletedStops },
       },
     });
+    setCompletedStops(nextCompletedStops);
     setRuntimeState((current) => ({
       ...current,
       perIslandEggs: { ...current.perIslandEggs, [islandKey]: collectedEntry },
+      completedStopsByIsland: {
+        ...current.completedStopsByIsland,
+        [islandKey]: nextCompletedStops,
+      },
     }));
+    if (activeStopId === 'hatchery') {
+      setActiveStopId(null);
+    }
   };
 
   const handleSellEggForRewards = () => {
@@ -2088,6 +2103,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     const nowTs = Date.now();
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    const nextCompletedStops = completedStops.includes('hatchery')
+      ? completedStops
+      : [...completedStops, 'hatchery'];
     const soldEntry: PerIslandEggEntry = existingEntry
       ? { ...existingEntry, status: 'sold', openedAt: nowTs, location: 'island' }
       : {
@@ -2154,12 +2172,21 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         activeEggHatchDurationMs: null,
         activeEggIsDormant: false,
         perIslandEggs: { [islandKey]: soldEntry },
+        completedStopsByIsland: { [islandKey]: nextCompletedStops },
       },
     });
+    setCompletedStops(nextCompletedStops);
     setRuntimeState((current) => ({
       ...current,
       perIslandEggs: { ...current.perIslandEggs, [islandKey]: soldEntry },
+      completedStopsByIsland: {
+        ...current.completedStopsByIsland,
+        [islandKey]: nextCompletedStops,
+      },
     }));
+    if (activeStopId === 'hatchery') {
+      setActiveStopId(null);
+    }
   };
 
 
