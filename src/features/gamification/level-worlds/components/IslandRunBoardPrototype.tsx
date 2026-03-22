@@ -3358,6 +3358,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   ?
                 </button>
               ) : null}
+              {activeStopId === 'hatchery' && showHatcheryHelp ? (
+                <div className="island-stop-modal__help-card" role="note" aria-label="Hatchery help">
+                  <p className="island-stop-modal__help-title">How Hatchery Works</p>
+                  <ul className="island-stop-modal__help-list">
+                    <li>{activeStop.description}</li>
+                    <li>The egg keeps incubating even while you travel.</li>
+                    <li>Each island has one egg slot — set it before you leave.</li>
+                  </ul>
+                </div>
+              ) : null}
             </div>
             {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
             {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p> : null}
@@ -3365,16 +3375,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
             {activeStopId === 'hatchery' && (
               <>
-                {showHatcheryHelp ? (
-                  <div className="island-stop-modal__help-card" role="note" aria-label="Hatchery help">
-                    <p className="island-stop-modal__help-title">How Hatchery Works</p>
-                    <ul className="island-stop-modal__help-list">
-                      <li>{activeStop.description}</li>
-                      <li>The egg keeps incubating even while you travel.</li>
-                      <li>Each island has one egg slot — set it before you leave.</li>
-                    </ul>
-                  </div>
-                ) : null}
                 <div className="island-hatchery-card">
                 {readyAnimal ? (
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">

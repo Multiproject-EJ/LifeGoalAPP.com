@@ -1963,6 +1963,7 @@
 }
 
 .island-stop-modal__header-row {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1999,11 +2000,16 @@
 }
 
 .island-stop-modal__help-card {
-  margin-top: 0.55rem;
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 2;
+  width: min(280px, calc(100vw - 4rem));
   padding: 0.7rem 0.8rem;
   border-radius: 12px;
   border: 1px solid rgba(145, 225, 255, 0.32);
-  background: rgba(11, 31, 46, 0.78);
+  background: rgba(11, 31, 46, 0.96);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
   color: rgba(221, 245, 255, 0.92);
 }
 
