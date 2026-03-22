@@ -7,7 +7,7 @@
 export type EggTier = 'common' | 'rare' | 'mythic';
 
 /** Where an egg currently lives. */
-export type EggLocation = 'island' | 'home' | 'dormant';
+export type EggLocation = 'island' | 'dormant';
 
 /** Reward payload returned by rollEggRewards. */
 export interface RewardBundle {
