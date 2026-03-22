@@ -5,6 +5,7 @@ import { encounterServiceTests } from './encounterService.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
 import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
+import { islandRunStopCompletionTests } from './islandRunStopCompletion.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -15,6 +16,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
   { label: 'islandRunProgression', tests: islandRunProgressionTests },
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
+  { label: 'islandRunStopCompletion', tests: islandRunStopCompletionTests },
 ];
 
 async function main() {

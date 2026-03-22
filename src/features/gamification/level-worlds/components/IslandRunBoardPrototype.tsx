@@ -88,6 +88,10 @@ import {
   getBossTypeColor,
   type BossType,
 } from '../services/bossService';
+import {
+  ensureStopCompleted,
+  shouldAutoOpenIslandStopOnLoad,
+} from '../services/islandRunStopCompletion';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
@@ -622,7 +626,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (!hasHydratedRuntimeState) return;
     const persistedStops = runtimeState.completedStopsByIsland?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? [];
     if (OPEN_HATCHERY_ON_LOAD) {
-      if (!persistedStops.includes('hatchery')) {
+      if (shouldAutoOpenIslandStopOnLoad({
+        requestedStopId: 'hatchery',
+        islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
+        completedStopsByIsland: runtimeState.completedStopsByIsland,
+      })) {
         setActiveStopId('hatchery');
       }
       // Clean the URL param without a reload
@@ -1862,8 +1870,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       status: 'incubating',
       location: 'island',
     };
-    const nextCompletedStops = activeStopId === 'hatchery' && !completedStops.includes('hatchery')
-      ? [...completedStops, 'hatchery']
+    const nextCompletedStops = activeStopId === 'hatchery'
+      ? ensureStopCompleted(completedStops, 'hatchery')
       : completedStops;
     const nextRuntimeState = {
       ...runtimeState,
@@ -2028,9 +2036,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
-    const nextCompletedStops = completedStops.includes('hatchery')
-      ? completedStops
-      : [...completedStops, 'hatchery'];
+    const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
     const collectedEntry: PerIslandEggEntry = existingEntry
       ? { ...existingEntry, status: 'collected', openedAt: nowTs, location: 'island' }
       : {
@@ -2103,9 +2109,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     const nowTs = Date.now();
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
-    const nextCompletedStops = completedStops.includes('hatchery')
-      ? completedStops
-      : [...completedStops, 'hatchery'];
+    const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
     const soldEntry: PerIslandEggEntry = existingEntry
       ? { ...existingEntry, status: 'sold', openedAt: nowTs, location: 'island' }
       : {
