@@ -11,6 +11,15 @@ export const encounterServiceTests: TestCase[] = [
     },
   },
   {
+    name: 'drawEncounterChallengeForBucket returns reusable metadata for UI copy',
+    run: () => {
+      const challenge = drawEncounterChallengeForBucket({ islandNumber: 7, tileIndex: 4, timeBucket: 200 });
+      assert(challenge.id.length > 0, 'Expected encounter challenges to expose stable ids');
+      assert(challenge.title.length > 0, 'Expected encounter challenges to expose titles');
+      assert(challenge.completionLabel.length > 0, 'Expected encounter challenges to expose completion labels');
+    },
+  },
+  {
     name: 'rollEncounterReward scales richer rewards for higher islands and quiz type',
     run: () => {
       const values = [0.5, 0.01, 0.01, 0.01, 0.01];
@@ -27,6 +36,13 @@ export const encounterServiceTests: TestCase[] = [
       const summary = formatEncounterRewardSummary({ coins: 18, heart: true, walletShards: true, dice: 4, spinTokens: 1 });
       assert(summary.includes('+4 dice'), 'Expected dice reward text in summary');
       assert(summary.includes('+1 spin'), 'Expected spin reward text in summary');
+    },
+  },
+  {
+    name: 'formatEncounterRewardSummary omits optional rewards when absent',
+    run: () => {
+      const summary = formatEncounterRewardSummary({ coins: 9, heart: false, walletShards: false, dice: 0, spinTokens: 0 });
+      assertEqual(summary, '+9 coins', 'Expected summary to stay compact when only coins are awarded');
     },
   },
 ];

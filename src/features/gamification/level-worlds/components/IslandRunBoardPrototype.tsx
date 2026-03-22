@@ -1701,19 +1701,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         setShowEncounterModal(false);
       } else {
         const challenge = drawEncounterChallenge(islandNumber, currentIndex);
-        setCurrentEncounterChallenge(challenge);
-        setEncounterStep('challenge');
-        setEncounterRewardData(null);
-        setGratitudeText('');
-        if (challenge.type === 'breathing') {
-          setBreathingSecondsLeft(challenge.durationSeconds);
-        }
-        setActiveEncounterTileIndex(currentIndex);
-        setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
-        setShowEncounterModal(true);
-        setEncounterResolved(false);
-        // M10C: encounter_trigger sound when encounter modal opens
-        playIslandRunSound('encounter_trigger');
+        openEncounterChallenge(challenge, currentIndex);
       }
     } else {
       resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
@@ -1830,18 +1818,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         setShowEncounterModal(false);
       } else {
         const challenge = drawEncounterChallenge(islandNumber, currentIndex);
-        setCurrentEncounterChallenge(challenge);
-        setEncounterStep('challenge');
-        setEncounterRewardData(null);
-        setGratitudeText('');
-        if (challenge.type === 'breathing') {
-          setBreathingSecondsLeft(challenge.durationSeconds);
-        }
-        setActiveEncounterTileIndex(currentIndex);
-        setLandingText(`Encounter tile reached (#${currentIndex}). Bonus challenge available.`);
-        setShowEncounterModal(true);
-        setEncounterResolved(false);
-        playIslandRunSound('encounter_trigger');
+        openEncounterChallenge(challenge, currentIndex);
       }
     } else {
       resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
@@ -2197,6 +2174,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const applyEncounterReward = (reward: EncounterReward) => {
     const specialtyEncounterBonusCoins = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
     const specialtyEncounterBonusHearts = activeCompanionSpecialty?.effect === 'encounter_bonus_hearts' ? activeCompanionSpecialty.amount : 0;
+    const challengeType = currentEncounterChallenge?.type ?? null;
+    const challengeId = currentEncounterChallenge?.id ?? null;
 
     setCoins((c) => c + reward.coins + specialtyEncounterBonusCoins);
     void awardGold(session.user.id, reward.coins + specialtyEncounterBonusCoins, 'shooter_blitz', 'island_run_encounter_reward');
@@ -2236,14 +2215,31 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         stage: 'island_run_encounter_resolved',
         island_number: islandNumber,
         tile_index: activeEncounterTileIndex,
+        challenge_type: challengeType,
+        challenge_id: challengeId,
         reward_coins: reward.coins,
         reward_heart: reward.heart,
         reward_wallet_shards: reward.walletShards,
+        reward_dice: reward.dice,
+        reward_spin_tokens: reward.spinTokens,
         specialty_bonus_coins: specialtyEncounterBonusCoins,
         specialty_bonus_hearts: specialtyEncounterBonusHearts,
         specialty_effect: activeCompanionSpecialty?.effect,
       },
     });
+  };
+
+  const openEncounterChallenge = (challenge: EncounterChallenge, tileIndex: number) => {
+    setCurrentEncounterChallenge(challenge);
+    setEncounterStep('challenge');
+    setEncounterRewardData(null);
+    setGratitudeText('');
+    setBreathingSecondsLeft(challenge.type === 'breathing' ? challenge.durationSeconds : 0);
+    setActiveEncounterTileIndex(tileIndex);
+    setLandingText(`Encounter tile reached (#${tileIndex}). ${challenge.title} ready.`);
+    setShowEncounterModal(true);
+    setEncounterResolved(false);
+    playIslandRunSound('encounter_trigger');
   };
 
   // M6-COMPLETE: Challenge complete handler (quiz answer or gratitude submit)
@@ -4159,6 +4155,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   <div className="island-encounter__challenge">
                     <p className="island-encounter__eyebrow">{currentEncounterChallenge.title}</p>
                     <p className="island-encounter__question">{currentEncounterChallenge.question}</p>
+                    <p className="island-encounter__hint">{currentEncounterChallenge.completionLabel}</p>
                     <div className="island-encounter__answers">
                       {currentEncounterChallenge.answers.map((answer, i) => (
                         <button
@@ -4184,7 +4181,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                         {breathingSecondsLeft > 0 ? breathingSecondsLeft : '✓'}
                       </p>
                     </div>
-                    <p className="island-encounter__hint">Auto-completes in {breathingSecondsLeft}s…</p>
+                    <p className="island-encounter__hint">{currentEncounterChallenge.completionLabel} · Auto-completes in {breathingSecondsLeft}s…</p>
                   </div>
                 )}
 
@@ -4192,6 +4189,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   <div className="island-encounter__challenge">
                     <p className="island-encounter__eyebrow">{currentEncounterChallenge.title}</p>
                     <p className="island-encounter__question">{currentEncounterChallenge.prompt}</p>
+                    <p className="island-encounter__hint">{currentEncounterChallenge.completionLabel}</p>
                     <textarea
                       className="island-encounter__gratitude-input"
                       value={gratitudeText}
@@ -4206,7 +4204,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       onClick={handleEncounterChallengeComplete}
                       disabled={gratitudeText.trim().length === 0}
                     >
-                      Submit ✓
+                      {currentEncounterChallenge.completionLabel} ✓
                     </button>
                   </div>
                 )}
