@@ -20,7 +20,7 @@ export function assertDeepEqual(actual: unknown, expected: unknown, message: str
 
 export type TestCase = {
   name: string;
-  run: () => void;
+  run: () => void | Promise<void>;
 };
 
 export function createMemoryStorage(initial: Record<string, string> = {}): Storage {
@@ -48,8 +48,13 @@ export function createMemoryStorage(initial: Record<string, string> = {}): Stora
 }
 
 export function installWindowWithStorage(storage: Storage): void {
+  const sessionStorage = createMemoryStorage();
   Object.defineProperty(globalThis, 'window', {
-    value: { localStorage: storage },
+    value: {
+      localStorage: storage,
+      sessionStorage,
+      location: { pathname: '/app', search: '', hash: '' },
+    },
     configurable: true,
     writable: true,
   });
