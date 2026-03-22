@@ -166,50 +166,16 @@ After the boss (Stop 5) is defeated, a special **post-boss bonus stop** becomes 
 
 ---
 
-## 5. Home Island Pets System
+## 5. Companion / Cosmetic Follow-ups (Deferred)
 
-The Home Island panel gains a **Pets section** (alongside the existing Hatchery section). Pets are a long-term cosmetic and gameplay companion system.
+Home Island pet mechanics are **not part of the current canonical Island Run loop**. If companions or cosmetic followers are revisited later, they should be specified as a separate follow-up system and must not change the core collectible bar rules in this document.
 
-### 5a. Pet slots
+For the current production path, shard progression remains focused on:
+- collectible milestone claims
+- island-run reward pacing
+- shop shard pricing
 
-- Players can collect up to **3 pets** on their Home Island.
-- **Slot 1** is available from the start (unlocks after the player claims their 1st lifetime shard bar reward).
-- **Slot 2** unlocks after 10 lifetime shard bar claims (`shard_claim_count ≥ 10`).
-- **Slot 3** unlocks after 30 lifetime shard bar claims (`shard_claim_count ≥ 30`).
-
-### 5b. How to get pets
-
-Pets are obtained from **Mythic egg hatches** (rare) and **era milestone drops** (see Section 3c reward pool). They cannot be directly purchased with any currency — they must be earned through gameplay. This makes them prestigious.
-
-A pet is associated with the era it was earned in (e.g. a Shooter Blitz era pet has a space/sci-fi theme; a Tap Garden era pet has a nature/floral theme).
-
-### 5c. Pet mechanics
-
-Each pet has:
-
-| Attribute | Description |
-|---|---|
-| Name | Player-assigned or default era name |
-| Level | 1–10. Increases with XP from treats and play time. |
-| Happiness | 0–5 stars. Decreases over time if not fed. Increases with treats. |
-| Rarity | Common / Rare / Legendary (matches the source egg tier) |
-| Era | Which mini-game era the pet came from (cosmetic flavour) |
-
-**Pet happiness effects (gameplay bonuses):**
-- 5 stars: +1 shard per `egg_shard` tile landing (passive bonus while on the board)
-- 3–4 stars: no bonus, no penalty
-- 1–2 stars: pet shows a sad indicator in the Home Island panel (cosmetic only, no gameplay penalty)
-- 0 stars: pet "sleeps" — no bonus and shown as resting in the Home panel
-
-Happiness decays at **1 star per 24 hours** without feeding. Players need to visit the app and feed pets to keep the happiness bonus active — this is a gentle daily engagement hook tied to the LifeGoal habit loop.
-
-### 5d. Pet display
-
-Pets are shown in the Home Island panel as small animated sprites (placeholder: emoji + name card in v0). Full sprite art is a future asset task. The panel shows:
-- Pet name + level + happiness stars
-- "Feed" button (spends shards) 
-- "Equip accessory" button (opens cosmetics from shop inventory)
-- "Pet" button (tap for a happiness animation, no cost, once per hour)
+No Home Island pet slots, feeding loop, or shard-powered pet upkeep should be assumed from this spec.
 
 ---
 
