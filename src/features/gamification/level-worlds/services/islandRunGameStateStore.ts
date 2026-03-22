@@ -147,6 +147,19 @@ function activateRemoteBackoff(userId: string): number {
   return backoffUntil;
 }
 
+function getRuntimeStateDebugFields(record: Pick<IslandRunGameStateRecord, 'currentIslandNumber' | 'bossTrialResolvedIslandNumber' | 'cycleIndex' | 'tokenIndex' | 'hearts' | 'coins' | 'spinTokens' | 'dicePool'>) {
+  return {
+    currentIslandNumber: record.currentIslandNumber,
+    bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
+    cycleIndex: record.cycleIndex,
+    tokenIndex: record.tokenIndex,
+    hearts: record.hearts,
+    coins: record.coins,
+    spinTokens: record.spinTokens,
+    dicePool: record.dicePool,
+  };
+}
+
 function getDefaultRecord(): IslandRunGameStateRecord {
   const nowMs = Date.now();
   return {
@@ -305,6 +318,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     logIslandRunEntryDebug('runtime_state_hydrate_skipped_remote', {
       userId: session.user.id,
       reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
+      ...getRuntimeStateDebugFields(fallback),
       fallbackCurrentIslandNumber: fallback.currentIslandNumber,
       fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
@@ -317,6 +331,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       userId: session.user.id,
       reason: 'remote_backoff_active',
       backoffUntil: new Date(remoteBackoffUntil).toISOString(),
+      ...getRuntimeStateDebugFields(fallback),
       fallbackCurrentIslandNumber: fallback.currentIslandNumber,
       fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
@@ -326,6 +341,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   logIslandRunEntryDebug('runtime_state_hydrate_query_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
+    ...getRuntimeStateDebugFields(fallback),
     fallbackCurrentIslandNumber: fallback.currentIslandNumber,
     fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
   });
@@ -346,6 +362,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       code: error.code ?? null,
       remoteBackoffTriggered,
       remoteBackoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
+      ...getRuntimeStateDebugFields(fallback),
       fallbackCurrentIslandNumber: fallback.currentIslandNumber,
       fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
@@ -355,6 +372,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   if (!data) {
     logIslandRunEntryDebug('runtime_state_hydrate_no_row', {
       userId: session.user.id,
+      ...getRuntimeStateDebugFields(fallback),
       fallbackCurrentIslandNumber: fallback.currentIslandNumber,
       fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
@@ -403,8 +421,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   logIslandRunEntryDebug('runtime_state_hydrate_query_success', {
     userId: session.user.id,
     source: 'table',
-    currentIslandNumber: hydratedRecord.currentIslandNumber,
-    bossTrialResolvedIslandNumber: hydratedRecord.bossTrialResolvedIslandNumber,
+    ...getRuntimeStateDebugFields(hydratedRecord),
   });
 
   return { record: hydratedRecord, source: 'table' };
@@ -437,8 +454,7 @@ export async function writeIslandRunGameStateRecord(options: {
     logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
       userId: session.user.id,
       reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
-      currentIslandNumber: record.currentIslandNumber,
-      bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
+      ...getRuntimeStateDebugFields(record),
     });
     return { ok: true };
   }
@@ -449,8 +465,7 @@ export async function writeIslandRunGameStateRecord(options: {
       userId: session.user.id,
       reason: 'remote_backoff_active',
       backoffUntil: new Date(remoteBackoffUntil).toISOString(),
-      currentIslandNumber: record.currentIslandNumber,
-      bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
+      ...getRuntimeStateDebugFields(record),
     });
     return { ok: true };
   }
@@ -458,8 +473,7 @@ export async function writeIslandRunGameStateRecord(options: {
   logIslandRunEntryDebug('runtime_state_persist_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
-    currentIslandNumber: record.currentIslandNumber,
-    bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
+    ...getRuntimeStateDebugFields(record),
   });
 
   const { error } = await client.from(ISLAND_RUN_RUNTIME_STATE_TABLE).upsert(
@@ -503,8 +517,7 @@ export async function writeIslandRunGameStateRecord(options: {
       code: error.code ?? null,
       remoteBackoffTriggered,
       remoteBackoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
-      currentIslandNumber: record.currentIslandNumber,
-      bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
+      ...getRuntimeStateDebugFields(record),
     });
 
     if (remoteBackoffTriggered) {
@@ -518,8 +531,7 @@ export async function writeIslandRunGameStateRecord(options: {
 
   logIslandRunEntryDebug('runtime_state_persist_success', {
     userId: session.user.id,
-    currentIslandNumber: record.currentIslandNumber,
-    bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
+    ...getRuntimeStateDebugFields(record),
   });
 
   return { ok: true };

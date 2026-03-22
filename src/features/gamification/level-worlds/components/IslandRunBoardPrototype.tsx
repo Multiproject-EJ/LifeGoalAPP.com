@@ -440,6 +440,32 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   });
   const [marketMarkerBaselineMs, setMarketMarkerBaselineMs] = useState<number | null>(null);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
+  const [runtimeVerificationSnapshot, setRuntimeVerificationSnapshot] = useState<{
+    generatedAt: string;
+    latestHydrationResult?: {
+      timestamp: string;
+      source?: string;
+      currentIslandNumber?: number;
+      bossTrialResolvedIslandNumber?: number | null;
+      cycleIndex?: number;
+      tokenIndex?: number;
+      hearts?: number;
+      coins?: number;
+      spinTokens?: number;
+      dicePool?: number;
+    };
+    latestPersistSuccess?: {
+      timestamp: string;
+      currentIslandNumber?: number;
+      bossTrialResolvedIslandNumber?: number | null;
+      cycleIndex?: number;
+      tokenIndex?: number;
+      hearts?: number;
+      coins?: number;
+      spinTokens?: number;
+      dicePool?: number;
+    };
+  } | null>(null);
   const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
@@ -838,6 +864,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return report;
     };
 
+    setRuntimeVerificationSnapshot(window.__islandRunEntryDebugRuntimeStateSummary?.() ?? null);
+
     window.__islandRunMarketDebugResetState = () => {
       const resetAt = new Date().toISOString();
       const resetMs = Date.parse(resetAt);
@@ -867,6 +895,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     };
   }, [marketMarkerBaselineMs, showDebug, showQaHooks]);
 
+  useEffect(() => {
+    if (!showDebug && !showQaHooks) return;
+    setRuntimeVerificationSnapshot(window.__islandRunEntryDebugRuntimeStateSummary?.() ?? null);
+  }, [showDebug, showQaHooks, runtimeState, hasHydratedRuntimeState]);
 
   useEffect(() => {
     let isActive = true;
@@ -882,7 +914,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
           userId: session.user.id,
           source: hydrationResult.source,
+          currentIslandNumber: hydrationResult.state.currentIslandNumber,
+          bossTrialResolvedIslandNumber: hydrationResult.state.bossTrialResolvedIslandNumber,
+          cycleIndex: hydrationResult.state.cycleIndex,
+          tokenIndex: hydrationResult.state.tokenIndex,
+          hearts: hydrationResult.state.hearts,
+          coins: hydrationResult.state.coins,
+          spinTokens: hydrationResult.state.spinTokens,
+          dicePool: hydrationResult.state.dicePool,
         });
+
+        setRuntimeVerificationSnapshot(window.__islandRunEntryDebugRuntimeStateSummary?.() ?? null);
 
         if (hydrationResult.source !== 'table') {
           setLandingText('Using local runtime fallback while server runtime state is unavailable.');
@@ -899,6 +941,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             metadata: {
               stage: ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
               source: hydrationResult.source,
+              current_island_number: hydrationResult.state.currentIslandNumber,
+              boss_trial_resolved_island_number: hydrationResult.state.bossTrialResolvedIslandNumber,
+              cycle_index: hydrationResult.state.cycleIndex,
+              token_index: hydrationResult.state.tokenIndex,
+              hearts: hydrationResult.state.hearts,
+              coins: hydrationResult.state.coins,
+              spin_tokens: hydrationResult.state.spinTokens,
+              dice_pool: hydrationResult.state.dicePool,
             },
           });
         }
@@ -3331,6 +3381,27 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 <code>window.__islandRunMarketDebugResetState()</code> ·{' '}
                 <code>window.__islandRunMarketDebugAssertStatusCoverage()</code>
               </p>
+              <p className="island-run-prototype__landing island-run-prototype__qa-note" role="note">
+                Runtime debug helper: <code>window.__islandRunEntryDebugRuntimeStateSummary()</code>
+              </p>
+              {runtimeVerificationSnapshot && (
+                <div className="island-run-prototype__hud-section" style={{ width: '100%' }}>
+                  <p className="island-run-prototype__hud-label">Runtime verification</p>
+                  <div className="island-run-prototype__status-row">
+                    <span className="island-run-prototype__stat-chip">Hydration: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.source ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip">Island: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.currentIslandNumber ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip">Cycle: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.cycleIndex ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip">Tile: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.tokenIndex ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">Hearts: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.hearts ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.coins ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">Spins: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.spinTokens ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.dicePool ?? '—'}</strong></span>
+                  </div>
+                  <p className="island-run-prototype__landing island-run-prototype__qa-note" role="note">
+                    Latest persist success: island <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.currentIslandNumber ?? '—'}</strong>, tile <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.tokenIndex ?? '—'}</strong>, hearts <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.hearts ?? '—'}</strong>, dice <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.dicePool ?? '—'}</strong>.
+                  </p>
+                </div>
+              )}
             </div>
           )}
           {(dailyRewardPlan.source === 'spin_of_the_day' || dailyRewardPlan.source === 'daily_hatch') && (
