@@ -10,9 +10,11 @@ export interface CreatureCollectionEntry {
   bondXp: number;
   bondLevel: number;
   lastFedAtMs: number | null;
+  claimedBondMilestones: number[];
 }
 
 export const CREATURE_BOND_XP_PER_LEVEL = 3;
+export const CREATURE_BOND_MILESTONE_LEVELS = [3, 5, 8, 10] as const;
 
 function getStorageKey(userId: string): string {
   return `island_run_creature_collection_${userId}`;
@@ -44,7 +46,13 @@ function normalizeCollectionEntry(value: Partial<CreatureCollectionEntry>): Crea
   const lastFedAtMs = typeof value.lastFedAtMs === 'number' && Number.isFinite(value.lastFedAtMs)
     ? value.lastFedAtMs
     : null;
-  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber, bondXp, bondLevel, lastFedAtMs };
+  const claimedBondMilestones = Array.isArray(value.claimedBondMilestones)
+    ? Array.from(new Set(value.claimedBondMilestones
+      .filter((milestone): milestone is number => typeof milestone === 'number' && Number.isFinite(milestone))
+      .map((milestone) => Math.max(1, Math.floor(milestone)))))
+        .sort((a, b) => a - b)
+    : [];
+  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber, bondXp, bondLevel, lastFedAtMs, claimedBondMilestones };
 }
 
 export function fetchCreatureCollection(userId: string): CreatureCollectionEntry[] {
@@ -91,6 +99,7 @@ export function collectCreatureForUser(options: {
           bondXp: entry.bondXp,
           bondLevel: entry.bondLevel,
           lastFedAtMs: entry.lastFedAtMs,
+          claimedBondMilestones: entry.claimedBondMilestones,
         }
       : entry)
     : [
@@ -103,6 +112,7 @@ export function collectCreatureForUser(options: {
           bondXp: 0,
           bondLevel: 1,
           lastFedAtMs: null,
+          claimedBondMilestones: [],
         },
         ...current,
       ];
@@ -127,6 +137,32 @@ export function feedCreatureForUser(options: {
       bondXp,
       bondLevel: Math.floor(bondXp / CREATURE_BOND_XP_PER_LEVEL) + 1,
       lastFedAtMs: fedAtMs,
+    };
+  });
+  return writeCreatureCollection(userId, next);
+}
+
+
+export function getUnclaimedBondMilestones(entry: Pick<CreatureCollectionEntry, 'bondLevel' | 'claimedBondMilestones'>): number[] {
+  const claimed = new Set(entry.claimedBondMilestones);
+  return CREATURE_BOND_MILESTONE_LEVELS.filter((milestone) => milestone <= entry.bondLevel && !claimed.has(milestone));
+}
+
+export function claimCreatureBondMilestoneForUser(options: {
+  userId: string;
+  creatureId: string;
+  milestoneLevel: number;
+}): CreatureCollectionEntry[] {
+  const { userId, creatureId, milestoneLevel } = options;
+  const current = fetchCreatureCollection(userId);
+  const next = current.map((entry) => {
+    if (entry.creatureId !== creatureId) return entry;
+    if (milestoneLevel > entry.bondLevel || entry.claimedBondMilestones.includes(milestoneLevel)) {
+      return entry;
+    }
+    return {
+      ...entry,
+      claimedBondMilestones: [...entry.claimedBondMilestones, milestoneLevel].sort((a, b) => a - b),
     };
   });
   return writeCreatureCollection(userId, next);
@@ -168,6 +204,7 @@ export function migrateLegacyEggLedgerToCollection(options: {
       bondXp: 0,
       bondLevel: 1,
       lastFedAtMs: null,
+      claimedBondMilestones: [],
     });
     didChange = true;
   });

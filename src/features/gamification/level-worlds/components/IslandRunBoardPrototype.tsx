@@ -48,6 +48,8 @@ import {
   migrateLegacyEggLedgerToCollection,
   saveActiveCompanionId,
   feedCreatureForUser,
+  claimCreatureBondMilestoneForUser,
+  getUnclaimedBondMilestones,
   CREATURE_BOND_XP_PER_LEVEL,
 } from '../services/creatureCollectionService';
 import { getCompanionBonusForCreature, selectCreatureForEgg } from '../services/creatureCatalog';
@@ -141,6 +143,30 @@ function formatCooldownRemaining(remainingMs: number): string {
   const days = Math.floor(totalHours / 24);
   const hours = totalHours % 24;
   return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+}
+
+type BondMilestoneReward = {
+  level: number;
+  label: string;
+  summary: string;
+  coins?: number;
+  hearts?: number;
+  spinTokens?: number;
+};
+
+function getBondMilestoneReward(level: number): BondMilestoneReward | null {
+  switch (level) {
+    case 3:
+      return { level, label: 'Level 3 Cache', summary: '+25 coins', coins: 25 };
+    case 5:
+      return { level, label: 'Level 5 Care Pack', summary: '+1 heart', hearts: 1 };
+    case 8:
+      return { level, label: 'Level 8 Momentum Pack', summary: '+1 spin token', spinTokens: 1 };
+    case 10:
+      return { level, label: "Level 10 Captain's Stash", summary: '+40 coins, +1 heart', coins: 40, hearts: 1 };
+    default:
+      return null;
+  }
 }
 
 interface ActiveEgg {
@@ -1800,6 +1826,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     () => (selectedSanctuaryCreature ? getCompanionBonusForCreature(selectedSanctuaryCreature.creature, selectedSanctuaryCreature.bondLevel) : null),
     [selectedSanctuaryCreature],
   );
+  const selectedSanctuaryCreatureUnclaimedMilestones = useMemo(
+    () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
+    [selectedSanctuaryCreature],
+  );
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
@@ -2859,13 +2889,52 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setSanctuaryClockMs(nowMs);
     const nextBondXp = target.bondXp + 1;
     const nextBondLevel = Math.floor(nextBondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
+    const rewardPreview = getBondMilestoneReward(nextBondLevel);
     setSanctuaryFeedback(
       nextBondLevel > previousBondLevel
-        ? `${target.creature.name} reached bond level ${nextBondLevel}!`
+        ? rewardPreview
+          ? `${target.creature.name} reached bond level ${nextBondLevel}! ${rewardPreview.label} is ready to claim.`
+          : `${target.creature.name} reached bond level ${nextBondLevel}!`
         : `Fed ${target.creature.name}. Bond progress increased.`,
     );
     setLandingText(`${target.creature.name} enjoyed a shipboard meal and feels closer to you.`);
     playIslandRunSound('encounter_resolve');
+    triggerIslandRunHaptic('reward_claim');
+  };
+
+
+  const handleClaimSanctuaryBondReward = (creatureId: string, milestoneLevel: number) => {
+    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+    const reward = getBondMilestoneReward(milestoneLevel);
+    if (!target || !reward) return;
+    const unclaimedMilestones = getUnclaimedBondMilestones(target);
+    if (!unclaimedMilestones.includes(milestoneLevel)) return;
+
+    setCreatureCollection(claimCreatureBondMilestoneForUser({
+      userId: session.user.id,
+      creatureId,
+      milestoneLevel,
+    }));
+
+    const rewardCoins = reward.coins ?? 0;
+    const rewardHearts = reward.hearts ?? 0;
+    const rewardSpinTokens = reward.spinTokens ?? 0;
+
+    if (rewardCoins > 0) {
+      setCoins((current) => current + rewardCoins);
+      void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
+    }
+    if (rewardHearts > 0) {
+      setHearts((current) => Math.min(MAX_HEARTS, current + rewardHearts));
+      void awardHearts(session.user.id, rewardHearts, 'shooter_blitz', 'Island Run creature bond milestone');
+    }
+    if (rewardSpinTokens > 0) {
+      setSpinTokens((current) => current + rewardSpinTokens);
+    }
+
+    setSanctuaryFeedback(`${target.creature.name} claimed ${reward.label}: ${reward.summary}.`);
+    setLandingText(`${target.creature.name} bond milestone claimed: ${reward.summary}.`);
+    playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('reward_claim');
   };
 
@@ -4152,6 +4221,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 <p className="island-run-sanctuary-card__meta">
                   Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
                 </p>
+                {selectedSanctuaryCreatureUnclaimedMilestones.length > 0 ? (
+                  <div className="island-run-sanctuary-reward">
+                    <p className="island-run-sanctuary-reward__title">Reward ready</p>
+                    <p className="island-run-sanctuary-card__meta">
+                      Bond level {selectedSanctuaryCreatureUnclaimedMilestones[0]} · {getBondMilestoneReward(selectedSanctuaryCreatureUnclaimedMilestones[0])?.summary}
+                    </p>
+                  </div>
+                ) : null}
                 <div className="island-hatchery-card__actions">
                   <button
                     type="button"
@@ -4160,6 +4237,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   >
                     ← Back to Roster
                   </button>
+                  {selectedSanctuaryCreatureUnclaimedMilestones.length > 0 ? (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={() => handleClaimSanctuaryBondReward(selectedSanctuaryCreature.creatureId, selectedSanctuaryCreatureUnclaimedMilestones[0])}
+                    >
+                      Claim {getBondMilestoneReward(selectedSanctuaryCreatureUnclaimedMilestones[0])?.label}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
@@ -4224,6 +4310,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       <p className="island-run-sanctuary-card__meta">
                         Next boost at bond level <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).nextBondMilestoneLevel}</strong>
                       </p>
+                      {getUnclaimedBondMilestones(creature).length > 0 ? (
+                        <div className="island-run-sanctuary-reward">
+                          <p className="island-run-sanctuary-reward__title">Reward ready</p>
+                          <p className="island-run-sanctuary-card__meta">
+                            Bond level {getUnclaimedBondMilestones(creature)[0]} · {getBondMilestoneReward(getUnclaimedBondMilestones(creature)[0])?.summary}
+                          </p>
+                        </div>
+                      ) : null}
                       <div className="island-run-sanctuary-card__progress" aria-hidden="true">
                         <span
                           className="island-run-sanctuary-card__progress-fill"

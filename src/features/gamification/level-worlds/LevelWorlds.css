@@ -3099,6 +3099,22 @@
   gap: 0.5rem;
 }
 
+.island-run-sanctuary-reward {
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(255, 208, 120, 0.12);
+  border: 1px solid rgba(255, 212, 140, 0.24);
+}
+
+.island-run-sanctuary-reward__title {
+  margin: 0 0 0.18rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 231, 184, 0.88);
+}
+
 .island-run-sanctuary-card__progress,
 .island-run-sanctuary-detail__progress {
   width: 100%;
