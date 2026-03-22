@@ -5,8 +5,8 @@ import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'animal_ready' | 'collected' | 'sold' | 'animal_sold';
 
-/** Where an egg lives: on a specific island, on the Home Island, or dormant (hatched but uncollected). */
-export type PerIslandEggLocation = 'island' | 'home' | 'dormant';
+/** Where an egg lives: on a specific island, or dormant after hatching while the player is away. */
+export type PerIslandEggLocation = 'island' | 'dormant';
 
 export interface PerIslandEggEntry {
   tier: 'common' | 'rare' | 'mythic';
