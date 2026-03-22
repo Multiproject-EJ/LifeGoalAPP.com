@@ -161,7 +161,7 @@ Repeat similarly for other tables.
 | `active_egg_set_at_ms` | bigint | null | Global active egg set timestamp ms |
 | `active_egg_hatch_duration_ms` | bigint | null | Global active egg hatch duration ms |
 | `active_egg_is_dormant` | boolean | false | Whether the global active egg is dormant |
-| `per_island_eggs` | jsonb | `'{}'` | Per-island egg ledger. Key = island number as text. Value = `{tier, set_at_ms, hatch_at_ms, status: "incubating"\|"ready"\|"collected"\|"sold"}`. One entry per island; never overwritten once status is collected/sold. |
+| `per_island_eggs` | jsonb | `'{}'` | Per-island egg ledger. Key = island number as text. Value = `{tier, set_at_ms, hatch_at_ms, status, location?, opened_at?, animal_collected_at_ms?}` where `status` can be `"incubating"\|"ready"\|"animal_ready"\|"collected"\|"sold"\|"animal_sold"`. In current app flow, island eggs become `animal_ready` after hatchery collection and `animal_sold` after Shop sale. |
 | `island_shards` | int | 0 | Lifetime cumulative shard count for the Collectible Progress Bar |
 | `shard_tier_index` | int | 0 | Current collectible era tier index (advances on player claim) |
 | `shard_claim_count` | int | 0 | Total number of shard milestone claims |

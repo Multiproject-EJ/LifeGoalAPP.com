@@ -71,10 +71,18 @@ the player was away or on another island, the egg remains on that island in a ha
 uncollected state and can be collected/sold when the player revisits the island on a future
 cycle.
 
-Opening:
-- consumes egg record (set `opened_at`)
-- spawns rewards (see reward contract)
-- optionally “sell” step via Shop
+Island hatchery flow (current app behavior):
+- At `stage == 4`, the hatchery CTA becomes **Collect Animal**.
+- Collecting the animal clears the active island egg and updates that island's ledger entry to
+  `status = animal_ready`.
+- No currency reward is granted yet at hatchery collect time.
+- The player then visits the Shop / Animal Market and sells the collected animal.
+- Selling the animal grants the tier-based reward bundle (see reward contract below) and updates
+  the island ledger entry to `status = animal_sold`.
+
+Home hatchery flow (separate from island eggs):
+- Home eggs still open directly into rewards once `stage == 4`.
+- Home eggs do **not** create an intermediate animal inventory / selling step.
 
 ---
 
@@ -128,6 +136,22 @@ v1: keep simple
 - rare: bigger bundle + guaranteed spin
 - mythic: large bundle + cosmetic chance
 
+Current implementation notes:
+- Island eggs use `rollEggRewards(...)` when the collected animal is sold in the Shop.
+- Home eggs use `rollEggRewards(...)` immediately when the egg is opened from the Home Island
+  hatchery overlay.
+- Reward output is deterministic per egg because the seed is the egg's `set_at` timestamp.
+
+Current v1 reward schedule in code:
+- common → `+1 heart`, `+5–19 coins`, `25%` chance of `+1 spin token`
+- rare → `+2 hearts`, `+20–49 coins`, `+1 spin token`
+- mythic → `+3 hearts`, `+75–124 coins`, `15%` chance of `+1 diamond`, `+2 spin tokens`,
+  `30%` chance of cosmetic
+
+Additional current rewards:
+- Selling a collected island animal also awards `+2 wallet shards`.
+- Opening a Home Island egg also awards `+2 wallet shards`.
+
 ---
 
 ## Egg Asset Naming (locked)
@@ -141,7 +165,8 @@ Creatures:
 ## Acceptance Tests
 - Island 1 forces egg set (onboarding gate)
 - Egg hatch timer runs from `set_at` regardless of player location
-- Egg can be collected/sold when `stage == 4` (no stop-landing requirement for hatched eggs)
+- Egg can be collected when `stage == 4`, converting the island egg into an `animal_ready` state
+- A collected animal can be sold later in the Shop / Animal Market for the tier reward bundle
 - If egg hatched while player was away, egg is in dormant/unclaimed state on that island
 - Multiple dormant eggs can exist simultaneously across different islands
 - Once an island egg is sold/collected, that island never provides a new egg (non-renewable)
