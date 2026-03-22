@@ -119,6 +119,15 @@ interface ActiveEgg {
   isDormant?: boolean;
 }
 
+type CreatureManifestEntry = {
+  islandKey: string;
+  name: string;
+  habitat: string;
+  affinity: string;
+  tier: EggTier;
+  collectedAtMs: number;
+};
+
 function getBossReward(islandNumber: number): { hearts: number; coins: number; spinTokens: number } {
   const tier = Math.floor((islandNumber - 1) / 10);
   return {
@@ -393,6 +402,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // M14: persistent shop panel state
   const [showShopPanel, setShowShopPanel] = useState(false);
+  const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -588,6 +598,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShopPanel]);
+
+  useEffect(() => {
+    if (!showSanctuaryPanel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowSanctuaryPanel(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showSanctuaryPanel]);
 
   // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
   useEffect(() => {
@@ -1712,6 +1734,40 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     return names[Math.abs(seed) % names.length] ?? `${tier} creature`;
   };
 
+  const buildCreatureHabitat = (tier: EggTier, seed: number): string => {
+    const habitats: Record<EggTier, string[]> = {
+      common: ['Zen Garden', 'Hydro Deck', 'Root Atrium', 'Moss Gallery'],
+      rare: ['Engine Wing', 'Solar Orchard', 'Ember Lab', 'Sky Foundry'],
+      mythic: ['Astral Dome', 'Dream Observatory', 'Star Archive', 'Aurora Bridge'],
+    };
+    const options = habitats[tier];
+    return options[Math.abs(seed * 3) % options.length] ?? 'Ship Habitat';
+  };
+
+  const buildCreatureAffinity = (tier: EggTier, seed: number): string => {
+    const affinities: Record<EggTier, string[]> = {
+      common: ['Grounded', 'Nurturer', 'Builder', 'Steady'],
+      rare: ['Visionary', 'Explorer', 'Guardian', 'Catalyst'],
+      mythic: ['Oracle', 'Radiant', 'Mythic', 'Cosmic'],
+    };
+    const options = affinities[tier];
+    return options[Math.abs(seed * 7) % options.length] ?? 'Balanced';
+  };
+
+  const collectedCreatures = useMemo<CreatureManifestEntry[]>(() => {
+    return Object.entries(runtimeState.perIslandEggs ?? {})
+      .filter(([, entry]) => entry.status === 'collected' || entry.status === 'animal_ready')
+      .map(([islandKey, entry]) => ({
+        islandKey,
+        name: buildCreatureName(entry.tier, entry.setAtMs),
+        habitat: buildCreatureHabitat(entry.tier, entry.setAtMs),
+        affinity: buildCreatureAffinity(entry.tier, entry.setAtMs),
+        tier: entry.tier,
+        collectedAtMs: entry.openedAt ?? entry.animalCollectedAtMs ?? entry.hatchAtMs,
+      }))
+      .sort((a, b) => b.collectedAtMs - a.collectedAtMs);
+  }, [runtimeState.perIslandEggs]);
+
   const handleCollectCreature = () => {
     if (!activeEgg || eggStage < 4) return;
     const resolvedEgg = activeEgg;
@@ -2666,6 +2722,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
+  const openSanctuaryPanel = () => {
+    setShowSanctuaryPanel(true);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'sanctuary_open',
+        island_number: islandNumber,
+        collected_creatures: collectedCreatures.length,
+      },
+    });
+  };
+
   const handleStoryRewardClaim = (coinsReward: number) => {
     if (coinsReward <= 0) {
       return;
@@ -2741,6 +2810,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             onClick={openShopPanel}
           >
             🛍️ Shop
+          </button>
+          <button
+            type="button"
+            className="island-run-prototype__shop-btn"
+            aria-label="Open creature sanctuary"
+            onClick={openSanctuaryPanel}
+          >
+            🐾 Sanctuary
           </button>
           <button
             type="button"
@@ -3860,6 +3937,78 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   setMarketPurchaseFeedback(null);
                   void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_close', island_number: islandNumber } });
                 }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {showSanctuaryPanel && (
+        <div
+          className="island-stop-modal-backdrop"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSanctuaryPanel(false);
+            }
+          }}
+        >
+          <section
+            className="island-run-sanctuary-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Creature Sanctuary"
+          >
+            <p className="island-stop-modal__eyebrow">Spaceship Sanctuary</p>
+            <h3 className="island-stop-modal__title">🐾 Creature Manifest</h3>
+            <p className="island-stop-modal__copy">
+              The ship now serves as home base for every creature you keep. This first pass shows your collected residents and their current habitat affinity.
+            </p>
+
+            <div className="island-run-sanctuary-panel__summary">
+              <span className="island-run-sanctuary-panel__pill">Collected: <strong>{collectedCreatures.length}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
+            </div>
+
+            {collectedCreatures.length === 0 ? (
+              <div className="island-hatchery-card">
+                <div className="island-hatchery-card__state island-hatchery-card__state--empty">
+                  <p className="island-hatchery-card__stage-emoji">🪹</p>
+                  <p className="island-hatchery-card__headline">No creatures collected yet.</p>
+                  <p className="island-hatchery-card__copy">
+                    Hatch an egg and choose <strong>Collect Creature</strong> to start your shipboard sanctuary.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="island-run-sanctuary-panel__grid">
+                {collectedCreatures.map((creature) => (
+                  <article key={`${creature.islandKey}-${creature.collectedAtMs}`} className="island-run-sanctuary-card">
+                    <img
+                      className="island-run-sanctuary-card__art"
+                      src={getEggStageArtSrc(creature.tier, 4)}
+                      alt={`${creature.name} collected creature`}
+                    />
+                    <div className="island-run-sanctuary-card__body">
+                      <p className="island-run-sanctuary-card__eyebrow">
+                        Island {creature.islandKey} · {creature.tier}
+                      </p>
+                      <h4 className="island-run-sanctuary-card__title">{creature.name}</h4>
+                      <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.habitat}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.affinity}</strong></p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowSanctuaryPanel(false)}
               >
                 ✕ Close
               </button>
