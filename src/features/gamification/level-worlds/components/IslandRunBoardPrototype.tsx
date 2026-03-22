@@ -325,6 +325,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // M6-COMPLETE: per-visit encounter tracking (Set of completed tile indices)
   const [completedEncounterIndices, setCompletedEncounterIndices] = useState<Set<number>>(() => new Set());
   const [activeEncounterTileIndex, setActiveEncounterTileIndex] = useState<number | null>(null);
+  const [showHatcheryHelp, setShowHatcheryHelp] = useState(false);
   // M6-COMPLETE: encounter challenge state machine
   const [currentEncounterChallenge, setCurrentEncounterChallenge] = useState<EncounterChallenge | null>(null);
   const [encounterStep, setEncounterStep] = useState<'challenge' | 'reward'>('challenge');
@@ -1343,6 +1344,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
     prevHomeEggStageRef.current = homeEggStage;
   }, [homeEggStage]);
+
+  useEffect(() => {
+    if (activeStopId !== 'hatchery') {
+      setShowHatcheryHelp(false);
+    }
+  }, [activeStopId]);
 
   useEffect(() => {
     if (showTravelOverlay) {
@@ -3338,13 +3345,37 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       {activeStop && (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label={activeStop.title}>
-            <h3 className="island-stop-modal__title">{activeStop.title}</h3>
-            <p>{activeStop.description}</p>
-            <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p>
+            <div className="island-stop-modal__header-row">
+              <h3 className="island-stop-modal__title">{activeStop.title}</h3>
+              {activeStopId === 'hatchery' ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__help-btn"
+                  aria-label={showHatcheryHelp ? 'Hide hatchery help' : 'Open hatchery help'}
+                  aria-expanded={showHatcheryHelp}
+                  onClick={() => setShowHatcheryHelp((current) => !current)}
+                >
+                  ?
+                </button>
+              ) : null}
+              {activeStopId === 'hatchery' && showHatcheryHelp ? (
+                <div className="island-stop-modal__help-card" role="note" aria-label="Hatchery help">
+                  <p className="island-stop-modal__help-title">How Hatchery Works</p>
+                  <ul className="island-stop-modal__help-list">
+                    <li>{activeStop.description}</li>
+                    <li>The egg keeps incubating even while you travel.</li>
+                    <li>Each island has one egg slot — set it before you leave.</li>
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+            {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
+            {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p> : null}
             {activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
 
             {activeStopId === 'hatchery' && (
-              <div className="island-hatchery-card">
+              <>
+                <div className="island-hatchery-card">
                 {readyAnimal ? (
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
                     <img
@@ -3425,7 +3456,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                         );
                       })}
                     </div>
-                    <p style={{ fontSize: '0.8rem', opacity: 0.55 }}>💡 The egg keeps incubating even while you travel.</p>
                   </div>
                 ) : (
                   /* State 2: No egg set — allow setting one */
@@ -3466,10 +3496,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     </div>
                   </div>
                 )}
-                {!islandEggSlotUsed && (
-                  <p style={{ fontSize: '0.82rem', opacity: 0.7, marginTop: '0.5rem' }}>💡 Each island has one egg slot — set it before you leave!</p>
-                )}
-              </div>
+                </div>
+              </>
             )}
 
             {activeStopId === 'minigame' && (
