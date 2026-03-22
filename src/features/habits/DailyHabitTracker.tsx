@@ -1826,6 +1826,7 @@ export function DailyHabitTracker({
   }, [session.user.id]);
 
   const islandRunRuntime = useMemo(() => readIslandRunRuntimeState(session), [session]);
+  const [eggReadinessNowMs, setEggReadinessNowMs] = useState(() => Date.now());
   const activeIsland = islandRunRuntime.currentIslandNumber;
   const completedStopsOnActiveIsland = islandRunRuntime.completedStopsByIsland?.[String(activeIsland)] ?? [];
   const stopPlanForActiveIsland = useMemo(() => generateIslandStopPlan(activeIsland), [activeIsland]);
@@ -1837,23 +1838,54 @@ export function DailyHabitTracker({
     return nonBossDone && !bossDone;
   }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
 
+  const activeIslandEgg = islandRunRuntime.perIslandEggs?.[String(activeIsland)];
+  const activeIslandEggReadyAtMs = useMemo(() => {
+    if (activeIslandEgg && activeIslandEgg.status === 'incubating') {
+      return activeIslandEgg.hatchAtMs;
+    }
+
+    if (!activeIslandEgg && islandRunRuntime.activeEggTier && islandRunRuntime.activeEggSetAtMs && islandRunRuntime.activeEggHatchDurationMs) {
+      return islandRunRuntime.activeEggSetAtMs + islandRunRuntime.activeEggHatchDurationMs;
+    }
+
+    return null;
+  }, [
+    activeIslandEgg,
+    islandRunRuntime.activeEggHatchDurationMs,
+    islandRunRuntime.activeEggSetAtMs,
+    islandRunRuntime.activeEggTier,
+  ]);
+
+  useEffect(() => {
+    if (!activeIslandEggReadyAtMs || activeIslandEggReadyAtMs <= eggReadinessNowMs) {
+      return;
+    }
+
+    const timeoutMs = Math.max(0, activeIslandEggReadyAtMs - Date.now());
+    const timeoutId = window.setTimeout(() => {
+      setEggReadinessNowMs(Date.now());
+    }, timeoutMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeIslandEggReadyAtMs, eggReadinessNowMs]);
+
   const isEggReadyToCollectOnActiveIsland = useMemo(() => {
-    const activeIslandEgg = islandRunRuntime.perIslandEggs?.[String(activeIsland)];
     if (activeIslandEgg) {
-      return activeIslandEgg.status === 'ready';
+      return activeIslandEgg.status === 'ready'
+        || (activeIslandEgg.status === 'incubating' && eggReadinessNowMs >= activeIslandEgg.hatchAtMs);
     }
 
     if (islandRunRuntime.activeEggTier && islandRunRuntime.activeEggSetAtMs && islandRunRuntime.activeEggHatchDurationMs) {
-      return Date.now() >= islandRunRuntime.activeEggSetAtMs + islandRunRuntime.activeEggHatchDurationMs;
+      return eggReadinessNowMs >= islandRunRuntime.activeEggSetAtMs + islandRunRuntime.activeEggHatchDurationMs;
     }
 
     return false;
   }, [
-    activeIsland,
+    activeIslandEgg,
+    eggReadinessNowMs,
     islandRunRuntime.activeEggHatchDurationMs,
     islandRunRuntime.activeEggSetAtMs,
     islandRunRuntime.activeEggTier,
-    islandRunRuntime.perIslandEggs,
   ]);
 
   const isMysteryStopAvailable = useMemo(() => {
