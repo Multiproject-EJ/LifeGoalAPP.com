@@ -1837,14 +1837,17 @@ export function DailyHabitTracker({
     return nonBossDone && !bossDone;
   }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
 
-  const isEggSetForHatching = useMemo(() => {
-    if (islandRunRuntime.activeEggTier && islandRunRuntime.activeEggSetAtMs && islandRunRuntime.activeEggHatchDurationMs) {
-      return true;
+  const isEggReadyToCollectOnActiveIsland = useMemo(() => {
+    const activeIslandEgg = islandRunRuntime.perIslandEggs?.[String(activeIsland)];
+    if (activeIslandEgg) {
+      return activeIslandEgg.status === 'ready';
     }
 
-    const activeIslandEgg = islandRunRuntime.perIslandEggs?.[String(activeIsland)];
-    if (!activeIslandEgg) return false;
-    return activeIslandEgg.status === 'incubating' || activeIslandEgg.status === 'ready';
+    if (islandRunRuntime.activeEggTier && islandRunRuntime.activeEggSetAtMs && islandRunRuntime.activeEggHatchDurationMs) {
+      return Date.now() >= islandRunRuntime.activeEggSetAtMs + islandRunRuntime.activeEggHatchDurationMs;
+    }
+
+    return false;
   }, [
     activeIsland,
     islandRunRuntime.activeEggHatchDurationMs,
@@ -1875,7 +1878,7 @@ export function DailyHabitTracker({
       },
       {
         id: 'daily_treat',
-        label: 'Daily Treat',
+        label: 'Holiday Calendar',
         icon: '🎁',
         expiresAtMs: nextUtcMidnight,
         isCollected: hasCollectedDailyHeartsToday(session.user.id),
@@ -1911,11 +1914,11 @@ export function DailyHabitTracker({
       },
       {
         id: 'egg_hatch',
-        label: 'Egg Hatch',
+        label: 'Egg Ready',
         icon: '🥚',
         expiresAtMs: null,
         isCollected: false,
-        isVisible: isEggSetForHatching,
+        isVisible: isEggReadyToCollectOnActiveIsland,
         sortPriority: 6,
       },
       {
@@ -1931,7 +1934,7 @@ export function DailyHabitTracker({
   }, [
     hasClaimedVisionStar,
     isBossChallengeAvailable,
-    isEggSetForHatching,
+    isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
     isMysteryStopAvailable,
     luckyRollDoneForToday,
@@ -1962,7 +1965,7 @@ export function DailyHabitTracker({
       if (onOpenDailyTreat) {
         onOpenDailyTreat();
       } else {
-        setVisionRewardError('Daily Treat launcher is unavailable in this view.');
+        setVisionRewardError('Holiday Calendar launcher is unavailable in this view.');
       }
       return;
     }
@@ -2044,9 +2047,9 @@ export function DailyHabitTracker({
         icon: '🌟',
       },
       daily_treat: {
-        title: 'Daily Treat',
-        description: 'Your holiday advent calendar and daily treat rewards are ready.',
-        cta: 'Open Daily Treat →',
+        title: 'Holiday Calendar',
+        description: "Your holiday calendar is ready with today's treat.",
+        cta: 'Open Holiday Calendar →',
         icon: '🎁',
       },
       lucky_roll: {
@@ -2062,7 +2065,7 @@ export function DailyHabitTracker({
         icon: '🎡',
       },
       boss_challenge: { title: 'Boss', description: 'Boss challenge is available.', cta: 'Open Boss →', icon: '⚔️' },
-      egg_hatch: { title: 'Egg Ready', description: 'Your egg is ready to hatch.', cta: 'Open Hatchery →', icon: '🥚' },
+      egg_hatch: { title: 'Egg Ready', description: 'Your current island egg is ready to collect.', cta: 'Open Hatchery →', icon: '🥚' },
       mystery_stop: { title: 'Mystery', description: 'A mystery stop is available.', cta: 'Open Mystery →', icon: '🎭' },
     };
     return map[activeOfferTeaser];
