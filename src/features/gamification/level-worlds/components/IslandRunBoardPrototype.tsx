@@ -43,10 +43,12 @@ import {
 import {
   fetchCreatureCollection,
   collectCreatureForUser,
+  fetchActiveCompanionId,
   getCreatureManifestEntries,
   migrateLegacyEggLedgerToCollection,
+  saveActiveCompanionId,
 } from '../services/creatureCollectionService';
-import { selectCreatureForEgg } from '../services/creatureCatalog';
+import { getCompanionBonusForCreature, selectCreatureForEgg } from '../services/creatureCatalog';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -212,6 +214,10 @@ const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
   mid: '#ffe066',
   front: '#ff4ff5',
 };
+
+function getCompanionBonusStorageKey(userId: string): string {
+  return `island_run_companion_bonus_applied_${userId}`;
+}
 
 function toScreen(anchor: TileAnchor, width: number, height: number) {
   return {
@@ -402,6 +408,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [showShopPanel, setShowShopPanel] = useState(false);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
   const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
+  const [activeCompanionId, setActiveCompanionId] = useState<string | null>(() => fetchActiveCompanionId(session.user.id));
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -617,6 +624,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
     setCreatureCollection(collection);
   }, [runtimeState.perIslandEggs, session.user.id]);
+
+  useEffect(() => {
+    const stillOwned = creatureCollection.some((entry) => entry.creatureId === activeCompanionId);
+    if (activeCompanionId && !stillOwned) {
+      setActiveCompanionId(null);
+      saveActiveCompanionId(session.user.id, null);
+    }
+  }, [activeCompanionId, creatureCollection, session.user.id]);
 
   // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
   useEffect(() => {
@@ -1732,6 +1747,49 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   };
 
   const collectedCreatures = useMemo(() => getCreatureManifestEntries(session.user.id), [creatureCollection, session.user.id]);
+  const activeCompanion = useMemo(
+    () => collectedCreatures.find((creature) => creature.creatureId === activeCompanionId) ?? null,
+    [activeCompanionId, collectedCreatures],
+  );
+  const activeCompanionBonus = useMemo(
+    () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature) : null),
+    [activeCompanion],
+  );
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
+      return;
+    }
+
+    const visitKey = `${cycleIndex}:${islandNumber}`;
+    const storageKey = getCompanionBonusStorageKey(session.user.id);
+
+    try {
+      if (window.localStorage.getItem(storageKey) === visitKey) {
+        return;
+      }
+      window.localStorage.setItem(storageKey, visitKey);
+    } catch {
+      // ignore storage failures and still apply once for this mount
+    }
+
+    if (activeCompanionBonus.effect === 'bonus_heart') {
+      setHearts((current) => Math.min(MAX_HEARTS, current + activeCompanionBonus.amount));
+    } else if (activeCompanionBonus.effect === 'bonus_spin') {
+      setSpinTokens((current) => current + activeCompanionBonus.amount);
+    } else {
+      setDicePool((current) => current + activeCompanionBonus.amount);
+    }
+
+    setLandingText(`${activeCompanion.creature.name} supported this island: ${activeCompanionBonus.label}.`);
+  }, [
+    activeCompanion,
+    activeCompanionBonus,
+    cycleIndex,
+    hasHydratedRuntimeState,
+    islandNumber,
+    session.user.id,
+  ]);
 
   const handleCollectCreature = () => {
     if (!activeEgg || eggStage < 4) return;
@@ -2716,6 +2774,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
+  const handleSetActiveCompanion = (creatureId: string | null) => {
+    setActiveCompanionId(creatureId);
+    saveActiveCompanionId(session.user.id, creatureId);
+    const selected = creatureId ? collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null : null;
+    setLandingText(
+      selected
+        ? `${selected.creature.name} is now your active companion.`
+        : 'Active companion cleared.',
+    );
+  };
+
   const handleStoryRewardClaim = (coinsReward: number) => {
     if (coinsReward <= 0) {
       return;
@@ -2817,6 +2886,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
+          {activeCompanion && activeCompanionBonus ? (
+            <span className="island-run-prototype__stat-chip">
+              🐾 <strong>{activeCompanion.creature.name}</strong> · {activeCompanionBonus.label}
+            </span>
+          ) : null}
           <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">Lvl <strong>{islandNumber}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
           {/* M2: roll result chip — visible in production after every roll */}
@@ -3951,6 +4025,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <div className="island-run-sanctuary-panel__summary">
               <span className="island-run-sanctuary-panel__pill">Species: <strong>{collectedCreatures.length}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Copies: <strong>{collectedCreatures.reduce((sum, creature) => sum + creature.copies, 0)}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">
+                Active: <strong>{activeCompanion?.creature.name ?? 'None'}</strong>
+              </span>
               <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
             </div>
 
@@ -3981,6 +4058,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.creature.habitat}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.creature.affinity}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">
+                        Companion bonus: <strong>{getCompanionBonusForCreature(creature.creature).label}</strong>
+                      </p>
+                      <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(creature.creature).description}</p>
+                      <div className="island-hatchery-card__actions">
+                        {activeCompanionId === creature.creatureId ? (
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                            onClick={() => handleSetActiveCompanion(null)}
+                          >
+                            Remove Active
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                            onClick={() => handleSetActiveCompanion(creature.creatureId)}
+                          >
+                            Set Active Companion
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </article>
                 ))}

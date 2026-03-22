@@ -13,6 +13,10 @@ function getStorageKey(userId: string): string {
   return `island_run_creature_collection_${userId}`;
 }
 
+function getActiveCompanionStorageKey(userId: string): string {
+  return `island_run_active_companion_${userId}`;
+}
+
 function normalizeCollectionEntry(value: Partial<CreatureCollectionEntry>): CreatureCollectionEntry | null {
   if (typeof value.creatureId !== 'string' || !value.creatureId) return null;
   const copies = typeof value.copies === 'number' && Number.isFinite(value.copies) ? Math.max(1, Math.floor(value.copies)) : 1;
@@ -126,4 +130,28 @@ export function migrateLegacyEggLedgerToCollection(options: {
     writeCreatureCollection(userId, collection);
   }
   return { didChange, collection };
+}
+
+export function fetchActiveCompanionId(userId: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const value = window.localStorage.getItem(getActiveCompanionStorageKey(userId));
+    return value && value.trim() ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveActiveCompanionId(userId: string, creatureId: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const storageKey = getActiveCompanionStorageKey(userId);
+    if (!creatureId) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+    window.localStorage.setItem(storageKey, creatureId);
+  } catch {
+    // ignore storage failures for now
+  }
 }

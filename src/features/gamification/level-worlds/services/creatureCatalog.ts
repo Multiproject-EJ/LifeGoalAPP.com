@@ -8,6 +8,13 @@ export interface CreatureDefinition {
   affinity: string;
 }
 
+export interface CreatureCompanionBonus {
+  effect: 'bonus_dice' | 'bonus_heart' | 'bonus_spin';
+  amount: number;
+  label: string;
+  description: string;
+}
+
 const COMMON_CREATURES: CreatureDefinition[] = [
   { id: 'common-sproutling', name: 'Sproutling', tier: 'common', habitat: 'Zen Garden', affinity: 'Builder' },
   { id: 'common-pebble-spirit', name: 'Pebble Spirit', tier: 'common', habitat: 'Root Atrium', affinity: 'Grounded' },
@@ -87,4 +94,29 @@ export function selectCreatureForEgg(options: {
   const pool = CREATURES_BY_TIER[eggTier];
   const index = Math.abs((seed * 17) + (islandNumber * 31)) % pool.length;
   return pool[index] ?? pool[0];
+}
+
+export function getCompanionBonusForCreature(creature: CreatureDefinition): CreatureCompanionBonus {
+  if (['Guardian', 'Caregiver', 'Mentor', 'Peacemaker'].includes(creature.affinity)) {
+    return {
+      effect: 'bonus_heart',
+      amount: 1,
+      label: '+1 Heart',
+      description: 'Supportive companion — grants +1 heart at the start of each island.',
+    };
+  }
+  if (['Explorer', 'Visionary', 'Creator', 'Catalyst'].includes(creature.affinity)) {
+    return {
+      effect: 'bonus_spin',
+      amount: 1,
+      label: '+1 Spin',
+      description: 'Momentum companion — grants +1 spin token at the start of each island.',
+    };
+  }
+  return {
+    effect: 'bonus_dice',
+    amount: 4,
+    label: '+4 Dice',
+    description: 'Steady companion — grants +4 dice at the start of each island.',
+  };
 }
