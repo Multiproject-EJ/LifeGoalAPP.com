@@ -145,6 +145,9 @@ function formatCooldownRemaining(remainingMs: number): string {
   return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
 }
 
+type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
+type SanctuarySortMode = 'recent' | 'bond' | 'tier' | 'active';
+
 type BondMilestoneReward = {
   level: number;
   label: string;
@@ -460,6 +463,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [selectedSanctuaryCreatureId, setSelectedSanctuaryCreatureId] = useState<string | null>(null);
   const [sanctuaryFeedback, setSanctuaryFeedback] = useState<string | null>(null);
   const [sanctuaryClockMs, setSanctuaryClockMs] = useState(() => Date.now());
+  const [sanctuaryFilterMode, setSanctuaryFilterMode] = useState<SanctuaryFilterMode>('all');
+  const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -1830,6 +1835,41 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
     [selectedSanctuaryCreature],
   );
+  const sanctuaryRewardReadyCount = useMemo(
+    () => collectedCreatures.filter((creature) => getUnclaimedBondMilestones(creature).length > 0).length,
+    [collectedCreatures],
+  );
+  const visibleSanctuaryCreatures = useMemo(() => {
+    const filtered = collectedCreatures.filter((creature) => {
+      if (sanctuaryFilterMode === 'reward_ready') return getUnclaimedBondMilestones(creature).length > 0;
+      if (sanctuaryFilterMode === 'active') return creature.creatureId === activeCompanionId;
+      if (sanctuaryFilterMode === 'common' || sanctuaryFilterMode === 'rare' || sanctuaryFilterMode === 'mythic') {
+        return creature.creature.tier === sanctuaryFilterMode;
+      }
+      return true;
+    });
+
+    const tierRank: Record<'common' | 'rare' | 'mythic', number> = { common: 0, rare: 1, mythic: 2 };
+
+    return [...filtered].sort((a, b) => {
+      if (sanctuarySortMode === 'bond') {
+        return b.bondLevel - a.bondLevel || b.bondXp - a.bondXp || b.lastCollectedAtMs - a.lastCollectedAtMs;
+      }
+      if (sanctuarySortMode === 'tier') {
+        return tierRank[b.creature.tier] - tierRank[a.creature.tier] || b.bondLevel - a.bondLevel || b.lastCollectedAtMs - a.lastCollectedAtMs;
+      }
+      if (sanctuarySortMode === 'active') {
+        const aActive = a.creatureId === activeCompanionId ? 1 : 0;
+        const bActive = b.creatureId === activeCompanionId ? 1 : 0;
+        const aReady = getUnclaimedBondMilestones(a).length > 0 ? 1 : 0;
+        const bReady = getUnclaimedBondMilestones(b).length > 0 ? 1 : 0;
+        return bActive - aActive || bReady - aReady || b.bondLevel - a.bondLevel || b.lastCollectedAtMs - a.lastCollectedAtMs;
+      }
+      const aReady = getUnclaimedBondMilestones(a).length > 0 ? 1 : 0;
+      const bReady = getUnclaimedBondMilestones(b).length > 0 ? 1 : 0;
+      return bReady - aReady || b.lastCollectedAtMs - a.lastCollectedAtMs;
+    });
+  }, [activeCompanionId, collectedCreatures, sanctuaryFilterMode, sanctuarySortMode]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
@@ -2841,6 +2881,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setSelectedSanctuaryCreatureId(null);
     setSanctuaryFeedback(null);
     setSanctuaryClockMs(Date.now());
+    setSanctuaryFilterMode('all');
+    setSanctuarySortMode('recent');
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -4182,7 +4224,41 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 Active: <strong>{activeCompanion?.creature.name ?? 'None'}</strong>
               </span>
               <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Rewards ready: <strong>{sanctuaryRewardReadyCount}</strong></span>
             </div>
+
+            {!selectedSanctuaryCreature && collectedCreatures.length > 0 ? (
+              <div className="island-run-sanctuary-toolbar">
+                <div className="island-run-sanctuary-toolbar__filters" role="group" aria-label="Sanctuary filters">
+                  {[
+                    ['all', 'All'],
+                    ['reward_ready', 'Reward Ready'],
+                    ['active', 'Active'],
+                    ['common', 'Common'],
+                    ['rare', 'Rare'],
+                    ['mythic', 'Mythic'],
+                  ].map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      className={`island-run-sanctuary-filter ${sanctuaryFilterMode === mode ? 'island-run-sanctuary-filter--active' : ''}`}
+                      onClick={() => setSanctuaryFilterMode(mode as SanctuaryFilterMode)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <label className="island-run-sanctuary-toolbar__sort">
+                  <span>Sort</span>
+                  <select value={sanctuarySortMode} onChange={(e) => setSanctuarySortMode(e.target.value as SanctuarySortMode)}>
+                    <option value="recent">Reward ready / recent</option>
+                    <option value="bond">Highest bond</option>
+                    <option value="tier">Highest tier</option>
+                    <option value="active">Active first</option>
+                  </select>
+                </label>
+              </div>
+            ) : null}
 
             {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
 
@@ -4287,7 +4363,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </div>
             ) : (
               <div className="island-run-sanctuary-panel__grid">
-                {collectedCreatures.map((creature) => (
+                {visibleSanctuaryCreatures.map((creature) => (
                   <article key={creature.creatureId} className="island-run-sanctuary-card">
                     <img
                       className="island-run-sanctuary-card__art"
@@ -4332,6 +4408,15 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                         >
                           View Details
                         </button>
+                        {getUnclaimedBondMilestones(creature).length > 0 ? (
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                            onClick={() => handleClaimSanctuaryBondReward(creature.creatureId, getUnclaimedBondMilestones(creature)[0])}
+                          >
+                            Claim Reward
+                          </button>
+                        ) : null}
                         {activeCompanionId === creature.creatureId ? (
                           <button
                             type="button"
