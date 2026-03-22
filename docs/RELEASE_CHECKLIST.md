@@ -153,12 +153,18 @@ Run migrations in the order listed below. All files are in `supabase/migrations/
 | `0174_contract_engine_v2.sql` | Contract Engine 2.0: `user_reputation_scores`, new ContractTypes, `locked` status | 🔄 |
 | `0175_contract_sweep_v2.sql` | Contract sweep v2 cron and RPC | No |
 
-### Final migrations (0176–0177)
+### Final migrations (0176–0188)
 
 | File | Description | Idempotent? |
 |---|---|---|
 | `0176_scheduled_reminders.sql` | `scheduled_reminders` table with `(status, scheduled_at)` index and per-user RLS | 🔄 |
 | `0177_advent_calendar_holiday_key.sql` | Adds `holiday_key` column to `daily_calendar_seasons` for holiday advent calendar | 🔄 |
+| `0178_*` | _(reserved / no canonical migration file in repo)_ | — |
+| `0179_island_run_completed_stops_by_island.sql` | Adds per-island completed stop ledger to `island_run_runtime_state` | No |
+| `0180_*`–`0185_*` | Other feature-track migrations (see `supabase/migrations/`) | varies |
+| `0186_island_run_cycle_index.sql` | Adds `cycle_index` wrap counter to `island_run_runtime_state` | 🔄 |
+| `0187_island_run_per_run_state_columns.sql` | Adds in-flight runtime columns (`token_index`, `hearts`, `coins`, `spin_tokens`) | No |
+| `0188_island_run_dice_pool_column.sql` | Adds `dice_pool` to `island_run_runtime_state` | No |
 
 ---
 
