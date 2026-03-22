@@ -2204,6 +2204,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setHearts((h) => h + (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts);
       void awardHearts(session.user.id, (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts, 'shooter_blitz', 'Island Run encounter reward');
     }
+    if (reward.dice > 0) {
+      setDicePool((current) => current + reward.dice);
+    }
+    if (reward.spinTokens > 0) {
+      setSpinTokens((current) => current + reward.spinTokens);
+    }
     if (reward.walletShards) {
       awardWalletShards(1);
     }
@@ -2243,7 +2249,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // M6-COMPLETE: Challenge complete handler (quiz answer or gratitude submit)
   const handleEncounterChallengeComplete = () => {
     if (encounterStep !== 'challenge') return;
-    const reward = rollEncounterReward();
+    const reward = rollEncounterReward({ islandNumber, challengeType: currentEncounterChallenge?.type });
     setEncounterRewardData(reward);
     setEncounterStep('reward');
     applyEncounterReward(reward);
@@ -2252,7 +2258,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // M6-COMPLETE: Breathing auto-complete — called from useEffect when countdown hits 0
   const handleBreathingAutoComplete = () => {
     if (encounterStep !== 'challenge') return;
-    const reward = rollEncounterReward();
+    const reward = rollEncounterReward({ islandNumber, challengeType: currentEncounterChallenge?.type });
     setEncounterRewardData(reward);
     setEncounterStep('reward');
     applyEncounterReward(reward);
@@ -4151,7 +4157,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <>
                 {currentEncounterChallenge.type === 'quiz' && (
                   <div className="island-encounter__challenge">
-                    <p className="island-encounter__eyebrow">Quick Quiz</p>
+                    <p className="island-encounter__eyebrow">{currentEncounterChallenge.title}</p>
                     <p className="island-encounter__question">{currentEncounterChallenge.question}</p>
                     <div className="island-encounter__answers">
                       {currentEncounterChallenge.answers.map((answer, i) => (
@@ -4170,7 +4176,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
                 {currentEncounterChallenge.type === 'breathing' && (
                   <div className="island-encounter__challenge">
-                    <p className="island-encounter__eyebrow">Breathing Exercise</p>
+                    <p className="island-encounter__eyebrow">{currentEncounterChallenge.title}</p>
                     <p className="island-encounter__question">{currentEncounterChallenge.instruction}</p>
                     <div className="island-encounter__breathing">
                       <div className="island-encounter__breathing-orb" aria-hidden="true" />
@@ -4184,7 +4190,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
                 {currentEncounterChallenge.type === 'gratitude' && (
                   <div className="island-encounter__challenge">
-                    <p className="island-encounter__eyebrow">Gratitude Moment</p>
+                    <p className="island-encounter__eyebrow">{currentEncounterChallenge.title}</p>
                     <p className="island-encounter__question">{currentEncounterChallenge.prompt}</p>
                     <textarea
                       className="island-encounter__gratitude-input"
@@ -4214,6 +4220,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   <span className="island-encounter__reward-item">🪙 +{encounterRewardData.coins} coins</span>
                   {encounterRewardData.heart && <span className="island-encounter__reward-item">❤️ +1 heart</span>}
                   {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
+                  {encounterRewardData.dice > 0 && <span className="island-encounter__reward-item">🎲 +{encounterRewardData.dice} dice</span>}
+                  {encounterRewardData.spinTokens > 0 && <span className="island-encounter__reward-item">🌀 +{encounterRewardData.spinTokens} spin</span>}
                 </div>
                 <p className="island-encounter__reward-tagline">Keep going — you're on a streak!</p>
               </div>
