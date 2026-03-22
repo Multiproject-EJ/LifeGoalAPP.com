@@ -17,14 +17,27 @@ export interface CreatureCompanionBonus {
   nextBondMilestoneLevel: number;
 }
 
+export interface CreatureSpecialtyBonus {
+  effect: 'sell_bonus_coins' | 'encounter_bonus_coins' | 'encounter_bonus_hearts';
+  amount: number;
+  label: string;
+  description: string;
+  bondLevel: number;
+}
+
+
+function getSafeBondLevel(bondLevel: number): number {
+  return Math.max(1, Math.floor(bondLevel));
+}
+
 function getScaledBonusAmount(baseAmount: number, bondLevel: number, growthStep: number): number {
-  const safeBondLevel = Math.max(1, Math.floor(bondLevel));
+  const safeBondLevel = getSafeBondLevel(bondLevel);
   const bonusSteps = Math.floor((safeBondLevel - 1) / growthStep);
   return baseAmount + bonusSteps;
 }
 
 function getNextBondMilestoneLevel(bondLevel: number, growthStep: number): number {
-  const safeBondLevel = Math.max(1, Math.floor(bondLevel));
+  const safeBondLevel = getSafeBondLevel(bondLevel);
   return Math.floor((safeBondLevel - 1) / growthStep) * growthStep + growthStep + 1;
 }
 
@@ -117,7 +130,7 @@ export function getCompanionBonusForCreature(creature: CreatureDefinition, bondL
       amount,
       label: `+${amount} Heart${amount === 1 ? '' : 's'}` ,
       description: `Supportive companion — grants +${amount} heart${amount === 1 ? '' : 's'} at the start of each island. Grows every 5 bond levels.`,
-      bondLevel: Math.max(1, Math.floor(bondLevel)),
+      bondLevel: getSafeBondLevel(bondLevel),
       nextBondMilestoneLevel: getNextBondMilestoneLevel(bondLevel, 5),
     };
   }
@@ -128,17 +141,52 @@ export function getCompanionBonusForCreature(creature: CreatureDefinition, bondL
       amount,
       label: `+${amount} Spin${amount === 1 ? '' : 's'}`,
       description: `Momentum companion — grants +${amount} spin token${amount === 1 ? '' : 's'} at the start of each island. Grows every 5 bond levels.`,
-      bondLevel: Math.max(1, Math.floor(bondLevel)),
+      bondLevel: getSafeBondLevel(bondLevel),
       nextBondMilestoneLevel: getNextBondMilestoneLevel(bondLevel, 5),
     };
   }
-  const amount = 4 + (Math.floor((Math.max(1, Math.floor(bondLevel)) - 1) / 3) * 2);
+  const amount = 4 + (Math.floor((getSafeBondLevel(bondLevel) - 1) / 3) * 2);
   return {
     effect: 'bonus_dice',
     amount,
     label: `+${amount} Dice`,
     description: `Steady companion — grants +${amount} dice at the start of each island. Grows by +2 every 3 bond levels.`,
-    bondLevel: Math.max(1, Math.floor(bondLevel)),
+    bondLevel: getSafeBondLevel(bondLevel),
     nextBondMilestoneLevel: getNextBondMilestoneLevel(bondLevel, 3),
+  };
+}
+
+export function getCreatureSpecialtyForCompanion(creature: CreatureDefinition, bondLevel = 1): CreatureSpecialtyBonus {
+  const safeBondLevel = getSafeBondLevel(bondLevel);
+
+  if (['Builder', 'Grounded', 'Steady', 'Architect', 'Strategist', 'Commander', 'Champion'].includes(creature.affinity)) {
+    const amount = 15 + (Math.floor((safeBondLevel - 1) / 4) * 5);
+    return {
+      effect: 'sell_bonus_coins',
+      amount,
+      label: `Hatchery Negotiator +${amount}%`,
+      description: `When you sell a hatched creature, gain +${amount}% bonus coins.`,
+      bondLevel: safeBondLevel,
+    };
+  }
+
+  if (['Guardian', 'Caregiver', 'Mentor', 'Peacemaker', 'Sage', 'Radiant'].includes(creature.affinity)) {
+    const amount = 1 + Math.floor((safeBondLevel - 1) / 6);
+    return {
+      effect: 'encounter_bonus_hearts',
+      amount,
+      label: `Encounter Guardian +${amount} heart${amount === 1 ? '' : 's'}` ,
+      description: `On successful encounters, gain +${amount} extra heart${amount === 1 ? '' : 's'}.`,
+      bondLevel: safeBondLevel,
+    };
+  }
+
+  const amount = 10 + (Math.floor((safeBondLevel - 1) / 4) * 5);
+  return {
+    effect: 'encounter_bonus_coins',
+    amount,
+    label: `Fortune Scout +${amount} coins`,
+    description: `On successful encounters, gain +${amount} extra coins.`,
+    bondLevel: safeBondLevel,
   };
 }

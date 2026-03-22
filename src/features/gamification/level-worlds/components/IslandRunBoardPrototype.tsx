@@ -52,7 +52,7 @@ import {
   getUnclaimedBondMilestones,
   CREATURE_BOND_XP_PER_LEVEL,
 } from '../services/creatureCollectionService';
-import { getCompanionBonusForCreature, selectCreatureForEgg } from '../services/creatureCatalog';
+import { getCompanionBonusForCreature, getCreatureSpecialtyForCompanion, selectCreatureForEgg } from '../services/creatureCatalog';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -1831,6 +1831,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     () => (selectedSanctuaryCreature ? getCompanionBonusForCreature(selectedSanctuaryCreature.creature, selectedSanctuaryCreature.bondLevel) : null),
     [selectedSanctuaryCreature],
   );
+  const activeCompanionSpecialty = useMemo(
+    () => (activeCompanion ? getCreatureSpecialtyForCompanion(activeCompanion.creature, activeCompanion.bondLevel) : null),
+    [activeCompanion],
+  );
+  const selectedSanctuaryCreatureSpecialty = useMemo(
+    () => (selectedSanctuaryCreature ? getCreatureSpecialtyForCompanion(selectedSanctuaryCreature.creature, selectedSanctuaryCreature.bondLevel) : null),
+    [selectedSanctuaryCreature],
+  );
   const selectedSanctuaryCreatureUnclaimedMilestones = useMemo(
     () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
     [selectedSanctuaryCreature],
@@ -1989,19 +1997,23 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           openedAt: nowTs,
           location: 'island',
         };
+    const specialtySellBonusCoins = activeCompanionSpecialty?.effect === 'sell_bonus_coins'
+      ? Math.max(0, Math.floor((bundle.coinsDelta * activeCompanionSpecialty.amount) / 100))
+      : 0;
     if (bundle.heartsDelta > 0) setHearts((current) => current + bundle.heartsDelta);
-    if (bundle.coinsDelta > 0) setCoins((c) => c + bundle.coinsDelta);
+    if (bundle.coinsDelta + specialtySellBonusCoins > 0) setCoins((c) => c + bundle.coinsDelta + specialtySellBonusCoins);
     if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
     if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
     awardShards('egg_open');
     awardWalletShards(2);
-    void awardGold(session.user.id, bundle.coinsDelta, 'shooter_blitz', 'island_run_hatchery_sell_creature');
+    void awardGold(session.user.id, bundle.coinsDelta + specialtySellBonusCoins, 'shooter_blitz', 'island_run_hatchery_sell_creature');
     setActiveEgg(null);
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     const rewardParts: string[] = [];
     if (bundle.heartsDelta > 0) rewardParts.push(`+${bundle.heartsDelta} ❤️`);
     if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
+    if (specialtySellBonusCoins > 0) rewardParts.push(`+${specialtySellBonusCoins} 🪙 specialty`);
     if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
     if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
     setLandingText(`Sold ${creature.name}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
@@ -2068,10 +2080,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // M6-COMPLETE: Core reward application for encounter completion
   const applyEncounterReward = (reward: EncounterReward) => {
-    setCoins((c) => c + reward.coins);
-    void awardGold(session.user.id, reward.coins, 'shooter_blitz', 'island_run_encounter_reward');
-    if (reward.heart) {
-      setHearts((h) => h + 1);
+    const specialtyEncounterBonusCoins = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
+    const specialtyEncounterBonusHearts = activeCompanionSpecialty?.effect === 'encounter_bonus_hearts' ? activeCompanionSpecialty.amount : 0;
+
+    setCoins((c) => c + reward.coins + specialtyEncounterBonusCoins);
+    void awardGold(session.user.id, reward.coins + specialtyEncounterBonusCoins, 'shooter_blitz', 'island_run_encounter_reward');
+    if (reward.heart || specialtyEncounterBonusHearts > 0) {
+      setHearts((h) => h + (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts);
+      void awardHearts(session.user.id, (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts, 'shooter_blitz', 'Island Run encounter reward');
     }
     if (reward.walletShards) {
       awardWalletShards(1);
@@ -2085,7 +2101,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
     setEncounterResolved(true);
     const summary = formatEncounterRewardSummary(reward);
-    setLandingText(`Encounter complete! ${summary}`);
+    const specialtySummaryParts: string[] = [];
+    if (specialtyEncounterBonusCoins > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusCoins} coins`);
+    if (specialtyEncounterBonusHearts > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusHearts} heart${specialtyEncounterBonusHearts === 1 ? '' : 's'}`);
+    const specialtySuffix = specialtySummaryParts.length > 0 && activeCompanion
+      ? ` ${activeCompanion.creature.name} specialty added ${specialtySummaryParts.join(', ')}.`
+      : '';
+    setLandingText(`Encounter complete! ${summary}.${specialtySuffix}`);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -2096,6 +2118,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         reward_coins: reward.coins,
         reward_heart: reward.heart,
         reward_wallet_shards: reward.walletShards,
+        specialty_bonus_coins: specialtyEncounterBonusCoins,
+        specialty_bonus_hearts: specialtyEncounterBonusHearts,
+        specialty_effect: activeCompanionSpecialty?.effect,
       },
     });
   };
@@ -4295,6 +4320,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 </p>
                 <p className="island-run-sanctuary-card__meta">{selectedSanctuaryCreatureBonus?.description}</p>
                 <p className="island-run-sanctuary-card__meta">
+                  Specialty: <strong>{selectedSanctuaryCreatureSpecialty?.label ?? '—'}</strong>
+                </p>
+                <p className="island-run-sanctuary-card__meta">{selectedSanctuaryCreatureSpecialty?.description}</p>
+                <p className="island-run-sanctuary-card__meta">
                   Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
                 </p>
                 {selectedSanctuaryCreatureUnclaimedMilestones.length > 0 ? (
@@ -4383,6 +4412,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                         Companion bonus: <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).label}</strong>
                       </p>
                       <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(creature.creature, creature.bondLevel).description}</p>
+                      <p className="island-run-sanctuary-card__meta">
+                        Specialty: <strong>{getCreatureSpecialtyForCompanion(creature.creature, creature.bondLevel).label}</strong>
+                      </p>
+                      <p className="island-run-sanctuary-card__meta">{getCreatureSpecialtyForCompanion(creature.creature, creature.bondLevel).description}</p>
                       <p className="island-run-sanctuary-card__meta">
                         Next boost at bond level <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).nextBondMilestoneLevel}</strong>
                       </p>
