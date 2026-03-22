@@ -52,6 +52,12 @@ import {
   getUnclaimedBondMilestones,
   CREATURE_BOND_XP_PER_LEVEL,
 } from '../services/creatureCollectionService';
+import {
+  earnCreatureTreatsForUser,
+  fetchCreatureTreatInventory,
+  spendCreatureTreatForUser,
+  type CreatureTreatType,
+} from '../services/creatureTreatInventoryService';
 import { getCompanionBonusForCreature, getCreatureSpecialtyForCompanion, selectCreatureForEgg } from '../services/creatureCatalog';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
@@ -125,6 +131,16 @@ const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
 const UTILITY_TIMER_EXT_HOURS = 12;
 const MAX_HEARTS = 10;
 const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
+const CREATURE_TREAT_OPTIONS: Array<{ type: CreatureTreatType; label: string; xpGain: number; summary: string }> = [
+  { type: 'basic', label: 'Basic Treat', xpGain: 1, summary: '+1 bond XP' },
+  { type: 'favorite', label: 'Favorite Snack', xpGain: 2, summary: '+2 bond XP' },
+  { type: 'rare', label: 'Rare Feast', xpGain: 4, summary: '+4 bond XP' },
+];
+const CREATURE_TREAT_EARN_BY_EGG_TIER: Record<EggTier, Partial<Record<CreatureTreatType, number>>> = {
+  common: { basic: 1 },
+  rare: { basic: 1, favorite: 1 },
+  mythic: { favorite: 1, rare: 1 },
+};
 
 function formatRelativeTimeFromNow(timestampMs: number | null): string {
   if (!timestampMs) return 'Never';
@@ -465,6 +481,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [sanctuaryClockMs, setSanctuaryClockMs] = useState(() => Date.now());
   const [sanctuaryFilterMode, setSanctuaryFilterMode] = useState<SanctuaryFilterMode>('all');
   const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
+  const [creatureTreatInventory, setCreatureTreatInventory] = useState(() => fetchCreatureTreatInventory(session.user.id));
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -684,6 +701,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }, 60_000);
     return () => window.clearInterval(intervalId);
   }, [showSanctuaryPanel]);
+
+  useEffect(() => {
+    setCreatureTreatInventory(fetchCreatureTreatInventory(session.user.id));
+  }, [session.user.id]);
 
   useEffect(() => {
     const { collection } = migrateLegacyEggLedgerToCollection({
@@ -1943,6 +1964,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       islandNumber,
       collectedAtMs: nowTs,
     }));
+    setCreatureTreatInventory(earnCreatureTreatsForUser(session.user.id, CREATURE_TREAT_EARN_BY_EGG_TIER[resolvedEgg.tier]));
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
     setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
@@ -2937,7 +2959,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setSanctuaryClockMs(Date.now());
   };
 
-  const handleFeedSanctuaryCreature = (creatureId: string) => {
+  const handleFeedSanctuaryCreature = (creatureId: string, treatType: CreatureTreatType) => {
     const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
     if (!target) return;
     const nowMs = Date.now();
@@ -2947,24 +2969,32 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setSanctuaryClockMs(nowMs);
       return;
     }
+    const treatOption = CREATURE_TREAT_OPTIONS.find((option) => option.type === treatType);
+    if (!treatOption) return;
+    if (creatureTreatInventory[treatType] <= 0) {
+      setSanctuaryFeedback(`No ${treatOption.label.toLowerCase()} left. Earn more by collecting creatures.`);
+      return;
+    }
+    setCreatureTreatInventory(spendCreatureTreatForUser(session.user.id, treatType));
     const previousBondLevel = target.bondLevel;
     setCreatureCollection(feedCreatureForUser({
       userId: session.user.id,
       creatureId,
       fedAtMs: nowMs,
+      xpGain: treatOption.xpGain,
     }));
     setSanctuaryClockMs(nowMs);
-    const nextBondXp = target.bondXp + 1;
+    const nextBondXp = target.bondXp + treatOption.xpGain;
     const nextBondLevel = Math.floor(nextBondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
     const rewardPreview = getBondMilestoneReward(nextBondLevel);
     setSanctuaryFeedback(
       nextBondLevel > previousBondLevel
         ? rewardPreview
-          ? `${target.creature.name} reached bond level ${nextBondLevel}! ${rewardPreview.label} is ready to claim.`
-          : `${target.creature.name} reached bond level ${nextBondLevel}!`
-        : `Fed ${target.creature.name}. Bond progress increased.`,
+          ? `${target.creature.name} loved the ${treatOption.label.toLowerCase()} and reached bond level ${nextBondLevel}! ${rewardPreview.label} is ready to claim.`
+          : `${target.creature.name} loved the ${treatOption.label.toLowerCase()} and reached bond level ${nextBondLevel}!`
+        : `Fed ${target.creature.name} a ${treatOption.label.toLowerCase()}. Bond progress increased by ${treatOption.xpGain}.`,
     );
-    setLandingText(`${target.creature.name} enjoyed a shipboard meal and feels closer to you.`);
+    setLandingText(`${target.creature.name} enjoyed a ${treatOption.label.toLowerCase()} and feels closer to you.`);
     playIslandRunSound('encounter_resolve');
     triggerIslandRunHaptic('reward_claim');
   };
@@ -4250,6 +4280,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               </span>
               <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rewards ready: <strong>{sanctuaryRewardReadyCount}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Basic treats: <strong>{creatureTreatInventory.basic}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Favorite snacks: <strong>{creatureTreatInventory.favorite}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Rare feasts: <strong>{creatureTreatInventory.rare}</strong></span>
             </div>
 
             {!selectedSanctuaryCreature && collectedCreatures.length > 0 ? (
@@ -4351,16 +4384,24 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       Claim {getBondMilestoneReward(selectedSanctuaryCreatureUnclaimedMilestones[0])?.label}
                     </button>
                   ) : null}
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                    onClick={() => handleFeedSanctuaryCreature(selectedSanctuaryCreature.creatureId)}
-                    disabled={Boolean(selectedSanctuaryCreature.lastFedAtMs && selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS > sanctuaryClockMs)}
-                  >
-                    {selectedSanctuaryCreature.lastFedAtMs && selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS > sanctuaryClockMs
-                      ? `Feed in ${formatCooldownRemaining(selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS - sanctuaryClockMs)}`
-                      : 'Feed Creature'}
-                  </button>
+                  <div className="island-run-sanctuary-treats">
+                    {CREATURE_TREAT_OPTIONS.map((treatOption) => {
+                      const isCoolingDown = Boolean(selectedSanctuaryCreature.lastFedAtMs && selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS > sanctuaryClockMs);
+                      return (
+                        <button
+                          key={treatOption.type}
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                          onClick={() => handleFeedSanctuaryCreature(selectedSanctuaryCreature.creatureId, treatOption.type)}
+                          disabled={isCoolingDown || creatureTreatInventory[treatOption.type] <= 0}
+                        >
+                          {isCoolingDown
+                            ? `Feed in ${formatCooldownRemaining((selectedSanctuaryCreature.lastFedAtMs ?? 0) + CREATURE_FEED_COOLDOWN_MS - sanctuaryClockMs)}`
+                            : `${treatOption.label} (${creatureTreatInventory[treatOption.type]}) · ${treatOption.summary}`}
+                        </button>
+                      );
+                    })}
+                  </div>
                   {activeCompanionId === selectedSanctuaryCreature.creatureId ? (
                     <button
                       type="button"

@@ -3159,6 +3159,12 @@
   color: rgba(255, 231, 184, 0.88);
 }
 
+.island-run-sanctuary-treats {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+}
+
 .island-run-sanctuary-card__progress,
 .island-run-sanctuary-detail__progress {
   width: 100%;
