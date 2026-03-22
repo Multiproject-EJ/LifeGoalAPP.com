@@ -7,7 +7,12 @@ export interface CreatureCollectionEntry {
   firstCollectedAtMs: number;
   lastCollectedAtMs: number;
   lastCollectedIslandNumber: number;
+  bondXp: number;
+  bondLevel: number;
+  lastFedAtMs: number | null;
 }
+
+export const CREATURE_BOND_XP_PER_LEVEL = 3;
 
 function getStorageKey(userId: string): string {
   return `island_run_creature_collection_${userId}`;
@@ -29,7 +34,17 @@ function normalizeCollectionEntry(value: Partial<CreatureCollectionEntry>): Crea
   const lastCollectedIslandNumber = typeof value.lastCollectedIslandNumber === 'number' && Number.isFinite(value.lastCollectedIslandNumber)
     ? Math.max(1, Math.floor(value.lastCollectedIslandNumber))
     : 1;
-  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber };
+  const bondXp = typeof value.bondXp === 'number' && Number.isFinite(value.bondXp)
+    ? Math.max(0, Math.floor(value.bondXp))
+    : 0;
+  const derivedBondLevel = Math.floor(bondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
+  const bondLevel = typeof value.bondLevel === 'number' && Number.isFinite(value.bondLevel)
+    ? Math.max(1, Math.floor(value.bondLevel), derivedBondLevel)
+    : derivedBondLevel;
+  const lastFedAtMs = typeof value.lastFedAtMs === 'number' && Number.isFinite(value.lastFedAtMs)
+    ? value.lastFedAtMs
+    : null;
+  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber, bondXp, bondLevel, lastFedAtMs };
 }
 
 export function fetchCreatureCollection(userId: string): CreatureCollectionEntry[] {
@@ -73,6 +88,9 @@ export function collectCreatureForUser(options: {
           copies: entry.copies + 1,
           lastCollectedAtMs: collectedAtMs,
           lastCollectedIslandNumber: islandNumber,
+          bondXp: entry.bondXp,
+          bondLevel: entry.bondLevel,
+          lastFedAtMs: entry.lastFedAtMs,
         }
       : entry)
     : [
@@ -82,9 +100,35 @@ export function collectCreatureForUser(options: {
           firstCollectedAtMs: collectedAtMs,
           lastCollectedAtMs: collectedAtMs,
           lastCollectedIslandNumber: islandNumber,
+          bondXp: 0,
+          bondLevel: 1,
+          lastFedAtMs: null,
         },
         ...current,
       ];
+  return writeCreatureCollection(userId, next);
+}
+
+
+export function feedCreatureForUser(options: {
+  userId: string;
+  creatureId: string;
+  fedAtMs: number;
+  xpGain?: number;
+}): CreatureCollectionEntry[] {
+  const { userId, creatureId, fedAtMs, xpGain = 1 } = options;
+  const safeXpGain = Math.max(1, Math.floor(xpGain));
+  const current = fetchCreatureCollection(userId);
+  const next = current.map((entry) => {
+    if (entry.creatureId !== creatureId) return entry;
+    const bondXp = entry.bondXp + safeXpGain;
+    return {
+      ...entry,
+      bondXp,
+      bondLevel: Math.floor(bondXp / CREATURE_BOND_XP_PER_LEVEL) + 1,
+      lastFedAtMs: fedAtMs,
+    };
+  });
   return writeCreatureCollection(userId, next);
 }
 
@@ -121,6 +165,9 @@ export function migrateLegacyEggLedgerToCollection(options: {
       firstCollectedAtMs: collectedAtMs,
       lastCollectedAtMs: collectedAtMs,
       lastCollectedIslandNumber: islandNumber,
+      bondXp: 0,
+      bondLevel: 1,
+      lastFedAtMs: null,
     });
     didChange = true;
   });

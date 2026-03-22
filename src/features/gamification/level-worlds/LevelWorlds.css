@@ -3041,6 +3041,81 @@
 }
 
 
+.island-run-sanctuary-panel__feedback {
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(98, 198, 255, 0.14);
+  border: 1px solid rgba(120, 210, 255, 0.2);
+  color: rgba(232, 247, 255, 0.92);
+  font-size: 0.86rem;
+}
+
+.island-run-sanctuary-detail {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.95rem;
+  margin-bottom: 0.95rem;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 200, 255, 0.2);
+  background: linear-gradient(180deg, rgba(17, 35, 60, 0.94), rgba(8, 18, 36, 0.92));
+}
+
+.island-run-sanctuary-detail__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.island-run-sanctuary-detail__art {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.3));
+}
+
+.island-run-sanctuary-detail__identity {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1 1 220px;
+}
+
+.island-run-sanctuary-detail__title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #f9fcff;
+}
+
+.island-run-sanctuary-detail__copy {
+  margin: 0;
+  color: rgba(220, 238, 248, 0.85);
+  font-size: 0.9rem;
+}
+
+.island-run-sanctuary-detail__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.island-run-sanctuary-card__progress,
+.island-run-sanctuary-detail__progress {
+  width: 100%;
+  height: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.island-run-sanctuary-card__progress-fill,
+.island-run-sanctuary-detail__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #86d6ff, #9fffd8);
+}
+
 @media (max-width: 640px) {
   .level-worlds-island-run-shell {
     padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);

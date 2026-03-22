@@ -47,6 +47,8 @@ import {
   getCreatureManifestEntries,
   migrateLegacyEggLedgerToCollection,
   saveActiveCompanionId,
+  feedCreatureForUser,
+  CREATURE_BOND_XP_PER_LEVEL,
 } from '../services/creatureCollectionService';
 import { getCompanionBonusForCreature, selectCreatureForEgg } from '../services/creatureCatalog';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
@@ -120,6 +122,26 @@ const UTILITY_DICE_BONUS_COST = 30;
 const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
 const UTILITY_TIMER_EXT_HOURS = 12;
 const MAX_HEARTS = 10;
+const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
+
+function formatRelativeTimeFromNow(timestampMs: number | null): string {
+  if (!timestampMs) return 'Never';
+  const diffMs = Math.max(0, Date.now() - timestampMs);
+  const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+  if (diffHours < 1) return 'Less than 1 hour ago';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
+function formatCooldownRemaining(remainingMs: number): string {
+  if (remainingMs <= 0) return 'Ready now';
+  const totalHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+  if (totalHours < 24) return `${totalHours}h`;
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+}
 
 interface ActiveEgg {
   tier: EggTier;
@@ -409,6 +431,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
   const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
   const [activeCompanionId, setActiveCompanionId] = useState<string | null>(() => fetchActiveCompanionId(session.user.id));
+  const [selectedSanctuaryCreatureId, setSelectedSanctuaryCreatureId] = useState<string | null>(null);
+  const [sanctuaryFeedback, setSanctuaryFeedback] = useState<string | null>(null);
+  const [sanctuaryClockMs, setSanctuaryClockMs] = useState(() => Date.now());
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -610,11 +635,23 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
+        if (selectedSanctuaryCreatureId) {
+          setSelectedSanctuaryCreatureId(null);
+          return;
+        }
         setShowSanctuaryPanel(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedSanctuaryCreatureId, showSanctuaryPanel]);
+
+  useEffect(() => {
+    if (!showSanctuaryPanel) return undefined;
+    const intervalId = window.setInterval(() => {
+      setSanctuaryClockMs(Date.now());
+    }, 60_000);
+    return () => window.clearInterval(intervalId);
   }, [showSanctuaryPanel]);
 
   useEffect(() => {
@@ -1755,6 +1792,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature) : null),
     [activeCompanion],
   );
+  const selectedSanctuaryCreature = useMemo(
+    () => collectedCreatures.find((creature) => creature.creatureId === selectedSanctuaryCreatureId) ?? null,
+    [collectedCreatures, selectedSanctuaryCreatureId],
+  );
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
@@ -2763,6 +2804,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const openSanctuaryPanel = () => {
     setShowSanctuaryPanel(true);
+    setSelectedSanctuaryCreatureId(null);
+    setSanctuaryFeedback(null);
+    setSanctuaryClockMs(Date.now());
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -2783,6 +2827,42 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         ? `${selected.creature.name} is now your active companion.`
         : 'Active companion cleared.',
     );
+  };
+
+
+  const handleOpenSanctuaryCreature = (creatureId: string) => {
+    setSelectedSanctuaryCreatureId(creatureId);
+    setSanctuaryFeedback(null);
+    setSanctuaryClockMs(Date.now());
+  };
+
+  const handleFeedSanctuaryCreature = (creatureId: string) => {
+    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+    if (!target) return;
+    const nowMs = Date.now();
+    const nextFeedAtMs = target.lastFedAtMs ? target.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS : 0;
+    if (nextFeedAtMs > nowMs) {
+      setSanctuaryFeedback(`${target.creature.name} is still full. Feed again in ${formatCooldownRemaining(nextFeedAtMs - nowMs)}.`);
+      setSanctuaryClockMs(nowMs);
+      return;
+    }
+    const previousBondLevel = target.bondLevel;
+    setCreatureCollection(feedCreatureForUser({
+      userId: session.user.id,
+      creatureId,
+      fedAtMs: nowMs,
+    }));
+    setSanctuaryClockMs(nowMs);
+    const nextBondXp = target.bondXp + 1;
+    const nextBondLevel = Math.floor(nextBondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
+    setSanctuaryFeedback(
+      nextBondLevel > previousBondLevel
+        ? `${target.creature.name} reached bond level ${nextBondLevel}!`
+        : `Fed ${target.creature.name}. Bond progress increased.`,
+    );
+    setLandingText(`${target.creature.name} enjoyed a shipboard meal and feels closer to you.`);
+    playIslandRunSound('encounter_resolve');
+    triggerIslandRunHaptic('reward_claim');
   };
 
   const handleStoryRewardClaim = (coinsReward: number) => {
@@ -4019,7 +4099,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             <p className="island-stop-modal__eyebrow">Spaceship Sanctuary</p>
             <h3 className="island-stop-modal__title">🐾 Creature Manifest</h3>
             <p className="island-stop-modal__copy">
-              The ship now serves as home base for every creature you keep. This first pass shows your collected residents and their current habitat affinity.
+              The ship now serves as home base for every creature you keep. Check their bond progress, open a detail card, and feed them to deepen the relationship over time.
             </p>
 
             <div className="island-run-sanctuary-panel__summary">
@@ -4031,7 +4111,78 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
             </div>
 
-            {collectedCreatures.length === 0 ? (
+            {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
+
+            {selectedSanctuaryCreature ? (
+              <section className="island-run-sanctuary-detail">
+                <div className="island-run-sanctuary-detail__header">
+                  <img
+                    className="island-run-sanctuary-detail__art"
+                    src={getEggStageArtSrc(selectedSanctuaryCreature.creature.tier, 4)}
+                    alt={`${selectedSanctuaryCreature.creature.name} sanctuary detail`}
+                  />
+                  <div className="island-run-sanctuary-detail__identity">
+                    <p className="island-run-sanctuary-card__eyebrow">Island {selectedSanctuaryCreature.lastCollectedIslandNumber} · {selectedSanctuaryCreature.creature.tier}</p>
+                    <h4 className="island-run-sanctuary-detail__title">{selectedSanctuaryCreature.creature.name}</h4>
+                    <p className="island-run-sanctuary-detail__copy">
+                      {selectedSanctuaryCreature.creature.name} thrives in {selectedSanctuaryCreature.creature.habitat.toLowerCase()} habitats and resonates with {selectedSanctuaryCreature.creature.affinity.toLowerCase()} energy.
+                    </p>
+                  </div>
+                </div>
+                <div className="island-run-sanctuary-detail__stats">
+                  <span className="island-run-sanctuary-panel__pill">Bond Lv <strong>{selectedSanctuaryCreature.bondLevel}</strong></span>
+                  <span className="island-run-sanctuary-panel__pill">Progress <strong>{selectedSanctuaryCreature.bondXp % CREATURE_BOND_XP_PER_LEVEL}/{CREATURE_BOND_XP_PER_LEVEL}</strong></span>
+                  <span className="island-run-sanctuary-panel__pill">Last fed <strong>{formatRelativeTimeFromNow(selectedSanctuaryCreature.lastFedAtMs)}</strong></span>
+                  <span className="island-run-sanctuary-panel__pill">Copies <strong>x{selectedSanctuaryCreature.copies}</strong></span>
+                </div>
+                <div className="island-run-sanctuary-detail__progress" aria-hidden="true">
+                  <span
+                    className="island-run-sanctuary-detail__progress-fill"
+                    style={{ width: `${((selectedSanctuaryCreature.bondXp % CREATURE_BOND_XP_PER_LEVEL) / CREATURE_BOND_XP_PER_LEVEL) * 100}%` }}
+                  />
+                </div>
+                <p className="island-run-sanctuary-card__meta">
+                  Companion bonus: <strong>{getCompanionBonusForCreature(selectedSanctuaryCreature.creature).label}</strong>
+                </p>
+                <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(selectedSanctuaryCreature.creature).description}</p>
+                <div className="island-hatchery-card__actions">
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={() => setSelectedSanctuaryCreatureId(null)}
+                  >
+                    ← Back to Roster
+                  </button>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                    onClick={() => handleFeedSanctuaryCreature(selectedSanctuaryCreature.creatureId)}
+                    disabled={Boolean(selectedSanctuaryCreature.lastFedAtMs && selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS > sanctuaryClockMs)}
+                  >
+                    {selectedSanctuaryCreature.lastFedAtMs && selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS > sanctuaryClockMs
+                      ? `Feed in ${formatCooldownRemaining(selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS - sanctuaryClockMs)}`
+                      : 'Feed Creature'}
+                  </button>
+                  {activeCompanionId === selectedSanctuaryCreature.creatureId ? (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                      onClick={() => handleSetActiveCompanion(null)}
+                    >
+                      Remove Active
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={() => handleSetActiveCompanion(selectedSanctuaryCreature.creatureId)}
+                    >
+                      Set Active Companion
+                    </button>
+                  )}
+                </div>
+              </section>
+            ) : collectedCreatures.length === 0 ? (
               <div className="island-hatchery-card">
                 <div className="island-hatchery-card__state island-hatchery-card__state--empty">
                   <p className="island-hatchery-card__stage-emoji">🪹</p>
@@ -4058,11 +4209,25 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                       <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.creature.habitat}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.creature.affinity}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">Bond level: <strong>{creature.bondLevel}</strong> · Progress <strong>{creature.bondXp % CREATURE_BOND_XP_PER_LEVEL}/{CREATURE_BOND_XP_PER_LEVEL}</strong></p>
                       <p className="island-run-sanctuary-card__meta">
                         Companion bonus: <strong>{getCompanionBonusForCreature(creature.creature).label}</strong>
                       </p>
                       <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(creature.creature).description}</p>
+                      <div className="island-run-sanctuary-card__progress" aria-hidden="true">
+                        <span
+                          className="island-run-sanctuary-card__progress-fill"
+                          style={{ width: `${((creature.bondXp % CREATURE_BOND_XP_PER_LEVEL) / CREATURE_BOND_XP_PER_LEVEL) * 100}%` }}
+                        />
+                      </div>
                       <div className="island-hatchery-card__actions">
+                        <button
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                          onClick={() => handleOpenSanctuaryCreature(creature.creatureId)}
+                        >
+                          View Details
+                        </button>
                         {activeCompanionId === creature.creatureId ? (
                           <button
                             type="button"
