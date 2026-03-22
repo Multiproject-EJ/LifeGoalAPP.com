@@ -148,7 +148,7 @@ Repeat similarly for other tables.
 
 ---
 
-## island_run_runtime_state columns (as of migration 0173)
+## island_run_runtime_state columns (as of migration 0188)
 
 | Column | Type | Default | Description |
 |---|---|---|---|
@@ -157,12 +157,21 @@ Repeat similarly for other tables.
 | `daily_hearts_claimed_day_key` | text | null | Day key for the last daily hearts claim |
 | `current_island_number` | int | 1 | Current island the player is on |
 | `boss_trial_resolved_island_number` | int | null | Island where boss trial was resolved |
+| `cycle_index` | int | 0 | Number of completed 120-island wraps (`120 -> 1`) |
 | `active_egg_tier` | text | null | Global active egg tier (legacy; kept for backward compat) |
 | `active_egg_set_at_ms` | bigint | null | Global active egg set timestamp ms |
 | `active_egg_hatch_duration_ms` | bigint | null | Global active egg hatch duration ms |
 | `active_egg_is_dormant` | boolean | false | Whether the global active egg is dormant |
 | `per_island_eggs` | jsonb | `'{}'` | Per-island egg ledger. Key = island number as text. Value = `{tier, set_at_ms, hatch_at_ms, status, location?, opened_at?, animal_collected_at_ms?}` where `status` can be `"incubating"\|"ready"\|"animal_ready"\|"collected"\|"sold"\|"animal_sold"`. In current app flow, island eggs become `animal_ready` after hatchery collection and `animal_sold` after Shop sale. |
+| `completed_stops_by_island` | jsonb | `'{}'` | Per-island stop-completion ledger. Key = island number as text. Value = string array of completed stop ids. |
+| `island_started_at_ms` | bigint | current ms | Active island start timestamp in unix ms |
+| `island_expires_at_ms` | bigint | current ms + duration | Active island expiry timestamp in unix ms |
 | `island_shards` | int | 0 | Lifetime cumulative shard count for the Collectible Progress Bar |
+| `token_index` | int | 0 | Current token tile index on the 17-tile board |
+| `hearts` | int | 5 | Active Island Run heart count for the in-flight island session |
+| `coins` | int | 0 | Active Island Run coin balance for the in-flight island session |
+| `spin_tokens` | int | 0 | Active Island Run spin-token balance for the in-flight island session |
+| `dice_pool` | int | 20 | Active Island Run dice inventory available for rolls on the current island |
 | `shard_tier_index` | int | 0 | Current collectible era tier index (advances on player claim) |
 | `shard_claim_count` | int | 0 | Total number of shard milestone claims |
 | `shields` | int | 0 | Body Habit Shield wallet currency balance (earned from Body habit completions) |
