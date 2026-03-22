@@ -2,6 +2,7 @@ import { creatureCatalogTests } from './creatureCatalog.test';
 import { creatureCollectionServiceTests } from './creatureCollectionService.test';
 import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryService.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
+import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
 import type { TestCase } from './testHarness';
 
@@ -10,6 +11,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },
   { label: 'creatureTreatInventoryService', tests: creatureTreatInventoryServiceTests },
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
+  { label: 'islandRunProgression', tests: islandRunProgressionTests },
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
 ];
 

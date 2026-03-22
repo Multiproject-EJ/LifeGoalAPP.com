@@ -15,6 +15,7 @@ import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
+import { getNextIslandOnExpiry, isIslandFullyCleared } from '../services/islandRunProgression';
 import { planDailyHeartReward } from '../services/islandRunDailyRewards';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
@@ -382,6 +383,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
+  const [travelOverlayDestinationIsland, setTravelOverlayDestinationIsland] = useState(2);
+  const [travelOverlayMode, setTravelOverlayMode] = useState<'advance' | 'retry'>('advance');
   const [step1PromptedIsland, setStep1PromptedIsland] = useState<number | null>(null);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
   const [isSettingEgg, setIsSettingEgg] = useState(false);
@@ -518,8 +521,9 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       setIslandExpiresAtMs(persistedExpiresAtMs);
       setTimeLeftSec(Math.ceil((persistedExpiresAtMs - Date.now()) / 1000));
     } else if (persistedExpiresAtMs > 0 && !showTravelOverlay) {
-      // Catch-up Rule A: timer already expired — advance exactly one island
-      performIslandTravel(persistedIsland + 1);
+      // Catch-up Rule A / M17A: expired islands only advance after a full clear.
+      const persistedStops = runtimeState.completedStopsByIsland?.[String(persistedIsland)] ?? [];
+      performIslandTravel(getNextIslandOnExpiry(persistedIsland, persistedStops));
     } else if (!showTravelOverlay) {
       // No timer stored (legacy/first-run) — initialize from current island
       const nowMs = Date.now();
@@ -1479,21 +1483,28 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       return;
     }
 
+    const nextIsland = getNextIslandOnExpiry(islandNumber, completedStops);
+    const isRetryingCurrentIsland = nextIsland === islandNumber;
+    setTravelOverlayDestinationIsland(nextIsland > 120 ? 1 : nextIsland);
+    setTravelOverlayMode(isRetryingCurrentIsland ? 'retry' : 'advance');
     setShowTravelOverlay(true);
-    setLandingText('Island expired. Traveling to next island...');
+    setLandingText(
+      isRetryingCurrentIsland
+        ? `Island ${islandNumber} expired before a full clear. Resetting the same island for another run.`
+        : 'Island expired. Traveling to next island...',
+    );
     // M10A: island_travel sound + haptic on travel start
     playIslandRunSound('island_travel');
     triggerIslandRunHaptic('island_travel');
 
-    // B4-2: When timer hits 0 it triggers showTravelOverlay, which then triggers performIslandTravel below
+    // B4-2 / M17A: expiry only advances after a full clear; otherwise it resets the same island.
     const timeout = window.setTimeout(() => {
-      const nextIsland = islandNumber + 1;
       performIslandTravel(nextIsland);
       setShowTravelOverlay(false);
     }, 1800);
 
     return () => window.clearTimeout(timeout);
-  }, [client, islandNumber, session, showTravelOverlay, timeLeftSec]);
+  }, [client, completedStops, islandNumber, session, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = timeLeftSec >= 3600
     ? `${String(Math.floor(timeLeftSec / 3600)).padStart(2, '0')}:${String(Math.floor((timeLeftSec % 3600) / 60)).padStart(2, '0')}`
@@ -1501,6 +1512,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
   const step1Stop = islandStopPlan[0] ?? null;
   const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+  const isCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, completedStops);
   const isEnergyDepletedForRoll = dicePool < DICE_PER_ROLL && hearts < 1;
   const rollButtonMode: 'rolling' | 'step1' | 'roll' | 'convert' = isRolling
     ? 'rolling'
@@ -3570,9 +3582,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       {showTravelOverlay && (
         <div className="island-travel-overlay" role="status" aria-live="polite">
           <div className="island-travel-overlay__card">
-            <p className="island-travel-overlay__eyebrow">Island transfer</p>
-            <p className="island-travel-overlay__title island-travel-overlay__title--headline">✈️ Traveling to Island {islandNumber >= 120 ? 1 : islandNumber + 1}...</p>
-            <p className="island-travel-overlay__subtitle island-travel-overlay__copy island-travel-overlay__copy--long">Preparing route, rewards, and stop plan.</p>
+            <p className="island-travel-overlay__eyebrow">{travelOverlayMode === 'retry' ? 'Island reset' : 'Island transfer'}</p>
+            <p className="island-travel-overlay__title island-travel-overlay__title--headline">
+              {travelOverlayMode === 'retry'
+                ? `🔁 Resetting Island ${travelOverlayDestinationIsland}...`
+                : `✈️ Traveling to Island ${travelOverlayDestinationIsland}...`}
+            </p>
+            <p className="island-travel-overlay__subtitle island-travel-overlay__copy island-travel-overlay__copy--long">
+              {travelOverlayMode === 'retry'
+                ? 'A full clear is required before the campaign advances.'
+                : 'Preparing route, rewards, and stop plan.'}
+            </p>
           </div>
         </div>
       )}
@@ -4008,7 +4028,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   onClick={handleCompleteActiveStop}
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
-                  {bossTrialResolved ? '🎉 Claim Island Clear' : 'Claim Island Clear'}
+                  {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : 'Claim Island Clear'}
                 </button>
               ) : null}
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
