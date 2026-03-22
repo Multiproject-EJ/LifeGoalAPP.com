@@ -5,8 +5,8 @@ import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'animal_ready' | 'collected' | 'sold' | 'animal_sold';
 
-/** Where an egg lives: on a specific island, on the Home Island, or dormant (hatched but uncollected). */
-export type PerIslandEggLocation = 'island' | 'home' | 'dormant';
+/** Where an egg lives: on a specific island, or dormant after hatching while the player is away. */
+export type PerIslandEggLocation = 'island' | 'dormant';
 
 export interface PerIslandEggEntry {
   tier: 'common' | 'rare' | 'mythic';
@@ -38,6 +38,10 @@ export interface IslandRunGameStateRecord {
   islandStartedAtMs: number;
   islandExpiresAtMs: number;
   islandShards: number;
+  tokenIndex: number;
+  hearts: number;
+  coins: number;
+  spinTokens: number;
   shardTierIndex: number;
   shardClaimCount: number;
   shields: number;
@@ -157,6 +161,10 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     islandStartedAtMs: nowMs,
     islandExpiresAtMs: nowMs + 48 * 60 * 60 * 1000,
     islandShards: 0,
+    tokenIndex: 0,
+    hearts: 5,
+    coins: 0,
+    spinTokens: 0,
     shardTierIndex: 0,
     shardClaimCount: 0,
     shields: 0,
@@ -218,6 +226,22 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.islandShards === 'number' && Number.isFinite(value.islandShards)
         ? Math.max(0, Math.floor(value.islandShards))
         : fallback.islandShards,
+    tokenIndex:
+      typeof value.tokenIndex === 'number' && Number.isFinite(value.tokenIndex)
+        ? Math.max(0, Math.floor(value.tokenIndex))
+        : fallback.tokenIndex,
+    hearts:
+      typeof value.hearts === 'number' && Number.isFinite(value.hearts)
+        ? Math.max(0, Math.floor(value.hearts))
+        : fallback.hearts,
+    coins:
+      typeof value.coins === 'number' && Number.isFinite(value.coins)
+        ? Math.max(0, Math.floor(value.coins))
+        : fallback.coins,
+    spinTokens:
+      typeof value.spinTokens === 'number' && Number.isFinite(value.spinTokens)
+        ? Math.max(0, Math.floor(value.spinTokens))
+        : fallback.spinTokens,
     shardTierIndex:
       typeof value.shardTierIndex === 'number' && Number.isFinite(value.shardTierIndex)
         ? Math.max(0, Math.floor(value.shardTierIndex))
@@ -301,7 +325,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,shard_tier_index,shard_claim_count,shields,shards,completed_stops_by_island')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,shard_tier_index,shard_claim_count,shields,shards,completed_stops_by_island')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -345,6 +369,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       islandStartedAtMs: data.island_started_at_ms,
       islandExpiresAtMs: data.island_expires_at_ms,
       islandShards: data.island_shards ?? 0,
+      tokenIndex: data.token_index ?? 0,
+      hearts: data.hearts ?? 5,
+      coins: data.coins ?? 0,
+      spinTokens: data.spin_tokens ?? 0,
       shardTierIndex: data.shard_tier_index ?? 0,
       shardClaimCount: data.shard_claim_count ?? 0,
       shields: data.shields ?? 0,
@@ -442,6 +470,10 @@ export async function writeIslandRunGameStateRecord(options: {
       island_started_at_ms: record.islandStartedAtMs,
       island_expires_at_ms: record.islandExpiresAtMs,
       island_shards: record.islandShards,
+      token_index: record.tokenIndex,
+      hearts: record.hearts,
+      coins: record.coins,
+      spin_tokens: record.spinTokens,
       shard_tier_index: record.shardTierIndex,
       shard_claim_count: record.shardClaimCount,
       shields: record.shields,
