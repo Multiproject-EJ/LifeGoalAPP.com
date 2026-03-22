@@ -40,6 +40,19 @@ import {
   rollEggRewards,
   type EggTier,
 } from '../services/eggService';
+import {
+  fetchCreatureCollection,
+  collectCreatureForUser,
+  fetchActiveCompanionId,
+  getCreatureManifestEntries,
+  migrateLegacyEggLedgerToCollection,
+  saveActiveCompanionId,
+  feedCreatureForUser,
+  claimCreatureBondMilestoneForUser,
+  getUnclaimedBondMilestones,
+  CREATURE_BOND_XP_PER_LEVEL,
+} from '../services/creatureCollectionService';
+import { getCompanionBonusForCreature, selectCreatureForEgg } from '../services/creatureCatalog';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -111,22 +124,56 @@ const UTILITY_DICE_BONUS_COST = 30;
 const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
 const UTILITY_TIMER_EXT_HOURS = 12;
 const MAX_HEARTS = 10;
+const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
 
-// M9-COMPLETE: how long (ms) the reward reveal animation stays visible before auto-dismiss
-const HOME_REWARD_REVEAL_DURATION_MS = 3000;
+function formatRelativeTimeFromNow(timestampMs: number | null): string {
+  if (!timestampMs) return 'Never';
+  const diffMs = Math.max(0, Date.now() - timestampMs);
+  const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+  if (diffHours < 1) return 'Less than 1 hour ago';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
+function formatCooldownRemaining(remainingMs: number): string {
+  if (remainingMs <= 0) return 'Ready now';
+  const totalHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+  if (totalHours < 24) return `${totalHours}h`;
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+}
+
+type BondMilestoneReward = {
+  level: number;
+  label: string;
+  summary: string;
+  coins?: number;
+  hearts?: number;
+  spinTokens?: number;
+};
+
+function getBondMilestoneReward(level: number): BondMilestoneReward | null {
+  switch (level) {
+    case 3:
+      return { level, label: 'Level 3 Cache', summary: '+25 coins', coins: 25 };
+    case 5:
+      return { level, label: 'Level 5 Care Pack', summary: '+1 heart', hearts: 1 };
+    case 8:
+      return { level, label: 'Level 8 Momentum Pack', summary: '+1 spin token', spinTokens: 1 };
+    case 10:
+      return { level, label: "Level 10 Captain's Stash", summary: '+40 coins, +1 heart', coins: 40, hearts: 1 };
+    default:
+      return null;
+  }
+}
 
 interface ActiveEgg {
   tier: EggTier;
   setAtMs: number;
   hatchAtMs: number;
   isDormant?: boolean;
-}
-
-interface ReadyAnimal {
-  tier: EggTier;
-  setAtMs: number;
-  hatchAtMs: number;
-  collectedAtMs: number;
 }
 
 function getBossReward(islandNumber: number): { hearts: number; coins: number; spinTokens: number } {
@@ -215,6 +262,10 @@ const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
   mid: '#ffe066',
   front: '#ff4ff5',
 };
+
+function getCompanionBonusStorageKey(userId: string): string {
+  return `island_run_companion_bonus_applied_${userId}`;
+}
 
 function toScreen(anchor: TileAnchor, width: number, height: number) {
   return {
@@ -403,23 +454,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // M14: persistent shop panel state
   const [showShopPanel, setShowShopPanel] = useState(false);
+  const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
+  const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
+  const [activeCompanionId, setActiveCompanionId] = useState<string | null>(() => fetchActiveCompanionId(session.user.id));
+  const [selectedSanctuaryCreatureId, setSelectedSanctuaryCreatureId] = useState<string | null>(null);
+  const [sanctuaryFeedback, setSanctuaryFeedback] = useState<string | null>(null);
+  const [sanctuaryClockMs, setSanctuaryClockMs] = useState(() => Date.now());
 
-  // M9-COMPLETE: Home Island panel state
-  const [showHomePanel, setShowHomePanel] = useState(false);
   const [showStoryReader, setShowStoryReader] = useState(false);
-  // M9-COMPLETE: Home egg state — persisted in localStorage, independent of island travel
-  const homeEggStorageKey = `island_run_home_egg_${session.user.id}`;
-  const [homeEgg, setHomeEggState] = useState<ActiveEgg | null>(() => {
-    try {
-      const raw = window.localStorage.getItem(homeEggStorageKey);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as { tier: EggTier; setAtMs: number; hatchAtMs: number };
-      if (!parsed.tier || !parsed.setAtMs || !parsed.hatchAtMs) return null;
-      return { tier: parsed.tier, setAtMs: parsed.setAtMs, hatchAtMs: parsed.hatchAtMs };
-    } catch { return null; }
-  });
-  // M9-COMPLETE: Reward reveal animation state for Home Island egg open
-  const [homeRewardReveal, setHomeRewardReveal] = useState<{ tier: EggTier; feedback: string } | null>(null);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
 
   // B3-4: utility stop state
@@ -614,36 +656,45 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShopPanel]);
 
-  // M9-COMPLETE: Escape key closes Home Island panel
   useEffect(() => {
-    if (!showHomePanel) return;
+    if (!showSanctuaryPanel) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        setShowHomePanel(false);
-        setHomeRewardReveal(null);
+        if (selectedSanctuaryCreatureId) {
+          setSelectedSanctuaryCreatureId(null);
+          return;
+        }
+        setShowSanctuaryPanel(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showHomePanel]);
+  }, [selectedSanctuaryCreatureId, showSanctuaryPanel]);
 
-  // M9-COMPLETE: Persist home egg to localStorage whenever it changes
   useEffect(() => {
-    try {
-      if (homeEgg) {
-        window.localStorage.setItem(homeEggStorageKey, JSON.stringify({
-          tier: homeEgg.tier,
-          setAtMs: homeEgg.setAtMs,
-          hatchAtMs: homeEgg.hatchAtMs,
-        }));
-      } else {
-        window.localStorage.removeItem(homeEggStorageKey);
-      }
-    } catch {
-      // ignore storage errors
+    if (!showSanctuaryPanel) return undefined;
+    const intervalId = window.setInterval(() => {
+      setSanctuaryClockMs(Date.now());
+    }, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [showSanctuaryPanel]);
+
+  useEffect(() => {
+    const { collection } = migrateLegacyEggLedgerToCollection({
+      userId: session.user.id,
+      perIslandEggs: runtimeState.perIslandEggs ?? {},
+    });
+    setCreatureCollection(collection);
+  }, [runtimeState.perIslandEggs, session.user.id]);
+
+  useEffect(() => {
+    const stillOwned = creatureCollection.some((entry) => entry.creatureId === activeCompanionId);
+    if (activeCompanionId && !stillOwned) {
+      setActiveCompanionId(null);
+      saveActiveCompanionId(session.user.id, null);
     }
-  }, [homeEgg, homeEggStorageKey]);
+  }, [activeCompanionId, creatureCollection, session.user.id]);
 
   // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
   useEffect(() => {
@@ -1257,15 +1308,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   // M13: per-island egg slot usage check
   const islandEggEntry = useMemo(() => runtimeState.perIslandEggs?.[String(islandNumber)] ?? null, [runtimeState.perIslandEggs, islandNumber]);
-  const readyAnimal = useMemo<ReadyAnimal | null>(() => {
-    if (!islandEggEntry || islandEggEntry.status !== 'animal_ready') return null;
-    return {
-      tier: islandEggEntry.tier,
-      setAtMs: islandEggEntry.setAtMs,
-      hatchAtMs: islandEggEntry.hatchAtMs,
-      collectedAtMs: islandEggEntry.animalCollectedAtMs ?? islandEggEntry.openedAt ?? islandEggEntry.hatchAtMs,
-    };
-  }, [islandEggEntry]);
 
   const islandEggSlotUsed = useMemo(() => {
     return islandEggEntry?.status === 'collected'
@@ -1276,17 +1318,16 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
 
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
   const hatcheryTimelineStage = useMemo(() => {
-    if (readyAnimal || islandEggSlotUsed) return HATCHERY_TIMELINE_STEPS.length;
+    if (islandEggSlotUsed) return HATCHERY_TIMELINE_STEPS.length;
     if (!activeEgg) return 1;
     return Math.min(HATCHERY_TIMELINE_STEPS.length, Math.max(1, eggStage));
-  }, [activeEgg, eggStage, islandEggSlotUsed, readyAnimal]);
+  }, [activeEgg, eggStage, islandEggSlotUsed]);
 
   useEffect(() => {
     setIslandRunDebugRuntimeSnapshotProvider(() => ({
       islandNumber,
       activeStopId,
       activeEgg,
-      readyAnimal,
       eggStage,
       completedStops,
       hearts,
@@ -1306,7 +1347,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     islandNumber,
     activeStopId,
     activeEgg,
-    readyAnimal,
     eggStage,
     completedStops,
     hearts,
@@ -1319,14 +1359,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     timeLeftSec,
   ]);
 
-  // M9-COMPLETE: home egg stage — computed independently of island egg
-  const homeEggStage = useMemo(() => {
-    if (!homeEgg) return 0;
-    const total = Math.max(1, homeEgg.hatchAtMs - homeEgg.setAtMs);
-    const progress = Math.min(1, Math.max(0, (nowMs - homeEgg.setAtMs) / total));
-    return Math.min(4, Math.max(1, Math.ceil(progress * 4)));
-  }, [homeEgg, nowMs]);
-
   // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
   const prevEggStageRef = useRef(0);
   useEffect(() => {
@@ -1335,15 +1367,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
     prevEggStageRef.current = eggStage;
   }, [eggStage]);
-
-  // M9-COMPLETE: play egg_ready sound when home egg transitions to stage 4
-  const prevHomeEggStageRef = useRef(0);
-  useEffect(() => {
-    if (homeEggStage === 4 && prevHomeEggStageRef.current < 4) {
-      playIslandRunSound('egg_ready');
-    }
-    prevHomeEggStageRef.current = homeEggStage;
-  }, [homeEggStage]);
 
   useEffect(() => {
     if (activeStopId !== 'hatchery') {
@@ -1786,38 +1809,107 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIsSettingEgg(false);
   };
 
-  const handleCollectAnimal = () => {
+  const collectedCreatures = useMemo(() => getCreatureManifestEntries(session.user.id), [creatureCollection, session.user.id]);
+  const activeCompanion = useMemo(
+    () => collectedCreatures.find((creature) => creature.creatureId === activeCompanionId) ?? null,
+    [activeCompanionId, collectedCreatures],
+  );
+  const activeCompanionBonus = useMemo(
+    () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature, activeCompanion.bondLevel) : null),
+    [activeCompanion],
+  );
+  const selectedSanctuaryCreature = useMemo(
+    () => collectedCreatures.find((creature) => creature.creatureId === selectedSanctuaryCreatureId) ?? null,
+    [collectedCreatures, selectedSanctuaryCreatureId],
+  );
+  const selectedSanctuaryCreatureBonus = useMemo(
+    () => (selectedSanctuaryCreature ? getCompanionBonusForCreature(selectedSanctuaryCreature.creature, selectedSanctuaryCreature.bondLevel) : null),
+    [selectedSanctuaryCreature],
+  );
+  const selectedSanctuaryCreatureUnclaimedMilestones = useMemo(
+    () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
+    [selectedSanctuaryCreature],
+  );
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
+      return;
+    }
+
+    const visitKey = `${cycleIndex}:${islandNumber}`;
+    const storageKey = getCompanionBonusStorageKey(session.user.id);
+
+    try {
+      if (window.localStorage.getItem(storageKey) === visitKey) {
+        return;
+      }
+      window.localStorage.setItem(storageKey, visitKey);
+    } catch {
+      // ignore storage failures and still apply once for this mount
+    }
+
+    if (activeCompanionBonus.effect === 'bonus_heart') {
+      setHearts((current) => Math.min(MAX_HEARTS, current + activeCompanionBonus.amount));
+    } else if (activeCompanionBonus.effect === 'bonus_spin') {
+      setSpinTokens((current) => current + activeCompanionBonus.amount);
+    } else {
+      setDicePool((current) => current + activeCompanionBonus.amount);
+    }
+
+    setLandingText(`${activeCompanion.creature.name} supported this island: ${activeCompanionBonus.label}.`);
+  }, [
+    activeCompanion,
+    activeCompanionBonus,
+    cycleIndex,
+    hasHydratedRuntimeState,
+    islandNumber,
+    session.user.id,
+  ]);
+
+  const handleCollectCreature = () => {
     if (!activeEgg || eggStage < 4) return;
-    const hatchedEgg = activeEgg;
+    const resolvedEgg = activeEgg;
     const nowTs = Date.now();
+    const creature = selectCreatureForEgg({
+      eggTier: resolvedEgg.tier,
+      seed: resolvedEgg.setAtMs,
+      islandNumber,
+    });
+    const islandKey = String(islandNumber);
+    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    const collectedEntry: PerIslandEggEntry = existingEntry
+      ? { ...existingEntry, status: 'collected', openedAt: nowTs, location: 'island' }
+      : {
+          tier: resolvedEgg.tier,
+          setAtMs: resolvedEgg.setAtMs,
+          hatchAtMs: resolvedEgg.hatchAtMs,
+          status: 'collected',
+          openedAt: nowTs,
+          location: 'island',
+        };
+
     setActiveEgg(null);
-    // M10B: egg_open sound + haptic now fire when the animal is collected from the egg
+    setCreatureCollection(collectCreatureForUser({
+      userId: session.user.id,
+      creature,
+      islandNumber,
+      collectedAtMs: nowTs,
+    }));
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
-    setLandingText(`${hatchedEgg.tier[0].toUpperCase()}${hatchedEgg.tier.slice(1)} animal collected! Visit the market to sell it.`);
+    setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
       metadata: {
-        stage: 'island_egg_animal_collected',
-        tier: hatchedEgg.tier,
+        stage: 'island_creature_collected',
+        tier: resolvedEgg.tier,
+        creature_id: creature.id,
+        creature_name: creature.name,
         source: 'island_hatchery',
       },
     });
-    logIslandRunEntryDebug('island_egg_animal_collected', { tier: hatchedEgg.tier, source: 'island_hatchery' });
-    const islandKey = String(islandNumber);
-    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
-    const collectedAnimalEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'animal_ready', openedAt: nowTs, animalCollectedAtMs: nowTs, location: 'island' }
-      : {
-          tier: hatchedEgg.tier,
-          setAtMs: hatchedEgg.setAtMs,
-          hatchAtMs: hatchedEgg.hatchAtMs,
-          status: 'animal_ready',
-          openedAt: nowTs,
-          animalCollectedAtMs: nowTs,
-          location: 'island',
-        };
+    logIslandRunEntryDebug('island_creature_collected', { tier: resolvedEgg.tier, creatureId: creature.id, creatureName: creature.name, source: 'island_hatchery' });
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -1826,70 +1918,70 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         activeEggSetAtMs: null,
         activeEggHatchDurationMs: null,
         activeEggIsDormant: false,
-        perIslandEggs: { [islandKey]: collectedAnimalEntry },
+        perIslandEggs: { [islandKey]: collectedEntry },
       },
     });
     setRuntimeState((current) => ({
       ...current,
-      perIslandEggs: { ...current.perIslandEggs, [islandKey]: collectedAnimalEntry },
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: collectedEntry },
     }));
   };
 
-  // M9-COMPLETE: handleSetHomeEgg — sets a home egg with random tier/delay, persisted in localStorage independently
-  const handleSetHomeEgg = () => {
-    const start = Date.now();
-    const tier = rollEggTierWeighted();
-    const hatchDurationMs = getRandomHatchDelayMs(IS_DEV_TIMER);
-    setHomeEggState({ tier, setAtMs: start, hatchAtMs: start + hatchDurationMs });
-    playIslandRunSound('egg_set');
-    triggerIslandRunHaptic('egg_set');
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: { stage: 'home_egg_set', tier, source: 'home_hatchery' },
+  const handleSellEggForRewards = () => {
+    if (!activeEgg || eggStage < 4) return;
+    const resolvedEgg = activeEgg;
+    const creature = selectCreatureForEgg({
+      eggTier: resolvedEgg.tier,
+      seed: resolvedEgg.setAtMs,
+      islandNumber,
     });
-    logIslandRunEntryDebug('home_egg_set', { tier, source: 'home_hatchery' });
-  };
-
-  // M9-COMPLETE: handleOpenHomeEgg — opens home egg, rolls rewards, awards +2 shards, shows reveal animation
-  const handleOpenHomeEgg = () => {
-    if (!homeEgg || homeEggStage < 4) return;
-    const openedEgg = homeEgg;
-    setHomeEggState(null);
-    const bundle = rollEggRewards(openedEgg.tier, openedEgg.setAtMs);
-    if (bundle.heartsDelta > 0) setHearts((h) => h + bundle.heartsDelta);
+    const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
+    const nowTs = Date.now();
+    const islandKey = String(islandNumber);
+    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    const soldEntry: PerIslandEggEntry = existingEntry
+      ? { ...existingEntry, status: 'sold', openedAt: nowTs, location: 'island' }
+      : {
+          tier: resolvedEgg.tier,
+          setAtMs: resolvedEgg.setAtMs,
+          hatchAtMs: resolvedEgg.hatchAtMs,
+          status: 'sold',
+          openedAt: nowTs,
+          location: 'island',
+        };
+    if (bundle.heartsDelta > 0) setHearts((current) => current + bundle.heartsDelta);
     if (bundle.coinsDelta > 0) setCoins((c) => c + bundle.coinsDelta);
     if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
     if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
-    // M17D: +2 wallet shards on home egg open
+    awardShards('egg_open');
     awardWalletShards(2);
-    const feedbackParts: string[] = [];
-    if (bundle.heartsDelta > 0) feedbackParts.push(`+${bundle.heartsDelta} ❤️`);
-    if (bundle.coinsDelta > 0) feedbackParts.push(`+${bundle.coinsDelta} 🪙`);
-    if (bundle.diamondsDelta > 0) feedbackParts.push(`+${bundle.diamondsDelta} 💎`);
-    if (bundle.spinTokensDelta > 0) feedbackParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
-    if (bundle.cosmetics.length > 0) feedbackParts.push('🎁 cosmetic!');
-    feedbackParts.push('+2 ✨ shards');
-    const feedbackMsg = feedbackParts.join(' · ');
-    setHomeRewardReveal({ tier: openedEgg.tier, feedback: feedbackMsg });
-    playIslandRunSound('egg_open');
-    triggerIslandRunHaptic('egg_open');
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'home_egg_open',
-        tier: openedEgg.tier,
-        source: 'home_hatchery',
-        heartsDelta: bundle.heartsDelta,
-        coinsDelta: bundle.coinsDelta,
-        spinTokensDelta: bundle.spinTokensDelta,
+    void awardGold(session.user.id, bundle.coinsDelta, 'shooter_blitz', 'island_run_hatchery_sell_creature');
+    setActiveEgg(null);
+    playIslandRunSound('market_purchase_success');
+    triggerIslandRunHaptic('market_purchase_success');
+    const rewardParts: string[] = [];
+    if (bundle.heartsDelta > 0) rewardParts.push(`+${bundle.heartsDelta} ❤️`);
+    if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
+    if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
+    if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
+    setLandingText(`Sold ${creature.name}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        activeEggIsDormant: false,
+        perIslandEggs: { [islandKey]: soldEntry },
       },
     });
-    logIslandRunEntryDebug('home_egg_open', { tier: openedEgg.tier, source: 'home_hatchery', heartsDelta: bundle.heartsDelta });
-    // Auto-dismiss reward reveal after 3 seconds
-    window.setTimeout(() => setHomeRewardReveal(null), HOME_REWARD_REVEAL_DURATION_MS);
+    setRuntimeState((current) => ({
+      ...current,
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: soldEntry },
+    }));
   };
+
 
   const handleClaimOnboardingBooster = () => {
     const trimmedName = boosterName.trim();
@@ -2731,55 +2823,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
-  // M14: sell collected animal from shop panel
-  const handleSellReadyAnimal = () => {
-    if (!readyAnimal) return;
-    const bundle = rollEggRewards(readyAnimal.tier, readyAnimal.setAtMs);
-    const soldTier = readyAnimal.tier;
-    const nowTs = Date.now();
-    const islandKey = String(islandNumber);
-    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
-    const soldEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'animal_sold', openedAt: nowTs }
-      : {
-          tier: soldTier,
-          setAtMs: readyAnimal.setAtMs,
-          hatchAtMs: readyAnimal.hatchAtMs,
-          status: 'animal_sold',
-          openedAt: nowTs,
-          animalCollectedAtMs: readyAnimal.collectedAtMs,
-        };
-    if (bundle.heartsDelta > 0) setHearts((current) => current + bundle.heartsDelta);
-    if (bundle.coinsDelta > 0) setCoins((c) => c + bundle.coinsDelta);
-    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
-    if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
-    awardShards('egg_open');
-    awardWalletShards(2);
-    void awardGold(session.user.id, bundle.coinsDelta, 'shooter_blitz', 'island_run_market_sell_animal');
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        activeEggTier: null,
-        activeEggSetAtMs: null,
-        activeEggHatchDurationMs: null,
-        activeEggIsDormant: false,
-        perIslandEggs: { [islandKey]: soldEntry },
-      },
-    });
-    setRuntimeState((current) => ({
-      ...current,
-      perIslandEggs: { ...current.perIslandEggs, [islandKey]: soldEntry },
-    }));
-    playIslandRunSound('market_purchase_success');
-    triggerIslandRunHaptic('market_purchase_success');
-    const rewardParts: string[] = [];
-    if (bundle.heartsDelta > 0) rewardParts.push(`+${bundle.heartsDelta} ❤️`);
-    if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
-    if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
-    if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
-    setLandingText(`Sold ${soldTier} animal. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
-  };
 
   const openShopPanel = () => {
     setShowShopPanel(true);
@@ -2791,6 +2834,108 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       eventType: 'economy_earn',
       metadata: { stage: 'shop_open', island_number: islandNumber },
     });
+  };
+
+  const openSanctuaryPanel = () => {
+    setShowSanctuaryPanel(true);
+    setSelectedSanctuaryCreatureId(null);
+    setSanctuaryFeedback(null);
+    setSanctuaryClockMs(Date.now());
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'sanctuary_open',
+        island_number: islandNumber,
+        collected_creatures: collectedCreatures.length,
+      },
+    });
+  };
+
+  const handleSetActiveCompanion = (creatureId: string | null) => {
+    setActiveCompanionId(creatureId);
+    saveActiveCompanionId(session.user.id, creatureId);
+    const selected = creatureId ? collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null : null;
+    setLandingText(
+      selected
+        ? `${selected.creature.name} is now your active companion.`
+        : 'Active companion cleared.',
+    );
+  };
+
+
+  const handleOpenSanctuaryCreature = (creatureId: string) => {
+    setSelectedSanctuaryCreatureId(creatureId);
+    setSanctuaryFeedback(null);
+    setSanctuaryClockMs(Date.now());
+  };
+
+  const handleFeedSanctuaryCreature = (creatureId: string) => {
+    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+    if (!target) return;
+    const nowMs = Date.now();
+    const nextFeedAtMs = target.lastFedAtMs ? target.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS : 0;
+    if (nextFeedAtMs > nowMs) {
+      setSanctuaryFeedback(`${target.creature.name} is still full. Feed again in ${formatCooldownRemaining(nextFeedAtMs - nowMs)}.`);
+      setSanctuaryClockMs(nowMs);
+      return;
+    }
+    const previousBondLevel = target.bondLevel;
+    setCreatureCollection(feedCreatureForUser({
+      userId: session.user.id,
+      creatureId,
+      fedAtMs: nowMs,
+    }));
+    setSanctuaryClockMs(nowMs);
+    const nextBondXp = target.bondXp + 1;
+    const nextBondLevel = Math.floor(nextBondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
+    const rewardPreview = getBondMilestoneReward(nextBondLevel);
+    setSanctuaryFeedback(
+      nextBondLevel > previousBondLevel
+        ? rewardPreview
+          ? `${target.creature.name} reached bond level ${nextBondLevel}! ${rewardPreview.label} is ready to claim.`
+          : `${target.creature.name} reached bond level ${nextBondLevel}!`
+        : `Fed ${target.creature.name}. Bond progress increased.`,
+    );
+    setLandingText(`${target.creature.name} enjoyed a shipboard meal and feels closer to you.`);
+    playIslandRunSound('encounter_resolve');
+    triggerIslandRunHaptic('reward_claim');
+  };
+
+
+  const handleClaimSanctuaryBondReward = (creatureId: string, milestoneLevel: number) => {
+    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+    const reward = getBondMilestoneReward(milestoneLevel);
+    if (!target || !reward) return;
+    const unclaimedMilestones = getUnclaimedBondMilestones(target);
+    if (!unclaimedMilestones.includes(milestoneLevel)) return;
+
+    setCreatureCollection(claimCreatureBondMilestoneForUser({
+      userId: session.user.id,
+      creatureId,
+      milestoneLevel,
+    }));
+
+    const rewardCoins = reward.coins ?? 0;
+    const rewardHearts = reward.hearts ?? 0;
+    const rewardSpinTokens = reward.spinTokens ?? 0;
+
+    if (rewardCoins > 0) {
+      setCoins((current) => current + rewardCoins);
+      void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
+    }
+    if (rewardHearts > 0) {
+      setHearts((current) => Math.min(MAX_HEARTS, current + rewardHearts));
+      void awardHearts(session.user.id, rewardHearts, 'shooter_blitz', 'Island Run creature bond milestone');
+    }
+    if (rewardSpinTokens > 0) {
+      setSpinTokens((current) => current + rewardSpinTokens);
+    }
+
+    setSanctuaryFeedback(`${target.creature.name} claimed ${reward.label}: ${reward.summary}.`);
+    setLandingText(`${target.creature.name} bond milestone claimed: ${reward.summary}.`);
+    playIslandRunSound('market_purchase_success');
+    triggerIslandRunHaptic('reward_claim');
   };
 
   const handleStoryRewardClaim = (coinsReward: number) => {
@@ -2872,30 +3017,19 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           <button
             type="button"
             className="island-run-prototype__shop-btn"
+            aria-label="Open creature sanctuary"
+            onClick={openSanctuaryPanel}
+          >
+            🐾 Sanctuary
+          </button>
+          <button
+            type="button"
+            className="island-run-prototype__shop-btn"
             aria-label="Open story reader"
             onClick={() => setShowStoryReader(true)}
           >
             📖 Story
           </button>
-          {/* M9-COMPLETE: persistent Home Island HUD button */}
-          {(() => {
-            const homeIsReady = homeEgg !== null && homeEggStage >= 4;
-            const homeIsIncubating = homeEgg !== null && homeEggStage < 4;
-            const homeEggIndicator = homeIsReady ? ' 🌟' : homeIsIncubating ? ` ${getEggStageEmoji(homeEggStage)}` : '';
-            return (
-              <button
-                type="button"
-                className={`island-run-prototype__home-btn${homeIsReady ? ' island-run-prototype__home-btn--ready' : ''}`}
-                aria-label="Open Home Island hatchery"
-                onClick={() => {
-                  setShowHomePanel(true);
-                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'home_panel_open', island_number: islandNumber } });
-                }}
-              >
-                🏠{homeEggIndicator}
-              </button>
-            );
-          })()}
           {!step1Complete ? (
             <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>
           ) : null}
@@ -2905,6 +3039,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
+          {activeCompanion && activeCompanionBonus ? (
+            <span className="island-run-prototype__stat-chip">
+              🐾 <strong>{activeCompanion.creature.name}</strong> · {activeCompanionBonus.label}
+            </span>
+          ) : null}
           <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">Lvl <strong>{islandNumber}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
           {/* M2: roll result chip — visible in production after every roll */}
@@ -3010,7 +3149,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </p>
           </div>
         </div>
-        {/* M9-COMPLETE: Home Island panel is now a persistent HUD overlay — see 🏠 button in always-controls */}
         <div className="island-run-prototype__controls" aria-label={`Board controls (scene: ${activeTheme.label})`}>
           <button type="button" className="island-run-prototype__debug-btn" onClick={() => setShowDebug((value) => !value)}>
             {showDebug ? 'Hide' : 'Show'} anchor/depth debug
@@ -3376,19 +3514,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             {activeStopId === 'hatchery' && (
               <>
                 <div className="island-hatchery-card">
-                {readyAnimal ? (
-                  <div className="island-hatchery-card__state island-hatchery-card__state--ready">
-                    <img
-                      className="island-hatchery-card__stage-art"
-                      src={getEggStageArtSrc(readyAnimal.tier, 4)}
-                      alt={`${readyAnimal.tier} animal collected and ready to sell`}
-                    />
-                    <p className="island-hatchery-card__headline">🐾 Animal collected!</p>
-                    <p className="island-hatchery-card__copy">
-                      Your <strong>{readyAnimal.tier}</strong> animal is safe. Visit the market to sell it and claim the reward bundle.
-                    </p>
-                  </div>
-                ) : islandEggSlotUsed ? (
+                {islandEggSlotUsed ? (
                   /* State 1: Egg already collected/sold on this island — permanent, non-renewable */
                   <div className="island-hatchery-card__state island-hatchery-card__state--done">
                     <img
@@ -3410,21 +3536,28 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                     {activeEgg.isDormant ? (
                       <>
                         <p className="island-hatchery-card__headline">💤 Dormant egg ready!</p>
-                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg hatched while you were away. Collect it now!</p>
+                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> creature is ready. Keep it for your collection or sell it for rewards.</p>
                       </>
                     ) : (
                       <>
-                        <p className="island-hatchery-card__headline">🌟 Ready to Open!</p>
-                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg has hatched. Open it to claim your reward!</p>
+                        <p className="island-hatchery-card__headline">🌟 Creature hatched!</p>
+                        <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg has hatched. Choose whether to collect the creature or sell it now for rewards.</p>
                       </>
                     )}
                     <div className="island-hatchery-card__actions">
                       <button
                         type="button"
                         className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={handleCollectAnimal}
+                        onClick={handleCollectCreature}
                       >
-                        Collect Animal 🐾
+                        Collect Creature 🐾
+                      </button>
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action"
+                        onClick={handleSellEggForRewards}
+                      >
+                        Sell for Rewards 💰
                       </button>
                     </div>
                   </div>
@@ -3997,20 +4130,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </div>
 
             <div className="island-hatchery-card">
-              <p><strong>Animal Market</strong></p>
-              {readyAnimal ? (
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                  onClick={() => { handleSellReadyAnimal(); setShowShopPanel(false); }}
-                >
-                  🐾 Sell {readyAnimal.tier} Animal
-                </button>
-              ) : activeEgg ? (
-                <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>No animal ready yet — hatch and collect the egg first.</p>
-              ) : (
-                <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>No collected animal ready to sell.</p>
-              )}
+              <p><strong>Creature Trade</strong></p>
+              <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>Hatched eggs are now resolved directly in the Hatchery: collect the creature for your manifest or sell it there immediately for rewards.</p>
             </div>
 
             {marketPurchaseFeedback && <p className="island-run-prototype__landing island-run-prototype__landing--info">{marketPurchaseFeedback}</p>}
@@ -4024,6 +4145,222 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                   setMarketPurchaseFeedback(null);
                   void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_close', island_number: islandNumber } });
                 }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {showSanctuaryPanel && (
+        <div
+          className="island-stop-modal-backdrop"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSanctuaryPanel(false);
+            }
+          }}
+        >
+          <section
+            className="island-run-sanctuary-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Creature Sanctuary"
+          >
+            <p className="island-stop-modal__eyebrow">Spaceship Sanctuary</p>
+            <h3 className="island-stop-modal__title">🐾 Creature Manifest</h3>
+            <p className="island-stop-modal__copy">
+              The ship now serves as home base for every creature you keep. Check their bond progress, open a detail card, and feed them to deepen the relationship over time.
+            </p>
+
+            <div className="island-run-sanctuary-panel__summary">
+              <span className="island-run-sanctuary-panel__pill">Species: <strong>{collectedCreatures.length}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Copies: <strong>{collectedCreatures.reduce((sum, creature) => sum + creature.copies, 0)}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">
+                Active: <strong>{activeCompanion?.creature.name ?? 'None'}</strong>
+              </span>
+              <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
+            </div>
+
+            {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
+
+            {selectedSanctuaryCreature ? (
+              <section className="island-run-sanctuary-detail">
+                <div className="island-run-sanctuary-detail__header">
+                  <img
+                    className="island-run-sanctuary-detail__art"
+                    src={getEggStageArtSrc(selectedSanctuaryCreature.creature.tier, 4)}
+                    alt={`${selectedSanctuaryCreature.creature.name} sanctuary detail`}
+                  />
+                  <div className="island-run-sanctuary-detail__identity">
+                    <p className="island-run-sanctuary-card__eyebrow">Island {selectedSanctuaryCreature.lastCollectedIslandNumber} · {selectedSanctuaryCreature.creature.tier}</p>
+                    <h4 className="island-run-sanctuary-detail__title">{selectedSanctuaryCreature.creature.name}</h4>
+                    <p className="island-run-sanctuary-detail__copy">
+                      {selectedSanctuaryCreature.creature.name} thrives in {selectedSanctuaryCreature.creature.habitat.toLowerCase()} habitats and resonates with {selectedSanctuaryCreature.creature.affinity.toLowerCase()} energy.
+                    </p>
+                  </div>
+                </div>
+                <div className="island-run-sanctuary-detail__stats">
+                  <span className="island-run-sanctuary-panel__pill">Bond Lv <strong>{selectedSanctuaryCreature.bondLevel}</strong></span>
+                  <span className="island-run-sanctuary-panel__pill">Progress <strong>{selectedSanctuaryCreature.bondXp % CREATURE_BOND_XP_PER_LEVEL}/{CREATURE_BOND_XP_PER_LEVEL}</strong></span>
+                  <span className="island-run-sanctuary-panel__pill">Last fed <strong>{formatRelativeTimeFromNow(selectedSanctuaryCreature.lastFedAtMs)}</strong></span>
+                  <span className="island-run-sanctuary-panel__pill">Copies <strong>x{selectedSanctuaryCreature.copies}</strong></span>
+                </div>
+                <div className="island-run-sanctuary-detail__progress" aria-hidden="true">
+                  <span
+                    className="island-run-sanctuary-detail__progress-fill"
+                    style={{ width: `${((selectedSanctuaryCreature.bondXp % CREATURE_BOND_XP_PER_LEVEL) / CREATURE_BOND_XP_PER_LEVEL) * 100}%` }}
+                  />
+                </div>
+                <p className="island-run-sanctuary-card__meta">
+                  Companion bonus: <strong>{selectedSanctuaryCreatureBonus?.label ?? '—'}</strong>
+                </p>
+                <p className="island-run-sanctuary-card__meta">{selectedSanctuaryCreatureBonus?.description}</p>
+                <p className="island-run-sanctuary-card__meta">
+                  Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
+                </p>
+                {selectedSanctuaryCreatureUnclaimedMilestones.length > 0 ? (
+                  <div className="island-run-sanctuary-reward">
+                    <p className="island-run-sanctuary-reward__title">Reward ready</p>
+                    <p className="island-run-sanctuary-card__meta">
+                      Bond level {selectedSanctuaryCreatureUnclaimedMilestones[0]} · {getBondMilestoneReward(selectedSanctuaryCreatureUnclaimedMilestones[0])?.summary}
+                    </p>
+                  </div>
+                ) : null}
+                <div className="island-hatchery-card__actions">
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={() => setSelectedSanctuaryCreatureId(null)}
+                  >
+                    ← Back to Roster
+                  </button>
+                  {selectedSanctuaryCreatureUnclaimedMilestones.length > 0 ? (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={() => handleClaimSanctuaryBondReward(selectedSanctuaryCreature.creatureId, selectedSanctuaryCreatureUnclaimedMilestones[0])}
+                    >
+                      Claim {getBondMilestoneReward(selectedSanctuaryCreatureUnclaimedMilestones[0])?.label}
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                    onClick={() => handleFeedSanctuaryCreature(selectedSanctuaryCreature.creatureId)}
+                    disabled={Boolean(selectedSanctuaryCreature.lastFedAtMs && selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS > sanctuaryClockMs)}
+                  >
+                    {selectedSanctuaryCreature.lastFedAtMs && selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS > sanctuaryClockMs
+                      ? `Feed in ${formatCooldownRemaining(selectedSanctuaryCreature.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS - sanctuaryClockMs)}`
+                      : 'Feed Creature'}
+                  </button>
+                  {activeCompanionId === selectedSanctuaryCreature.creatureId ? (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                      onClick={() => handleSetActiveCompanion(null)}
+                    >
+                      Remove Active
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={() => handleSetActiveCompanion(selectedSanctuaryCreature.creatureId)}
+                    >
+                      Set Active Companion
+                    </button>
+                  )}
+                </div>
+              </section>
+            ) : collectedCreatures.length === 0 ? (
+              <div className="island-hatchery-card">
+                <div className="island-hatchery-card__state island-hatchery-card__state--empty">
+                  <p className="island-hatchery-card__stage-emoji">🪹</p>
+                  <p className="island-hatchery-card__headline">No creatures collected yet.</p>
+                  <p className="island-hatchery-card__copy">
+                    Hatch an egg and choose <strong>Collect Creature</strong> to start your shipboard sanctuary.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="island-run-sanctuary-panel__grid">
+                {collectedCreatures.map((creature) => (
+                  <article key={creature.creatureId} className="island-run-sanctuary-card">
+                    <img
+                      className="island-run-sanctuary-card__art"
+                      src={getEggStageArtSrc(creature.creature.tier, 4)}
+                      alt={`${creature.creature.name} collected creature`}
+                    />
+                    <div className="island-run-sanctuary-card__body">
+                      <p className="island-run-sanctuary-card__eyebrow">
+                        Island {creature.lastCollectedIslandNumber} · {creature.creature.tier}
+                      </p>
+                      <h4 className="island-run-sanctuary-card__title">{creature.creature.name}</h4>
+                      <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.creature.habitat}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.creature.affinity}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">Bond level: <strong>{creature.bondLevel}</strong> · Progress <strong>{creature.bondXp % CREATURE_BOND_XP_PER_LEVEL}/{CREATURE_BOND_XP_PER_LEVEL}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">
+                        Companion bonus: <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).label}</strong>
+                      </p>
+                      <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(creature.creature, creature.bondLevel).description}</p>
+                      <p className="island-run-sanctuary-card__meta">
+                        Next boost at bond level <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).nextBondMilestoneLevel}</strong>
+                      </p>
+                      {getUnclaimedBondMilestones(creature).length > 0 ? (
+                        <div className="island-run-sanctuary-reward">
+                          <p className="island-run-sanctuary-reward__title">Reward ready</p>
+                          <p className="island-run-sanctuary-card__meta">
+                            Bond level {getUnclaimedBondMilestones(creature)[0]} · {getBondMilestoneReward(getUnclaimedBondMilestones(creature)[0])?.summary}
+                          </p>
+                        </div>
+                      ) : null}
+                      <div className="island-run-sanctuary-card__progress" aria-hidden="true">
+                        <span
+                          className="island-run-sanctuary-card__progress-fill"
+                          style={{ width: `${((creature.bondXp % CREATURE_BOND_XP_PER_LEVEL) / CREATURE_BOND_XP_PER_LEVEL) * 100}%` }}
+                        />
+                      </div>
+                      <div className="island-hatchery-card__actions">
+                        <button
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                          onClick={() => handleOpenSanctuaryCreature(creature.creatureId)}
+                        >
+                          View Details
+                        </button>
+                        {activeCompanionId === creature.creatureId ? (
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                            onClick={() => handleSetActiveCompanion(null)}
+                          >
+                            Remove Active
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                            onClick={() => handleSetActiveCompanion(creature.creatureId)}
+                          >
+                            Set Active Companion
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowSanctuaryPanel(false)}
               >
                 ✕ Close
               </button>
@@ -4097,121 +4434,6 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         />
       )}
 
-      {/* M9-COMPLETE: Home Island panel — persistent overlay, accessible via 🏠 HUD button */}
-      {showHomePanel && (
-        <div
-          className="island-stop-modal-backdrop island-home-panel-backdrop"
-          role="presentation"
-          onClick={(e) => { if (e.target === e.currentTarget) { setShowHomePanel(false); setHomeRewardReveal(null); } }}
-        >
-          <section
-            className="island-stop-modal island-home-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Home Island Hatchery"
-          >
-            <p className="island-stop-modal__eyebrow">Home Island</p>
-            <h3 className="island-stop-modal__title">🏠 Home Hatchery</h3>
-            <p className="island-stop-modal__copy" style={{ fontSize: '0.78rem', opacity: 0.75 }}>
-              Your home egg slot — repeatable. Set a new egg any time the slot is empty.
-            </p>
-
-            {/* Reward reveal animation */}
-            {homeRewardReveal && (
-              <div className="island-home-panel__reward-reveal" role="status" aria-live="polite">
-                <img
-                  className="island-home-panel__reward-art"
-                  src={getEggStageArtSrc(homeRewardReveal.tier, 4)}
-                  alt={`${homeRewardReveal.tier} egg opened`}
-                />
-                <p className="island-home-panel__reward-tier">
-                  {homeRewardReveal.tier.charAt(0).toUpperCase() + homeRewardReveal.tier.slice(1)} Egg Opened!
-                </p>
-                <p className="island-home-panel__reward-items">{homeRewardReveal.feedback}</p>
-              </div>
-            )}
-
-            {/* Egg slot display */}
-            {!homeRewardReveal && (
-              <div className="island-hatchery-card island-home-panel__slot">
-                <p className="island-home-panel__slot-label">
-                  Egg Slot — <strong>{homeEgg ? '1/1' : '0/1'}</strong>
-                </p>
-
-                {/* State: Empty slot */}
-                {!homeEgg && (
-                  <div className="island-hatchery-card__state">
-                    <p className="island-hatchery-card__stage-emoji">🪹</p>
-                    <p className="island-hatchery-card__headline">Slot available</p>
-                    <p className="island-hatchery-card__copy">Set a new egg now to earn rewards. Tier is a surprise — hatch time too!</p>
-                    <div className="island-hatchery-card__actions">
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={handleSetHomeEgg}
-                      >
-                        🥚 Set Home Egg
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* State: Egg incubating (stage 1–3) */}
-                {homeEgg && homeEggStage < 4 && (
-                  <div className="island-hatchery-card__state island-hatchery-card__state--progress">
-                    <img
-                      className="island-hatchery-card__stage-art"
-                      src={getEggStageArtSrc(homeEgg.tier, homeEggStage)}
-                      alt={`${homeEgg.tier} home egg stage ${homeEggStage}`}
-                    />
-                    <p className="island-hatchery-card__headline">Stage {homeEggStage}: {getEggStageName(homeEggStage)}</p>
-                    <p className="island-hatchery-card__copy">
-                      Your <strong>{homeEgg.tier}</strong> egg is incubating… Check back later!
-                    </p>
-                    <p style={{ fontSize: '0.75rem', opacity: 0.6, margin: 0 }}>
-                      💡 Home eggs progress while you play — no need to stay on any island.
-                    </p>
-                  </div>
-                )}
-
-                {/* State: Egg ready to open (stage 4) */}
-                {homeEgg && homeEggStage >= 4 && (
-                  <div className="island-hatchery-card__state island-hatchery-card__state--ready">
-                    <img
-                      className="island-hatchery-card__stage-art"
-                      src={getEggStageArtSrc(homeEgg.tier, 4)}
-                      alt={`${homeEgg.tier} home egg ready to open`}
-                    />
-                    <p className="island-hatchery-card__headline">Ready to Open!</p>
-                    <p className="island-hatchery-card__copy">
-                      Your <strong>{homeEgg.tier}</strong> egg is ready — open it to claim your rewards.
-                    </p>
-                    <div className="island-hatchery-card__actions">
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={handleOpenHomeEgg}
-                      >
-                        🌟 Open Egg
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => { setShowHomePanel(false); setHomeRewardReveal(null); }}
-              >
-                ✕ Close
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
     </section>
   );
 }
