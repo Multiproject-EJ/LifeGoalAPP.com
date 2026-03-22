@@ -3694,7 +3694,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 🍬
               </div>
               <div className="mobile-gamification-overlay__stat-content">
-                <p className="mobile-gamification-overlay__stat-label">Daily Treats</p>
+                <p className="mobile-gamification-overlay__stat-label">Holiday Calendar</p>
                 <p className="mobile-gamification-overlay__stat-hint">
                   Open your treats menu for spins, leagues, and countdown secrets.
                 </p>
@@ -3754,7 +3754,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       className="daily-treats-congrats"
       role="dialog"
       aria-modal="true"
-      aria-label="Daily treats bonus unlock"
+      aria-label="Holiday calendar bonus unlock"
     >
       <div
         className="daily-treats-congrats__backdrop"
@@ -3765,7 +3765,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <button
           type="button"
           className="daily-treats-congrats__close"
-          aria-label="Close daily treats bonus"
+          aria-label="Close holiday calendar bonus"
           onClick={handleDailyTreatsCongratsClose}
         >
           ×
@@ -3776,7 +3776,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             src={lifespinIcon}
             alt="Life Spin icon"
           />
-          <p className="daily-treats-congrats__eyebrow">Daily Treats</p>
+          <p className="daily-treats-congrats__eyebrow">Holiday Calendar</p>
           <h3 className="daily-treats-congrats__title">Congrats on your first visit today!</h3>
           <p className="daily-treats-congrats__subtitle">
             Your controller is powered up with fresh rewards.
@@ -3825,7 +3825,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   ) : null;
 
   const dailyTreatsModal = showDailyTreatsMenu ? (
-    <div className="daily-treats-modal" role="dialog" aria-modal="true" aria-label="Daily treats">
+    <div className="daily-treats-modal" role="dialog" aria-modal="true" aria-label="Holiday calendar treats">
       <div
         className="daily-treats-modal__backdrop"
         onClick={() => setShowDailyTreatsMenu(false)}
@@ -3838,7 +3838,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <button
           type="button"
           className="daily-treats-modal__close"
-          aria-label="Close daily treats menu"
+          aria-label="Close holiday calendar menu"
           onClick={() => setShowDailyTreatsMenu(false)}
         >
           ×
@@ -3944,7 +3944,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <img src={dailyTreatsCalendarOpen} alt="" />
                 </span>
                 {dailyTreatsInventory.hatchesRemaining > 0 ? (
-                  <span className="daily-treats-modal__card-indicator" aria-label="Daily hatch ready" />
+                  <span className="daily-treats-modal__card-indicator" aria-label="Today's treat ready" />
                 ) : null}
               </button>
               <button
@@ -3957,7 +3957,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   setShowCalendarPlaceholder(true);
                 }}
               >
-                OPEN
+                REVEAL
               </button>
             </div>
           </div>
@@ -3970,8 +3970,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     ? [
         {
           id: 'daily-treats',
-          title: 'Unclaimed daily treats',
-          description: 'Open the treats menu to claim a bonus.',
+          title: 'Unclaimed holiday calendar',
+          description: "Open the holiday calendar to reveal today's treat.",
         },
       ]
     : [];

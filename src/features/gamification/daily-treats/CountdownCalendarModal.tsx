@@ -112,7 +112,7 @@ export const CountdownCalendarModal = ({
         className="daily-treats-calendar daily-treats-calendar--holiday-none"
         role="dialog"
         aria-modal="true"
-        aria-label="Holiday advent calendar"
+        aria-label="Holiday calendar"
       >
         <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
         <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
@@ -125,14 +125,14 @@ export const CountdownCalendarModal = ({
             ×
           </button>
           <div className="daily-treats-calendar__content">
-            <p className="daily-treats-modal__eyebrow">Holiday Advent Calendar</p>
+            <p className="daily-treats-modal__eyebrow">Holiday Calendar</p>
             <h3 className="daily-treats-calendar__title">No holiday countdown active 🗓️</h3>
             <p className="daily-treats-calendar__subtitle">
               Check back when the next holiday season starts! Enable your favourite holidays in
-              Settings → Holiday Preferences to unlock their advent calendars.
+              Settings → Holiday Preferences to unlock their holiday calendars.
             </p>
             <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
-              Back to Daily Treats
+              Back to Holiday Calendar
             </button>
           </div>
         </div>
@@ -164,7 +164,7 @@ export const CountdownCalendarModal = ({
       className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod}`}
       role="dialog"
       aria-modal="true"
-      aria-label={`${meta.theme_name} advent calendar`}
+      aria-label={`${meta.theme_name} holiday calendar`}
     >
       <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
       <div
@@ -182,13 +182,13 @@ export const CountdownCalendarModal = ({
         <button
           type="button"
           className="daily-treats-modal__close"
-          aria-label="Close advent calendar"
+          aria-label="Close holiday calendar"
           onClick={onClose}
         >
           ×
         </button>
         <div className="daily-treats-calendar__content">
-          <p className="daily-treats-modal__eyebrow">Holiday Advent Calendar</p>
+          <p className="daily-treats-modal__eyebrow">Holiday Calendar</p>
           <h3 className="daily-treats-calendar__title">
             {meta.emojis[0]} {meta.theme_name}
           </h3>
@@ -196,11 +196,11 @@ export const CountdownCalendarModal = ({
           <p className="daily-treats-calendar__subtitle">
             Day {activeDay} of {totalDoors}
             {alreadyOpenedToday
-              ? ' • hatch opened for today!'
-              : ' • open today\u2019s hatch to reveal your treat.'}
+              ? " • today's treat already revealed!"
+              : " • open today's door to reveal your treat."}
           </p>
           {hasOpenableHatch ? (
-            <p className="daily-treats-calendar__hint">Tap today&apos;s hatch to open it.</p>
+            <p className="daily-treats-calendar__hint">Tap today&apos;s door to reveal your treat.</p>
           ) : null}
 
           <div className="daily-treats-calendar__grid" role="list">
@@ -214,13 +214,13 @@ export const CountdownCalendarModal = ({
                   : day < activeDay
                     ? 'available'
                     : 'locked';
-              const label = `Day ${day} ${status === 'today' ? '(today)' : `(${status})`}`;
+              const label = `Day ${day} ${status === 'today' ? '(today\'s door)' : `(${status})`}`;
               const canOpen = day <= activeDay && !revealedSymbol;
 
               // Holiday emoji rotated through the door array; locked doors show a padlock
               const doorEmoji = meta.emojis[(day - 1) % meta.emojis.length];
 
-              const hatchBody = (
+              const doorBody = (
                 <>
                   <span className="daily-treats-calendar__hatch-number">{day}</span>
                   {revealedSymbol ? (
@@ -249,7 +249,7 @@ export const CountdownCalendarModal = ({
                     setScratchState(loadScratchCardState(userId));
                   }}
                 >
-                  {hatchBody}
+                  {doorBody}
                 </button>
               ) : (
                 <div
@@ -258,7 +258,7 @@ export const CountdownCalendarModal = ({
                   role="listitem"
                   aria-label={label}
                 >
-                  {hatchBody}
+                  {doorBody}
                 </div>
               );
             })}
@@ -266,7 +266,7 @@ export const CountdownCalendarModal = ({
 
           {alreadyOpenedToday ? (
             <div className="daily-treats-calendar__rest">
-              You opened today&apos;s hatch {meta.emojis[0]} Come back tomorrow for the next reveal.
+              You revealed today&apos;s treat {meta.emojis[0]} Come back tomorrow for the next surprise.
             </div>
           ) : null}
 
@@ -277,7 +277,7 @@ export const CountdownCalendarModal = ({
               </p>
               <p className="daily-treats-calendar__rollover-copy">
                 You opened every door of the {meta.theme_name}. Enjoy the holiday — see you at the
-                next countdown!
+                next holiday calendar!
               </p>
             </div>
           ) : null}
@@ -321,7 +321,7 @@ export const CountdownCalendarModal = ({
           </div>
 
           <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
-            Back to Daily Treats
+            Back to Holiday Calendar
           </button>
         </div>
       </div>
