@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp-island-run-tests",
+    "rootDir": "src",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2020",
+    "lib": ["DOM", "ES2020"],
+    "types": ["node"],
+    "isolatedModules": false,
+    "allowImportingTsExtensions": false
+  },
+  "include": [
+    "src/features/gamification/level-worlds/services/eggService.ts",
+    "src/features/gamification/level-worlds/services/creatureCatalog.ts",
+    "src/features/gamification/level-worlds/services/creatureCollectionService.ts",
+    "src/features/gamification/level-worlds/services/creatureTreatInventoryService.ts",
+    "src/features/gamification/level-worlds/services/islandBoardTileMap.ts",
+    "src/features/gamification/level-worlds/services/islandRunStops.ts",
+    "src/features/gamification/level-worlds/services/islandRunEconomy.ts",
+    "src/features/gamification/level-worlds/services/islandRunRuntimeState.ts",
+    "src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts",
+    "src/features/gamification/level-worlds/services/islandRunGameStateStore.ts",
+    "src/features/gamification/level-worlds/services/islandRunProfile.ts",
+    "src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts",
+    "src/features/gamification/level-worlds/services/islandRunEntryDebug.ts",
+    "src/features/gamification/level-worlds/services/__tests__/**/*.ts"
+  ]
+}
