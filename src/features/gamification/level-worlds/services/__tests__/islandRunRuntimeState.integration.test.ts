@@ -59,6 +59,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
           hearts: 3,
           coins: 12,
           spinTokens: 1,
+          dicePool: 6,
           shields: 1,
           shards: 2,
         }),
@@ -80,6 +81,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
           hearts: -2,
           coins: 41.6,
           spinTokens: 2.2,
+          dicePool: 13.9,
           shields: -4,
           shards: 9.9,
         },
@@ -94,6 +96,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       assertEqual(state.hearts, 0, 'Expected hearts to clamp at zero');
       assertEqual(state.coins, 41, 'Expected coins to be floored');
       assertEqual(state.spinTokens, 2, 'Expected spin tokens to be floored');
+      assertEqual(state.dicePool, 13, 'Expected dice pool to be floored');
       assertEqual(state.shields, 0, 'Expected shields to clamp at zero');
       assertEqual(state.shards, 9, 'Expected shards to be floored');
       assertDeepEqual(Object.keys(state.perIslandEggs).sort(), ['2', '5'], 'Expected egg ledger merge to preserve old and new islands');

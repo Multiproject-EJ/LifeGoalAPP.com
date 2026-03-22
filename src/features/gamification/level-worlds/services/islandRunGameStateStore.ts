@@ -1,5 +1,6 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { isDemoSession } from '../../../../services/demoSession';
+import { convertHeartToDicePool } from './islandRunEconomy';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
@@ -42,6 +43,7 @@ export interface IslandRunGameStateRecord {
   hearts: number;
   coins: number;
   spinTokens: number;
+  dicePool: number;
   shardTierIndex: number;
   shardClaimCount: number;
   shields: number;
@@ -165,6 +167,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     hearts: 5,
     coins: 0,
     spinTokens: 0,
+    dicePool: convertHeartToDicePool(1),
     shardTierIndex: 0,
     shardClaimCount: 0,
     shields: 0,
@@ -242,6 +245,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.spinTokens === 'number' && Number.isFinite(value.spinTokens)
         ? Math.max(0, Math.floor(value.spinTokens))
         : fallback.spinTokens,
+    dicePool:
+      typeof value.dicePool === 'number' && Number.isFinite(value.dicePool)
+        ? Math.max(0, Math.floor(value.dicePool))
+        : fallback.dicePool,
     shardTierIndex:
       typeof value.shardTierIndex === 'number' && Number.isFinite(value.shardTierIndex)
         ? Math.max(0, Math.floor(value.shardTierIndex))
@@ -325,7 +332,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,shard_tier_index,shard_claim_count,shields,shards,completed_stops_by_island')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,completed_stops_by_island')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -373,6 +380,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       hearts: data.hearts ?? 5,
       coins: data.coins ?? 0,
       spinTokens: data.spin_tokens ?? 0,
+      dicePool: data.dice_pool ?? fallback.dicePool,
       shardTierIndex: data.shard_tier_index ?? 0,
       shardClaimCount: data.shard_claim_count ?? 0,
       shields: data.shields ?? 0,
@@ -474,6 +482,7 @@ export async function writeIslandRunGameStateRecord(options: {
       hearts: record.hearts,
       coins: record.coins,
       spin_tokens: record.spinTokens,
+      dice_pool: record.dicePool,
       shard_tier_index: record.shardTierIndex,
       shard_claim_count: record.shardClaimCount,
       shields: record.shields,

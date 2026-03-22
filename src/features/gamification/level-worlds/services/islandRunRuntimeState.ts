@@ -21,6 +21,7 @@ export interface IslandRunRuntimeState {
   hearts: number;
   coins: number;
   spinTokens: number;
+  dicePool: number;
   shardTierIndex: number;
   shardClaimCount: number;
   shields: number;
@@ -98,6 +99,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     hearts?: number;
     coins?: number;
     spinTokens?: number;
+    dicePool?: number;
     shardTierIndex?: number;
     shardClaimCount?: number;
     shields?: number;

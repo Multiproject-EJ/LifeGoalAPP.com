@@ -1048,6 +1048,7 @@ export interface Database {
           hearts: number;
           coins: number;
           spin_tokens: number;
+          dice_pool: number;
           shard_tier_index: number;
           shard_claim_count: number;
           shields: number;
@@ -1075,6 +1076,7 @@ export interface Database {
           hearts?: number;
           coins?: number;
           spin_tokens?: number;
+          dice_pool?: number;
           shard_tier_index?: number;
           shard_claim_count?: number;
           shields?: number;
@@ -1102,6 +1104,7 @@ export interface Database {
           hearts?: number;
           coins?: number;
           spin_tokens?: number;
+          dice_pool?: number;
           shard_tier_index?: number;
           shard_claim_count?: number;
           shields?: number;
