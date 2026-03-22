@@ -101,6 +101,33 @@ type IslandRunProgressionAssertionExportBundle = {
   filteredEventCount?: number;
 };
 
+type IslandRunRuntimeVerificationSummary = {
+  generatedAt: string;
+  latestHydrationResult?: {
+    timestamp: string;
+    source?: string;
+    currentIslandNumber?: number;
+    bossTrialResolvedIslandNumber?: number | null;
+    cycleIndex?: number;
+    tokenIndex?: number;
+    hearts?: number;
+    coins?: number;
+    spinTokens?: number;
+    dicePool?: number;
+  };
+  latestPersistSuccess?: {
+    timestamp: string;
+    currentIslandNumber?: number;
+    bossTrialResolvedIslandNumber?: number | null;
+    cycleIndex?: number;
+    tokenIndex?: number;
+    hearts?: number;
+    coins?: number;
+    spinTokens?: number;
+    dicePool?: number;
+  };
+};
+
 type IslandRunProgressionRunFilterResult = {
   ref?: string;
   filterApplied: boolean;
@@ -139,6 +166,7 @@ declare global {
       ref?: string,
       mode?: 'table' | 'fallback',
     ) => IslandRunProgressionRunFilterResult;
+    __islandRunEntryDebugRuntimeStateSummary?: () => IslandRunRuntimeVerificationSummary;
     __islandRunEntryDebugListenersInstalled?: boolean;
   }
 }
@@ -401,6 +429,52 @@ function findNextEventIndex(
   }
 
   return -1;
+}
+
+function getLatestRuntimeStateEvent(events: IslandRunEntryDebugEntry[], stage: string) {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    if (events[index].stage === stage) {
+      return events[index];
+    }
+  }
+
+  return null;
+}
+
+function summarizeRuntimeVerification(events: IslandRunEntryDebugEntry[]): IslandRunRuntimeVerificationSummary {
+  const hydrationEvent = getLatestRuntimeStateEvent(events, 'island_run_runtime_hydration_result');
+  const persistEvent = getLatestRuntimeStateEvent(events, 'runtime_state_persist_success');
+
+  return {
+    generatedAt: new Date().toISOString(),
+    latestHydrationResult: hydrationEvent
+      ? {
+          timestamp: hydrationEvent.timestamp,
+          source: hydrationEvent.payload?.source as string | undefined,
+          currentIslandNumber: hydrationEvent.payload?.currentIslandNumber as number | undefined,
+          bossTrialResolvedIslandNumber: hydrationEvent.payload?.bossTrialResolvedIslandNumber as number | null | undefined,
+          cycleIndex: hydrationEvent.payload?.cycleIndex as number | undefined,
+          tokenIndex: hydrationEvent.payload?.tokenIndex as number | undefined,
+          hearts: hydrationEvent.payload?.hearts as number | undefined,
+          coins: hydrationEvent.payload?.coins as number | undefined,
+          spinTokens: hydrationEvent.payload?.spinTokens as number | undefined,
+          dicePool: hydrationEvent.payload?.dicePool as number | undefined,
+        }
+      : undefined,
+    latestPersistSuccess: persistEvent
+      ? {
+          timestamp: persistEvent.timestamp,
+          currentIslandNumber: persistEvent.payload?.currentIslandNumber as number | undefined,
+          bossTrialResolvedIslandNumber: persistEvent.payload?.bossTrialResolvedIslandNumber as number | null | undefined,
+          cycleIndex: persistEvent.payload?.cycleIndex as number | undefined,
+          tokenIndex: persistEvent.payload?.tokenIndex as number | undefined,
+          hearts: persistEvent.payload?.hearts as number | undefined,
+          coins: persistEvent.payload?.coins as number | undefined,
+          spinTokens: persistEvent.payload?.spinTokens as number | undefined,
+          dicePool: persistEvent.payload?.dicePool as number | undefined,
+        }
+      : undefined,
+  };
 }
 
 function assertProgressionSequence(
@@ -715,6 +789,8 @@ function installDebugWindowHelpers() {
 
     return bundle;
   };
+  window.__islandRunEntryDebugRuntimeStateSummary = () => summarizeRuntimeVerification(readDebugBuffer());
+
   window.__islandRunEntryDebugFilterProgressionRun = (ref, mode = 'table') => {
     const buffer = readDebugBuffer();
     const { filteredEvents, matchedRunId, matchedScenario } = filterProgressionRunEvents(buffer, ref);

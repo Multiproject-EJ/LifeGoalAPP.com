@@ -1,4 +1,4 @@
-# EGGS + HATCHERY + HOME ISLAND (DETAILED)
+# EGGS + HATCHERY (DETAILED)
 
 ## Egg tiers
 - common
@@ -25,7 +25,6 @@ When setting egg:
 ## Where eggs live
 Egg location enum:
 - island  (current island egg)
-- home   (home island eggs)
 - dormant (ready but uncollected from an island)
 
 ---
@@ -37,8 +36,6 @@ player can roll dice (it is the onboarding/orientation gate for each island).
 Each island has **exactly one egg slot** that is permanent and non-renewable across all cycles.
 Once an egg on a given island has been sold or collected, that island never provides a new egg
 — even when the player returns on cycle 2 or later.
-
-> **Exception:** Home Island eggs are repeatable (see Home Island Hatchery section below).
 
 Special case:
 - Island 1: hatchery is guaranteed and is the forced first action (onboarding).
@@ -62,8 +59,8 @@ Multiple dormant or hatched-but-unclaimed eggs may exist across different island
 
 ---
 
-## Collect / Open Egg
-Egg can be opened (collected or sold) when:
+## Resolve Hatched Egg
+Egg can be resolved when:
 - `stage == 4` (i.e., `now >= hatch_at`)
 
 The player **does not need to be on the island at hatch time**.  If the egg hatched while
@@ -71,18 +68,11 @@ the player was away or on another island, the egg remains on that island in a ha
 uncollected state and can be collected/sold when the player revisits the island on a future
 cycle.
 
-Island hatchery flow (current app behavior):
-- At `stage == 4`, the hatchery CTA becomes **Collect Animal**.
-- Collecting the animal clears the active island egg and updates that island's ledger entry to
-  `status = animal_ready`.
-- No currency reward is granted yet at hatchery collect time.
-- The player then visits the Shop / Animal Market and sells the collected animal.
-- Selling the animal grants the tier-based reward bundle (see reward contract below) and updates
-  the island ledger entry to `status = animal_sold`.
-
-Home hatchery flow (separate from island eggs):
-- Home eggs still open directly into rewards once `stage == 4`.
-- Home eggs do **not** create an intermediate animal inventory / selling step.
+Current hatchery flow:
+- **Collect Creature** → clears the active egg, marks the island egg as `collected`, and reserves
+  the species for the ship manifest / future sanctuary systems.
+- **Sell for Rewards** → clears the active egg, marks the island egg as `sold`, and grants the
+  tier-based reward bundle immediately.
 
 ---
 
@@ -104,21 +94,6 @@ Dormant egg collect condition:
 
 ---
 
-## Home Island Hatchery
-**Home Island is a UI hub / player-menu overlay** (not part of the 1–120 linear sequence).
-Home hatchery is always available and the egg rule here is **repeatable** — the one-time
-non-renewable restriction does not apply to the Home Island.
-
-Rules:
-- User can set a home egg any time a slot is available.
-- Home egg can be opened any time after `stage == 4` without movement (no stop landing needed).
-
-Slots:
-- 1 free slot (v1)
-- + slots via life level later (v2)
-
----
-
 ## Reward Contract (output)
 Define function:
 `rollEggRewards(eggTier, seed) -> RewardBundle`
@@ -137,8 +112,7 @@ v1: keep simple
 - mythic: large bundle + cosmetic chance
 
 Current implementation notes:
-- Island eggs use `rollEggRewards(...)` when the collected animal is sold in the Shop.
-- Home eggs use `rollEggRewards(...)` immediately when the egg is opened from the Home Island
+- Island eggs use `rollEggRewards(...)` when the player chooses **Sell for Rewards** in the
   hatchery overlay.
 - Reward output is deterministic per egg because the seed is the egg's `set_at` timestamp.
 
@@ -149,8 +123,7 @@ Current v1 reward schedule in code:
   `30%` chance of cosmetic
 
 Additional current rewards:
-- Selling a collected island animal also awards `+2 wallet shards`.
-- Opening a Home Island egg also awards `+2 wallet shards`.
+- Selling a hatched creature also awards `+2 wallet shards`.
 
 ---
 
@@ -165,10 +138,8 @@ Creatures:
 ## Acceptance Tests
 - Island 1 forces egg set (onboarding gate)
 - Egg hatch timer runs from `set_at` regardless of player location
-- Egg can be collected when `stage == 4`, converting the island egg into an `animal_ready` state
-- A collected animal can be sold later in the Shop / Animal Market for the tier reward bundle
+- Egg can be resolved when `stage == 4` with an immediate **Collect Creature** or **Sell for Rewards** choice
 - If egg hatched while player was away, egg is in dormant/unclaimed state on that island
 - Multiple dormant eggs can exist simultaneously across different islands
 - Once an island egg is sold/collected, that island never provides a new egg (non-renewable)
-- Home Island egg slot is repeatable (can set a new egg after claiming)
 - Dormant egg persists and can be opened when player revisits the origin island
