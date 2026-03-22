@@ -89,8 +89,8 @@
 - [x] Market stop prototype — dice bundle (30c → +6 dice) and heart bundle (40c) purchase modals; owned-state no-repurchase guard; repurchase-block telemetry
 - [x] Boss stop trial — 10-prompt challenge pool; scaled reward by island tier (`hearts + coins + spinTokens`); resolve + reward feedback
 - [x] Encounter tile — stub award (+coins) wired, telemetry fired on trigger and resolve
-- [x] Utility stop — stub modal (copy scaffold only, no real objective)
-- [x] Minigame stop — stub modal (no framework yet; `ShooterBlitz` can be triggered directly from the board as a placeholder)
+- [x] Utility stop — production recovery actions wired (heart refill, dice bonus, timer extension) with spend telemetry, sound, and haptics
+- [x] Minigame stop — framework launcher wired through `resolveMinigameForStop`; completing a run clears the stop and passes rewards back into Island Run
 
 #### Egg / Hatchery System
 - [x] Three egg tiers: common (0c, 24h hatch), rare (50c, 36h), mythic (150c, 48h); dev-timer mode (15/20/30s)
@@ -143,7 +143,7 @@
 ### 3b. What Is In Progress 🟡
 
 - [~] **M2 token animation** — basic hop loop shipped; 60 fps easing, squash/stretch micro-animation, and dynamic shadow by `zBand` not yet production-grade
-- [~] **M3 stop modals** — stub modals wired; utility stop has no real objective behind it; minigame stop shows only placeholder copy
+- [x] **M3 stop modals** — hatchery, minigame, utility, dynamic, and boss flows all open from the board; utility has production actions and minigame launches through the registry-backed stop flow
 - [~] **M4 travel overlay** — dev simulation working; production-grade "next island" art swap and visual continuity not yet polished
 - [~] **M5 hatchery egg stages** — scaffold shipped; stage progress indicator present; full stage-unlock animation and dormant visual not yet production-grade
 - [~] **M6 encounter tile** — stub award wired; encounter content (mini-challenge, real reward table, rarity weighting) not yet implemented
@@ -173,14 +173,14 @@
 - [ ] **Stop icon art** — custom stop icon art not yet present
 
 #### Backend / Data
-- [ ] **Full per-run state persistence** — in-flight state (current token index, per-stop completion flags, current hearts/coins/spin tokens) is held in React `useState` and lost on page reload; only `currentIslandNumber`, `bossTrialResolvedIslandNumber`, and egg state are persisted to Supabase
+- [~] **Full per-run state persistence** — stop flags, token index, hearts/coins/spin tokens, and dice pool now persist in runtime-state storage; broader integration verification and live-schema confirmation still remain
 - [ ] **`island_run_runtime_state` migration** — table schema needs to be confirmed applied (migration file lives in `sql/` or `supabase/`); no automated migration CI check
 - [ ] **Backend tables for stop objectives** — no Supabase tables for stop-level completion records, encounter outcomes, or market purchase history beyond the prototype markers
 - [ ] **RLS policies** — `island_run_runtime_state` RLS is specified in docs but needs explicit verification against the live schema
 - [ ] **Analytics / telemetry backend** — debug markers log to console or a local debug table; no production analytics pipeline (event schema, BigQuery/Amplitude/PostHog routing)
 
 #### Quality / Testing
-- [ ] **Automated tests** — no unit tests for `generateTileMap`, `generateIslandStopPlan`, economy helpers, runtime state hydration, or any Island Run component
+- [~] **Automated tests** — service-level coverage now exists for tile-map generation, stop-plan generation, economy helpers, progression rules, creature services, and runtime-state hydration/persistence via `npm run test:island-run`; component/UI automation is still missing
 - [ ] **QA checklist automation** — acceptance tests in `docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md` and `docs/11_ISLAND_RUN_PROGRESSION_MARKER_QA_CHECKLIST.md` are manual-only
 - [ ] **Cross-device / accessibility testing** — no recorded test results for 360 × 780 viewport, safe-area notches, or keyboard navigation
 - [ ] **Balancing** — no economy simulation; heart drain rate, coin earn rate, encounter frequency, and egg hatch costs have not been validated against a 72-hour play session
@@ -199,16 +199,13 @@
 
 | # | Slice ID | Goal | Key files |
 |---|---|---|---|
-| 1 | **M11A** | Minigame framework scaffold — define `IslandRunMinigame` interface, entry/exit/reward contract, wire stop modal to stub launcher | `IslandRunBoardPrototype.tsx`, new `islandRunMinigameService.ts` |
-| 2 | **M11B** | First real minigame wired through the M11A framework (e.g. `ShooterBlitz` → minigame stop) | `IslandRunBoardPrototype.tsx`, `ShooterBlitz` |
-| 3 | **M3B** | Utility stop — real objective (e.g. shield / recovery action) wired and clearable | `IslandRunBoardPrototype.tsx`, `islandRunStops.ts` |
-| 4 | **M6B** | Encounter tile — real mini-challenge content, reward table, and rarity weight | `IslandRunBoardPrototype.tsx`, `islandBoardTileMap.ts` |
-| 5 | **M13A** | Full per-run state persistence — persist token index, stop flags, hearts, coins, spin tokens to Supabase on every mutation | `islandRunRuntimeState.ts`, `islandRunGameStateStore.ts`, new migration |
-| 6 | **M14A** | Island background art pipeline — add 3 placeholder `bg_*.webp` + `depth_mask_*.png` for islands 1–3; wire into `IslandRunBoardPrototype` renderer | `public/assets/islands/`, `IslandRunBoardPrototype.tsx` |
-| 7 | **M15A** | Audio files — add 4 core SFX (`sfx_dice_roll`, `sfx_tile_land`, `sfx_boss_resolve`, `sfx_island_clear`); activate `playIslandRunSound` for those events | `public/assets/audio/sfx/`, `islandRunAudio.ts` |
-| 8 | **M16A** | Real stop objectives for habit / check-in stops — query live habit completion data; unlock stop clear only when criteria met | `islandRunStops.ts`, habits feature API |
-| 9 | **M17A** | 120-island progression gate — require all 5 stops + boss cleared before `currentIslandNumber` increments; add island-completion record to Supabase | `IslandRunBoardPrototype.tsx`, `islandRunGameStateStore.ts` |
-| 10 | **M18A** | Test suite — unit tests for `generateTileMap`, `generateIslandStopPlan`, economy helpers, and runtime state hydration | new `*.test.ts` files alongside service files |
+| 1 | **M6B** | Encounter tile — deepen the mini-challenge content/reward table beyond the current easy challenge pool and rarity rules | `IslandRunBoardPrototype.tsx`, `encounterService.ts`, `islandBoardTileMap.ts` |
+| 2 | **M13A** | Full per-run state persistence — storage/runtime wiring has landed; finish integration verification, remote schema validation, and any remaining edge-case fixes | `IslandRunBoardPrototype.tsx`, `islandRunRuntimeState.ts`, `islandRunGameStateStore.ts`, migrations |
+| 3 | **M14A** | Island background art pipeline — extend beyond the current placeholder/procedural set with final asset coverage and depth-mask pairing | `public/assets/islands/`, `IslandRunBoardPrototype.tsx` |
+| 4 | **M15A** | Audio files — add real SFX assets for the mapped sound events so `playIslandRunSound` is no longer placeholder-only | `public/assets/audio/sfx/`, `islandRunAudio.ts` |
+| 5 | **M16A** | Real stop objectives for habit / check-in stops — query live habit completion data; unlock stop clear only when criteria met | `islandRunStops.ts`, habits feature API |
+| 6 | **M17A** | 120-island progression gate — add explicit island-completion records / locked-map progression beyond the current expiry gating | `IslandRunBoardPrototype.tsx`, `islandRunGameStateStore.ts` |
+| 7 | **M18A** | Test suite — add component/UI automation and broader regression coverage on top of the current service-level test runner | new `*.test.ts` files, board test harness |
 
 ---
 
