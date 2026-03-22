@@ -40,6 +40,13 @@ import {
   rollEggRewards,
   type EggTier,
 } from '../services/eggService';
+import {
+  fetchCreatureCollection,
+  collectCreatureForUser,
+  getCreatureManifestEntries,
+  migrateLegacyEggLedgerToCollection,
+} from '../services/creatureCollectionService';
+import { selectCreatureForEgg } from '../services/creatureCatalog';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -118,15 +125,6 @@ interface ActiveEgg {
   hatchAtMs: number;
   isDormant?: boolean;
 }
-
-type CreatureManifestEntry = {
-  islandKey: string;
-  name: string;
-  habitat: string;
-  affinity: string;
-  tier: EggTier;
-  collectedAtMs: number;
-};
 
 function getBossReward(islandNumber: number): { hearts: number; coins: number; spinTokens: number } {
   const tier = Math.floor((islandNumber - 1) / 10);
@@ -403,6 +401,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   // M14: persistent shop panel state
   const [showShopPanel, setShowShopPanel] = useState(false);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
+  const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -610,6 +609,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showSanctuaryPanel]);
+
+  useEffect(() => {
+    const { collection } = migrateLegacyEggLedgerToCollection({
+      userId: session.user.id,
+      perIslandEggs: runtimeState.perIslandEggs ?? {},
+    });
+    setCreatureCollection(collection);
+  }, [runtimeState.perIslandEggs, session.user.id]);
 
   // M6-COMPLETE: Breathing challenge countdown — auto-completes when it reaches 0
   useEffect(() => {
@@ -1724,55 +1731,17 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setIsSettingEgg(false);
   };
 
-  const buildCreatureName = (tier: EggTier, seed: number): string => {
-    const families: Record<EggTier, string[]> = {
-      common: ['Sproutling', 'Pebble Spirit', 'Mossling', 'Glowtail', 'Drift Pup'],
-      rare: ['Luma Hatchling', 'Nebula Wisp', 'Dewleaf Sprite', 'Aurora Finch', 'Ember Sprout'],
-      mythic: ['Starhorn Seraph', 'Voidlight Familiar', 'Sunflare Kirin', 'Dreamroot Ancient', 'Celest Pup'],
-    };
-    const names = families[tier];
-    return names[Math.abs(seed) % names.length] ?? `${tier} creature`;
-  };
-
-  const buildCreatureHabitat = (tier: EggTier, seed: number): string => {
-    const habitats: Record<EggTier, string[]> = {
-      common: ['Zen Garden', 'Hydro Deck', 'Root Atrium', 'Moss Gallery'],
-      rare: ['Engine Wing', 'Solar Orchard', 'Ember Lab', 'Sky Foundry'],
-      mythic: ['Astral Dome', 'Dream Observatory', 'Star Archive', 'Aurora Bridge'],
-    };
-    const options = habitats[tier];
-    return options[Math.abs(seed * 3) % options.length] ?? 'Ship Habitat';
-  };
-
-  const buildCreatureAffinity = (tier: EggTier, seed: number): string => {
-    const affinities: Record<EggTier, string[]> = {
-      common: ['Grounded', 'Nurturer', 'Builder', 'Steady'],
-      rare: ['Visionary', 'Explorer', 'Guardian', 'Catalyst'],
-      mythic: ['Oracle', 'Radiant', 'Mythic', 'Cosmic'],
-    };
-    const options = affinities[tier];
-    return options[Math.abs(seed * 7) % options.length] ?? 'Balanced';
-  };
-
-  const collectedCreatures = useMemo<CreatureManifestEntry[]>(() => {
-    return Object.entries(runtimeState.perIslandEggs ?? {})
-      .filter(([, entry]) => entry.status === 'collected' || entry.status === 'animal_ready')
-      .map(([islandKey, entry]) => ({
-        islandKey,
-        name: buildCreatureName(entry.tier, entry.setAtMs),
-        habitat: buildCreatureHabitat(entry.tier, entry.setAtMs),
-        affinity: buildCreatureAffinity(entry.tier, entry.setAtMs),
-        tier: entry.tier,
-        collectedAtMs: entry.openedAt ?? entry.animalCollectedAtMs ?? entry.hatchAtMs,
-      }))
-      .sort((a, b) => b.collectedAtMs - a.collectedAtMs);
-  }, [runtimeState.perIslandEggs]);
+  const collectedCreatures = useMemo(() => getCreatureManifestEntries(session.user.id), [creatureCollection, session.user.id]);
 
   const handleCollectCreature = () => {
     if (!activeEgg || eggStage < 4) return;
     const resolvedEgg = activeEgg;
     const nowTs = Date.now();
-    const creatureName = buildCreatureName(resolvedEgg.tier, resolvedEgg.setAtMs);
+    const creature = selectCreatureForEgg({
+      eggTier: resolvedEgg.tier,
+      seed: resolvedEgg.setAtMs,
+      islandNumber,
+    });
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
     const collectedEntry: PerIslandEggEntry = existingEntry
@@ -1787,20 +1756,27 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         };
 
     setActiveEgg(null);
+    setCreatureCollection(collectCreatureForUser({
+      userId: session.user.id,
+      creature,
+      islandNumber,
+      collectedAtMs: nowTs,
+    }));
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
-    setLandingText(`Collected ${creatureName}! It has been added to your ship's creature manifest.`);
+    setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
       metadata: {
         stage: 'island_creature_collected',
         tier: resolvedEgg.tier,
-        creature_name: creatureName,
+        creature_id: creature.id,
+        creature_name: creature.name,
         source: 'island_hatchery',
       },
     });
-    logIslandRunEntryDebug('island_creature_collected', { tier: resolvedEgg.tier, creatureName, source: 'island_hatchery' });
+    logIslandRunEntryDebug('island_creature_collected', { tier: resolvedEgg.tier, creatureId: creature.id, creatureName: creature.name, source: 'island_hatchery' });
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -1821,6 +1797,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
   const handleSellEggForRewards = () => {
     if (!activeEgg || eggStage < 4) return;
     const resolvedEgg = activeEgg;
+    const creature = selectCreatureForEgg({
+      eggTier: resolvedEgg.tier,
+      seed: resolvedEgg.setAtMs,
+      islandNumber,
+    });
     const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
     const nowTs = Date.now();
     const islandKey = String(islandNumber);
@@ -1850,7 +1831,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
     if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
     if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
-    setLandingText(`Sold ${buildCreatureName(resolvedEgg.tier, resolvedEgg.setAtMs)}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
+    setLandingText(`Sold ${creature.name}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -3968,7 +3949,8 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             </p>
 
             <div className="island-run-sanctuary-panel__summary">
-              <span className="island-run-sanctuary-panel__pill">Collected: <strong>{collectedCreatures.length}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Species: <strong>{collectedCreatures.length}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">Copies: <strong>{collectedCreatures.reduce((sum, creature) => sum + creature.copies, 0)}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
             </div>
 
@@ -3985,19 +3967,20 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             ) : (
               <div className="island-run-sanctuary-panel__grid">
                 {collectedCreatures.map((creature) => (
-                  <article key={`${creature.islandKey}-${creature.collectedAtMs}`} className="island-run-sanctuary-card">
+                  <article key={creature.creatureId} className="island-run-sanctuary-card">
                     <img
                       className="island-run-sanctuary-card__art"
-                      src={getEggStageArtSrc(creature.tier, 4)}
-                      alt={`${creature.name} collected creature`}
+                      src={getEggStageArtSrc(creature.creature.tier, 4)}
+                      alt={`${creature.creature.name} collected creature`}
                     />
                     <div className="island-run-sanctuary-card__body">
                       <p className="island-run-sanctuary-card__eyebrow">
-                        Island {creature.islandKey} · {creature.tier}
+                        Island {creature.lastCollectedIslandNumber} · {creature.creature.tier}
                       </p>
-                      <h4 className="island-run-sanctuary-card__title">{creature.name}</h4>
-                      <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.habitat}</strong></p>
-                      <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.affinity}</strong></p>
+                      <h4 className="island-run-sanctuary-card__title">{creature.creature.name}</h4>
+                      <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.creature.habitat}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.creature.affinity}</strong></p>
+                      <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
                     </div>
                   </article>
                 ))}
