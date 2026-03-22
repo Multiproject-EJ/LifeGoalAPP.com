@@ -554,6 +554,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       });
     }
 
+    setTokenIndex(runtimeState.tokenIndex ?? TOKEN_START_TILE_INDEX);
+    setHearts(runtimeState.hearts ?? 5);
+    setCoins(runtimeState.coins ?? 0);
+    setSpinTokens(runtimeState.spinTokens ?? 0);
+
     // M16B: Restore shard state from runtime state on hydration
     const hydratedShards = runtimeState.islandShards ?? 0;
     const hydratedTierIndex = runtimeState.shardTierIndex ?? 0;
@@ -571,7 +576,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     setShards(runtimeState.shards ?? 0);
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards]);
+  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -1125,6 +1130,29 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       },
     }));
   }, [client, completedStops, hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+
+    const nextPatch = {
+      tokenIndex,
+      hearts,
+      coins,
+      spinTokens,
+    };
+
+    if (
+      runtimeState.tokenIndex === nextPatch.tokenIndex
+      && runtimeState.hearts === nextPatch.hearts
+      && runtimeState.coins === nextPatch.coins
+      && runtimeState.spinTokens === nextPatch.spinTokens
+    ) {
+      return;
+    }
+
+    void persistIslandRunRuntimeStatePatch({ session, client, patch: nextPatch });
+    setRuntimeState((current) => ({ ...current, ...nextPatch }));
+  }, [client, coins, hasHydratedRuntimeState, hearts, runtimeState.coins, runtimeState.hearts, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
 
   // M8-COMPLETE: persist diamonds to localStorage (permanent cross-island balance)
   useEffect(() => {

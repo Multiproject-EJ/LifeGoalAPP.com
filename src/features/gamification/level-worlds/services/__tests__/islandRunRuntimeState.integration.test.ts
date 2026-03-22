@@ -55,6 +55,10 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
           completedStopsByIsland: {
             '2': ['hatchery'],
           },
+          tokenIndex: 4,
+          hearts: 3,
+          coins: 12,
+          spinTokens: 1,
           shields: 1,
           shards: 2,
         }),
@@ -72,6 +76,10 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
           completedStopsByIsland: {
             '5': ['boss', 123 as unknown as string],
           },
+          tokenIndex: 8.7,
+          hearts: -2,
+          coins: 41.6,
+          spinTokens: 2.2,
           shields: -4,
           shards: 9.9,
         },
@@ -82,6 +90,10 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       const state = readIslandRunRuntimeState(makeSession());
       assertEqual(state.currentIslandNumber, 5, 'Expected island number to be floored to a positive integer');
       assertEqual(state.cycleIndex, 0, 'Expected cycle index to clamp at zero');
+      assertEqual(state.tokenIndex, 8, 'Expected token index to floor to a non-negative integer');
+      assertEqual(state.hearts, 0, 'Expected hearts to clamp at zero');
+      assertEqual(state.coins, 41, 'Expected coins to be floored');
+      assertEqual(state.spinTokens, 2, 'Expected spin tokens to be floored');
       assertEqual(state.shields, 0, 'Expected shields to clamp at zero');
       assertEqual(state.shards, 9, 'Expected shards to be floored');
       assertDeepEqual(Object.keys(state.perIslandEggs).sort(), ['2', '5'], 'Expected egg ledger merge to preserve old and new islands');
