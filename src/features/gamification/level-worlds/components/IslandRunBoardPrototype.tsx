@@ -641,7 +641,13 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     }
 
     if (OPEN_ISLAND_STOP_ON_LOAD === 'boss' || OPEN_ISLAND_STOP_ON_LOAD === 'dynamic') {
-      setActiveStopId(OPEN_ISLAND_STOP_ON_LOAD);
+      if (shouldAutoOpenIslandStopOnLoad({
+        requestedStopId: OPEN_ISLAND_STOP_ON_LOAD,
+        islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
+        completedStopsByIsland: runtimeState.completedStopsByIsland,
+      })) {
+        setActiveStopId(OPEN_ISLAND_STOP_ON_LOAD);
+      }
       // Clean the URL param without a reload
       const url = new URL(window.location.href);
       url.searchParams.delete('openIslandStop');

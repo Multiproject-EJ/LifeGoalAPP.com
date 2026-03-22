@@ -23,7 +23,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
     },
   },
   {
-    name: 'shouldAutoOpenIslandStopOnLoad blocks completed hatchery stop re-open',
+    name: 'shouldAutoOpenIslandStopOnLoad blocks completed requested stop re-open',
     run: () => {
       assertEqual(
         shouldAutoOpenIslandStopOnLoad({
@@ -42,6 +42,24 @@ export const islandRunStopCompletionTests: TestCase[] = [
         }),
         true,
         'Expected incomplete hatchery stop to still auto-open when requested',
+      );
+      assertEqual(
+        shouldAutoOpenIslandStopOnLoad({
+          requestedStopId: 'boss',
+          islandNumber: 8,
+          completedStopsByIsland: { '8': ['boss'] },
+        }),
+        false,
+        'Expected completed boss stop to stay closed on load',
+      );
+      assertEqual(
+        shouldAutoOpenIslandStopOnLoad({
+          requestedStopId: 'dynamic',
+          islandNumber: 8,
+          completedStopsByIsland: { '8': ['hatchery'] },
+        }),
+        true,
+        'Expected incomplete dynamic stop to still auto-open when requested',
       );
     },
   },
