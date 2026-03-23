@@ -107,12 +107,18 @@ const SPIN_MAX = 5;
 // Production island duration: 72 hours. Use ?devTimer=1 for 45s dev mode.
 const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
-const OPEN_HATCHERY_ON_LOAD = typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).get('openHatchery') === '1';
-const OPEN_ISLAND_STOP_ON_LOAD = typeof window !== 'undefined'
-  ? new URLSearchParams(window.location.search).get('openIslandStop')
-  : null;
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
+
+function getOpenHatcheryOnLoadFlag(): boolean {
+  return typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('openHatchery') === '1';
+}
+
+function getOpenIslandStopOnLoadFlag(): string | null {
+  return typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('openIslandStop')
+    : null;
+}
 
 // M15C: Special islands get 72h timer; normal islands get 48h timer
 const SPECIAL_ISLAND_NUMBERS = new Set([5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120]);
@@ -662,13 +668,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    const openHatcheryOnLoad = getOpenHatcheryOnLoadFlag();
+    const openIslandStopOnLoad = getOpenIslandStopOnLoadFlag();
     const persistedStops = runtimeState.completedStopsByIsland?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? [];
     const currentIslandEggEntry = runtimeState.perIslandEggs?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? null;
     const islandEggSlotUsedOnLoad = currentIslandEggEntry?.status === 'collected'
       || currentIslandEggEntry?.status === 'sold'
       || currentIslandEggEntry?.status === 'animal_ready'
       || currentIslandEggEntry?.status === 'animal_sold';
-    if (OPEN_HATCHERY_ON_LOAD) {
+    if (openHatcheryOnLoad) {
       if (shouldAutoOpenIslandStopOnLoad({
         requestedStopId: 'hatchery',
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
@@ -684,13 +692,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    if (OPEN_ISLAND_STOP_ON_LOAD === 'boss' || OPEN_ISLAND_STOP_ON_LOAD === 'dynamic') {
+    if (openIslandStopOnLoad === 'boss' || openIslandStopOnLoad === 'dynamic') {
       if (shouldAutoOpenIslandStopOnLoad({
-        requestedStopId: OPEN_ISLAND_STOP_ON_LOAD,
+        requestedStopId: openIslandStopOnLoad,
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
         completedStopsByIsland: runtimeState.completedStopsByIsland,
       })) {
-        setActiveStopId(OPEN_ISLAND_STOP_ON_LOAD);
+        setActiveStopId(openIslandStopOnLoad);
       }
       // Clean the URL param without a reload
       const url = new URL(window.location.href);
