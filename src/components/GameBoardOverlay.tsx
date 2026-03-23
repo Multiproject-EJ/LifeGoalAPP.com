@@ -40,6 +40,8 @@ type GameBoardOverlayProps = {
   islandTimeLabel?: string;
   spinWinResetAtMs?: number;
   luckyRollResetAtMs?: number;
+  luckyRollRunsRemaining?: number;
+  luckyRollStatusLabel?: string;
   showSpinWheel?: boolean;
   showLuckyRoll?: boolean;
   creatureCollectionCount?: number;
@@ -64,6 +66,8 @@ export function GameBoardOverlay({
   islandTimeLabel = '—',
   spinWinResetAtMs,
   luckyRollResetAtMs,
+  luckyRollRunsRemaining = 0,
+  luckyRollStatusLabel,
   showSpinWheel = false,
   showLuckyRoll = false,
   creatureCollectionCount = 0,
@@ -74,6 +78,7 @@ export function GameBoardOverlay({
   const [shouldRender, setShouldRender] = useState(false);
   const [nowMs, setNowMs] = useState(Date.now());
   const activeLeftIconCount = [showSpinWheel, showLuckyRoll].filter(Boolean).length;
+  const luckyRollTimerLabel = luckyRollStatusLabel ?? (formatCountdown(luckyRollResetAtMs, nowMs) || 'Reward active');
 
   useEffect(() => {
     if (spinWinResetAtMs === undefined && luckyRollResetAtMs === undefined) return;
@@ -211,10 +216,15 @@ export function GameBoardOverlay({
                       alt=""
                       className="game-board-overlay__icon-asset-img"
                     />
+                    {luckyRollRunsRemaining > 0 ? (
+                      <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
+                        {luckyRollRunsRemaining}
+                      </span>
+                    ) : null}
                   </div>
                 </button>
                 <span className="game-board-overlay__icon-timer">
-                  {formatCountdown(luckyRollResetAtMs, nowMs) || 'Reward active'}
+                  {luckyRollTimerLabel}
                 </span>
               </div>
             ) : null}

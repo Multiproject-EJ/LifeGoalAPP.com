@@ -2567,7 +2567,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     });
   }, [activeSession, logIslandRunEntryDebug, showLevelWorldsFromEntry]);
 
-  const shouldLockAppScroll = showGameBoardOverlay || showLuckyRoll || showLevelWorldsFromEntry;
+  const shouldLockAppScroll = showGameBoardOverlay || showLuckyRoll || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
 
   useEffect(() => {
     if (!shouldLockAppScroll) {
@@ -4241,6 +4241,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
           islandTimeLabel={islandTimeLabelForOverlay}
           spinWinResetAtMs={spinWinResetAtMs}
           luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
+          luckyRollRunsRemaining={luckyRollStatus.earnedRuns}
+          luckyRollStatusLabel={luckyRollStatus.activeSource === 'earned' ? `${luckyRollStatus.earnedRuns} earned ${luckyRollStatus.earnedRuns === 1 ? 'run' : 'runs'}` : undefined}
           showSpinWheel={spinAvailable}
           showLuckyRoll={luckyRollStatus.available}
           creatureCollectionCount={creatureCollectionSummary.total}
@@ -4531,6 +4533,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
         islandTimeLabel={islandTimeLabelForOverlay}
         spinWinResetAtMs={spinWinResetAtMs}
         luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
+        luckyRollRunsRemaining={luckyRollStatus.earnedRuns}
+        luckyRollStatusLabel={luckyRollStatus.activeSource === 'earned' ? `${luckyRollStatus.earnedRuns} earned ${luckyRollStatus.earnedRuns === 1 ? 'run' : 'runs'}` : undefined}
         showSpinWheel={spinAvailable}
         showLuckyRoll={luckyRollStatus.available}
         creatureCollectionCount={creatureCollectionSummary.total}
