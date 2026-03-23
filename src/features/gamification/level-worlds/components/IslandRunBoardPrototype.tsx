@@ -15,7 +15,7 @@ import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
-import { getNextIslandOnExpiry, isIslandFullyCleared } from '../services/islandRunProgression';
+import { isIslandFullyCleared } from '../services/islandRunProgression';
 import { planDailyHeartReward } from '../services/islandRunDailyRewards';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
@@ -447,6 +447,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [travelOverlayDestinationIsland, setTravelOverlayDestinationIsland] = useState(2);
   const [travelOverlayMode, setTravelOverlayMode] = useState<'advance' | 'retry'>('advance');
+  const [isIslandTimerPendingStart, setIsIslandTimerPendingStart] = useState(false);
   const [step1PromptedIsland, setStep1PromptedIsland] = useState<number | null>(null);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
   const [isSettingEgg, setIsSettingEgg] = useState(false);
@@ -606,17 +607,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIslandNumber((current) => (current === persistedIsland ? current : persistedIsland));
     setBossTrialResolved(runtimeState.bossTrialResolvedIslandNumber === persistedIsland);
 
-    // M15E: Restore timer from persisted islandExpiresAtMs or apply Catch-up Rule A
+    // Restore timer from persisted islandExpiresAtMs, resume a pending island, or advance after expiry.
     const persistedExpiresAtMs = runtimeState.islandExpiresAtMs;
+    const persistedStartedAtMs = runtimeState.islandStartedAtMs;
     if (persistedExpiresAtMs > 0 && persistedExpiresAtMs > Date.now()) {
       // Timer still running — restore from persisted state
-      setIslandStartedAtMs(runtimeState.islandStartedAtMs);
+      setIslandStartedAtMs(persistedStartedAtMs);
       setIslandExpiresAtMs(persistedExpiresAtMs);
       setTimeLeftSec(Math.ceil((persistedExpiresAtMs - Date.now()) / 1000));
+      setIsIslandTimerPendingStart(false);
     } else if (persistedExpiresAtMs > 0 && !showTravelOverlay) {
-      // Catch-up Rule A / M17A: expired islands only advance after a full clear.
-      const persistedStops = runtimeState.completedStopsByIsland?.[String(persistedIsland)] ?? [];
-      performIslandTravel(getNextIslandOnExpiry(persistedIsland, persistedStops));
+      // Expired island should always advance, but the next island timer stays pending until the player starts it.
+      performIslandTravel(persistedIsland + 1, { startTimer: false });
+    } else if (persistedStartedAtMs <= 0 && persistedExpiresAtMs <= 0 && !showTravelOverlay) {
+      setIslandStartedAtMs(0);
+      setIslandExpiresAtMs(0);
+      setTimeLeftSec(0);
+      setIsIslandTimerPendingStart(true);
     } else if (!showTravelOverlay) {
       // No timer stored (legacy/first-run) — initialize from current island
       const nowMs = Date.now();
@@ -624,6 +631,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setIslandStartedAtMs(nowMs);
       setIslandExpiresAtMs(nowMs + durationMs);
       setTimeLeftSec(Math.ceil(durationMs / 1000));
+      setIsIslandTimerPendingStart(false);
     }
 
     // B5-3: Restore egg state from runtime state
@@ -1668,7 +1676,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [activeStopId]);
 
   useEffect(() => {
-    if (showTravelOverlay) {
+    if (showTravelOverlay || isIslandTimerPendingStart || islandExpiresAtMs <= 0) {
       return;
     }
 
@@ -1677,7 +1685,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [showTravelOverlay, islandNumber, islandExpiresAtMs]);
+  }, [isIslandTimerPendingStart, showTravelOverlay, islandNumber, islandExpiresAtMs]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || showFirstRunCelebration || showTravelOverlay) return;
@@ -1736,8 +1744,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (typeof window === 'undefined') return;
     try {
       const summary = {
+        currentIslandNumber: islandNumber,
         islandStartedAtMs,
         islandExpiresAtMs,
+        isIslandTimerPendingStart,
         activeEggSetAtMs: activeEgg?.setAtMs ?? null,
         activeEggHatchDurationMs: activeEgg ? activeEgg.hatchAtMs - activeEgg.setAtMs : null,
       };
@@ -1745,7 +1755,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore storage errors
     }
-  }, [islandStartedAtMs, islandExpiresAtMs, activeEgg]);
+  }, [activeEgg, islandExpiresAtMs, islandNumber, islandStartedAtMs, isIslandTimerPendingStart]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !hasHydratedRuntimeState) {
@@ -1759,34 +1769,27 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [hasHydratedRuntimeState, storySeenStorageKey]);
 
   useEffect(() => {
-    if (timeLeftSec > 0 || showTravelOverlay) {
+    if (isIslandTimerPendingStart || timeLeftSec > 0 || showTravelOverlay) {
       return;
     }
 
-    const nextIsland = getNextIslandOnExpiry(islandNumber, effectiveCompletedStops);
-    const isRetryingCurrentIsland = nextIsland === islandNumber;
+    const nextIsland = islandNumber + 1;
     setTravelOverlayDestinationIsland(nextIsland > 120 ? 1 : nextIsland);
-    setTravelOverlayMode(isRetryingCurrentIsland ? 'retry' : 'advance');
+    setTravelOverlayMode('advance');
     setShowTravelOverlay(true);
-    setLandingText(
-      isRetryingCurrentIsland
-        ? `Island ${islandNumber} expired before a full clear. Resetting the same island for another run.`
-        : 'Island expired. Traveling to next island...',
-    );
-    // M10A: island_travel sound + haptic on travel start
+    setLandingText('Island expired. Next island unlocked — start it when you are ready.');
     playIslandRunSound('island_travel');
     triggerIslandRunHaptic('island_travel');
 
-    // B4-2 / M17A: expiry only advances after a full clear; otherwise it resets the same island.
     const timeout = window.setTimeout(() => {
-      performIslandTravel(nextIsland);
+      performIslandTravel(nextIsland, { startTimer: false });
       setShowTravelOverlay(false);
     }, 1800);
 
     return () => window.clearTimeout(timeout);
-  }, [client, effectiveCompletedStops, islandNumber, session, showTravelOverlay, timeLeftSec]);
+  }, [client, islandNumber, isIslandTimerPendingStart, session, showTravelOverlay, timeLeftSec]);
 
-  const timerDisplay = formatIslandCountdown(timeLeftSec);
+  const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
   const step1Stop = islandStopPlan[0] ?? null;
   const step1Complete = step1Stop
@@ -1820,6 +1823,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       : rollButtonMode === 'roll'
         ? 'Roll'
         : 'Convert';
+
+  const activateCurrentIsland = useCallback(() => {
+    const nowMs = Date.now();
+    const durationMs = getIslandDurationMs(islandNumber);
+    const expiresAtMs = nowMs + durationMs;
+    setIslandStartedAtMs(nowMs);
+    setIslandExpiresAtMs(expiresAtMs);
+    setTimeLeftSec(Math.ceil(durationMs / 1000));
+    setIsIslandTimerPendingStart(false);
+    setLandingText('Island timer started. Complete Stop 1 (Hatchery) to unlock dice.');
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        currentIslandNumber: islandNumber,
+        cycleIndex,
+        islandStartedAtMs: nowMs,
+        islandExpiresAtMs: expiresAtMs,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      currentIslandNumber: islandNumber,
+      cycleIndex,
+      islandStartedAtMs: nowMs,
+      islandExpiresAtMs: expiresAtMs,
+    }));
+  }, [client, cycleIndex, islandNumber, session]);
 
   const openStep1Stop = () => {
     if (!step1Stop?.stopId) return;
@@ -2869,7 +2900,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(message);
     setMarketInteracted(true);
   };
-  const performIslandTravel = (nextIsland: number) => {
+  const performIslandTravel = (nextIsland: number, options?: { startTimer?: boolean }) => {
+    const startTimer = options?.startTimer ?? true;
     // M4-COMPLETE: Handle island 120 → 1 wrap with cycle_index increment
     const MAX_ISLAND = 120;
     const wraps = nextIsland > MAX_ISLAND;
@@ -2983,12 +3015,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore storage errors
     }
-    const nowMs = Date.now();
+    const nowMs = startTimer ? Date.now() : 0;
     const durationMs = getIslandDurationMs(resolvedIsland);
-    const expiresAtMs = nowMs + durationMs;
-    setTimeLeftSec(Math.ceil(durationMs / 1000));
+    const expiresAtMs = startTimer ? nowMs + durationMs : 0;
+    setTimeLeftSec(startTimer ? Math.ceil(durationMs / 1000) : 0);
     setIslandStartedAtMs(nowMs);
     setIslandExpiresAtMs(expiresAtMs);
+    setIsIslandTimerPendingStart(!startTimer);
     setUtilityInteracted(false);
     setIslandIntention('');
     setShowIslandClearCelebration(false);
@@ -3001,7 +3034,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRollValue(null);
     setRollingDiceFaces([1, 1]);
     setStep1PromptedIsland(null);
-    setLandingText('Arrived at new island. Complete Stop 1 (Hatchery) to unlock dice.');
+    setLandingText(startTimer
+      ? 'Arrived at new island. Complete Stop 1 (Hatchery) to unlock dice.'
+      : 'New island unlocked. Start it when you are ready.');
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -3082,7 +3117,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       window.setTimeout(() => {
         const nextIsland = islandNumber + 1;
         setShowTravelOverlay(false);
-        performIslandTravel(nextIsland);
+        performIslandTravel(nextIsland, { startTimer: true });
       }, 1400);
       return;
     }
@@ -3810,7 +3845,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">Ends in: <strong>{timerDisplay}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">{isIslandTimerPendingStart ? 'Ready:' : 'Ends in:'} <strong>{timerDisplay}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">Spins: <strong>{spinTokens}</strong></span>
               {/* M11C: stop progress chip */}
               {(() => {
@@ -4094,10 +4129,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <button
               type="button"
               className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-              onClick={step1Complete ? () => void handleRoll() : openStep1Stop}
-              disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll) || showTravelOverlay}
+              onClick={isIslandTimerPendingStart ? activateCurrentIsland : (step1Complete ? () => void handleRoll() : openStep1Stop)}
+              disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll && !isIslandTimerPendingStart) || showTravelOverlay}
             >
-              {rollButtonLabel}
+              {isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}
             </button>
             {spinTokens > 0 && (
               <button

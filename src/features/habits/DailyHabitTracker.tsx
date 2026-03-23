@@ -1821,8 +1821,23 @@ export function DailyHabitTracker({
   const bonusPlaceholderText = hasClaimedVisionStar && !shouldFadeTrackingMeta
     ? 'Vision star claimed today.'
     : '';
-  const islandRunRuntime = useMemo(() => readIslandRunRuntimeState(session), [session]);
+  const [islandRunRuntime, setIslandRunRuntime] = useState(() => readIslandRunRuntimeState(session));
   const [eggReadinessNowMs, setEggReadinessNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const syncIslandRunRuntime = () => {
+      setIslandRunRuntime(readIslandRunRuntimeState(session));
+    };
+
+    syncIslandRunRuntime();
+    const intervalId = window.setInterval(syncIslandRunRuntime, 1000);
+    window.addEventListener('storage', syncIslandRunRuntime);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('storage', syncIslandRunRuntime);
+    };
+  }, [session]);
+
   const activeIsland = islandRunRuntime.currentIslandNumber;
   const completedStopsOnActiveIsland = islandRunRuntime.completedStopsByIsland?.[String(activeIsland)] ?? [];
   const stopPlanForActiveIsland = useMemo(() => generateIslandStopPlan(activeIsland), [activeIsland]);
@@ -1890,10 +1905,28 @@ export function DailyHabitTracker({
     return !completedStopsOnActiveIsland.includes(eventStop.stopId);
   }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
 
+  const islandRunCountdownExpiresAtMs = islandRunRuntime.islandExpiresAtMs > Date.now()
+    ? islandRunRuntime.islandExpiresAtMs
+    : null;
+  const isIslandRunReadyToStart = islandRunRuntime.islandStartedAtMs <= 0 && islandRunRuntime.islandExpiresAtMs <= 0;
+  const isIslandRunOfferVisible = Boolean(islandRunCountdownExpiresAtMs) || isIslandRunReadyToStart;
+  const islandRunOfferLabel = isIslandRunReadyToStart ? `Island ${activeIsland}` : `Island ${activeIsland}`;
+  const islandRunOfferBadge = isIslandRunReadyToStart ? 'Open' : undefined;
+
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
 
     return [
+      {
+        id: 'island_run',
+        label: islandRunOfferLabel,
+        icon: isIslandRunReadyToStart ? '🗺️' : '🏝️',
+        expiresAtMs: islandRunCountdownExpiresAtMs,
+        badgeLabelOverride: islandRunOfferBadge,
+        isCollected: false,
+        isVisible: isIslandRunOfferVisible,
+        sortPriority: 0,
+      },
       {
         id: 'vision_star',
         label: 'Vision Star',
@@ -1963,7 +1996,13 @@ export function DailyHabitTracker({
       },
     ];
   }, [
+    activeIsland,
     hasClaimedVisionStar,
+    islandRunCountdownExpiresAtMs,
+    islandRunOfferBadge,
+    islandRunOfferLabel,
+    isIslandRunOfferVisible,
+    isIslandRunReadyToStart,
     isBossChallengeAvailable,
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
@@ -1980,6 +2019,15 @@ export function DailyHabitTracker({
   const offerTeaserKey = useCallback((offerId: TimeBoundOfferId) => `${getTodayUtcDateKey()}:${offerId}`, []);
 
   const openOfferContent = useCallback((offerId: TimeBoundOfferId) => {
+    if (offerId === 'island_run') {
+      if (onOpenIslandRunStop) {
+        onOpenIslandRunStop('hatchery');
+      } else {
+        setVisionRewardError('Island Run launcher is unavailable in this view.');
+      }
+      return;
+    }
+
     if (offerId === 'vision_star') {
       void handleVisionRewardClick();
       return;
@@ -2041,7 +2089,7 @@ export function DailyHabitTracker({
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
-    if (offerId === 'egg_hatch' || offerId === 'vision_star') {
+    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run') {
       openOfferContent(offerId);
       return;
     }
@@ -2073,6 +2121,7 @@ export function DailyHabitTracker({
   const activeOfferTeaserConfig = useMemo(() => {
     if (!activeOfferTeaser) return null;
     const map: Record<TimeBoundOfferId, { title: string; description: string; cta: string; icon: string }> = {
+      island_run: { title: 'Island Run', description: 'Your next island is ready to open.', cta: 'Open Island Run →', icon: '🏝️' },
       vision_star: {
         title: 'Vision Star',
         description: 'Your daily vision boost is ready. Open now to claim it.',

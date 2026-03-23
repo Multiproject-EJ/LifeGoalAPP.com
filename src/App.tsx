@@ -454,10 +454,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
           activeEggSetAtMs?: number;
           activeEggHatchDurationMs?: number;
           currentIslandNumber?: number;
+          isIslandTimerPendingStart?: boolean;
         };
         setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(state?.currentIslandNumber ?? 1));
         const expiresAtMs = state?.islandExpiresAtMs;
-        if (expiresAtMs) {
+        if (state?.isIslandTimerPendingStart) {
+          setIslandTimeLabelForOverlay('Open');
+          setHeartsResetAtMs(undefined);
+        } else if (expiresAtMs) {
           const remaining = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
           setIslandTimeLabelForOverlay(formatCompactDuration(remaining));
           setHeartsResetAtMs(expiresAtMs);
@@ -486,7 +490,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       }
     }
     computeLabel();
-    const id = window.setInterval(computeLabel, 60_000);
+    const id = window.setInterval(computeLabel, 1000);
     return () => window.clearInterval(id);
   }, []);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
