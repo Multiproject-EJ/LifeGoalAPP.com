@@ -1593,10 +1593,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState || showFirstRunCelebration || showTravelOverlay) return;
 
     const step1Stop = islandStopPlan[0];
+    const persistedCompletedStops = runtimeState.completedStopsByIsland?.[String(islandNumber)] ?? [];
     const step1Complete = step1Stop
       ? isIslandStopEffectivelyCompleted({
           stopId: step1Stop.stopId,
-          completedStops,
+          completedStops: persistedCompletedStops,
           hasActiveEgg: Boolean(activeEgg),
           islandEggSlotUsed,
         })
@@ -1614,7 +1615,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     showFirstRunCelebration,
     showTravelOverlay,
     islandStopPlan,
-    completedStops,
+    runtimeState.completedStopsByIsland,
     activeEgg,
     islandEggSlotUsed,
     step1PromptedIsland,
