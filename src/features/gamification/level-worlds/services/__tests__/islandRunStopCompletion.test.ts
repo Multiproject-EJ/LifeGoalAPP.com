@@ -1,7 +1,9 @@
 import {
   ensureStopCompleted,
+  getEffectiveCompletedStops,
   getStopCompletionBlockReason,
   getCompletedStopsForIsland,
+  isIslandStopEffectivelyCompleted,
   isStopCompleted,
   shouldAutoOpenIslandStopOnLoad,
 } from '../islandRunStopCompletion';
@@ -22,6 +24,73 @@ export const islandRunStopCompletionTests: TestCase[] = [
     run: () => {
       assertEqual(isStopCompleted(['hatchery', 'utility'], 'hatchery'), true, 'Expected hatchery to be marked complete');
       assertEqual(isStopCompleted(['hatchery', 'utility'], 'boss'), false, 'Expected boss to remain incomplete');
+    },
+  },
+  {
+    name: 'isIslandStopEffectivelyCompleted falls back to hatchery egg state when stop ledger is stale',
+    run: () => {
+      assertEqual(
+        isIslandStopEffectivelyCompleted({
+          stopId: 'hatchery',
+          completedStops: [],
+          hasActiveEgg: false,
+          islandEggSlotUsed: true,
+        }),
+        true,
+        'Expected used hatchery egg slot to satisfy step 1 even when completedStops is stale',
+      );
+      assertEqual(
+        isIslandStopEffectivelyCompleted({
+          stopId: 'hatchery',
+          completedStops: [],
+          hasActiveEgg: true,
+          islandEggSlotUsed: false,
+        }),
+        true,
+        'Expected active hatchery egg to satisfy step 1 even before persistence catches up',
+      );
+      assertEqual(
+        isIslandStopEffectivelyCompleted({
+          stopId: 'dynamic',
+          completedStops: [],
+          hasActiveEgg: true,
+          islandEggSlotUsed: true,
+        }),
+        false,
+        'Expected fallback completion to remain hatchery-specific',
+      );
+    },
+  },
+  {
+    name: 'getEffectiveCompletedStops backfills hatchery into the ledger when egg state proves completion',
+    run: () => {
+      assertDeepEqual(
+        getEffectiveCompletedStops({
+          completedStops: ['utility'],
+          hasActiveEgg: false,
+          islandEggSlotUsed: true,
+        }),
+        ['utility', 'hatchery'],
+        'Expected hatchery to be backfilled when the egg slot is already used',
+      );
+      assertDeepEqual(
+        getEffectiveCompletedStops({
+          completedStops: ['hatchery', 'utility'],
+          hasActiveEgg: false,
+          islandEggSlotUsed: true,
+        }),
+        ['hatchery', 'utility'],
+        'Expected existing hatchery completion to remain stable',
+      );
+      assertDeepEqual(
+        getEffectiveCompletedStops({
+          completedStops: ['utility'],
+          hasActiveEgg: false,
+          islandEggSlotUsed: false,
+        }),
+        ['utility'],
+        'Expected unrelated stop ledgers to remain untouched',
+      );
     },
   },
   {
