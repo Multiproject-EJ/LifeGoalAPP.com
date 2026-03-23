@@ -31,6 +31,7 @@ import {
   resolveCollectibleForClaim,
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
+import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { writeIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import {
   rollEggTierWeighted,
@@ -63,6 +64,7 @@ import { getCompanionBonusForCreature, getCreatureSpecialtyForCompanion, selectC
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
+import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
 import {
   playIslandRunSound,
   triggerIslandRunHaptic,
@@ -360,9 +362,10 @@ const TILE_TYPE_ICONS: Record<string, string> = {
 
 interface IslandRunBoardPrototypeProps {
   session: Session;
+  initialPanel?: 'default' | 'sanctuary';
 }
 
-export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProps) {
+export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   const boardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -3095,7 +3098,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
-  const openSanctuaryPanel = () => {
+  const openSanctuaryPanel = useCallback(() => {
     setShowSanctuaryPanel(true);
     setSelectedSanctuaryCreatureId(null);
     setSanctuaryFeedback(null);
@@ -3111,7 +3114,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         collected_creatures: collectedCreatures.length,
       },
     });
-  };
+  }, [collectedCreatures.length, islandNumber, session.user.id]);
+
+  useEffect(() => {
+    if (initialPanel !== 'sanctuary') return;
+    openSanctuaryPanel();
+  }, [initialPanel, openSanctuaryPanel]);
 
   const sanctuaryHandlers = {
     closePanel: () => {
@@ -4278,7 +4286,14 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
                 {activeStop.kind === 'habit_action' ? (
                   <p>✅ Complete one habit or action objective to earn your reward and stabilize momentum.</p>
                 ) : activeStop.kind === 'checkin_reflection' ? (
-                  <p>🧭 Take a moment to check in with yourself. Run a quick reflection to calibrate your next moves.</p>
+                  <IslandRunReflectionComposer
+                    session={session}
+                    islandNumber={islandNumber}
+                    onSaved={(message) => {
+                      setLandingText(message);
+                      handleCompleteActiveStop();
+                    }}
+                  />
                 ) : activeStop.kind === 'utility_support' ? (
                   <p>🧰 Take a utility or support action — shield up, clean your queue, reroute, or prepare for the next stretch.</p>
                 ) : activeStop.kind === 'event_challenge' ? (
@@ -4433,7 +4448,10 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
             ) : null}
 
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              {activeStop.stopId !== 'hatchery' && activeStop.stopId !== 'boss' && activeStop.stopId !== 'utility' ? (
+              {activeStop.stopId !== 'hatchery'
+              && activeStop.stopId !== 'boss'
+              && activeStop.stopId !== 'utility'
+              && activeStop.kind !== 'checkin_reflection' ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
                 </button>
@@ -5014,9 +5032,11 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
       {showClaimModal && pendingClaimTierIndex !== null && (
         <ShardClaimModal
           collectible={resolveCollectibleForClaim(pendingClaimTierIndex)}
+          bonusSummary="🎲 Bonus reward: +1 Lucky Roll run"
           onCollect={() => {
             playIslandRunSound('market_purchase_success');
             triggerIslandRunHaptic('reward_claim');
+            awardLuckyRollRuns(session.user.id, 1);
             // M16C/M16E: advance tier index + claim count on player claim action
             const newTierIndex = shardTierIndex + 1;
             const newClaimCount = shardClaimCount + 1;
@@ -5029,6 +5049,18 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
               session,
               client,
               patch: { shardTierIndex: newTierIndex, shardClaimCount: newClaimCount },
+            });
+            setLandingText('Shard milestone claimed! +1 Lucky Roll run unlocked.');
+            void recordTelemetryEvent({
+              userId: session.user.id,
+              eventType: 'economy_earn',
+              metadata: {
+                stage: 'island_run_shard_milestone_claim',
+                island_number: islandNumber,
+                collectible_tier_index: pendingClaimTierIndex,
+                lucky_roll_runs_awarded: 1,
+                new_shard_claim_count: newClaimCount,
+              },
             });
           }}
         />
