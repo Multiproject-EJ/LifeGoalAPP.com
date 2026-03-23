@@ -198,7 +198,7 @@ export function LevelWorldsHub({ session, onClose, initialPanel = 'default' }: L
         <button
           className="level-worlds-back-button"
           onClick={onClose}
-          aria-label="Back to Lucky Roll"
+          aria-label="Back to app"
         >
           ← Back
         </button>

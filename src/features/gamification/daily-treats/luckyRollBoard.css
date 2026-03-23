@@ -178,9 +178,6 @@
   background: #f0e6ff;
 }
 
-.lucky-roll-tile--mini_game {
-  background: linear-gradient(135deg, #ffd89b 0%, #ffb347 100%);
-}
 
 .lucky-roll-tile--mystery {
   background: linear-gradient(135deg, #dac8ff 0%, #b8a3ff 100%);
@@ -813,12 +810,12 @@
   }
 }
 
-/* Near-miss for mini-games (using game accent colors) */
-.lucky-roll-tile--near-miss-mini {
-  animation: nearMissGlowMini 600ms ease-out;
+/* Near-miss for the finish chest (using warm treasure colors) */
+.lucky-roll-tile--near-miss-finish {
+  animation: nearMissGlowFinish 600ms ease-out;
 }
 
-@keyframes nearMissGlowMini {
+@keyframes nearMissGlowFinish {
   0% { 
     box-shadow: 0 0 0 0 rgba(212, 165, 116, 0.6); 
   }

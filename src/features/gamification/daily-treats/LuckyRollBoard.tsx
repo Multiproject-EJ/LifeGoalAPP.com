@@ -223,7 +223,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
     if (nearMissTiles.includes(tile.index)) {
       classes.push('lucky-roll-tile--near-miss');
     }
-    if (tile.type === 'finish') classes.push('lucky-roll-tile--near-miss-mini');
+    if (tile.type === 'finish') classes.push('lucky-roll-tile--near-miss-finish');
 
     return classes.join(' ');
   };
