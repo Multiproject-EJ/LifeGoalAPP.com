@@ -4,6 +4,7 @@ import type { CollectibleInfo } from '../services/islandRunRuntimeState';
 
 interface ShardClaimModalProps {
   collectible: CollectibleInfo;
+  bonusSummary?: string | null;
   onCollect: () => void;
 }
 
@@ -11,7 +12,7 @@ interface ShardClaimModalProps {
  * Full-screen blind-box reveal modal.
  * Shows a 0.5s shimmer animation before revealing the earned collectible.
  */
-export function ShardClaimModal({ collectible, onCollect }: ShardClaimModalProps) {
+export function ShardClaimModal({ collectible, bonusSummary = null, onCollect }: ShardClaimModalProps) {
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function ShardClaimModal({ collectible, onCollect }: ShardClaimModalProps
               <span className="shard-claim-modal__emoji">{collectible.emoji}</span>
               <p className="shard-claim-modal__name">{collectible.name}</p>
               <p className="shard-claim-modal__era">{collectible.era}</p>
+              {bonusSummary ? <p className="shard-claim-modal__era">{bonusSummary}</p> : null}
             </>
           ) : (
             <span className="shard-claim-modal__shimmer" aria-label="Revealing…" />
