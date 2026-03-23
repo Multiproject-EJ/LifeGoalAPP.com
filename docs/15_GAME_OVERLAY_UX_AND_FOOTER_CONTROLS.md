@@ -24,7 +24,7 @@ GameBoardOverlay (full-screen, z-index top)
 ├── IslandRunBoardPrototype (17-tile board + token)
 ├── StopModals (conditionally rendered on top of board)
 ├── HUD row: [Coins] [Diamonds] [Hearts] [Shields] [Shards] [Dice count]
-└── PersistentShopButton (bottom corner, always visible)
+└── Permanent utility icons (Creature Collection + Garage) and active reward icons (Spin/Lucky Roll only when available)
 ```
 
 ---
@@ -68,3 +68,15 @@ The Mind / Body options pop up **above** the energy button — upward, not sidew
 | Overlay persistent (no nav on Play) | `GameBoardOverlay` + `App.tsx` | Planned (slice G1A) |
 | Controller tap-to-collapse | `MobileFooterNav.tsx` | Planned (slice G1B) |
 | Energy popup goes upward | `MobileFooterNav.tsx` CSS | Planned (slice G1C) |
+
+### 4a. Overlay icon consistency update
+
+- The **holiday calendar** does **not** belong in the game overlay.
+- The overlay’s reward rail should only show **currently active** reward icons:
+  - Daily Spin (only if a spin is available)
+  - Lucky Roll (only if the reward is active/unlocked)
+- The overlay’s persistent utility rail should prioritize:
+  - **Creature Collection / Sanctuary**
+  - **Garage**
+
+See `docs/18_LUCKY_ROLL_ISLAND_RUN_REFACTOR.md` for the Lucky Roll-specific availability contract.

@@ -360,9 +360,10 @@ const TILE_TYPE_ICONS: Record<string, string> = {
 
 interface IslandRunBoardPrototypeProps {
   session: Session;
+  initialPanel?: 'default' | 'sanctuary';
 }
 
-export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProps) {
+export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   const boardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -3095,7 +3096,7 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
     });
   };
 
-  const openSanctuaryPanel = () => {
+  const openSanctuaryPanel = useCallback(() => {
     setShowSanctuaryPanel(true);
     setSelectedSanctuaryCreatureId(null);
     setSanctuaryFeedback(null);
@@ -3111,7 +3112,12 @@ export function IslandRunBoardPrototype({ session }: IslandRunBoardPrototypeProp
         collected_creatures: collectedCreatures.length,
       },
     });
-  };
+  }, [collectedCreatures.length, islandNumber, session.user.id]);
+
+  useEffect(() => {
+    if (initialPanel !== 'sanctuary') return;
+    openSanctuaryPanel();
+  }, [initialPanel, openSanctuaryPanel]);
 
   const sanctuaryHandlers = {
     closePanel: () => {
