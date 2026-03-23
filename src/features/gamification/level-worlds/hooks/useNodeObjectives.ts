@@ -125,8 +125,6 @@ function formatMiniGameName(game: string): string {
       return 'Task Tower';
     case 'shooter_blitz':
       return 'Shooter Blitz';
-    case 'vision_quest':
-      return 'Vision Quest';
     case 'wheel_of_wins':
       return 'Wheel of Wins';
     default:

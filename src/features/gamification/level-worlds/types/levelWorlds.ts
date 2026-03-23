@@ -13,7 +13,7 @@ export type NodeType =
 
 export type NodeStatus = 'locked' | 'active' | 'completed';
 
-export type MiniGameType = 'task_tower' | 'shooter_blitz' | 'vision_quest' | 'wheel_of_wins';
+export type MiniGameType = 'task_tower' | 'shooter_blitz' | 'wheel_of_wins';
 
 export interface WorldNode {
   id: string;

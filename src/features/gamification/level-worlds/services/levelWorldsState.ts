@@ -16,16 +16,25 @@ function normalizeLegacyMiniGameIds(state: LevelWorldsState): LevelWorldsState {
         return node;
       }
 
-      if ((node.objective as { game?: string }).game !== 'pomodoro_sprint') {
+      const legacyGame = (node.objective as { game?: string }).game;
+      if (legacyGame !== 'pomodoro_sprint' && legacyGame !== 'vision_quest') {
         return node;
       }
 
       hasChanges = true;
       boardChanged = true;
 
-      const nextLabel = node.label.replace(/pomodoro sprint/gi, 'Shooter Blitz');
-      const nextDescription = node.description.replace(/pomodoro sprint/gi, 'Shooter Blitz');
-      const nextEmoji = node.emoji === '🍅' ? '🚀' : node.emoji;
+      const nextLabel = legacyGame === 'vision_quest'
+        ? node.label.replace(/vision quest/gi, 'Shooter Blitz')
+        : node.label.replace(/pomodoro sprint/gi, 'Shooter Blitz');
+      const nextDescription = legacyGame === 'vision_quest'
+        ? node.description.replace(/vision quest/gi, 'Shooter Blitz')
+        : node.description.replace(/pomodoro sprint/gi, 'Shooter Blitz');
+      const nextEmoji = legacyGame === 'vision_quest'
+        ? '🚀'
+        : node.emoji === '🍅'
+          ? '🚀'
+          : node.emoji;
 
       return {
         ...node,

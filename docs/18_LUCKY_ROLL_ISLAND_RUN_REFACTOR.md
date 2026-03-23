@@ -116,6 +116,8 @@ These reflections must persist through the **real journal system** (`journal_ent
 The old reflective Vision Quest style should no longer be used as a Lucky Roll-launched mini-game.
 That reflective behavior should instead be routed into journal-backed Island Run stop content.
 
+Current implementation also removes `vision_quest` from the legacy Level Worlds mini-game rotation so fallback board flows align with the newer Island Run direction.
+
 ---
 
 ## 6. Implementation Phasing
