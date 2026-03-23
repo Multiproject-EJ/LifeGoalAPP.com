@@ -85,6 +85,14 @@ Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 - [✅] M16: Collectible Progress Bar — shard sub-currency, repeating milestone chain, pill HUD component (design locked in docs/13_COLLECTIBLE_PROGRESS_BAR.md; build slices M16A–M16I); M16A shipped; M16B shard earn logic shipped; M16C shard tier index advancement + milestone chain progression shipped; M16D fill animation shipped; M16E Claim button + blind-box reveal shipped
 - [✅] M17: Currencies & Shield — add Shards + Shields to wallet state, HUD, Body habit award, Bank tab convert (design locked in docs/17_CURRENCIES_AND_SHIELD.md; build slices M17A–M17E); M17A shipped; M17B Body habit shield earn + Bank tab convert stub shipped; M17C Shards HUD chip + wallet field + Bank tab balance shipped; M17D Shards earn paths wired (stops +1, boss +3, egg open +2, minigame +1) + dev simulate button shipped; M17E Bank tab Coins/Diamonds/Hearts rows added — all 5 persistent wallet currencies visible in canonical HUD order; M17D shipped; M17E close-out complete
 
+
+## Island timer semantics
+- **Shipped behavior:** when an island timer expires, the run now advances to the next island instead of retrying the same one.
+- **Deferred start rule:** expiry unlocks the next island immediately, but that next island's timer stays paused until the player opens Island Run and starts the island.
+- **Today-tab support:** the circular offers row can show an active Island Run countdown while a timer is live, then switch to an `Open` state once the next island is ready to start.
+- **Why this matters:** it avoids background timer burn on unopened islands, makes expiry less punitive, and gives the player a clear “new island ready” return point.
+- **UI timer format:** island countdowns use compact adaptive labels such as `1d 8h`, `17h 57m`, `43m 32s`, or `52s`.
+
 Support shipped:
 - ✅ Hearts-empty fallback can launch existing Game of Life onboarding display-name loop as a booster in Island Run dev prototype (+1 heart on success, loop step persisted).
 

@@ -186,18 +186,18 @@ const ISLAND_DURATION_SEC_PROD = 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_STATE_KEY = 'lifegoal_island_run_runtime_state';
 
 function formatCompactDuration(totalSec: number): string {
-  if (totalSec <= 0) return 'Ready';
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if (h >= 24) {
-    const d = Math.floor(h / 24);
-    const rh = h % 24;
-    return rh > 0 ? `${d}d ${rh}h` : `${d}d`;
-  }
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m`;
-  return `${s}s`;
+  const safe = Math.max(0, Math.floor(totalSec));
+  if (safe <= 0) return '0s';
+
+  const days = Math.floor(safe / 86400);
+  const hours = Math.floor((safe % 86400) / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }
 
 function setIslandRunOpenStopParam(stopId: 'boss' | 'hatchery' | 'dynamic') {
@@ -454,10 +454,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
           activeEggSetAtMs?: number;
           activeEggHatchDurationMs?: number;
           currentIslandNumber?: number;
+          isIslandTimerPendingStart?: boolean;
         };
         setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(state?.currentIslandNumber ?? 1));
         const expiresAtMs = state?.islandExpiresAtMs;
-        if (expiresAtMs) {
+        if (state?.isIslandTimerPendingStart) {
+          setIslandTimeLabelForOverlay('Open');
+          setHeartsResetAtMs(undefined);
+        } else if (expiresAtMs) {
           const remaining = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
           setIslandTimeLabelForOverlay(formatCompactDuration(remaining));
           setHeartsResetAtMs(expiresAtMs);
@@ -486,7 +490,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       }
     }
     computeLabel();
-    const id = window.setInterval(computeLabel, 60_000);
+    const id = window.setInterval(computeLabel, 1000);
     return () => window.clearInterval(id);
   }, []);
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);

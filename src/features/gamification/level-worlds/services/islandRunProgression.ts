@@ -9,6 +9,6 @@ export function isIslandFullyCleared(islandNumber: number, completedStopIds: str
   return getRequiredStopIdsForIsland(islandNumber).every((stopId) => completed.has(stopId));
 }
 
-export function getNextIslandOnExpiry(islandNumber: number, completedStopIds: string[]): number {
-  return isIslandFullyCleared(islandNumber, completedStopIds) ? islandNumber + 1 : islandNumber;
+export function getNextIslandOnExpiry(islandNumber: number, _completedStopIds: string[]): number {
+  return islandNumber + 1;
 }

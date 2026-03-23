@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export type TimeBoundOfferId =
   | 'vision_star'
@@ -7,7 +7,8 @@ export type TimeBoundOfferId =
   | 'spin_wheel'
   | 'boss_challenge'
   | 'egg_hatch'
-  | 'mystery_stop';
+  | 'mystery_stop'
+  | 'island_run';
 
 export type TimeBoundOfferItem = {
   id: TimeBoundOfferId;
@@ -25,19 +26,31 @@ type TimeBoundOfferRowProps = {
   onOfferClick: (offerId: TimeBoundOfferId) => void;
 };
 
-function formatOfferCountdown(expiresAtMs: number | null): string {
+function formatOfferCountdown(expiresAtMs: number | null, nowMs: number): string {
   if (!expiresAtMs) return 'Live';
-  const remainingMs = expiresAtMs - Date.now();
-  if (remainingMs <= 0) return 'Expired';
+  const remainingMs = expiresAtMs - nowMs;
+  if (remainingMs <= 0) return '0s';
 
   const totalSeconds = Math.floor(remainingMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${Math.max(0, minutes)}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }
 
 export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowProps) {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const visibleOffers = useMemo(() => offers.filter((offer) => offer.isVisible), [offers]);
 
   const sorted = useMemo(() => {
@@ -82,7 +95,7 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
       {padded.map((offer) => {
         const isPlaceholder = offer.id.startsWith('placeholder_');
         const isDone = offer.isCollected || isPlaceholder;
-        const badgeLabel = offer.badgeLabelOverride ?? (isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs));
+        const badgeLabel = offer.badgeLabelOverride ?? (isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs, nowMs));
 
         return (
           <button

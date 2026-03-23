@@ -20,9 +20,9 @@ export const islandRunProgressionTests: TestCase[] = [
     },
   },
   {
-    name: 'getNextIslandOnExpiry only advances after a full clear',
+    name: 'getNextIslandOnExpiry always advances to the next island',
     run: () => {
-      assertEqual(getNextIslandOnExpiry(12, ['hatchery', 'minigame', 'utility', 'dynamic']), 12, 'Expected incomplete island expiry to retry the same island');
+      assertEqual(getNextIslandOnExpiry(12, ['hatchery', 'minigame', 'utility', 'dynamic']), 13, 'Expected incomplete island expiry to unlock the next island');
       assertEqual(getNextIslandOnExpiry(12, ['hatchery', 'minigame', 'utility', 'dynamic', 'boss']), 13, 'Expected cleared island expiry to advance to the next island');
     },
   },
