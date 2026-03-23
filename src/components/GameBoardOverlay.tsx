@@ -3,10 +3,8 @@ import boardTopbar from '../assets/IMG_8564.webp';
 import boardMatchbar from '../assets/IMG_8562.webp';
 import boardIconsRight1 from '../assets/board_icons_right1.webp';
 import boardIconsRight2 from '../assets/board_icons_right2.webp';
-import boardIconsRight3 from '../assets/board_icons_right3.webp';
 import spinWheelImg from '../assets/Daily_treats_spinnwheel.webp';
 import heartsImg from '../assets/Daily_treats_hearts.webp';
-import hatchImg from '../assets/Daily_treat_calendar_closed.webp';
 import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
 
@@ -31,24 +29,23 @@ type GameBoardOverlayProps = {
   onPlayClick?: () => void;
   onTopbarClick?: () => void;
   onSpinWinClick?: () => void;
-  onHeartsGameplayClick?: () => void;
-  onDailyHatchClick?: () => void;
-  onBankClick?: () => void;
-  onDiamondClick?: () => void;
-  onGoldClick?: () => void;
+  onLuckyRollClick?: () => void;
+  onCreatureCollectionClick?: () => void;
+  onGarageClick?: () => void;
   profilePlaystyleIcon?: string;
   profilePlaystyleLabel?: string;
   currentLevel?: number;
   momentumPercent?: number;
-  diamondBalance?: number;
-  goldBalance?: number;
   spinsRemaining?: number;
   islandTimeLabel?: string;
-  heartsResetLabel?: string;
-  eggHatchLabel?: string;
   spinWinResetAtMs?: number;
-  heartsResetAtMs?: number;
-  hatcheryResetAtMs?: number;
+  luckyRollResetAtMs?: number;
+  luckyRollRunsRemaining?: number;
+  luckyRollStatusLabel?: string;
+  showSpinWheel?: boolean;
+  showLuckyRoll?: boolean;
+  creatureCollectionCount?: number;
+  creatureRewardReadyCount?: number;
   islandSceneSrc?: string;
 };
 
@@ -58,35 +55,36 @@ export function GameBoardOverlay({
   onPlayClick,
   onTopbarClick,
   onSpinWinClick,
-  onHeartsGameplayClick,
-  onDailyHatchClick,
-  onBankClick,
-  onDiamondClick,
-  onGoldClick,
+  onLuckyRollClick,
+  onCreatureCollectionClick,
+  onGarageClick,
   profilePlaystyleIcon,
   profilePlaystyleLabel,
   currentLevel = 1,
   momentumPercent = 0,
-  diamondBalance = 0,
-  goldBalance = 0,
   spinsRemaining = 0,
   islandTimeLabel = '—',
-  heartsResetLabel = '—',
-  eggHatchLabel = '—',
   spinWinResetAtMs,
-  heartsResetAtMs,
-  hatcheryResetAtMs,
+  luckyRollResetAtMs,
+  luckyRollRunsRemaining = 0,
+  luckyRollStatusLabel,
+  showSpinWheel = false,
+  showLuckyRoll = false,
+  creatureCollectionCount = 0,
+  creatureRewardReadyCount = 0,
   islandSceneSrc = getIslandBackgroundImageSrc(1),
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const [nowMs, setNowMs] = useState(Date.now());
+  const activeLeftIconCount = [showSpinWheel, showLuckyRoll].filter(Boolean).length;
+  const luckyRollTimerLabel = luckyRollStatusLabel ?? (formatCountdown(luckyRollResetAtMs, nowMs) || 'Reward active');
 
   useEffect(() => {
-    if (spinWinResetAtMs === undefined && heartsResetAtMs === undefined && hatcheryResetAtMs === undefined) return;
+    if (spinWinResetAtMs === undefined && luckyRollResetAtMs === undefined) return;
     const interval = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [spinWinResetAtMs, heartsResetAtMs, hatcheryResetAtMs]);
+  }, [spinWinResetAtMs, luckyRollResetAtMs]);
 
   useEffect(() => {
     if (isOpen) {
@@ -179,66 +177,63 @@ export function GameBoardOverlay({
 
           {/* Left Side Icons - Blue Circle Placeholders */}
           <div className="game-board-overlay__side-icons game-board-overlay__side-icons--left">
-            <div className="game-board-overlay__icon-item">
-              <button
-                type="button"
-                className="game-board-overlay__icon-button"
-                onClick={onSpinWinClick}
-                aria-label="Open Spin & Win"
-              >
-                <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
-                  <img
-                    src={spinWheelImg}
-                    alt=""
-                    className="game-board-overlay__icon-asset-img"
-                  />
-                  <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
-                    {spinsRemaining}
-                  </span>
-                </div>
-              </button>
-              <span className="game-board-overlay__icon-timer">
-                {formatCountdown(spinWinResetAtMs, nowMs) || islandTimeLabel}
-              </span>
-            </div>
-            <div className="game-board-overlay__icon-item">
-              <button
-                type="button"
-                className="game-board-overlay__icon-button"
-                onClick={onHeartsGameplayClick}
-                aria-label="Open Hearts gameplay"
-              >
-                <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
-                  <img
-                    src={heartsImg}
-                    alt=""
-                    className="game-board-overlay__icon-asset-img"
-                  />
-                </div>
-              </button>
-              <span className="game-board-overlay__icon-timer">
-                {formatCountdown(heartsResetAtMs, nowMs) || heartsResetLabel}
-              </span>
-            </div>
-            <div className="game-board-overlay__icon-item">
-              <button
-                type="button"
-                className="game-board-overlay__icon-button"
-                onClick={onDailyHatchClick}
-                aria-label="Open Home Egg Hatchery"
-              >
-                <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
-                  <img
-                    src={hatchImg}
-                    alt=""
-                    className="game-board-overlay__icon-asset-img"
-                  />
-                </div>
-              </button>
-              <span className="game-board-overlay__icon-timer">
-                {formatCountdown(hatcheryResetAtMs, nowMs) || eggHatchLabel}
-              </span>
-            </div>
+            {showSpinWheel ? (
+              <div className="game-board-overlay__icon-item">
+                <button
+                  type="button"
+                  className="game-board-overlay__icon-button"
+                  onClick={onSpinWinClick}
+                  aria-label="Open Spin Wheel reward"
+                >
+                  <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
+                    <img
+                      src={spinWheelImg}
+                      alt=""
+                      className="game-board-overlay__icon-asset-img"
+                    />
+                    <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
+                      {Math.max(1, spinsRemaining)}
+                    </span>
+                  </div>
+                </button>
+                <span className="game-board-overlay__icon-timer">
+                  {formatCountdown(spinWinResetAtMs, nowMs) || islandTimeLabel}
+                </span>
+              </div>
+            ) : null}
+
+            {showLuckyRoll ? (
+              <div className="game-board-overlay__icon-item">
+                <button
+                  type="button"
+                  className="game-board-overlay__icon-button"
+                  onClick={onLuckyRollClick}
+                  aria-label="Open Lucky Roll reward"
+                >
+                  <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
+                    <img
+                      src={heartsImg}
+                      alt=""
+                      className="game-board-overlay__icon-asset-img"
+                    />
+                    {luckyRollRunsRemaining > 0 ? (
+                      <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
+                        {luckyRollRunsRemaining}
+                      </span>
+                    ) : null}
+                  </div>
+                </button>
+                <span className="game-board-overlay__icon-timer">
+                  {luckyRollTimerLabel}
+                </span>
+              </div>
+            ) : null}
+
+            {activeLeftIconCount === 0 ? (
+              <div className="game-board-overlay__icon-item">
+                <span className="game-board-overlay__icon-timer">No active reward icons</span>
+              </div>
+            ) : null}
           </div>
 
           {/* Right Side Icons */}
@@ -247,38 +242,32 @@ export function GameBoardOverlay({
               <button
                 type="button"
                 className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
-                onClick={onBankClick}
-                aria-label="Open bank tab"
+                onClick={onCreatureCollectionClick}
+                aria-label="Open creature collection"
               >
                 <img
                   src={boardIconsRight1}
-                  alt="Bank"
+                  alt="Creature collection"
                   className="game-board-overlay__icons-image game-board-overlay__icons-image--bank"
                 />
-                <span className="game-board-overlay__icon-bank-label">BANK</span>
+                <span className="game-board-overlay__icon-bank-label">CREATURES</span>
               </button>
+              <span className="game-board-overlay__icon-counter">
+                {creatureRewardReadyCount > 0
+                  ? `${creatureCollectionCount} · ${creatureRewardReadyCount} ready`
+                  : creatureCollectionCount.toLocaleString()}
+              </span>
             </div>
             <div className="game-board-overlay__right-icon-item">
               <button
                 type="button"
                 className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
-                onClick={onDiamondClick}
+                onClick={onGarageClick}
                 aria-label="Open garage tab"
               >
-                <img src={boardIconsRight2} alt="Diamonds" className="game-board-overlay__icons-image" />
+                <img src={boardIconsRight2} alt="Garage" className="game-board-overlay__icons-image" />
               </button>
-              <span className="game-board-overlay__icon-counter">{diamondBalance.toLocaleString()}</span>
-            </div>
-            <div className="game-board-overlay__right-icon-item">
-              <button
-                type="button"
-                className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
-                onClick={onGoldClick}
-                aria-label="Open player shop tab"
-              >
-                <img src={boardIconsRight3} alt="Gold" className="game-board-overlay__icons-image" />
-              </button>
-              <span className="game-board-overlay__icon-counter">{goldBalance.toLocaleString()}</span>
+              <span className="game-board-overlay__icon-counter">Garage</span>
             </div>
           </div>
         </div>

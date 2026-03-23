@@ -84,6 +84,7 @@ import {
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
+import { useLuckyRollStatus } from '../../hooks/useLuckyRollStatus';
 import { hasCollectedDailyHeartsToday } from '../../services/dailyTreats';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
 import { readIslandRunRuntimeState } from '../gamification/level-worlds/services/islandRunRuntimeState';
@@ -415,7 +416,13 @@ export function DailyHabitTracker({
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
-  const { spinAvailable, loading: spinStatusLoading } = useDailySpinStatus(session.user.id);
+  const { spinAvailable } = useDailySpinStatus(session.user.id);
+  const {
+    available: luckyRollAvailable,
+    monthlyWindowEndsAtMs: luckyRollExpiresAtMs,
+    earnedRuns: luckyRollEarnedRuns,
+    activeSource: luckyRollActiveSource,
+  } = useLuckyRollStatus(session.user.id);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
@@ -1814,17 +1821,6 @@ export function DailyHabitTracker({
   const bonusPlaceholderText = hasClaimedVisionStar && !shouldFadeTrackingMeta
     ? 'Vision star claimed today.'
     : '';
-  const luckyRollDoneForToday = useMemo(() => {
-    try {
-      const raw = window.localStorage.getItem(`gol_lucky_roll_state_${session.user.id}`);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw) as { rollsToday?: number; lastSessionDate?: string };
-      return (parsed.lastSessionDate === getTodayUtcDateKey()) && Number(parsed.rollsToday ?? 0) > 0;
-    } catch {
-      return false;
-    }
-  }, [session.user.id]);
-
   const islandRunRuntime = useMemo(() => readIslandRunRuntimeState(session), [session]);
   const [eggReadinessNowMs, setEggReadinessNowMs] = useState(() => Date.now());
   const activeIsland = islandRunRuntime.currentIslandNumber;
@@ -1921,9 +1917,12 @@ export function DailyHabitTracker({
         id: 'lucky_roll',
         label: 'Lucky Roll',
         icon: '🎲',
-        expiresAtMs: nextUtcMidnight,
-        isCollected: luckyRollDoneForToday,
-        isVisible: true,
+        expiresAtMs: luckyRollExpiresAtMs ?? nextUtcMidnight,
+        badgeLabelOverride: luckyRollActiveSource === 'earned'
+          ? `${luckyRollEarnedRuns} ${luckyRollEarnedRuns === 1 ? 'run' : 'runs'}`
+          : undefined,
+        isCollected: false,
+        isVisible: luckyRollAvailable,
         sortPriority: 3,
       },
       {
@@ -1931,8 +1930,8 @@ export function DailyHabitTracker({
         label: 'Spin Wheel',
         icon: '🎡',
         expiresAtMs: nextUtcMidnight,
-        isCollected: !spinStatusLoading && !spinAvailable,
-        isVisible: true,
+        isCollected: false,
+        isVisible: spinAvailable,
         sortPriority: 4,
       },
       {
@@ -1969,10 +1968,12 @@ export function DailyHabitTracker({
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
     isMysteryStopAvailable,
-    luckyRollDoneForToday,
+    luckyRollActiveSource,
+    luckyRollAvailable,
+    luckyRollEarnedRuns,
+    luckyRollExpiresAtMs,
     session.user.id,
     spinAvailable,
-    spinStatusLoading,
   ]);
 
 
@@ -2086,7 +2087,9 @@ export function DailyHabitTracker({
       },
       lucky_roll: {
         title: 'Lucky Roll',
-        description: 'Jump into Lucky Roll and use your daily chance for bonus rewards.',
+        description: luckyRollActiveSource === 'earned'
+          ? `You have ${luckyRollEarnedRuns} earned Lucky Roll ${luckyRollEarnedRuns === 1 ? 'run' : 'runs'} ready to use.`
+          : 'Your monthly free Lucky Roll window is active now.',
         cta: 'Open Lucky Roll →',
         icon: '🎲',
       },
@@ -2101,7 +2104,7 @@ export function DailyHabitTracker({
       mystery_stop: { title: 'Mystery', description: 'A mystery stop is available.', cta: 'Open Mystery →', icon: '🎭' },
     };
     return map[activeOfferTeaser];
-  }, [activeOfferTeaser]);
+  }, [activeOfferTeaser, luckyRollActiveSource, luckyRollEarnedRuns]);
 
   const offerTeaserModal = activeOfferTeaser && activeOfferTeaserConfig ? (
     <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-label="Offer teaser" onClick={() => setActiveOfferTeaser(null)}>
