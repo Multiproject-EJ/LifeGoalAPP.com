@@ -3948,6 +3948,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </div>
 
           <div className="island-run-prototype__footer-actions">
+            <button
+              type="button"
+              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+              onClick={step1Complete ? () => void handleRoll() : openStep1Stop}
+              disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll) || showTravelOverlay}
+            >
+              {rollButtonLabel}
+            </button>
             {spinTokens > 0 && (
               <button
                 type="button"
@@ -3958,14 +3966,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 Spin
               </button>
             )}
-            <button
-              type="button"
-              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-              onClick={step1Complete ? () => void handleRoll() : openStep1Stop}
-              disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll) || showTravelOverlay}
-            >
-              {compactRollButtonLabel}
-            </button>
             {!isHudCollapsed && (
               <button
                 type="button"
