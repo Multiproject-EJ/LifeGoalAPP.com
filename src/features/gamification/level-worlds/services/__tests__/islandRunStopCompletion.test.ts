@@ -166,6 +166,16 @@ export const islandRunStopCompletionTests: TestCase[] = [
           requestedStopId: 'hatchery',
           islandNumber: 8,
           completedStopsByIsland: { '8': ['minigame'] },
+          hasActiveEgg: true,
+        }),
+        false,
+        'Expected an active hatchery egg to suppress auto-open even if the stop ledger is stale',
+      );
+      assertEqual(
+        shouldAutoOpenIslandStopOnLoad({
+          requestedStopId: 'hatchery',
+          islandNumber: 8,
+          completedStopsByIsland: { '8': ['minigame'] },
           islandEggSlotUsed: true,
         }),
         false,

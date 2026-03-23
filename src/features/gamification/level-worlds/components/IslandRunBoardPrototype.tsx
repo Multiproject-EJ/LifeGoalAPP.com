@@ -584,7 +584,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const persistedIsland = runtimeState.currentIslandNumber;
     setIslandNumber((current) => (current === persistedIsland ? current : persistedIsland));
-    setDicePool(convertHeartToDicePool(persistedIsland));
     setBossTrialResolved(runtimeState.bossTrialResolvedIslandNumber === persistedIsland);
 
     // M15E: Restore timer from persisted islandExpiresAtMs or apply Catch-up Rule A
@@ -688,17 +687,39 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }
         })();
     const currentIslandEggEntry = runtimeState.perIslandEggs?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? null;
+    const hasActiveEggOnLoad = currentIslandEggEntry?.status === 'incubating'
+      || currentIslandEggEntry?.status === 'ready'
+      || Boolean(
+        !currentIslandEggEntry
+        && runtimeState.activeEggTier
+        && runtimeState.activeEggSetAtMs
+        && runtimeState.activeEggHatchDurationMs,
+      );
     const islandEggSlotUsedOnLoad = currentIslandEggEntry?.status === 'collected'
       || currentIslandEggEntry?.status === 'sold'
       || currentIslandEggEntry?.status === 'animal_ready'
       || currentIslandEggEntry?.status === 'animal_sold';
     if (openHatcheryOnLoad) {
-      if (shouldAutoOpenIslandStopOnLoad({
+      const shouldAutoOpen = shouldAutoOpenIslandStopOnLoad({
         requestedStopId: 'hatchery',
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
         completedStopsByIsland: { [String(runtimeState.currentIslandNumber ?? islandNumber)]: storedStops },
         islandEggSlotUsed: islandEggSlotUsedOnLoad,
-      })) {
+        hasActiveEgg: hasActiveEggOnLoad,
+      });
+      logIslandRunEntryDebug('island_stop_autopen_check', {
+        userId: session.user.id,
+        requestedStopId: 'hatchery',
+        targetIslandNumber,
+        openHatcheryOnLoad,
+        openIslandStopOnLoad,
+        storedStops,
+        currentIslandEggStatus: currentIslandEggEntry?.status ?? null,
+        hasActiveEggOnLoad,
+        islandEggSlotUsedOnLoad,
+        shouldAutoOpen,
+      });
+      if (shouldAutoOpen) {
         setActiveStopId('hatchery');
       }
       // Clean the URL param without a reload
@@ -709,11 +730,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     if (openIslandStopOnLoad === 'boss' || openIslandStopOnLoad === 'dynamic') {
-      if (shouldAutoOpenIslandStopOnLoad({
+      const shouldAutoOpen = shouldAutoOpenIslandStopOnLoad({
         requestedStopId: openIslandStopOnLoad,
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
         completedStopsByIsland: { [String(runtimeState.currentIslandNumber ?? islandNumber)]: storedStops },
-      })) {
+      });
+      logIslandRunEntryDebug('island_stop_autopen_check', {
+        userId: session.user.id,
+        requestedStopId: openIslandStopOnLoad,
+        targetIslandNumber,
+        openHatcheryOnLoad,
+        openIslandStopOnLoad,
+        storedStops,
+        currentIslandEggStatus: currentIslandEggEntry?.status ?? null,
+        hasActiveEggOnLoad,
+        islandEggSlotUsedOnLoad,
+        shouldAutoOpen,
+      });
+      if (shouldAutoOpen) {
         setActiveStopId(openIslandStopOnLoad);
       }
       // Clean the URL param without a reload
