@@ -72,6 +72,22 @@ Each mode uses a different combination of fields from the `journal_entries` tabl
 - Passes `journalType` to `JournalEntryEditor`
 - Handles all mode fields when saving entries
 
+## Island Run Reflection Persistence
+
+Island Run reflection prompts (for example Mystery Stop or Dynamic Stop prompts) should be stored in the **main journal library**, not in isolated mini-game-only local state.
+
+Recommended persistence strategy:
+
+- Use `createJournalEntry()` from `src/services/journal.ts`
+- Persist to `journal_entries`
+- Prefer existing types where possible:
+  - `quick` for short guided reflections
+  - `goal` for goal-specific prompts
+  - `life_wheel` for area/category reflections
+- Tag entries with Island Run context such as `island-run`, `mystery-stop`, `dynamic-stop`
+
+This keeps reflective gameplay content discoverable inside the primary journal experience and aligned with Supabase-backed history.
+
 ### `JournalEntryEditor.tsx`
 - Renders mode-specific UI sections based on `draft.type`
 - **Quick mode**: Mood slider, random prompts, 4-row textarea

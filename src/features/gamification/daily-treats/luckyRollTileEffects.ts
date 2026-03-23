@@ -1,6 +1,6 @@
 /**
  * Lucky Roll Tile Effect Resolution System
- * 
+ *
  * Handles what happens when landing on each tile type:
  * - Calculates rewards/penalties (with crypto RNG)
  * - Delivers rewards through gameRewards service
@@ -8,26 +8,30 @@
  */
 
 import type { BoardTile } from './luckyRollTypes';
-import { awardDice, awardGameTokens, logRewardEvent, loadCurrencyBalance, type GameSource } from '../../../services/gameRewards';
+import { awardDice, awardGameTokens, logRewardEvent, type GameSource } from '../../../services/gameRewards';
 
-// For gold/coins, we need to manage it through localStorage similar to gameRewards
-// The existing system doesn't have gold management, so we'll add it here
 const STORAGE_KEY_GOLD = 'gol_game_gold_balance';
-
 const RANDOM_BUFFER = new Uint32Array(1);
 
 export interface TileEffectResult {
-  type: 'gain_coins' | 'lose_coins' | 'bonus_dice' | 'game_token' | 'mystery' | 'jackpot' | 'neutral' | 'mini_game';
+  type:
+    | 'gain_coins'
+    | 'lose_coins'
+    | 'bonus_dice'
+    | 'game_token'
+    | 'mystery'
+    | 'jackpot'
+    | 'neutral'
+    | 'boost_step'
+    | 'slow_zone'
+    | 'finish';
   amount: number;
   currency: string;
-  message: string;       // "🪙 +25 coins!"
+  message: string;
   celebrationType: 'none' | 'small' | 'medium' | 'big';
-  miniGame?: string;     // which mini-game to trigger (for mini_game tiles)
+  movementDelta?: number;
 }
 
-/**
- * Get secure random float between 0 and 1
- */
 function getSecureRandomFloat(): number {
   if (globalThis.crypto?.getRandomValues) {
     globalThis.crypto.getRandomValues(RANDOM_BUFFER);
@@ -36,22 +40,16 @@ function getSecureRandomFloat(): number {
   return Math.random();
 }
 
-/**
- * Get random integer in range [min, max] inclusive
- */
 function getRandomIntInclusive(min: number, max: number): number {
   const safeMin = Math.ceil(min);
   const safeMax = Math.floor(max);
   return Math.floor(getSecureRandomFloat() * (safeMax - safeMin + 1)) + safeMin;
 }
 
-/**
- * Load gold balance from localStorage
- */
 function loadGoldBalance(userId: string): number {
   const safeLocalStorage = typeof window !== 'undefined' && window.localStorage ? window.localStorage : null;
   if (!safeLocalStorage) return 0;
-  
+
   try {
     const stored = safeLocalStorage.getItem(`${STORAGE_KEY_GOLD}_${userId}`);
     if (!stored) return 0;
@@ -62,13 +60,10 @@ function loadGoldBalance(userId: string): number {
   }
 }
 
-/**
- * Save gold balance to localStorage
- */
 function saveGoldBalance(userId: string, amount: number): void {
   const safeLocalStorage = typeof window !== 'undefined' && window.localStorage ? window.localStorage : null;
   if (!safeLocalStorage) return;
-  
+
   try {
     safeLocalStorage.setItem(`${STORAGE_KEY_GOLD}_${userId}`, Math.max(0, amount).toString());
   } catch (error) {
@@ -76,15 +71,11 @@ function saveGoldBalance(userId: string, amount: number): void {
   }
 }
 
-/**
- * Award gold coins
- * Exported for use by Task Tower and other games
- */
 export function awardGold(userId: string, amount: number, source: GameSource, context: string): number {
   const currentGold = loadGoldBalance(userId);
   const newGold = currentGold + amount;
   saveGoldBalance(userId, newGold);
-  
+
   logRewardEvent({
     id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     userId,
@@ -94,19 +85,16 @@ export function awardGold(userId: string, amount: number, source: GameSource, co
     context,
     timestamp: new Date().toISOString(),
   });
-  
+
   return newGold;
 }
 
-/**
- * Deduct gold coins (never goes below 0)
- */
 function deductGold(userId: string, amount: number, source: GameSource = 'lucky_roll', context: string): number {
   const currentGold = loadGoldBalance(userId);
-  const deductAmount = Math.min(currentGold, amount); // Can't deduct more than available
+  const deductAmount = Math.min(currentGold, amount);
   const newGold = currentGold - deductAmount;
   saveGoldBalance(userId, newGold);
-  
+
   logRewardEvent({
     id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     userId,
@@ -116,21 +104,16 @@ function deductGold(userId: string, amount: number, source: GameSource = 'lucky_
     context,
     timestamp: new Date().toISOString(),
   });
-  
+
   return newGold;
 }
 
-/**
- * Resolve mystery tile outcome
- */
 function resolveMysteryOutcome(userId: string): TileEffectResult {
   const roll = getSecureRandomFloat();
-  
-  // 40% gain coins (20-80)
-  if (roll < 0.40) {
-    const amount = getRandomIntInclusive(20, 80);
+
+  if (roll < 0.35) {
+    const amount = getRandomIntInclusive(25, 90);
     awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Mystery tile - coins');
-    
     return {
       type: 'mystery',
       amount,
@@ -139,26 +122,22 @@ function resolveMysteryOutcome(userId: string): TileEffectResult {
       celebrationType: amount >= 60 ? 'medium' : 'small',
     };
   }
-  
-  // 25% bonus dice (1-2)
-  if (roll < 0.65) {
+
+  if (roll < 0.60) {
     const amount = getRandomIntInclusive(1, 2);
-    awardDice(userId, amount, 'lucky_roll', 'Lucky Roll: Mystery tile - dice');
-    
+    awardDice(userId, amount, 'lucky_roll', 'Lucky Roll: Mystery tile - bonus rolls');
     return {
       type: 'mystery',
       amount,
       currency: 'dice',
-      message: `🎲 +${amount} dice!`,
+      message: `🎲 +${amount} bonus roll${amount === 1 ? '' : 's'}!`,
       celebrationType: 'medium',
     };
   }
-  
-  // 20% game tokens (2-4)
-  if (roll < 0.85) {
-    const amount = getRandomIntInclusive(2, 4);
+
+  if (roll < 0.78) {
+    const amount = getRandomIntInclusive(1, 3);
     awardGameTokens(userId, amount, 'lucky_roll', 'Lucky Roll: Mystery tile - tokens');
-    
     return {
       type: 'mystery',
       amount,
@@ -167,22 +146,33 @@ function resolveMysteryOutcome(userId: string): TileEffectResult {
       celebrationType: 'small',
     };
   }
-  
-  // 10% nothing interesting
-  if (roll < 0.95) {
+
+  if (roll < 0.90) {
+    const amount = getRandomIntInclusive(1, 2);
     return {
       type: 'mystery',
-      amount: 0,
-      currency: 'none',
-      message: 'Nothing this time...',
-      celebrationType: 'none',
+      amount,
+      currency: 'position',
+      message: `🚀 Mystery boost! Move +${amount}.`,
+      celebrationType: 'medium',
+      movementDelta: amount,
     };
   }
-  
-  // 5% jackpot-level (100+ coins)
-  const amount = getRandomIntInclusive(100, 200);
+
+  if (roll < 0.97) {
+    const amount = -getRandomIntInclusive(1, 2);
+    return {
+      type: 'mystery',
+      amount,
+      currency: 'position',
+      message: `🪨 Mystery snag! Slip ${Math.abs(amount)} tile${Math.abs(amount) === 1 ? '' : 's'}.`,
+      celebrationType: 'none',
+      movementDelta: amount,
+    };
+  }
+
+  const amount = getRandomIntInclusive(120, 220);
   awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Mystery tile - jackpot');
-  
   return {
     type: 'mystery',
     amount,
@@ -192,10 +182,6 @@ function resolveMysteryOutcome(userId: string): TileEffectResult {
   };
 }
 
-/**
- * Main tile effect resolver
- * Determines what happens when landing on a tile
- */
 export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectResult {
   switch (tile.type) {
     case 'neutral':
@@ -206,62 +192,48 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
         message: tile.label || 'Safe Ground',
         celebrationType: 'none',
       };
-    
+
     case 'gain_coins': {
-      const min = tile.effect?.min || 10;
-      const max = tile.effect?.max || 50;
-      const amount = getRandomIntInclusive(min, max);
+      const amount = getRandomIntInclusive(tile.effect?.min || 10, tile.effect?.max || 50);
       awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Gain coins tile');
-      
-      let celebrationType: 'small' | 'medium' | 'big' = 'small';
-      if (amount >= 76) celebrationType = 'big';
-      else if (amount >= 31) celebrationType = 'medium';
-      
       return {
         type: 'gain_coins',
         amount,
         currency: 'gold',
         message: `🪙 +${amount} coins!`,
-        celebrationType,
+        celebrationType: amount >= 40 ? 'medium' : 'small',
       };
     }
-    
+
     case 'lose_coins': {
       const min = Math.abs(tile.effect?.min || -25);
       const max = Math.abs(tile.effect?.max || -5);
       const amount = getRandomIntInclusive(Math.min(min, max), Math.max(min, max));
       deductGold(userId, amount, 'lucky_roll', 'Lucky Roll: Lose coins tile');
-      
       return {
         type: 'lose_coins',
         amount,
         currency: 'gold',
-        message: `-${amount} 🪙`,
+        message: `💸 -${amount} coins`,
         celebrationType: 'none',
       };
     }
-    
+
     case 'bonus_dice': {
-      const min = tile.effect?.min || 1;
-      const max = tile.effect?.max || 3;
-      const amount = getRandomIntInclusive(min, max);
+      const amount = getRandomIntInclusive(tile.effect?.min || 1, tile.effect?.max || 2);
       awardDice(userId, amount, 'lucky_roll', 'Lucky Roll: Bonus dice tile');
-      
       return {
         type: 'bonus_dice',
         amount,
         currency: 'dice',
-        message: `🎲 +${amount} dice!`,
+        message: `🎲 +${amount} bonus roll${amount === 1 ? '' : 's'}!`,
         celebrationType: 'medium',
       };
     }
-    
+
     case 'game_token': {
-      const min = tile.effect?.min || 1;
-      const max = tile.effect?.max || 3;
-      const amount = getRandomIntInclusive(min, max);
+      const amount = getRandomIntInclusive(tile.effect?.min || 1, tile.effect?.max || 2);
       awardGameTokens(userId, amount, 'lucky_roll', 'Lucky Roll: Game token tile');
-      
       return {
         type: 'game_token',
         amount,
@@ -270,16 +242,13 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
         celebrationType: 'small',
       };
     }
-    
+
     case 'mystery':
       return resolveMysteryOutcome(userId);
-    
+
     case 'jackpot': {
-      const min = tile.effect?.min || 100;
-      const max = tile.effect?.max || 500;
-      const amount = getRandomIntInclusive(min, max);
+      const amount = getRandomIntInclusive(tile.effect?.min || 100, tile.effect?.max || 240);
       awardGold(userId, amount, 'lucky_roll', 'Lucky Roll: Jackpot tile');
-      
       return {
         type: 'jackpot',
         amount,
@@ -288,17 +257,45 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
         celebrationType: 'big',
       };
     }
-    
-    case 'mini_game':
+
+    case 'boost_step': {
+      const amount = getRandomIntInclusive(tile.effect?.min || 1, tile.effect?.max || 2);
       return {
-        type: 'mini_game',
-        amount: 0,
-        currency: 'none',
-        message: tile.label || 'Mini-Game',
+        type: 'boost_step',
+        amount,
+        currency: 'position',
+        message: `🚀 Surge ahead +${amount}!`,
         celebrationType: 'medium',
-        miniGame: tile.miniGame,
+        movementDelta: amount,
       };
-    
+    }
+
+    case 'slow_zone': {
+      const amount = getRandomIntInclusive(tile.effect?.min || -2, tile.effect?.max || -1);
+      return {
+        type: 'slow_zone',
+        amount,
+        currency: 'position',
+        message: `🪨 Slow zone ${amount} tile${Math.abs(amount) === 1 ? '' : 's'}`,
+        celebrationType: 'none',
+        movementDelta: amount,
+      };
+    }
+
+    case 'finish': {
+      const tokenAmount = getRandomIntInclusive(tile.effect?.min || 5, tile.effect?.max || 8);
+      const goldAmount = getRandomIntInclusive(150, 260);
+      awardGameTokens(userId, tokenAmount, 'lucky_roll', 'Lucky Roll: Finish chest - tokens');
+      awardGold(userId, goldAmount, 'lucky_roll', 'Lucky Roll: Finish chest - coins');
+      return {
+        type: 'finish',
+        amount: tokenAmount,
+        currency: 'game_tokens',
+        message: `🏁 Finish chest! +${tokenAmount} tokens and +${goldAmount} coins!`,
+        celebrationType: 'big',
+      };
+    }
+
     default:
       return {
         type: 'neutral',
@@ -310,9 +307,6 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
   }
 }
 
-/**
- * Get current gold balance for display
- */
 export function getGoldBalance(userId: string): number {
   return loadGoldBalance(userId);
 }

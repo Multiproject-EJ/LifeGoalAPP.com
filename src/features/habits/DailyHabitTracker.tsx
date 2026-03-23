@@ -84,6 +84,7 @@ import {
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
+import { useLuckyRollStatus } from '../../hooks/useLuckyRollStatus';
 import { hasCollectedDailyHeartsToday } from '../../services/dailyTreats';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
 import { readIslandRunRuntimeState } from '../gamification/level-worlds/services/islandRunRuntimeState';
@@ -415,7 +416,8 @@ export function DailyHabitTracker({
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
-  const { spinAvailable, loading: spinStatusLoading } = useDailySpinStatus(session.user.id);
+  const { spinAvailable } = useDailySpinStatus(session.user.id);
+  const { available: luckyRollAvailable, monthlyWindowEndsAtMs: luckyRollExpiresAtMs } = useLuckyRollStatus(session.user.id);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
@@ -1814,17 +1816,6 @@ export function DailyHabitTracker({
   const bonusPlaceholderText = hasClaimedVisionStar && !shouldFadeTrackingMeta
     ? 'Vision star claimed today.'
     : '';
-  const luckyRollDoneForToday = useMemo(() => {
-    try {
-      const raw = window.localStorage.getItem(`gol_lucky_roll_state_${session.user.id}`);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw) as { rollsToday?: number; lastSessionDate?: string };
-      return (parsed.lastSessionDate === getTodayUtcDateKey()) && Number(parsed.rollsToday ?? 0) > 0;
-    } catch {
-      return false;
-    }
-  }, [session.user.id]);
-
   const islandRunRuntime = useMemo(() => readIslandRunRuntimeState(session), [session]);
   const [eggReadinessNowMs, setEggReadinessNowMs] = useState(() => Date.now());
   const activeIsland = islandRunRuntime.currentIslandNumber;
@@ -1921,9 +1912,9 @@ export function DailyHabitTracker({
         id: 'lucky_roll',
         label: 'Lucky Roll',
         icon: '🎲',
-        expiresAtMs: nextUtcMidnight,
-        isCollected: luckyRollDoneForToday,
-        isVisible: true,
+        expiresAtMs: luckyRollExpiresAtMs ?? nextUtcMidnight,
+        isCollected: false,
+        isVisible: luckyRollAvailable,
         sortPriority: 3,
       },
       {
@@ -1931,8 +1922,8 @@ export function DailyHabitTracker({
         label: 'Spin Wheel',
         icon: '🎡',
         expiresAtMs: nextUtcMidnight,
-        isCollected: !spinStatusLoading && !spinAvailable,
-        isVisible: true,
+        isCollected: false,
+        isVisible: spinAvailable,
         sortPriority: 4,
       },
       {
@@ -1969,10 +1960,10 @@ export function DailyHabitTracker({
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
     isMysteryStopAvailable,
-    luckyRollDoneForToday,
+    luckyRollAvailable,
+    luckyRollExpiresAtMs,
     session.user.id,
     spinAvailable,
-    spinStatusLoading,
   ]);
 
 
