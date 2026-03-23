@@ -31,7 +31,10 @@ Lucky Roll can be active from:
 1. **Earned unlocks** from Island Run systems (for example Mystery Stop rewards, shard milestones, or future island reward hooks)
 2. **Monthly free Lucky Roll window**
 
-Current implementation now grants an earned Lucky Roll run from **Island Run shard milestone claims**, establishing the first non-monthly unlock path.
+Current implementation now grants earned Lucky Roll runs from:
+
+- **Island Run shard milestone claims**
+- **Island Run Mystery Stop outcomes**
 
 ### 2.2 Monthly free window
 

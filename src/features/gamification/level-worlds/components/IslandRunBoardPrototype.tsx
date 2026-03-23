@@ -278,6 +278,12 @@ type OrbitStopVisual = {
   stopId?: string;
 };
 
+type MysteryStopReward =
+  | { type: 'coins'; amount: number; message: string }
+  | { type: 'hearts'; amount: number; message: string }
+  | { type: 'dice'; amount: number; message: string }
+  | { type: 'lucky_roll'; amount: number; message: string };
+
 const HATCHERY_TIMELINE_STEPS = [
   { id: 'set', label: 'Set', icon: '🥚' },
   { id: 'glow', label: 'Glow', icon: '✨' },
@@ -308,6 +314,28 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function resolveMysteryStopReward(): MysteryStopReward {
+  const randomValue = globalThis.crypto?.getRandomValues
+    ? (() => {
+        const buffer = new Uint32Array(1);
+        globalThis.crypto.getRandomValues(buffer);
+        return buffer[0] / (0xffffffff + 1);
+      })()
+    : Math.random();
+
+  if (randomValue < 0.35) {
+    return { type: 'coins', amount: 80, message: '🪙 Mystery cache! +80 coins.' };
+  }
+  if (randomValue < 0.60) {
+    return { type: 'dice', amount: 8, message: '🎲 Mystery momentum! +8 dice.' };
+  }
+  if (randomValue < 0.82) {
+    return { type: 'hearts', amount: 1, message: '❤️ Mystery recovery! +1 heart.' };
+  }
+
+  return { type: 'lucky_roll', amount: 1, message: '🎲 Lucky Roll unlocked! +1 bonus run.' };
+}
+
 function areStringArraysEqual(left: string[], right: string[]) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
@@ -330,6 +358,8 @@ function getStopIcon(kind: string, stopId: string) {
       return '✅';
     case 'checkin_reflection':
       return '🧭';
+    case 'mystery_reward':
+      return '🎁';
     case 'utility_support':
       return '🧰';
     case 'event_challenge':
@@ -441,6 +471,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M16E: tier index of a pending (unclaimed) milestone; null when no claim is waiting
   const [pendingClaimTierIndex, setPendingClaimTierIndex] = useState<number | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
+  const [mysteryStopReward, setMysteryStopReward] = useState<MysteryStopReward | null>(null);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
   const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle' | 'heart_boost_bundle', boolean>>({
     dice_bundle: false,
@@ -2824,6 +2855,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // pendingClaimTierIndex are NOT reset on island travel — they are lifetime-cumulative
     // and persist across islands per docs/13_COLLECTIBLE_PROGRESS_BAR.md §3.
     setShowClaimModal(false); // close any open claim modal but preserve pending claim state
+    setMysteryStopReward(null);
     setRollValue(null);
     setRollingDiceFaces([1, 1]);
     setStep1PromptedIsland(null);
@@ -2918,6 +2950,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       awardWalletShards(1);
     }
     setCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+    setMysteryStopReward(null);
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
     setActiveStopId(null);
   };
@@ -4294,6 +4327,57 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       handleCompleteActiveStop();
                     }}
                   />
+                ) : activeStop.kind === 'mystery_reward' ? (
+                  <div>
+                    <p>🎁 Reveal a mystery reward. Some mystery stops can unlock bonus Lucky Roll runs from Island Run.</p>
+                    {mysteryStopReward ? (
+                      <div>
+                        <p style={{ marginTop: 12 }}>{mysteryStopReward.message}</p>
+                        <div className="island-hatchery-card__actions">
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                            onClick={() => {
+                              if (mysteryStopReward.type === 'coins') {
+                                setCoins((current) => current + mysteryStopReward.amount);
+                              } else if (mysteryStopReward.type === 'hearts') {
+                                setHearts((current) => Math.min(MAX_HEARTS, current + mysteryStopReward.amount));
+                              } else if (mysteryStopReward.type === 'dice') {
+                                setDicePool((current) => current + mysteryStopReward.amount);
+                              } else if (mysteryStopReward.type === 'lucky_roll') {
+                                awardLuckyRollRuns(session.user.id, mysteryStopReward.amount);
+                              }
+
+                              setLandingText(mysteryStopReward.message);
+                              void recordTelemetryEvent({
+                                userId: session.user.id,
+                                eventType: 'economy_earn',
+                                metadata: {
+                                  stage: 'island_run_mystery_stop_claim',
+                                  island_number: islandNumber,
+                                  reward_type: mysteryStopReward.type,
+                                  reward_amount: mysteryStopReward.amount,
+                                },
+                              });
+                              handleCompleteActiveStop();
+                            }}
+                          >
+                            Claim Mystery Reward
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="island-hatchery-card__actions">
+                        <button
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                          onClick={() => setMysteryStopReward(resolveMysteryStopReward())}
+                        >
+                          Reveal Mystery Reward
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : activeStop.kind === 'utility_support' ? (
                   <p>🧰 Take a utility or support action — shield up, clean your queue, reroute, or prepare for the next stretch.</p>
                 ) : activeStop.kind === 'event_challenge' ? (
@@ -4451,7 +4535,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               {activeStop.stopId !== 'hatchery'
               && activeStop.stopId !== 'boss'
               && activeStop.stopId !== 'utility'
-              && activeStop.kind !== 'checkin_reflection' ? (
+              && activeStop.kind !== 'checkin_reflection'
+              && activeStop.kind !== 'mystery_reward' ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
                 </button>
