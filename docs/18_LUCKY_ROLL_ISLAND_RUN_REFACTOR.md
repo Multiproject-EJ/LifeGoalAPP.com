@@ -132,5 +132,5 @@ That reflective behavior should instead be routed into journal-backed Island Run
 
 ### Phase C — journal-backed reflection migration
 
-- Move reflective prompts from Lucky Roll-driven flow into Island Run stop flows
-- Persist the resulting entries through `journal_entries`
+- Move reflective prompts from Lucky Roll-driven flow into Island Run stop flows ✅
+- Persist the resulting entries through `journal_entries` ✅
