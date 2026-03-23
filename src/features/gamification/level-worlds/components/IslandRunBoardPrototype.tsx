@@ -64,6 +64,7 @@ import { getCompanionBonusForCreature, getCreatureSpecialtyForCompanion, selectC
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
+import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
 import {
   playIslandRunSound,
   triggerIslandRunHaptic,
@@ -5031,9 +5032,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       {showClaimModal && pendingClaimTierIndex !== null && (
         <ShardClaimModal
           collectible={resolveCollectibleForClaim(pendingClaimTierIndex)}
+          bonusSummary="🎲 Bonus reward: +1 Lucky Roll run"
           onCollect={() => {
             playIslandRunSound('market_purchase_success');
             triggerIslandRunHaptic('reward_claim');
+            awardLuckyRollRuns(session.user.id, 1);
             // M16C/M16E: advance tier index + claim count on player claim action
             const newTierIndex = shardTierIndex + 1;
             const newClaimCount = shardClaimCount + 1;
@@ -5046,6 +5049,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               session,
               client,
               patch: { shardTierIndex: newTierIndex, shardClaimCount: newClaimCount },
+            });
+            setLandingText('Shard milestone claimed! +1 Lucky Roll run unlocked.');
+            void recordTelemetryEvent({
+              userId: session.user.id,
+              eventType: 'economy_earn',
+              metadata: {
+                stage: 'island_run_shard_milestone_claim',
+                island_number: islandNumber,
+                collectible_tier_index: pendingClaimTierIndex,
+                lucky_roll_runs_awarded: 1,
+                new_shard_claim_count: newClaimCount,
+              },
             });
           }}
         />
