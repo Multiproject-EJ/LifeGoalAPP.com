@@ -134,6 +134,21 @@ function getIslandDurationMs(islandNum: number): number {
   if (IS_DEV_TIMER) return 45_000;
   return SPECIAL_ISLAND_NUMBERS.has(islandNum) ? 72 * 60 * 60 * 1000 : 48 * 60 * 60 * 1000;
 }
+
+function formatIslandCountdown(totalSec: number): string {
+  const safe = Math.max(0, Math.floor(totalSec));
+  if (safe <= 0) return '0s';
+
+  const days = Math.floor(safe / 86400);
+  const hours = Math.floor((safe % 86400) / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
 // Egg hatch durations are now random (24–72 h production / 15–30 s dev) via eggService.
 // Egg tier is assigned randomly on set via rollEggTierWeighted() in eggService.
 const MARKET_DICE_BUNDLE_COST = 30;
@@ -1771,9 +1786,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.clearTimeout(timeout);
   }, [client, effectiveCompletedStops, islandNumber, session, showTravelOverlay, timeLeftSec]);
 
-  const timerDisplay = timeLeftSec >= 3600
-    ? `${String(Math.floor(timeLeftSec / 3600)).padStart(2, '0')}:${String(Math.floor((timeLeftSec % 3600) / 60)).padStart(2, '0')}`
-    : formatClock(timeLeftSec);
+  const timerDisplay = formatIslandCountdown(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
   const step1Stop = islandStopPlan[0] ?? null;
   const step1Complete = step1Stop
