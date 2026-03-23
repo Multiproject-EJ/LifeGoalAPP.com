@@ -23,6 +23,22 @@ export function isIslandStopEffectivelyCompleted(options: {
   return false;
 }
 
+export function getEffectiveCompletedStops(options: {
+  completedStops: string[];
+  hasActiveEgg: boolean;
+  islandEggSlotUsed: boolean;
+}): string[] {
+  const { completedStops, hasActiveEgg, islandEggSlotUsed } = options;
+  return isIslandStopEffectivelyCompleted({
+    stopId: 'hatchery',
+    completedStops,
+    hasActiveEgg,
+    islandEggSlotUsed,
+  })
+    ? ensureStopCompleted(completedStops, 'hatchery')
+    : completedStops;
+}
+
 export function getCompletedStopsForIsland(
   completedStopsByIsland: Record<string, string[]> | undefined,
   islandNumber: number,

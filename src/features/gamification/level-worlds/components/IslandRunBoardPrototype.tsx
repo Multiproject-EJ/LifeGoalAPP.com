@@ -92,6 +92,7 @@ import {
 } from '../services/bossService';
 import {
   ensureStopCompleted,
+  getEffectiveCompletedStops,
   getStopCompletionBlockReason,
   isIslandStopEffectivelyCompleted,
   isStopCompleted,
@@ -1349,13 +1350,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [islandShards, shardTierIndex, shardClaimCount, shardMilestoneReached, session, client]);
 
+  // M13: per-island egg slot usage check
+  const islandEggEntry = useMemo(() => runtimeState.perIslandEggs?.[String(islandNumber)] ?? null, [runtimeState.perIslandEggs, islandNumber]);
+  const islandEggSlotUsed = useMemo(() => {
+    return islandEggEntry?.status === 'collected'
+      || islandEggEntry?.status === 'sold'
+      || islandEggEntry?.status === 'animal_ready'
+      || islandEggEntry?.status === 'animal_sold';
+  }, [islandEggEntry]);
+  const effectiveCompletedStops = useMemo(
+    () => getEffectiveCompletedStops({
+      completedStops,
+      hasActiveEgg: Boolean(activeEgg),
+      islandEggSlotUsed,
+    }),
+    [activeEgg, completedStops, islandEggSlotUsed],
+  );
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if (areStringArraysEqual(completedStops, effectiveCompletedStops)) return;
+    setCompletedStops((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops));
+  }, [completedStops, effectiveCompletedStops, hasHydratedRuntimeState]);
+
   const stopStateMap = useMemo(() => {
     const map = new Map<string, StopProgressState>();
+    const effectiveCompletedStopSet = new Set(effectiveCompletedStops);
     const nonBossStops = islandStopPlan.filter((stop) => stop.stopId !== 'boss');
-    const allNonBossCompleted = nonBossStops.every((stop) => completedStops.includes(stop.stopId));
+    const allNonBossCompleted = nonBossStops.every((stop) => effectiveCompletedStopSet.has(stop.stopId));
 
     for (const stop of islandStopPlan) {
-      if (completedStops.includes(stop.stopId)) {
+      if (effectiveCompletedStopSet.has(stop.stopId)) {
         map.set(stop.stopId, 'completed');
         continue;
       }
@@ -1369,7 +1394,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [completedStops, islandStopPlan]);
+  }, [effectiveCompletedStops, islandStopPlan]);
 
   const stopMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -1480,16 +1505,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return Math.min(4, Math.max(1, Math.ceil(progress * 4)));
   }, [activeEgg, nowMs]);
 
-  // M13: per-island egg slot usage check
-  const islandEggEntry = useMemo(() => runtimeState.perIslandEggs?.[String(islandNumber)] ?? null, [runtimeState.perIslandEggs, islandNumber]);
-
-  const islandEggSlotUsed = useMemo(() => {
-    return islandEggEntry?.status === 'collected'
-      || islandEggEntry?.status === 'sold'
-      || islandEggEntry?.status === 'animal_ready'
-      || islandEggEntry?.status === 'animal_sold';
-  }, [islandEggEntry]);
-
   const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
   const hatcheryTimelineStage = useMemo(() => {
     if (islandEggSlotUsed) return HATCHERY_TIMELINE_STEPS.length;
@@ -1564,7 +1579,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState || showFirstRunCelebration || showTravelOverlay) return;
 
     const step1Stop = islandStopPlan[0];
-    const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+    const step1Complete = step1Stop
+      ? isIslandStopEffectivelyCompleted({
+          stopId: step1Stop.stopId,
+          completedStops,
+          hasActiveEgg: Boolean(activeEgg),
+          islandEggSlotUsed,
+        })
+      : true;
     if (step1Complete) return;
     if (step1PromptedIsland === islandNumber) return;
 
@@ -1579,6 +1601,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     showTravelOverlay,
     islandStopPlan,
     completedStops,
+    activeEgg,
+    islandEggSlotUsed,
     step1PromptedIsland,
     islandNumber,
   ]);
@@ -1627,7 +1651,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    const nextIsland = getNextIslandOnExpiry(islandNumber, completedStops);
+    const nextIsland = getNextIslandOnExpiry(islandNumber, effectiveCompletedStops);
     const isRetryingCurrentIsland = nextIsland === islandNumber;
     setTravelOverlayDestinationIsland(nextIsland > 120 ? 1 : nextIsland);
     setTravelOverlayMode(isRetryingCurrentIsland ? 'retry' : 'advance');
@@ -1648,7 +1672,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }, 1800);
 
     return () => window.clearTimeout(timeout);
-  }, [client, completedStops, islandNumber, session, showTravelOverlay, timeLeftSec]);
+  }, [client, effectiveCompletedStops, islandNumber, session, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = timeLeftSec >= 3600
     ? `${String(Math.floor(timeLeftSec / 3600)).padStart(2, '0')}:${String(Math.floor((timeLeftSec % 3600) / 60)).padStart(2, '0')}`
@@ -1663,7 +1687,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         islandEggSlotUsed,
       })
     : true;
-  const isCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, completedStops);
+  const isCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
   const isEnergyDepletedForRoll = dicePool < DICE_PER_ROLL && hearts < 1;
   const rollButtonMode: 'rolling' | 'step1' | 'roll' | 'convert' = isRolling
     ? 'rolling'
@@ -3681,7 +3705,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               {/* M11C: stop progress chip */}
               {(() => {
                 const nonBossStops = islandStopPlan.filter((s) => s.stopId !== 'boss');
-                const completedNonBoss = nonBossStops.filter((s) => completedStops.includes(s.stopId)).length;
+                const effectiveCompletedStopSet = new Set(effectiveCompletedStops);
+                const completedNonBoss = nonBossStops.filter((s) => effectiveCompletedStopSet.has(s.stopId)).length;
                 if (!step1Complete) {
                   return <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>;
                 }
