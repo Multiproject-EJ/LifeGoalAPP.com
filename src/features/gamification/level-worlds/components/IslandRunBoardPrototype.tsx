@@ -574,8 +574,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
+  const runtimeStateRef = useRef(runtimeState);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
+
+  useEffect(() => {
+    runtimeStateRef.current = runtimeState;
+  }, [runtimeState]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) {
@@ -584,7 +589,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const persistedIsland = runtimeState.currentIslandNumber;
     setIslandNumber((current) => (current === persistedIsland ? current : persistedIsland));
-    setDicePool(convertHeartToDicePool(persistedIsland));
     setBossTrialResolved(runtimeState.bossTrialResolvedIslandNumber === persistedIsland);
 
     // M15E: Restore timer from persisted islandExpiresAtMs or apply Catch-up Rule A
@@ -688,17 +692,39 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }
         })();
     const currentIslandEggEntry = runtimeState.perIslandEggs?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? null;
+    const hasActiveEggOnLoad = currentIslandEggEntry?.status === 'incubating'
+      || currentIslandEggEntry?.status === 'ready'
+      || Boolean(
+        !currentIslandEggEntry
+        && runtimeState.activeEggTier
+        && runtimeState.activeEggSetAtMs
+        && runtimeState.activeEggHatchDurationMs,
+      );
     const islandEggSlotUsedOnLoad = currentIslandEggEntry?.status === 'collected'
       || currentIslandEggEntry?.status === 'sold'
       || currentIslandEggEntry?.status === 'animal_ready'
       || currentIslandEggEntry?.status === 'animal_sold';
     if (openHatcheryOnLoad) {
-      if (shouldAutoOpenIslandStopOnLoad({
+      const shouldAutoOpen = shouldAutoOpenIslandStopOnLoad({
         requestedStopId: 'hatchery',
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
         completedStopsByIsland: { [String(runtimeState.currentIslandNumber ?? islandNumber)]: storedStops },
         islandEggSlotUsed: islandEggSlotUsedOnLoad,
-      })) {
+        hasActiveEgg: hasActiveEggOnLoad,
+      });
+      logIslandRunEntryDebug('island_stop_autopen_check', {
+        userId: session.user.id,
+        requestedStopId: 'hatchery',
+        targetIslandNumber,
+        openHatcheryOnLoad,
+        openIslandStopOnLoad,
+        storedStops,
+        currentIslandEggStatus: currentIslandEggEntry?.status ?? null,
+        hasActiveEggOnLoad,
+        islandEggSlotUsedOnLoad,
+        shouldAutoOpen,
+      });
+      if (shouldAutoOpen) {
         setActiveStopId('hatchery');
       }
       // Clean the URL param without a reload
@@ -709,11 +735,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     if (openIslandStopOnLoad === 'boss' || openIslandStopOnLoad === 'dynamic') {
-      if (shouldAutoOpenIslandStopOnLoad({
+      const shouldAutoOpen = shouldAutoOpenIslandStopOnLoad({
         requestedStopId: openIslandStopOnLoad,
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
         completedStopsByIsland: { [String(runtimeState.currentIslandNumber ?? islandNumber)]: storedStops },
-      })) {
+      });
+      logIslandRunEntryDebug('island_stop_autopen_check', {
+        userId: session.user.id,
+        requestedStopId: openIslandStopOnLoad,
+        targetIslandNumber,
+        openHatcheryOnLoad,
+        openIslandStopOnLoad,
+        storedStops,
+        currentIslandEggStatus: currentIslandEggEntry?.status ?? null,
+        hasActiveEggOnLoad,
+        islandEggSlotUsedOnLoad,
+        shouldAutoOpen,
+      });
+      if (shouldAutoOpen) {
         setActiveStopId(openIslandStopOnLoad);
       }
       // Clean the URL param without a reload
@@ -1267,12 +1306,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
     const patch = { [islandKey]: completedStops };
-    void persistIslandRunRuntimeStatePatch({
+    const nextRuntimeState = {
+      ...runtimeStateRef.current,
+      completedStopsByIsland: {
+        ...runtimeStateRef.current.completedStopsByIsland,
+        ...patch,
+      },
+    };
+    void writeIslandRunGameStateRecord({
       session,
       client,
-      patch: {
-        completedStopsByIsland: patch,
-      },
+      record: nextRuntimeState,
     });
     setRuntimeState((current) => ({
       ...current,
@@ -1304,7 +1348,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    void persistIslandRunRuntimeStatePatch({ session, client, patch: nextPatch });
+    const nextRuntimeState = {
+      ...runtimeStateRef.current,
+      ...nextPatch,
+    };
+    void writeIslandRunGameStateRecord({
+      session,
+      client,
+      record: nextRuntimeState,
+    });
     setRuntimeState((current) => ({ ...current, ...nextPatch }));
   }, [client, coins, dicePool, hasHydratedRuntimeState, hearts, runtimeState.coins, runtimeState.dicePool, runtimeState.hearts, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
 
@@ -1616,11 +1668,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState || showFirstRunCelebration || showTravelOverlay) return;
 
     const step1Stop = islandStopPlan[0];
-    const persistedCompletedStops = getStoredCompletedStopsForIsland(islandNumber);
     const step1Complete = step1Stop
       ? isIslandStopEffectivelyCompleted({
           stopId: step1Stop.stopId,
-          completedStops: persistedCompletedStops,
+          completedStops: effectiveCompletedStops,
           hasActiveEgg: Boolean(activeEgg),
           islandEggSlotUsed,
         })
@@ -1629,20 +1680,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (step1PromptedIsland === islandNumber) return;
 
     if (step1Stop?.stopId) {
-      setActiveStopId(step1Stop.stopId);
       setStep1PromptedIsland(islandNumber);
       setLandingText(`Start here: complete Stop 1 (${step1Stop.title}) to unlock dice.`);
+      logIslandRunEntryDebug('island_step1_prompt_ready', {
+        userId: session.user.id,
+        islandNumber,
+        stopId: step1Stop.stopId,
+        effectiveCompletedStops,
+        hasActiveEgg: Boolean(activeEgg),
+        islandEggSlotUsed,
+      });
     }
   }, [
     hasHydratedRuntimeState,
-    getStoredCompletedStopsForIsland,
     showFirstRunCelebration,
     showTravelOverlay,
     islandStopPlan,
+    effectiveCompletedStops,
     activeEgg,
     islandEggSlotUsed,
     step1PromptedIsland,
     islandNumber,
+    session.user.id,
   ]);
 
   useEffect(() => {

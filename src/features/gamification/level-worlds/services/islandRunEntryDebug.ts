@@ -364,6 +364,8 @@ export function downloadIslandRunExportableDebugLog() {
 
 export function getIslandRunExportableDebugLogText() {
   const evidence = collectDebugEvidence();
+  const condensedEvents = condenseDebugEvents(evidence.events);
+  const condensedNetwork = condenseNetworkEntries(evidence.network);
   const lines: string[] = [
     'Island Run Debug Log',
     `Generated At: ${evidence.generatedAt}`,
@@ -377,27 +379,100 @@ export function getIslandRunExportableDebugLogText() {
     'Runtime Snapshot:',
     JSON.stringify(evidence.runtimeSnapshot ?? {}, null, 2),
     '',
-    `Events (${evidence.events.length}):`,
+    `Events (${evidence.events.length} raw, ${condensedEvents.length} condensed):`,
   ];
 
-  evidence.events.forEach((event, index) => {
+  condensedEvents.forEach((event, index) => {
     lines.push(
-      `${index + 1}. [${event.timestamp}] ${event.stage}`,
+      `${index + 1}. [${event.firstTimestamp}] ${event.stage}${event.repeatCount > 1 ? ` x${event.repeatCount}` : ''}`,
       `   route=${event.pathname}${event.search}${event.hash}`,
       `   payload=${JSON.stringify(event.payload ?? {}, null, 2)}`,
+      ...(event.repeatCount > 1 ? [`   lastSeen=${event.lastTimestamp}`] : []),
     );
   });
 
-  lines.push('', `Network (${evidence.network.length}):`);
+  lines.push('', `Network (${evidence.network.length} raw, ${condensedNetwork.length} condensed):`);
 
-  evidence.network.forEach((entry, index) => {
+  condensedNetwork.forEach((entry, index) => {
     lines.push(
-      `${index + 1}. ${entry.initiatorType || 'unknown'} ${entry.name}`,
-      `   start=${entry.startTime}ms duration=${entry.duration}ms transferSize=${entry.transferSize ?? 'n/a'}`,
+      `${index + 1}. ${entry.initiatorType || 'unknown'} ${entry.name}${entry.repeatCount > 1 ? ` x${entry.repeatCount}` : ''}`,
+      `   start=${entry.firstStartTime}ms duration=${entry.lastDuration}ms transferSize=${entry.transferSize ?? 'n/a'}`,
     );
   });
 
   return lines.join('\n');
+}
+
+function condenseDebugEvents(events: IslandRunEntryDebugEntry[]) {
+  return events.reduce<Array<{
+    stage: string;
+    pathname: string;
+    search: string;
+    hash: string;
+    payload: IslandRunEntryDebugPayload | undefined;
+    firstTimestamp: string;
+    lastTimestamp: string;
+    repeatCount: number;
+  }>>((acc, event) => {
+    const previous = acc[acc.length - 1];
+    const sameAsPrevious = previous
+      && previous.stage === event.stage
+      && previous.pathname === event.pathname
+      && previous.search === event.search
+      && previous.hash === event.hash
+      && JSON.stringify(previous.payload ?? {}) === JSON.stringify(event.payload ?? {});
+
+    if (sameAsPrevious) {
+      previous.lastTimestamp = event.timestamp;
+      previous.repeatCount += 1;
+      return acc;
+    }
+
+    acc.push({
+      stage: event.stage,
+      pathname: event.pathname,
+      search: event.search,
+      hash: event.hash,
+      payload: event.payload,
+      firstTimestamp: event.timestamp,
+      lastTimestamp: event.timestamp,
+      repeatCount: 1,
+    });
+    return acc;
+  }, []);
+}
+
+function condenseNetworkEntries(entries: IslandRunEntryDebugNetworkEntry[]) {
+  return entries.reduce<Array<{
+    name: string;
+    initiatorType: string;
+    firstStartTime: number;
+    lastDuration: number;
+    transferSize?: number;
+    repeatCount: number;
+  }>>((acc, entry) => {
+    const previous = acc[acc.length - 1];
+    const sameAsPrevious = previous
+      && previous.name === entry.name
+      && previous.initiatorType === (entry.initiatorType || 'unknown');
+
+    if (sameAsPrevious) {
+      previous.lastDuration = entry.duration;
+      previous.transferSize = entry.transferSize;
+      previous.repeatCount += 1;
+      return acc;
+    }
+
+    acc.push({
+      name: entry.name,
+      initiatorType: entry.initiatorType || 'unknown',
+      firstStartTime: entry.startTime,
+      lastDuration: entry.duration,
+      transferSize: entry.transferSize,
+      repeatCount: 1,
+    });
+    return acc;
+  }, []);
 }
 
 export function downloadIslandRunExportableDebugLogText() {
