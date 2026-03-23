@@ -1,6 +1,7 @@
 export type IslandDynamicStopKind =
   | 'habit_action'
   | 'checkin_reflection'
+  | 'mystery_reward'
   | 'utility_support'
   | 'event_challenge'
   | 'mini_game';
@@ -31,6 +32,12 @@ const DYNAMIC_STOP_POOL: Array<{
     title: '🧭 Check-in Stop',
     description: 'Run a quick check-in/reflection to calibrate your next moves.',
     isBehaviorStop: true,
+  },
+  {
+    kind: 'mystery_reward',
+    title: '🎁 Mystery Stop',
+    description: 'Reveal a mystery reward or Lucky Roll unlock from Island Run.',
+    isBehaviorStop: false,
   },
   {
     kind: 'utility_support',

@@ -22,110 +22,78 @@ const safeLocalStorage = typeof window !== 'undefined' && window.localStorage ? 
  */
 export function generateDefaultBoard(): BoardTile[] {
   const board: BoardTile[] = [];
-  
-  // Define mini-game tiles first (from dev plan)
-  const miniGameTiles: Record<number, { game: 'task_tower' | 'shooter_blitz' | 'vision_quest' | 'wheel_of_wins' }> = {
-    7: { game: 'task_tower' },
-    22: { game: 'task_tower' },
-    12: { game: 'shooter_blitz' },
-    27: { game: 'shooter_blitz' },
-    15: { game: 'vision_quest' },
-    20: { game: 'wheel_of_wins' }
-  };
-  
+
   // Create tiles
   for (let i = 0; i < BOARD_SIZE; i++) {
     const zoneLabel = LIFE_WHEEL_ZONES[i];
-    
-    // Check if this is a mini-game tile
-    if (miniGameTiles[i]) {
-      const miniGame = miniGameTiles[i].game;
-      let label = '';
-      let emoji = '';
-      
-      switch (miniGame) {
-        case 'task_tower':
-          label = 'Task Tower';
-          emoji = '🏗️';
-          break;
-        case 'shooter_blitz':
-          label = 'Shooter Blitz';
-          emoji = '🚀';
-          break;
-        case 'vision_quest':
-          label = 'Vision Quest';
-          emoji = '🎯';
-          break;
-        case 'wheel_of_wins':
-          label = 'Wheel of Wins';
-          emoji = '🎡';
-          break;
-      }
-      
-      board.push({
-        index: i,
-        type: 'mini_game',
-        label,
-        emoji,
-        miniGame,
-        zoneLabel
-      });
+
+    let type: TileType;
+    let label: string;
+    let emoji: string;
+    let effect: BoardTile['effect'];
+
+    if (i === BOARD_SIZE - 1) {
+      type = 'finish';
+      label = 'Finish Chest';
+      emoji = '🏁';
+      effect = { currency: 'game_tokens', min: 5, max: 8 };
     } else {
-      // Distribute remaining tiles (24 tiles to distribute)
-      // ~30% neutral, ~20% gain_coins, ~10% lose_coins, ~10% bonus_dice, ~10% game_token, ~5% mystery, ~5% jackpot
-      let type: TileType;
-      let label: string;
-      let emoji: string;
-      let effect: BoardTile['effect'];
-      
-      // Use a simple distribution pattern
-      const position = i;
-      const mod = position % 20; // Create pattern over 20 positions
-      
+      const mod = i % 18;
+
       if (mod === 0) {
         type = 'jackpot';
         label = 'Jackpot!';
         emoji = '💎';
-        effect = { currency: 'gold', min: 100, max: 500 };
-      } else if (mod === 1) {
+        effect = { currency: 'gold', min: 120, max: 260 };
+      } else if (mod === 1 || mod === 10) {
         type = 'mystery';
         label = 'Mystery';
         emoji = '❓';
       } else if (mod === 2 || mod === 11) {
         type = 'bonus_dice';
-        label = 'Bonus Dice';
+        label = 'Bonus Roll';
         emoji = '🎲';
-        effect = { currency: 'dice', min: 2, max: 5 };
-      } else if (mod === 3 || mod === 13) {
+        effect = { currency: 'dice', min: 1, max: 3 };
+      } else if (mod === 3 || mod === 12) {
         type = 'game_token';
-        label = 'Game Tokens';
+        label = 'Token Cache';
         emoji = '🎟️';
-        effect = { currency: 'game_tokens', min: 1, max: 3 };
-      } else if (mod === 4 || mod === 9) {
+        effect = { currency: 'game_tokens', min: 1, max: 2 };
+      } else if (mod === 4 || mod === 13) {
+        type = 'boost_step';
+        label = 'Lucky Boost';
+        emoji = '🚀';
+        effect = { currency: 'position', min: 1, max: 2 };
+      } else if (mod === 5 || mod === 14) {
+        type = 'slow_zone';
+        label = 'Sticky Mud';
+        emoji = '🪨';
+        effect = { currency: 'position', min: -2, max: -1 };
+      } else if (mod === 6 || mod === 15) {
         type = 'lose_coins';
         label = 'Lose Coins';
         emoji = '💸';
-        effect = { currency: 'gold', min: -50, max: -10 };
-      } else if (mod === 5 || mod === 8 || mod === 14 || mod === 17) {
+        effect = { currency: 'gold', min: -45, max: -10 };
+      } else if (mod === 7 || mod === 16) {
         type = 'gain_coins';
-        label = 'Gain Coins';
+        label = 'Coin Burst';
         emoji = '🪙';
-        effect = { currency: 'gold', min: 10, max: 75 };
+        effect = { currency: 'gold', min: 15, max: 70 };
       } else {
         type = 'neutral';
         label = 'Safe Ground';
         emoji = '⬜';
       }
-      
-      board.push({
-        index: i,
-        type,
-        label,
-        emoji,
-        effect,
-        zoneLabel
-      });
     }
+
+    board.push({
+      index: i,
+      type,
+      label,
+      emoji,
+      effect,
+      zoneLabel,
+    });
   }
   
   return board;
@@ -152,15 +120,19 @@ export function loadState(userId: string): LuckyRollState {
     // Validate and sanitize
     return {
       currentPosition: Math.max(0, Math.min(BOARD_SIZE - 1, parsed.currentPosition || 0)),
-      currentLap: Math.max(1, parsed.currentLap || 1),
       availableDice: Math.max(0, parsed.availableDice || 0),
       lastRoll: Math.max(0, Math.min(6, parsed.lastRoll || 0)),
       lastRollTimestamp: parsed.lastRollTimestamp || new Date().toISOString(),
       totalRolls: Math.max(0, parsed.totalRolls || 0),
       visitHistory: Array.isArray(parsed.visitHistory) ? parsed.visitHistory : [],
-      tilesVisitedThisLap: Array.isArray(parsed.tilesVisitedThisLap) ? parsed.tilesVisitedThisLap : [],
+      tilesVisitedThisRun: Array.isArray(parsed.tilesVisitedThisRun)
+        ? parsed.tilesVisitedThisRun
+        : Array.isArray((parsed as LuckyRollState & { tilesVisitedThisLap?: number[] }).tilesVisitedThisLap)
+          ? (parsed as LuckyRollState & { tilesVisitedThisLap?: number[] }).tilesVisitedThisLap ?? []
+          : [],
       rollsToday: Math.max(0, parsed.rollsToday || 0),
-      lastSessionDate: parsed.lastSessionDate || getTodayDateString()
+      lastSessionDate: parsed.lastSessionDate || getTodayDateString(),
+      sessionComplete: Boolean(parsed.sessionComplete)
     };
   } catch (error) {
     console.warn('Failed to load Lucky Roll state:', error);
@@ -195,31 +167,19 @@ export function rollDice(): number {
 }
 
 /**
- * Moves the token by the rolled amount, handles wrapping and lap increment
+ * Moves the token by the rolled amount on a finite board.
  */
 export function moveToken(state: LuckyRollState, roll: number, boardSize: number): LuckyRollState {
-  const newPosition = state.currentPosition + roll;
-  let currentLap = state.currentLap;
-  let finalPosition = newPosition;
-  let tilesVisitedThisLap = [...state.tilesVisitedThisLap];
-  
-  // Check if we wrapped around the board
-  if (newPosition >= boardSize) {
-    currentLap += 1;
-    finalPosition = newPosition % boardSize;
-    tilesVisitedThisLap = []; // Reset visited tiles for new lap
-  }
-  
-  // Add current position to visit history
+  const finalPosition = Math.min(boardSize - 1, state.currentPosition + roll);
   const visitHistory = [...state.visitHistory, finalPosition];
-  tilesVisitedThisLap.push(finalPosition);
+  const tilesVisitedThisRun = [...state.tilesVisitedThisRun, finalPosition];
   
   return {
     ...state,
     currentPosition: finalPosition,
-    currentLap,
     visitHistory,
-    tilesVisitedThisLap
+    tilesVisitedThisRun,
+    sessionComplete: finalPosition >= boardSize - 1
   };
 }
 
@@ -246,15 +206,15 @@ export function resetDailyCounters(state: LuckyRollState): LuckyRollState {
 function createDefaultState(): LuckyRollState {
   return {
     currentPosition: 0,
-    currentLap: 1,
     availableDice: 0,
     lastRoll: 0,
     lastRollTimestamp: new Date().toISOString(),
     totalRolls: 0,
     visitHistory: [0],
-    tilesVisitedThisLap: [0],
+    tilesVisitedThisRun: [0],
     rollsToday: 0,
-    lastSessionDate: getTodayDateString()
+    lastSessionDate: getTodayDateString(),
+    sessionComplete: false,
   };
 }
 
