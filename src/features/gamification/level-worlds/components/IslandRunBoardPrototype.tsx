@@ -93,6 +93,7 @@ import {
 import {
   ensureStopCompleted,
   getStopCompletionBlockReason,
+  isIslandStopEffectivelyCompleted,
   isStopCompleted,
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
@@ -1654,7 +1655,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : formatClock(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
   const step1Stop = islandStopPlan[0] ?? null;
-  const step1Complete = step1Stop ? completedStops.includes(step1Stop.stopId) : true;
+  const step1Complete = step1Stop
+    ? isIslandStopEffectivelyCompleted({
+        stopId: step1Stop.stopId,
+        completedStops,
+        hasActiveEgg: Boolean(activeEgg),
+        islandEggSlotUsed,
+      })
+    : true;
   const isCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, completedStops);
   const isEnergyDepletedForRoll = dicePool < DICE_PER_ROLL && hearts < 1;
   const rollButtonMode: 'rolling' | 'step1' | 'roll' | 'convert' = isRolling
