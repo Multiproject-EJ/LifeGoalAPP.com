@@ -14,6 +14,7 @@ import { LevelWorldsHub } from '../level-worlds/LevelWorldsHub';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
 import { triggerCompletionHaptic } from '../../../utils/completionHaptics';
+import { consumeLuckyRollAccess } from '../../../services/luckyRollAccess';
 import './luckyRollBoard.css';
 
 interface LuckyRollBoardProps {
@@ -48,6 +49,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
   const [mysteryRevealed, setMysteryRevealed] = useState(false);
+  const [sessionAccessConsumed, setSessionAccessConsumed] = useState(false);
   
   const boardRef = useRef<HTMLDivElement>(null);
   
@@ -87,6 +89,14 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   
   const handleRoll = useCallback(async () => {
     if (isRolling || isMoving || gameState.availableDice === 0) return;
+
+    if (!sessionAccessConsumed) {
+      const accessConsumption = consumeLuckyRollAccess(userId);
+      if (!accessConsumption.success) {
+        return;
+      }
+      setSessionAccessConsumed(true);
+    }
     
     setIsRolling(true);
     setLandedTile(null);
@@ -295,7 +305,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
       setLandedTile(null);
     }, 1500);
     
-  }, [isRolling, isMoving, gameState, userId, board, scrollToToken, consecutivePositives]);
+  }, [isRolling, isMoving, gameState, sessionAccessConsumed, userId, board, scrollToToken, consecutivePositives]);
   
   const getTileClassName = (tile: BoardTile): string => {
     const classes = ['lucky-roll-tile'];
