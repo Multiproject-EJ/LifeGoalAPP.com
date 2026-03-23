@@ -126,12 +126,11 @@ That reflective behavior should instead be routed into journal-backed Island Run
 
 ### Phase B — reward-board refactor
 
-- Remove mini-game tiles from Lucky Roll
-- Convert Lucky Roll into a finite board session with a clear finish reward
-- Add session unlock consumption rules
+- Remove mini-game tiles from Lucky Roll ✅
+- Convert Lucky Roll into a finite board session with a clear finish reward ✅
+- Add session unlock consumption rules ✅
 
 ### Phase C — journal-backed reflection migration
 
 - Move reflective prompts from Lucky Roll-driven flow into Island Run stop flows
 - Persist the resulting entries through `journal_entries`
-

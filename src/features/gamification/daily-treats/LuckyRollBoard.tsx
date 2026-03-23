@@ -1,16 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { generateDefaultBoard, loadState, saveState, rollDice, moveToken, resetDailyCounters } from './luckyRollState';
+import { generateDefaultBoard, loadState, moveToken, resetDailyCounters, rollDice, saveState } from './luckyRollState';
 import { LuckyRollDiceShop } from './LuckyRollDiceShop';
-import { loadCurrencyBalance, deductDice } from '../../../services/gameRewards';
-import { resolveTileEffect, getGoldBalance, type TileEffectResult } from './luckyRollTileEffects';
-
-import { TaskTower } from '../games/task-tower/TaskTower';
-import { ShooterBlitz } from '../games/shooter-blitz/ShooterBlitz';
-import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
-import { VisionQuest } from '../games/vision-quest/VisionQuest';
+import { deductDice, loadCurrencyBalance } from '../../../services/gameRewards';
+import { getGoldBalance, resolveTileEffect, type TileEffectResult } from './luckyRollTileEffects';
 import { LuckyRollCelebration } from './LuckyRollCelebration';
-import { LevelWorldsHub } from '../level-worlds/LevelWorldsHub';
 import type { BoardTile, LuckyRollState } from './luckyRollTypes';
 import * as sounds from './luckyRollSounds';
 import { triggerCompletionHaptic } from '../../../utils/completionHaptics';
@@ -25,43 +19,25 @@ interface LuckyRollBoardProps {
 export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   const userId = session.user.id;
   const [board] = useState<BoardTile[]>(() => generateDefaultBoard());
-  const [gameState, setGameState] = useState<LuckyRollState>(() => {
-    const loaded = loadState(userId);
-    return resetDailyCounters(loaded);
-  });
+  const [gameState, setGameState] = useState<LuckyRollState>(() => resetDailyCounters(loadState(userId)));
   const [isRolling, setIsRolling] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [showDiceShop, setShowDiceShop] = useState(false);
   const [landedTile, setLandedTile] = useState<BoardTile | null>(null);
-  const [showLapCelebration, setShowLapCelebration] = useState(false);
-  const [celebrationLap, setCelebrationLap] = useState(0);
-  
-  // Phase 2 additions
   const [tileEffect, setTileEffect] = useState<TileEffectResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
-
-  const [showTaskTower, setShowTaskTower] = useState(false);
-  const [showShooterBlitz, setShowShooterBlitz] = useState(false);
-  const [showWheelOfWins, setShowWheelOfWins] = useState(false);
-  const [showVisionQuest, setShowVisionQuest] = useState(false);
-  const [showLevelWorlds, setShowLevelWorlds] = useState(false);
   const [nearMissTiles, setNearMissTiles] = useState<number[]>([]);
-  const [consecutivePositives, setConsecutivePositives] = useState(0);
   const [goldBalance, setGoldBalance] = useState(() => getGoldBalance(userId));
   const [mysteryRevealed, setMysteryRevealed] = useState(false);
   const [sessionAccessConsumed, setSessionAccessConsumed] = useState(false);
-  
-  const boardRef = useRef<HTMLDivElement>(null);
-  
-  // Load currency balance from gameRewards
   const [currencyBalance, setCurrencyBalance] = useState(() => loadCurrencyBalance(userId));
-  
-  // Function to refresh currency balance
+  const boardRef = useRef<HTMLDivElement>(null);
+
   const refreshCurrencyBalance = useCallback(() => {
     setCurrencyBalance(loadCurrencyBalance(userId));
+    setGoldBalance(getGoldBalance(userId));
   }, [userId]);
-  
-  // Sync available dice with currency balance
+
   useEffect(() => {
     if (gameState.availableDice !== currencyBalance.dice) {
       const updated = { ...gameState, availableDice: currencyBalance.dice };
@@ -69,431 +45,302 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
       saveState(userId, updated);
     }
   }, [currencyBalance.dice, gameState, userId]);
-  
 
-
-  // Save state whenever it changes
   useEffect(() => {
     saveState(userId, gameState);
-  }, [userId, gameState]);
-  
-  // Scroll to keep token visible
+  }, [gameState, userId]);
+
   const scrollToToken = useCallback(() => {
-    if (boardRef.current) {
-      const tokenElement = boardRef.current.querySelector('.lucky-roll-tile--current');
-      if (tokenElement) {
-        tokenElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    if (!boardRef.current) return;
+    const tokenElement = boardRef.current.querySelector('.lucky-roll-tile--current');
+    if (tokenElement) {
+      tokenElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, []);
-  
+
+  const distanceToFinish = Math.max(0, board.length - 1 - gameState.currentPosition);
+  const progressPercent = Math.round((gameState.currentPosition / (board.length - 1)) * 100);
+
+  const applyMovementDelta = useCallback((movementDelta: number) => {
+    if (!movementDelta) return;
+
+    setGameState((prev) => {
+      const finalPosition = Math.min(board.length - 1, Math.max(0, prev.currentPosition + movementDelta));
+      const nextVisited = prev.tilesVisitedThisRun.includes(finalPosition)
+        ? prev.tilesVisitedThisRun
+        : [...prev.tilesVisitedThisRun, finalPosition];
+      return {
+        ...prev,
+        currentPosition: finalPosition,
+        visitHistory: [...prev.visitHistory, finalPosition],
+        tilesVisitedThisRun: nextVisited,
+        sessionComplete: finalPosition >= board.length - 1,
+      };
+    });
+  }, [board.length]);
+
   const handleRoll = useCallback(async () => {
-    if (isRolling || isMoving || gameState.availableDice === 0) return;
+    if (isRolling || isMoving || gameState.availableDice === 0 || gameState.sessionComplete) return;
 
     if (!sessionAccessConsumed) {
       const accessConsumption = consumeLuckyRollAccess(userId);
-      if (!accessConsumption.success) {
-        return;
-      }
+      if (!accessConsumption.success) return;
       setSessionAccessConsumed(true);
     }
-    
+
     setIsRolling(true);
     setLandedTile(null);
     setTileEffect(null);
     setNearMissTiles([]);
     setMysteryRevealed(false);
-    
-    // Deduct a die
-    deductDice(userId, 1, 'Lucky Roll: dice roll');
-    
-    // Play dice roll sound
+
+    deductDice(userId, 1, 'Lucky Roll: reward-board roll');
     sounds.playDiceRoll();
-    
-    // Simulate dice tumble animation
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Roll the dice
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
     const roll = rollDice();
     const now = new Date().toISOString();
-    
     sounds.playDiceSettle();
-    
-    setGameState(prev => ({
-      ...prev,
-      lastRoll: roll,
-      lastRollTimestamp: now,
-      totalRolls: prev.totalRolls + 1,
-      rollsToday: prev.rollsToday + 1
-    }));
-    
+
     setIsRolling(false);
-    
-    // Brief pause before moving
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    // Move the token
+    await new Promise((resolve) => setTimeout(resolve, 400));
     setIsMoving(true);
-    
-    const oldLap = gameState.currentLap;
+
     const newState = moveToken(gameState, roll, board.length);
     const detectedNearMisses: number[] = [];
-    
-    // Animate movement tile by tile with near-miss detection
+
     for (let step = 1; step <= roll; step++) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
       sounds.playTokenMove();
-      
-      setGameState(prev => {
-        const intermediatePosition = (prev.currentPosition + 1) % board.length;
-        
-        // Near-miss detection: check tiles adjacent to current position
+
+      setGameState((prev) => {
+        const intermediatePosition = Math.min(board.length - 1, prev.currentPosition + 1);
         const adjacentIndices = [
-          (intermediatePosition - 1 + board.length) % board.length,
-          (intermediatePosition + 1) % board.length,
+          Math.max(0, intermediatePosition - 1),
+          Math.min(board.length - 1, intermediatePosition + 1),
         ];
-        
+
         for (const adjacentIdx of adjacentIndices) {
           const adjacentTile = board[adjacentIdx];
-          // Only trigger near-miss if we're NOT landing on it and it's a jackpot or mini-game
           if (
             adjacentIdx !== newState.currentPosition &&
-            (adjacentTile.type === 'jackpot' || adjacentTile.type === 'mini_game') &&
+            (adjacentTile.type === 'jackpot' || adjacentTile.type === 'finish') &&
             !detectedNearMisses.includes(adjacentIdx)
           ) {
             detectedNearMisses.push(adjacentIdx);
             sounds.playNearMiss();
           }
         }
-        
+
         return { ...prev, currentPosition: intermediatePosition };
       });
     }
-    
-    // Update near-miss tiles for visual effect
+
     if (detectedNearMisses.length > 0) {
       setNearMissTiles(detectedNearMisses);
-      
-      // Clear near-miss glow after animation
-      setTimeout(() => {
-        setNearMissTiles([]);
-      }, 600);
+      setTimeout(() => setNearMissTiles([]), 600);
     }
-    
-    // Update final state
-    setGameState(prev => ({
+
+    setGameState((prev) => ({
       ...newState,
       availableDice: prev.availableDice - 1,
       lastRoll: roll,
       lastRollTimestamp: now,
       totalRolls: prev.totalRolls + 1,
-      rollsToday: prev.rollsToday + 1
+      rollsToday: prev.rollsToday + 1,
     }));
-    
-    // Show tile landing effect
+
     const finalTile = board[newState.currentPosition];
-    setLandedTile(finalTile);
-    
-    // Resolve tile effect
     const effect = resolveTileEffect(finalTile, userId);
+
+    setLandedTile(finalTile);
     setTileEffect(effect);
-    
-    // Update gold balance display
-    setGoldBalance(getGoldBalance(userId));
-    
-    // Update streak tracking
-    const isPositive = ['gain_coins', 'bonus_dice', 'game_token', 'jackpot'].includes(effect.type);
-    const isNegativeOrNeutral = ['lose_coins', 'neutral'].includes(effect.type);
-    
-    if (isPositive) {
-      setConsecutivePositives(prev => prev + 1);
-    } else if (isNegativeOrNeutral) {
-      setConsecutivePositives(0);
+    refreshCurrencyBalance();
+
+    if (effect.type === 'mystery') {
+      sounds.playMysteryReveal();
+      setTimeout(() => setMysteryRevealed(true), 400);
     }
-    
-    // Play tile landing sound
+
+    const isPositive = ['gain_coins', 'bonus_dice', 'game_token', 'jackpot', 'boost_step', 'finish'].includes(effect.type);
     if (isPositive) {
       sounds.playTileLandPositive();
-    } else if (effect.type === 'lose_coins') {
+    } else if (effect.type === 'lose_coins' || effect.type === 'slow_zone') {
       sounds.playTileLandNegative();
     } else {
       sounds.playTileLandNeutral();
     }
-    
-    // Check for lap completion
-    if (newState.currentLap > oldLap) {
-      setCelebrationLap(newState.currentLap);
-      setShowLapCelebration(true);
-      
-      sounds.playLapCelebration();
-      
-      setTimeout(() => {
-        setShowLapCelebration(false);
-      }, 2300); // 400ms fade in + 1500ms hold + 400ms fade out
-    }
-    
-    scrollToToken();
-    setIsMoving(false);
-    
-    // Handle mystery tile reveal delay
-    if (finalTile.type === 'mystery') {
-      sounds.playMysteryReveal();
-      
-      // Show mystery emoji first for 400ms
-      setTimeout(() => {
-        setMysteryRevealed(true);
-      }, 400);
-    }
-    
-    // Show celebration if appropriate
+
+    const celebrationDelay = finalTile.type === 'mystery' ? 400 : 0;
     if (effect.celebrationType !== 'none') {
-      const celebrationDelay = finalTile.type === 'mystery' ? 400 : 0; // Delay for mystery tiles
-      
       setTimeout(() => {
-        // Check for streak milestone (5+ consecutive positives)
-        if (consecutivePositives >= 4 && isPositive) {
-          // Show streak badge
-          triggerCompletionHaptic('strong', { channel: 'gamification', minIntervalMs: 3200 });
-          setShowCelebration(true);
-          sounds.playStreakActive();
-          
-          setTimeout(() => {
-            setShowCelebration(false);
-          }, 1200);
-        } else {
-          // Show regular celebration
-          if (effect.celebrationType === 'medium' || effect.celebrationType === 'big') {
-            triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 2600 });
-          }
-          setShowCelebration(true);
-          
-          if (effect.celebrationType === 'small') {
-            sounds.playCelebrationSmall();
-          } else if (effect.celebrationType === 'medium') {
-            sounds.playCelebrationMedium();
-          } else if (effect.celebrationType === 'big') {
-            sounds.playCelebrationBig();
-          }
+        if (effect.celebrationType === 'medium' || effect.celebrationType === 'big') {
+          triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 2600 });
         }
+        if (effect.type === 'finish') {
+          triggerCompletionHaptic('strong', { channel: 'gamification', minIntervalMs: 3200 });
+        }
+        setShowCelebration(true);
+        if (effect.celebrationType === 'small') sounds.playCelebrationSmall();
+        if (effect.celebrationType === 'medium') sounds.playCelebrationMedium();
+        if (effect.celebrationType === 'big') sounds.playCelebrationBig();
       }, celebrationDelay);
     }
-    
-    // Handle mini-game trigger
-    if (effect.type === 'mini_game' && effect.miniGame) {
-      sounds.playMiniGameTrigger();
+
+    if (effect.movementDelta) {
+      const movementDelay = finalTile.type === 'mystery' ? 700 : 350;
       setTimeout(() => {
-        switch (effect.miniGame) {
-          case 'task_tower':
-            setShowTaskTower(true);
-            break;
-          case 'shooter_blitz':
-            setShowShooterBlitz(true);
-            break;
-          case 'vision_quest':
-            setShowVisionQuest(true);
-            break;
-          case 'wheel_of_wins':
-            setShowWheelOfWins(true);
-            break;
-        }
-      }, 1200); // Show after landing effect
+        applyMovementDelta(effect.movementDelta ?? 0);
+        refreshCurrencyBalance();
+        scrollToToken();
+      }, movementDelay);
     }
-    
-    // Hide landed tile effect after delay
-    setTimeout(() => {
-      setLandedTile(null);
-    }, 1500);
-    
-  }, [isRolling, isMoving, gameState, sessionAccessConsumed, userId, board, scrollToToken, consecutivePositives]);
-  
+
+    scrollToToken();
+    setIsMoving(false);
+    setTimeout(() => setLandedTile(null), 1800);
+  }, [
+    applyMovementDelta,
+    board,
+    gameState,
+    isMoving,
+    isRolling,
+    refreshCurrencyBalance,
+    scrollToToken,
+    sessionAccessConsumed,
+    userId,
+  ]);
+
   const getTileClassName = (tile: BoardTile): string => {
     const classes = ['lucky-roll-tile'];
-    
     classes.push(`lucky-roll-tile--${tile.type}`);
-    
-    if (tile.index === gameState.currentPosition) {
-      classes.push('lucky-roll-tile--current');
-    }
-    
-    if (gameState.tilesVisitedThisLap.includes(tile.index) && tile.index !== gameState.currentPosition) {
+
+    if (tile.index === gameState.currentPosition) classes.push('lucky-roll-tile--current');
+    if (gameState.tilesVisitedThisRun.includes(tile.index) && tile.index !== gameState.currentPosition) {
       classes.push('lucky-roll-tile--visited');
     }
-    
-    if (landedTile && tile.index === landedTile.index) {
-      classes.push('lucky-roll-tile--landing');
-    }
-    
-    // Near-miss glow effect
+    if (landedTile && tile.index === landedTile.index) classes.push('lucky-roll-tile--landing');
     if (nearMissTiles.includes(tile.index)) {
-      if (tile.type === 'mini_game') {
-        classes.push('lucky-roll-tile--near-miss-mini');
-      } else {
-        classes.push('lucky-roll-tile--near-miss');
-      }
+      classes.push('lucky-roll-tile--near-miss');
     }
-    
+    if (tile.type === 'finish') classes.push('lucky-roll-tile--near-miss-mini');
+
     return classes.join(' ');
   };
-  
+
   const renderBoard = () => {
     const rows: BoardTile[][] = [];
-    
-    // Create 6 rows of 5 tiles
     for (let row = 0; row < 6; row++) {
       const rowTiles = board.slice(row * 5, row * 5 + 5);
-      
-      // Reverse even rows for snake pattern
-      if (row % 2 === 1) {
-        rowTiles.reverse();
-      }
-      
+      if (row % 2 === 1) rowTiles.reverse();
       rows.push(rowTiles);
     }
-    
+
     return rows.map((rowTiles, rowIndex) => (
       <div key={rowIndex} className="lucky-roll-board__row">
-        {rowTiles.map(tile => (
+        {rowTiles.map((tile) => (
           <div key={tile.index} className={getTileClassName(tile)}>
             <span className="lucky-roll-tile__emoji" aria-hidden="true">{tile.emoji}</span>
             <span className="lucky-roll-tile__index">{tile.index + 1}</span>
-            {tile.index === gameState.currentPosition && (
+            {tile.index === gameState.currentPosition ? (
               <span className="lucky-roll-token" aria-label="Your position">🟠</span>
-            )}
+            ) : null}
           </div>
         ))}
       </div>
     ));
   };
-  
-  const isMilestone = gameState.currentLap % 5 === 0;
 
-  const handleOpenLevelWorldMap = useCallback(() => {
-    const openedWindow = window.open('/level-worlds.html', '_blank', 'noopener,noreferrer');
+  const finishStateLabel = useMemo(() => {
+    if (gameState.sessionComplete) return 'Finish chest claimed';
+    if (distanceToFinish === 0) return 'Finish ready';
+    return `${distanceToFinish} tiles to finish`;
+  }, [distanceToFinish, gameState.sessionComplete]);
 
-    if (!openedWindow) {
-      window.location.assign('/level-worlds.html');
-      return;
-    }
-
-    openedWindow.opener = null;
-  }, []);
-  
-  if (showLevelWorlds) {
-    return (
-      <LevelWorldsHub
-        session={session}
-        onClose={() => {
-          setShowLevelWorlds(false);
-          // Refresh currency balance
-          refreshCurrencyBalance();
-          setGoldBalance(getGoldBalance(userId));
-        }}
-      />
-    );
-  }
-  
   if (showDiceShop) {
     return (
       <LuckyRollDiceShop
         session={session}
         onClose={() => setShowDiceShop(false)}
-        onBack={() => setShowDiceShop(false)}
+        onBack={() => {
+          setShowDiceShop(false);
+          refreshCurrencyBalance();
+        }}
       />
     );
   }
-  
+
   return (
-    <div className="lucky-roll-board" role="dialog" aria-modal="true" aria-label="Lucky Roll Board Game">
+    <div className="lucky-roll-board" role="dialog" aria-modal="true" aria-label="Lucky Roll Reward Board">
       <div className="lucky-roll-board__backdrop" onClick={onClose} role="presentation" />
-      
+
       <div className="lucky-roll-board__container">
-        {/* Header */}
         <div className="lucky-roll-board__header">
-          <h2 className="lucky-roll-board__title">🎲 Lucky Roll</h2>
-          <div className="lucky-roll-board__lap">Lap: {gameState.currentLap}</div>
-          <button
-            type="button"
-            className="lucky-roll-board__close"
-            onClick={onClose}
-            aria-label="Close Lucky Roll"
-          >
+          <h2 className="lucky-roll-board__title">🎲 Lucky Roll Reward Run</h2>
+          <div className="lucky-roll-board__lap">{finishStateLabel}</div>
+          <button type="button" className="lucky-roll-board__close" onClick={onClose} aria-label="Close Lucky Roll">
             ×
           </button>
         </div>
-        
-        {/* Status bar */}
+
         <div className="lucky-roll-board__status">
-          <div className="lucky-roll-board__stat">
-            Dice: {gameState.availableDice} 🎲
-          </div>
-          <div className="lucky-roll-board__stat">
-            Coins: {goldBalance} 🪙
-          </div>
-          <div className="lucky-roll-board__stat">
-            Tokens: {currencyBalance.gameTokens} 🎟️
-          </div>
+          <div className="lucky-roll-board__stat">Rolls: {gameState.availableDice} 🎲</div>
+          <div className="lucky-roll-board__stat">Coins: {goldBalance} 🪙</div>
+          <div className="lucky-roll-board__stat">Tokens: {currencyBalance.gameTokens} 🎟️</div>
         </div>
-        
-        {/* Board grid */}
+
+        <div className="lucky-roll-board__status" style={{ marginTop: -8 }}>
+          <div className="lucky-roll-board__stat">Progress: {progressPercent}%</div>
+          <div className="lucky-roll-board__stat">Position: {gameState.currentPosition + 1}/30</div>
+          <div className="lucky-roll-board__stat">Finish: Tile 30 🏁</div>
+        </div>
+
         <div className="lucky-roll-board__grid" ref={boardRef}>
           {renderBoard()}
         </div>
-        
-        {/* Dice display */}
+
         <div className="lucky-roll-board__dice-area">
           <div className={`lucky-roll-dice ${isRolling ? 'lucky-roll-dice--rolling' : 'lucky-roll-dice--settled'}`}>
             {isRolling ? '🎲' : gameState.lastRoll > 0 ? `🎲 ${gameState.lastRoll}` : '🎲'}
           </div>
         </div>
-        
-        {/* Landed tile effect */}
-        {landedTile && tileEffect && (
+
+        {landedTile && tileEffect ? (
           <div className="lucky-roll-landed-effect">
             <span className="lucky-roll-landed-effect__emoji">{landedTile.emoji}</span>
             <span className="lucky-roll-landed-effect__label">
               {landedTile.type === 'mystery' && !mysteryRevealed ? '❓ Mystery...' : tileEffect.message}
             </span>
           </div>
-        )}
-        
-        {/* Celebration overlay */}
-        {showCelebration && tileEffect && (
+        ) : null}
+
+        {showCelebration && tileEffect ? (
           <LuckyRollCelebration
-            type={
-              consecutivePositives >= 5 && ['gain_coins', 'bonus_dice', 'game_token', 'jackpot'].includes(tileEffect.type)
-                ? 'streak'
-                : tileEffect.celebrationType
-            }
-            message={
-              consecutivePositives >= 5 && ['gain_coins', 'bonus_dice', 'game_token', 'jackpot'].includes(tileEffect.type)
-                ? `🔥 Hot Streak! ${consecutivePositives} wins!`
-                : tileEffect.message
-            }
+            type={tileEffect.celebrationType}
+            message={tileEffect.message}
             emoji={landedTile?.emoji}
             onComplete={() => setShowCelebration(false)}
           />
-        )}
-        
-        {/* Actions */}
-        <div className="lucky-roll-board__actions">
-          <button
-            type="button"
-            className="lucky-roll-board__play-button"
-            onClick={handleOpenLevelWorldMap}
-          >
-            PLAY
-          </button>
+        ) : null}
 
+        <div className="lucky-roll-board__actions">
           <button
             type="button"
             className="lucky-roll-board__roll-button"
             onClick={handleRoll}
-            disabled={gameState.availableDice === 0 || isRolling || isMoving}
+            disabled={gameState.availableDice === 0 || isRolling || isMoving || gameState.sessionComplete}
           >
-            {gameState.availableDice === 0 ? 'No Dice - Visit Shop!' : isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'ROLL THE DICE'}
+            {gameState.sessionComplete
+              ? 'FINISH CLAIMED'
+              : gameState.availableDice === 0
+                ? 'No Rolls - Visit Shop!'
+                : isRolling
+                  ? 'Rolling...'
+                  : isMoving
+                    ? 'Moving...'
+                    : 'ROLL TO THE FINISH'}
           </button>
-          
+
           <button
             type="button"
             className="lucky-roll-board__shop-button"
@@ -501,107 +348,8 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
           >
             🛒 Dice Shop
           </button>
-          
-          <button
-            type="button"
-            className="lucky-roll-board__campaign-button"
-            onClick={() => setShowLevelWorlds(true)}
-          >
-            🗺️ Campaign
-          </button>
         </div>
-        
-        {/* Lap celebration overlay */}
-        {showLapCelebration && (
-          <div className="lucky-roll-lap-celebration">
-            <div className="lucky-roll-lap-celebration__content">
-              <span className="lucky-roll-lap-celebration__icon">
-                {isMilestone ? '🏆' : '🎉'}
-              </span>
-              <h3 className="lucky-roll-lap-celebration__title">
-                {isMilestone ? `Lap ${celebrationLap} — Milestone!` : `Lap ${celebrationLap}!`}
-              </h3>
-              <p className="lucky-roll-lap-celebration__subtitle">
-                {isMilestone ? 'Amazing progress!' : 'A new journey begins'}
-              </p>
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* Task Tower mini-game */}
-      {showTaskTower && (
-        <TaskTower
-          session={session}
-          onClose={() => {
-            setShowTaskTower(false);
-            // Refresh currency balance
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-          onComplete={() => {
-            setShowTaskTower(false);
-            // Rewards are already delivered by TaskTower
-            // Just refresh currency balance display
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-        />
-      )}
-      
-      {/* Shooter Blitz mini-game */}
-      {showShooterBlitz && (
-        <ShooterBlitz
-          session={session}
-          onClose={() => {
-            setShowShooterBlitz(false);
-            // Refresh currency balance
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-          onComplete={() => {
-            setShowShooterBlitz(false);
-            // Rewards are already delivered by ShooterBlitz
-            // Just refresh currency balance display
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-        />
-      )}
-      
-      {/* Wheel of Wins mini-game */}
-      {showWheelOfWins && (
-        <WheelOfWins
-          session={session}
-          onClose={() => {
-            setShowWheelOfWins(false);
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-          onComplete={() => {
-            setShowWheelOfWins(false);
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-        />
-      )}
-      
-      {/* Vision Quest mini-game */}
-      {showVisionQuest && (
-        <VisionQuest
-          session={session}
-          onClose={() => {
-            setShowVisionQuest(false);
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-          onComplete={() => {
-            setShowVisionQuest(false);
-            refreshCurrencyBalance();
-            setGoldBalance(getGoldBalance(userId));
-          }}
-        />
-      )}
     </div>
   );
 }
