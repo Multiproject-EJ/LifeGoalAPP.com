@@ -6,6 +6,39 @@ export function isStopCompleted(completedStops: string[], stopId: string): boole
   return completedStops.includes(stopId);
 }
 
+export function isIslandStopEffectivelyCompleted(options: {
+  stopId: string | null;
+  completedStops: string[];
+  hasActiveEgg: boolean;
+  islandEggSlotUsed: boolean;
+}): boolean {
+  const { stopId, completedStops, hasActiveEgg, islandEggSlotUsed } = options;
+  if (!stopId) return false;
+  if (isStopCompleted(completedStops, stopId)) return true;
+
+  if (stopId === 'hatchery') {
+    return hasActiveEgg || islandEggSlotUsed;
+  }
+
+  return false;
+}
+
+export function getEffectiveCompletedStops(options: {
+  completedStops: string[];
+  hasActiveEgg: boolean;
+  islandEggSlotUsed: boolean;
+}): string[] {
+  const { completedStops, hasActiveEgg, islandEggSlotUsed } = options;
+  return isIslandStopEffectivelyCompleted({
+    stopId: 'hatchery',
+    completedStops,
+    hasActiveEgg,
+    islandEggSlotUsed,
+  })
+    ? ensureStopCompleted(completedStops, 'hatchery')
+    : completedStops;
+}
+
 export function getCompletedStopsForIsland(
   completedStopsByIsland: Record<string, string[]> | undefined,
   islandNumber: number,
@@ -17,9 +50,11 @@ export function shouldAutoOpenIslandStopOnLoad(options: {
   requestedStopId: string | null;
   islandNumber: number;
   completedStopsByIsland?: Record<string, string[]>;
+  islandEggSlotUsed?: boolean;
 }): boolean {
-  const { requestedStopId, islandNumber, completedStopsByIsland } = options;
+  const { requestedStopId, islandNumber, completedStopsByIsland, islandEggSlotUsed = false } = options;
   if (!requestedStopId) return false;
+  if (requestedStopId === 'hatchery' && islandEggSlotUsed) return false;
   const persistedStops = getCompletedStopsForIsland(completedStopsByIsland, islandNumber);
   return !persistedStops.includes(requestedStopId);
 }
@@ -51,7 +86,7 @@ export function getStopCompletionBlockReason(options: {
     return 'Boss challenge is still pending. Resolve the boss trial before clearing the island.';
   }
 
-  if (isStopCompleted(completedStops, stopId)) {
+  if (isIslandStopEffectivelyCompleted({ stopId, completedStops, hasActiveEgg, islandEggSlotUsed })) {
     return null;
   }
 
