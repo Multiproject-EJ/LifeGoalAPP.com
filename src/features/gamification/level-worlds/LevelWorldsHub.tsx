@@ -37,9 +37,10 @@ import './LevelWorlds.css';
 interface LevelWorldsHubProps {
   session: Session;
   onClose: () => void;
+  initialPanel?: 'default' | 'sanctuary';
 }
 
-export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
+export function LevelWorldsHub({ session, onClose, initialPanel = 'default' }: LevelWorldsHubProps) {
   const userId = session.user.id;
   const { state, currentBoard, isLoading, completeNode } = useLevelWorlds(userId);
   const { progress } = useWorldProgress(state);
@@ -201,7 +202,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
         >
           ← Back
         </button>
-        <IslandRunBoardPrototype session={session} />
+        <IslandRunBoardPrototype session={session} initialPanel={initialPanel} />
       </div>
     );
   }
