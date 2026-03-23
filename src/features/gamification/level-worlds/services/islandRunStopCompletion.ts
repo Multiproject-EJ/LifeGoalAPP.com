@@ -50,9 +50,11 @@ export function shouldAutoOpenIslandStopOnLoad(options: {
   requestedStopId: string | null;
   islandNumber: number;
   completedStopsByIsland?: Record<string, string[]>;
+  islandEggSlotUsed?: boolean;
 }): boolean {
-  const { requestedStopId, islandNumber, completedStopsByIsland } = options;
+  const { requestedStopId, islandNumber, completedStopsByIsland, islandEggSlotUsed = false } = options;
   if (!requestedStopId) return false;
+  if (requestedStopId === 'hatchery' && islandEggSlotUsed) return false;
   const persistedStops = getCompletedStopsForIsland(completedStopsByIsland, islandNumber);
   return !persistedStops.includes(requestedStopId);
 }

@@ -146,6 +146,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
           requestedStopId: 'hatchery',
           islandNumber: 8,
           completedStopsByIsland: { '8': ['hatchery'] },
+          islandEggSlotUsed: true,
         }),
         false,
         'Expected completed hatchery stop to stay closed on load',
@@ -155,9 +156,20 @@ export const islandRunStopCompletionTests: TestCase[] = [
           requestedStopId: 'hatchery',
           islandNumber: 8,
           completedStopsByIsland: { '8': ['minigame'] },
+          islandEggSlotUsed: false,
         }),
         true,
         'Expected incomplete hatchery stop to still auto-open when requested',
+      );
+      assertEqual(
+        shouldAutoOpenIslandStopOnLoad({
+          requestedStopId: 'hatchery',
+          islandNumber: 8,
+          completedStopsByIsland: { '8': ['minigame'] },
+          islandEggSlotUsed: true,
+        }),
+        false,
+        'Expected a sold or collected hatchery egg slot to suppress auto-open even if the stop ledger is stale',
       );
       assertEqual(
         shouldAutoOpenIslandStopOnLoad({

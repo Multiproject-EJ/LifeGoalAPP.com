@@ -663,11 +663,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     const persistedStops = runtimeState.completedStopsByIsland?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? [];
+    const currentIslandEggEntry = runtimeState.perIslandEggs?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? null;
+    const islandEggSlotUsedOnLoad = currentIslandEggEntry?.status === 'collected'
+      || currentIslandEggEntry?.status === 'sold'
+      || currentIslandEggEntry?.status === 'animal_ready'
+      || currentIslandEggEntry?.status === 'animal_sold';
     if (OPEN_HATCHERY_ON_LOAD) {
       if (shouldAutoOpenIslandStopOnLoad({
         requestedStopId: 'hatchery',
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
         completedStopsByIsland: runtimeState.completedStopsByIsland,
+        islandEggSlotUsed: islandEggSlotUsedOnLoad,
       })) {
         setActiveStopId('hatchery');
       }
@@ -691,7 +697,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       url.searchParams.delete('openIslandStop');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, runtimeState.currentIslandNumber]);
+  }, [hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, runtimeState.currentIslandNumber, runtimeState.perIslandEggs]);
 
   useEffect(() => {
     logIslandRunEntryDebug('island_run_board_mount', {
