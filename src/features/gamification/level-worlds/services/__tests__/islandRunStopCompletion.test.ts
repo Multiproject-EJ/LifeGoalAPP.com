@@ -1,6 +1,8 @@
 import {
   ensureStopCompleted,
+  getStopCompletionBlockReason,
   getCompletedStopsForIsland,
+  isStopCompleted,
   shouldAutoOpenIslandStopOnLoad,
 } from '../islandRunStopCompletion';
 import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
@@ -16,10 +18,55 @@ export const islandRunStopCompletionTests: TestCase[] = [
     },
   },
   {
+    name: 'isStopCompleted detects whether a stop id is already in the island ledger',
+    run: () => {
+      assertEqual(isStopCompleted(['hatchery', 'utility'], 'hatchery'), true, 'Expected hatchery to be marked complete');
+      assertEqual(isStopCompleted(['hatchery', 'utility'], 'boss'), false, 'Expected boss to remain incomplete');
+    },
+  },
+  {
     name: 'getCompletedStopsForIsland returns the island-specific persisted stops',
     run: () => {
       const stops = getCompletedStopsForIsland({ '3': ['hatchery', 'utility'] }, 3);
       assertDeepEqual(stops, ['hatchery', 'utility'], 'Expected island-specific completed stops');
+    },
+  },
+  {
+    name: 'getStopCompletionBlockReason centralizes hatchery and boss completion blockers',
+    run: () => {
+      assertEqual(
+        getStopCompletionBlockReason({
+          stopId: 'hatchery',
+          completedStops: [],
+          hasActiveEgg: false,
+          islandEggSlotUsed: false,
+          bossTrialResolved: false,
+        }),
+        'Set an egg in Hatchery before completing Stop 1.',
+        'Expected hatchery completion to be blocked until an egg is set',
+      );
+      assertEqual(
+        getStopCompletionBlockReason({
+          stopId: 'boss',
+          completedStops: ['hatchery', 'minigame', 'utility', 'dynamic'],
+          hasActiveEgg: true,
+          islandEggSlotUsed: true,
+          bossTrialResolved: false,
+        }),
+        'Boss challenge is still pending. Resolve the boss trial before clearing the island.',
+        'Expected unresolved boss trial to block island clear',
+      );
+      assertEqual(
+        getStopCompletionBlockReason({
+          stopId: 'boss',
+          completedStops: ['hatchery', 'minigame', 'utility', 'dynamic'],
+          hasActiveEgg: true,
+          islandEggSlotUsed: true,
+          bossTrialResolved: true,
+        }),
+        null,
+        'Expected resolved boss trial to allow completion',
+      );
     },
   },
   {
