@@ -85,6 +85,8 @@ import {
 import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceStats';
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
+import { useDailySpinStatus } from './hooks/useDailySpinStatus';
+import { useLuckyRollStatus } from './hooks/useLuckyRollStatus';
 import { generateInitials } from './utils/initials';
 import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
 import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
@@ -103,6 +105,10 @@ import {
   upsertPersonalityProfile,
 } from './services/personalityTest';
 import { scoreProfileStrength } from './features/profile-strength/scoreProfileStrength';
+import {
+  fetchCreatureCollection,
+  getUnclaimedBondMilestones,
+} from './features/gamification/level-worlds/services/creatureCollectionService';
 import type { AreaKey, NextTask, ProfileStrengthResult } from './features/profile-strength/profileStrengthTypes';
 import {
   applyProfileStrengthXpEvent,
@@ -422,8 +428,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
   const [islandTimeLabelForOverlay, setIslandTimeLabelForOverlay] = useState('—');
-  const [heartsResetAtMs, setHeartsResetAtMs] = useState<number | undefined>(undefined);
-  const [eggHatchResetAtMs, setEggHatchResetAtMs] = useState<number | undefined>(undefined);
+  const [, setHeartsResetAtMs] = useState<number | undefined>(undefined);
+  const [, setEggHatchResetAtMs] = useState<number | undefined>(undefined);
   const [currentIslandBackgroundSrc, setCurrentIslandBackgroundSrc] = useState(() => getIslandBackgroundImageSrc(1));
   const spinWinResetAtMs = useMemo(() => {
     const now = new Date();
@@ -495,6 +501,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
+  const [levelWorldsEntryPanel, setLevelWorldsEntryPanel] = useState<'default' | 'sanctuary'>('default');
   const [reopenGameBoardOverlayOnLevelWorldsClose, setReopenGameBoardOverlayOnLevelWorldsClose] = useState(false);
   const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -622,6 +629,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const goldBalance = gamificationProfile?.total_points ?? 0;
   const goldBreakdown = splitGoldBalance(goldBalance);
+  const { spinAvailable } = useDailySpinStatus(supabaseSession?.user?.id);
+  const luckyRollStatus = useLuckyRollStatus(supabaseSession?.user?.id);
+  const creatureCollectionSummary = useMemo(() => {
+    if (!supabaseSession?.user?.id) {
+      return { total: 0, rewardsReady: 0 };
+    }
+
+    const collection = fetchCreatureCollection(supabaseSession.user.id);
+    return {
+      total: collection.length,
+      rewardsReady: collection.filter((entry) => getUnclaimedBondMilestones(entry).length > 0).length,
+    };
+  }, [showGameBoardOverlay, showLevelWorldsFromEntry, supabaseSession?.user?.id]);
   const goldValueLabel =
     goldBreakdown.diamonds > 0
       ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
@@ -675,11 +695,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const heartsCollectedToday = hasCollectedDailyHeartsToday(userId);
     
     return {
-      spinsRemaining: 2,
+      spinsRemaining: spinAvailable ? 1 : 0,
       heartsRemaining: heartsCollectedToday ? 0 : 5,
       hatchesRemaining: 1,
     };
-  }, [supabaseSession?.user?.id]);
+  }, [spinAvailable, supabaseSession?.user?.id]);
   
   const todayDailyTreatsKey = getTodayDateKey();
   const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;
@@ -2534,6 +2554,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     if (!shouldAutoOpenIslandRun || !activeSession) return;
 
+    setLevelWorldsEntryPanel('default');
     setShowLevelWorldsFromEntry(true);
     setShouldAutoOpenIslandRun(false);
     logIslandRunEntryDebug('auto_open_triggered');
@@ -2800,6 +2821,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onOpenIslandRunStop={(stopId) => {
                 setIslandRunOpenStopParam(stopId);
                 setShowMobileHome(false);
+                setLevelWorldsEntryPanel('default');
                 setShowLevelWorldsFromEntry(true);
               }}
               pendingOfferToOpen={pendingTodayOfferOpen}
@@ -4080,12 +4102,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
           });
           console.error('[LevelWorldsEntryModal] render failed; closing modal to keep app usable.', error);
           setShowLevelWorldsFromEntry(false);
+          setLevelWorldsEntryPanel('default');
         }}
       >
         <LevelWorldsHub
           session={activeSession}
+          initialPanel={levelWorldsEntryPanel}
           onClose={() => {
             setShowLevelWorldsFromEntry(false);
+            setLevelWorldsEntryPanel('default');
             if (reopenGameBoardOverlayOnLevelWorldsClose) {
               setShowGameBoardOverlay(true);
               setReopenGameBoardOverlayOnLevelWorldsClose(false);
@@ -4131,6 +4156,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onOpenIslandRunStop={(stopId) => {
             setIslandRunOpenStopParam(stopId);
             setReopenGameBoardOverlayOnLevelWorldsClose(false);
+            setLevelWorldsEntryPanel('default');
             setShowLevelWorldsFromEntry(true);
           }}
           forceCompactView={!isGameModeActive}
@@ -4176,6 +4202,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onPlayClick={() => {
             setShowGameBoardOverlay(false);
             setReopenGameBoardOverlayOnLevelWorldsClose(true);
+            setLevelWorldsEntryPanel('default');
             setShowLevelWorldsFromEntry(true);
           }}
           onTopbarClick={() => {
@@ -4187,34 +4214,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setReopenGameOverlayOnRewardClose(true);
             setShowDailySpinWheel(true);
           }}
-          onHeartsGameplayClick={() => {
+          onLuckyRollClick={() => {
             setShowGameBoardOverlay(false);
             setReopenGameOverlayOnRewardClose(true);
             setShowLuckyRoll(true);
           }}
-          onDailyHatchClick={() => {
+          onCreatureCollectionClick={() => {
+            setShowGameBoardOverlay(false);
+            setReopenGameBoardOverlayOnLevelWorldsClose(true);
+            setLevelWorldsEntryPanel('sanctuary');
+            setShowLevelWorldsFromEntry(true);
+          }}
+          onGarageClick={() => {
             setShowGameBoardOverlay(false);
             setReopenGameOverlayOnRewardClose(false);
-            setShowMobileHome(false);
-            setActiveWorkspaceNav('planning');
-            setPendingTodayOfferOpen('daily_treat');
-          }}
-          onBankClick={() => {
-            setShowGameBoardOverlay(false);
-            setReopenGameOverlayOnRewardClose(false);
-            setScoreTabActiveTab('bank');
-            setShowMobileHome(false);
-            setActiveWorkspaceNav('score');
-          }}
-          onDiamondClick={() => {
-            setShowGameBoardOverlay(false);
             setScoreTabActiveTab('garage');
-            setShowMobileHome(false);
-            setActiveWorkspaceNav('score');
-          }}
-          onGoldClick={() => {
-            setShowGameBoardOverlay(false);
-            setScoreTabActiveTab('shop');
             setShowMobileHome(false);
             setActiveWorkspaceNav('score');
           }}
@@ -4222,16 +4236,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
           profilePlaystyleLabel={playstyleLabel ?? undefined}
           currentLevel={currentLevel}
           momentumPercent={Math.min(100, streakMomentum * 4)}
-          diamondBalance={goldBreakdown.diamonds}
-          goldBalance={goldBreakdown.goldRemainder}
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
           islandSceneSrc={currentIslandBackgroundSrc}
           islandTimeLabel={islandTimeLabelForOverlay}
           spinWinResetAtMs={spinWinResetAtMs}
-          heartsResetAtMs={heartsResetAtMs}
-          heartsResetLabel="Next island"
-          hatcheryResetAtMs={eggHatchResetAtMs}
-          eggHatchLabel={eggHatchResetAtMs ? '—' : 'No egg'}
+          luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
+          showSpinWheel={spinAvailable}
+          showLuckyRoll={luckyRollStatus.available}
+          creatureCollectionCount={creatureCollectionSummary.total}
+          creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
         />
         {showAiCoachModal && (
           <AiCoach
@@ -4481,6 +4494,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onPlayClick={() => {
           setShowGameBoardOverlay(false);
           setReopenGameBoardOverlayOnLevelWorldsClose(true);
+          setLevelWorldsEntryPanel('default');
           setShowLevelWorldsFromEntry(true);
         }}
         onTopbarClick={() => {
@@ -4492,48 +4506,35 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setReopenGameOverlayOnRewardClose(true);
           setShowDailySpinWheel(true);
         }}
-        onHeartsGameplayClick={() => {
+        onLuckyRollClick={() => {
           setShowGameBoardOverlay(false);
           setReopenGameOverlayOnRewardClose(true);
           setShowLuckyRoll(true);
         }}
-        onDailyHatchClick={() => {
+        onCreatureCollectionClick={() => {
           setShowGameBoardOverlay(false);
-          setReopenGameOverlayOnRewardClose(false);
-          setShowMobileHome(false);
-          setActiveWorkspaceNav('planning');
-          setPendingTodayOfferOpen('daily_treat');
+          setReopenGameBoardOverlayOnLevelWorldsClose(true);
+          setLevelWorldsEntryPanel('sanctuary');
+          setShowLevelWorldsFromEntry(true);
         }}
-        onBankClick={() => {
-          setShowGameBoardOverlay(false);
-          setReopenGameOverlayOnRewardClose(false);
-          setScoreTabActiveTab('bank');
-          setActiveWorkspaceNav('score');
-        }}
-        onDiamondClick={() => {
+        onGarageClick={() => {
           setShowGameBoardOverlay(false);
           setScoreTabActiveTab('garage');
-          setActiveWorkspaceNav('score');
-        }}
-        onGoldClick={() => {
-          setShowGameBoardOverlay(false);
-          setScoreTabActiveTab('shop');
           setActiveWorkspaceNav('score');
         }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profilePlaystyleLabel={playstyleLabel ?? undefined}
         currentLevel={currentLevel}
         momentumPercent={Math.min(100, streakMomentum * 4)}
-        diamondBalance={goldBreakdown.diamonds}
-        goldBalance={goldBreakdown.goldRemainder}
         spinsRemaining={dailyTreatsInventory.spinsRemaining}
         islandSceneSrc={currentIslandBackgroundSrc}
         islandTimeLabel={islandTimeLabelForOverlay}
         spinWinResetAtMs={spinWinResetAtMs}
-        heartsResetAtMs={heartsResetAtMs}
-        heartsResetLabel="Next island"
-        hatcheryResetAtMs={eggHatchResetAtMs}
-        eggHatchLabel={eggHatchResetAtMs ? '—' : 'No egg'}
+        luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
+        showSpinWheel={spinAvailable}
+        showLuckyRoll={luckyRollStatus.available}
+        creatureCollectionCount={creatureCollectionSummary.total}
+        creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
       />
 
       {isAuthOverlayVisible ? (

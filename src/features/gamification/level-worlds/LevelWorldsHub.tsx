@@ -15,7 +15,6 @@ import { logIslandRunEntryDebug } from './services/islandRunEntryDebug';
 // Import mini-games
 import { TaskTower } from '../games/task-tower/TaskTower';
 import { ShooterBlitz } from '../games/shooter-blitz/ShooterBlitz';
-import { VisionQuest } from '../games/vision-quest/VisionQuest';
 import { WheelOfWins } from '../games/wheel-of-wins/WheelOfWins';
 
 // Register minigames in the framework registry
@@ -37,9 +36,10 @@ import './LevelWorlds.css';
 interface LevelWorldsHubProps {
   session: Session;
   onClose: () => void;
+  initialPanel?: 'default' | 'sanctuary';
 }
 
-export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
+export function LevelWorldsHub({ session, onClose, initialPanel = 'default' }: LevelWorldsHubProps) {
   const userId = session.user.id;
   const { state, currentBoard, isLoading, completeNode } = useLevelWorlds(userId);
   const { progress } = useWorldProgress(state);
@@ -52,7 +52,6 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
   // Mini-game states
   const [showTaskTower, setShowTaskTower] = useState(false);
   const [showShooterBlitz, setShowShooterBlitz] = useState(false);
-  const [showVisionQuest, setShowVisionQuest] = useState(false);
   const [showWheelOfWins, setShowWheelOfWins] = useState(false);
 
   const islandRunDevParam = new URLSearchParams(window.location.search).get('islandRunDev');
@@ -95,9 +94,6 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
         case 'shooter_blitz':
           setShowShooterBlitz(true);
           break;
-        case 'vision_quest':
-          setShowVisionQuest(true);
-          break;
         case 'wheel_of_wins':
           setShowWheelOfWins(true);
           break;
@@ -123,7 +119,6 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
     // Close all mini-games
     setShowTaskTower(false);
     setShowShooterBlitz(false);
-    setShowVisionQuest(false);
     setShowWheelOfWins(false);
 
     // Complete the current node if it was a mini-game
@@ -170,16 +165,6 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
     );
   }
 
-  if (showVisionQuest) {
-    return (
-      <VisionQuest
-        session={session}
-        onClose={handleMiniGameComplete}
-        onComplete={handleMiniGameComplete}
-      />
-    );
-  }
-
   if (showWheelOfWins) {
     return (
       <WheelOfWins
@@ -201,7 +186,7 @@ export function LevelWorldsHub({ session, onClose }: LevelWorldsHubProps) {
         >
           ← Back
         </button>
-        <IslandRunBoardPrototype session={session} />
+        <IslandRunBoardPrototype session={session} initialPanel={initialPanel} />
       </div>
     );
   }
