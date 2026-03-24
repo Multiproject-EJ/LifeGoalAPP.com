@@ -47,7 +47,13 @@ export interface IslandRunRuntimeStateBackend {
       shardClaimCount?: number;
       shields?: number;
       shards?: number;
+      diamonds?: number;
       completedStopsByIsland?: Record<string, string[]>;
+      marketOwnedBundlesByIsland?: Record<string, {
+        dice_bundle: boolean;
+        heart_bundle: boolean;
+        heart_boost_bundle: boolean;
+      }>;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -159,6 +165,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.shards === 'number' && Number.isFinite(patch.shards)
           ? Math.max(0, Math.floor(patch.shards))
           : current.shards,
+      diamonds:
+        typeof patch.diamonds === 'number' && Number.isFinite(patch.diamonds)
+          ? Math.max(0, Math.floor(patch.diamonds))
+          : current.diamonds,
       completedStopsByIsland:
         patch.completedStopsByIsland !== null && typeof patch.completedStopsByIsland === 'object' && !Array.isArray(patch.completedStopsByIsland)
           ? {
@@ -171,6 +181,28 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.completedStopsByIsland,
+      marketOwnedBundlesByIsland:
+        patch.marketOwnedBundlesByIsland !== null && typeof patch.marketOwnedBundlesByIsland === 'object' && !Array.isArray(patch.marketOwnedBundlesByIsland)
+          ? {
+              ...current.marketOwnedBundlesByIsland,
+              ...Object.fromEntries(
+                Object.entries(patch.marketOwnedBundlesByIsland).map(([islandKey, bundles]) => [
+                  islandKey,
+                  bundles !== null && typeof bundles === 'object' && !Array.isArray(bundles)
+                    ? {
+                        dice_bundle: Boolean((bundles as Record<string, unknown>).dice_bundle),
+                        heart_bundle: Boolean((bundles as Record<string, unknown>).heart_bundle),
+                        heart_boost_bundle: Boolean((bundles as Record<string, unknown>).heart_boost_bundle),
+                      }
+                    : {
+                        dice_bundle: false,
+                        heart_bundle: false,
+                        heart_boost_bundle: false,
+                      },
+                ]),
+              ),
+            }
+          : current.marketOwnedBundlesByIsland,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

@@ -176,6 +176,8 @@ Repeat similarly for other tables.
 | `shard_claim_count` | int | 0 | Total number of shard milestone claims |
 | `shields` | int | 0 | Body Habit Shield wallet currency balance (earned from Body habit completions) |
 | `shards` | int | 0 | Persistent Shards wallet currency balance (accumulates across islands; earn paths wired in future slices) |
+| `diamonds` | int | 3 | Persistent Diamonds wallet balance for Island Run utility/market spends |
+| `market_owned_bundles_by_island` | jsonb | `'{}'` | Per-island market owned-bundle ledger. Key = island number as text. Value = `{dice_bundle, heart_bundle, heart_boost_bundle}` booleans |
 | `updated_at` | timestamptz | now() | Last updated timestamp |
 
 ---
