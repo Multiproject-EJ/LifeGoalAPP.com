@@ -1,7 +1,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { getIslandRunRuntimeStateBackend } from './islandRunRuntimeStateBackend';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
-import type { PerIslandEggsLedger } from './islandRunGameStateStore';
+import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
 
 export interface IslandRunRuntimeState {
   firstRunClaimed: boolean;
@@ -35,6 +35,8 @@ export interface IslandRunRuntimeState {
     heart_bundle: boolean;
     heart_boost_bundle: boolean;
   }>;
+  creatureCollection: CreatureCollectionRuntimeEntry[];
+  activeCompanionId: string | null;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -121,6 +123,8 @@ export async function persistIslandRunRuntimeStatePatch(options: {
       heart_bundle: boolean;
       heart_boost_bundle: boolean;
     }>;
+    creatureCollection?: CreatureCollectionRuntimeEntry[];
+    activeCompanionId?: string | null;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

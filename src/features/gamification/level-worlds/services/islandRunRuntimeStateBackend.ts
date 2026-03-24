@@ -2,7 +2,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
-import type { PerIslandEggsLedger } from './islandRunGameStateStore';
+import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
 import {
   hydrateIslandRunGameStateRecord,
   hydrateIslandRunGameStateRecordWithSource,
@@ -56,6 +56,8 @@ export interface IslandRunRuntimeStateBackend {
         heart_bundle: boolean;
         heart_boost_bundle: boolean;
       }>;
+      creatureCollection?: CreatureCollectionRuntimeEntry[];
+      activeCompanionId?: string | null;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -213,6 +215,14 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.marketOwnedBundlesByIsland,
+      creatureCollection:
+        Array.isArray(patch.creatureCollection)
+          ? patch.creatureCollection
+          : current.creatureCollection,
+      activeCompanionId:
+        typeof patch.activeCompanionId === 'string' || patch.activeCompanionId === null
+          ? patch.activeCompanionId
+          : current.activeCompanionId,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

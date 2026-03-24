@@ -53,6 +53,7 @@ import {
   claimCreatureBondMilestoneForUser,
   getUnclaimedBondMilestones,
   CREATURE_BOND_XP_PER_LEVEL,
+  type CreatureCollectionEntry,
 } from '../services/creatureCollectionService';
 import {
   earnCreatureTreatsForUser,
@@ -361,6 +362,39 @@ function resolveMysteryStopReward(): MysteryStopReward {
 
 function areStringArraysEqual(left: string[], right: string[]) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function mergeCreatureCollections(
+  primary: CreatureCollectionEntry[],
+  fallback: CreatureCollectionEntry[],
+): CreatureCollectionEntry[] {
+  const byId = new Map<string, CreatureCollectionEntry>();
+  [...fallback, ...primary].forEach((entry) => {
+    const existing = byId.get(entry.creatureId);
+    if (!existing) {
+      byId.set(entry.creatureId, entry);
+      return;
+    }
+    byId.set(entry.creatureId, {
+      ...existing,
+      copies: Math.max(existing.copies, entry.copies),
+      firstCollectedAtMs: Math.min(existing.firstCollectedAtMs, entry.firstCollectedAtMs),
+      lastCollectedAtMs: Math.max(existing.lastCollectedAtMs, entry.lastCollectedAtMs),
+      lastCollectedIslandNumber:
+        existing.lastCollectedAtMs >= entry.lastCollectedAtMs
+          ? existing.lastCollectedIslandNumber
+          : entry.lastCollectedIslandNumber,
+      bondXp: Math.max(existing.bondXp, entry.bondXp),
+      bondLevel: Math.max(existing.bondLevel, entry.bondLevel),
+      lastFedAtMs: Math.max(existing.lastFedAtMs ?? 0, entry.lastFedAtMs ?? 0) || null,
+      claimedBondMilestones: Array.from(new Set([
+        ...existing.claimedBondMilestones,
+        ...entry.claimedBondMilestones,
+      ])).sort((a, b) => a - b),
+    });
+  });
+
+  return Array.from(byId.values()).sort((a, b) => b.lastCollectedAtMs - a.lastCollectedAtMs);
 }
 
 function preloadThemeAssets(theme: IslandBoardTheme) {
@@ -705,7 +739,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
+    setActiveCompanionId(runtimeState.activeCompanionId ?? fetchActiveCompanionId(session.user.id));
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -921,8 +956,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       userId: session.user.id,
       perIslandEggs: runtimeState.perIslandEggs ?? {},
     });
+    const runtimeCollection = Array.isArray(runtimeState.creatureCollection)
+      ? runtimeState.creatureCollection
+      : [];
+    if (runtimeCollection.length > 0) {
+      setCreatureCollection(mergeCreatureCollections(runtimeCollection, collection));
+      return;
+    }
     setCreatureCollection(collection);
-  }, [runtimeState.perIslandEggs, session.user.id]);
+  }, [runtimeState.perIslandEggs, runtimeState.creatureCollection, session.user.id]);
 
   useEffect(() => {
     const stillOwned = creatureCollection.some((entry) => entry.creatureId === activeCompanionId);
@@ -1477,6 +1519,33 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       // ignore storage errors
     }
   }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const runtimeCollection = runtimeState.creatureCollection ?? [];
+    if (JSON.stringify(runtimeCollection) === JSON.stringify(creatureCollection)) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        creatureCollection,
+      },
+    });
+    setRuntimeState((current) => ({ ...current, creatureCollection }));
+  }, [client, creatureCollection, hasHydratedRuntimeState, runtimeState.creatureCollection, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if ((runtimeState.activeCompanionId ?? null) === (activeCompanionId ?? null)) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        activeCompanionId,
+      },
+    });
+    setRuntimeState((current) => ({ ...current, activeCompanionId: activeCompanionId ?? null }));
+  }, [activeCompanionId, client, hasHydratedRuntimeState, runtimeState.activeCompanionId, session]);
 
   // M17D: award wallet shards (persistent cross-island balance) by a given amount.
   // This is separate from awardShards (islandShards / Collectible Progress Bar).
