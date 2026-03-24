@@ -1,7 +1,15 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
-import { deleteGoal, fetchGoals, insertGoal, updateGoal } from '../../services/goals';
+import {
+  deleteGoal,
+  fetchGoals,
+  getGoalQueueStatus,
+  insertGoal,
+  syncQueuedGoals,
+  updateGoal,
+  type GoalQueueStatus,
+} from '../../services/goals';
 import type { Database } from '../../lib/database.types';
 import {
   DEFAULT_GOAL_STATUS,
@@ -20,7 +28,14 @@ import {
 import { StrategyPicker } from '../../components/StrategyPicker';
 import { isDemoSession } from '../../services/demoSession';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
-import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
+import {
+  fetchStepsForGoal,
+  getLifeGoalQueueStatus,
+  insertAlert,
+  insertStep,
+  insertSubstep,
+  syncQueuedLifeGoalMutations,
+} from '../../services/lifeGoals';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
@@ -175,6 +190,22 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
   const [allVisionImages, setAllVisionImages] = useState<VisionImageRow[]>([]);
   const [goalHealthById, setGoalHealthById] = useState<Record<string, GoalHealthResult>>({});
   const [stepsByGoal, setStepsByGoal] = useState<Record<string, StepRow[]>>({});
+  const [queueStatus, setQueueStatus] = useState<GoalQueueStatus>({ pending: 0, failed: 0 });
+
+  const refreshQueueStatus = useCallback(async () => {
+    if (!isConfigured) {
+      setQueueStatus({ pending: 0, failed: 0 });
+      return;
+    }
+    const [goalStatus, lifeGoalStatus] = await Promise.all([
+      getGoalQueueStatus(),
+      getLifeGoalQueueStatus(),
+    ]);
+    setQueueStatus({
+      pending: goalStatus.pending + lifeGoalStatus.pending,
+      failed: goalStatus.failed + lifeGoalStatus.failed,
+    });
+  }, [isConfigured]);
 
   const refreshGoals = useCallback(async () => {
     if (!isConfigured) {
@@ -217,6 +248,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
           // Health evaluation is non-critical — swallow errors silently
         }
       })();
+      void refreshQueueStatus();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Unable to load goals. Try again in a moment.',
@@ -225,7 +257,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
       setHasLoadedOnce(true);
       setLoading(false);
     }
-  }, [isConfigured]);
+  }, [isConfigured, refreshQueueStatus]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -233,6 +265,37 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
     }
     refreshGoals();
   }, [session?.user?.id, isConfigured, refreshGoals]);
+
+  useEffect(() => {
+    if (!isConfigured) return;
+    const runSync = () => {
+      Promise.all([syncQueuedGoals(), syncQueuedLifeGoalMutations()])
+        .then(() => refreshGoals())
+        .catch(() => undefined);
+    };
+    runSync();
+    window.addEventListener('online', runSync);
+    return () => window.removeEventListener('online', runSync);
+  }, [isConfigured, refreshGoals]);
+
+  useEffect(() => {
+    void refreshQueueStatus();
+    const interval = window.setInterval(() => {
+      void refreshQueueStatus();
+    }, 15000);
+    return () => window.clearInterval(interval);
+  }, [refreshQueueStatus]);
+
+  useEffect(() => {
+    if (queueStatus.pending === 0 && queueStatus.failed === 0) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue =
+        'You have unsynced goal changes on this device. Leaving now may discard unsynced content.';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [queueStatus.pending, queueStatus.failed]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -497,6 +560,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
       }
       setDraft(initialDraft);
       setStatusMessage(isDemoExperience ? 'Goal saved to demo data.' : 'Goal saved.');
+      void refreshQueueStatus();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to save your goal.');
     } finally {
@@ -614,6 +678,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
 
       setEditingGoalId(null);
       setEditDraft(initialDraft);
+      void refreshQueueStatus();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update the goal.');
     } finally {
@@ -658,6 +723,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
         setEditingGoalId(null);
         setEditDraft(initialDraft);
       }
+      void refreshQueueStatus();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the goal right now.');
     } finally {
@@ -707,6 +773,13 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
         const { data: goal, error: goalError } = await insertGoal(goalPayload as Parameters<typeof insertGoal>[0]);
         if (goalError) throw goalError;
         if (!goal) throw new Error('Failed to create goal');
+        if (goal.id.startsWith('local-goal-')) {
+          setGoals((current) => [goal, ...current]);
+          setStatusMessage('Goal saved locally. Detailed steps and alerts will sync after reconnect.');
+          setIsDialogOpen(false);
+          void refreshQueueStatus();
+          return;
+        }
 
         // Create steps
         for (let i = 0; i < formData.steps.length; i++) {
@@ -839,6 +912,14 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
           ) : null}
           {errorMessage ? (
             <p className="goal-workspace__status goal-workspace__status--error">{errorMessage}</p>
+          ) : null}
+          {queueStatus.pending > 0 || queueStatus.failed > 0 ? (
+            <p className="goal-workspace__status goal-workspace__status--warning">
+              {queueStatus.failed > 0
+                ? `${queueStatus.failed} goal change${queueStatus.failed === 1 ? '' : 's'} failed to sync and will retry when online.`
+                : `${queueStatus.pending} goal change${queueStatus.pending === 1 ? '' : 's'} pending sync.`}{' '}
+              Avoid clearing browser/app data until sync completes.
+            </p>
           ) : null}
 
           <div className="goal-workspace__grid">

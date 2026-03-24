@@ -3,6 +3,21 @@ import type { Session } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
+  buildLocalJournalId,
+  enqueueJournalMutation,
+  getLocalJournalRecord,
+  getJournalMutationCounts,
+  listLocalJournalRecordsForUser,
+  listPendingJournalMutations,
+  removeJournalMutation,
+  removeLocalJournalRecord,
+  updateJournalMutation,
+  upsertLocalJournalRecord,
+  type JournalEntryInsert as LocalJournalInsert,
+  type JournalEntryRow as LocalJournalRow,
+  type JournalEntryUpdate as LocalJournalUpdate,
+} from '../data/journalOfflineRepo';
+import {
   DEMO_USER_ID,
   addDemoJournalEntry,
   getDemoJournalEntries,
@@ -41,6 +56,7 @@ export type JournalListFilters = {
 };
 
 const DEFAULT_LIST_LIMIT = 200;
+const LOCAL_ID_PREFIX = 'local-';
 
 /**
  * Validates that a Supabase session is active before performing database operations.
@@ -73,6 +89,323 @@ function normalizeSearchTerm(search?: string | null): string | null {
   const trimmed = search.trim();
   if (!trimmed) return null;
   return `%${trimmed.replace(/%/g, '\\%')}%`;
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function isNetworkLikeError(error: unknown): boolean {
+  const message =
+    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('offline') ||
+    normalized.includes('load failed')
+  );
+}
+
+function makeLocalRowFromInsert(payload: JournalEntryInsert, localId: string): JournalEntry {
+  const createdAt = nowIso();
+  return {
+    id: localId,
+    user_id: payload.user_id,
+    created_at: createdAt,
+    updated_at: createdAt,
+    entry_date: payload.entry_date ?? createdAt.slice(0, 10),
+    title: payload.title ?? null,
+    content: payload.content,
+    mood: payload.mood ?? null,
+    tags: payload.tags ?? [],
+    is_private: payload.is_private ?? true,
+    attachments: payload.attachments ?? null,
+    linked_goal_ids: payload.linked_goal_ids ?? [],
+    linked_habit_ids: payload.linked_habit_ids ?? [],
+    type: payload.type ?? 'quick',
+    mood_score: payload.mood_score ?? null,
+    category: payload.category ?? null,
+    unlock_date: payload.unlock_date ?? null,
+    goal_id: payload.goal_id ?? null,
+    irrational_fears: payload.irrational_fears ?? null,
+    training_solutions: payload.training_solutions ?? null,
+    concrete_steps: payload.concrete_steps ?? null,
+  } as JournalEntry;
+}
+
+function mergeRowWithUpdate(base: JournalEntry, patch: JournalEntryUpdate): JournalEntry {
+  return {
+    ...base,
+    ...patch,
+    id: base.id,
+    user_id: base.user_id,
+    updated_at: nowIso(),
+  } as JournalEntry;
+}
+
+async function getActiveUserId(): Promise<string | null> {
+  try {
+    const supabase = getSupabaseClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function maybeLocalJournalId(id: string): boolean {
+  return id.startsWith(LOCAL_ID_PREFIX);
+}
+
+async function queueLocalCreate(payload: JournalEntryInsert): Promise<JournalEntry> {
+  const localId = buildLocalJournalId();
+  const localRow = makeLocalRowFromInsert(payload, localId);
+  const nowMs = Date.now();
+
+  await upsertLocalJournalRecord({
+    id: localId,
+    user_id: payload.user_id,
+    server_id: null,
+    row: localRow as LocalJournalRow,
+    sync_state: 'pending_create',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+
+  await enqueueJournalMutation({
+    id: `mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+    user_id: payload.user_id,
+    entry_id: localId,
+    server_id: null,
+    operation: 'create',
+    payload: payload as LocalJournalInsert,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+
+  return localRow;
+}
+
+async function queueLocalUpdate(id: string, payload: JournalEntryUpdate): Promise<JournalEntry | null> {
+  const userId = await getActiveUserId();
+  if (!userId) return null;
+  const nowMs = Date.now();
+
+  const existingLocal = await getLocalJournalRecord(id);
+  let base: JournalEntry | null = existingLocal?.row ?? null;
+
+  if (!base && !maybeLocalJournalId(id)) {
+    const remote = await getJournalEntry(id);
+    if (remote.data) {
+      base = remote.data;
+    }
+  }
+
+  if (!base) {
+    return null;
+  }
+
+  const merged = mergeRowWithUpdate(base, payload);
+  await upsertLocalJournalRecord({
+    id,
+    user_id: userId,
+    server_id: maybeLocalJournalId(id) ? null : id,
+    row: merged as LocalJournalRow,
+    sync_state: maybeLocalJournalId(id) ? 'pending_create' : 'pending_update',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+
+  if (!maybeLocalJournalId(id)) {
+    await enqueueJournalMutation({
+      id: `mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      entry_id: id,
+      server_id: id,
+      operation: 'update',
+      payload: payload as LocalJournalUpdate,
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+
+  return merged;
+}
+
+async function queueLocalDelete(id: string): Promise<void> {
+  const userId = await getActiveUserId();
+  if (!userId) return;
+  const nowMs = Date.now();
+
+  if (maybeLocalJournalId(id)) {
+    await removeLocalJournalRecord(id);
+    return;
+  }
+
+  const existing = await getLocalJournalRecord(id);
+  if (existing) {
+    await upsertLocalJournalRecord({
+      ...existing,
+      sync_state: 'pending_delete',
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+
+  await enqueueJournalMutation({
+    id: `mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+    user_id: userId,
+    entry_id: id,
+    server_id: id,
+    operation: 'delete',
+    payload: null,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+}
+
+async function mergeLocalJournalOverRemote(remoteEntries: JournalEntry[]): Promise<JournalEntry[]> {
+  const userId = await getActiveUserId();
+  if (!userId) {
+    return remoteEntries;
+  }
+
+  const localRecords = await listLocalJournalRecordsForUser(userId);
+  if (!localRecords.length) {
+    return remoteEntries;
+  }
+
+  const mergedById = new Map(remoteEntries.map((entry) => [entry.id, entry] as const));
+  for (const localRecord of localRecords) {
+    if (localRecord.sync_state === 'pending_delete') {
+      mergedById.delete(localRecord.id);
+      if (localRecord.server_id) {
+        mergedById.delete(localRecord.server_id);
+      }
+      continue;
+    }
+    mergedById.set(localRecord.row.id, localRecord.row as JournalEntry);
+  }
+
+  return Array.from(mergedById.values());
+}
+
+export async function syncQueuedJournalEntries(): Promise<void> {
+  if (!canUseSupabaseData()) return;
+
+  const userId = await getActiveUserId();
+  if (!userId) return;
+
+  const supabase = getSupabaseClient();
+  const pending = await listPendingJournalMutations(userId);
+
+  for (const mutation of pending) {
+    try {
+      await updateJournalMutation(mutation.id, {
+        status: 'processing',
+        updated_at_ms: Date.now(),
+      });
+
+      if (mutation.operation === 'create') {
+        const payload = mutation.payload as JournalEntryInsert | null;
+        if (!payload) {
+          await removeJournalMutation(mutation.id);
+          continue;
+        }
+        const { data, error } = await supabase.from('journal_entries').insert(payload).select().single<JournalEntry>();
+        if (error) throw error;
+        await removeLocalJournalRecord(mutation.entry_id);
+        void data;
+        await removeJournalMutation(mutation.id);
+        continue;
+      }
+
+      if (mutation.operation === 'update') {
+        const payload = mutation.payload as JournalEntryUpdate | null;
+        if (!payload || !mutation.server_id) {
+          await removeJournalMutation(mutation.id);
+          continue;
+        }
+        const { error } = await supabase
+          .from('journal_entries')
+          .update(payload)
+          .eq('id', mutation.server_id)
+          .select()
+          .single<JournalEntry>();
+        if (error) throw error;
+        await removeLocalJournalRecord(mutation.entry_id);
+        await removeJournalMutation(mutation.id);
+        continue;
+      }
+
+      if (mutation.operation === 'delete') {
+        if (!mutation.server_id) {
+          await removeJournalMutation(mutation.id);
+          continue;
+        }
+        const { error } = await supabase
+          .from('journal_entries')
+          .delete()
+          .eq('id', mutation.server_id)
+          .select()
+          .single<JournalEntry>();
+        if (error) throw error;
+        await removeLocalJournalRecord(mutation.entry_id);
+        await removeJournalMutation(mutation.id);
+      }
+    } catch (error) {
+      await updateJournalMutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: error instanceof Error ? error.message : String(error),
+      });
+      const local = await getLocalJournalRecord(mutation.entry_id);
+      if (local) {
+        await upsertLocalJournalRecord({
+          ...local,
+          last_error: error instanceof Error ? error.message : String(error),
+          sync_state:
+            local.sync_state === 'pending_delete'
+              ? 'pending_delete'
+              : local.sync_state === 'pending_update'
+                ? 'pending_update'
+                : 'failed',
+          updated_at_ms: Date.now(),
+        });
+      }
+    }
+  }
+}
+
+export type JournalQueueStatus = {
+  pending: number;
+  failed: number;
+};
+
+export async function getJournalQueueStatus(): Promise<JournalQueueStatus> {
+  if (!canUseSupabaseData()) {
+    return { pending: 0, failed: 0 };
+  }
+
+  const userId = await getActiveUserId();
+  if (!userId) {
+    return { pending: 0, failed: 0 };
+  }
+
+  return getJournalMutationCounts(userId);
 }
 
 export async function listJournalEntries(
@@ -134,7 +467,9 @@ export async function listJournalEntries(
   }
 
   const response = await query.returns<JournalEntry[]>();
-  return { data: response.data, error: response.error };
+  const remoteEntries = response.data ?? [];
+  const merged = await mergeLocalJournalOverRemote(remoteEntries);
+  return { data: merged, error: response.error };
 }
 
 export async function getJournalEntry(id: string): Promise<ServiceResponse<JournalEntry>> {
@@ -181,7 +516,13 @@ export async function createJournalEntry(
   }
   
   const supabase = getSupabaseClient();
-  return supabase.from('journal_entries').insert(payload).select().single();
+  const result = await supabase.from('journal_entries').insert(payload).select().single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const localRow = await queueLocalCreate(payload);
+  return { data: localRow, error: null };
 }
 
 export async function updateJournalEntry(
@@ -199,7 +540,17 @@ export async function updateJournalEntry(
   }
 
   const supabase = getSupabaseClient();
-  return supabase.from('journal_entries').update(payload).eq('id', id).select().single();
+  const result = await supabase.from('journal_entries').update(payload).eq('id', id).select().single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const localRow = await queueLocalUpdate(id, payload);
+  if (localRow) {
+    return { data: localRow, error: null };
+  }
+
+  return result;
 }
 
 export async function deleteJournalEntry(id: string): Promise<ServiceResponse<JournalEntry>> {
@@ -214,7 +565,13 @@ export async function deleteJournalEntry(id: string): Promise<ServiceResponse<Jo
   }
 
   const supabase = getSupabaseClient();
-  return supabase.from('journal_entries').delete().eq('id', id).select().single();
+  const result = await supabase.from('journal_entries').delete().eq('id', id).select().single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  await queueLocalDelete(id);
+  return { data: null, error: null };
 }
 
 /**
