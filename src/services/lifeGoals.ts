@@ -1,6 +1,13 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import {
+  enqueueLifeGoalMutation,
+  getLifeGoalMutationCounts,
+  listPendingLifeGoalMutations,
+  removeLifeGoalMutation,
+  updateLifeGoalMutation,
+} from '../data/lifeGoalsOfflineRepo';
 
 type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
 type StepInsert = Database['public']['Tables']['life_goal_steps']['Insert'];
@@ -18,6 +25,115 @@ type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+function isNetworkLikeError(error: unknown): boolean {
+  const message =
+    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('offline') ||
+    normalized.includes('load failed')
+  );
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+async function getActiveUserId(): Promise<string | null> {
+  try {
+    const supabase = getSupabaseClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function buildLocalId(prefix: string): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return `${prefix}-${crypto.randomUUID()}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function canQueueWithServerParent(parentId: string | null | undefined): boolean {
+  return Boolean(parentId && !parentId.startsWith('local-'));
+}
+
+function canQueueById(id: string): boolean {
+  return !id.startsWith('local-');
+}
+
+export type LifeGoalQueueStatus = { pending: number; failed: number };
+
+export async function getLifeGoalQueueStatus(): Promise<LifeGoalQueueStatus> {
+  if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
+  const userId = await getActiveUserId();
+  if (!userId) return { pending: 0, failed: 0 };
+  return getLifeGoalMutationCounts(userId);
+}
+
+export async function syncQueuedLifeGoalMutations(): Promise<void> {
+  if (!canUseSupabaseData()) return;
+  const userId = await getActiveUserId();
+  if (!userId) return;
+  const supabase = getSupabaseClient();
+  const pending = await listPendingLifeGoalMutations(userId);
+
+  for (const mutation of pending) {
+    try {
+      await updateLifeGoalMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
+      if (mutation.operation === 'insert_step') {
+        const payload = mutation.payload as { kind: 'insert_step'; insert: StepInsert };
+        const { error } = await supabase.from('life_goal_steps').insert(payload.insert);
+        if (error) throw error;
+      } else if (mutation.operation === 'update_step') {
+        const payload = mutation.payload as { kind: 'update_step'; id: string; patch: StepUpdate };
+        const { error } = await supabase.from('life_goal_steps').update(payload.patch).eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'delete_step') {
+        const payload = mutation.payload as { kind: 'delete_step'; id: string };
+        const { error } = await supabase.from('life_goal_steps').delete().eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'insert_substep') {
+        const payload = mutation.payload as { kind: 'insert_substep'; insert: SubstepInsert };
+        const { error } = await supabase.from('life_goal_substeps').insert(payload.insert);
+        if (error) throw error;
+      } else if (mutation.operation === 'update_substep') {
+        const payload = mutation.payload as { kind: 'update_substep'; id: string; patch: SubstepUpdate };
+        const { error } = await supabase.from('life_goal_substeps').update(payload.patch).eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'delete_substep') {
+        const payload = mutation.payload as { kind: 'delete_substep'; id: string };
+        const { error } = await supabase.from('life_goal_substeps').delete().eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'insert_alert') {
+        const payload = mutation.payload as { kind: 'insert_alert'; insert: AlertInsert };
+        const { error } = await supabase.from('life_goal_alerts').insert(payload.insert);
+        if (error) throw error;
+      } else if (mutation.operation === 'update_alert') {
+        const payload = mutation.payload as { kind: 'update_alert'; id: string; patch: AlertUpdate };
+        const { error } = await supabase.from('life_goal_alerts').update(payload.patch).eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'delete_alert') {
+        const payload = mutation.payload as { kind: 'delete_alert'; id: string };
+        const { error } = await supabase.from('life_goal_alerts').delete().eq('id', payload.id);
+        if (error) throw error;
+      }
+      await removeLifeGoalMutation(mutation.id);
+    } catch (error) {
+      await updateLifeGoalMutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+}
 
 // =====================================================
 // LIFE GOAL STEPS
@@ -56,12 +172,45 @@ export async function insertStep(payload: StepInsert): Promise<ServiceResponse<S
   }
 
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_steps')
     .insert(payload)
     .select()
     .returns<StepRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error) || !canQueueWithServerParent(payload.goal_id)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'insert_step',
+      payload: { kind: 'insert_step', insert: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return {
+    data: {
+      id: buildLocalId('local-step'),
+      goal_id: payload.goal_id,
+      step_order: payload.step_order ?? 0,
+      title: payload.title,
+      description: payload.description ?? null,
+      completed: payload.completed ?? false,
+      completed_at: payload.completed_at ?? null,
+      due_date: payload.due_date ?? null,
+      created_at: nowIso(),
+    },
+    error: null,
+  };
 }
 
 export async function updateStep(id: string, payload: StepUpdate): Promise<ServiceResponse<StepRow>> {
@@ -70,14 +219,38 @@ export async function updateStep(id: string, payload: StepUpdate): Promise<Servi
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_steps')
     .update(payload)
     .eq('id', id)
     .select()
     .returns<StepRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'update_step',
+      payload: { kind: 'update_step', id, patch: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 export async function deleteStep(id: string): Promise<ServiceResponse<StepRow>> {
@@ -85,13 +258,37 @@ export async function deleteStep(id: string): Promise<ServiceResponse<StepRow>> 
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_steps')
     .delete()
     .eq('id', id)
     .select()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'delete_step',
+      payload: { kind: 'delete_step', id },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 // =====================================================
@@ -127,12 +324,43 @@ export async function insertSubstep(payload: SubstepInsert): Promise<ServiceResp
   }
 
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_substeps')
     .insert(payload)
     .select()
     .returns<SubstepRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error) || !canQueueWithServerParent(payload.step_id)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'insert_substep',
+      payload: { kind: 'insert_substep', insert: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return {
+    data: {
+      id: buildLocalId('local-substep'),
+      step_id: payload.step_id,
+      substep_order: payload.substep_order ?? 0,
+      title: payload.title,
+      completed: payload.completed ?? false,
+      completed_at: payload.completed_at ?? null,
+      created_at: nowIso(),
+    },
+    error: null,
+  };
 }
 
 export async function updateSubstep(
@@ -143,14 +371,38 @@ export async function updateSubstep(
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_substeps')
     .update(payload)
     .eq('id', id)
     .select()
     .returns<SubstepRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'update_substep',
+      payload: { kind: 'update_substep', id, patch: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 export async function deleteSubstep(id: string): Promise<ServiceResponse<SubstepRow>> {
@@ -158,13 +410,37 @@ export async function deleteSubstep(id: string): Promise<ServiceResponse<Substep
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_substeps')
     .delete()
     .eq('id', id)
     .select()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'delete_substep',
+      payload: { kind: 'delete_substep', id },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 // =====================================================
@@ -220,12 +496,48 @@ export async function insertAlert(payload: AlertInsert): Promise<ServiceResponse
   }
 
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_alerts')
     .insert(payload)
     .select()
     .returns<AlertRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error) || !canQueueWithServerParent(payload.goal_id)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'insert_alert',
+      payload: { kind: 'insert_alert', insert: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return {
+    data: {
+      id: buildLocalId('local-alert'),
+      goal_id: payload.goal_id,
+      user_id: payload.user_id,
+      alert_type: payload.alert_type,
+      alert_time: payload.alert_time,
+      title: payload.title,
+      message: payload.message ?? null,
+      sent: payload.sent ?? false,
+      sent_at: payload.sent_at ?? null,
+      repeat_pattern: payload.repeat_pattern ?? null,
+      enabled: payload.enabled ?? true,
+      created_at: nowIso(),
+    },
+    error: null,
+  };
 }
 
 export async function updateAlert(id: string, payload: AlertUpdate): Promise<ServiceResponse<AlertRow>> {
@@ -233,14 +545,38 @@ export async function updateAlert(id: string, payload: AlertUpdate): Promise<Ser
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_alerts')
     .update(payload)
     .eq('id', id)
     .select()
     .returns<AlertRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'update_alert',
+      payload: { kind: 'update_alert', id, patch: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 export async function deleteAlert(id: string): Promise<ServiceResponse<AlertRow>> {
@@ -248,11 +584,35 @@ export async function deleteAlert(id: string): Promise<ServiceResponse<AlertRow>
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_alerts')
     .delete()
     .eq('id', id)
     .select()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'delete_alert',
+      payload: { kind: 'delete_alert', id },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
