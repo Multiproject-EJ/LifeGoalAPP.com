@@ -23,6 +23,18 @@ import {
   type HabitLogV2Row,
 } from '../services/habitsV2';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import {
+  buildHabitLogKey,
+  enqueueHabitLogMutation,
+  getHabitLogMutationCounts,
+  getLocalHabitLogRecord,
+  listLocalHabitLogRecordsForUser,
+  listPendingHabitLogMutations,
+  removeHabitLogMutation,
+  removeLocalHabitLogRecord,
+  updateHabitLogMutation,
+  upsertLocalHabitLogRecord,
+} from '../data/habitLogsOfflineRepo';
 
 // Legacy type definitions for compatibility
 type LegacyHabitRow = Database['public']['Tables']['habits']['Row'];
@@ -59,6 +71,112 @@ type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+export type HabitLogQueueStatus = { pending: number; failed: number };
+
+function isNetworkLikeError(error: unknown): boolean {
+  const message =
+    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('offline') ||
+    normalized.includes('load failed')
+  );
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function buildLocalHabitLogRow(userId: string, payload: LegacyHabitLogInsert): HabitLogV2Row {
+  return {
+    id: `local-habit-log-${buildHabitLogKey(userId, payload.habit_id, payload.date)}`,
+    user_id: userId,
+    habit_id: payload.habit_id,
+    done: payload.completed ?? true,
+    value: payload.value ?? null,
+    note: payload.note ?? null,
+    mood: null,
+    date: payload.date,
+    progress_state: payload.progress_state ?? null,
+    completion_percentage: payload.completion_percentage ?? null,
+    logged_stage: payload.logged_stage ?? null,
+    ts: payload.date ? new Date(`${payload.date}T00:00:00Z`).toISOString() : nowIso(),
+  } as HabitLogV2Row;
+}
+
+async function queueLocalHabitLogUpsert(payload: LegacyHabitLogInsert, userId: string): Promise<LegacyHabitLogRow> {
+  const key = buildHabitLogKey(userId, payload.habit_id, payload.date);
+  const row = buildLocalHabitLogRow(userId, payload);
+  const nowMs = Date.now();
+  await upsertLocalHabitLogRecord({
+    id: key,
+    user_id: userId,
+    habit_id: payload.habit_id,
+    date: payload.date,
+    row,
+    sync_state: 'pending_upsert',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  await enqueueHabitLogMutation({
+    id: `habit-log-mut-${key}`,
+    user_id: userId,
+    habit_id: payload.habit_id,
+    date: payload.date,
+    operation: 'upsert',
+    payload: {
+      habit_id: payload.habit_id,
+      user_id: userId,
+      done: payload.completed ?? true,
+      value: payload.value ?? null,
+      note: payload.note ?? null,
+      date: payload.date,
+      progress_state: payload.progress_state ?? null,
+      completion_percentage: payload.completion_percentage ?? null,
+      logged_stage: payload.logged_stage ?? null,
+      ts: payload.date ? new Date(`${payload.date}T00:00:00Z`).toISOString() : undefined,
+    },
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+
+  return toLegacyLog(row);
+}
+
+async function queueLocalHabitLogDelete(habitId: string, date: string, userId: string): Promise<void> {
+  const key = buildHabitLogKey(userId, habitId, date);
+  const existing = await getLocalHabitLogRecord(key);
+  const nowMs = Date.now();
+  await upsertLocalHabitLogRecord({
+    id: key,
+    user_id: userId,
+    habit_id: habitId,
+    date,
+    row: existing?.row ?? null,
+    sync_state: 'pending_delete',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  await enqueueHabitLogMutation({
+    id: `habit-log-mut-${key}`,
+    user_id: userId,
+    habit_id: habitId,
+    date,
+    operation: 'delete',
+    payload: null,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+}
 
 /**
  * Log deprecation warning (only in development mode)
@@ -289,9 +407,12 @@ export async function logHabitCompletion(
   };
   
   const { data, error } = await logHabitCompletionV2(v2Payload, userId);
-  
-  if (error) {
+  if (error && !isNetworkLikeError(error)) {
     return { data: null, error };
+  }
+  if (error) {
+    const queued = await queueLocalHabitLogUpsert(payload, userId);
+    return { data: queued, error: null };
   }
   
   if (!data) {
@@ -332,8 +453,12 @@ export async function clearHabitCompletion(
     .select()
     .single();
   
-  if (error) {
+  if (error && !isNetworkLikeError(error)) {
     return { data: null, error };
+  }
+  if (error) {
+    await queueLocalHabitLogDelete(habitId, date, session.user.id);
+    return { data: null, error: null };
   }
   
   if (!data) {
@@ -386,7 +511,8 @@ export async function fetchHabitLogsForDate(
     return { data: null, error };
   }
   
-  const filteredLogs = (data || [])
+  const mergedLogs = await mergeLocalHabitLogsOverRemote(userId, data || []);
+  const filteredLogs = mergedLogs
     .filter(log => habitIds.includes(log.habit_id) && log.date === date)
     .map(toLegacyLog);
   
@@ -432,7 +558,84 @@ export async function fetchHabitLogsForRange(
     return { data: null, error };
   }
   
-  const legacyLogs = (data || []).map(toLegacyLog);
+  const mergedLogs = await mergeLocalHabitLogsOverRemote(userId, data || []);
+  const legacyLogs = mergedLogs.map(toLegacyLog);
   
   return { data: legacyLogs, error: null };
+}
+
+async function mergeLocalHabitLogsOverRemote(userId: string, remoteLogs: HabitLogV2Row[]): Promise<HabitLogV2Row[]> {
+  const localRecords = await listLocalHabitLogRecordsForUser(userId);
+  if (!localRecords.length) return remoteLogs;
+
+  const byKey = new Map(remoteLogs.map((log) => [buildHabitLogKey(userId, log.habit_id, log.date), log] as const));
+  for (const local of localRecords) {
+    const key = buildHabitLogKey(userId, local.habit_id, local.date);
+    if (local.sync_state === 'pending_delete') {
+      byKey.delete(key);
+      continue;
+    }
+    if (local.row) {
+      byKey.set(key, local.row);
+    }
+  }
+  return Array.from(byKey.values());
+}
+
+export async function syncQueuedHabitLogs(userId: string): Promise<void> {
+  if (!canUseSupabaseData()) return;
+  const supabase = getSupabaseClient();
+  const pending = await listPendingHabitLogMutations(userId);
+
+  for (const mutation of pending) {
+    const key = buildHabitLogKey(userId, mutation.habit_id, mutation.date);
+    try {
+      await updateHabitLogMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
+      if (mutation.operation === 'upsert') {
+        const payload = mutation.payload;
+        if (!payload) {
+          await removeHabitLogMutation(mutation.id);
+          continue;
+        }
+        const { error } = await supabase
+          .from('habit_logs_v2')
+          .upsert(payload, { onConflict: 'user_id,habit_id,date' })
+          .select()
+          .single();
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('habit_logs_v2')
+          .delete()
+          .eq('user_id', userId)
+          .eq('habit_id', mutation.habit_id)
+          .eq('date', mutation.date);
+        if (error) throw error;
+      }
+      await removeLocalHabitLogRecord(key);
+      await removeHabitLogMutation(mutation.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await updateHabitLogMutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: message,
+      });
+      const local = await getLocalHabitLogRecord(key);
+      if (local) {
+        await upsertLocalHabitLogRecord({
+          ...local,
+          sync_state: 'failed',
+          updated_at_ms: Date.now(),
+          last_error: message,
+        });
+      }
+    }
+  }
+}
+
+export async function getHabitLogQueueStatus(userId: string): Promise<HabitLogQueueStatus> {
+  if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
+  return getHabitLogMutationCounts(userId);
 }
