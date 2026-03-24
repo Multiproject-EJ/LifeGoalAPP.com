@@ -28,7 +28,14 @@ import {
 import { StrategyPicker } from '../../components/StrategyPicker';
 import { isDemoSession } from '../../services/demoSession';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
-import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert } from '../../services/lifeGoals';
+import {
+  fetchStepsForGoal,
+  getLifeGoalQueueStatus,
+  insertAlert,
+  insertStep,
+  insertSubstep,
+  syncQueuedLifeGoalMutations,
+} from '../../services/lifeGoals';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
@@ -190,8 +197,14 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
       setQueueStatus({ pending: 0, failed: 0 });
       return;
     }
-    const status = await getGoalQueueStatus();
-    setQueueStatus(status);
+    const [goalStatus, lifeGoalStatus] = await Promise.all([
+      getGoalQueueStatus(),
+      getLifeGoalQueueStatus(),
+    ]);
+    setQueueStatus({
+      pending: goalStatus.pending + lifeGoalStatus.pending,
+      failed: goalStatus.failed + lifeGoalStatus.failed,
+    });
   }, [isConfigured]);
 
   const refreshGoals = useCallback(async () => {
@@ -256,7 +269,7 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
   useEffect(() => {
     if (!isConfigured) return;
     const runSync = () => {
-      syncQueuedGoals()
+      Promise.all([syncQueuedGoals(), syncQueuedLifeGoalMutations()])
         .then(() => refreshGoals())
         .catch(() => undefined);
     };
