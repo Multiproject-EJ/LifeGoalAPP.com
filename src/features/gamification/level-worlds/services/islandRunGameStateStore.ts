@@ -38,6 +38,7 @@ export interface CreatureCollectionRuntimeEntry {
 }
 
 export interface IslandRunGameStateRecord {
+  runtimeVersion: number;
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
   onboardingDisplayNameLoopCompleted: boolean;
@@ -186,6 +187,7 @@ function getRuntimeStateDebugFields(record: Pick<IslandRunGameStateRecord, 'curr
 function getDefaultRecord(): IslandRunGameStateRecord {
   const nowMs = Date.now();
   return {
+    runtimeVersion: 0,
     firstRunClaimed: false,
     dailyHeartsClaimedDayKey: null,
     onboardingDisplayNameLoopCompleted: false,
@@ -267,6 +269,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
   const activeEggTier: 'common' | 'rare' | 'mythic' | null =
     eggTierRaw === 'common' || eggTierRaw === 'rare' || eggTierRaw === 'mythic' ? eggTierRaw : fallback.activeEggTier;
   return {
+    runtimeVersion:
+      typeof value.runtimeVersion === 'number' && Number.isFinite(value.runtimeVersion)
+        ? Math.max(0, Math.floor(value.runtimeVersion))
+        : fallback.runtimeVersion,
     firstRunClaimed: typeof value.firstRunClaimed === 'boolean' ? value.firstRunClaimed : fallback.firstRunClaimed,
     dailyHeartsClaimedDayKey:
       typeof value.dailyHeartsClaimedDayKey === 'string' || value.dailyHeartsClaimedDayKey === null
@@ -408,6 +414,121 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
   };
 }
 
+function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
+  return Array.from(new Set([...left, ...right]));
+}
+
+function mergeCreatureCollection(
+  remote: CreatureCollectionRuntimeEntry[],
+  local: CreatureCollectionRuntimeEntry[],
+): CreatureCollectionRuntimeEntry[] {
+  const byCreatureId = new Map<string, CreatureCollectionRuntimeEntry>();
+  [...remote, ...local].forEach((entry) => {
+    const existing = byCreatureId.get(entry.creatureId);
+    if (!existing) {
+      byCreatureId.set(entry.creatureId, entry);
+      return;
+    }
+
+    const bondXp = Math.max(existing.bondXp, entry.bondXp);
+    byCreatureId.set(entry.creatureId, {
+      creatureId: existing.creatureId,
+      copies: Math.max(existing.copies, entry.copies),
+      firstCollectedAtMs: Math.min(existing.firstCollectedAtMs, entry.firstCollectedAtMs),
+      lastCollectedAtMs: Math.max(existing.lastCollectedAtMs, entry.lastCollectedAtMs),
+      lastCollectedIslandNumber: Math.max(existing.lastCollectedIslandNumber, entry.lastCollectedIslandNumber),
+      bondXp,
+      bondLevel: Math.max(existing.bondLevel, entry.bondLevel, Math.floor(bondXp / 3) + 1),
+      lastFedAtMs: Math.max(existing.lastFedAtMs ?? 0, entry.lastFedAtMs ?? 0) || null,
+      claimedBondMilestones: Array.from(new Set([
+        ...existing.claimedBondMilestones,
+        ...entry.claimedBondMilestones,
+      ])).sort((a, b) => a - b),
+    });
+  });
+
+  return Array.from(byCreatureId.values())
+    .sort((a, b) => b.lastCollectedAtMs - a.lastCollectedAtMs);
+}
+
+function mergeRecordForConflict(options: {
+  remote: IslandRunGameStateRecord;
+  local: IslandRunGameStateRecord;
+}): IslandRunGameStateRecord {
+  const { remote, local } = options;
+  const mergedCompletedStopsByIsland = {
+    ...remote.completedStopsByIsland,
+    ...local.completedStopsByIsland,
+  };
+  Object.keys(mergedCompletedStopsByIsland).forEach((islandKey) => {
+    mergedCompletedStopsByIsland[islandKey] = mergeStringArrayByUnion(
+      remote.completedStopsByIsland[islandKey] ?? [],
+      local.completedStopsByIsland[islandKey] ?? [],
+    );
+  });
+
+  const mergedMarketOwnedBundlesByIsland = {
+    ...remote.marketOwnedBundlesByIsland,
+    ...local.marketOwnedBundlesByIsland,
+  };
+  Object.keys(mergedMarketOwnedBundlesByIsland).forEach((islandKey) => {
+    mergedMarketOwnedBundlesByIsland[islandKey] = {
+      dice_bundle: Boolean(remote.marketOwnedBundlesByIsland[islandKey]?.dice_bundle) || Boolean(local.marketOwnedBundlesByIsland[islandKey]?.dice_bundle),
+      heart_bundle: Boolean(remote.marketOwnedBundlesByIsland[islandKey]?.heart_bundle) || Boolean(local.marketOwnedBundlesByIsland[islandKey]?.heart_bundle),
+      heart_boost_bundle:
+        Boolean(remote.marketOwnedBundlesByIsland[islandKey]?.heart_boost_bundle) || Boolean(local.marketOwnedBundlesByIsland[islandKey]?.heart_boost_bundle),
+    };
+  });
+
+  return {
+    ...remote,
+    ...local,
+    runtimeVersion: remote.runtimeVersion,
+    perIslandEggs: { ...remote.perIslandEggs, ...local.perIslandEggs },
+    completedStopsByIsland: mergedCompletedStopsByIsland,
+    marketOwnedBundlesByIsland: mergedMarketOwnedBundlesByIsland,
+    creatureCollection: mergeCreatureCollection(remote.creatureCollection, local.creatureCollection),
+  };
+}
+
+function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number) {
+  return {
+    user_id: null as unknown as string,
+    runtime_version: runtimeVersion,
+    first_run_claimed: record.firstRunClaimed,
+    daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
+    onboarding_display_name_loop_completed: record.onboardingDisplayNameLoopCompleted,
+    story_prologue_seen: record.storyPrologueSeen,
+    audio_enabled: record.audioEnabled,
+    current_island_number: record.currentIslandNumber,
+    cycle_index: record.cycleIndex,
+    boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,
+    active_egg_tier: record.activeEggTier,
+    active_egg_set_at_ms: record.activeEggSetAtMs,
+    active_egg_hatch_duration_ms: record.activeEggHatchDurationMs,
+    active_egg_is_dormant: record.activeEggIsDormant,
+    per_island_eggs: record.perIslandEggs,
+    island_started_at_ms: record.islandStartedAtMs,
+    island_expires_at_ms: record.islandExpiresAtMs,
+    island_shards: record.islandShards,
+    token_index: record.tokenIndex,
+    hearts: record.hearts,
+    coins: record.coins,
+    spin_tokens: record.spinTokens,
+    dice_pool: record.dicePool,
+    shard_tier_index: record.shardTierIndex,
+    shard_claim_count: record.shardClaimCount,
+    shields: record.shields,
+    shards: record.shards,
+    diamonds: record.diamonds,
+    completed_stops_by_island: record.completedStopsByIsland,
+    market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
+    creature_collection: record.creatureCollection,
+    active_companion_id: record.activeCompanionId,
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export function readIslandRunGameStateRecord(session: Session): IslandRunGameStateRecord {
   const fallback = getDefaultRecord();
 
@@ -466,7 +587,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -499,6 +620,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const hydratedRecord = toRecord(
     {
+      runtimeVersion: data.runtime_version ?? 0,
       firstRunClaimed: data.first_run_claimed,
       dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
       onboardingDisplayNameLoopCompleted: data.onboarding_display_name_loop_completed ?? false,
@@ -566,10 +688,15 @@ export async function writeIslandRunGameStateRecord(options: {
   record: IslandRunGameStateRecord;
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, record } = options;
+  const existingLocalRecord = readIslandRunGameStateRecord(session);
+  const localRecord: IslandRunGameStateRecord = {
+    ...record,
+    runtimeVersion: Math.max(record.runtimeVersion, existingLocalRecord.runtimeVersion),
+  };
 
   if (typeof window !== 'undefined') {
     try {
-      window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(record));
+      window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(localRecord));
     } catch {
       // ignore local persistence failures in prototype mode
     }
@@ -579,7 +706,7 @@ export async function writeIslandRunGameStateRecord(options: {
     logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
       userId: session.user.id,
       reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
-      ...getRuntimeStateDebugFields(record),
+      ...getRuntimeStateDebugFields(localRecord),
     });
     return { ok: true };
   }
@@ -590,7 +717,7 @@ export async function writeIslandRunGameStateRecord(options: {
       userId: session.user.id,
       reason: 'remote_backoff_active',
       backoffUntil: new Date(remoteBackoffUntil).toISOString(),
-      ...getRuntimeStateDebugFields(record),
+      ...getRuntimeStateDebugFields(localRecord),
     });
     return { ok: true };
   }
@@ -598,48 +725,89 @@ export async function writeIslandRunGameStateRecord(options: {
   logIslandRunEntryDebug('runtime_state_persist_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
-    ...getRuntimeStateDebugFields(record),
+    ...getRuntimeStateDebugFields(localRecord),
+    runtimeVersion: localRecord.runtimeVersion,
   });
 
-  const { error } = await client.from(ISLAND_RUN_RUNTIME_STATE_TABLE).upsert(
-    {
-      user_id: session.user.id,
-      first_run_claimed: record.firstRunClaimed,
-      daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
-      onboarding_display_name_loop_completed: record.onboardingDisplayNameLoopCompleted,
-      story_prologue_seen: record.storyPrologueSeen,
-      audio_enabled: record.audioEnabled,
-      current_island_number: record.currentIslandNumber,
-      cycle_index: record.cycleIndex,
-      boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,
-      active_egg_tier: record.activeEggTier,
-      active_egg_set_at_ms: record.activeEggSetAtMs,
-      active_egg_hatch_duration_ms: record.activeEggHatchDurationMs,
-      active_egg_is_dormant: record.activeEggIsDormant,
-      per_island_eggs: record.perIslandEggs,
-      island_started_at_ms: record.islandStartedAtMs,
-      island_expires_at_ms: record.islandExpiresAtMs,
-      island_shards: record.islandShards,
-      token_index: record.tokenIndex,
-      hearts: record.hearts,
-      coins: record.coins,
-      spin_tokens: record.spinTokens,
-      dice_pool: record.dicePool,
-      shard_tier_index: record.shardTierIndex,
-      shard_claim_count: record.shardClaimCount,
-      shields: record.shields,
-      shards: record.shards,
-      diamonds: record.diamonds,
-      completed_stops_by_island: record.completedStopsByIsland,
-      market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
-      creature_collection: record.creatureCollection,
-      active_companion_id: record.activeCompanionId,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id' },
-  );
+  const tryConditionalWrite = async (candidate: IslandRunGameStateRecord): Promise<
+    | { status: 'ok'; nextVersion: number }
+    | { status: 'missing_row' }
+    | { status: 'conflict' }
+    | { status: 'error'; error: { message?: string | null; code?: string | null } }
+  > => {
+    const expectedVersion = Math.max(0, Math.floor(candidate.runtimeVersion));
+    const nextVersion = expectedVersion + 1;
+    const payload = toRemoteRow(candidate, nextVersion);
+    payload.user_id = session.user.id;
 
-  if (error) {
+    const { data, error } = await client
+      .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
+      .update(payload)
+      .eq('user_id', session.user.id)
+      .eq('runtime_version', expectedVersion)
+      .select('runtime_version')
+      .maybeSingle();
+
+    if (error) {
+      return { status: 'error', error };
+    }
+
+    if (data) {
+      return { status: 'ok', nextVersion };
+    }
+
+    const { data: rowExists, error: existsError } = await client
+      .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
+      .select('user_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (existsError) {
+      return { status: 'error', error: existsError };
+    }
+
+    return rowExists ? { status: 'conflict' } : { status: 'missing_row' };
+  };
+
+  let writeResult = await tryConditionalWrite(localRecord);
+
+  if (writeResult.status === 'missing_row') {
+    const payload = toRemoteRow(localRecord, 0);
+    payload.user_id = session.user.id;
+    const { error: insertError } = await client
+      .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
+      .insert(payload);
+
+    if (!insertError) {
+      writeResult = { status: 'ok', nextVersion: 0 };
+    } else if (insertError.code === '23505') {
+      writeResult = { status: 'conflict' };
+    } else {
+      writeResult = { status: 'error', error: insertError };
+    }
+  }
+
+  if (writeResult.status === 'conflict') {
+    const latest = await hydrateIslandRunGameStateRecordWithSource({ session, client });
+    if (latest.source === 'table') {
+      const merged = mergeRecordForConflict({
+        remote: latest.record,
+        local: localRecord,
+      });
+      writeResult = await tryConditionalWrite(merged);
+    } else {
+      writeResult = {
+        status: 'error',
+        error: {
+          message: 'Runtime state conflict detected and latest server row could not be loaded.',
+          code: 'runtime_conflict_remote_unavailable',
+        },
+      };
+    }
+  }
+
+  if (writeResult.status === 'error') {
+    const { error } = writeResult;
     const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error) || isSchemaMismatchRuntimeStateError(error);
     const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
 
@@ -649,21 +817,38 @@ export async function writeIslandRunGameStateRecord(options: {
       code: error.code ?? null,
       remoteBackoffTriggered,
       remoteBackoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
-      ...getRuntimeStateDebugFields(record),
+      ...getRuntimeStateDebugFields(localRecord),
     });
 
     if (remoteBackoffTriggered) {
       return { ok: true };
     }
 
-    return { ok: false, errorMessage: error.message };
+    return { ok: false, errorMessage: error.message ?? 'Unknown runtime state persistence error.' };
+  }
+
+  if (writeResult.status !== 'ok') {
+    return { ok: false, errorMessage: 'Runtime state persistence did not reach a terminal success state.' };
   }
 
   setRemoteBackoffUntil(session.user.id, null);
 
+  if (typeof window !== 'undefined') {
+    try {
+      const persisted = {
+        ...localRecord,
+        runtimeVersion: writeResult.nextVersion,
+      };
+      window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(persisted));
+    } catch {
+      // ignore local persistence failures in prototype mode
+    }
+  }
+
   logIslandRunEntryDebug('runtime_state_persist_success', {
     userId: session.user.id,
-    ...getRuntimeStateDebugFields(record),
+    ...getRuntimeStateDebugFields(localRecord),
+    runtimeVersion: writeResult.nextVersion,
   });
 
   return { ok: true };
