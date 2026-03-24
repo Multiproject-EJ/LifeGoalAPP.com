@@ -43,6 +43,7 @@ import {
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
+import { getHabitReminderQueueStatus, syncQueuedHabitReminderPrefs } from '../../services/habitReminderPrefs';
 import { archiveHabitV2, updateHabitFullV2, pauseHabitV2, deactivateHabitV2, type HabitV2Row } from '../../services/habitsV2';
 import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
@@ -3104,13 +3105,14 @@ export function DailyHabitTracker({
       setQueueStatus({ pending: 0, failed: 0 });
       return;
     }
-    const [completionStatus, logStatus] = await Promise.all([
+    const [completionStatus, logStatus, reminderStatus] = await Promise.all([
       getHabitCompletionQueueStatus(session.user.id),
       getHabitLogQueueStatus(session.user.id),
+      getHabitReminderQueueStatus(session.user.id),
     ]);
     setQueueStatus({
-      pending: completionStatus.pending + logStatus.pending,
-      failed: completionStatus.failed + logStatus.failed,
+      pending: completionStatus.pending + logStatus.pending + reminderStatus.pending,
+      failed: completionStatus.failed + logStatus.failed + reminderStatus.failed,
     });
   }, [isConfigured, session?.user?.id]);
 
@@ -3181,6 +3183,7 @@ export function DailyHabitTracker({
       Promise.all([
         syncQueuedHabitCompletions(session.user.id),
         syncQueuedHabitLogs(session.user.id),
+        syncQueuedHabitReminderPrefs(session.user.id),
       ])
         .then(() => Promise.all([loadMonthlyStats(selectedYear, selectedMonth), refreshHabits(), refreshQueueStatus()]))
         .catch(() => undefined);
