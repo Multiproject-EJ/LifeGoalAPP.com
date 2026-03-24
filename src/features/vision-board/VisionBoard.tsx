@@ -4,7 +4,9 @@ import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
   deleteVisionImage,
   fetchVisionImages,
+  getVisionImageQueueStatus,
   getVisionImagePublicUrl,
+  syncQueuedVisionImageMutations,
   updateVisionImage,
   uploadVisionImage,
   uploadVisionImageFromUrl,
@@ -171,6 +173,8 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [selectedHaircutStyle, setSelectedHaircutStyle] = useState(HAIRCUT_STYLES[0].key);
   const [bestHairLength, setBestHairLength] = useState(HAIRCUT_LENGTHS[1].value);
   const [needsHaircut, setNeedsHaircut] = useState(false);
+  const [queuePending, setQueuePending] = useState(0);
+  const [queueFailed, setQueueFailed] = useState(0);
   const lifeWheelAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
   const visionariesAvailable = FOUR_VISIONARIES.length > 0;
   const lifeWheelLabelLookup = useMemo(
@@ -218,6 +222,52 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
     loadImages();
   }, [session?.user?.id, isConfigured, isDemoExperience, loadImages]);
+
+  useEffect(() => {
+    if (!session || (!isConfigured && !isDemoExperience)) {
+      setQueuePending(0);
+      setQueueFailed(0);
+      return;
+    }
+    let cancelled = false;
+    const userId = session.user.id;
+    const refreshQueueStatus = async () => {
+      const status = await getVisionImageQueueStatus(userId);
+      if (!cancelled) {
+        setQueuePending(status.pending);
+        setQueueFailed(status.failed);
+      }
+    };
+    void refreshQueueStatus();
+    const intervalId = window.setInterval(() => {
+      void refreshQueueStatus();
+    }, 10000);
+    const handleOnline = () => {
+      void syncQueuedVisionImageMutations(userId)
+        .then(() => loadImages())
+        .finally(() => {
+          void refreshQueueStatus();
+        });
+    };
+    window.addEventListener('online', handleOnline);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [session, isConfigured, isDemoExperience, loadImages]);
+
+  useEffect(() => {
+    if (!session || queuePending + queueFailed <= 0) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [session, queuePending, queueFailed]);
 
   const loadImageTags = useCallback(async () => {
     if (!session || (!isConfigured && !isDemoExperience)) {
@@ -873,6 +923,13 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       ) : null}
 
       {errorMessage && <p className="vision-board__status vision-board__status--error">{errorMessage}</p>}
+      {(queuePending > 0 || queueFailed > 0) && (
+        <p className="vision-board__status vision-board__status--warning">
+          {queueFailed > 0
+            ? `${queueFailed} vision board change${queueFailed > 1 ? 's' : ''} failed to sync. We'll retry automatically when you're online.`
+            : `${queuePending} vision board change${queuePending > 1 ? 's are' : ' is'} queued for sync.`}
+        </p>
+      )}
 
       <div className="vision-board__add-edit">
         <button
