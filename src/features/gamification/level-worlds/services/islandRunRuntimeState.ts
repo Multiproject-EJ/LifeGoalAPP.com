@@ -4,6 +4,7 @@ import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetr
 import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
 
 export interface IslandRunRuntimeState {
+  runtimeVersion: number;
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
   onboardingDisplayNameLoopCompleted: boolean;
@@ -30,6 +31,12 @@ export interface IslandRunRuntimeState {
   shields: number;
   shards: number;
   diamonds: number;
+  creatureTreatInventory: {
+    basic: number;
+    favorite: number;
+    rare: number;
+  };
+  companionBonusLastVisitKey: string | null;
   completedStopsByIsland: Record<string, string[]>;
   marketOwnedBundlesByIsland: Record<string, {
     dice_bundle: boolean;
@@ -119,6 +126,12 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     shields?: number;
     shards?: number;
     diamonds?: number;
+    creatureTreatInventory?: {
+      basic: number;
+      favorite: number;
+      rare: number;
+    };
+    companionBonusLastVisitKey?: string | null;
     completedStopsByIsland?: Record<string, string[]>;
     marketOwnedBundlesByIsland?: Record<string, {
       dice_bundle: boolean;

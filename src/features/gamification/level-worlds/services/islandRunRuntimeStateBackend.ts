@@ -51,6 +51,12 @@ export interface IslandRunRuntimeStateBackend {
       shields?: number;
       shards?: number;
       diamonds?: number;
+      creatureTreatInventory?: {
+        basic: number;
+        favorite: number;
+        rare: number;
+      };
+      companionBonusLastVisitKey?: string | null;
       completedStopsByIsland?: Record<string, string[]>;
       marketOwnedBundlesByIsland?: Record<string, {
         dice_bundle: boolean;
@@ -80,6 +86,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
   async persistPatch({ session, client, patch }) {
     const current = await hydrateIslandRunGameStateRecord({ session, client });
     const nextState: IslandRunRuntimeState = {
+      runtimeVersion: current.runtimeVersion,
       firstRunClaimed: typeof patch.firstRunClaimed === 'boolean' ? patch.firstRunClaimed : current.firstRunClaimed,
       dailyHeartsClaimedDayKey:
         typeof patch.dailyHeartsClaimedDayKey === 'string' || patch.dailyHeartsClaimedDayKey === null
@@ -186,6 +193,24 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.diamonds === 'number' && Number.isFinite(patch.diamonds)
           ? Math.max(0, Math.floor(patch.diamonds))
           : current.diamonds,
+      creatureTreatInventory:
+        patch.creatureTreatInventory !== null && typeof patch.creatureTreatInventory === 'object' && !Array.isArray(patch.creatureTreatInventory)
+          ? {
+              basic: typeof patch.creatureTreatInventory.basic === 'number' && Number.isFinite(patch.creatureTreatInventory.basic)
+                ? Math.max(0, Math.floor(patch.creatureTreatInventory.basic))
+                : current.creatureTreatInventory.basic,
+              favorite: typeof patch.creatureTreatInventory.favorite === 'number' && Number.isFinite(patch.creatureTreatInventory.favorite)
+                ? Math.max(0, Math.floor(patch.creatureTreatInventory.favorite))
+                : current.creatureTreatInventory.favorite,
+              rare: typeof patch.creatureTreatInventory.rare === 'number' && Number.isFinite(patch.creatureTreatInventory.rare)
+                ? Math.max(0, Math.floor(patch.creatureTreatInventory.rare))
+                : current.creatureTreatInventory.rare,
+            }
+          : current.creatureTreatInventory,
+      companionBonusLastVisitKey:
+        typeof patch.companionBonusLastVisitKey === 'string' || patch.companionBonusLastVisitKey === null
+          ? patch.companionBonusLastVisitKey
+          : current.companionBonusLastVisitKey,
       completedStopsByIsland:
         patch.completedStopsByIsland !== null && typeof patch.completedStopsByIsland === 'object' && !Array.isArray(patch.completedStopsByIsland)
           ? {

@@ -11,6 +11,10 @@ The core Island Run runtime state is read from and written to Supabase table `is
 - `island_started_at_ms`, `island_expires_at_ms`
 - `per_island_eggs`, `completed_stops_by_island`
 - `island_shards`, `shard_tier_index`, `shard_claim_count`, `shields`, `shards`
+- `diamonds`, `market_owned_bundles_by_island`
+- `creature_treat_inventory`, `companion_bonus_last_visit_key`
+- `onboarding_display_name_loop_completed`, `story_prologue_seen`, `audio_enabled`
+- `creature_collection`, `active_companion_id`
 - plus first-run and daily-hearts markers
 
 At runtime, the UI hydrates local state by:
@@ -18,25 +22,24 @@ At runtime, the UI hydrates local state by:
 2. fetching Supabase runtime row, and
 3. replacing local copy with table data on success.
 
-Writes persist both locally and remotely via upsert.
+Writes persist both locally and remotely; as of M20A they now use optimistic concurrency (`runtime_version`) compare-and-swap semantics with retry/merge for safe collection/map fields.
 
-## What is NOT synchronized across devices (localStorage-only)
-The following Island Run-related state is currently local-only and device-specific:
+## What is NOT synchronized across devices (still local-only or mirrored)
+The following Island Run-related state is still local-only / mirrored:
 
-- Diamonds wallet (`island_run_diamonds_<userId>`)
-- Per-island shop owned bundles (`island_run_shop_owned_<userId>_island_<n>`)
 - Onboarding display-name loop local step storage
-- Story-seen flags
-- Creature collection / active companion / companion per-visit bonus flags
-- Audio preference toggle (`islandRunAudioEnabled`)
+- Audio preference mirror key (`islandRunAudioEnabled`)
 
-These do not round-trip through `island_run_runtime_state`.
+Some of these are now mirrors/fallbacks (with table-backed canonical state), but still represent dual-source behavior that can diverge until cleanup.
 
 ## Real-time behavior and conflict model
-There is no realtime subscription that streams remote updates into already-open clients. Devices hydrate on mount, then keep local React state while writing patches/upserts.
+Island Run now includes live reconciliation for already-open clients:
+- Supabase realtime subscription on `island_run_runtime_state` row changes for the active `user_id`.
+- Focus/visibility + interval refresh reconciliation to catch missed updates and reconnect cases.
 
 Implication:
-- If multiple devices are active simultaneously, each can write and whichever write lands last may overwrite overlapping fields.
+- Concurrent writes reject stale versions (`runtime_version` CAS), reducing blind last-writer-wins overwrites on overlapping fields.
+- Open multi-device sessions now converge automatically once update events are observed and reconciled.
 - If a device goes offline or Supabase is unreachable, runtime state falls back to local cache and remote writes can be skipped under backoff; that device can drift until next successful hydrate.
 
 ## Direct answer
@@ -44,10 +47,8 @@ Is Island Run fully synced across iPad, iPhone, and browser to always keep same 
 
 - **Partially yes** for core runtime progress/state in `island_run_runtime_state` (island number, token position, hearts/coins/spins/dice, timers, eggs ledger, completed stops, shard economy fields).
 - **Not fully** for local-only state listed above.
-- **Not strongly consistent in real-time** across multiple concurrently-open devices (no live subscriptions; last-writer-wins style upserts on shared row).
+- **Mostly convergent in real-time** across concurrently-open devices due to subscriptions + focus/poll reconciliation.
 
 ## Recommended improvements for full cross-device parity
-1. Move diamonds + market owned bundles + creature collection/active companion into Supabase-backed tables/columns.
-2. Add `updated_at` optimistic concurrency checks (or version column) to avoid stale client overwrites.
-3. Add realtime subscriptions (or polling on visibility/focus) to reconcile active multi-device sessions.
-4. Reduce fallback-only behavior by queueing failed writes and replaying after connection recovery.
+1. Remove remaining onboarding/audio legacy mirrors behind a migration-complete feature flag.
+2. Add targeted race/reconnect/realtime convergence tests around version conflicts, replay, and convergence.
