@@ -35,10 +35,13 @@ The following Island Run-related state is currently local-only and device-specif
 Some of these are now mirrors/fallbacks (with table-backed canonical state), but still represent dual-source behavior that can diverge until cleanup.
 
 ## Real-time behavior and conflict model
-There is no realtime subscription that streams remote updates into already-open clients. Devices hydrate on mount, then keep local React state while writing patches.
+Island Run now includes live reconciliation for already-open clients:
+- Supabase realtime subscription on `island_run_runtime_state` row changes for the active `user_id`.
+- Focus/visibility + interval refresh reconciliation to catch missed updates and reconnect cases.
 
 Implication:
-- Concurrent writes now reject stale versions, reducing blind last-writer-wins overwrites on overlapping fields.
+- Concurrent writes reject stale versions (`runtime_version` CAS), reducing blind last-writer-wins overwrites on overlapping fields.
+- Open multi-device sessions now converge automatically once update events are observed and reconciled.
 - If a device goes offline or Supabase is unreachable, runtime state falls back to local cache and remote writes can be skipped under backoff; that device can drift until next successful hydrate.
 
 ## Direct answer
@@ -46,10 +49,10 @@ Is Island Run fully synced across iPad, iPhone, and browser to always keep same 
 
 - **Partially yes** for core runtime progress/state in `island_run_runtime_state` (island number, token position, hearts/coins/spins/dice, timers, eggs ledger, completed stops, shard economy fields).
 - **Not fully** for local-only state listed above.
-- **Not strongly consistent in real-time** across multiple concurrently-open devices (no live subscriptions yet).
+- **Mostly convergent in real-time** across concurrently-open devices due to subscriptions + focus/poll reconciliation.
 
 ## Recommended improvements for full cross-device parity
-1. Add realtime subscriptions (or polling on visibility/focus) to reconcile active multi-device sessions.
-2. Reduce fallback-only behavior by queueing failed writes and replaying after connection recovery.
-3. Move treat inventory + companion visit dedupe key into runtime table fields.
-4. Remove legacy local mirrors behind a migration-complete feature flag.
+1. Reduce fallback-only behavior by queueing failed writes and replaying after connection recovery.
+2. Move treat inventory + companion visit dedupe key into runtime table fields.
+3. Remove legacy local mirrors behind a migration-complete feature flag.
+4. Add targeted race/reconnect/realtime convergence tests around version conflicts and replay.
