@@ -2,6 +2,17 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
+  buildLocalVisionImageId,
+  enqueueVisionImageMutation,
+  getVisionImageMutationCounts,
+  listLocalVisionImageRecordsForUser,
+  listPendingVisionImageMutations,
+  removeLocalVisionImageRecord,
+  removeVisionImageMutation,
+  updateVisionImageMutation,
+  upsertLocalVisionImageRecord,
+} from '../data/visionBoardOfflineRepo';
+import {
   DEMO_USER_ID,
   addDemoVisionImage,
   fileToDataUrl,
@@ -23,6 +34,30 @@ type ServiceResponse<T> = {
   error: ServiceError;
 };
 
+export type VisionImageQueueStatus = { pending: number; failed: number };
+
+function isNetworkLikeError(error: unknown): boolean {
+  const message =
+    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('offline') ||
+    normalized.includes('load failed')
+  );
+}
+
+async function mergeLocalVisionImages(userId: string, remote: VisionImageRow[]): Promise<VisionImageRow[]> {
+  const local = await listLocalVisionImageRecordsForUser(userId);
+  if (!local.length) return remote;
+  const byId = new Map(remote.map((record) => [record.id, record] as const));
+  for (const record of local) {
+    byId.set(record.row.id, record.row);
+  }
+  return Array.from(byId.values()).sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
+}
+
 function isBucketNotFoundError(message: string): boolean {
   const lowerMessage = message.toLowerCase();
   return lowerMessage.includes('bucket') && (lowerMessage.includes('not found') || lowerMessage.includes('not exist'));
@@ -41,7 +76,9 @@ export async function fetchVisionImages(userId: string): Promise<ServiceResponse
     .order('created_at', { ascending: false })
     .returns<VisionImageRow[]>();
 
-  return { data: response.data, error: response.error };
+  if (response.error) return { data: response.data, error: response.error };
+  const merged = await mergeLocalVisionImages(userId, response.data ?? []);
+  return { data: merged, error: null };
 }
 
 export function getVisionImagePublicUrl(record: VisionImageRow): string {
@@ -255,7 +292,7 @@ export async function uploadVisionImageFromUrl({
     .returns<VisionImageRow>()
     .single();
 
-  if (error) {
+  if (error && !isNetworkLikeError(error)) {
     // Log database error with context for debugging
     console.error('[Vision Board] Database insert failed (URL):', {
       timestamp: new Date().toISOString(),
@@ -270,8 +307,84 @@ export async function uploadVisionImageFromUrl({
     const errorMessage = `Database insert failed: ${error.message} (URL: ${imageUrl})`;
     return { data: null, error: new Error(errorMessage) };
   }
+  if (error) {
+    const localId = buildLocalVisionImageId();
+    const nowIso = new Date().toISOString();
+    const localRow: VisionImageRow = {
+      id: localId,
+      user_id: userId,
+      image_path: null,
+      image_url: imageUrl,
+      image_source: 'url',
+      caption: caption?.trim() ? caption.trim() : null,
+      created_at: nowIso,
+      file_path: null,
+      file_format: null,
+      vision_type: visionType ?? null,
+      review_interval_days: reviewIntervalDays ?? null,
+      last_reviewed_at: null,
+      linked_goal_ids: linkedGoalIds ?? [],
+      linked_habit_ids: linkedHabitIds ?? [],
+    };
+    const nowMs = Date.now();
+    await upsertLocalVisionImageRecord({
+      id: localId,
+      user_id: userId,
+      server_id: null,
+      row: localRow,
+      sync_state: 'pending_create',
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+    await enqueueVisionImageMutation({
+      id: `vision-image-mut-${localId}`,
+      user_id: userId,
+      image_id: localId,
+      server_id: null,
+      operation: 'create_url',
+      payload,
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+    return { data: localRow, error: null };
+  }
 
   return { data, error: null };
+}
+
+export async function syncQueuedVisionImageMutations(userId: string): Promise<void> {
+  if (!canUseSupabaseData()) return;
+  const supabase = getSupabaseClient();
+  const pending = await listPendingVisionImageMutations(userId);
+  for (const mutation of pending) {
+    try {
+      await updateVisionImageMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
+      const { error } = await supabase
+        .from('vision_images')
+        .insert(mutation.payload)
+        .select()
+        .returns<VisionImageRow>()
+        .single();
+      if (error) throw error;
+      await removeLocalVisionImageRecord(mutation.image_id);
+      await removeVisionImageMutation(mutation.id);
+    } catch (error) {
+      await updateVisionImageMutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+}
+
+export async function getVisionImageQueueStatus(userId: string): Promise<VisionImageQueueStatus> {
+  if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
+  return getVisionImageMutationCounts(userId);
 }
 
 export async function updateVisionImage(
