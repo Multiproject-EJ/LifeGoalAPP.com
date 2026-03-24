@@ -53,6 +53,7 @@ import {
   claimCreatureBondMilestoneForUser,
   getUnclaimedBondMilestones,
   CREATURE_BOND_XP_PER_LEVEL,
+  type CreatureCollectionEntry,
 } from '../services/creatureCollectionService';
 import {
   earnCreatureTreatsForUser,
@@ -363,6 +364,39 @@ function areStringArraysEqual(left: string[], right: string[]) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
+function mergeCreatureCollections(
+  primary: CreatureCollectionEntry[],
+  fallback: CreatureCollectionEntry[],
+): CreatureCollectionEntry[] {
+  const byId = new Map<string, CreatureCollectionEntry>();
+  [...fallback, ...primary].forEach((entry) => {
+    const existing = byId.get(entry.creatureId);
+    if (!existing) {
+      byId.set(entry.creatureId, entry);
+      return;
+    }
+    byId.set(entry.creatureId, {
+      ...existing,
+      copies: Math.max(existing.copies, entry.copies),
+      firstCollectedAtMs: Math.min(existing.firstCollectedAtMs, entry.firstCollectedAtMs),
+      lastCollectedAtMs: Math.max(existing.lastCollectedAtMs, entry.lastCollectedAtMs),
+      lastCollectedIslandNumber:
+        existing.lastCollectedAtMs >= entry.lastCollectedAtMs
+          ? existing.lastCollectedIslandNumber
+          : entry.lastCollectedIslandNumber,
+      bondXp: Math.max(existing.bondXp, entry.bondXp),
+      bondLevel: Math.max(existing.bondLevel, entry.bondLevel),
+      lastFedAtMs: Math.max(existing.lastFedAtMs ?? 0, entry.lastFedAtMs ?? 0) || null,
+      claimedBondMilestones: Array.from(new Set([
+        ...existing.claimedBondMilestones,
+        ...entry.claimedBondMilestones,
+      ])).sort((a, b) => a - b),
+    });
+  });
+
+  return Array.from(byId.values()).sort((a, b) => b.lastCollectedAtMs - a.lastCollectedAtMs);
+}
+
 function preloadThemeAssets(theme: IslandBoardTheme) {
   const urls = [theme.depthMaskImage, theme.pathOverlayImage].filter(Boolean) as string[];
   urls.forEach((url) => {
@@ -483,13 +517,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [shields, setShields] = useState<number>(0);
   // M17C: shards wallet currency (persistent cross-island Shards balance)
   const [shards, setShards] = useState<number>(0);
-  // M8-COMPLETE: diamonds wallet currency (earned from mythic egg rewards; spent in utility stop)
-  const [diamonds, setDiamonds] = useState<number>(() => {
-    try {
-      const stored = window.localStorage.getItem(`island_run_diamonds_${session.user.id}`);
-      return stored !== null ? Math.max(0, parseInt(stored, 10) || 0) : 3;
-    } catch { return 3; }
-  });
+  // M19A: diamonds wallet currency now runtime-state backed for cross-device sync.
+  const [diamonds, setDiamonds] = useState<number>(3);
   // M16C: true when islandShards >= current tier threshold; cleared on player claim (M16E)
   const [shardMilestoneReached, setShardMilestoneReached] = useState<boolean>(false);
   // M16E: tier index of a pending (unclaimed) milestone; null when no claim is waiting
@@ -676,9 +705,44 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setShields(runtimeState.shields ?? 0);
     // M17C: Restore shards wallet currency from runtime state
     setShards(runtimeState.shards ?? 0);
+    // M19A: Restore diamonds wallet currency from runtime state
+    setDiamonds(runtimeState.diamonds ?? 3);
+    // M19A: Restore market owned bundles from runtime state map (with one-time local fallback migration)
+    const runtimeOwnedBundles = runtimeState.marketOwnedBundlesByIsland?.[islandKey];
+    if (runtimeOwnedBundles) {
+      setMarketOwnedBundles({
+        dice_bundle: Boolean(runtimeOwnedBundles.dice_bundle),
+        heart_bundle: Boolean(runtimeOwnedBundles.heart_bundle),
+        heart_boost_bundle: Boolean(runtimeOwnedBundles.heart_boost_bundle),
+      });
+    } else {
+      const localStorageKey = `island_run_shop_owned_${session.user.id}_island_${persistedIsland}`;
+      try {
+        const raw = window.localStorage.getItem(localStorageKey);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Record<string, boolean>;
+          if (parsed && typeof parsed === 'object') {
+            setMarketOwnedBundles({
+              dice_bundle: Boolean(parsed.dice_bundle),
+              heart_bundle: Boolean(parsed.heart_bundle),
+              heart_boost_bundle: Boolean(parsed.heart_boost_bundle),
+            });
+          } else {
+            setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+          }
+        } else {
+          setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+        }
+      } catch {
+        setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+      }
+    }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
-  }, [hasHydratedRuntimeState, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards]);
+    setAudioEnabled(runtimeState.audioEnabled ?? true);
+    setIslandRunAudioEnabled(runtimeState.audioEnabled ?? true);
+    setActiveCompanionId(runtimeState.activeCompanionId ?? fetchActiveCompanionId(session.user.id));
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -894,8 +958,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       userId: session.user.id,
       perIslandEggs: runtimeState.perIslandEggs ?? {},
     });
+    const runtimeCollection = Array.isArray(runtimeState.creatureCollection)
+      ? runtimeState.creatureCollection
+      : [];
+    if (runtimeCollection.length > 0) {
+      setCreatureCollection(mergeCreatureCollections(runtimeCollection, collection));
+      return;
+    }
     setCreatureCollection(collection);
-  }, [runtimeState.perIslandEggs, session.user.id]);
+  }, [runtimeState.perIslandEggs, runtimeState.creatureCollection, session.user.id]);
 
   useEffect(() => {
     const stillOwned = creatureCollection.some((entry) => entry.creatureId === activeCompanionId);
@@ -1143,19 +1214,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [client, session.user.id]);
 
   useEffect(() => {
+    const runtimeCompleted = runtimeState.onboardingDisplayNameLoopCompleted === true;
     const storedValue = window.localStorage.getItem(onboardingStorageKey);
     if (!storedValue) {
-      setIsDisplayNameLoopCompleted(false);
+      setIsDisplayNameLoopCompleted(runtimeCompleted);
       return;
     }
 
     try {
       const parsed = JSON.parse(storedValue) as { stepIndex?: number };
-      setIsDisplayNameLoopCompleted((parsed.stepIndex ?? 0) >= 1);
+      setIsDisplayNameLoopCompleted(runtimeCompleted || (parsed.stepIndex ?? 0) >= 1);
     } catch {
-      setIsDisplayNameLoopCompleted(false);
+      setIsDisplayNameLoopCompleted(runtimeCompleted);
     }
-  }, [onboardingStorageKey]);
+  }, [onboardingStorageKey, runtimeState.onboardingDisplayNameLoopCompleted]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || isOnboardingComplete) return;
@@ -1174,6 +1246,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     setDailyHeartsClaimed(runtimeState.dailyHeartsClaimedDayKey === dailyRewardPlan.dayKey);
   }, [dailyRewardPlan.dayKey, runtimeState.dailyHeartsClaimedDayKey]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if (runtimeState.onboardingDisplayNameLoopCompleted === isDisplayNameLoopCompleted) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted,
+    }));
+  }, [client, hasHydratedRuntimeState, isDisplayNameLoopCompleted, runtimeState.onboardingDisplayNameLoopCompleted, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if (runtimeState.audioEnabled === audioEnabled) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { audioEnabled },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      audioEnabled,
+    }));
+  }, [audioEnabled, client, hasHydratedRuntimeState, runtimeState.audioEnabled, session]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -1383,48 +1483,85 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeState((current) => ({ ...current, ...nextPatch }));
   }, [client, coins, dicePool, hasHydratedRuntimeState, hearts, runtimeState.coins, runtimeState.dicePool, runtimeState.hearts, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
 
-  // M8-COMPLETE: persist diamonds to localStorage (permanent cross-island balance)
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(`island_run_diamonds_${session.user.id}`, String(diamonds));
-    } catch {
-      // ignore storage errors
-    }
-  }, [diamonds, session.user.id]);
-
-  // M8-COMPLETE: restore shop owned state from localStorage on island change
+  // M19A: persist diamonds to runtime state (cross-device)
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
-    const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Record<string, boolean>;
-        if (parsed && typeof parsed === 'object') {
-          setMarketOwnedBundles({
-            dice_bundle: Boolean(parsed.dice_bundle),
-            heart_bundle: Boolean(parsed.heart_bundle),
-            heart_boost_bundle: Boolean(parsed.heart_boost_bundle),
-          });
-          return;
-        }
-      }
-    } catch {
-      // ignore storage errors
-    }
-    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
-  }, [hasHydratedRuntimeState, islandNumber, session.user.id]);
+    if (runtimeState.diamonds === diamonds) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { diamonds },
+    });
+    setRuntimeState((current) => ({ ...current, diamonds }));
+  }, [client, diamonds, hasHydratedRuntimeState, runtimeState.diamonds, session]);
 
-  // M8-COMPLETE: persist shop owned state to localStorage
+  // M19A: persist market owned state to runtime state map (and mirror legacy local storage key for compatibility)
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    const islandKey = String(islandNumber);
+    const persisted = runtimeState.marketOwnedBundlesByIsland?.[islandKey];
+    if (
+      persisted
+      && persisted.dice_bundle === marketOwnedBundles.dice_bundle
+      && persisted.heart_bundle === marketOwnedBundles.heart_bundle
+      && persisted.heart_boost_bundle === marketOwnedBundles.heart_boost_bundle
+    ) {
+      return;
+    }
+    const patch = {
+      [islandKey]: {
+        dice_bundle: marketOwnedBundles.dice_bundle,
+        heart_bundle: marketOwnedBundles.heart_bundle,
+        heart_boost_bundle: marketOwnedBundles.heart_boost_bundle,
+      },
+    };
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { marketOwnedBundlesByIsland: patch },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      marketOwnedBundlesByIsland: {
+        ...current.marketOwnedBundlesByIsland,
+        ...patch,
+      },
+    }));
+
     const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
     try {
       window.localStorage.setItem(key, JSON.stringify(marketOwnedBundles));
     } catch {
       // ignore storage errors
     }
-  }, [marketOwnedBundles, hasHydratedRuntimeState, islandNumber, session.user.id]);
+  }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const runtimeCollection = runtimeState.creatureCollection ?? [];
+    if (JSON.stringify(runtimeCollection) === JSON.stringify(creatureCollection)) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        creatureCollection,
+      },
+    });
+    setRuntimeState((current) => ({ ...current, creatureCollection }));
+  }, [client, creatureCollection, hasHydratedRuntimeState, runtimeState.creatureCollection, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if ((runtimeState.activeCompanionId ?? null) === (activeCompanionId ?? null)) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        activeCompanionId,
+      },
+    });
+    setRuntimeState((current) => ({ ...current, activeCompanionId: activeCompanionId ?? null }));
+  }, [activeCompanionId, client, hasHydratedRuntimeState, runtimeState.activeCompanionId, session]);
 
   // M17D: award wallet shards (persistent cross-island balance) by a given amount.
   // This is separate from awardShards (islandShards / Collectible Progress Bar).
@@ -1762,11 +1899,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    const hasSeenStory = window.localStorage.getItem(storySeenStorageKey) === 'true';
+    const hasSeenStory = runtimeState.storyPrologueSeen || window.localStorage.getItem(storySeenStorageKey) === 'true';
     if (!hasSeenStory) {
       setShowStoryReader(true);
     }
-  }, [hasHydratedRuntimeState, storySeenStorageKey]);
+  }, [hasHydratedRuntimeState, runtimeState.storyPrologueSeen, storySeenStorageKey]);
 
   useEffect(() => {
     if (isIslandTimerPendingStart || timeLeftSec > 0 || showTravelOverlay) {
@@ -3677,6 +3814,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore localStorage failures
     }
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { storyPrologueSeen: true },
+    });
+    setRuntimeState((current) => ({ ...current, storyPrologueSeen: true }));
   };
 
   const diceThrowDisplay = (

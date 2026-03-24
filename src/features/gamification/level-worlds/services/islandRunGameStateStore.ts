@@ -25,9 +25,24 @@ export interface PerIslandEggEntry {
 /** Key = island number (as string), value = egg entry */
 export type PerIslandEggsLedger = Record<string, PerIslandEggEntry>;
 
+export interface CreatureCollectionRuntimeEntry {
+  creatureId: string;
+  copies: number;
+  firstCollectedAtMs: number;
+  lastCollectedAtMs: number;
+  lastCollectedIslandNumber: number;
+  bondXp: number;
+  bondLevel: number;
+  lastFedAtMs: number | null;
+  claimedBondMilestones: number[];
+}
+
 export interface IslandRunGameStateRecord {
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
+  onboardingDisplayNameLoopCompleted: boolean;
+  storyPrologueSeen: boolean;
+  audioEnabled: boolean;
   currentIslandNumber: number;
   cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
@@ -48,7 +63,15 @@ export interface IslandRunGameStateRecord {
   shardClaimCount: number;
   shields: number;
   shards: number;
+  diamonds: number;
   completedStopsByIsland: Record<string, string[]>;
+  marketOwnedBundlesByIsland: Record<string, {
+    dice_bundle: boolean;
+    heart_bundle: boolean;
+    heart_boost_bundle: boolean;
+  }>;
+  creatureCollection: CreatureCollectionRuntimeEntry[];
+  activeCompanionId: string | null;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -165,6 +188,9 @@ function getDefaultRecord(): IslandRunGameStateRecord {
   return {
     firstRunClaimed: false,
     dailyHeartsClaimedDayKey: null,
+    onboardingDisplayNameLoopCompleted: false,
+    storyPrologueSeen: false,
+    audioEnabled: true,
     currentIslandNumber: 1,
     cycleIndex: 0,
     bossTrialResolvedIslandNumber: null,
@@ -185,7 +211,54 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     shardClaimCount: 0,
     shields: 0,
     shards: 0,
+    diamonds: 3,
     completedStopsByIsland: {},
+    marketOwnedBundlesByIsland: {},
+    creatureCollection: [],
+    activeCompanionId: null,
+  };
+}
+
+function toCreatureCollectionEntry(value: unknown): CreatureCollectionRuntimeEntry | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Record<string, unknown>;
+  if (typeof candidate.creatureId !== 'string' || !candidate.creatureId.trim()) return null;
+  const copies = typeof candidate.copies === 'number' && Number.isFinite(candidate.copies) ? Math.max(1, Math.floor(candidate.copies)) : 1;
+  const firstCollectedAtMs = typeof candidate.firstCollectedAtMs === 'number' && Number.isFinite(candidate.firstCollectedAtMs)
+    ? candidate.firstCollectedAtMs
+    : Date.now();
+  const lastCollectedAtMs = typeof candidate.lastCollectedAtMs === 'number' && Number.isFinite(candidate.lastCollectedAtMs)
+    ? candidate.lastCollectedAtMs
+    : firstCollectedAtMs;
+  const lastCollectedIslandNumber = typeof candidate.lastCollectedIslandNumber === 'number' && Number.isFinite(candidate.lastCollectedIslandNumber)
+    ? Math.max(1, Math.floor(candidate.lastCollectedIslandNumber))
+    : 1;
+  const bondXp = typeof candidate.bondXp === 'number' && Number.isFinite(candidate.bondXp)
+    ? Math.max(0, Math.floor(candidate.bondXp))
+    : 0;
+  const derivedBondLevel = Math.floor(bondXp / 3) + 1;
+  const bondLevel = typeof candidate.bondLevel === 'number' && Number.isFinite(candidate.bondLevel)
+    ? Math.max(1, Math.floor(candidate.bondLevel), derivedBondLevel)
+    : derivedBondLevel;
+  const lastFedAtMs = typeof candidate.lastFedAtMs === 'number' && Number.isFinite(candidate.lastFedAtMs)
+    ? candidate.lastFedAtMs
+    : null;
+  const claimedBondMilestones = Array.isArray(candidate.claimedBondMilestones)
+    ? Array.from(new Set(candidate.claimedBondMilestones
+      .filter((milestone): milestone is number => typeof milestone === 'number' && Number.isFinite(milestone))
+      .map((milestone) => Math.max(1, Math.floor(milestone))))
+    ).sort((a, b) => a - b)
+    : [];
+  return {
+    creatureId: candidate.creatureId,
+    copies,
+    firstCollectedAtMs,
+    lastCollectedAtMs,
+    lastCollectedIslandNumber,
+    bondXp,
+    bondLevel,
+    lastFedAtMs,
+    claimedBondMilestones,
   };
 }
 
@@ -199,6 +272,18 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.dailyHeartsClaimedDayKey === 'string' || value.dailyHeartsClaimedDayKey === null
         ? value.dailyHeartsClaimedDayKey
         : fallback.dailyHeartsClaimedDayKey,
+    onboardingDisplayNameLoopCompleted:
+      typeof value.onboardingDisplayNameLoopCompleted === 'boolean'
+        ? value.onboardingDisplayNameLoopCompleted
+        : fallback.onboardingDisplayNameLoopCompleted,
+    storyPrologueSeen:
+      typeof value.storyPrologueSeen === 'boolean'
+        ? value.storyPrologueSeen
+        : fallback.storyPrologueSeen,
+    audioEnabled:
+      typeof value.audioEnabled === 'boolean'
+        ? value.audioEnabled
+        : fallback.audioEnabled,
     currentIslandNumber:
       typeof value.currentIslandNumber === 'number' && Number.isFinite(value.currentIslandNumber)
         ? Math.max(1, Math.floor(value.currentIslandNumber))
@@ -278,6 +363,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.shards === 'number' && Number.isFinite(value.shards)
         ? Math.max(0, Math.floor(value.shards))
         : fallback.shards,
+    diamonds:
+      typeof value.diamonds === 'number' && Number.isFinite(value.diamonds)
+        ? Math.max(0, Math.floor(value.diamonds))
+        : fallback.diamonds,
     completedStopsByIsland:
       value.completedStopsByIsland !== null && typeof value.completedStopsByIsland === 'object' && !Array.isArray(value.completedStopsByIsland)
         ? Object.fromEntries(
@@ -287,6 +376,35 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
             ]),
           )
         : fallback.completedStopsByIsland,
+    marketOwnedBundlesByIsland:
+      value.marketOwnedBundlesByIsland !== null && typeof value.marketOwnedBundlesByIsland === 'object' && !Array.isArray(value.marketOwnedBundlesByIsland)
+        ? Object.fromEntries(
+            Object.entries(value.marketOwnedBundlesByIsland).map(([islandKey, bundles]) => [
+              islandKey,
+              bundles !== null && typeof bundles === 'object' && !Array.isArray(bundles)
+                ? {
+                    dice_bundle: Boolean((bundles as Record<string, unknown>).dice_bundle),
+                    heart_bundle: Boolean((bundles as Record<string, unknown>).heart_bundle),
+                    heart_boost_bundle: Boolean((bundles as Record<string, unknown>).heart_boost_bundle),
+                  }
+                : {
+                    dice_bundle: false,
+                    heart_bundle: false,
+                    heart_boost_bundle: false,
+                  },
+            ]),
+          )
+        : fallback.marketOwnedBundlesByIsland,
+    creatureCollection:
+      Array.isArray(value.creatureCollection)
+        ? value.creatureCollection
+            .map((entry) => toCreatureCollectionEntry(entry))
+            .filter((entry): entry is CreatureCollectionRuntimeEntry => entry !== null)
+        : fallback.creatureCollection,
+    activeCompanionId:
+      typeof value.activeCompanionId === 'string' || value.activeCompanionId === null
+        ? value.activeCompanionId
+        : fallback.activeCompanionId,
   };
 }
 
@@ -348,7 +466,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,completed_stops_by_island')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -383,6 +501,9 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     {
       firstRunClaimed: data.first_run_claimed,
       dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
+      onboardingDisplayNameLoopCompleted: data.onboarding_display_name_loop_completed ?? false,
+      storyPrologueSeen: data.story_prologue_seen ?? false,
+      audioEnabled: data.audio_enabled ?? true,
       currentIslandNumber: data.current_island_number,
       cycleIndex: data.cycle_index ?? 0,
       bossTrialResolvedIslandNumber: data.boss_trial_resolved_island_number,
@@ -403,7 +524,11 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       shardClaimCount: data.shard_claim_count ?? 0,
       shields: data.shields ?? 0,
       shards: data.shards ?? 0,
+      diamonds: data.diamonds ?? 3,
       completedStopsByIsland: data.completed_stops_by_island ?? {},
+      marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
+      creatureCollection: data.creature_collection ?? [],
+      activeCompanionId: data.active_companion_id ?? null,
     },
     fallback,
   );
@@ -481,6 +606,9 @@ export async function writeIslandRunGameStateRecord(options: {
       user_id: session.user.id,
       first_run_claimed: record.firstRunClaimed,
       daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
+      onboarding_display_name_loop_completed: record.onboardingDisplayNameLoopCompleted,
+      story_prologue_seen: record.storyPrologueSeen,
+      audio_enabled: record.audioEnabled,
       current_island_number: record.currentIslandNumber,
       cycle_index: record.cycleIndex,
       boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,
@@ -501,7 +629,11 @@ export async function writeIslandRunGameStateRecord(options: {
       shard_claim_count: record.shardClaimCount,
       shields: record.shields,
       shards: record.shards,
+      diamonds: record.diamonds,
       completed_stops_by_island: record.completedStopsByIsland,
+      market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
+      creature_collection: record.creatureCollection,
+      active_companion_id: record.activeCompanionId,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },

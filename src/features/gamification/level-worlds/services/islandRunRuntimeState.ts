@@ -1,11 +1,14 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { getIslandRunRuntimeStateBackend } from './islandRunRuntimeStateBackend';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
-import type { PerIslandEggsLedger } from './islandRunGameStateStore';
+import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
 
 export interface IslandRunRuntimeState {
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
+  onboardingDisplayNameLoopCompleted: boolean;
+  storyPrologueSeen: boolean;
+  audioEnabled: boolean;
   currentIslandNumber: number;
   cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
@@ -26,7 +29,15 @@ export interface IslandRunRuntimeState {
   shardClaimCount: number;
   shields: number;
   shards: number;
+  diamonds: number;
   completedStopsByIsland: Record<string, string[]>;
+  marketOwnedBundlesByIsland: Record<string, {
+    dice_bundle: boolean;
+    heart_bundle: boolean;
+    heart_boost_bundle: boolean;
+  }>;
+  creatureCollection: CreatureCollectionRuntimeEntry[];
+  activeCompanionId: string | null;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -83,6 +94,9 @@ export async function persistIslandRunRuntimeStatePatch(options: {
   patch: {
     firstRunClaimed?: boolean;
     dailyHeartsClaimedDayKey?: string | null;
+    onboardingDisplayNameLoopCompleted?: boolean;
+    storyPrologueSeen?: boolean;
+    audioEnabled?: boolean;
     onboardingComplete?: boolean;
     currentIslandNumber?: number;
     cycleIndex?: number;
@@ -104,7 +118,15 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     shardClaimCount?: number;
     shields?: number;
     shards?: number;
+    diamonds?: number;
     completedStopsByIsland?: Record<string, string[]>;
+    marketOwnedBundlesByIsland?: Record<string, {
+      dice_bundle: boolean;
+      heart_bundle: boolean;
+      heart_boost_bundle: boolean;
+    }>;
+    creatureCollection?: CreatureCollectionRuntimeEntry[];
+    activeCompanionId?: string | null;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

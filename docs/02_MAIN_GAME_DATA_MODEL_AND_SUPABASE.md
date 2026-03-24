@@ -155,6 +155,9 @@ Repeat similarly for other tables.
 | `user_id` | uuid | — | PK, references auth.users |
 | `first_run_claimed` | boolean | false | Whether the first-run bonus has been claimed |
 | `daily_hearts_claimed_day_key` | text | null | Day key for the last daily hearts claim |
+| `onboarding_display_name_loop_completed` | boolean | false | Whether the Island Run onboarding display-name loop has been completed |
+| `story_prologue_seen` | boolean | false | Whether the Island Run prologue story has been viewed |
+| `audio_enabled` | boolean | true | Island Run audio/haptics toggle preference synced across devices |
 | `current_island_number` | int | 1 | Current island the player is on |
 | `boss_trial_resolved_island_number` | int | null | Island where boss trial was resolved |
 | `cycle_index` | int | 0 | Number of completed 120-island wraps (`120 -> 1`) |
@@ -176,6 +179,10 @@ Repeat similarly for other tables.
 | `shard_claim_count` | int | 0 | Total number of shard milestone claims |
 | `shields` | int | 0 | Body Habit Shield wallet currency balance (earned from Body habit completions) |
 | `shards` | int | 0 | Persistent Shards wallet currency balance (accumulates across islands; earn paths wired in future slices) |
+| `diamonds` | int | 3 | Persistent Diamonds wallet balance for Island Run utility/market spends |
+| `market_owned_bundles_by_island` | jsonb | `'{}'` | Per-island market owned-bundle ledger. Key = island number as text. Value = `{dice_bundle, heart_bundle, heart_boost_bundle}` booleans |
+| `creature_collection` | jsonb | `'[]'` | Creature collection roster for Island Run sanctuary progression (copies/bond fields per creature) |
+| `active_companion_id` | text | null | Selected active sanctuary companion creature id |
 | `updated_at` | timestamptz | now() | Last updated timestamp |
 
 ---
