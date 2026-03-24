@@ -56,9 +56,7 @@ import {
   type CreatureCollectionEntry,
 } from '../services/creatureCollectionService';
 import {
-  earnCreatureTreatsForUser,
   fetchCreatureTreatInventory,
-  spendCreatureTreatForUser,
   type CreatureTreatType,
 } from '../services/creatureTreatInventoryService';
 import { getCompanionBonusForCreature, getCreatureSpecialtyForCompanion, selectCreatureForEgg } from '../services/creatureCatalog';
@@ -69,7 +67,6 @@ import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
 import {
   playIslandRunSound,
   triggerIslandRunHaptic,
-  getIslandRunAudioEnabled,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
@@ -109,6 +106,7 @@ const SPIN_MAX = 5;
 const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
+const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 
 function getOpenHatcheryOnLoadFlag(): boolean {
   return typeof window !== 'undefined'
@@ -320,10 +318,6 @@ const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
   mid: '#ffe066',
   front: '#ff4ff5',
 };
-
-function getCompanionBonusStorageKey(userId: string): string {
-  return `island_run_companion_bonus_applied_${userId}`;
-}
 
 function toScreen(anchor: TileAnchor, width: number, height: number) {
   return {
@@ -563,7 +557,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(() => getIslandRunAudioEnabled());
+  const [audioEnabled, setAudioEnabled] = useState(true);
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
   const [cycleIndex, setCycleIndex] = useState<number>(0);
 
@@ -616,7 +610,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
   const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; heartsEarned: number; coinsEarned: number; stopsCleared: number } | null>(null);
 
-  const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const runtimeStateRef = useRef(runtimeState);
@@ -626,6 +619,50 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
+
+  const isReconcilingRuntimeStateRef = useRef(false);
+  const reconcileRuntimeState = useCallback(async (
+    reason: 'realtime' | 'focus' | 'visibility' | 'interval',
+  ) => {
+    if (!client || isReconcilingRuntimeStateRef.current || !hasHydratedRuntimeState) {
+      return;
+    }
+
+    isReconcilingRuntimeStateRef.current = true;
+    try {
+      const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client });
+      if (hydrationResult.source !== 'table') {
+        return;
+      }
+
+      const currentRuntimeVersion = runtimeStateRef.current.runtimeVersion ?? 0;
+      const incomingRuntimeVersion = hydrationResult.state.runtimeVersion ?? 0;
+      if (incomingRuntimeVersion <= currentRuntimeVersion) {
+        return;
+      }
+
+      setRuntimeState(hydrationResult.state);
+      logIslandRunEntryDebug('island_run_runtime_reconciled', {
+        userId: session.user.id,
+        reason,
+        previousRuntimeVersion: currentRuntimeVersion,
+        incomingRuntimeVersion,
+        currentIslandNumber: hydrationResult.state.currentIslandNumber,
+      });
+
+      if (reason === 'realtime') {
+        setLandingText('Synced latest Island Run state from another active session.');
+      }
+    } catch (error) {
+      logIslandRunEntryDebug('island_run_runtime_reconcile_error', {
+        userId: session.user.id,
+        reason,
+        errorMessage: error instanceof Error ? error.message : 'unknown_error',
+      });
+    } finally {
+      isReconcilingRuntimeStateRef.current = false;
+    }
+  }, [client, hasHydratedRuntimeState, session]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) {
@@ -715,7 +752,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         heart_bundle: Boolean(runtimeOwnedBundles.heart_bundle),
         heart_boost_bundle: Boolean(runtimeOwnedBundles.heart_boost_bundle),
       });
-    } else {
+    } else if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
       const localStorageKey = `island_run_shop_owned_${session.user.id}_island_${persistedIsland}`;
       try {
         const raw = window.localStorage.getItem(localStorageKey);
@@ -736,13 +773,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       } catch {
         setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
       }
+    } else {
+      setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
     setAudioEnabled(runtimeState.audioEnabled ?? true);
     setIslandRunAudioEnabled(runtimeState.audioEnabled ?? true);
     setActiveCompanionId(runtimeState.activeCompanionId ?? fetchActiveCompanionId(session.user.id));
-  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
+    setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -765,6 +805,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const storedStops = Array.isArray(runtimeState.completedStopsByIsland?.[String(targetIslandNumber)])
       ? runtimeState.completedStopsByIsland[String(targetIslandNumber)]!.filter((x): x is string => typeof x === 'string')
       : (() => {
+          if (ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) return [];
           if (typeof window === 'undefined') return [];
           const key = `island_run_stops_${session.user.id}_island_${targetIslandNumber}`;
           try {
@@ -950,8 +991,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [showSanctuaryPanel]);
 
   useEffect(() => {
+    if (hasHydratedRuntimeState) return;
     setCreatureTreatInventory(fetchCreatureTreatInventory(session.user.id));
-  }, [session.user.id]);
+  }, [hasHydratedRuntimeState, session.user.id]);
 
   useEffect(() => {
     const { collection } = migrateLegacyEggLedgerToCollection({
@@ -1214,20 +1256,64 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [client, session.user.id]);
 
   useEffect(() => {
-    const runtimeCompleted = runtimeState.onboardingDisplayNameLoopCompleted === true;
-    const storedValue = window.localStorage.getItem(onboardingStorageKey);
-    if (!storedValue) {
-      setIsDisplayNameLoopCompleted(runtimeCompleted);
+    if (!client || !hasHydratedRuntimeState) {
       return;
     }
 
-    try {
-      const parsed = JSON.parse(storedValue) as { stepIndex?: number };
-      setIsDisplayNameLoopCompleted(runtimeCompleted || (parsed.stepIndex ?? 0) >= 1);
-    } catch {
-      setIsDisplayNameLoopCompleted(runtimeCompleted);
+    const channel = client
+      .channel(`island_run_runtime_state_${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'island_run_runtime_state',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        () => {
+          void reconcileRuntimeState('realtime');
+        },
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [client, hasHydratedRuntimeState, reconcileRuntimeState, session.user.id]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
     }
-  }, [onboardingStorageKey, runtimeState.onboardingDisplayNameLoopCompleted]);
+
+    const onFocus = () => {
+      void reconcileRuntimeState('focus');
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void reconcileRuntimeState('visibility');
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void reconcileRuntimeState('interval');
+      }
+    }, 45_000);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.clearInterval(intervalId);
+    };
+  }, [hasHydratedRuntimeState, reconcileRuntimeState]);
+
+  useEffect(() => {
+    setIsDisplayNameLoopCompleted(runtimeState.onboardingDisplayNameLoopCompleted === true);
+  }, [runtimeState.onboardingDisplayNameLoopCompleted]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || isOnboardingComplete) return;
@@ -1390,6 +1476,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return [];
     }
 
+    if (ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
+      return [];
+    }
+
     const key = `island_run_stops_${session.user.id}_island_${targetIslandNumber}`;
     try {
       const raw = window.localStorage.getItem(key);
@@ -1417,11 +1507,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M11D: persist completedStops to both localStorage and Supabase runtime state
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
-    const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
-    try {
-      window.localStorage.setItem(key, JSON.stringify(completedStops));
-    } catch {
-      // ignore storage errors
+    if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
+      const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
+      try {
+        window.localStorage.setItem(key, JSON.stringify(completedStops));
+      } catch {
+        // ignore storage errors
+      }
     }
     const islandKey = String(islandNumber);
     const persistedStops = runtimeState.completedStopsByIsland?.[islandKey] ?? [];
@@ -1528,13 +1620,39 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       },
     }));
 
-    const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
-    try {
-      window.localStorage.setItem(key, JSON.stringify(marketOwnedBundles));
-    } catch {
-      // ignore storage errors
+    if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
+      const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
+      try {
+        window.localStorage.setItem(key, JSON.stringify(marketOwnedBundles));
+      } catch {
+        // ignore storage errors
+      }
     }
   }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const runtimeInventory = runtimeState.creatureTreatInventory;
+    if (
+      runtimeInventory
+      && runtimeInventory.basic === creatureTreatInventory.basic
+      && runtimeInventory.favorite === creatureTreatInventory.favorite
+      && runtimeInventory.rare === creatureTreatInventory.rare
+    ) {
+      return;
+    }
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        creatureTreatInventory,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      creatureTreatInventory,
+    }));
+  }, [client, creatureTreatInventory, hasHydratedRuntimeState, runtimeState.creatureTreatInventory, session]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -2348,16 +2466,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     const visitKey = `${cycleIndex}:${islandNumber}`;
-    const storageKey = getCompanionBonusStorageKey(session.user.id);
-
-    try {
-      if (window.localStorage.getItem(storageKey) === visitKey) {
-        return;
-      }
-      window.localStorage.setItem(storageKey, visitKey);
-    } catch {
-      // ignore storage failures and still apply once for this mount
+    if (runtimeState.companionBonusLastVisitKey === visitKey) {
+      return;
     }
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        companionBonusLastVisitKey: visitKey,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      companionBonusLastVisitKey: visitKey,
+    }));
 
     if (activeCompanionBonus.effect === 'bonus_heart') {
       setHearts((current) => Math.min(MAX_HEARTS, current + activeCompanionBonus.amount));
@@ -2372,8 +2495,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     activeCompanion,
     activeCompanionBonus,
     cycleIndex,
+    client,
     hasHydratedRuntimeState,
     islandNumber,
+    runtimeState.companionBonusLastVisitKey,
+    session,
     session.user.id,
   ]);
 
@@ -2407,7 +2533,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       islandNumber,
       collectedAtMs: nowTs,
     }));
-    setCreatureTreatInventory(earnCreatureTreatsForUser(session.user.id, CREATURE_TREAT_EARN_BY_EGG_TIER[resolvedEgg.tier]));
+    const earnedTreats = CREATURE_TREAT_EARN_BY_EGG_TIER[resolvedEgg.tier];
+    setCreatureTreatInventory((current) => ({
+      basic: Math.max(0, current.basic + (earnedTreats.basic ?? 0)),
+      favorite: Math.max(0, current.favorite + (earnedTreats.favorite ?? 0)),
+      rare: Math.max(0, current.rare + (earnedTreats.rare ?? 0)),
+    }));
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
     setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
@@ -2552,35 +2683,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setBoosterError('Display name is required.');
       return;
     }
-
-    let nextStepIndex = 1;
-    let tokens = 0;
-    let unlockedItemIds: string[] = [];
-
-    const existingState = window.localStorage.getItem(onboardingStorageKey);
-    if (existingState) {
-      try {
-        const parsed = JSON.parse(existingState) as {
-          stepIndex?: number;
-          tokens?: number;
-          unlockedItemIds?: string[];
-        };
-        nextStepIndex = Math.max(1, parsed.stepIndex ?? 0);
-        tokens = parsed.tokens ?? 0;
-        unlockedItemIds = parsed.unlockedItemIds ?? [];
-      } catch {
-        // ignore broken storage and write a fresh payload
-      }
-    }
-
-    window.localStorage.setItem(
-      onboardingStorageKey,
-      JSON.stringify({
-        stepIndex: nextStepIndex,
-        tokens,
-        unlockedItemIds,
-      }),
-    );
 
     setIsDisplayNameLoopCompleted(true);
     setHearts((current) => current + 1);
@@ -3522,7 +3624,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setSanctuaryFeedback(`No ${treatOption.label.toLowerCase()} left. Earn more by collecting creatures.`);
         return;
       }
-      setCreatureTreatInventory(spendCreatureTreatForUser(session.user.id, treatType));
+      setCreatureTreatInventory((current) => ({
+        ...current,
+        [treatType]: Math.max(0, current[treatType] - 1),
+      }));
       const previousBondLevel = target.bondLevel;
       setCreatureCollection(feedCreatureForUser({
         userId: session.user.id,
@@ -3692,7 +3797,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setSanctuaryFeedback(`No ${treatOption.label.toLowerCase()} left. Earn more by collecting creatures.`);
       return;
     }
-    setCreatureTreatInventory(spendCreatureTreatForUser(session.user.id, treatType));
+    setCreatureTreatInventory((current) => ({
+      ...current,
+      [treatType]: Math.max(0, current[treatType] - 1),
+    }));
     const previousBondLevel = target.bondLevel;
     setCreatureCollection(feedCreatureForUser({
       userId: session.user.id,
@@ -3857,7 +3965,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               🌀 Spin
             </button>
           )}
-          {/* M10A: audio toggle — persists to localStorage */}
+          {/* M10A: audio toggle */}
           <button
             type="button"
             className="island-run-prototype__audio-toggle"
