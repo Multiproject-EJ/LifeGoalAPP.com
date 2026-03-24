@@ -19,8 +19,12 @@ export type VisionImageMutationRecord = {
   user_id: string;
   image_id: string;
   server_id: string | null;
-  operation: 'create_url';
-  payload: VisionImageInsert;
+  operation: 'create_url' | 'create_file';
+  payload: VisionImageInsert & {
+    staged_file_data_url?: string | null;
+    staged_file_name?: string | null;
+    staged_content_type?: string | null;
+  };
   status: 'pending' | 'processing' | 'failed';
   attempt_count: number;
   created_at_ms: number;
