@@ -8,6 +8,8 @@ import {
   putPersonalityTest,
   type PersonalityTestValue,
 } from './localDb';
+import { enqueuePersonalityTestMutation } from './personalityTestOfflineRepo';
+import { recordOfflineSyncEvent } from '../services/offlineSyncTelemetry';
 
 export type PersonalityTestRecord = PersonalityTestValue;
 
@@ -32,6 +34,34 @@ export async function queuePersonalityTestResult(params: {
   };
 
   await putPersonalityTest(record);
+  const nowMs = Date.now();
+  await enqueuePersonalityTestMutation({
+    id: `personality-test-mut-${record.id}`,
+    user_id: params.userId,
+    test_id: record.id,
+    operation: 'upsert_test',
+    payload: {
+      id: record.id,
+      user_id: record.user_id,
+      taken_at: record.taken_at,
+      traits: record.traits,
+      axes: record.axes,
+      answers: record.answers ?? null,
+      version: record.version,
+      archetype_hand: record.archetype_hand ?? null,
+    },
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  recordOfflineSyncEvent({
+    feature: 'personality_test',
+    event: 'queue_enqueued',
+    userId: params.userId,
+    pending: 1,
+  });
 
   return record;
 }
