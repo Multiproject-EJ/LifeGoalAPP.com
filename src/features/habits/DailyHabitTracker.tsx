@@ -44,7 +44,15 @@ import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { fetchGoals, insertGoal } from '../../services/goals';
 import { getHabitReminderQueueStatus, syncQueuedHabitReminderPrefs } from '../../services/habitReminderPrefs';
-import { archiveHabitV2, updateHabitFullV2, pauseHabitV2, deactivateHabitV2, type HabitV2Row } from '../../services/habitsV2';
+import {
+  archiveHabitV2,
+  getHabitsV2QueueStatus,
+  pauseHabitV2,
+  deactivateHabitV2,
+  syncQueuedHabitsV2Mutations,
+  updateHabitFullV2,
+  type HabitV2Row,
+} from '../../services/habitsV2';
 import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import {
@@ -3105,14 +3113,15 @@ export function DailyHabitTracker({
       setQueueStatus({ pending: 0, failed: 0 });
       return;
     }
-    const [completionStatus, logStatus, reminderStatus] = await Promise.all([
+    const [completionStatus, logStatus, reminderStatus, habitsStatus] = await Promise.all([
       getHabitCompletionQueueStatus(session.user.id),
       getHabitLogQueueStatus(session.user.id),
       getHabitReminderQueueStatus(session.user.id),
+      getHabitsV2QueueStatus(session.user.id),
     ]);
     setQueueStatus({
-      pending: completionStatus.pending + logStatus.pending + reminderStatus.pending,
-      failed: completionStatus.failed + logStatus.failed + reminderStatus.failed,
+      pending: completionStatus.pending + logStatus.pending + reminderStatus.pending + habitsStatus.pending,
+      failed: completionStatus.failed + logStatus.failed + reminderStatus.failed + habitsStatus.failed,
     });
   }, [isConfigured, session?.user?.id]);
 
@@ -3184,6 +3193,7 @@ export function DailyHabitTracker({
         syncQueuedHabitCompletions(session.user.id),
         syncQueuedHabitLogs(session.user.id),
         syncQueuedHabitReminderPrefs(session.user.id),
+        syncQueuedHabitsV2Mutations(session.user.id),
       ])
         .then(() => Promise.all([loadMonthlyStats(selectedYear, selectedMonth), refreshHabits(), refreshQueueStatus()]))
         .catch(() => undefined);
