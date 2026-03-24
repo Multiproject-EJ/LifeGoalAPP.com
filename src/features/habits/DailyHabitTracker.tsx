@@ -9,7 +9,9 @@ import {
   clearHabitCompletion,
   fetchHabitLogsForRange,
   fetchHabitsForUser,
+  getHabitLogQueueStatus,
   logHabitCompletion,
+  syncQueuedHabitLogs,
   type LegacyHabitWithGoal as HabitWithGoal,
 } from '../../compat/legacyHabitsAdapter';
 import { useGamification } from '../../hooks/useGamification';
@@ -294,6 +296,11 @@ const LIFE_WHEEL_COLORS: Record<string, string> = {
 
 const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatically once you reconnect.';
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
+
+type HabitOfflineQueueStatus = {
+  pending: number;
+  failed: number;
+};
 const LIFE_WHEEL_UNASSIGNED = 'unassigned';
 const GOAL_UNASSIGNED = 'unassigned';
 const QUICK_JOURNAL_PULSE_DEFAULTS = {
@@ -433,7 +440,7 @@ export function DailyHabitTracker({
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [queueStatus, setQueueStatus] = useState<HabitCompletionQueueStatus>({ pending: 0, failed: 0 });
+  const [queueStatus, setQueueStatus] = useState<HabitOfflineQueueStatus>({ pending: 0, failed: 0 });
   const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
   const [lifecycleActionHabitIds, setLifecycleActionHabitIds] = useState<Set<string>>(new Set());
   const [todayPauseDialogHabit, setTodayPauseDialogHabit] = useState<HabitWithGoal | null>(null);
@@ -3097,8 +3104,14 @@ export function DailyHabitTracker({
       setQueueStatus({ pending: 0, failed: 0 });
       return;
     }
-    const status = await getHabitCompletionQueueStatus(session.user.id);
-    setQueueStatus(status);
+    const [completionStatus, logStatus] = await Promise.all([
+      getHabitCompletionQueueStatus(session.user.id),
+      getHabitLogQueueStatus(session.user.id),
+    ]);
+    setQueueStatus({
+      pending: completionStatus.pending + logStatus.pending,
+      failed: completionStatus.failed + logStatus.failed,
+    });
   }, [isConfigured, session?.user?.id]);
 
   // Load monthly statistics when month changes
@@ -3165,7 +3178,10 @@ export function DailyHabitTracker({
     }
 
     const runSync = () => {
-      syncQueuedHabitCompletions(session.user.id)
+      Promise.all([
+        syncQueuedHabitCompletions(session.user.id),
+        syncQueuedHabitLogs(session.user.id),
+      ])
         .then(() => Promise.all([loadMonthlyStats(selectedYear, selectedMonth), refreshHabits(), refreshQueueStatus()]))
         .catch(() => undefined);
     };
