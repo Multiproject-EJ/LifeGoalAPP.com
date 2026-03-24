@@ -4,6 +4,7 @@ import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetr
 import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
 
 export interface IslandRunRuntimeState {
+  runtimeVersion: number;
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
   onboardingDisplayNameLoopCompleted: boolean;

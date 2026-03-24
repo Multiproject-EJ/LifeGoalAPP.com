@@ -627,6 +627,50 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
 
+  const isReconcilingRuntimeStateRef = useRef(false);
+  const reconcileRuntimeState = useCallback(async (
+    reason: 'realtime' | 'focus' | 'visibility' | 'interval',
+  ) => {
+    if (!client || isReconcilingRuntimeStateRef.current || !hasHydratedRuntimeState) {
+      return;
+    }
+
+    isReconcilingRuntimeStateRef.current = true;
+    try {
+      const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client });
+      if (hydrationResult.source !== 'table') {
+        return;
+      }
+
+      const currentRuntimeVersion = runtimeStateRef.current.runtimeVersion ?? 0;
+      const incomingRuntimeVersion = hydrationResult.state.runtimeVersion ?? 0;
+      if (incomingRuntimeVersion <= currentRuntimeVersion) {
+        return;
+      }
+
+      setRuntimeState(hydrationResult.state);
+      logIslandRunEntryDebug('island_run_runtime_reconciled', {
+        userId: session.user.id,
+        reason,
+        previousRuntimeVersion: currentRuntimeVersion,
+        incomingRuntimeVersion,
+        currentIslandNumber: hydrationResult.state.currentIslandNumber,
+      });
+
+      if (reason === 'realtime') {
+        setLandingText('Synced latest Island Run state from another active session.');
+      }
+    } catch (error) {
+      logIslandRunEntryDebug('island_run_runtime_reconcile_error', {
+        userId: session.user.id,
+        reason,
+        errorMessage: error instanceof Error ? error.message : 'unknown_error',
+      });
+    } finally {
+      isReconcilingRuntimeStateRef.current = false;
+    }
+  }, [client, hasHydratedRuntimeState, session]);
+
   useEffect(() => {
     if (!hasHydratedRuntimeState) {
       return;
@@ -1212,6 +1256,62 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isActive = false;
     };
   }, [client, session.user.id]);
+
+  useEffect(() => {
+    if (!client || !hasHydratedRuntimeState) {
+      return;
+    }
+
+    const channel = client
+      .channel(`island_run_runtime_state_${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'island_run_runtime_state',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        () => {
+          void reconcileRuntimeState('realtime');
+        },
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [client, hasHydratedRuntimeState, reconcileRuntimeState, session.user.id]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    const onFocus = () => {
+      void reconcileRuntimeState('focus');
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void reconcileRuntimeState('visibility');
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void reconcileRuntimeState('interval');
+      }
+    }, 45_000);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.clearInterval(intervalId);
+    };
+  }, [hasHydratedRuntimeState, reconcileRuntimeState]);
 
   useEffect(() => {
     const runtimeCompleted = runtimeState.onboardingDisplayNameLoopCompleted === true;

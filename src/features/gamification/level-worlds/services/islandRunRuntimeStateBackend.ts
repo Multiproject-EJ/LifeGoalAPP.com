@@ -80,6 +80,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
   async persistPatch({ session, client, patch }) {
     const current = await hydrateIslandRunGameStateRecord({ session, client });
     const nextState: IslandRunRuntimeState = {
+      runtimeVersion: current.runtimeVersion,
       firstRunClaimed: typeof patch.firstRunClaimed === 'boolean' ? patch.firstRunClaimed : current.firstRunClaimed,
       dailyHeartsClaimedDayKey:
         typeof patch.dailyHeartsClaimedDayKey === 'string' || patch.dailyHeartsClaimedDayKey === null
