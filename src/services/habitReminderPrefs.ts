@@ -1,6 +1,18 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import {
+  buildReminderPrefKey,
+  enqueueReminderPrefMutation,
+  getLocalReminderPrefRecord,
+  getReminderPrefMutationCounts,
+  listLocalReminderPrefRecordsForUser,
+  listPendingReminderPrefMutations,
+  removeReminderPrefMutation,
+  removeLocalReminderPrefRecord,
+  updateReminderPrefMutation,
+  upsertLocalReminderPrefRecord,
+} from '../data/habitReminderPrefsOfflineRepo';
 
 export type HabitReminderPrefsRow = Database['public']['Tables']['habit_reminder_prefs']['Row'];
 export type ReminderActionLogRow = Database['public']['Tables']['reminder_action_logs']['Row'];
@@ -30,9 +42,42 @@ export type ReminderActionLogWithHabit = {
   };
 };
 
+export type HabitReminderQueueStatus = { pending: number; failed: number };
+
 // Demo mode storage
 const DEMO_HABIT_PREFS_KEY = 'demo_habit_reminder_prefs';
 const DEMO_ACTION_LOGS_KEY = 'demo_reminder_action_logs';
+
+function isNetworkLikeError(error: unknown): boolean {
+  const message =
+    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('offline') ||
+    normalized.includes('load failed')
+  );
+}
+
+async function getActiveSession() {
+  const supabase = getSupabaseClient();
+  const { data: { session }, error } = await supabase.auth.getSession();
+  return { session, error };
+}
+
+async function mergeLocalReminderPrefs(
+  userId: string,
+  remotePrefs: HabitWithReminderPref[],
+): Promise<HabitWithReminderPref[]> {
+  const local = await listLocalReminderPrefRecordsForUser(userId);
+  if (!local.length) return remotePrefs;
+  const byId = new Map(remotePrefs.map((pref) => [pref.habit_id, pref] as const));
+  for (const record of local) {
+    byId.set(record.habit_id, record.pref);
+  }
+  return Array.from(byId.values());
+}
 
 function getDemoHabitPrefs(): HabitWithReminderPref[] {
   try {
@@ -74,8 +119,7 @@ export async function fetchHabitReminderPrefs(): Promise<ServiceResponse<HabitWi
     return { data: getDemoHabitPrefs(), error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  const { session, error: sessionError } = await getActiveSession();
   
   if (sessionError || !session) {
     return { data: null, error: sessionError || new Error('No session') };
@@ -98,9 +142,14 @@ export async function fetchHabitReminderPrefs(): Promise<ServiceResponse<HabitWi
       return { data: null, error: new Error(errorData.error || 'Failed to fetch habit prefs') };
     }
 
-    const data = await response.json();
-    return { data, error: null };
+    const data = (await response.json()) as HabitWithReminderPref[];
+    const merged = await mergeLocalReminderPrefs(session.user.id, data);
+    return { data: merged, error: null };
   } catch (err) {
+    if (isNetworkLikeError(err)) {
+      const merged = await mergeLocalReminderPrefs(session.user.id, []);
+      return { data: merged, error: null };
+    }
     return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
 }
@@ -134,8 +183,7 @@ export async function updateHabitReminderPref(
     return { data: null, error: new Error('Habit not found') };
   }
 
-  const supabase = getSupabaseClient();
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  const { session, error: sessionError } = await getActiveSession();
   
   if (sessionError || !session) {
     return { data: null, error: sessionError || new Error('No session') };
@@ -159,14 +207,130 @@ export async function updateHabitReminderPref(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      return { data: null, error: new Error(errorData.error || 'Failed to update habit pref') };
+      const err = new Error(errorData.error || 'Failed to update habit pref');
+      if (!isNetworkLikeError(err)) {
+        return { data: null, error: err };
+      }
+      const queued = await queueLocalReminderPrefUpdate(session.user.id, habitId, updates);
+      return { data: queued, error: null };
     }
 
     const data = await response.json();
+    await removeLocalReminderPrefRecord(buildReminderPrefKey(session.user.id, habitId));
+    await removeReminderPrefMutation(`habit-reminder-mut-${buildReminderPrefKey(session.user.id, habitId)}`);
     return { data, error: null };
   } catch (err) {
+    if (isNetworkLikeError(err)) {
+      const queued = await queueLocalReminderPrefUpdate(session.user.id, habitId, updates);
+      return { data: queued, error: null };
+    }
     return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
+}
+
+async function queueLocalReminderPrefUpdate(
+  userId: string,
+  habitId: string,
+  updates: { enabled?: boolean; preferred_time?: string | null },
+): Promise<HabitReminderPrefsRow> {
+  const key = buildReminderPrefKey(userId, habitId);
+  const existing = await getLocalReminderPrefRecord(key);
+  const nowMs = Date.now();
+  const nextEnabled = updates.enabled ?? existing?.pref.enabled ?? false;
+  const nextTime = updates.preferred_time !== undefined ? updates.preferred_time : existing?.pref.preferred_time ?? null;
+  const pref: HabitWithReminderPref = {
+    habit_id: habitId,
+    title: existing?.pref.title ?? 'Habit',
+    emoji: existing?.pref.emoji ?? null,
+    enabled: nextEnabled,
+    preferred_time: nextTime,
+  };
+
+  await upsertLocalReminderPrefRecord({
+    id: key,
+    user_id: userId,
+    habit_id: habitId,
+    pref,
+    sync_state: 'pending_upsert',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  await enqueueReminderPrefMutation({
+    id: `habit-reminder-mut-${key}`,
+    user_id: userId,
+    habit_id: habitId,
+    updates,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+
+  return {
+    habit_id: habitId,
+    enabled: nextEnabled,
+    preferred_time: nextTime,
+    created_at: new Date(nowMs).toISOString(),
+    updated_at: new Date(nowMs).toISOString(),
+  } as HabitReminderPrefsRow;
+}
+
+export async function syncQueuedHabitReminderPrefs(userId: string): Promise<void> {
+  if (!canUseSupabaseData()) return;
+  const { session, error } = await getActiveSession();
+  if (error || !session) return;
+  const pending = await listPendingReminderPrefMutations(userId);
+
+  for (const mutation of pending) {
+    const key = buildReminderPrefKey(userId, mutation.habit_id);
+    try {
+      await updateReminderPrefMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-reminders/habit-prefs`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            habit_id: mutation.habit_id,
+            ...mutation.updates,
+          }),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to sync queued reminder preference');
+      }
+
+      await removeLocalReminderPrefRecord(key);
+      await removeReminderPrefMutation(mutation.id);
+    } catch (syncError) {
+      const message = syncError instanceof Error ? syncError.message : String(syncError);
+      await updateReminderPrefMutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: message,
+      });
+      const local = await getLocalReminderPrefRecord(key);
+      if (local) {
+        await upsertLocalReminderPrefRecord({
+          ...local,
+          sync_state: 'failed',
+          updated_at_ms: Date.now(),
+          last_error: message,
+        });
+      }
+    }
+  }
+}
+
+export async function getHabitReminderQueueStatus(userId: string): Promise<HabitReminderQueueStatus> {
+  if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
+  return getReminderPrefMutationCounts(userId);
 }
 
 /**
