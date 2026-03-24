@@ -28,6 +28,8 @@ export type PerIslandEggsLedger = Record<string, PerIslandEggEntry>;
 export interface IslandRunGameStateRecord {
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
+  onboardingDisplayNameLoopCompleted: boolean;
+  storyPrologueSeen: boolean;
   currentIslandNumber: number;
   cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
@@ -171,6 +173,8 @@ function getDefaultRecord(): IslandRunGameStateRecord {
   return {
     firstRunClaimed: false,
     dailyHeartsClaimedDayKey: null,
+    onboardingDisplayNameLoopCompleted: false,
+    storyPrologueSeen: false,
     currentIslandNumber: 1,
     cycleIndex: 0,
     bossTrialResolvedIslandNumber: null,
@@ -207,6 +211,14 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.dailyHeartsClaimedDayKey === 'string' || value.dailyHeartsClaimedDayKey === null
         ? value.dailyHeartsClaimedDayKey
         : fallback.dailyHeartsClaimedDayKey,
+    onboardingDisplayNameLoopCompleted:
+      typeof value.onboardingDisplayNameLoopCompleted === 'boolean'
+        ? value.onboardingDisplayNameLoopCompleted
+        : fallback.onboardingDisplayNameLoopCompleted,
+    storyPrologueSeen:
+      typeof value.storyPrologueSeen === 'boolean'
+        ? value.storyPrologueSeen
+        : fallback.storyPrologueSeen,
     currentIslandNumber:
       typeof value.currentIslandNumber === 'number' && Number.isFinite(value.currentIslandNumber)
         ? Math.max(1, Math.floor(value.currentIslandNumber))
@@ -379,7 +391,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -414,6 +426,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     {
       firstRunClaimed: data.first_run_claimed,
       dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
+      onboardingDisplayNameLoopCompleted: data.onboarding_display_name_loop_completed ?? false,
+      storyPrologueSeen: data.story_prologue_seen ?? false,
       currentIslandNumber: data.current_island_number,
       cycleIndex: data.cycle_index ?? 0,
       bossTrialResolvedIslandNumber: data.boss_trial_resolved_island_number,
@@ -514,6 +528,8 @@ export async function writeIslandRunGameStateRecord(options: {
       user_id: session.user.id,
       first_run_claimed: record.firstRunClaimed,
       daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
+      onboarding_display_name_loop_completed: record.onboardingDisplayNameLoopCompleted,
+      story_prologue_seen: record.storyPrologueSeen,
       current_island_number: record.currentIslandNumber,
       cycle_index: record.cycleIndex,
       boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,

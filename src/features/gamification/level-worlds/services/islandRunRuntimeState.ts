@@ -6,6 +6,8 @@ import type { PerIslandEggsLedger } from './islandRunGameStateStore';
 export interface IslandRunRuntimeState {
   firstRunClaimed: boolean;
   dailyHeartsClaimedDayKey: string | null;
+  onboardingDisplayNameLoopCompleted: boolean;
+  storyPrologueSeen: boolean;
   currentIslandNumber: number;
   cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
@@ -89,6 +91,8 @@ export async function persistIslandRunRuntimeStatePatch(options: {
   patch: {
     firstRunClaimed?: boolean;
     dailyHeartsClaimedDayKey?: string | null;
+    onboardingDisplayNameLoopCompleted?: boolean;
+    storyPrologueSeen?: boolean;
     onboardingComplete?: boolean;
     currentIslandNumber?: number;
     cycleIndex?: number;

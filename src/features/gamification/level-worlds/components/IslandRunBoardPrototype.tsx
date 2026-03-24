@@ -1170,19 +1170,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [client, session.user.id]);
 
   useEffect(() => {
+    const runtimeCompleted = runtimeState.onboardingDisplayNameLoopCompleted === true;
     const storedValue = window.localStorage.getItem(onboardingStorageKey);
     if (!storedValue) {
-      setIsDisplayNameLoopCompleted(false);
+      setIsDisplayNameLoopCompleted(runtimeCompleted);
       return;
     }
 
     try {
       const parsed = JSON.parse(storedValue) as { stepIndex?: number };
-      setIsDisplayNameLoopCompleted((parsed.stepIndex ?? 0) >= 1);
+      setIsDisplayNameLoopCompleted(runtimeCompleted || (parsed.stepIndex ?? 0) >= 1);
     } catch {
-      setIsDisplayNameLoopCompleted(false);
+      setIsDisplayNameLoopCompleted(runtimeCompleted);
     }
-  }, [onboardingStorageKey]);
+  }, [onboardingStorageKey, runtimeState.onboardingDisplayNameLoopCompleted]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || isOnboardingComplete) return;
@@ -1201,6 +1202,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     setDailyHeartsClaimed(runtimeState.dailyHeartsClaimedDayKey === dailyRewardPlan.dayKey);
   }, [dailyRewardPlan.dayKey, runtimeState.dailyHeartsClaimedDayKey]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if (runtimeState.onboardingDisplayNameLoopCompleted === isDisplayNameLoopCompleted) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted,
+    }));
+  }, [client, hasHydratedRuntimeState, isDisplayNameLoopCompleted, runtimeState.onboardingDisplayNameLoopCompleted, session]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -1799,11 +1814,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    const hasSeenStory = window.localStorage.getItem(storySeenStorageKey) === 'true';
+    const hasSeenStory = runtimeState.storyPrologueSeen || window.localStorage.getItem(storySeenStorageKey) === 'true';
     if (!hasSeenStory) {
       setShowStoryReader(true);
     }
-  }, [hasHydratedRuntimeState, storySeenStorageKey]);
+  }, [hasHydratedRuntimeState, runtimeState.storyPrologueSeen, storySeenStorageKey]);
 
   useEffect(() => {
     if (isIslandTimerPendingStart || timeLeftSec > 0 || showTravelOverlay) {
@@ -3714,6 +3729,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore localStorage failures
     }
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { storyPrologueSeen: true },
+    });
+    setRuntimeState((current) => ({ ...current, storyPrologueSeen: true }));
   };
 
   const diceThrowDisplay = (

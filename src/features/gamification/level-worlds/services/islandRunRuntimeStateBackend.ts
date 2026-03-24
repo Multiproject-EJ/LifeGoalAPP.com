@@ -26,6 +26,8 @@ export interface IslandRunRuntimeStateBackend {
     patch: {
       firstRunClaimed?: boolean;
       dailyHeartsClaimedDayKey?: string | null;
+      onboardingDisplayNameLoopCompleted?: boolean;
+      storyPrologueSeen?: boolean;
       onboardingComplete?: boolean;
       currentIslandNumber?: number;
       cycleIndex?: number;
@@ -80,6 +82,14 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.dailyHeartsClaimedDayKey === 'string' || patch.dailyHeartsClaimedDayKey === null
           ? patch.dailyHeartsClaimedDayKey
           : current.dailyHeartsClaimedDayKey,
+      onboardingDisplayNameLoopCompleted:
+        typeof patch.onboardingDisplayNameLoopCompleted === 'boolean'
+          ? patch.onboardingDisplayNameLoopCompleted
+          : current.onboardingDisplayNameLoopCompleted,
+      storyPrologueSeen:
+        typeof patch.storyPrologueSeen === 'boolean'
+          ? patch.storyPrologueSeen
+          : current.storyPrologueSeen,
       currentIslandNumber:
         typeof patch.currentIslandNumber === 'number' && Number.isFinite(patch.currentIslandNumber)
           ? Math.max(1, Math.floor(patch.currentIslandNumber))
