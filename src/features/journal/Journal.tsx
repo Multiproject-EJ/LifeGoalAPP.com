@@ -8,6 +8,7 @@ import {
   deleteJournalEntry,
   listJournalEntries,
   listJournalEntriesByMode,
+  syncQueuedJournalEntries,
   updateJournalEntry,
   type JournalEntry,
 } from '../../services/journal';
@@ -282,6 +283,20 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
 
   useEffect(() => {
     loadEntries();
+  }, [loadEntries]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const trySync = () => {
+      syncQueuedJournalEntries()
+        .then(() => loadEntries())
+        .catch(() => undefined);
+    };
+
+    trySync();
+    window.addEventListener('online', trySync);
+    return () => window.removeEventListener('online', trySync);
   }, [loadEntries]);
 
   useEffect(() => {
@@ -702,6 +717,7 @@ ${thankYouDraft}`,
       }
 
       if (saved) {
+        const savedPendingSync = saved.id.startsWith('local-');
         // Award XP for journal entry (only for new entries, not edits)
         if (editorMode === 'create') {
           const content = draft.content.trim();
@@ -810,7 +826,11 @@ ${thankYouDraft}`,
 
         setSelectedEntryId(saved.id);
         if (!(editorMode === 'create' && draft.type === 'gratitude')) {
-          setStatus({ kind: 'success', message: editorMode === 'create' ? 'Entry saved.' : 'Entry updated.' });
+          setStatus(
+            savedPendingSync
+              ? { kind: 'warning', message: 'Entry saved locally. It will sync once you are back online.' }
+              : { kind: 'success', message: editorMode === 'create' ? 'Entry saved.' : 'Entry updated.' }
+          );
         }
         setEditorOpen(false);
         if (isCompactLayout) {
