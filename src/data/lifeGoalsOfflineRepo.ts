@@ -4,12 +4,35 @@ import type { Database } from '../lib/database.types';
 type StepInsert = Database['public']['Tables']['life_goal_steps']['Insert'];
 type SubstepInsert = Database['public']['Tables']['life_goal_substeps']['Insert'];
 type AlertInsert = Database['public']['Tables']['life_goal_alerts']['Insert'];
+type StepUpdate = Database['public']['Tables']['life_goal_steps']['Update'];
+type SubstepUpdate = Database['public']['Tables']['life_goal_substeps']['Update'];
+type AlertUpdate = Database['public']['Tables']['life_goal_alerts']['Update'];
+
+type LifeGoalMutationPayload =
+  | { kind: 'insert_step'; insert: StepInsert }
+  | { kind: 'update_step'; id: string; patch: StepUpdate }
+  | { kind: 'delete_step'; id: string }
+  | { kind: 'insert_substep'; insert: SubstepInsert }
+  | { kind: 'update_substep'; id: string; patch: SubstepUpdate }
+  | { kind: 'delete_substep'; id: string }
+  | { kind: 'insert_alert'; insert: AlertInsert }
+  | { kind: 'update_alert'; id: string; patch: AlertUpdate }
+  | { kind: 'delete_alert'; id: string };
 
 export type LifeGoalMutationRecord = {
   id: string;
   user_id: string;
-  operation: 'insert_step' | 'insert_substep' | 'insert_alert';
-  payload: StepInsert | SubstepInsert | AlertInsert;
+  operation:
+    | 'insert_step'
+    | 'update_step'
+    | 'delete_step'
+    | 'insert_substep'
+    | 'update_substep'
+    | 'delete_substep'
+    | 'insert_alert'
+    | 'update_alert'
+    | 'delete_alert';
+  payload: LifeGoalMutationPayload;
   status: 'pending' | 'processing' | 'failed';
   attempt_count: number;
   created_at_ms: number;

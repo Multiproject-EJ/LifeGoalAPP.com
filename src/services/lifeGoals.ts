@@ -63,6 +63,10 @@ function canQueueWithServerParent(parentId: string | null | undefined): boolean 
   return Boolean(parentId && !parentId.startsWith('local-'));
 }
 
+function canQueueById(id: string): boolean {
+  return !id.startsWith('local-');
+}
+
 export type LifeGoalQueueStatus = { pending: number; failed: number };
 
 export async function getLifeGoalQueueStatus(): Promise<LifeGoalQueueStatus> {
@@ -83,13 +87,40 @@ export async function syncQueuedLifeGoalMutations(): Promise<void> {
     try {
       await updateLifeGoalMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
       if (mutation.operation === 'insert_step') {
-        const { error } = await supabase.from('life_goal_steps').insert(mutation.payload as StepInsert);
+        const payload = mutation.payload as { kind: 'insert_step'; insert: StepInsert };
+        const { error } = await supabase.from('life_goal_steps').insert(payload.insert);
+        if (error) throw error;
+      } else if (mutation.operation === 'update_step') {
+        const payload = mutation.payload as { kind: 'update_step'; id: string; patch: StepUpdate };
+        const { error } = await supabase.from('life_goal_steps').update(payload.patch).eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'delete_step') {
+        const payload = mutation.payload as { kind: 'delete_step'; id: string };
+        const { error } = await supabase.from('life_goal_steps').delete().eq('id', payload.id);
         if (error) throw error;
       } else if (mutation.operation === 'insert_substep') {
-        const { error } = await supabase.from('life_goal_substeps').insert(mutation.payload as SubstepInsert);
+        const payload = mutation.payload as { kind: 'insert_substep'; insert: SubstepInsert };
+        const { error } = await supabase.from('life_goal_substeps').insert(payload.insert);
+        if (error) throw error;
+      } else if (mutation.operation === 'update_substep') {
+        const payload = mutation.payload as { kind: 'update_substep'; id: string; patch: SubstepUpdate };
+        const { error } = await supabase.from('life_goal_substeps').update(payload.patch).eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'delete_substep') {
+        const payload = mutation.payload as { kind: 'delete_substep'; id: string };
+        const { error } = await supabase.from('life_goal_substeps').delete().eq('id', payload.id);
         if (error) throw error;
       } else if (mutation.operation === 'insert_alert') {
-        const { error } = await supabase.from('life_goal_alerts').insert(mutation.payload as AlertInsert);
+        const payload = mutation.payload as { kind: 'insert_alert'; insert: AlertInsert };
+        const { error } = await supabase.from('life_goal_alerts').insert(payload.insert);
+        if (error) throw error;
+      } else if (mutation.operation === 'update_alert') {
+        const payload = mutation.payload as { kind: 'update_alert'; id: string; patch: AlertUpdate };
+        const { error } = await supabase.from('life_goal_alerts').update(payload.patch).eq('id', payload.id);
+        if (error) throw error;
+      } else if (mutation.operation === 'delete_alert') {
+        const payload = mutation.payload as { kind: 'delete_alert'; id: string };
+        const { error } = await supabase.from('life_goal_alerts').delete().eq('id', payload.id);
         if (error) throw error;
       }
       await removeLifeGoalMutation(mutation.id);
@@ -158,7 +189,7 @@ export async function insertStep(payload: StepInsert): Promise<ServiceResponse<S
       id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
       user_id: userId,
       operation: 'insert_step',
-      payload,
+      payload: { kind: 'insert_step', insert: payload },
       status: 'pending',
       attempt_count: 0,
       created_at_ms: nowMs,
@@ -188,14 +219,38 @@ export async function updateStep(id: string, payload: StepUpdate): Promise<Servi
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_steps')
     .update(payload)
     .eq('id', id)
     .select()
     .returns<StepRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'update_step',
+      payload: { kind: 'update_step', id, patch: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 export async function deleteStep(id: string): Promise<ServiceResponse<StepRow>> {
@@ -203,13 +258,37 @@ export async function deleteStep(id: string): Promise<ServiceResponse<StepRow>> 
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_steps')
     .delete()
     .eq('id', id)
     .select()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'delete_step',
+      payload: { kind: 'delete_step', id },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 // =====================================================
@@ -262,7 +341,7 @@ export async function insertSubstep(payload: SubstepInsert): Promise<ServiceResp
       id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
       user_id: userId,
       operation: 'insert_substep',
-      payload,
+      payload: { kind: 'insert_substep', insert: payload },
       status: 'pending',
       attempt_count: 0,
       created_at_ms: nowMs,
@@ -292,14 +371,38 @@ export async function updateSubstep(
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_substeps')
     .update(payload)
     .eq('id', id)
     .select()
     .returns<SubstepRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'update_substep',
+      payload: { kind: 'update_substep', id, patch: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 export async function deleteSubstep(id: string): Promise<ServiceResponse<SubstepRow>> {
@@ -307,13 +410,37 @@ export async function deleteSubstep(id: string): Promise<ServiceResponse<Substep
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_substeps')
     .delete()
     .eq('id', id)
     .select()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'delete_substep',
+      payload: { kind: 'delete_substep', id },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 // =====================================================
@@ -386,7 +513,7 @@ export async function insertAlert(payload: AlertInsert): Promise<ServiceResponse
       id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
       user_id: userId,
       operation: 'insert_alert',
-      payload,
+      payload: { kind: 'insert_alert', insert: payload },
       status: 'pending',
       attempt_count: 0,
       created_at_ms: nowMs,
@@ -418,14 +545,38 @@ export async function updateAlert(id: string, payload: AlertUpdate): Promise<Ser
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_alerts')
     .update(payload)
     .eq('id', id)
     .select()
     .returns<AlertRow>()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'update_alert',
+      payload: { kind: 'update_alert', id, patch: payload },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
 
 export async function deleteAlert(id: string): Promise<ServiceResponse<AlertRow>> {
@@ -433,11 +584,35 @@ export async function deleteAlert(id: string): Promise<ServiceResponse<AlertRow>
     return { data: null, error: null };
   }
 
+  if (!canQueueById(id)) {
+    return { data: null, error: null };
+  }
+
   const supabase = getSupabaseClient();
-  return supabase
+  const result = await supabase
     .from('life_goal_alerts')
     .delete()
     .eq('id', id)
     .select()
     .single();
+  if (!result.error || !isNetworkLikeError(result.error)) {
+    return result;
+  }
+
+  const userId = await getActiveUserId();
+  if (userId) {
+    const nowMs = Date.now();
+    await enqueueLifeGoalMutation({
+      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: userId,
+      operation: 'delete_alert',
+      payload: { kind: 'delete_alert', id },
+      status: 'pending',
+      attempt_count: 0,
+      created_at_ms: nowMs,
+      updated_at_ms: nowMs,
+      last_error: null,
+    });
+  }
+  return { data: null, error: null };
 }
