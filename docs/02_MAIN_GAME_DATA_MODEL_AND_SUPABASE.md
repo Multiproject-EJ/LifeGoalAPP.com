@@ -157,6 +157,7 @@ Repeat similarly for other tables.
 | `daily_hearts_claimed_day_key` | text | null | Day key for the last daily hearts claim |
 | `onboarding_display_name_loop_completed` | boolean | false | Whether the Island Run onboarding display-name loop has been completed |
 | `story_prologue_seen` | boolean | false | Whether the Island Run prologue story has been viewed |
+| `audio_enabled` | boolean | true | Island Run audio/haptics toggle preference synced across devices |
 | `current_island_number` | int | 1 | Current island the player is on |
 | `boss_trial_resolved_island_number` | int | null | Island where boss trial was resolved |
 | `cycle_index` | int | 0 | Number of completed 120-island wraps (`120 -> 1`) |

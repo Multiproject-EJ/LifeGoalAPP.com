@@ -28,6 +28,7 @@ export interface IslandRunRuntimeStateBackend {
       dailyHeartsClaimedDayKey?: string | null;
       onboardingDisplayNameLoopCompleted?: boolean;
       storyPrologueSeen?: boolean;
+      audioEnabled?: boolean;
       onboardingComplete?: boolean;
       currentIslandNumber?: number;
       cycleIndex?: number;
@@ -92,6 +93,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.storyPrologueSeen === 'boolean'
           ? patch.storyPrologueSeen
           : current.storyPrologueSeen,
+      audioEnabled:
+        typeof patch.audioEnabled === 'boolean'
+          ? patch.audioEnabled
+          : current.audioEnabled,
       currentIslandNumber:
         typeof patch.currentIslandNumber === 'number' && Number.isFinite(patch.currentIslandNumber)
           ? Math.max(1, Math.floor(patch.currentIslandNumber))

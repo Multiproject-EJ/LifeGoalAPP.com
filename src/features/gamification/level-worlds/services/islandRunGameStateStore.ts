@@ -42,6 +42,7 @@ export interface IslandRunGameStateRecord {
   dailyHeartsClaimedDayKey: string | null;
   onboardingDisplayNameLoopCompleted: boolean;
   storyPrologueSeen: boolean;
+  audioEnabled: boolean;
   currentIslandNumber: number;
   cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
@@ -189,6 +190,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     dailyHeartsClaimedDayKey: null,
     onboardingDisplayNameLoopCompleted: false,
     storyPrologueSeen: false,
+    audioEnabled: true,
     currentIslandNumber: 1,
     cycleIndex: 0,
     bossTrialResolvedIslandNumber: null,
@@ -278,6 +280,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.storyPrologueSeen === 'boolean'
         ? value.storyPrologueSeen
         : fallback.storyPrologueSeen,
+    audioEnabled:
+      typeof value.audioEnabled === 'boolean'
+        ? value.audioEnabled
+        : fallback.audioEnabled,
     currentIslandNumber:
       typeof value.currentIslandNumber === 'number' && Number.isFinite(value.currentIslandNumber)
         ? Math.max(1, Math.floor(value.currentIslandNumber))
@@ -460,7 +466,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
+    .select('first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -497,6 +503,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
       onboardingDisplayNameLoopCompleted: data.onboarding_display_name_loop_completed ?? false,
       storyPrologueSeen: data.story_prologue_seen ?? false,
+      audioEnabled: data.audio_enabled ?? true,
       currentIslandNumber: data.current_island_number,
       cycleIndex: data.cycle_index ?? 0,
       bossTrialResolvedIslandNumber: data.boss_trial_resolved_island_number,
@@ -601,6 +608,7 @@ export async function writeIslandRunGameStateRecord(options: {
       daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
       onboarding_display_name_loop_completed: record.onboardingDisplayNameLoopCompleted,
       story_prologue_seen: record.storyPrologueSeen,
+      audio_enabled: record.audioEnabled,
       current_island_number: record.currentIslandNumber,
       cycle_index: record.cycleIndex,
       boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,

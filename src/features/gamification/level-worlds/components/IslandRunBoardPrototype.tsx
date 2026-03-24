@@ -739,8 +739,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
+    setAudioEnabled(runtimeState.audioEnabled ?? true);
+    setIslandRunAudioEnabled(runtimeState.audioEnabled ?? true);
     setActiveCompanionId(runtimeState.activeCompanionId ?? fetchActiveCompanionId(session.user.id));
-  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -1258,6 +1260,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted,
     }));
   }, [client, hasHydratedRuntimeState, isDisplayNameLoopCompleted, runtimeState.onboardingDisplayNameLoopCompleted, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    if (runtimeState.audioEnabled === audioEnabled) return;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { audioEnabled },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      audioEnabled,
+    }));
+  }, [audioEnabled, client, hasHydratedRuntimeState, runtimeState.audioEnabled, session]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);

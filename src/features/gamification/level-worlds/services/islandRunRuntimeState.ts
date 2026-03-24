@@ -8,6 +8,7 @@ export interface IslandRunRuntimeState {
   dailyHeartsClaimedDayKey: string | null;
   onboardingDisplayNameLoopCompleted: boolean;
   storyPrologueSeen: boolean;
+  audioEnabled: boolean;
   currentIslandNumber: number;
   cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
@@ -95,6 +96,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     dailyHeartsClaimedDayKey?: string | null;
     onboardingDisplayNameLoopCompleted?: boolean;
     storyPrologueSeen?: boolean;
+    audioEnabled?: boolean;
     onboardingComplete?: boolean;
     currentIslandNumber?: number;
     cycleIndex?: number;
