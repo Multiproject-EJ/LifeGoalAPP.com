@@ -2,7 +2,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
-import type { PerIslandEggsLedger } from './islandRunGameStateStore';
+import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
 import {
   hydrateIslandRunGameStateRecord,
   hydrateIslandRunGameStateRecordWithSource,
@@ -26,6 +26,8 @@ export interface IslandRunRuntimeStateBackend {
     patch: {
       firstRunClaimed?: boolean;
       dailyHeartsClaimedDayKey?: string | null;
+      onboardingDisplayNameLoopCompleted?: boolean;
+      storyPrologueSeen?: boolean;
       onboardingComplete?: boolean;
       currentIslandNumber?: number;
       cycleIndex?: number;
@@ -47,7 +49,15 @@ export interface IslandRunRuntimeStateBackend {
       shardClaimCount?: number;
       shields?: number;
       shards?: number;
+      diamonds?: number;
       completedStopsByIsland?: Record<string, string[]>;
+      marketOwnedBundlesByIsland?: Record<string, {
+        dice_bundle: boolean;
+        heart_bundle: boolean;
+        heart_boost_bundle: boolean;
+      }>;
+      creatureCollection?: CreatureCollectionRuntimeEntry[];
+      activeCompanionId?: string | null;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -74,6 +84,14 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.dailyHeartsClaimedDayKey === 'string' || patch.dailyHeartsClaimedDayKey === null
           ? patch.dailyHeartsClaimedDayKey
           : current.dailyHeartsClaimedDayKey,
+      onboardingDisplayNameLoopCompleted:
+        typeof patch.onboardingDisplayNameLoopCompleted === 'boolean'
+          ? patch.onboardingDisplayNameLoopCompleted
+          : current.onboardingDisplayNameLoopCompleted,
+      storyPrologueSeen:
+        typeof patch.storyPrologueSeen === 'boolean'
+          ? patch.storyPrologueSeen
+          : current.storyPrologueSeen,
       currentIslandNumber:
         typeof patch.currentIslandNumber === 'number' && Number.isFinite(patch.currentIslandNumber)
           ? Math.max(1, Math.floor(patch.currentIslandNumber))
@@ -159,6 +177,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.shards === 'number' && Number.isFinite(patch.shards)
           ? Math.max(0, Math.floor(patch.shards))
           : current.shards,
+      diamonds:
+        typeof patch.diamonds === 'number' && Number.isFinite(patch.diamonds)
+          ? Math.max(0, Math.floor(patch.diamonds))
+          : current.diamonds,
       completedStopsByIsland:
         patch.completedStopsByIsland !== null && typeof patch.completedStopsByIsland === 'object' && !Array.isArray(patch.completedStopsByIsland)
           ? {
@@ -171,6 +193,36 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.completedStopsByIsland,
+      marketOwnedBundlesByIsland:
+        patch.marketOwnedBundlesByIsland !== null && typeof patch.marketOwnedBundlesByIsland === 'object' && !Array.isArray(patch.marketOwnedBundlesByIsland)
+          ? {
+              ...current.marketOwnedBundlesByIsland,
+              ...Object.fromEntries(
+                Object.entries(patch.marketOwnedBundlesByIsland).map(([islandKey, bundles]) => [
+                  islandKey,
+                  bundles !== null && typeof bundles === 'object' && !Array.isArray(bundles)
+                    ? {
+                        dice_bundle: Boolean((bundles as Record<string, unknown>).dice_bundle),
+                        heart_bundle: Boolean((bundles as Record<string, unknown>).heart_bundle),
+                        heart_boost_bundle: Boolean((bundles as Record<string, unknown>).heart_boost_bundle),
+                      }
+                    : {
+                        dice_bundle: false,
+                        heart_bundle: false,
+                        heart_boost_bundle: false,
+                      },
+                ]),
+              ),
+            }
+          : current.marketOwnedBundlesByIsland,
+      creatureCollection:
+        Array.isArray(patch.creatureCollection)
+          ? patch.creatureCollection
+          : current.creatureCollection,
+      activeCompanionId:
+        typeof patch.activeCompanionId === 'string' || patch.activeCompanionId === null
+          ? patch.activeCompanionId
+          : current.activeCompanionId,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({
