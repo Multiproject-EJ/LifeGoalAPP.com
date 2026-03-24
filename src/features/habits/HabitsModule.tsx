@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, isHabitLifecycleActive, getHabitLifecycleStatus, pauseHabitV2, resumeHabitV2, deactivateHabitV2, reactivateHabitV2, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, isHabitLifecycleActive, getHabitLifecycleStatus, pauseHabitV2, resumeHabitV2, deactivateHabitV2, reactivateHabitV2, getHabitsV2QueueStatus, getHabitLogV2QueueStatus, syncQueuedHabitsV2Mutations, syncQueuedHabitLogsV2Mutations, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
@@ -88,6 +88,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const [weekLogs, setWeekLogs] = useState<HabitLogV2Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [queueStatus, setQueueStatus] = useState<{ pending: number; failed: number }>({ pending: 0, failed: 0 });
   
   // Streaks state
   const [streaks, setStreaks] = useState<HabitStreakRow[]>([]);
@@ -349,7 +350,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   }, [session, handleServiceWorkerMessage]);
 
   // Helper to reload today's logs
-  const reloadTodayLogs = async () => {
+  const reloadTodayLogs = useCallback(async () => {
     if (!session) return;
     
     try {
@@ -361,10 +362,10 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     } catch (err) {
       console.error('Error reloading today\'s logs:', err);
     }
-  };
+  }, [session]);
 
   // Helper to reload week logs (for times_per_week support)
-  const reloadWeekLogs = async () => {
+  const reloadWeekLogs = useCallback(async () => {
     if (!session || habits.length === 0) return;
     
     try {
@@ -380,7 +381,52 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     } catch (err) {
       console.error('Error reloading week logs:', err);
     }
-  };
+  }, [habits, session]);
+
+  const refreshQueueStatus = useCallback(async () => {
+    const [habitStatus, habitLogStatus] = await Promise.all([
+      getHabitsV2QueueStatus(session.user.id),
+      getHabitLogV2QueueStatus(session.user.id),
+    ]);
+    setQueueStatus({
+      pending: habitStatus.pending + habitLogStatus.pending,
+      failed: habitStatus.failed + habitLogStatus.failed,
+    });
+  }, [session.user.id]);
+
+  useEffect(() => {
+    void refreshQueueStatus();
+    const interval = window.setInterval(() => {
+      void refreshQueueStatus();
+    }, 15000);
+    return () => window.clearInterval(interval);
+  }, [refreshQueueStatus]);
+
+  useEffect(() => {
+    const runSync = () => {
+      syncQueuedHabitsV2Mutations(session.user.id)
+        .then(() => syncQueuedHabitLogsV2Mutations(session.user.id))
+        .then(async () => {
+          const { data: habitsData } = await listHabitsV2({ includeInactive: true });
+          setHabits(habitsData ?? []);
+          await Promise.all([reloadTodayLogs(), reloadWeekLogs(), refreshQueueStatus()]);
+        })
+        .catch(() => undefined);
+    };
+    runSync();
+    window.addEventListener('online', runSync);
+    return () => window.removeEventListener('online', runSync);
+  }, [refreshQueueStatus, reloadTodayLogs, reloadWeekLogs, session.user.id]);
+
+  useEffect(() => {
+    if (queueStatus.pending === 0 && queueStatus.failed === 0) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = 'You have unsynced habit updates on this device.';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [queueStatus.pending, queueStatus.failed]);
 
   // Load adherence snapshots when toggled on
   const loadAdherenceData = async () => {
@@ -1681,6 +1727,24 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           {error}
         </div>
       )}
+
+      {queueStatus.pending > 0 ? (
+        <div
+          role="status"
+          style={{
+            background: queueStatus.failed > 0 ? '#fef3c7' : '#dbeafe',
+            border: `1px solid ${queueStatus.failed > 0 ? '#fcd34d' : '#93c5fd'}`,
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '1rem',
+            color: queueStatus.failed > 0 ? '#92400e' : '#1e3a8a',
+          }}
+        >
+          {queueStatus.failed > 0
+            ? `Some habit updates are still queued (${queueStatus.pending}) and will retry automatically.`
+            : `Habit updates queued offline: ${queueStatus.pending}. They'll sync when you're online.`}
+        </div>
+      ) : null}
 
       {/* Success message */}
       {successMessage && (
