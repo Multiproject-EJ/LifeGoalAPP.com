@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, isHabitLifecycleActive, getHabitLifecycleStatus, pauseHabitV2, resumeHabitV2, deactivateHabitV2, reactivateHabitV2, getHabitsV2QueueStatus, syncQueuedHabitsV2Mutations, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
+import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, isHabitLifecycleActive, getHabitLifecycleStatus, pauseHabitV2, resumeHabitV2, deactivateHabitV2, reactivateHabitV2, getHabitsV2QueueStatus, getHabitLogV2QueueStatus, syncQueuedHabitsV2Mutations, syncQueuedHabitLogsV2Mutations, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
 import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
@@ -384,8 +384,14 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   }, [habits, session]);
 
   const refreshQueueStatus = useCallback(async () => {
-    const status = await getHabitsV2QueueStatus(session.user.id);
-    setQueueStatus(status);
+    const [habitStatus, habitLogStatus] = await Promise.all([
+      getHabitsV2QueueStatus(session.user.id),
+      getHabitLogV2QueueStatus(session.user.id),
+    ]);
+    setQueueStatus({
+      pending: habitStatus.pending + habitLogStatus.pending,
+      failed: habitStatus.failed + habitLogStatus.failed,
+    });
   }, [session.user.id]);
 
   useEffect(() => {
@@ -399,6 +405,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   useEffect(() => {
     const runSync = () => {
       syncQueuedHabitsV2Mutations(session.user.id)
+        .then(() => syncQueuedHabitLogsV2Mutations(session.user.id))
         .then(async () => {
           const { data: habitsData } = await listHabitsV2({ includeInactive: true });
           setHabits(habitsData ?? []);

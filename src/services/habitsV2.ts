@@ -13,6 +13,18 @@ import {
   updateHabitV2Mutation,
   upsertLocalHabitV2Record,
 } from '../data/habitsV2OfflineRepo';
+import {
+  buildHabitLogKey,
+  enqueueHabitLogMutation,
+  getHabitLogMutationCounts,
+  getLocalHabitLogRecord,
+  listLocalHabitLogRecordsForUser,
+  listPendingHabitLogMutations,
+  removeHabitLogMutation,
+  removeLocalHabitLogRecord,
+  updateHabitLogMutation,
+  upsertLocalHabitLogRecord,
+} from '../data/habitLogsOfflineRepo';
 import { computeEnvironmentAudit } from '../features/environment/environmentAudit';
 import { buildEnvironmentRecommendations } from '../features/environment/environmentRecommendations';
 import {
@@ -37,6 +49,7 @@ type ServiceResponse<T> = {
 };
 
 export type HabitV2QueueStatus = { pending: number; failed: number };
+export type HabitLogV2QueueStatus = { pending: number; failed: number };
 
 type HabitEnvironmentPatch = Pick<
   HabitV2Insert,
@@ -190,6 +203,65 @@ async function queueLocalHabitUpdate(
   return merged;
 }
 
+async function queueLocalHabitLogUpsert(payload: HabitLogV2Insert): Promise<HabitLogV2Row> {
+  const effectiveDate = payload.date ?? new Date().toISOString().slice(0, 10);
+  const key = buildHabitLogKey(payload.user_id, payload.habit_id, effectiveDate);
+  const row: HabitLogV2Row = {
+    id: `local-habit-log-${key}`,
+    habit_id: payload.habit_id,
+    user_id: payload.user_id,
+    ts: payload.ts ?? new Date(`${effectiveDate}T00:00:00Z`).toISOString(),
+    date: effectiveDate,
+    value: payload.value ?? null,
+    done: payload.done ?? true,
+    note: payload.note ?? null,
+    mood: payload.mood ?? null,
+    progress_state: payload.progress_state ?? null,
+    completion_percentage: payload.completion_percentage ?? null,
+    logged_stage: payload.logged_stage ?? null,
+  };
+  const nowMs = Date.now();
+  await upsertLocalHabitLogRecord({
+    id: key,
+    user_id: payload.user_id,
+    habit_id: payload.habit_id,
+    date: effectiveDate,
+    row,
+    sync_state: 'pending_upsert',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  await enqueueHabitLogMutation({
+    id: `habit-log-mut-${key}`,
+    user_id: payload.user_id,
+    habit_id: payload.habit_id,
+    date: effectiveDate,
+    operation: 'upsert',
+    payload,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  return row;
+}
+
+async function mergeLocalLogsOverRemote(userId: string, remoteLogs: HabitLogV2Row[]): Promise<HabitLogV2Row[]> {
+  const local = await listLocalHabitLogRecordsForUser(userId);
+  if (!local.length) return remoteLogs;
+  const byKey = new Map(remoteLogs.map((log) => [buildHabitLogKey(userId, log.habit_id, log.date), log] as const));
+  for (const record of local) {
+    const key = buildHabitLogKey(userId, record.habit_id, record.date);
+    if (record.sync_state === 'pending_delete') {
+      byKey.delete(key);
+      continue;
+    }
+    if (record.row) byKey.set(key, record.row);
+  }
+  return Array.from(byKey.values());
+}
+
 function buildHabitEnvironmentPatch(input: {
   environment_context?: HabitV2Insert['environment_context'] | null;
   environment_score?: number | null;
@@ -271,12 +343,15 @@ export async function listTodayHabitLogsV2(
   // Get today's date in UTC format (YYYY-MM-DD)
   const today = new Date().toISOString().split('T')[0];
   
-  return supabase
+  const result = await supabase
     .from('habit_logs_v2')
     .select('*')
     .eq('user_id', userId)
     .eq('date', today)
     .returns<HabitLogV2Row[]>();
+  if (result.error) return result;
+  const merged = await mergeLocalLogsOverRemote(userId, result.data ?? []);
+  return { data: merged, error: null };
 }
 
 /**
@@ -359,11 +434,16 @@ export async function logHabitCompletionV2(
     user_id: userId,
   };
   
-  return supabase
+  const result = await supabase
     .from('habit_logs_v2')
     .insert(payload)
     .select()
     .single();
+  if (result.error && isNetworkLikeError(result.error)) {
+    const queued = await queueLocalHabitLogUpsert(payload);
+    return { data: queued, error: null };
+  }
+  return result;
 }
 
 /**
@@ -423,7 +503,7 @@ export async function listHabitLogsForRangeV2(params: {
 }): Promise<ServiceResponse<HabitLogV2Row[]>> {
   const supabase = getSupabaseClient();
   
-  return supabase
+  const result = await supabase
     .from('habit_logs_v2')
     .select('*')
     .eq('user_id', params.userId)
@@ -432,6 +512,14 @@ export async function listHabitLogsForRangeV2(params: {
     .lte('date', params.endDate)
     .order('date', { ascending: true })
     .returns<HabitLogV2Row[]>();
+  if (result.error) return result;
+  const merged = await mergeLocalLogsOverRemote(params.userId, result.data ?? []);
+  return {
+    data: merged
+      .filter((log) => log.habit_id === params.habitId)
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    error: null,
+  };
 }
 
 /**
@@ -535,7 +623,7 @@ export async function listHabitLogsForWeekV2(
   const startDate = monday.toISOString().split('T')[0];
   const endDate = sunday.toISOString().split('T')[0];
   
-  return supabase
+  const result = await supabase
     .from('habit_logs_v2')
     .select('*')
     .eq('user_id', userId)
@@ -544,6 +632,14 @@ export async function listHabitLogsForWeekV2(
     .lte('date', endDate)
     .order('date', { ascending: true })
     .returns<HabitLogV2Row[]>();
+  if (result.error) return result;
+  const merged = await mergeLocalLogsOverRemote(userId, result.data ?? []);
+  return {
+    data: merged
+      .filter((log) => habitIds.includes(log.habit_id) && log.date >= startDate && log.date <= endDate)
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    error: null,
+  };
 }
 
 /**
@@ -565,7 +661,7 @@ export async function listHabitLogsForRangeMultiV2(params: {
   
   const supabase = getSupabaseClient();
   
-  return supabase
+  const result = await supabase
     .from('habit_logs_v2')
     .select('*')
     .eq('user_id', params.userId)
@@ -574,6 +670,14 @@ export async function listHabitLogsForRangeMultiV2(params: {
     .lte('date', params.endDate)
     .order('date', { ascending: true })
     .returns<HabitLogV2Row[]>();
+  if (result.error) return result;
+  const merged = await mergeLocalLogsOverRemote(params.userId, result.data ?? []);
+  return {
+    data: merged
+      .filter((log) => params.habitIds.includes(log.habit_id) && log.date >= params.startDate && log.date <= params.endDate)
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    error: null,
+  };
 }
 
 /**
@@ -937,4 +1041,59 @@ export async function syncQueuedHabitsV2Mutations(userId: string): Promise<void>
 
 export async function getHabitsV2QueueStatus(userId: string): Promise<HabitV2QueueStatus> {
   return getHabitV2MutationCounts(userId);
+}
+
+export async function syncQueuedHabitLogsV2Mutations(userId: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const pending = await listPendingHabitLogMutations(userId);
+  for (const mutation of pending) {
+    const key = buildHabitLogKey(userId, mutation.habit_id, mutation.date);
+    try {
+      await updateHabitLogMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
+      if (mutation.operation === 'upsert') {
+        const payload = mutation.payload;
+        if (!payload) {
+          await removeHabitLogMutation(mutation.id);
+          continue;
+        }
+        const { error } = await supabase
+          .from('habit_logs_v2')
+          .upsert(payload, { onConflict: 'user_id,habit_id,date' })
+          .select()
+          .single();
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('habit_logs_v2')
+          .delete()
+          .eq('user_id', userId)
+          .eq('habit_id', mutation.habit_id)
+          .eq('date', mutation.date);
+        if (error) throw error;
+      }
+      await removeLocalHabitLogRecord(key);
+      await removeHabitLogMutation(mutation.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await updateHabitLogMutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: message,
+      });
+      const local = await getLocalHabitLogRecord(key);
+      if (local) {
+        await upsertLocalHabitLogRecord({
+          ...local,
+          sync_state: 'failed',
+          updated_at_ms: Date.now(),
+          last_error: message,
+        });
+      }
+    }
+  }
+}
+
+export async function getHabitLogV2QueueStatus(userId: string): Promise<HabitLogV2QueueStatus> {
+  return getHabitLogMutationCounts(userId);
 }
