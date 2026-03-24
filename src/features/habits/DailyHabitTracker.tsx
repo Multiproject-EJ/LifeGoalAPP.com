@@ -26,6 +26,7 @@ import {
   getMonthlyCompletionGrid,
   syncQueuedHabitCompletions,
   toggleHabitCompletionForDate,
+  type HabitCompletionQueueStatus,
   type MonthlyHabitCompletions,
 } from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
