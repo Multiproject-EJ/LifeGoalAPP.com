@@ -2,6 +2,19 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
 import {
+  buildLocalCompletionKey,
+  buildLocalCompletionRowId,
+  enqueueHabitCompletionMutation,
+  getHabitCompletionMutationCounts,
+  getLocalHabitCompletionRecord,
+  listLocalHabitCompletionsForUserInRange,
+  listPendingHabitCompletionMutations,
+  removeHabitCompletionMutation,
+  removeLocalHabitCompletionRecord,
+  updateHabitCompletionMutation,
+  upsertLocalHabitCompletionRecord,
+} from '../data/habitCompletionsOfflineRepo';
+import {
   DEMO_USER_ID,
   getDemoHabitLogsForRange,
   getDemoHabitsForUser,
@@ -17,6 +30,103 @@ type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+export type HabitCompletionQueueStatus = {
+  pending: number;
+  failed: number;
+};
+
+function isNetworkLikeError(error: unknown): boolean {
+  const message =
+    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('offline') ||
+    normalized.includes('load failed')
+  );
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function toLocalQueuedCompletionRow(
+  userId: string,
+  habitId: string,
+  date: string,
+  completed: boolean,
+): HabitCompletionRow {
+  return {
+    id: buildLocalCompletionRowId(userId, habitId, date),
+    user_id: userId,
+    habit_id: habitId,
+    completed_date: date,
+    completed,
+    created_at: nowIso(),
+  };
+}
+
+async function queueLocalHabitCompletionToggle(
+  userId: string,
+  habitId: string,
+  date: string,
+  baseCompleted: boolean,
+): Promise<HabitCompletionRow> {
+  const key = buildLocalCompletionKey(userId, habitId, date);
+  const localExisting = await getLocalHabitCompletionRecord(key);
+  const currentCompleted = localExisting?.row.completed ?? baseCompleted;
+  const desiredCompleted = !currentCompleted;
+  const nowMs = Date.now();
+  const localRow = toLocalQueuedCompletionRow(userId, habitId, date, desiredCompleted);
+
+  await upsertLocalHabitCompletionRecord({
+    id: key,
+    user_id: userId,
+    habit_id: habitId,
+    completed_date: date,
+    row: localRow,
+    sync_state: 'pending_upsert',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+
+  await enqueueHabitCompletionMutation({
+    id: `habit-completion-mut-${key}`,
+    user_id: userId,
+    habit_id: habitId,
+    completed_date: date,
+    desired_completed: desiredCompleted,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+
+  return localRow;
+}
+
+async function buildMergedMonthlyGrid(
+  userId: string,
+  startDate: string,
+  endDate: string,
+  remoteGrid: Record<string, Record<string, boolean>>,
+): Promise<Record<string, Record<string, boolean>>> {
+  const localRecords = await listLocalHabitCompletionsForUserInRange(userId, startDate, endDate);
+  if (!localRecords.length) return remoteGrid;
+  const merged: Record<string, Record<string, boolean>> = { ...remoteGrid };
+
+  for (const record of localRecords) {
+    if (!merged[record.habit_id]) {
+      merged[record.habit_id] = {};
+    }
+    merged[record.habit_id][record.completed_date] = record.row.completed;
+  }
+
+  return merged;
+}
 
 /**
  * Structure representing completion data for a single habit in a month.
@@ -364,7 +474,7 @@ export async function toggleHabitCompletionForDate(
       .eq('completed_date', date)
       .maybeSingle();
     
-    if (fetchError) {
+    if (fetchError && !isNetworkLikeError(fetchError)) {
       return { data: null, error: fetchError };
     }
     
@@ -380,10 +490,14 @@ export async function toggleHabitCompletionForDate(
         .select()
         .single();
       
-      if (updateError) {
+      if (updateError && !isNetworkLikeError(updateError)) {
         return { data: null, error: updateError };
       }
-      
+      if (updateError) {
+        const queued = await queueLocalHabitCompletionToggle(userId, habitId, date, existingCompletion.completed);
+        return { data: queued, error: null };
+      }
+
       return { data: updateData as HabitCompletionRow, error: null };
     } else {
       // Record doesn't exist - insert a new one with completed = true
@@ -400,13 +514,21 @@ export async function toggleHabitCompletionForDate(
         .select()
         .single();
       
-      if (insertError) {
+      if (insertError && !isNetworkLikeError(insertError)) {
         return { data: null, error: insertError };
+      }
+      if (insertError) {
+        const queued = await queueLocalHabitCompletionToggle(userId, habitId, date, false);
+        return { data: queued, error: null };
       }
       
       return { data: insertData as HabitCompletionRow, error: null };
     }
   } catch (error) {
+    if (isNetworkLikeError(error)) {
+      const queued = await queueLocalHabitCompletionToggle(userId, habitId, date, false);
+      return { data: queued, error: null };
+    }
     console.error('Error in toggleHabitCompletionForDate:', error);
     return {
       data: null,
@@ -482,10 +604,9 @@ export async function getMonthlyCompletionGrid(
       .gte('completed_date', startDate)
       .lte('completed_date', endDate);
     
-    if (completionsError) {
+    if (completionsError && !isNetworkLikeError(completionsError)) {
       return { data: null, error: completionsError };
     }
-    
     const completions = (completionsData || []) as HabitCompletionRow[];
     
     // Build the grid: habitId -> date -> completed
@@ -497,8 +618,14 @@ export async function getMonthlyCompletionGrid(
       }
       grid[completion.habit_id][completion.completed_date] = completion.completed;
     }
-    
-    return { data: grid, error: null };
+
+    if (completionsError && isNetworkLikeError(completionsError)) {
+      const localOnly = await buildMergedMonthlyGrid(userId, startDate, endDate, {});
+      return { data: localOnly, error: null };
+    }
+
+    const mergedGrid = await buildMergedMonthlyGrid(userId, startDate, endDate, grid);
+    return { data: mergedGrid, error: null };
   } catch (error) {
     console.error('Error in getMonthlyCompletionGrid:', error);
     return {
@@ -506,6 +633,77 @@ export async function getMonthlyCompletionGrid(
       error: error as PostgrestError,
     };
   }
+}
+
+export async function syncQueuedHabitCompletions(userId: string): Promise<void> {
+  if (!canUseSupabaseData()) return;
+  const supabase = getSupabaseClient();
+  const pending = await listPendingHabitCompletionMutations(userId);
+
+  for (const mutation of pending) {
+    const recordKey = buildLocalCompletionKey(userId, mutation.habit_id, mutation.completed_date);
+    try {
+      await updateHabitCompletionMutation(mutation.id, {
+        status: 'processing',
+        updated_at_ms: Date.now(),
+      });
+
+      const { data: existingData, error: existingError } = await supabase
+        .from('habit_completions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('habit_id', mutation.habit_id)
+        .eq('completed_date', mutation.completed_date)
+        .maybeSingle<HabitCompletionRow>();
+
+      if (existingError) throw existingError;
+      if (existingData) {
+        const payload: HabitCompletionUpdate = { completed: mutation.desired_completed };
+        const { error: updateError } = await supabase
+          .from('habit_completions')
+          .update(payload)
+          .eq('id', existingData.id);
+        if (updateError) throw updateError;
+      } else {
+        const payload: HabitCompletionInsert = {
+          user_id: userId,
+          habit_id: mutation.habit_id,
+          completed_date: mutation.completed_date,
+          completed: mutation.desired_completed,
+        };
+        const { error: insertError } = await supabase
+          .from('habit_completions')
+          .insert(payload);
+        if (insertError) throw insertError;
+      }
+
+      await removeLocalHabitCompletionRecord(recordKey);
+      await removeHabitCompletionMutation(mutation.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await updateHabitCompletionMutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: message,
+      });
+
+      const local = await getLocalHabitCompletionRecord(recordKey);
+      if (local) {
+        await upsertLocalHabitCompletionRecord({
+          ...local,
+          sync_state: 'failed',
+          updated_at_ms: Date.now(),
+          last_error: message,
+        });
+      }
+    }
+  }
+}
+
+export async function getHabitCompletionQueueStatus(userId: string): Promise<HabitCompletionQueueStatus> {
+  if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
+  return getHabitCompletionMutationCounts(userId);
 }
 
 /**

@@ -45,6 +45,10 @@ function getPreview(content: string, limit = 140): string {
   return `${normalized.slice(0, limit)}…`;
 }
 
+function isPendingSyncEntry(entry: JournalEntry): boolean {
+  return entry.id.startsWith('local-');
+}
+
 export function JournalEntryList({
   entries,
   filteredEntries,
@@ -177,7 +181,10 @@ export function JournalEntryList({
                               <span className="journal-list__item-type">{getModeLabel(entry.type)}</span>
                             )}
                           </div>
-                          <strong>{entry.title?.trim() || 'Untitled'}</strong>
+                          <strong>
+                            {entry.title?.trim() || 'Untitled'}
+                            {isPendingSyncEntry(entry) ? ' · Not synced yet' : ''}
+                          </strong>
                           {isLocked && entry.unlock_date ? (
                             <p>🔒 Locked until {unlockDateFormatter.format(new Date(entry.unlock_date))}</p>
                           ) : (
@@ -216,7 +223,10 @@ export function JournalEntryList({
                       <span>{entryListDateFormatter.format(new Date(entry.entry_date))}</span>
                       {moodMeta ? <span className="journal-list__item-mood">{moodMeta.icon}</span> : null}
                     </div>
-                    <strong>{entry.title?.trim() || 'Untitled'}</strong>
+                    <strong>
+                      {entry.title?.trim() || 'Untitled'}
+                      {isPendingSyncEntry(entry) ? ' · Not synced yet' : ''}
+                    </strong>
                     {isLocked && entry.unlock_date ? (
                       <p>🔒 Locked until {unlockDateFormatter.format(new Date(entry.unlock_date))}</p>
                     ) : (

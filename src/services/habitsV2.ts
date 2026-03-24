@@ -1,6 +1,18 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import {
+  buildLocalHabitV2Id,
+  enqueueHabitV2Mutation,
+  getHabitV2MutationCounts,
+  getLocalHabitV2Record,
+  listLocalHabitsV2ForUser,
+  listPendingHabitV2Mutations,
+  removeHabitV2Mutation,
+  removeLocalHabitV2Record,
+  updateHabitV2Mutation,
+  upsertLocalHabitV2Record,
+} from '../data/habitsV2OfflineRepo';
 import { computeEnvironmentAudit } from '../features/environment/environmentAudit';
 import { buildEnvironmentRecommendations } from '../features/environment/environmentRecommendations';
 import {
@@ -16,12 +28,15 @@ export type HabitStreakRow = Database['public']['Views']['v_habit_streaks']['Row
 export type HabitLifecycleStatus = Database['public']['Enums']['habit_lifecycle_status'];
 
 type HabitV2Insert = Database['public']['Tables']['habits_v2']['Insert'];
+type HabitV2Update = Database['public']['Tables']['habits_v2']['Update'];
 type HabitLogV2Insert = Database['public']['Tables']['habit_logs_v2']['Insert'];
 
 type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+export type HabitV2QueueStatus = { pending: number; failed: number };
 
 type HabitEnvironmentPatch = Pick<
   HabitV2Insert,
@@ -40,6 +55,139 @@ export function getHabitLifecycleStatus(habit: Pick<HabitV2Row, 'status' | 'arch
 
 export function isHabitLifecycleActive(habit: Pick<HabitV2Row, 'status' | 'archived'>): boolean {
   return getHabitLifecycleStatus(habit) === 'active';
+}
+
+function isNetworkLikeError(error: unknown): boolean {
+  const message =
+    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('offline') ||
+    normalized.includes('load failed')
+  );
+}
+
+async function mergeLocalHabitsOverRemote(remote: HabitV2Row[], includeInactive: boolean): Promise<HabitV2Row[]> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) return remote;
+  const local = await listLocalHabitsV2ForUser(userId);
+  if (!local.length) return remote;
+  const byId = new Map(remote.map((habit) => [habit.id, habit] as const));
+  for (const record of local) {
+    if (record.sync_state === 'pending_archive' || record.row.archived) {
+      byId.delete(record.id);
+      if (record.server_id) byId.delete(record.server_id);
+      continue;
+    }
+    if (!includeInactive && record.row.status !== 'active') {
+      byId.delete(record.id);
+      continue;
+    }
+    byId.set(record.row.id, record.row);
+  }
+  return Array.from(byId.values());
+}
+
+async function queueLocalHabitCreate(payload: HabitV2Insert): Promise<HabitV2Row> {
+  const localId = buildLocalHabitV2Id();
+  const now = new Date().toISOString();
+  const localRow: HabitV2Row = {
+    id: localId,
+    user_id: payload.user_id,
+    title: payload.title,
+    emoji: payload.emoji ?? null,
+    type: payload.type ?? 'boolean',
+    target_num: payload.target_num ?? null,
+    target_unit: payload.target_unit ?? null,
+    allow_skip: payload.allow_skip ?? true,
+    start_date: payload.start_date ?? null,
+    done_ish_config: payload.done_ish_config ?? null,
+    schedule: payload.schedule ?? { mode: 'daily' },
+    autoprog: payload.autoprog ?? {},
+    goal_id: payload.goal_id ?? null,
+    archived: payload.archived ?? false,
+    created_at: now,
+    domain_key: payload.domain_key ?? null,
+    status: payload.status ?? 'active',
+    paused_at: payload.paused_at ?? null,
+    paused_reason: payload.paused_reason ?? null,
+    resume_on: payload.resume_on ?? null,
+    deactivated_at: payload.deactivated_at ?? null,
+    deactivated_reason: payload.deactivated_reason ?? null,
+    habit_environment: payload.habit_environment ?? null,
+    environment_context: payload.environment_context ?? null,
+    environment_score: payload.environment_score ?? null,
+    environment_risk_tags: payload.environment_risk_tags ?? [],
+    environment_last_audited_at: payload.environment_last_audited_at ?? null,
+  };
+  const nowMs = Date.now();
+  await upsertLocalHabitV2Record({
+    id: localId,
+    user_id: payload.user_id,
+    server_id: null,
+    row: localRow,
+    sync_state: 'pending_create',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  await enqueueHabitV2Mutation({
+    id: `habit-v2-mut-${localId}`,
+    user_id: payload.user_id,
+    habit_id: localId,
+    server_id: null,
+    operation: 'create',
+    payload,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  return localRow;
+}
+
+async function queueLocalHabitUpdate(
+  habitId: string,
+  operation: 'update' | 'archive' | 'pause' | 'resume' | 'deactivate',
+  patch: HabitV2Update,
+): Promise<HabitV2Row | null> {
+  const local = await getLocalHabitV2Record(habitId);
+  let base = local?.row ?? null;
+  if (!base) {
+    const supabase = getSupabaseClient();
+    const { data } = await supabase.from('habits_v2').select('*').eq('id', habitId).maybeSingle<HabitV2Row>();
+    base = data ?? null;
+  }
+  if (!base) return null;
+  const merged = { ...base, ...patch } as HabitV2Row;
+  const nowMs = Date.now();
+  await upsertLocalHabitV2Record({
+    id: habitId,
+    user_id: merged.user_id,
+    server_id: habitId,
+    row: merged,
+    sync_state: operation === 'archive' ? 'pending_archive' : 'pending_update',
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  await enqueueHabitV2Mutation({
+    id: `habit-v2-mut-${habitId}`,
+    user_id: merged.user_id,
+    habit_id: habitId,
+    server_id: habitId,
+    operation,
+    payload: patch,
+    status: 'pending',
+    attempt_count: 0,
+    created_at_ms: nowMs,
+    updated_at_ms: nowMs,
+    last_error: null,
+  });
+  return merged;
 }
 
 function buildHabitEnvironmentPatch(input: {
@@ -90,18 +238,22 @@ function buildHabitEnvironmentPatch(input: {
  */
 export async function listHabitsV2(params?: { includeInactive?: boolean }): Promise<ServiceResponse<HabitV2Row[]>> {
   const supabase = getSupabaseClient();
+  const includeInactive = Boolean(params?.includeInactive);
   let query = supabase
     .from('habits_v2')
     .select('*')
     .eq('archived', false);
 
-  if (!params?.includeInactive) {
+  if (!includeInactive) {
     query = query.eq('status', 'active');
   }
 
-  return query
+  const result = await query
     .order('created_at', { ascending: false })
     .returns<HabitV2Row[]>();
+  if (result.error) return result;
+  const merged = await mergeLocalHabitsOverRemote(result.data ?? [], includeInactive);
+  return { data: merged, error: null };
 }
 
 /**
@@ -158,6 +310,11 @@ export async function createHabitV2(
     .insert(payload)
     .select()
     .single();
+
+  if (result.error && isNetworkLikeError(result.error)) {
+    const queued = await queueLocalHabitCreate(payload);
+    return { data: queued, error: null };
+  }
 
   if (result.data) {
     const environment = normalizeEnvironmentContext(result.data.environment_context ?? null, {
@@ -334,19 +491,23 @@ export async function quickAddDailyHabit(params: {
  */
 export async function archiveHabitV2(habitId: string): Promise<ServiceResponse<null>> {
   const supabase = getSupabaseClient();
-  
+  const patch: HabitV2Update = {
+    archived: true,
+    status: 'archived',
+    paused_at: null,
+    paused_reason: null,
+    resume_on: null,
+    deactivated_at: null,
+    deactivated_reason: null,
+  };
   const { error } = await supabase
     .from('habits_v2')
-    .update({
-      archived: true,
-      status: 'archived',
-      paused_at: null,
-      paused_reason: null,
-      resume_on: null,
-      deactivated_at: null,
-      deactivated_reason: null,
-    })
+    .update(patch)
     .eq('id', habitId);
+  if (error && isNetworkLikeError(error)) {
+    await queueLocalHabitUpdate(habitId, 'archive', patch);
+    return { data: null, error: null };
+  }
   
   return { data: null, error };
 }
@@ -436,55 +597,7 @@ export async function updateHabitV2(
     habit_environment?: string | null;
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
-  const supabase = getSupabaseClient();
-
-  const { data: beforeState } = await supabase
-    .from('habits_v2')
-    .select('*')
-    .eq('id', habitId)
-    .maybeSingle<HabitV2Row>();
-
-  const result = await supabase
-    .from('habits_v2')
-    .update({
-      ...updates,
-      ...buildHabitEnvironmentPatch({
-        environment_context: updates.environment_context ?? beforeState?.environment_context ?? null,
-        environment_score: updates.environment_score ?? beforeState?.environment_score ?? null,
-        environment_risk_tags: updates.environment_risk_tags ?? beforeState?.environment_risk_tags ?? [],
-        environment_last_audited_at:
-          updates.environment_last_audited_at ?? beforeState?.environment_last_audited_at ?? null,
-        habit_environment: updates.habit_environment ?? beforeState?.habit_environment ?? null,
-      }),
-    })
-    .eq('id', habitId)
-    .select()
-    .single();
-
-  if (result.data) {
-    const beforeEnvironment = normalizeEnvironmentContext(beforeState?.environment_context ?? null, {
-      fallbackText: beforeState?.habit_environment ?? null,
-    });
-    const afterEnvironment = normalizeEnvironmentContext(result.data.environment_context ?? null, {
-      fallbackText: result.data.habit_environment,
-    });
-
-    if (beforeEnvironment || afterEnvironment) {
-      const recommendations = buildEnvironmentRecommendations(afterEnvironment);
-      await insertEnvironmentAudit({
-        userId: result.data.user_id,
-        habitId: result.data.id,
-        auditSource: 'manual_edit',
-        scoreBefore: beforeState?.environment_score ?? null,
-        scoreAfter: result.data.environment_score,
-        riskTags: recommendations.riskTags,
-        beforeState: beforeEnvironment,
-        afterState: afterEnvironment,
-      });
-    }
-  }
-
-  return result;
+  return updateHabitFullV2(habitId, updates);
 }
 
 /**
@@ -538,6 +651,25 @@ export async function updateHabitFullV2(
     .select()
     .single();
 
+  if (result.error && isNetworkLikeError(result.error)) {
+    const queued = await queueLocalHabitUpdate(
+      habitId,
+      'update',
+      {
+        ...updates,
+        ...buildHabitEnvironmentPatch({
+          environment_context: updates.environment_context ?? beforeState?.environment_context ?? null,
+          environment_score: updates.environment_score ?? beforeState?.environment_score ?? null,
+          environment_risk_tags: updates.environment_risk_tags ?? beforeState?.environment_risk_tags ?? [],
+          environment_last_audited_at:
+            updates.environment_last_audited_at ?? beforeState?.environment_last_audited_at ?? null,
+          habit_environment: updates.habit_environment ?? beforeState?.habit_environment ?? null,
+        }),
+      } as HabitV2Update,
+    );
+    if (queued) return { data: queued, error: null };
+  }
+
   if (result.data) {
     const beforeEnvironment = normalizeEnvironmentContext(beforeState?.environment_context ?? null, {
       fallbackText: beforeState?.habit_environment ?? null,
@@ -573,12 +705,15 @@ export async function updateHabitFullV2(
  */
 export async function getHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
-  
-  return supabase
+  const result = await supabase
     .from('habits_v2')
     .select('*')
     .eq('id', habitId)
     .single();
+  if (result.data) return result;
+  const local = await getLocalHabitV2Record(habitId);
+  if (local) return { data: local.row, error: null };
+  return result;
 }
 
 /**
@@ -660,40 +795,50 @@ export async function pauseHabitV2(
   options?: { reason?: string | null; resumeOn?: string | null },
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
-
-  return supabase
+  const patch: HabitV2Update = {
+    status: 'paused',
+    paused_at: new Date().toISOString(),
+    paused_reason: options?.reason ?? null,
+    resume_on: options?.resumeOn ?? null,
+    deactivated_at: null,
+    deactivated_reason: null,
+    archived: false,
+  };
+  const result = await supabase
     .from('habits_v2')
-    .update({
-      status: 'paused',
-      paused_at: new Date().toISOString(),
-      paused_reason: options?.reason ?? null,
-      resume_on: options?.resumeOn ?? null,
-      deactivated_at: null,
-      deactivated_reason: null,
-      archived: false,
-    })
+    .update(patch)
     .eq('id', habitId)
     .select()
     .single();
+  if (result.error && isNetworkLikeError(result.error)) {
+    const queued = await queueLocalHabitUpdate(habitId, 'pause', patch);
+    if (queued) return { data: queued, error: null };
+  }
+  return result;
 }
 
 export async function resumeHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
-
-  return supabase
+  const patch: HabitV2Update = {
+    status: 'active',
+    paused_at: null,
+    paused_reason: null,
+    resume_on: null,
+    deactivated_at: null,
+    deactivated_reason: null,
+    archived: false,
+  };
+  const result = await supabase
     .from('habits_v2')
-    .update({
-      status: 'active',
-      paused_at: null,
-      paused_reason: null,
-      resume_on: null,
-      deactivated_at: null,
-      deactivated_reason: null,
-      archived: false,
-    })
+    .update(patch)
     .eq('id', habitId)
     .select()
     .single();
+  if (result.error && isNetworkLikeError(result.error)) {
+    const queued = await queueLocalHabitUpdate(habitId, 'resume', patch);
+    if (queued) return { data: queued, error: null };
+  }
+  return result;
 }
 
 export async function deactivateHabitV2(
@@ -701,23 +846,95 @@ export async function deactivateHabitV2(
   options?: { reason?: string | null },
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();
-
-  return supabase
+  const patch: HabitV2Update = {
+    status: 'deactivated',
+    deactivated_at: new Date().toISOString(),
+    deactivated_reason: options?.reason ?? null,
+    paused_at: null,
+    paused_reason: null,
+    resume_on: null,
+    archived: false,
+  };
+  const result = await supabase
     .from('habits_v2')
-    .update({
-      status: 'deactivated',
-      deactivated_at: new Date().toISOString(),
-      deactivated_reason: options?.reason ?? null,
-      paused_at: null,
-      paused_reason: null,
-      resume_on: null,
-      archived: false,
-    })
+    .update(patch)
     .eq('id', habitId)
     .select()
     .single();
+  if (result.error && isNetworkLikeError(result.error)) {
+    const queued = await queueLocalHabitUpdate(habitId, 'deactivate', patch);
+    if (queued) return { data: queued, error: null };
+  }
+  return result;
 }
 
 export async function reactivateHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
   return resumeHabitV2(habitId);
+}
+
+export async function syncQueuedHabitsV2Mutations(userId: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const pending = await listPendingHabitV2Mutations(userId);
+  for (const mutation of pending) {
+    try {
+      await updateHabitV2Mutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
+      if (mutation.operation === 'create') {
+        const payload = mutation.payload as HabitV2Insert | null;
+        if (!payload) {
+          await removeHabitV2Mutation(mutation.id);
+          continue;
+        }
+        const { error } = await supabase.from('habits_v2').insert(payload).select().single<HabitV2Row>();
+        if (error) throw error;
+      } else if (mutation.operation === 'archive') {
+        const { error } = await supabase
+          .from('habits_v2')
+          .update({
+            archived: true,
+            status: 'archived',
+            paused_at: null,
+            paused_reason: null,
+            resume_on: null,
+            deactivated_at: null,
+            deactivated_reason: null,
+          })
+          .eq('id', mutation.server_id ?? mutation.habit_id);
+        if (error) throw error;
+      } else {
+        const payload = mutation.payload as HabitV2Update | null;
+        if (!payload) {
+          await removeHabitV2Mutation(mutation.id);
+          continue;
+        }
+        const { error } = await supabase
+          .from('habits_v2')
+          .update(payload)
+          .eq('id', mutation.server_id ?? mutation.habit_id);
+        if (error) throw error;
+      }
+      await removeLocalHabitV2Record(mutation.habit_id);
+      await removeHabitV2Mutation(mutation.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await updateHabitV2Mutation(mutation.id, {
+        status: 'failed',
+        attempt_count: mutation.attempt_count + 1,
+        updated_at_ms: Date.now(),
+        last_error: message,
+      });
+      const local = await getLocalHabitV2Record(mutation.habit_id);
+      if (local) {
+        await upsertLocalHabitV2Record({
+          ...local,
+          sync_state: 'failed',
+          updated_at_ms: Date.now(),
+          last_error: message,
+        });
+      }
+    }
+  }
+}
+
+export async function getHabitsV2QueueStatus(userId: string): Promise<HabitV2QueueStatus> {
+  return getHabitV2MutationCounts(userId);
 }
