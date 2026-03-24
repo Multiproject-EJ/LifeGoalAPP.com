@@ -210,6 +210,13 @@ async function handleSupabaseWrite(request) {
   }
 }
 
+function shouldQueueSupabaseWrite(request) {
+  // Opt-in only: callers must explicitly request SW-backed offline queuing.
+  // This avoids returning synthetic 202 responses to flows that expect a real
+  // Supabase record body (e.g. `.single()` inserts).
+  return request.headers.get('X-LifeGoal-Offline-Queue') === '1';
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
@@ -307,7 +314,9 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(event.request.method)) {
-      event.respondWith(handleSupabaseWrite(event.request));
+      if (shouldQueueSupabaseWrite(event.request)) {
+        event.respondWith(handleSupabaseWrite(event.request));
+      }
     }
     return;
   }
