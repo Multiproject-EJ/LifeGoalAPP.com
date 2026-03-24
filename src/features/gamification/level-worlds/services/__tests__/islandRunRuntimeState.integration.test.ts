@@ -1,6 +1,6 @@
-import { hydrateIslandRunGameStateRecordWithSource } from '../islandRunGameStateStore';
+import { hydrateIslandRunGameStateRecordWithSource, readIslandRunGameStateRecord, writeIslandRunGameStateRecord } from '../islandRunGameStateStore';
 import { persistIslandRunRuntimeStatePatch, readIslandRunRuntimeState } from '../islandRunRuntimeState';
-import { assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+import { assert, assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'runtime-test-user';
 
@@ -19,6 +19,42 @@ function makeSession() {
 
 function resetStorage(initial: Record<string, string> = {}): void {
   installWindowWithStorage(createMemoryStorage(initial));
+}
+
+function createAlwaysSuccessfulRuntimeClient() {
+  let updateCalls = 0;
+  const client = {
+    from() {
+      return {
+        update() {
+          updateCalls += 1;
+          return {
+            eq() {
+              return this;
+            },
+            select() {
+              return this;
+            },
+            maybeSingle: async () => ({ data: { runtime_version: updateCalls }, error: null }),
+          };
+        },
+        insert: async () => ({ error: null }),
+        select() {
+          return {
+            eq() {
+              return this;
+            },
+            maybeSingle: async () => ({ data: { user_id: USER_ID }, error: null }),
+          };
+        },
+      };
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+  return {
+    client,
+    getUpdateCalls: () => updateCalls,
+  };
 }
 
 export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
@@ -104,6 +140,58 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         '2': ['hatchery'],
         '5': ['boss'],
       }, 'Expected completed stops merge to filter invalid entries');
+    },
+  },
+  {
+    name: 'writeIslandRunGameStateRecord queues pending write when remote is unavailable',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 1,
+        },
+      });
+
+      assertDeepEqual(result, { ok: true }, 'Expected write to succeed in queued local mode');
+      const pendingRaw = window.localStorage.getItem(`island_run_runtime_state_${USER_ID}_pending_write`);
+      assert(typeof pendingRaw === 'string' && pendingRaw.length > 0, 'Expected pending write payload to be queued');
+    },
+  },
+  {
+    name: 'writeIslandRunGameStateRecord replays queued write before current write when remote recovers',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      window.localStorage.setItem(
+        `island_run_runtime_state_${USER_ID}_pending_write`,
+        JSON.stringify({
+          ...baseline,
+          hearts: baseline.hearts + 2,
+        }),
+      );
+      const { client, getUpdateCalls } = createAlwaysSuccessfulRuntimeClient();
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 3,
+        },
+      });
+
+      assertDeepEqual(result, { ok: true }, 'Expected replay + current write to succeed');
+      assert(getUpdateCalls() >= 2, 'Expected pending replay write plus current write');
+      assertEqual(
+        window.localStorage.getItem(`island_run_runtime_state_${USER_ID}_pending_write`),
+        null,
+        'Expected pending write queue to be cleared after successful replay',
+      );
     },
   },
 ];

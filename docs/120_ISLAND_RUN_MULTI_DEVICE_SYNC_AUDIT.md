@@ -12,6 +12,7 @@ The core Island Run runtime state is read from and written to Supabase table `is
 - `per_island_eggs`, `completed_stops_by_island`
 - `island_shards`, `shard_tier_index`, `shard_claim_count`, `shields`, `shards`
 - `diamonds`, `market_owned_bundles_by_island`
+- `creature_treat_inventory`, `companion_bonus_last_visit_key`
 - `onboarding_display_name_loop_completed`, `story_prologue_seen`, `audio_enabled`
 - `creature_collection`, `active_companion_id`
 - plus first-run and daily-hearts markers
@@ -24,12 +25,9 @@ At runtime, the UI hydrates local state by:
 Writes persist both locally and remotely; as of M20A they now use optimistic concurrency (`runtime_version`) compare-and-swap semantics with retry/merge for safe collection/map fields.
 
 ## What is NOT synchronized across devices (still local-only or mirrored)
-The following Island Run-related state is currently local-only and device-specific:
+The following Island Run-related state is still local-only / mirrored:
 
-- Creature treat inventory (`island_run_creature_treat_inventory_<userId>`)
-- Companion per-visit bonus dedupe flag (`island_run_companion_bonus_applied_<userId>`)
 - Onboarding display-name loop local step storage
-- Legacy mirrors for completed stops and per-island market keys
 - Audio preference mirror key (`islandRunAudioEnabled`)
 
 Some of these are now mirrors/fallbacks (with table-backed canonical state), but still represent dual-source behavior that can diverge until cleanup.
@@ -52,7 +50,5 @@ Is Island Run fully synced across iPad, iPhone, and browser to always keep same 
 - **Mostly convergent in real-time** across concurrently-open devices due to subscriptions + focus/poll reconciliation.
 
 ## Recommended improvements for full cross-device parity
-1. Reduce fallback-only behavior by queueing failed writes and replaying after connection recovery.
-2. Move treat inventory + companion visit dedupe key into runtime table fields.
-3. Remove legacy local mirrors behind a migration-complete feature flag.
-4. Add targeted race/reconnect/realtime convergence tests around version conflicts and replay.
+1. Remove remaining onboarding/audio legacy mirrors behind a migration-complete feature flag.
+2. Add targeted race/reconnect/realtime convergence tests around version conflicts, replay, and convergence.

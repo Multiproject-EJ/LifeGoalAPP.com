@@ -65,6 +65,12 @@ export interface IslandRunGameStateRecord {
   shields: number;
   shards: number;
   diamonds: number;
+  creatureTreatInventory: {
+    basic: number;
+    favorite: number;
+    rare: number;
+  };
+  companionBonusLastVisitKey: string | null;
   completedStopsByIsland: Record<string, string[]>;
   marketOwnedBundlesByIsland: Record<string, {
     dice_bundle: boolean;
@@ -84,6 +90,10 @@ function getStorageKey(userId: string) {
 
 function getRemoteBackoffStorageKey(userId: string) {
   return `${getStorageKey(userId)}_remote_backoff_until`;
+}
+
+function getPendingWriteStorageKey(userId: string) {
+  return `${getStorageKey(userId)}_pending_write`;
 }
 
 function getNormalizedRuntimeStateError(error: { message?: string | null; code?: string | null } | null | undefined) {
@@ -214,6 +224,12 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     shields: 0,
     shards: 0,
     diamonds: 3,
+    creatureTreatInventory: {
+      basic: 3,
+      favorite: 1,
+      rare: 0,
+    },
+    companionBonusLastVisitKey: null,
     completedStopsByIsland: {},
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
@@ -373,6 +389,24 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.diamonds === 'number' && Number.isFinite(value.diamonds)
         ? Math.max(0, Math.floor(value.diamonds))
         : fallback.diamonds,
+    creatureTreatInventory:
+      value.creatureTreatInventory !== null && typeof value.creatureTreatInventory === 'object' && !Array.isArray(value.creatureTreatInventory)
+        ? {
+            basic: typeof value.creatureTreatInventory.basic === 'number' && Number.isFinite(value.creatureTreatInventory.basic)
+              ? Math.max(0, Math.floor(value.creatureTreatInventory.basic))
+              : fallback.creatureTreatInventory.basic,
+            favorite: typeof value.creatureTreatInventory.favorite === 'number' && Number.isFinite(value.creatureTreatInventory.favorite)
+              ? Math.max(0, Math.floor(value.creatureTreatInventory.favorite))
+              : fallback.creatureTreatInventory.favorite,
+            rare: typeof value.creatureTreatInventory.rare === 'number' && Number.isFinite(value.creatureTreatInventory.rare)
+              ? Math.max(0, Math.floor(value.creatureTreatInventory.rare))
+              : fallback.creatureTreatInventory.rare,
+          }
+        : fallback.creatureTreatInventory,
+    companionBonusLastVisitKey:
+      typeof value.companionBonusLastVisitKey === 'string' || value.companionBonusLastVisitKey === null
+        ? value.companionBonusLastVisitKey
+        : fallback.companionBonusLastVisitKey,
     completedStopsByIsland:
       value.completedStopsByIsland !== null && typeof value.completedStopsByIsland === 'object' && !Array.isArray(value.completedStopsByIsland)
         ? Object.fromEntries(
@@ -485,6 +519,12 @@ function mergeRecordForConflict(options: {
     ...local,
     runtimeVersion: remote.runtimeVersion,
     perIslandEggs: { ...remote.perIslandEggs, ...local.perIslandEggs },
+    creatureTreatInventory: {
+      basic: Math.max(remote.creatureTreatInventory.basic, local.creatureTreatInventory.basic),
+      favorite: Math.max(remote.creatureTreatInventory.favorite, local.creatureTreatInventory.favorite),
+      rare: Math.max(remote.creatureTreatInventory.rare, local.creatureTreatInventory.rare),
+    },
+    companionBonusLastVisitKey: local.companionBonusLastVisitKey ?? remote.companionBonusLastVisitKey,
     completedStopsByIsland: mergedCompletedStopsByIsland,
     marketOwnedBundlesByIsland: mergedMarketOwnedBundlesByIsland,
     creatureCollection: mergeCreatureCollection(remote.creatureCollection, local.creatureCollection),
@@ -521,6 +561,8 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number) {
     shields: record.shields,
     shards: record.shards,
     diamonds: record.diamonds,
+    creature_treat_inventory: record.creatureTreatInventory,
+    companion_bonus_last_visit_key: record.companionBonusLastVisitKey,
     completed_stops_by_island: record.completedStopsByIsland,
     market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
     creature_collection: record.creatureCollection,
@@ -587,7 +629,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -647,6 +689,8 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       shields: data.shields ?? 0,
       shards: data.shards ?? 0,
       diamonds: data.diamonds ?? 3,
+      creatureTreatInventory: data.creature_treat_inventory ?? fallback.creatureTreatInventory,
+      companionBonusLastVisitKey: data.companion_bonus_last_visit_key ?? null,
       completedStopsByIsland: data.completed_stops_by_island ?? {},
       marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
       creatureCollection: data.creature_collection ?? [],
@@ -686,8 +730,9 @@ export async function writeIslandRunGameStateRecord(options: {
   session: Session;
   client: SupabaseClient | null;
   record: IslandRunGameStateRecord;
+  skipQueueReplay?: boolean;
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
-  const { session, client, record } = options;
+  const { session, client, record, skipQueueReplay = false } = options;
   const existingLocalRecord = readIslandRunGameStateRecord(session);
   const localRecord: IslandRunGameStateRecord = {
     ...record,
@@ -702,7 +747,38 @@ export async function writeIslandRunGameStateRecord(options: {
     }
   }
 
+  const enqueuePendingWrite = (pendingRecord: IslandRunGameStateRecord) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(getPendingWriteStorageKey(session.user.id), JSON.stringify(pendingRecord));
+    } catch {
+      // ignore local persistence failures in prototype mode
+    }
+  };
+
+  const readPendingWrite = (): IslandRunGameStateRecord | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem(getPendingWriteStorageKey(session.user.id));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as Partial<IslandRunGameStateRecord>;
+      return toRecord(parsed, getDefaultRecord());
+    } catch {
+      return null;
+    }
+  };
+
+  const clearPendingWrite = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(getPendingWriteStorageKey(session.user.id));
+    } catch {
+      // ignore local persistence failures in prototype mode
+    }
+  };
+
   if (isDemoSession(session) || !client) {
+    enqueuePendingWrite(localRecord);
     logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
       userId: session.user.id,
       reason: isDemoSession(session) ? 'demo_session' : 'missing_client',
@@ -713,6 +789,7 @@ export async function writeIslandRunGameStateRecord(options: {
 
   const remoteBackoffUntil = getRemoteBackoffUntil(session.user.id);
   if (remoteBackoffUntil !== null) {
+    enqueuePendingWrite(localRecord);
     logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
       userId: session.user.id,
       reason: 'remote_backoff_active',
@@ -728,6 +805,23 @@ export async function writeIslandRunGameStateRecord(options: {
     ...getRuntimeStateDebugFields(localRecord),
     runtimeVersion: localRecord.runtimeVersion,
   });
+
+  if (!skipQueueReplay) {
+    const pendingWrite = readPendingWrite();
+    if (pendingWrite) {
+      const replayResult = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: pendingWrite,
+        skipQueueReplay: true,
+      });
+      if (replayResult.ok) {
+        clearPendingWrite();
+      } else {
+        return replayResult;
+      }
+    }
+  }
 
   const tryConditionalWrite = async (candidate: IslandRunGameStateRecord): Promise<
     | { status: 'ok'; nextVersion: number }
@@ -821,6 +915,7 @@ export async function writeIslandRunGameStateRecord(options: {
     });
 
     if (remoteBackoffTriggered) {
+      enqueuePendingWrite(localRecord);
       return { ok: true };
     }
 
@@ -832,6 +927,19 @@ export async function writeIslandRunGameStateRecord(options: {
   }
 
   setRemoteBackoffUntil(session.user.id, null);
+  clearPendingWrite();
+
+  if (typeof window !== 'undefined') {
+    try {
+      const persisted = {
+        ...localRecord,
+        runtimeVersion: writeResult.nextVersion,
+      };
+      window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(persisted));
+    } catch {
+      // ignore local persistence failures in prototype mode
+    }
+  }
 
   if (typeof window !== 'undefined') {
     try {
