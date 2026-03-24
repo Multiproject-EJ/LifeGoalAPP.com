@@ -941,6 +941,18 @@ export async function writeIslandRunGameStateRecord(options: {
     }
   }
 
+  if (typeof window !== 'undefined') {
+    try {
+      const persisted = {
+        ...localRecord,
+        runtimeVersion: writeResult.nextVersion,
+      };
+      window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(persisted));
+    } catch {
+      // ignore local persistence failures in prototype mode
+    }
+  }
+
   logIslandRunEntryDebug('runtime_state_persist_success', {
     userId: session.user.id,
     ...getRuntimeStateDebugFields(localRecord),
