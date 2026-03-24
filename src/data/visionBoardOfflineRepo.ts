@@ -128,3 +128,27 @@ export async function getVisionImageMutationCounts(userId: string): Promise<{ pe
   }
   return { pending, failed };
 }
+
+export async function clearVisionImageMutationsForUser(userId: string): Promise<void> {
+  const db = await getDb();
+  const records = await db.getAllFromIndex('vision_images_mutations', 'by-user', IDBKeyRange.only(userId));
+  await Promise.all(records.map((record) => db.delete('vision_images_mutations', record.id)));
+}
+
+export async function retryFailedVisionImageMutationsForUser(userId: string): Promise<void> {
+  const db = await getDb();
+  const records = await db.getAllFromIndex('vision_images_mutations', 'by-user', IDBKeyRange.only(userId));
+  const nowMs = Date.now();
+  await Promise.all(
+    records
+      .filter((record) => record.status === 'failed')
+      .map((record) =>
+        db.put('vision_images_mutations', {
+          ...record,
+          status: 'pending',
+          updated_at_ms: nowMs,
+          last_error: null,
+        }),
+      ),
+  );
+}

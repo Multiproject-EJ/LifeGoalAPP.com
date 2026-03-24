@@ -88,3 +88,27 @@ export async function getPersonalityTestMutationCounts(
   }
   return { pending, failed };
 }
+
+export async function clearPersonalityTestMutationsForUser(userId: string): Promise<void> {
+  const db = await getDb();
+  const records = await db.getAllFromIndex('personality_test_mutations', 'by-user', IDBKeyRange.only(userId));
+  await Promise.all(records.map((record) => db.delete('personality_test_mutations', record.id)));
+}
+
+export async function retryFailedPersonalityTestMutationsForUser(userId: string): Promise<void> {
+  const db = await getDb();
+  const records = await db.getAllFromIndex('personality_test_mutations', 'by-user', IDBKeyRange.only(userId));
+  const nowMs = Date.now();
+  await Promise.all(
+    records
+      .filter((record) => record.status === 'failed')
+      .map((record) =>
+        db.put('personality_test_mutations', {
+          ...record,
+          status: 'pending',
+          updated_at_ms: nowMs,
+          last_error: null,
+        }),
+      ),
+  );
+}

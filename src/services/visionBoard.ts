@@ -3,12 +3,14 @@ import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
   buildLocalVisionImageId,
+  clearVisionImageMutationsForUser,
   enqueueVisionImageMutation,
   getVisionImageMutationCounts,
   listLocalVisionImageRecordsForUser,
   listPendingVisionImageMutations,
   removeLocalVisionImageRecord,
   removeVisionImageMutation,
+  retryFailedVisionImageMutationsForUser,
   updateVisionImageMutation,
   upsertLocalVisionImageRecord,
 } from '../data/visionBoardOfflineRepo';
@@ -20,6 +22,7 @@ import {
   removeDemoVisionImage,
   updateDemoVisionImage,
 } from './demoData';
+import { recordOfflineSyncEvent } from './offlineSyncTelemetry';
 
 export const VISION_BOARD_BUCKET = 'vision-board';
 
@@ -174,6 +177,12 @@ async function queueLocalVisionFileCreate({
     created_at_ms: nowMs,
     updated_at_ms: nowMs,
     last_error: null,
+  });
+  recordOfflineSyncEvent({
+    feature: 'vision_board',
+    event: 'queue_enqueued',
+    userId,
+    pending: 1,
   });
   return localRow;
 }
@@ -467,6 +476,12 @@ export async function uploadVisionImageFromUrl({
       updated_at_ms: nowMs,
       last_error: null,
     });
+    recordOfflineSyncEvent({
+      feature: 'vision_board',
+      event: 'queue_enqueued',
+      userId,
+      pending: 1,
+    });
     return { data: localRow, error: null };
   }
 
@@ -477,6 +492,12 @@ export async function syncQueuedVisionImageMutations(userId: string): Promise<vo
   if (!canUseSupabaseData()) return;
   const supabase = getSupabaseClient();
   const pending = await listPendingVisionImageMutations(userId);
+  recordOfflineSyncEvent({
+    feature: 'vision_board',
+    event: 'sync_started',
+    userId,
+    pending: pending.length,
+  });
   for (const mutation of pending) {
     try {
       await updateVisionImageMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
@@ -529,12 +550,25 @@ export async function syncQueuedVisionImageMutations(userId: string): Promise<vo
       if (error) throw error;
       await removeLocalVisionImageRecord(mutation.image_id);
       await removeVisionImageMutation(mutation.id);
+      recordOfflineSyncEvent({
+        feature: 'vision_board',
+        event: 'sync_succeeded',
+        userId,
+        attemptCount: mutation.attempt_count + 1,
+      });
     } catch (error) {
       await updateVisionImageMutation(mutation.id, {
         status: 'failed',
         attempt_count: mutation.attempt_count + 1,
         updated_at_ms: Date.now(),
         last_error: error instanceof Error ? error.message : String(error),
+      });
+      recordOfflineSyncEvent({
+        feature: 'vision_board',
+        event: 'sync_failed',
+        userId,
+        attemptCount: mutation.attempt_count + 1,
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -543,6 +577,24 @@ export async function syncQueuedVisionImageMutations(userId: string): Promise<vo
 export async function getVisionImageQueueStatus(userId: string): Promise<VisionImageQueueStatus> {
   if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
   return getVisionImageMutationCounts(userId);
+}
+
+export async function clearQueuedVisionImageMutations(userId: string): Promise<void> {
+  await clearVisionImageMutationsForUser(userId);
+  recordOfflineSyncEvent({
+    feature: 'vision_board',
+    event: 'queue_cleared',
+    userId,
+  });
+}
+
+export async function retryFailedVisionImageMutations(userId: string): Promise<void> {
+  await retryFailedVisionImageMutationsForUser(userId);
+  recordOfflineSyncEvent({
+    feature: 'vision_board',
+    event: 'queue_retry_requested',
+    userId,
+  });
 }
 
 export async function updateVisionImage(

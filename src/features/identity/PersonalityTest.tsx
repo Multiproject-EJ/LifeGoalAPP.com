@@ -22,7 +22,9 @@ import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { createDemoSession } from '../../services/demoSession';
 import { queuePersonalityTestResult, type PersonalityTestRecord } from '../../data/personalityTestRepo';
 import {
+  clearQueuedPersonalityTestMutations,
   loadPersonalityTestHistoryWithSupabase,
+  retryFailedPersonalityTestMutations,
   syncPersonalityTestsWithSupabase,
   fetchPersonalityTestsFromSupabase,
   getPersonalityTestQueueStatus,
@@ -731,6 +733,25 @@ export default function PersonalityTest() {
     }
   };
 
+  const handleRetryFailed = async () => {
+    if (!activeUserId) return;
+    await retryFailedPersonalityTestMutations(activeUserId);
+    await syncPersonalityTestsWithSupabase(activeUserId);
+    const status = await getPersonalityTestQueueStatus(activeUserId);
+    setQueuePending(status.pending);
+    setQueueFailed(status.failed);
+  };
+
+  const handleClearQueue = async () => {
+    if (!activeUserId) return;
+    const confirmed = window.confirm('Clear unsynced personality test changes on this device?');
+    if (!confirmed) return;
+    await clearQueuedPersonalityTestMutations(activeUserId);
+    const status = await getPersonalityTestQueueStatus(activeUserId);
+    setQueuePending(status.pending);
+    setQueueFailed(status.failed);
+  };
+
   useEffect(() => {
     if (step !== 'results' || !scores || !activeUserId) {
       return;
@@ -964,6 +985,24 @@ export default function PersonalityTest() {
           {refreshMessage && (
             <p className="identity-hub__refresh-message">{refreshMessage}</p>
           )}
+          {(queuePending > 0 || queueFailed > 0) && (
+            <>
+              <button type="button" className="identity-hub__settings-option" onClick={handleRetryFailed}>
+                🔁 Retry offline sync
+              </button>
+              <button type="button" className="identity-hub__settings-option" onClick={handleClearQueue}>
+                🧹 Clear offline queue
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {(queuePending > 0 || queueFailed > 0) && (
+        <div className="identity-hub__settings-menu" role="status" aria-live="polite">
+          {queueFailed > 0
+            ? `⚠️ ${queueFailed} personality test change${queueFailed > 1 ? 's' : ''} failed to sync. We'll retry when you are online.`
+            : `💾 ${queuePending} personality test change${queuePending > 1 ? 's are' : ' is'} queued for sync.`}
         </div>
       )}
 

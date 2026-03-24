@@ -133,23 +133,26 @@ Before sign-out/reset/clear local data (when queue not empty):
 ## Phase 0 (done)
 - SW write queue changed to opt-in only.
 
-## Phase 1 (next)
+## Phase 1 (done)
 - Journal local store + queue + sync engine integration
 - Journal per-entry sync badges and global status
 - Unsynced-destructive-action warnings
 
-## Phase 2
+## Phase 2 (done)
 - Goals + life goal steps/substeps/alerts migration to same queue engine
 
-## Phase 3
+## Phase 3 (done)
 - Habits + habit logs/reminders migration
 
-## Phase 4
+## Phase 4 (done)
 - Personality tests align fully with shared queue engine
 - Vision board (URL entries first, then file upload staging)
 
-## Phase 5
-- Hardening: telemetry, conflict tooling, performance, recovery tools
+## Phase 5 (done - baseline hardening)
+- Telemetry: offline sync events (queue, retry, success/failure, clear) persisted locally for diagnostics.
+- Recovery tooling: feature-level retry-failed and clear-queue actions for personality tests and vision board.
+- Performance baseline: bounded telemetry ring-buffer and periodic queue polling.
+- Conflict tooling baseline: surfaced failure state + retry path to avoid silent stalls.
 
 ---
 

@@ -2,10 +2,12 @@ import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, use
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
+  clearQueuedVisionImageMutations,
   deleteVisionImage,
   fetchVisionImages,
   getVisionImageQueueStatus,
   getVisionImagePublicUrl,
+  retryFailedVisionImageMutations,
   syncQueuedVisionImageMutations,
   updateVisionImage,
   uploadVisionImage,
@@ -850,6 +852,26 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   };
 
+  const handleRetryVisionQueue = async () => {
+    if (!session) return;
+    await retryFailedVisionImageMutations(session.user.id);
+    await syncQueuedVisionImageMutations(session.user.id);
+    await loadImages();
+    const status = await getVisionImageQueueStatus(session.user.id);
+    setQueuePending(status.pending);
+    setQueueFailed(status.failed);
+  };
+
+  const handleClearVisionQueue = async () => {
+    if (!session) return;
+    const confirmed = window.confirm('Clear unsynced vision board changes on this device?');
+    if (!confirmed) return;
+    await clearQueuedVisionImageMutations(session.user.id);
+    const status = await getVisionImageQueueStatus(session.user.id);
+    setQueuePending(status.pending);
+    setQueueFailed(status.failed);
+  };
+
   return (
     <section className="vision-board">
       <header className="vision-board__header">
@@ -924,11 +946,21 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
 
       {errorMessage && <p className="vision-board__status vision-board__status--error">{errorMessage}</p>}
       {(queuePending > 0 || queueFailed > 0) && (
-        <p className="vision-board__status vision-board__status--warning">
-          {queueFailed > 0
-            ? `${queueFailed} vision board change${queueFailed > 1 ? 's' : ''} failed to sync. We'll retry automatically when you're online.`
-            : `${queuePending} vision board change${queuePending > 1 ? 's are' : ' is'} queued for sync.`}
-        </p>
+        <div className="vision-board__status vision-board__status--warning">
+          <p style={{ margin: 0 }}>
+            {queueFailed > 0
+              ? `${queueFailed} vision board change${queueFailed > 1 ? 's' : ''} failed to sync. We'll retry automatically when you're online.`
+              : `${queuePending} vision board change${queuePending > 1 ? 's are' : ' is'} queued for sync.`}
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button type="button" className="vision-board__daily-game-button" onClick={handleRetryVisionQueue}>
+              Retry sync
+            </button>
+            <button type="button" className="vision-board__daily-game-button" onClick={handleClearVisionQueue}>
+              Clear queue
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="vision-board__add-edit">

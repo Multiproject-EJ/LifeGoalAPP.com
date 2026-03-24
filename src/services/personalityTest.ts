@@ -4,12 +4,15 @@ import type { Database } from '../lib/database.types';
 import { loadPersonalityTestHistory } from '../data/personalityTestRepo';
 import { putPersonalityTest, type PersonalityTestValue } from '../data/localDb';
 import {
+  clearPersonalityTestMutationsForUser,
   getPersonalityTestMutationCounts,
   listPendingPersonalityTestMutations,
   removePersonalityTestMutation,
+  retryFailedPersonalityTestMutationsForUser,
   updatePersonalityTestMutation,
 } from '../data/personalityTestOfflineRepo';
 import { buildTopTraitSummary } from '../features/identity/personalitySummary';
+import { recordOfflineSyncEvent } from './offlineSyncTelemetry';
 
 export type PersonalityTestRow = Database['public']['Tables']['personality_tests']['Row'];
 export type PersonalityTestInsert = Database['public']['Tables']['personality_tests']['Insert'];
@@ -170,6 +173,12 @@ export async function syncPersonalityTestsWithSupabase(userId: string): Promise<
 
   const supabase = getSupabaseClient();
   const pendingMutations = await listPendingPersonalityTestMutations(userId);
+  recordOfflineSyncEvent({
+    feature: 'personality_test',
+    event: 'sync_started',
+    userId,
+    pending: pendingMutations.length,
+  });
   let latestSynced: PersonalityTestValue | null = null;
 
   for (const mutation of pendingMutations) {
@@ -196,6 +205,12 @@ export async function syncPersonalityTestsWithSupabase(userId: string): Promise<
 
       await putPersonalityTest(syncedRecord);
       await removePersonalityTestMutation(mutation.id);
+      recordOfflineSyncEvent({
+        feature: 'personality_test',
+        event: 'sync_succeeded',
+        userId,
+        attemptCount: mutation.attempt_count + 1,
+      });
 
       if (!latestSynced || syncedRecord.taken_at > latestSynced.taken_at) {
         latestSynced = syncedRecord;
@@ -206,6 +221,13 @@ export async function syncPersonalityTestsWithSupabase(userId: string): Promise<
         attempt_count: mutation.attempt_count + 1,
         updated_at_ms: Date.now(),
         last_error: error instanceof Error ? error.message : String(error),
+      });
+      recordOfflineSyncEvent({
+        feature: 'personality_test',
+        event: 'sync_failed',
+        userId,
+        attemptCount: mutation.attempt_count + 1,
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -225,4 +247,22 @@ export async function syncPersonalityTestsWithSupabase(userId: string): Promise<
 export async function getPersonalityTestQueueStatus(userId: string): Promise<PersonalityTestQueueStatus> {
   if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
   return getPersonalityTestMutationCounts(userId);
+}
+
+export async function clearQueuedPersonalityTestMutations(userId: string): Promise<void> {
+  await clearPersonalityTestMutationsForUser(userId);
+  recordOfflineSyncEvent({
+    feature: 'personality_test',
+    event: 'queue_cleared',
+    userId,
+  });
+}
+
+export async function retryFailedPersonalityTestMutations(userId: string): Promise<void> {
+  await retryFailedPersonalityTestMutationsForUser(userId);
+  recordOfflineSyncEvent({
+    feature: 'personality_test',
+    event: 'queue_retry_requested',
+    userId,
+  });
 }
