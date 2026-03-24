@@ -1006,6 +1006,14 @@ export default function PersonalityTest() {
         </div>
       )}
 
+      {(queuePending > 0 || queueFailed > 0) && (
+        <div className="identity-hub__settings-menu" role="status" aria-live="polite">
+          {queueFailed > 0
+            ? `⚠️ ${queueFailed} personality test change${queueFailed > 1 ? 's' : ''} failed to sync. We'll retry when you are online.`
+            : `💾 ${queuePending} personality test change${queuePending > 1 ? 's are' : ' is'} queued for sync.`}
+        </div>
+      )}
+
       {step === 'intro' && (
         <div className="identity-hub__card">
           <h3 className="identity-hub__card-title">Meet your playstyle</h3>
