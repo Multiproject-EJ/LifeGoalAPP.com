@@ -20,8 +20,11 @@ import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
   getHabitCompletionsByMonth,
+  getHabitCompletionQueueStatus,
   getMonthlyCompletionGrid,
+  syncQueuedHabitCompletions,
   toggleHabitCompletionForDate,
+  type HabitCompletionQueueStatus,
   type MonthlyHabitCompletions,
 } from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
@@ -430,6 +433,7 @@ export function DailyHabitTracker({
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [queueStatus, setQueueStatus] = useState<HabitCompletionQueueStatus>({ pending: 0, failed: 0 });
   const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
   const [lifecycleActionHabitIds, setLifecycleActionHabitIds] = useState<Set<string>>(new Set());
   const [todayPauseDialogHabit, setTodayPauseDialogHabit] = useState<HabitWithGoal | null>(null);
@@ -3088,10 +3092,27 @@ export function DailyHabitTracker({
     }
   }, [session?.user?.id, isConfigured]);
 
+  const refreshQueueStatus = useCallback(async () => {
+    if (!isConfigured || !session?.user?.id) {
+      setQueueStatus({ pending: 0, failed: 0 });
+      return;
+    }
+    const status = await getHabitCompletionQueueStatus(session.user.id);
+    setQueueStatus(status);
+  }, [isConfigured, session?.user?.id]);
+
   // Load monthly statistics when month changes
   useEffect(() => {
     void loadMonthlyStats(selectedYear, selectedMonth);
   }, [selectedYear, selectedMonth, loadMonthlyStats]);
+
+  useEffect(() => {
+    void refreshQueueStatus();
+    const interval = window.setInterval(() => {
+      void refreshQueueStatus();
+    }, 15000);
+    return () => window.clearInterval(interval);
+  }, [refreshQueueStatus]);
 
   useEffect(() => {
     if (!isConfigured && !isDemoExperience) {
@@ -3139,25 +3160,34 @@ export function DailyHabitTracker({
   }, [refreshHabits]);
 
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) {
+    if (!isConfigured || !session?.user?.id) {
       return;
     }
 
-    const handleOnline = () => {
-      navigator.serviceWorker.ready
-        .then((registration) => {
-          registration.active?.postMessage({ type: 'PROCESS_SUPABASE_QUEUE' });
-        })
+    const runSync = () => {
+      syncQueuedHabitCompletions(session.user.id)
+        .then(() => Promise.all([loadMonthlyStats(selectedYear, selectedMonth), refreshHabits(), refreshQueueStatus()]))
         .catch(() => undefined);
     };
 
-    window.addEventListener('online', handleOnline);
-    handleOnline();
+    runSync();
+    window.addEventListener('online', runSync);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('online', runSync);
     };
-  }, []);
+  }, [isConfigured, loadMonthlyStats, refreshHabits, refreshQueueStatus, selectedMonth, selectedYear, session?.user?.id]);
+
+  useEffect(() => {
+    if (queueStatus.pending === 0 && queueStatus.failed === 0) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue =
+        'You have unsynced habit completion changes on this device. Leaving now may discard unsynced updates.';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [queueStatus.pending, queueStatus.failed]);
 
   const toggleHabitForDate = async (habit: HabitWithGoal, dateISO: string) => {
     if (!isConfigured && !isDemoExperience) {
@@ -3744,6 +3774,7 @@ export function DailyHabitTracker({
 
       // Refresh monthly stats to get updated completion data
       await loadMonthlyStats(selectedYear, selectedMonth);
+      await refreshQueueStatus();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update the habit.');
     } finally {
@@ -7277,6 +7308,14 @@ export function DailyHabitTracker({
       ) : !isConfigured ? (
         <p className="habit-tracker__status habit-tracker__status--warning">
           Connect your Supabase credentials to sync habits and log completions across devices.
+        </p>
+      ) : null}
+
+      {isConfigured && queueStatus.pending > 0 ? (
+        <p className={`habit-tracker__status ${queueStatus.failed > 0 ? 'habit-tracker__status--warning' : 'habit-tracker__status--info'}`}>
+          {queueStatus.failed > 0
+            ? `${QUEUE_RETRY_MESSAGE} ${queueStatus.pending} update${queueStatus.pending === 1 ? '' : 's'} pending.`
+            : `${OFFLINE_SYNC_MESSAGE} ${queueStatus.pending} update${queueStatus.pending === 1 ? '' : 's'} pending.`}
         </p>
       ) : null}
 
