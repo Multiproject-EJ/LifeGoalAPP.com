@@ -25,12 +25,7 @@ At runtime, the UI hydrates local state by:
 Writes persist both locally and remotely; as of M20A they now use optimistic concurrency (`runtime_version`) compare-and-swap semantics with retry/merge for safe collection/map fields.
 
 ## What is NOT synchronized across devices (still local-only or mirrored)
-The following Island Run-related state is still local-only / mirrored:
-
-- Onboarding display-name loop local step storage
-- Audio preference mirror key (`islandRunAudioEnabled`)
-
-Some of these are now mirrors/fallbacks (with table-backed canonical state), but still represent dual-source behavior that can diverge until cleanup.
+No remaining known Island Run runtime fields are intentionally local-only in this sync slice.
 
 ## Real-time behavior and conflict model
 Island Run now includes live reconciliation for already-open clients:
@@ -45,10 +40,8 @@ Implication:
 ## Direct answer
 Is Island Run fully synced across iPad, iPhone, and browser to always keep same island and same state?
 
-- **Partially yes** for core runtime progress/state in `island_run_runtime_state` (island number, token position, hearts/coins/spins/dice, timers, eggs ledger, completed stops, shard economy fields).
-- **Not fully** for local-only state listed above.
-- **Mostly convergent in real-time** across concurrently-open devices due to subscriptions + focus/poll reconciliation.
+- **Yes for runtime state coverage in this slice**, including progression, economy, onboarding/story/audio toggles, market ownership, creature systems, and companion visit dedupe markers.
+- **Convergent in real-time** across concurrently-open devices due to subscriptions + focus/poll reconciliation.
 
-## Recommended improvements for full cross-device parity
-1. Remove remaining onboarding/audio legacy mirrors behind a migration-complete feature flag.
-2. Add targeted race/reconnect/realtime convergence tests around version conflicts, replay, and convergence.
+## Recommended improvements for continued hardening
+1. Expand targeted race/reconnect/realtime convergence tests around version conflicts, replay, and convergence.

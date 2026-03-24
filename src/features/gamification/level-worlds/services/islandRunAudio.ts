@@ -2,7 +2,7 @@
  * Island Run — Audio + Haptics service (M10A)
  *
  * Provides typed sound and haptic event dispatch for Island Run game events.
- * All calls are gated behind the `islandRunAudioEnabled` localStorage preference
+ * All calls are gated behind an in-memory `islandRunAudioEnabled` preference
  * (defaults to `true`) and gracefully no-op when the relevant browser API is
  * unavailable.
  *
@@ -62,24 +62,14 @@ export type IslandRunHapticEvent =
 
 // ─── Preference helpers ────────────────────────────────────────────────────────
 
-const AUDIO_PREF_KEY = 'islandRunAudioEnabled';
+let islandRunAudioEnabled = true;
 
 export function getIslandRunAudioEnabled(): boolean {
-  try {
-    const stored = window.localStorage.getItem(AUDIO_PREF_KEY);
-    if (stored === null) return true; // default on
-    return stored !== 'false';
-  } catch {
-    return true;
-  }
+  return islandRunAudioEnabled;
 }
 
 export function setIslandRunAudioEnabled(enabled: boolean): void {
-  try {
-    window.localStorage.setItem(AUDIO_PREF_KEY, enabled ? 'true' : 'false');
-  } catch {
-    // ignore storage errors
-  }
+  islandRunAudioEnabled = enabled;
 }
 
 // ─── Haptic patterns (ms) ─────────────────────────────────────────────────────

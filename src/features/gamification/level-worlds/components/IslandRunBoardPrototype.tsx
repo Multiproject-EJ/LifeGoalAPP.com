@@ -67,7 +67,6 @@ import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
 import {
   playIslandRunSound,
   triggerIslandRunHaptic,
-  getIslandRunAudioEnabled,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
@@ -558,7 +557,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(() => getIslandRunAudioEnabled());
+  const [audioEnabled, setAudioEnabled] = useState(true);
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
   const [cycleIndex, setCycleIndex] = useState<number>(0);
 
@@ -611,7 +610,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
   const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; heartsEarned: number; coinsEarned: number; stopsCleared: number } | null>(null);
 
-  const onboardingStorageKey = `gol_onboarding_${session.user.id}`;
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const runtimeStateRef = useRef(runtimeState);
@@ -1314,20 +1312,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [hasHydratedRuntimeState, reconcileRuntimeState]);
 
   useEffect(() => {
-    const runtimeCompleted = runtimeState.onboardingDisplayNameLoopCompleted === true;
-    const storedValue = window.localStorage.getItem(onboardingStorageKey);
-    if (!storedValue) {
-      setIsDisplayNameLoopCompleted(runtimeCompleted);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(storedValue) as { stepIndex?: number };
-      setIsDisplayNameLoopCompleted(runtimeCompleted || (parsed.stepIndex ?? 0) >= 1);
-    } catch {
-      setIsDisplayNameLoopCompleted(runtimeCompleted);
-    }
-  }, [onboardingStorageKey, runtimeState.onboardingDisplayNameLoopCompleted]);
+    setIsDisplayNameLoopCompleted(runtimeState.onboardingDisplayNameLoopCompleted === true);
+  }, [runtimeState.onboardingDisplayNameLoopCompleted]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || isOnboardingComplete) return;
@@ -2698,35 +2684,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    let nextStepIndex = 1;
-    let tokens = 0;
-    let unlockedItemIds: string[] = [];
-
-    const existingState = window.localStorage.getItem(onboardingStorageKey);
-    if (existingState) {
-      try {
-        const parsed = JSON.parse(existingState) as {
-          stepIndex?: number;
-          tokens?: number;
-          unlockedItemIds?: string[];
-        };
-        nextStepIndex = Math.max(1, parsed.stepIndex ?? 0);
-        tokens = parsed.tokens ?? 0;
-        unlockedItemIds = parsed.unlockedItemIds ?? [];
-      } catch {
-        // ignore broken storage and write a fresh payload
-      }
-    }
-
-    window.localStorage.setItem(
-      onboardingStorageKey,
-      JSON.stringify({
-        stepIndex: nextStepIndex,
-        tokens,
-        unlockedItemIds,
-      }),
-    );
-
     setIsDisplayNameLoopCompleted(true);
     setHearts((current) => current + 1);
     setLandingText(`Onboarding display-name loop complete for ${trimmedName}. +1 heart rewarded.`);
@@ -4008,7 +3965,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               🌀 Spin
             </button>
           )}
-          {/* M10A: audio toggle — persists to localStorage */}
+          {/* M10A: audio toggle */}
           <button
             type="button"
             className="island-run-prototype__audio-toggle"
