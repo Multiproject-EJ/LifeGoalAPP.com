@@ -6,9 +6,11 @@ import { isDemoSession } from '../../services/demoSession';
 import {
   createJournalEntry,
   deleteJournalEntry,
+  getJournalQueueStatus,
   listJournalEntries,
   listJournalEntriesByMode,
   syncQueuedJournalEntries,
+  type JournalQueueStatus,
   updateJournalEntry,
   type JournalEntry,
 } from '../../services/journal';
@@ -71,6 +73,7 @@ type JournalProps = {
 };
 
 type StatusState = { kind: 'success' | 'warning' | 'error'; message: string } | null;
+const EMPTY_QUEUE_STATUS: JournalQueueStatus = { pending: 0, failed: 0 };
 
 type GratitudeAttachmentMeta = {
   coachScore: number;
@@ -210,6 +213,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   const [thankYouDraft, setThankYouDraft] = useState<string | null>(null);
   const [thankYouCopied, setThankYouCopied] = useState(false);
   const [handledLaunchRequestId, setHandledLaunchRequestId] = useState<number | null>(null);
+  const [queueStatus, setQueueStatus] = useState<JournalQueueStatus>(EMPTY_QUEUE_STATUS);
 
   // Watch for level-up events
   useEffect(() => {
@@ -281,6 +285,15 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     }
   }, [session, journalDisabled, isCompactLayout]);
 
+  const refreshQueueStatus = useCallback(async () => {
+    if (journalDisabled) {
+      setQueueStatus(EMPTY_QUEUE_STATUS);
+      return;
+    }
+    const status = await getJournalQueueStatus();
+    setQueueStatus(status);
+  }, [journalDisabled]);
+
   useEffect(() => {
     loadEntries();
   }, [loadEntries]);
@@ -290,14 +303,40 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
 
     const trySync = () => {
       syncQueuedJournalEntries()
-        .then(() => loadEntries())
+        .then(async () => {
+          await loadEntries();
+          await refreshQueueStatus();
+        })
         .catch(() => undefined);
     };
 
     trySync();
     window.addEventListener('online', trySync);
     return () => window.removeEventListener('online', trySync);
-  }, [loadEntries]);
+  }, [loadEntries, refreshQueueStatus]);
+
+  useEffect(() => {
+    void refreshQueueStatus();
+    const interval = window.setInterval(() => {
+      void refreshQueueStatus();
+    }, 15000);
+    return () => window.clearInterval(interval);
+  }, [refreshQueueStatus]);
+
+  useEffect(() => {
+    if (queueStatus.pending === 0 && queueStatus.failed === 0) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue =
+        'You have unsynced journal changes on this device. Leaving now may discard unsynced content.';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [queueStatus.pending, queueStatus.failed]);
 
   useEffect(() => {
     if (!session || journalDisabled) {
@@ -836,6 +875,7 @@ ${thankYouDraft}`,
         if (isCompactLayout) {
           setShowMobileDetail(true);
         }
+        void refreshQueueStatus();
       }
     } catch (err) {
       setEditorError(err instanceof Error ? err.message : 'Unable to save your entry right now.');
@@ -872,6 +912,7 @@ ${thankYouDraft}`,
         setShowMobileDetail(false);
       }
       setStatus({ kind: 'success', message: 'Entry deleted.' });
+      void refreshQueueStatus();
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'Unable to delete the entry.' });
     } finally {
@@ -940,6 +981,14 @@ ${thankYouDraft}`,
 
       {status ? <p className={`journal__status journal__status--${status.kind}`}>{status.message}</p> : null}
       {error ? <p className="journal__status journal__status--error">{error}</p> : null}
+      {queueStatus.pending > 0 || queueStatus.failed > 0 ? (
+        <p className="journal__status journal__status--warning">
+          {queueStatus.failed > 0
+            ? `${queueStatus.failed} journal change${queueStatus.failed === 1 ? '' : 's'} failed to sync. We will keep retrying when online.`
+            : `${queueStatus.pending} journal change${queueStatus.pending === 1 ? '' : 's'} pending sync.`}{' '}
+          Avoid clearing browser/app data until sync completes.
+        </p>
+      ) : null}
       {gratitudeCoach ? (
         <section className="journal-gratitude-coach" aria-live="polite">
           <div>

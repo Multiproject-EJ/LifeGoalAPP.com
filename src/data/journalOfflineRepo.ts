@@ -140,3 +140,15 @@ export async function listPendingJournalMutations(userId: string): Promise<Journ
     .filter((record) => record.status === 'pending' || record.status === 'failed')
     .sort((a, b) => a.created_at_ms - b.created_at_ms);
 }
+
+export async function getJournalMutationCounts(userId: string): Promise<{ pending: number; failed: number }> {
+  const db = await getDb();
+  const records = await db.getAllFromIndex('journal_mutations', 'by-user', IDBKeyRange.only(userId));
+  let pending = 0;
+  let failed = 0;
+  for (const record of records) {
+    if (record.status === 'pending' || record.status === 'processing') pending += 1;
+    if (record.status === 'failed') failed += 1;
+  }
+  return { pending, failed };
+}

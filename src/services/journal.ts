@@ -6,6 +6,7 @@ import {
   buildLocalJournalId,
   enqueueJournalMutation,
   getLocalJournalRecord,
+  getJournalMutationCounts,
   listLocalJournalRecordsForUser,
   listPendingJournalMutations,
   removeJournalMutation,
@@ -387,6 +388,24 @@ export async function syncQueuedJournalEntries(): Promise<void> {
       }
     }
   }
+}
+
+export type JournalQueueStatus = {
+  pending: number;
+  failed: number;
+};
+
+export async function getJournalQueueStatus(): Promise<JournalQueueStatus> {
+  if (!canUseSupabaseData()) {
+    return { pending: 0, failed: 0 };
+  }
+
+  const userId = await getActiveUserId();
+  if (!userId) {
+    return { pending: 0, failed: 0 };
+  }
+
+  return getJournalMutationCounts(userId);
 }
 
 export async function listJournalEntries(
