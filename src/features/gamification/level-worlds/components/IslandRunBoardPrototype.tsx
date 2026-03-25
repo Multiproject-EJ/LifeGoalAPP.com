@@ -830,6 +830,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
   const [isActiveSessionOwner, setIsActiveSessionOwner] = useState(() => isDemoSession(session));
   const [activeSessionStatusMessage, setActiveSessionStatusMessage] = useState<string | null>(null);
+  const [isRetryingSync, setIsRetryingSync] = useState(false);
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
@@ -1516,6 +1517,36 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setActiveSessionStatusMessage(null);
     return true;
   }, [client, deviceSessionId, session]);
+
+  const retryRuntimeSync = useCallback(async () => {
+    setIsRetryingSync(true);
+    setActiveSessionStatusMessage(null);
+    try {
+      const owned = await claimOwnership('manual_takeover');
+      if (!owned && !isDemoSession(session)) {
+        setActiveSessionStatusMessage('Unable to take over Island Run session yet. Please try again.');
+        return;
+      }
+
+      const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client });
+      setRuntimeHydrationSource(hydrationResult.source);
+      setRuntimeState(hydrationResult.state);
+
+      if (hydrationResult.source === 'table') {
+        setLandingText('Island Run synced successfully. You can continue playing.');
+        setActiveSessionStatusMessage(null);
+        return;
+      }
+
+      setActiveSessionStatusMessage(
+        'Runtime sync is still unavailable. Please verify Supabase credentials/session and rerun latest migrations.',
+      );
+    } catch (error) {
+      setActiveSessionStatusMessage(error instanceof Error ? error.message : 'Unexpected sync retry failure.');
+    } finally {
+      setIsRetryingSync(false);
+    }
+  }, [claimOwnership, client, session]);
 
   useEffect(() => {
     let isActive = true;
@@ -4710,6 +4741,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               }}
             >
               Take over here
+            </button>
+          )}
+          {isRuntimeSyncBlocked && (
+            <button
+              type="button"
+              className="island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--primary"
+              onClick={() => {
+                void retryRuntimeSync();
+              }}
+              disabled={isRetryingSync}
+            >
+              {isRetryingSync ? 'Retrying…' : 'Retry sync now'}
             </button>
           )}
         </header>
