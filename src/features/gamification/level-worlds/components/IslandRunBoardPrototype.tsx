@@ -59,7 +59,18 @@ import {
   fetchCreatureTreatInventory,
   type CreatureTreatType,
 } from '../services/creatureTreatInventoryService';
-import { getCompanionBonusForCreature, getCreatureSpecialtyForCompanion, selectCreatureForEgg } from '../services/creatureCatalog';
+import {
+  CREATURE_CATALOG,
+  getCompanionBonusForCreature,
+  getCreatureSpecialtyForCompanion,
+  selectCreatureForEgg,
+} from '../services/creatureCatalog';
+import {
+  rankCreatureFitsForPlayer,
+  selectPerfectCompanions,
+  type PlayerHandContext,
+} from '../services/creatureFitEngine';
+import { getDefaultZonePreferencesForArchetypes } from '../services/creatureArchetypeBridge';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -107,6 +118,7 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
+const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 
 function getOpenHatcheryOnLoadFlag(): boolean {
   return typeof window !== 'undefined'
@@ -147,6 +159,46 @@ function formatIslandCountdown(totalSec: number): string {
   if (hours > 0) return `${hours}h ${minutes}m`;
   if (minutes > 0) return `${minutes}m ${seconds}s`;
   return `${seconds}s`;
+}
+
+function extractArchetypeIdsFromMetadata(value: unknown): string[] {
+  if (!value || typeof value !== 'object') return [];
+  const candidate = value as Record<string, unknown>;
+  const ids: string[] = [];
+
+  const pushIfString = (nextValue: unknown) => {
+    if (typeof nextValue === 'string' && nextValue.trim()) {
+      ids.push(nextValue.trim().toLowerCase());
+    }
+  };
+
+  pushIfString(candidate.id);
+  pushIfString(candidate.cardId);
+  if (candidate.card && typeof candidate.card === 'object') {
+    pushIfString((candidate.card as Record<string, unknown>).id);
+  }
+
+  ['dominant', 'secondary', 'support', 'shadow'].forEach((key) => {
+    const entry = candidate[key];
+    if (entry && typeof entry === 'object') {
+      pushIfString((entry as Record<string, unknown>).id);
+      if ((entry as Record<string, unknown>).card && typeof (entry as Record<string, unknown>).card === 'object') {
+        pushIfString((((entry as Record<string, unknown>).card as Record<string, unknown>).id));
+      }
+    }
+  });
+
+  if (Array.isArray(candidate.cards)) {
+    candidate.cards.forEach((entry) => {
+      if (!entry || typeof entry !== 'object') return;
+      pushIfString((entry as Record<string, unknown>).id);
+      if ((entry as Record<string, unknown>).card && typeof (entry as Record<string, unknown>).card === 'object') {
+        pushIfString((((entry as Record<string, unknown>).card as Record<string, unknown>).id));
+      }
+    });
+  }
+
+  return Array.from(new Set(ids));
 }
 // Egg hatch durations are now random (24–72 h production / 15–30 s dev) via eggService.
 // Egg tier is assigned randomly on set via rollEggTierWeighted() in eggService.
@@ -2459,6 +2511,87 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return bReady - aReady || b.lastCollectedAtMs - a.lastCollectedAtMs;
     });
   }, [activeCompanionId, collectedCreatures, sanctuaryFilterMode, sanctuarySortMode]);
+  const perfectCompanionIdSet = useMemo(
+    () => new Set(runtimeState.perfectCompanionIds ?? []),
+    [runtimeState.perfectCompanionIds],
+  );
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+
+    const metadata = session.user.user_metadata as Record<string, unknown> | undefined;
+    const metadataArchetypeIds = extractArchetypeIdsFromMetadata(metadata?.archetype_hand);
+    const dominantArchetypeIds = metadataArchetypeIds.slice(0, 2);
+    const secondaryArchetypeIds = metadataArchetypeIds.slice(2, 4);
+    const supportArchetypeIds = metadataArchetypeIds.slice(4, 8);
+    const fallbackArchetypeIds = metadataArchetypeIds.length > 0 ? metadataArchetypeIds : ['guardian', 'visionary'];
+    const preferredShipZones = getDefaultZonePreferencesForArchetypes(fallbackArchetypeIds);
+
+    const context: PlayerHandContext = {
+      dominantArchetypeIds: dominantArchetypeIds.length > 0 ? dominantArchetypeIds : ['guardian'],
+      secondaryArchetypeIds: secondaryArchetypeIds.length > 0 ? secondaryArchetypeIds : ['visionary'],
+      supportArchetypeIds,
+      weaknessTags: ['stress_fragility', 'decision_confusion'],
+      preferredShipZones,
+    };
+
+    const shouldRecompute =
+      runtimeState.perfectCompanionModelVersion !== PERFECT_COMPANION_MODEL_VERSION
+      || runtimeState.perfectCompanionComputedCycleIndex !== cycleIndex
+      || !Array.isArray(runtimeState.perfectCompanionIds)
+      || runtimeState.perfectCompanionIds.length === 0;
+
+    if (!shouldRecompute) return;
+
+    const rankedFits = rankCreatureFitsForPlayer(CREATURE_CATALOG, context);
+    const selectedFits = selectPerfectCompanions(rankedFits, 3, {
+      userId: session.user.id,
+      cycleIndex,
+      islandNumber,
+    });
+    const perfectCompanionIds = selectedFits.map((entry) => entry.creatureId);
+    const perfectCompanionReasons = Object.fromEntries(
+      selectedFits.map((entry) => [
+        entry.creatureId,
+        {
+          strength: entry.matchedArchetypes,
+          weaknessSupport: entry.matchedWeaknessTags,
+          zoneMatch: entry.zoneMatch > 0,
+        },
+      ]),
+    );
+    const computedAtMs = Date.now();
+
+    setRuntimeState((current) => ({
+      ...current,
+      perfectCompanionIds,
+      perfectCompanionReasons,
+      perfectCompanionComputedAtMs: computedAtMs,
+      perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
+      perfectCompanionComputedCycleIndex: cycleIndex,
+    }));
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        perfectCompanionIds,
+        perfectCompanionReasons,
+        perfectCompanionComputedAtMs: computedAtMs,
+        perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
+        perfectCompanionComputedCycleIndex: cycleIndex,
+      },
+    });
+  }, [
+    client,
+    cycleIndex,
+    hasHydratedRuntimeState,
+    islandNumber,
+    runtimeState.perfectCompanionComputedCycleIndex,
+    runtimeState.perfectCompanionIds,
+    runtimeState.perfectCompanionModelVersion,
+    session,
+  ]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
@@ -5304,6 +5437,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   <div className="island-run-sanctuary-detail__identity">
                     <p className="island-run-sanctuary-card__eyebrow">Island {selectedSanctuaryCreature.lastCollectedIslandNumber} · {selectedSanctuaryCreature.creature.tier}</p>
                     <h4 className="island-run-sanctuary-detail__title">{selectedSanctuaryCreature.creature.name}</h4>
+                    {perfectCompanionIdSet.has(selectedSanctuaryCreature.creatureId) ? (
+                      <p className="island-run-sanctuary-card__meta"><strong>⭐ Perfect for your hand</strong></p>
+                    ) : null}
                     <p className="island-run-sanctuary-detail__copy">
                       {selectedSanctuaryCreature.creature.name} thrives in {selectedSanctuaryCreature.creature.habitat.toLowerCase()} habitats and resonates with {selectedSanctuaryCreature.creature.affinity.toLowerCase()} energy.
                     </p>
@@ -5418,6 +5554,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         Island {creature.lastCollectedIslandNumber} · {creature.creature.tier}
                       </p>
                       <h4 className="island-run-sanctuary-card__title">{creature.creature.name}</h4>
+                      {perfectCompanionIdSet.has(creature.creatureId) ? (
+                        <p className="island-run-sanctuary-card__meta"><strong>⭐ Perfect for your hand</strong></p>
+                      ) : null}
                       <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.creature.habitat}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.creature.affinity}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
