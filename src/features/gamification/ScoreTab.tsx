@@ -47,6 +47,7 @@ interface ScoreTabProps {
   onNavigateToShop?: () => void;
   onNavigateToZenGarden?: () => void;
   onNavigateToGarage?: () => void;
+  onNavigateToShipCompanions?: () => void;
   initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard';
   onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard') => void;
 }
@@ -71,6 +72,7 @@ export function ScoreTab({
   onNavigateToShop,
   onNavigateToZenGarden,
   onNavigateToGarage,
+  onNavigateToShipCompanions,
   initialActiveTab,
   onActiveTabChange,
 }: ScoreTabProps) {
@@ -130,6 +132,7 @@ export function ScoreTab({
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [leaderboardArchetypeFilter, setLeaderboardArchetypeFilter] = useState<string>('all');
+  const [garageShipTab, setGarageShipTab] = useState<'companions' | 'upgrades' | 'cosmetics'>('companions');
 
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
@@ -1040,16 +1043,99 @@ export function ScoreTab({
       {!loading && enabled && activeTab === 'garage' && (
         <div className="score-tab__content">
           <div className="score-tab__bank-intro">
-            <h2 className="score-tab__headline">Spaceship Controller Garage</h2>
+            <h2 className="score-tab__headline">Ship Systems</h2>
             <p className="score-tab__subtitle">
-              Manage your power-ups and timed boosters from your garage bay.
+              Unified ship shell: companions, upgrades, and cosmetics.
             </p>
           </div>
-          {session ? (
-            <PowerUpsStore session={session} />
-          ) : (
-            <div className="score-tab__status">Sign in to access your power-ups.</div>
-          )}
+          <div className="score-tab__leaderboard-filters" role="tablist" aria-label="Ship sections">
+            <button
+              type="button"
+              className={`score-tab__leaderboard-filter${garageShipTab === 'companions' ? ' score-tab__leaderboard-filter--active' : ''}`}
+              onClick={() => {
+                setGarageShipTab('companions');
+                if (!session?.user?.id) return;
+                void recordTelemetryEvent({
+                  userId: session.user.id,
+                  eventType: 'economy_earn',
+                  metadata: { stage: 'ship_shell_tab_opened', tab: 'companions' },
+                });
+              }}
+            >
+              Companions
+            </button>
+            <button
+              type="button"
+              className={`score-tab__leaderboard-filter${garageShipTab === 'upgrades' ? ' score-tab__leaderboard-filter--active' : ''}`}
+              onClick={() => {
+                setGarageShipTab('upgrades');
+                if (!session?.user?.id) return;
+                void recordTelemetryEvent({
+                  userId: session.user.id,
+                  eventType: 'economy_earn',
+                  metadata: { stage: 'ship_shell_tab_opened', tab: 'upgrades' },
+                });
+              }}
+            >
+              Upgrades
+            </button>
+            <button
+              type="button"
+              className={`score-tab__leaderboard-filter${garageShipTab === 'cosmetics' ? ' score-tab__leaderboard-filter--active' : ''}`}
+              onClick={() => {
+                setGarageShipTab('cosmetics');
+                if (!session?.user?.id) return;
+                void recordTelemetryEvent({
+                  userId: session.user.id,
+                  eventType: 'economy_earn',
+                  metadata: { stage: 'ship_shell_tab_opened', tab: 'cosmetics' },
+                });
+              }}
+            >
+              Cosmetics
+            </button>
+          </div>
+
+          {garageShipTab === 'companions' ? (
+            <section className="score-tab__card">
+              <h3 className="score-tab__card-title">Companion Sanctuary</h3>
+              <p className="score-tab__meta">
+                Manage creatures, bond levels, and your active Perfect Companion inside the Island Run sanctuary.
+              </p>
+              <button
+                type="button"
+                className="score-tab__link"
+                onClick={() => {
+                  onNavigateToShipCompanions?.();
+                  if (!session?.user?.id) return;
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'economy_earn',
+                    metadata: { stage: 'ship_shell_open_companions_sanctuary' },
+                  });
+                }}
+              >
+                Open Companions Sanctuary
+              </button>
+            </section>
+          ) : null}
+
+          {garageShipTab === 'upgrades' ? (
+            session ? (
+              <PowerUpsStore session={session} />
+            ) : (
+              <div className="score-tab__status">Sign in to access your ship upgrades.</div>
+            )
+          ) : null}
+
+          {garageShipTab === 'cosmetics' ? (
+            <section className="score-tab__card">
+              <h3 className="score-tab__card-title">Ship Cosmetics</h3>
+              <p className="score-tab__meta">
+                Cosmetic habitat modules are planned next. Use Companions for creature care and Upgrades for power-ups today.
+              </p>
+            </section>
+          ) : null}
         </div>
       )}
       {!loading && enabled && activeTab === 'bank' && (!profile || !levelInfo) && (

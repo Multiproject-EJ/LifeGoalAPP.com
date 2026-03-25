@@ -2572,6 +2572,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
     });
   }, [activeSession, logIslandRunEntryDebug, showLevelWorldsFromEntry]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleOpenScoreGarage = () => {
+      setShowLevelWorldsFromEntry(false);
+      setLevelWorldsEntryPanel('default');
+      setScoreTabActiveTab('garage');
+      setShowMobileHome(false);
+      setActiveWorkspaceNav('score');
+    };
+    window.addEventListener('openScoreGarageFromSanctuary', handleOpenScoreGarage as EventListener);
+    return () => {
+      window.removeEventListener('openScoreGarageFromSanctuary', handleOpenScoreGarage as EventListener);
+    };
+  }, []);
+
   const shouldLockAppScroll = showGameBoardOverlay || showLuckyRoll || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
 
   useEffect(() => {
@@ -2891,6 +2906,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               onNavigateToGarage={() => {
                 setScoreTabActiveTab('garage');
+              }}
+              onNavigateToShipCompanions={() => {
+                setLevelWorldsEntryPanel('sanctuary');
+                setShowLevelWorldsFromEntry(true);
               }}
               initialActiveTab={scoreTabActiveTab}
               onActiveTabChange={(tab) => setScoreTabActiveTab(tab)}

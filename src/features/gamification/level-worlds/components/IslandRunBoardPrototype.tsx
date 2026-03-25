@@ -5687,6 +5687,27 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-sanctuary-panel__pill">Favorite snacks: <strong>{creatureTreatInventory.favorite}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rare feasts: <strong>{creatureTreatInventory.rare}</strong></span>
             </div>
+            <div className="island-hatchery-card__actions" style={{ marginBottom: '0.75rem' }}>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('openScoreGarageFromSanctuary'));
+                  }
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'economy_earn',
+                    metadata: {
+                      stage: 'sanctuary_open_ship_upgrades_bridge',
+                      island_number: islandNumber,
+                    },
+                  });
+                }}
+              >
+                Open Ship Upgrades (Garage)
+              </button>
+            </div>
             {isUsingStarterProfileForPerfectCompanion ? (
               <p className="island-run-sanctuary-panel__starter-note">
                 ⭐ Using starter profile until your archetype hand is set.
