@@ -712,6 +712,76 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     .maybeSingle();
 
   if (error) {
+    if (isSchemaMismatchRuntimeStateError(error)) {
+      const { data: legacyData, error: legacyError } = await client
+        .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (!legacyError && legacyData) {
+        const legacyHydratedRecord = toRecord(
+          {
+            runtimeVersion: legacyData.runtime_version ?? 0,
+            firstRunClaimed: legacyData.first_run_claimed,
+            dailyHeartsClaimedDayKey: legacyData.daily_hearts_claimed_day_key,
+            onboardingDisplayNameLoopCompleted: legacyData.onboarding_display_name_loop_completed ?? false,
+            storyPrologueSeen: legacyData.story_prologue_seen ?? false,
+            audioEnabled: legacyData.audio_enabled ?? true,
+            currentIslandNumber: legacyData.current_island_number,
+            cycleIndex: legacyData.cycle_index ?? 0,
+            bossTrialResolvedIslandNumber: legacyData.boss_trial_resolved_island_number,
+            activeEggTier: legacyData.active_egg_tier,
+            activeEggSetAtMs: legacyData.active_egg_set_at_ms,
+            activeEggHatchDurationMs: legacyData.active_egg_hatch_duration_ms,
+            activeEggIsDormant: legacyData.active_egg_is_dormant,
+            perIslandEggs: legacyData.per_island_eggs ?? {},
+            islandStartedAtMs: legacyData.island_started_at_ms,
+            islandExpiresAtMs: legacyData.island_expires_at_ms,
+            islandShards: legacyData.island_shards ?? 0,
+            tokenIndex: legacyData.token_index ?? 0,
+            hearts: legacyData.hearts ?? 5,
+            coins: legacyData.coins ?? 0,
+            spinTokens: legacyData.spin_tokens ?? 0,
+            dicePool: legacyData.dice_pool ?? fallback.dicePool,
+            shardTierIndex: legacyData.shard_tier_index ?? 0,
+            shardClaimCount: legacyData.shard_claim_count ?? 0,
+            shields: legacyData.shields ?? 0,
+            shards: legacyData.shards ?? 0,
+            diamonds: legacyData.diamonds ?? 3,
+            creatureTreatInventory: legacyData.creature_treat_inventory ?? fallback.creatureTreatInventory,
+            companionBonusLastVisitKey: legacyData.companion_bonus_last_visit_key ?? null,
+            completedStopsByIsland: legacyData.completed_stops_by_island ?? {},
+            marketOwnedBundlesByIsland: legacyData.market_owned_bundles_by_island ?? {},
+            creatureCollection: legacyData.creature_collection ?? [],
+            activeCompanionId: legacyData.active_companion_id ?? null,
+            perfectCompanionIds: legacyData.perfect_companion_ids ?? fallback.perfectCompanionIds,
+            perfectCompanionReasons: legacyData.perfect_companion_reasons ?? fallback.perfectCompanionReasons,
+            perfectCompanionComputedAtMs: legacyData.perfect_companion_computed_at_ms ?? fallback.perfectCompanionComputedAtMs,
+            perfectCompanionModelVersion: legacyData.perfect_companion_model_version ?? fallback.perfectCompanionModelVersion,
+            perfectCompanionComputedCycleIndex: legacyData.perfect_companion_computed_cycle_index ?? fallback.perfectCompanionComputedCycleIndex,
+          },
+          fallback,
+        );
+
+        if (typeof window !== 'undefined') {
+          try {
+            window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(legacyHydratedRecord));
+          } catch {
+            // ignore local persistence failures in prototype mode
+          }
+        }
+
+        setRemoteBackoffUntil(session.user.id, null);
+        logIslandRunEntryDebug('runtime_state_hydrate_query_success', {
+          userId: session.user.id,
+          source: 'table_legacy_wildcard',
+          ...getRuntimeStateDebugFields(legacyHydratedRecord),
+        });
+        return { record: legacyHydratedRecord, source: 'table' };
+      }
+    }
+
     const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error) || isSchemaMismatchRuntimeStateError(error);
     const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
 
