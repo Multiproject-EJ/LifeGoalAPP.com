@@ -29,6 +29,13 @@ import {
   readIslandRunRuntimeState,
   persistIslandRunRuntimeStatePatch,
 } from './level-worlds/services/islandRunRuntimeState';
+import {
+  DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
+  readPerfectCompanionRuntimeConfig,
+  resetPerfectCompanionRuntimeConfig,
+  writePerfectCompanionRuntimeConfig,
+  type PerfectCompanionRuntimeConfig,
+} from './level-worlds/services/perfectCompanionConfig';
 import scoreAchievements from '../../assets/Score_achievements.webp';
 import scoreBank from '../../assets/score_Bank.webp';
 import scoreShop from '../../assets/Score_shop.webp';
@@ -133,6 +140,9 @@ export function ScoreTab({
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [leaderboardArchetypeFilter, setLeaderboardArchetypeFilter] = useState<string>('all');
   const [garageShipTab, setGarageShipTab] = useState<'companions' | 'upgrades' | 'cosmetics'>('companions');
+  const [perfectCompanionOps, setPerfectCompanionOps] = useState<PerfectCompanionRuntimeConfig>(() =>
+    DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
+  );
 
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
@@ -154,6 +164,14 @@ export function ScoreTab({
       setActiveTab(initialActiveTab);
     }
   }, [initialActiveTab]);
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setPerfectCompanionOps(DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG);
+      return;
+    }
+    setPerfectCompanionOps(readPerfectCompanionRuntimeConfig(session.user.id));
+  }, [session?.user?.id, activeTab]);
 
   const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard') => {
     setActiveTab(tab);
@@ -1134,6 +1152,81 @@ export function ScoreTab({
               <p className="score-tab__meta">
                 Cosmetic habitat modules are planned next. Use Companions for creature care and Upgrades for power-ups today.
               </p>
+            </section>
+          ) : null}
+
+          {session ? (
+            <section className="score-tab__card">
+              <h3 className="score-tab__card-title">Perfect Companion tuning (ops)</h3>
+              <p className="score-tab__meta">
+                Runtime knobs for balancing without redeploy (stored per user locally).
+              </p>
+              <label className="score-tab__meta">
+                Soft bias %: <strong>{perfectCompanionOps.gameplay.softBiasPercent}</strong>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={perfectCompanionOps.gameplay.softBiasPercent}
+                  onChange={(event) => {
+                    const next = writePerfectCompanionRuntimeConfig(session.user.id, {
+                      ...perfectCompanionOps,
+                      gameplay: {
+                        ...perfectCompanionOps.gameplay,
+                        softBiasPercent: Number(event.target.value),
+                      },
+                    });
+                    setPerfectCompanionOps(next);
+                  }}
+                />
+              </label>
+              <label className="score-tab__meta">
+                Pity island threshold:
+                <input
+                  type="number"
+                  min={1}
+                  max={120}
+                  value={perfectCompanionOps.gameplay.pityIslandThreshold}
+                  onChange={(event) => {
+                    const next = writePerfectCompanionRuntimeConfig(session.user.id, {
+                      ...perfectCompanionOps,
+                      gameplay: {
+                        ...perfectCompanionOps.gameplay,
+                        pityIslandThreshold: Number(event.target.value),
+                      },
+                    });
+                    setPerfectCompanionOps(next);
+                  }}
+                />
+              </label>
+              <label className="score-tab__meta">
+                Max perfect companions:
+                <input
+                  type="number"
+                  min={1}
+                  max={3}
+                  value={perfectCompanionOps.fit.maxPerfectCount}
+                  onChange={(event) => {
+                    const next = writePerfectCompanionRuntimeConfig(session.user.id, {
+                      ...perfectCompanionOps,
+                      fit: {
+                        ...perfectCompanionOps.fit,
+                        maxPerfectCount: Number(event.target.value),
+                      },
+                    });
+                    setPerfectCompanionOps(next);
+                  }}
+                />
+              </label>
+              <button
+                type="button"
+                className="score-tab__link"
+                onClick={() => {
+                  setPerfectCompanionOps(resetPerfectCompanionRuntimeConfig(session.user.id));
+                }}
+              >
+                Reset tuning defaults
+              </button>
             </section>
           ) : null}
         </div>

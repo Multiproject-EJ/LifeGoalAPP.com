@@ -70,6 +70,7 @@ import {
   selectPerfectCompanions,
   type PlayerHandContext,
 } from '../services/creatureFitEngine';
+import { readPerfectCompanionRuntimeConfig } from '../services/perfectCompanionConfig';
 import { getDefaultZonePreferencesForArchetypes } from '../services/creatureArchetypeBridge';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
@@ -119,19 +120,6 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
-const PERFECT_COMPANION_PITY_ISLAND_THRESHOLD = 5;
-const PERFECT_COMPANION_SOFT_BIAS_PERCENT = 35;
-const PERFECT_COMPANION_STARTUP_BONUS_BY_EFFECT: Record<'bonus_dice' | 'bonus_heart' | 'bonus_spin', number> = {
-  bonus_dice: 2,
-  bonus_heart: 1,
-  bonus_spin: 1,
-};
-const PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS = {
-  coins: 4,
-  hearts: 1,
-  dice: 2,
-  spinTokens: 1,
-};
 
 function getOpenHatcheryOnLoadFlag(): boolean {
   return typeof window !== 'undefined'
@@ -735,6 +723,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
+  const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
@@ -742,6 +731,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
+
+  useEffect(() => {
+    setPerfectCompanionRuntimeConfig(readPerfectCompanionRuntimeConfig(session.user.id));
+  }, [session.user.id]);
 
   const isReconcilingRuntimeStateRef = useRef(false);
   const reconcileRuntimeState = useCallback(async (
@@ -2631,8 +2624,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     if (!shouldRecompute) return;
 
-    const rankedFits = rankCreatureFitsForPlayer(CREATURE_CATALOG, context);
-    const selectedFits = selectPerfectCompanions(rankedFits, 3, {
+    const rankedFits = rankCreatureFitsForPlayer(CREATURE_CATALOG, context, {
+      strengthWeight: perfectCompanionRuntimeConfig.fit.strengthWeight,
+      healingWeight: perfectCompanionRuntimeConfig.fit.healingWeight,
+      zoneWeight: perfectCompanionRuntimeConfig.fit.zoneWeight,
+      rarityBonusByTier: perfectCompanionRuntimeConfig.fit.rarityBonusByTier,
+    });
+    const selectedFits = selectPerfectCompanions(rankedFits, perfectCompanionRuntimeConfig.fit.maxPerfectCount, {
       userId: session.user.id,
       cycleIndex,
       islandNumber,
@@ -2676,6 +2674,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     hasHydratedRuntimeState,
     islandNumber,
     metadataArchetypeIds,
+    perfectCompanionRuntimeConfig.fit.healingWeight,
+    perfectCompanionRuntimeConfig.fit.maxPerfectCount,
+    perfectCompanionRuntimeConfig.fit.rarityBonusByTier,
+    perfectCompanionRuntimeConfig.fit.strengthWeight,
+    perfectCompanionRuntimeConfig.fit.zoneWeight,
     runtimeState.perfectCompanionComputedCycleIndex,
     runtimeState.perfectCompanionIds,
     runtimeState.perfectCompanionModelVersion,
@@ -2706,7 +2709,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const isPerfectCompanionActive = perfectCompanionIdSet.has(activeCompanion.creatureId);
     const perfectCompanionStartupBonus = isPerfectCompanionActive
-      ? PERFECT_COMPANION_STARTUP_BONUS_BY_EFFECT[activeCompanionBonus.effect]
+      ? perfectCompanionRuntimeConfig.gameplay.startupBonusByEffect[activeCompanionBonus.effect]
       : 0;
     const totalStartupBonus = activeCompanionBonus.amount + perfectCompanionStartupBonus;
 
@@ -2748,6 +2751,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     hasHydratedRuntimeState,
     islandNumber,
     perfectCompanionIdSet,
+    perfectCompanionRuntimeConfig.gameplay.startupBonusByEffect,
     runtimeState.companionBonusLastVisitKey,
     session,
     session.user.id,
@@ -2769,7 +2773,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     const shouldApplyPity =
       !hasCollectedPerfectCompanion
-      && islandNumber >= PERFECT_COMPANION_PITY_ISLAND_THRESHOLD;
+      && islandNumber >= perfectCompanionRuntimeConfig.gameplay.pityIslandThreshold;
 
     const seedBase = `${session.user.id}:${cycleIndex}:${islandNumber}:${resolvedEgg.setAtMs}`;
     const seed = hashPerfectCompanionSeed(seedBase);
@@ -2779,7 +2783,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     const softBiasRoll = seed % 100;
-    if (softBiasRoll < PERFECT_COMPANION_SOFT_BIAS_PERCENT) {
+    if (softBiasRoll < perfectCompanionRuntimeConfig.gameplay.softBiasPercent) {
       const pickSeed = hashPerfectCompanionSeed(`${seedBase}:soft_bias_pick`);
       return perfectCreaturePool[pickSeed % perfectCreaturePool.length] ?? baselineCreature;
     }
@@ -2800,7 +2804,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const isPerfectCompanionCollected = (runtimeState.perfectCompanionIds ?? []).includes(creature.id);
     const pityWasEligible =
       !hasCollectedPerfectCompanionBeforeCollect
-      && islandNumber >= PERFECT_COMPANION_PITY_ISLAND_THRESHOLD;
+      && islandNumber >= perfectCompanionRuntimeConfig.gameplay.pityIslandThreshold;
     const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
     const collectedEntry: PerIslandEggEntry = existingEntry
       ? { ...existingEntry, status: 'collected', openedAt: nowTs, location: 'island' }
@@ -3006,10 +3010,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const isPerfectCompanionActive = Boolean(activeCompanion && perfectCompanionIdSet.has(activeCompanion.creatureId));
     const perfectCompanionEncounterBonus = isPerfectCompanionActive
       ? {
-          coins: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.coins, 3),
-          hearts: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.hearts, reward.heart ? 0 : 1),
-          dice: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.dice, reward.dice > 0 ? 1 : 0),
-          spinTokens: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.spinTokens, reward.spinTokens > 0 ? 0 : 1),
+          coins: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.coins, 3),
+          hearts: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.hearts, reward.heart ? 0 : 1),
+          dice: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.dice, reward.dice > 0 ? 1 : 0),
+          spinTokens: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.spinTokens, reward.spinTokens > 0 ? 0 : 1),
         }
       : { coins: 0, hearts: 0, dice: 0, spinTokens: 0 };
     const challengeType = currentEncounterChallenge?.type ?? null;
