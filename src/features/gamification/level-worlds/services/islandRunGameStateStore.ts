@@ -1,5 +1,6 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { isDemoSession } from '../../../../services/demoSession';
+import { getIslandRunDeviceSessionId } from './islandRunDeviceSession';
 import { convertHeartToDicePool } from './islandRunEconomy';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
@@ -866,6 +867,48 @@ export async function writeIslandRunGameStateRecord(options: {
       ...getRuntimeStateDebugFields(localRecord),
     });
     return { ok: true };
+  }
+
+  const deviceSessionId = getIslandRunDeviceSessionId(session.user.id);
+  if (typeof (client as { rpc?: unknown }).rpc === 'function') {
+    const { data: ownershipValidationData, error: ownershipValidationError } = await client.rpc(
+      'island_run_validate_session_owner',
+      {
+        p_device_session_id: deviceSessionId,
+      },
+    );
+
+    if (ownershipValidationError) {
+      logIslandRunEntryDebug('runtime_state_persist_error', {
+        userId: session.user.id,
+        message: ownershipValidationError.message,
+        code: ownershipValidationError.code ?? null,
+        stage: 'ownership_validation_rpc_failed',
+        deviceSessionId,
+        ...getRuntimeStateDebugFields(localRecord),
+      });
+      return { ok: false, errorMessage: ownershipValidationError.message ?? 'Unable to validate Island Run session ownership.' };
+    }
+
+    const ownershipRow = Array.isArray(ownershipValidationData)
+      ? ownershipValidationData[0]
+      : ownershipValidationData;
+    const isOwner = Boolean((ownershipRow as { is_owner?: unknown } | null)?.is_owner);
+    const leaseIsActive = Boolean((ownershipRow as { lease_is_active?: unknown } | null)?.lease_is_active);
+
+    if (!isOwner || !leaseIsActive) {
+      logIslandRunEntryDebug('runtime_state_persist_error', {
+        userId: session.user.id,
+        message: 'Runtime write blocked: device is not active Island Run owner.',
+        code: 'runtime_write_rejected_not_owner',
+        stage: 'ownership_validation_failed',
+        deviceSessionId,
+        isOwner,
+        leaseIsActive,
+        ...getRuntimeStateDebugFields(localRecord),
+      });
+      return { ok: false, errorMessage: 'Island Run is active on another device. Take over this session to continue.' };
+    }
   }
 
   const remoteBackoffUntil = getRemoteBackoffUntil(session.user.id);
