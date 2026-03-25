@@ -2639,6 +2639,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const metadata = session.user.user_metadata as Record<string, unknown> | undefined;
     return extractArchetypeIdsFromMetadata(metadata?.archetype_hand);
   }, [session.user.user_metadata]);
+  const preferredShipZones = useMemo(
+    () => getDefaultZonePreferencesForArchetypes(
+      metadataArchetypeIds.length > 0 ? metadataArchetypeIds : ['guardian', 'visionary'],
+    ),
+    [metadataArchetypeIds],
+  );
   const isUsingStarterProfileForPerfectCompanion = metadataArchetypeIds.length === 0;
   const sanctuaryRewardReadyCount = useMemo(
     () => collectedCreatures.filter((creature) => getUnclaimedBondMilestones(creature).length > 0).length,
@@ -2714,6 +2720,45 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     perfectCompanionIdSet,
   ]);
   const companionQuestClaimedToday = companionQuestProgress.lastClaimedDayKey === companionQuestDayKey;
+  const selectedVsActiveComparison = useMemo(() => {
+    if (!selectedSanctuaryCreature || !activeCompanion || selectedSanctuaryCreature.creatureId === activeCompanion.creatureId) {
+      return null;
+    }
+    const selectedZone = resolveShipZoneForCreature(selectedSanctuaryCreature.creature);
+    const activeZone = resolveShipZoneForCreature(activeCompanion.creature);
+    const selectedZonePreferred = preferredShipZones.includes(selectedZone);
+    const activeZonePreferred = preferredShipZones.includes(activeZone);
+    const startupDelta = (selectedSanctuaryCreatureBonus?.amount ?? 0) - (activeCompanionBonus?.amount ?? 0);
+    const specialtyDelta = (selectedSanctuaryCreatureSpecialty?.amount ?? 0) - (activeCompanionSpecialty?.amount ?? 0);
+    const bondDelta = selectedSanctuaryCreature.bondLevel - activeCompanion.bondLevel;
+    const strengthScore = [
+      startupDelta > 0,
+      specialtyDelta > 0,
+      bondDelta > 0,
+      selectedZonePreferred && !activeZonePreferred,
+    ].filter(Boolean).length;
+    return {
+      startupDelta,
+      specialtyDelta,
+      bondDelta,
+      selectedZone,
+      selectedZonePreferred,
+      activeZonePreferred,
+      selectedSpecialtyLabel: selectedSanctuaryCreatureSpecialty?.label ?? '—',
+      activeSpecialtyLabel: activeCompanionSpecialty?.label ?? '—',
+      selectedStartupLabel: selectedSanctuaryCreatureBonus?.label ?? '—',
+      activeStartupLabel: activeCompanionBonus?.label ?? '—',
+      recommendation: strengthScore >= 2 ? 'Try as Active' : 'Keep current active',
+    };
+  }, [
+    activeCompanion,
+    activeCompanionBonus,
+    activeCompanionSpecialty,
+    preferredShipZones,
+    selectedSanctuaryCreature,
+    selectedSanctuaryCreatureBonus,
+    selectedSanctuaryCreatureSpecialty,
+  ]);
   const visibleSanctuaryCreatures = useMemo(() => {
     const filtered = collectedCreatures.filter((creature) => {
       const creatureZone = resolveShipZoneForCreature(creature.creature);
@@ -2768,8 +2813,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const dominantArchetypeIds = metadataArchetypeIds.slice(0, 2);
     const secondaryArchetypeIds = metadataArchetypeIds.slice(2, 4);
     const supportArchetypeIds = metadataArchetypeIds.slice(4, 8);
-    const fallbackArchetypeIds = metadataArchetypeIds.length > 0 ? metadataArchetypeIds : ['guardian', 'visionary'];
-    const preferredShipZones = getDefaultZonePreferencesForArchetypes(fallbackArchetypeIds);
 
     const context: PlayerHandContext = {
       dominantArchetypeIds: dominantArchetypeIds.length > 0 ? dominantArchetypeIds : ['guardian'],
@@ -2837,6 +2880,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     hasHydratedRuntimeState,
     islandNumber,
     metadataArchetypeIds,
+    preferredShipZones,
     perfectCompanionRuntimeConfig.fit.healingWeight,
     perfectCompanionRuntimeConfig.fit.maxPerfectCount,
     perfectCompanionRuntimeConfig.fit.rarityBonusByTier,
@@ -6071,6 +6115,53 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <p className="island-run-sanctuary-card__meta">
                   Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
                 </p>
+                {selectedVsActiveComparison ? (
+                  <div className="island-run-sanctuary-compare">
+                    <p className="island-run-sanctuary-compare__title">Compare vs Active: {activeCompanion?.creature.name}</p>
+                    <p className="island-run-sanctuary-compare__row">
+                      Startup bonus: <strong>{selectedVsActiveComparison.selectedStartupLabel}</strong> vs <strong>{selectedVsActiveComparison.activeStartupLabel}</strong>
+                      <span className={selectedVsActiveComparison.startupDelta >= 0 ? 'island-run-sanctuary-compare__delta island-run-sanctuary-compare__delta--up' : 'island-run-sanctuary-compare__delta island-run-sanctuary-compare__delta--down'}>
+                        {selectedVsActiveComparison.startupDelta >= 0 ? '+' : ''}{selectedVsActiveComparison.startupDelta}
+                      </span>
+                    </p>
+                    <p className="island-run-sanctuary-compare__row">
+                      Specialty: <strong>{selectedVsActiveComparison.selectedSpecialtyLabel}</strong> vs <strong>{selectedVsActiveComparison.activeSpecialtyLabel}</strong>
+                      <span className={selectedVsActiveComparison.specialtyDelta >= 0 ? 'island-run-sanctuary-compare__delta island-run-sanctuary-compare__delta--up' : 'island-run-sanctuary-compare__delta island-run-sanctuary-compare__delta--down'}>
+                        {selectedVsActiveComparison.specialtyDelta >= 0 ? '+' : ''}{selectedVsActiveComparison.specialtyDelta}
+                      </span>
+                    </p>
+                    <p className="island-run-sanctuary-compare__row">
+                      Bond level delta:
+                      <span className={selectedVsActiveComparison.bondDelta >= 0 ? 'island-run-sanctuary-compare__delta island-run-sanctuary-compare__delta--up' : 'island-run-sanctuary-compare__delta island-run-sanctuary-compare__delta--down'}>
+                        {selectedVsActiveComparison.bondDelta >= 0 ? '+' : ''}{selectedVsActiveComparison.bondDelta}
+                      </span>
+                    </p>
+                    <p className="island-run-sanctuary-compare__row">
+                      Zone alignment: <strong>{SHIP_ZONE_LABELS[selectedVsActiveComparison.selectedZone]}</strong> · {selectedVsActiveComparison.selectedZonePreferred ? 'preferred' : 'not preferred'}
+                      {selectedVsActiveComparison.activeZonePreferred ? ' (active already preferred)' : ''}
+                    </p>
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                      onClick={() => {
+                        sanctuaryHandlers.setActiveCompanion(selectedSanctuaryCreature.creatureId);
+                        void recordTelemetryEvent({
+                          userId: session.user.id,
+                          eventType: 'economy_earn',
+                          metadata: {
+                            stage: 'sanctuary_compare_set_active',
+                            island_number: islandNumber,
+                            creature_id: selectedSanctuaryCreature.creature.id,
+                            creature_name: selectedSanctuaryCreature.creature.name,
+                            recommendation: selectedVsActiveComparison.recommendation,
+                          },
+                        });
+                      }}
+                    >
+                      {selectedVsActiveComparison.recommendation}
+                    </button>
+                  </div>
+                ) : null}
                 {perfectCompanionIdSet.has(selectedSanctuaryCreature.creatureId) && selectedPerfectCompanionReason ? (
                   <div className="island-run-sanctuary-reason">
                     <button
