@@ -21,9 +21,17 @@ import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
   ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
+  type IslandRunRuntimeHydrationSource,
   shouldEmitIslandRunRuntimeHydrationTelemetry,
 } from '../services/islandRunRuntimeTelemetry';
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
+import { isDemoSession } from '../../../../services/demoSession';
+import {
+  claimIslandRunActiveSession,
+  heartbeatIslandRunActiveSession,
+  validateIslandRunSessionOwner,
+} from '../services/islandRunActiveSessionService';
+import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import {
   hydrateIslandRunRuntimeStateWithSource,
   persistIslandRunRuntimeStatePatch,
@@ -646,6 +654,7 @@ interface IslandRunBoardPrototypeProps {
 
 export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
+  const [deviceSessionId] = useState(() => getIslandRunDeviceSessionId(session.user.id));
   const boardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
@@ -818,6 +827,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
+  const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
+  const [isActiveSessionOwner, setIsActiveSessionOwner] = useState(() => isDemoSession(session));
+  const [activeSessionStatusMessage, setActiveSessionStatusMessage] = useState<string | null>(null);
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
@@ -842,6 +854,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     isReconcilingRuntimeStateRef.current = true;
     try {
       const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client });
+      setRuntimeHydrationSource(hydrationResult.source);
       if (hydrationResult.source !== 'table') {
         return;
       }
@@ -1384,11 +1397,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     let isActive = true;
 
     setHasHydratedRuntimeState(false);
+    setRuntimeHydrationSource(null);
     setRuntimeState(readIslandRunRuntimeState(session));
 
     void hydrateIslandRunRuntimeStateWithSource({ session, client })
       .then((hydrationResult) => {
         if (!isActive) return;
+        setRuntimeHydrationSource(hydrationResult.source);
         setRuntimeState(hydrationResult.state);
 
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
@@ -1465,6 +1480,130 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isActive = false;
     };
   }, [client, session.user.id]);
+
+  const isRuntimeSyncBlocked =
+    hasHydratedRuntimeState &&
+    runtimeHydrationSource !== null &&
+    (runtimeHydrationSource === 'fallback_query_error' ||
+      (runtimeHydrationSource === 'fallback_demo_or_no_client' && !isDemoSession(session)));
+  const isOwnershipBlocked = hasHydratedRuntimeState && !isActiveSessionOwner;
+
+  const claimOwnership = useCallback(async (reason: 'enter' | 'manual_takeover' = 'enter') => {
+    if (!client || isDemoSession(session)) {
+      setIsActiveSessionOwner(true);
+      setActiveSessionStatusMessage(null);
+      return true;
+    }
+
+    const result = await claimIslandRunActiveSession({
+      client,
+      deviceSessionId,
+      forceTakeover: true,
+      takeoverReason: reason,
+      metadata: {
+        source: 'island_run_board',
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      },
+    });
+
+    if (result.error || !result.data) {
+      setIsActiveSessionOwner(false);
+      setActiveSessionStatusMessage(result.error?.message ?? 'Unable to claim active Island Run session.');
+      return false;
+    }
+
+    setIsActiveSessionOwner(result.data.ownership_status === 'granted' || result.data.ownership_status === 'already_owner');
+    setActiveSessionStatusMessage(null);
+    return true;
+  }, [client, deviceSessionId, session]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!client || isDemoSession(session)) {
+      setIsActiveSessionOwner(true);
+      setActiveSessionStatusMessage(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    void claimOwnership('enter').then((owned) => {
+      if (!isActive) return;
+      if (!owned) {
+        setLandingText('Island Run is active on another device. Take over to continue here.');
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [claimOwnership, client, session]);
+
+  useEffect(() => {
+    if (!client || isDemoSession(session) || !hasHydratedRuntimeState) {
+      return;
+    }
+
+    const channel = client
+      .channel(`island_run_active_session_${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'island_run_active_sessions',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        () => {
+          void validateIslandRunSessionOwner({ client, deviceSessionId }).then((result) => {
+            if (!result.data) return;
+            const ownsSession = result.data.is_owner && result.data.lease_is_active;
+            setIsActiveSessionOwner(ownsSession);
+            if (!ownsSession) {
+              setActiveSessionStatusMessage('Island Run moved to another device. This session is paused.');
+              setLandingText('Island Run moved to another device. Tap Take over to continue here.');
+            }
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [client, deviceSessionId, hasHydratedRuntimeState, session]);
+
+  useEffect(() => {
+    if (!client || isDemoSession(session) || !isActiveSessionOwner || !hasHydratedRuntimeState || typeof window === 'undefined') {
+      return;
+    }
+
+    const tick = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const heartbeat = await heartbeatIslandRunActiveSession({
+        client,
+        deviceSessionId,
+        leaseTtlSeconds: 35,
+      });
+
+      if (!heartbeat.data || heartbeat.data.heartbeat_status !== 'ok') {
+        setIsActiveSessionOwner(false);
+        setActiveSessionStatusMessage(
+          heartbeat.error?.message ??
+            'Island Run ownership heartbeat failed. This session is paused until you take over again.',
+        );
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void tick();
+    }, 12_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [client, deviceSessionId, hasHydratedRuntimeState, isActiveSessionOwner, session]);
 
   useEffect(() => {
     if (!client || !hasHydratedRuntimeState) {
@@ -4543,6 +4682,40 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       {rollValue !== null ? <span className="island-run-prototype__dice-total">= {rollValue}</span> : null}
     </div>
   );
+
+  if (isRuntimeSyncBlocked || isOwnershipBlocked) {
+    return (
+      <section className="island-run-prototype">
+        <header className="island-run-prototype__header">
+          <p className="island-run-prototype__landing-feed" role="alert">
+            {isRuntimeSyncBlocked
+              ? 'Island Run sync is currently unavailable for this account, so gameplay is paused on this device to prevent split progress.'
+              : 'Island Run is currently active on another device. This device is paused to prevent split progress.'}
+          </p>
+          <p className="island-run-prototype__landing-feed">
+            {isRuntimeSyncBlocked
+              ? 'Please reconnect this app to Supabase and run the latest Island Run migrations (including runtime_version) before resuming.'
+              : (activeSessionStatusMessage ?? 'Use Take over here to make this device the active Island Run session.')}
+          </p>
+          {!isRuntimeSyncBlocked && (
+            <button
+              type="button"
+              className="island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--primary"
+              onClick={() => {
+                void claimOwnership('manual_takeover').then((owned) => {
+                  if (!owned) return;
+                  setLandingText('This device is now the active Island Run session.');
+                  void reconcileRuntimeState('focus');
+                });
+              }}
+            >
+              Take over here
+            </button>
+          )}
+        </header>
+      </section>
+    );
+  }
 
   return (
     <section className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}>
