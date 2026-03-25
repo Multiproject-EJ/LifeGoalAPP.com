@@ -9,6 +9,7 @@ import {
   type PersonalityTestValue,
 } from './localDb';
 import { enqueuePersonalityTestMutation } from './personalityTestOfflineRepo';
+import { recordOfflineSyncEvent } from '../services/offlineSyncTelemetry';
 
 export type PersonalityTestRecord = PersonalityTestValue;
 
@@ -54,6 +55,12 @@ export async function queuePersonalityTestResult(params: {
     created_at_ms: nowMs,
     updated_at_ms: nowMs,
     last_error: null,
+  });
+  recordOfflineSyncEvent({
+    feature: 'personality_test',
+    event: 'queue_enqueued',
+    userId: params.userId,
+    pending: 1,
   });
 
   return record;
