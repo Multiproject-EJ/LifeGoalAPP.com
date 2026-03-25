@@ -63,7 +63,9 @@ import {
   CREATURE_CATALOG,
   getCompanionBonusForCreature,
   getCreatureSpecialtyForCompanion,
+  resolveShipZoneForCreature,
   selectCreatureForEgg,
+  type ShipZone,
 } from '../services/creatureCatalog';
 import {
   rankCreatureFitsForPlayer,
@@ -302,6 +304,38 @@ function formatCooldownRemaining(remainingMs: number): string {
 
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
 type SanctuarySortMode = 'recent' | 'bond' | 'tier' | 'active';
+type SanctuaryZoneFilter = 'all' | ShipZone;
+
+const SHIP_ZONE_LABELS: Record<ShipZone, string> = {
+  zen: 'Zen Deck',
+  energy: 'Engine Wing',
+  cosmic: 'Cosmic Bridge',
+};
+
+function getSanctuaryZoneSlotCap(islandNumber: number, zone: ShipZone): number {
+  if (zone === 'zen') {
+    if (islandNumber >= 90) return 7;
+    if (islandNumber >= 60) return 6;
+    if (islandNumber >= 30) return 5;
+    if (islandNumber >= 12) return 4;
+    return 3;
+  }
+  if (zone === 'energy') {
+    if (islandNumber >= 96) return 7;
+    if (islandNumber >= 72) return 6;
+    if (islandNumber >= 45) return 5;
+    if (islandNumber >= 24) return 4;
+    if (islandNumber >= 12) return 3;
+    if (islandNumber >= 6) return 2;
+    return 1;
+  }
+  if (islandNumber >= 108) return 6;
+  if (islandNumber >= 84) return 5;
+  if (islandNumber >= 60) return 4;
+  if (islandNumber >= 36) return 3;
+  if (islandNumber >= 18) return 2;
+  return 1;
+}
 
 type BondMilestoneReward = {
   level: number;
@@ -704,6 +738,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [sanctuaryFeedback, setSanctuaryFeedback] = useState<string | null>(null);
   const [sanctuaryClockMs, setSanctuaryClockMs] = useState(() => Date.now());
   const [sanctuaryFilterMode, setSanctuaryFilterMode] = useState<SanctuaryFilterMode>('all');
+  const [sanctuaryZoneFilter, setSanctuaryZoneFilter] = useState<SanctuaryZoneFilter>('all');
   const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
   const [creatureTreatInventory, setCreatureTreatInventory] = useState(() => fetchCreatureTreatInventory(session.user.id));
   const [showPerfectCompanionOnboardingHint, setShowPerfectCompanionOnboardingHint] = useState(false);
@@ -2549,8 +2584,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => collectedCreatures.filter((creature) => getUnclaimedBondMilestones(creature).length > 0).length,
     [collectedCreatures],
   );
+  const sanctuaryZoneSummaries = useMemo(
+    () => (['zen', 'energy', 'cosmic'] as ShipZone[]).map((zone) => {
+      const owned = collectedCreatures.filter((entry) => resolveShipZoneForCreature(entry.creature) === zone);
+      const capacity = getSanctuaryZoneSlotCap(islandNumber, zone);
+      return {
+        zone,
+        ownedCount: owned.length,
+        visibleCount: Math.min(owned.length, capacity),
+        overflowCount: Math.max(0, owned.length - capacity),
+        capacity,
+      };
+    }),
+    [collectedCreatures, islandNumber],
+  );
+  const sanctuaryTierRevealLabel = useMemo(() => {
+    if (islandNumber >= 90) return 'Mythic deep slots online';
+    if (islandNumber >= 45) return 'Rare-tier slot upgrades online';
+    if (islandNumber >= 18) return 'Cosmic wing slots online';
+    if (islandNumber >= 6) return 'Engine wing slots online';
+    return 'Starter sanctuary slots online';
+  }, [islandNumber]);
   const visibleSanctuaryCreatures = useMemo(() => {
     const filtered = collectedCreatures.filter((creature) => {
+      const creatureZone = resolveShipZoneForCreature(creature.creature);
+      if (sanctuaryZoneFilter !== 'all' && creatureZone !== sanctuaryZoneFilter) return false;
       if (sanctuaryFilterMode === 'reward_ready') return getUnclaimedBondMilestones(creature).length > 0;
       if (sanctuaryFilterMode === 'active') return creature.creatureId === activeCompanionId;
       if (sanctuaryFilterMode === 'common' || sanctuaryFilterMode === 'rare' || sanctuaryFilterMode === 'mythic') {
@@ -2579,7 +2637,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const bReady = getUnclaimedBondMilestones(b).length > 0 ? 1 : 0;
       return bReady - aReady || b.lastCollectedAtMs - a.lastCollectedAtMs;
     });
-  }, [activeCompanionId, collectedCreatures, sanctuaryFilterMode, sanctuarySortMode]);
+  }, [activeCompanionId, collectedCreatures, sanctuaryFilterMode, sanctuarySortMode, sanctuaryZoneFilter]);
   const perfectCompanionIdSet = useMemo(
     () => new Set(runtimeState.perfectCompanionIds ?? []),
     [runtimeState.perfectCompanionIds],
@@ -5737,6 +5795,51 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </div>
                   </div>
                 ) : null}
+                <div className="island-run-sanctuary-zone-tabs" role="tablist" aria-label="Ship sanctuary zones">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={sanctuaryZoneFilter === 'all'}
+                    className={`island-run-sanctuary-filter ${sanctuaryZoneFilter === 'all' ? 'island-run-sanctuary-filter--active' : ''}`}
+                    onClick={() => setSanctuaryZoneFilter('all')}
+                  >
+                    All Zones
+                  </button>
+                  {sanctuaryZoneSummaries.map((summary) => (
+                    <button
+                      key={summary.zone}
+                      type="button"
+                      role="tab"
+                      aria-selected={sanctuaryZoneFilter === summary.zone}
+                      className={`island-run-sanctuary-filter ${sanctuaryZoneFilter === summary.zone ? 'island-run-sanctuary-filter--active' : ''}`}
+                      onClick={() => setSanctuaryZoneFilter(summary.zone)}
+                    >
+                      {SHIP_ZONE_LABELS[summary.zone]} · {summary.visibleCount}/{summary.capacity}
+                    </button>
+                  ))}
+                </div>
+                <div className="island-run-sanctuary-zone-capacity" aria-label="Zone slot capacity">
+                  {sanctuaryZoneSummaries.map((summary) => (
+                    <article key={summary.zone} className="island-run-sanctuary-zone-capacity__card">
+                      <p className="island-run-sanctuary-zone-capacity__title">{SHIP_ZONE_LABELS[summary.zone]}</p>
+                      <p className="island-run-sanctuary-zone-capacity__meta">
+                        Occupied <strong>{summary.visibleCount}</strong> / <strong>{summary.capacity}</strong>
+                        {summary.overflowCount > 0 ? (
+                          <span> · Queue +{summary.overflowCount}</span>
+                        ) : null}
+                      </p>
+                      <div className="island-run-sanctuary-zone-capacity__track" aria-hidden="true">
+                        <span
+                          className="island-run-sanctuary-zone-capacity__fill"
+                          style={{ width: `${Math.min(100, (summary.visibleCount / Math.max(1, summary.capacity)) * 100)}%` }}
+                        />
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <p className="island-run-sanctuary-zone-capacity__progress-note">
+                  Progression unlock: <strong>{sanctuaryTierRevealLabel}</strong>. Deeper slots reveal as your island tier advances.
+                </p>
                 <div className="island-run-sanctuary-toolbar__filters" role="group" aria-label="Sanctuary filters">
                   {[
                     ['all', 'All'],
