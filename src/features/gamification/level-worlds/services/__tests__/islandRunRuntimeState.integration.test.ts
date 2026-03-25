@@ -120,6 +120,17 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
           dicePool: 13.9,
           shields: -4,
           shards: 9.9,
+          perfectCompanionIds: ['rare-nebula-wisp', 42 as unknown as string],
+          perfectCompanionReasons: {
+            'rare-nebula-wisp': {
+              strength: ['explorer', 5 as unknown as string],
+              weaknessSupport: ['stress_fragility'],
+              zoneMatch: true,
+            },
+          },
+          perfectCompanionComputedAtMs: 123456789,
+          perfectCompanionModelVersion: 'phase3_v1',
+          perfectCompanionComputedCycleIndex: 8.2,
         },
       });
 
@@ -140,6 +151,14 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         '2': ['hatchery'],
         '5': ['boss'],
       }, 'Expected completed stops merge to filter invalid entries');
+      assertDeepEqual(state.perfectCompanionIds, ['rare-nebula-wisp'], 'Expected perfect companion ids to filter invalid entries');
+      assertDeepEqual(state.perfectCompanionReasons['rare-nebula-wisp'], {
+        strength: ['explorer'],
+        weaknessSupport: ['stress_fragility'],
+        zoneMatch: true,
+      }, 'Expected perfect companion reasons to sanitize payload shape');
+      assertEqual(state.perfectCompanionModelVersion, 'phase3_v1', 'Expected model version to persist');
+      assertEqual(state.perfectCompanionComputedCycleIndex, 8, 'Expected computed cycle index to floor');
     },
   },
   {

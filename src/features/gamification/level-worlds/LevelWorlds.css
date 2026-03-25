@@ -2991,10 +2991,98 @@
   margin-bottom: 0.9rem;
 }
 
+.island-run-sanctuary-quest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 214, 132, 0.28);
+  background: linear-gradient(160deg, rgba(255, 215, 130, 0.12), rgba(125, 190, 255, 0.12));
+}
+
+.island-run-sanctuary-quest__title {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 780;
+  color: rgba(255, 243, 214, 0.98);
+}
+
+.island-run-sanctuary-quest__body {
+  margin: 0.18rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(226, 241, 252, 0.9);
+}
+
+.island-run-sanctuary-quest__meta {
+  margin: 0.24rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 232, 176, 0.92);
+}
+
 .island-run-sanctuary-toolbar__filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+.island-run-sanctuary-zone-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.island-run-sanctuary-zone-capacity {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.island-run-sanctuary-zone-capacity__card {
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 200, 255, 0.2);
+  background: rgba(12, 24, 45, 0.7);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.island-run-sanctuary-zone-capacity__title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 760;
+  color: rgba(232, 246, 255, 0.94);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.island-run-sanctuary-zone-capacity__meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(206, 232, 246, 0.82);
+}
+
+.island-run-sanctuary-zone-capacity__track {
+  width: 100%;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.island-run-sanctuary-zone-capacity__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7ec9ff, #7dffcf);
+}
+
+.island-run-sanctuary-zone-capacity__progress-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 232, 185, 0.92);
 }
 
 .island-run-sanctuary-filter {
@@ -3089,6 +3177,46 @@
   font-size: 0.86rem;
 }
 
+.island-run-sanctuary-panel__starter-note {
+  margin: 0 0 0.8rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: rgba(248, 236, 197, 0.94);
+  border: 1px solid rgba(255, 220, 125, 0.28);
+  background: rgba(255, 215, 117, 0.12);
+}
+
+.island-run-sanctuary-top3 {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.island-run-sanctuary-top3__title {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(220, 241, 255, 0.88);
+}
+
+.island-run-sanctuary-top3__chips {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.island-run-sanctuary-top3__chip {
+  border: 1px solid rgba(255, 220, 125, 0.34);
+  background: rgba(255, 219, 126, 0.14);
+  color: rgba(255, 245, 224, 0.96);
+  border-radius: 999px;
+  padding: 0.35rem 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .island-run-sanctuary-detail {
   display: grid;
   gap: 0.8rem;
@@ -3135,6 +3263,32 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.island-run-sanctuary-reason {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.island-run-sanctuary-reason__body {
+  padding: 0.68rem 0.78rem;
+  border-radius: 12px;
+  background: rgba(105, 182, 255, 0.12);
+  border: 1px solid rgba(132, 206, 255, 0.22);
+  color: rgba(228, 246, 255, 0.92);
+  font-size: 0.82rem;
+}
+
+.island-run-sanctuary-reason__body ul {
+  margin: 0.3rem 0 0.6rem 1rem;
+  padding: 0;
+}
+
+.island-run-sanctuary-reason__label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(245, 252, 255, 0.98);
 }
 
 .island-run-sanctuary-reward {
