@@ -305,6 +305,13 @@ function formatCooldownRemaining(remainingMs: number): string {
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
 type SanctuarySortMode = 'recent' | 'bond' | 'tier' | 'active';
 type SanctuaryZoneFilter = 'all' | ShipZone;
+type CompanionQuestType = 'feed_any' | 'set_perfect_active' | 'open_top3';
+
+type CompanionQuestProgress = {
+  lastClaimedDayKey: string | null;
+  currentStreak: number;
+  bestStreak: number;
+};
 
 const SHIP_ZONE_LABELS: Record<ShipZone, string> = {
   zen: 'Zen Deck',
@@ -335,6 +342,55 @@ function getSanctuaryZoneSlotCap(islandNumber: number, zone: ShipZone): number {
   if (islandNumber >= 36) return 3;
   if (islandNumber >= 18) return 2;
   return 1;
+}
+
+function getLocalDayKey(timestampMs = Date.now()): string {
+  const date = new Date(timestampMs);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getPreviousDayKey(dayKey: string): string {
+  const [year, month, day] = dayKey.split('-').map((part) => Number(part));
+  if (!year || !month || !day) return dayKey;
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() - 1);
+  return getLocalDayKey(date.getTime());
+}
+
+function getCompanionQuestStorageKey(userId: string): string {
+  return `island_run_companion_quest:${userId}`;
+}
+
+function readCompanionQuestProgress(userId: string): CompanionQuestProgress {
+  if (typeof window === 'undefined') {
+    return { lastClaimedDayKey: null, currentStreak: 0, bestStreak: 0 };
+  }
+  try {
+    const raw = window.localStorage.getItem(getCompanionQuestStorageKey(userId));
+    if (!raw) return { lastClaimedDayKey: null, currentStreak: 0, bestStreak: 0 };
+    const parsed = JSON.parse(raw) as Partial<CompanionQuestProgress>;
+    return {
+      lastClaimedDayKey: typeof parsed.lastClaimedDayKey === 'string' ? parsed.lastClaimedDayKey : null,
+      currentStreak: Number.isFinite(parsed.currentStreak) ? Math.max(0, Math.floor(parsed.currentStreak as number)) : 0,
+      bestStreak: Number.isFinite(parsed.bestStreak) ? Math.max(0, Math.floor(parsed.bestStreak as number)) : 0,
+    };
+  } catch {
+    return { lastClaimedDayKey: null, currentStreak: 0, bestStreak: 0 };
+  }
+}
+
+function writeCompanionQuestProgress(userId: string, progress: CompanionQuestProgress): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(getCompanionQuestStorageKey(userId), JSON.stringify(progress));
+}
+
+function getCompanionQuestTypeForDay(dayKey: string): CompanionQuestType {
+  const seed = dayKey.split('-').join('').split('').reduce((sum, digit) => sum + Number(digit), 0);
+  const questTypes: CompanionQuestType[] = ['feed_any', 'set_perfect_active', 'open_top3'];
+  return questTypes[seed % questTypes.length] ?? 'feed_any';
 }
 
 type BondMilestoneReward = {
@@ -740,6 +796,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [sanctuaryFilterMode, setSanctuaryFilterMode] = useState<SanctuaryFilterMode>('all');
   const [sanctuaryZoneFilter, setSanctuaryZoneFilter] = useState<SanctuaryZoneFilter>('all');
   const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
+  const [companionQuestProgress, setCompanionQuestProgress] = useState<CompanionQuestProgress>(() =>
+    readCompanionQuestProgress(session.user.id),
+  );
+  const [companionQuestTop3ViewedDayKey, setCompanionQuestTop3ViewedDayKey] = useState<string | null>(null);
   const [creatureTreatInventory, setCreatureTreatInventory] = useState(() => fetchCreatureTreatInventory(session.user.id));
   const [showPerfectCompanionOnboardingHint, setShowPerfectCompanionOnboardingHint] = useState(false);
   const [perfectCompanionOnboardingCreatureId, setPerfectCompanionOnboardingCreatureId] = useState<string | null>(null);
@@ -2605,6 +2665,55 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (islandNumber >= 6) return 'Engine wing slots online';
     return 'Starter sanctuary slots online';
   }, [islandNumber]);
+  const companionQuestDayKey = useMemo(() => getLocalDayKey(), []);
+  const companionQuestType = useMemo(
+    () => getCompanionQuestTypeForDay(companionQuestDayKey),
+    [companionQuestDayKey],
+  );
+  const companionQuestCopy = useMemo(() => {
+    if (companionQuestType === 'set_perfect_active') {
+      return {
+        title: 'Companion Quest: Perfect Match',
+        body: 'Set one of your Perfect Companions as active for today.',
+        cta: 'Activate perfect companion',
+      };
+    }
+    if (companionQuestType === 'open_top3') {
+      return {
+        title: 'Companion Quest: Scout Your Top 3',
+        body: 'Open one of your Top 3 companion cards to review their bonuses.',
+        cta: 'Open top companion card',
+      };
+    }
+    return {
+      title: 'Companion Quest: Care Round',
+      body: 'Feed any companion once today to build your daily streak.',
+      cta: 'Feed a companion',
+    };
+  }, [companionQuestType]);
+  const perfectCompanionIdSet = useMemo(
+    () => new Set(runtimeState.perfectCompanionIds ?? []),
+    [runtimeState.perfectCompanionIds],
+  );
+  const companionQuestComplete = useMemo(() => {
+    if (companionQuestType === 'set_perfect_active') {
+      return activeCompanionId !== null && perfectCompanionIdSet.has(activeCompanionId);
+    }
+    if (companionQuestType === 'open_top3') {
+      return companionQuestTop3ViewedDayKey === companionQuestDayKey;
+    }
+    return collectedCreatures.some((creature) =>
+      creature.lastFedAtMs !== null && getLocalDayKey(creature.lastFedAtMs) === companionQuestDayKey,
+    );
+  }, [
+    activeCompanionId,
+    collectedCreatures,
+    companionQuestDayKey,
+    companionQuestTop3ViewedDayKey,
+    companionQuestType,
+    perfectCompanionIdSet,
+  ]);
+  const companionQuestClaimedToday = companionQuestProgress.lastClaimedDayKey === companionQuestDayKey;
   const visibleSanctuaryCreatures = useMemo(() => {
     const filtered = collectedCreatures.filter((creature) => {
       const creatureZone = resolveShipZoneForCreature(creature.creature);
@@ -2638,10 +2747,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return bReady - aReady || b.lastCollectedAtMs - a.lastCollectedAtMs;
     });
   }, [activeCompanionId, collectedCreatures, sanctuaryFilterMode, sanctuarySortMode, sanctuaryZoneFilter]);
-  const perfectCompanionIdSet = useMemo(
-    () => new Set(runtimeState.perfectCompanionIds ?? []),
-    [runtimeState.perfectCompanionIds],
-  );
   const topPerfectCompanionEntries = useMemo(
     () => {
       const byCreatureId = new Map(collectedCreatures.map((entry) => [entry.creatureId, entry]));
@@ -4020,6 +4125,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setSanctuaryFeedback(null);
       setSanctuaryClockMs(Date.now());
       const selected = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+      if ((runtimeState.perfectCompanionIds ?? []).slice(0, 3).includes(creatureId)) {
+        setCompanionQuestTop3ViewedDayKey(companionQuestDayKey);
+      }
       void recordTelemetryEvent({
         userId: session.user.id,
         eventType: 'economy_earn',
@@ -4162,6 +4270,33 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       void awardGold(session.user.id, coinsReward, 'shooter_blitz', 'island_story_episode_reward');
       setLandingText(`Story reward claimed: +${coinsReward} coins.`);
     },
+  };
+
+  const handleClaimCompanionQuest = () => {
+    if (!companionQuestComplete || companionQuestClaimedToday) return;
+    const previousClaimed = companionQuestProgress.lastClaimedDayKey;
+    const expectedYesterday = getPreviousDayKey(companionQuestDayKey);
+    const nextStreak = previousClaimed === expectedYesterday ? companionQuestProgress.currentStreak + 1 : 1;
+    const nextProgress: CompanionQuestProgress = {
+      lastClaimedDayKey: companionQuestDayKey,
+      currentStreak: nextStreak,
+      bestStreak: Math.max(companionQuestProgress.bestStreak, nextStreak),
+    };
+    setCompanionQuestProgress(nextProgress);
+    writeCompanionQuestProgress(session.user.id, nextProgress);
+    setSanctuaryFeedback(
+      `Quest complete! 🔥 Companion streak is now ${nextStreak} day${nextStreak === 1 ? '' : 's'}.`,
+    );
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'sanctuary_daily_companion_quest_claimed',
+        island_number: islandNumber,
+        quest_type: companionQuestType,
+        streak_count: nextStreak,
+      },
+    });
   };
 
   const closeSanctuaryPanel = () => {
@@ -5778,6 +5913,27 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
             {!selectedSanctuaryCreature && collectedCreatures.length > 0 ? (
               <div className="island-run-sanctuary-toolbar">
+                <section className="island-run-sanctuary-quest">
+                  <div>
+                    <p className="island-run-sanctuary-quest__title">{companionQuestCopy.title}</p>
+                    <p className="island-run-sanctuary-quest__body">{companionQuestCopy.body}</p>
+                    <p className="island-run-sanctuary-quest__meta">
+                      Streak: <strong>{companionQuestProgress.currentStreak}</strong> · Best: <strong>{companionQuestProgress.bestStreak}</strong>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                    onClick={handleClaimCompanionQuest}
+                    disabled={!companionQuestComplete || companionQuestClaimedToday}
+                  >
+                    {companionQuestClaimedToday
+                      ? 'Claimed today'
+                      : companionQuestComplete
+                        ? 'Claim quest streak'
+                        : companionQuestCopy.cta}
+                  </button>
+                </section>
                 {topPerfectCompanionEntries.length > 0 ? (
                   <div className="island-run-sanctuary-top3" role="group" aria-label="Your best companions">
                     <p className="island-run-sanctuary-top3__title">Your Best Companions</p>
