@@ -259,6 +259,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 function cacheAppShell(event) {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

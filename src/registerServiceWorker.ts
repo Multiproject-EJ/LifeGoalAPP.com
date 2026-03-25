@@ -8,10 +8,29 @@ export async function registerServiceWorker() {
   }
 
   try {
+    const SW_RELOAD_FLAG_KEY = 'lifegoalapp_sw_reloaded_once';
+
+    const triggerControlledReload = () => {
+      if (typeof window === 'undefined') return;
+      if (window.sessionStorage.getItem(SW_RELOAD_FLAG_KEY) === '1') return;
+      window.sessionStorage.setItem(SW_RELOAD_FLAG_KEY, '1');
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      triggerControlledReload();
+    });
+
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
       type: 'classic',
     });
+
+    void registration.update();
+
+    if (registration.waiting) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
 
     if (typeof window !== 'undefined') {
       window.__LifeGoalAppDebugger?.log('Service worker registered.', {
@@ -25,6 +44,9 @@ export async function registerServiceWorker() {
       installingWorker.onstatechange = () => {
         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
           console.info('New content is available; please refresh.');
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
           if (typeof window !== 'undefined') {
             window.__LifeGoalAppDebugger?.log('Service worker installed an update.');
           }
