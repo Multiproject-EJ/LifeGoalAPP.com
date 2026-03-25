@@ -603,7 +603,7 @@ function mergeRecordForConflict(options: {
   };
 }
 
-function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number) {
+function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, deviceSessionId: string) {
   return {
     user_id: null as unknown as string,
     runtime_version: runtimeVersion,
@@ -644,6 +644,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number) {
     perfect_companion_computed_at_ms: record.perfectCompanionComputedAtMs,
     perfect_companion_model_version: record.perfectCompanionModelVersion,
     perfect_companion_computed_cycle_index: record.perfectCompanionComputedCycleIndex,
+    last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
 }
@@ -955,7 +956,7 @@ export async function writeIslandRunGameStateRecord(options: {
   > => {
     const expectedVersion = Math.max(0, Math.floor(candidate.runtimeVersion));
     const nextVersion = expectedVersion + 1;
-    const payload = toRemoteRow(candidate, nextVersion);
+    const payload = toRemoteRow(candidate, nextVersion, deviceSessionId);
     payload.user_id = session.user.id;
 
     const { data, error } = await client
@@ -990,7 +991,7 @@ export async function writeIslandRunGameStateRecord(options: {
   let writeResult = await tryConditionalWrite(localRecord);
 
   if (writeResult.status === 'missing_row') {
-    const payload = toRemoteRow(localRecord, 0);
+    const payload = toRemoteRow(localRecord, 0, deviceSessionId);
     payload.user_id = session.user.id;
     const { error: insertError } = await client
       .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
