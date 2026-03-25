@@ -895,7 +895,22 @@ export async function writeIslandRunGameStateRecord(options: {
       ? ownershipValidationData[0]
       : ownershipValidationData;
     const isOwner = Boolean((ownershipRow as { is_owner?: unknown } | null)?.is_owner);
-    const leaseIsActive = Boolean((ownershipRow as { lease_is_active?: unknown } | null)?.lease_is_active);
+    let leaseIsActive = Boolean((ownershipRow as { lease_is_active?: unknown } | null)?.lease_is_active);
+
+    if (isOwner && !leaseIsActive) {
+      const { data: reclaimData, error: reclaimError } = await client.rpc('island_run_claim_active_session', {
+        p_device_session_id: deviceSessionId,
+        p_force_takeover: true,
+        p_takeover_reason: 'auto_reclaim_expired_lease',
+        p_metadata: { source: 'runtime_write_auto_reclaim' },
+      });
+
+      if (!reclaimError) {
+        const reclaimRow = Array.isArray(reclaimData) ? reclaimData[0] : reclaimData;
+        const reclaimStatus = (reclaimRow as { ownership_status?: unknown } | null)?.ownership_status;
+        leaseIsActive = reclaimStatus === 'granted' || reclaimStatus === 'already_owner';
+      }
+    }
 
     if (!isOwner || !leaseIsActive) {
       logIslandRunEntryDebug('runtime_state_persist_error', {
