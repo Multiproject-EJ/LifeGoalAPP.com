@@ -173,3 +173,130 @@ If you want creatures to explicitly reflect a player archetype hand, add a bridg
 - a resolver that prioritizes creature pools linked to the player's dominant/secondary archetypes.
 
 That would convert the current thematic relationship into a strict, testable one.
+
+## Proposed implementation: "Perfect Companion" system (personality-aligned creatures)
+
+You described this target flow:
+
+1. User takes personality test (+ ads/upsell around tests).
+2. System identifies trait strengths and weakness edges from the player's archetype hand.
+3. During 120-island play, animals appear as usual, but only **1–3 creatures** are marked as
+   "perfect for you" because they both amplify strengths and support weaknesses.
+
+This can be implemented cleanly on top of current systems.
+
+### A) Add a canonical affinity-to-archetype bridge
+
+Create a new mapping module (example: `creatureArchetypeBridge.ts`) with two layers:
+
+- `affinity -> archetypeId[]` (semantic family match)
+- `affinity -> weaknessSupportTags[]` (what weakness this affinity can soften)
+
+Example structure:
+
+```ts
+export const AFFINITY_TO_ARCHETYPE: Record<string, string[]> = {
+  Visionary: ['visionary', 'dreamer', 'pioneer'],
+  Guardian: ['guardian', 'caregiver', 'mentor'],
+  Strategist: ['strategist', 'architect', 'analyst'],
+  // ...
+};
+
+export const AFFINITY_WEAKNESS_SUPPORT: Record<string, string[]> = {
+  Guardian: ['stress_fragility', 'low_safety'],
+  Mentor: ['decision_confusion', 'low_confidence'],
+  Builder: ['inconsistency', 'overwhelm'],
+  // ...
+};
+```
+
+### B) Build a "player companion fit profile" from archetype hand
+
+Input sources (already available in code architecture):
+
+- Ranked archetype hand (dominant/secondary/support/shadow)
+- Trait/axis scores from personality engine
+
+Compute two vectors:
+
+- `strengthVector`: weighted from dominant + secondary + high traits
+- `healingVector`: weighted from shadow + low traits + stress-sensitive axes
+
+Then score each creature:
+
+```ts
+fitScore =
+  (0.60 * strengthMatch)
++ (0.40 * healingMatch)
++ rarityBonus
++ recencyPenalty
+```
+
+Sort all 45 and persist top picks.
+
+### C) Enforce 1–3 "perfect" creatures deterministically
+
+Keep gameplay fair/predictable by selecting from top fit candidates with deterministic seeds
+(per cycle or per island range), for example:
+
+- 1 guaranteed perfect creature in islands 1–40
+- up to 2 total in islands 41–80
+- up to 3 total in islands 81–120
+
+Use deterministic seed `(userId + cycleIndex + islandNumber)` so outcomes are stable, debuggable,
+and anti-reroll.
+
+### D) Make value obvious in UI (very easy to understand)
+
+For each creature card/encounter modal, show a simple high-signal badge:
+
+- `⭐ Perfect for your hand`
+- `✅ Strength boost: Visionary (+Spin)`
+- `🛡️ Weakness support: Stress Response`
+
+Also add a compact "Why this helps you" drawer:
+
+- "Because your hand has **Visionary + Dreamer** and your growth edge is **stress overload**, this creature boosts momentum and adds protection during high-pressure islands."
+
+### E) Add one global discoverability surface
+
+Add a persistent mini-panel in Island HUD / Creature Collection:
+
+- `Your Best Companions (3)`
+- ranked chips: `#1`, `#2`, `#3`
+- tap opens reason cards + recommended islands/stops
+
+This ensures players always know which creatures are extra valuable *for them* without reading long text.
+
+### F) Reward loop design
+
+When a perfect creature is equipped or newly collected:
+
+- Trigger personalized celebration copy: "Perfect synergy unlocked"
+- Grant small, visible, profile-aligned reward (e.g., +1 bonus spin or +1 safety heart once per island)
+- Track telemetry:
+  - `perfect_companion_seen`
+  - `perfect_companion_equipped`
+  - `perfect_companion_effect_triggered`
+
+### G) Fast MVP slice order
+
+1. Mapping table + fit scoring util (pure functions, fully unit testable).
+2. Persist top-3 fit creature IDs in profile runtime state.
+3. Badge + "Why this helps you" UI in creature cards.
+4. Deterministic island encounter injection from top fit set.
+5. Telemetry + tuning dashboard.
+
+### H) Tuning knobs (for live balancing)
+
+Keep these in config (not hardcoded):
+
+- strength vs healing weight (default 60/40)
+- max perfect creatures per 120-island cycle (default 3)
+- rarity multiplier
+- duplicate protection window
+- pity rule (guarantee at least 1 perfect by island N)
+
+With this, your core goal is met: players get personalized creatures that both **amplify
+who they already are** and **support where they struggle**, and the UI clearly explains why each
+valuable creature matters for *their* current archetype hand.
