@@ -2,7 +2,11 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
-import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
+import type {
+  CreatureCollectionRuntimeEntry,
+  PerIslandEggsLedger,
+  PerfectCompanionReason,
+} from './islandRunGameStateStore';
 import {
   hydrateIslandRunGameStateRecord,
   hydrateIslandRunGameStateRecordWithSource,
@@ -65,6 +69,11 @@ export interface IslandRunRuntimeStateBackend {
       }>;
       creatureCollection?: CreatureCollectionRuntimeEntry[];
       activeCompanionId?: string | null;
+      perfectCompanionIds?: string[];
+      perfectCompanionReasons?: Record<string, PerfectCompanionReason>;
+      perfectCompanionComputedAtMs?: number | null;
+      perfectCompanionModelVersion?: string | null;
+      perfectCompanionComputedCycleIndex?: number | null;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -253,6 +262,51 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.activeCompanionId === 'string' || patch.activeCompanionId === null
           ? patch.activeCompanionId
           : current.activeCompanionId,
+      perfectCompanionIds:
+        Array.isArray(patch.perfectCompanionIds)
+          ? patch.perfectCompanionIds.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+          : current.perfectCompanionIds,
+      perfectCompanionReasons:
+        patch.perfectCompanionReasons !== null && typeof patch.perfectCompanionReasons === 'object' && !Array.isArray(patch.perfectCompanionReasons)
+          ? Object.fromEntries(
+              Object.entries(patch.perfectCompanionReasons).map(([creatureId, reason]) => [
+                creatureId,
+                reason !== null && typeof reason === 'object' && !Array.isArray(reason)
+                  ? {
+                      strength: Array.isArray((reason as unknown as Record<string, unknown>).strength)
+                        ? ((reason as unknown as Record<string, unknown>).strength as unknown[])
+                            .filter((item: unknown): item is string => typeof item === 'string' && item.trim().length > 0)
+                        : [],
+                      weaknessSupport: Array.isArray((reason as unknown as Record<string, unknown>).weaknessSupport)
+                        ? ((reason as unknown as Record<string, unknown>).weaknessSupport as unknown[])
+                            .filter((item: unknown): item is string => typeof item === 'string' && item.trim().length > 0)
+                        : [],
+                      zoneMatch: Boolean((reason as unknown as Record<string, unknown>).zoneMatch),
+                    }
+                  : {
+                      strength: [],
+                      weaknessSupport: [],
+                      zoneMatch: false,
+                    },
+              ]),
+            )
+          : current.perfectCompanionReasons,
+      perfectCompanionComputedAtMs:
+        typeof patch.perfectCompanionComputedAtMs === 'number' && Number.isFinite(patch.perfectCompanionComputedAtMs)
+          ? patch.perfectCompanionComputedAtMs
+          : patch.perfectCompanionComputedAtMs === null
+            ? null
+            : current.perfectCompanionComputedAtMs,
+      perfectCompanionModelVersion:
+        typeof patch.perfectCompanionModelVersion === 'string' || patch.perfectCompanionModelVersion === null
+          ? patch.perfectCompanionModelVersion
+          : current.perfectCompanionModelVersion,
+      perfectCompanionComputedCycleIndex:
+        typeof patch.perfectCompanionComputedCycleIndex === 'number' && Number.isFinite(patch.perfectCompanionComputedCycleIndex)
+          ? Math.max(0, Math.floor(patch.perfectCompanionComputedCycleIndex))
+          : patch.perfectCompanionComputedCycleIndex === null
+            ? null
+            : current.perfectCompanionComputedCycleIndex,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({
