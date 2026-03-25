@@ -21,9 +21,11 @@ import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
   ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
+  type IslandRunRuntimeHydrationSource,
   shouldEmitIslandRunRuntimeHydrationTelemetry,
 } from '../services/islandRunRuntimeTelemetry';
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
+import { isDemoSession } from '../../../../services/demoSession';
 import {
   hydrateIslandRunRuntimeStateWithSource,
   persistIslandRunRuntimeStatePatch,
@@ -818,6 +820,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
+  const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
@@ -842,6 +845,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     isReconcilingRuntimeStateRef.current = true;
     try {
       const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client });
+      setRuntimeHydrationSource(hydrationResult.source);
       if (hydrationResult.source !== 'table') {
         return;
       }
@@ -1384,11 +1388,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     let isActive = true;
 
     setHasHydratedRuntimeState(false);
+    setRuntimeHydrationSource(null);
     setRuntimeState(readIslandRunRuntimeState(session));
 
     void hydrateIslandRunRuntimeStateWithSource({ session, client })
       .then((hydrationResult) => {
         if (!isActive) return;
+        setRuntimeHydrationSource(hydrationResult.source);
         setRuntimeState(hydrationResult.state);
 
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
@@ -1465,6 +1471,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isActive = false;
     };
   }, [client, session.user.id]);
+
+  const isRuntimeSyncBlocked =
+    hasHydratedRuntimeState &&
+    runtimeHydrationSource !== null &&
+    (runtimeHydrationSource === 'fallback_query_error' ||
+      (runtimeHydrationSource === 'fallback_demo_or_no_client' && !isDemoSession(session)));
 
   useEffect(() => {
     if (!client || !hasHydratedRuntimeState) {
@@ -4543,6 +4555,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       {rollValue !== null ? <span className="island-run-prototype__dice-total">= {rollValue}</span> : null}
     </div>
   );
+
+  if (isRuntimeSyncBlocked) {
+    return (
+      <section className="island-run-prototype">
+        <header className="island-run-prototype__header">
+          <p className="island-run-prototype__landing-feed" role="alert">
+            Island Run sync is currently unavailable for this account, so gameplay is paused on this device to prevent split progress.
+          </p>
+          <p className="island-run-prototype__landing-feed">
+            Please reconnect this app to Supabase and run the latest Island Run migrations (including runtime_version) before resuming.
+          </p>
+        </header>
+      </section>
+    );
+  }
 
   return (
     <section className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}>
