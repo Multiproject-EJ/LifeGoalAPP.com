@@ -59,7 +59,18 @@ import {
   fetchCreatureTreatInventory,
   type CreatureTreatType,
 } from '../services/creatureTreatInventoryService';
-import { getCompanionBonusForCreature, getCreatureSpecialtyForCompanion, selectCreatureForEgg } from '../services/creatureCatalog';
+import {
+  CREATURE_CATALOG,
+  getCompanionBonusForCreature,
+  getCreatureSpecialtyForCompanion,
+  selectCreatureForEgg,
+} from '../services/creatureCatalog';
+import {
+  rankCreatureFitsForPlayer,
+  selectPerfectCompanions,
+  type PlayerHandContext,
+} from '../services/creatureFitEngine';
+import { getDefaultZonePreferencesForArchetypes } from '../services/creatureArchetypeBridge';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
 import { awardHearts, logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
@@ -107,6 +118,20 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
+const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
+const PERFECT_COMPANION_PITY_ISLAND_THRESHOLD = 5;
+const PERFECT_COMPANION_SOFT_BIAS_PERCENT = 35;
+const PERFECT_COMPANION_STARTUP_BONUS_BY_EFFECT: Record<'bonus_dice' | 'bonus_heart' | 'bonus_spin', number> = {
+  bonus_dice: 2,
+  bonus_heart: 1,
+  bonus_spin: 1,
+};
+const PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS = {
+  coins: 4,
+  hearts: 1,
+  dice: 2,
+  spinTokens: 1,
+};
 
 function getOpenHatcheryOnLoadFlag(): boolean {
   return typeof window !== 'undefined'
@@ -147,6 +172,101 @@ function formatIslandCountdown(totalSec: number): string {
   if (hours > 0) return `${hours}h ${minutes}m`;
   if (minutes > 0) return `${minutes}m ${seconds}s`;
   return `${seconds}s`;
+}
+
+function extractArchetypeIdsFromMetadata(value: unknown): string[] {
+  if (!value || typeof value !== 'object') return [];
+  const candidate = value as Record<string, unknown>;
+  const ids: string[] = [];
+
+  const pushIfString = (nextValue: unknown) => {
+    if (typeof nextValue === 'string' && nextValue.trim()) {
+      ids.push(nextValue.trim().toLowerCase());
+    }
+  };
+
+  pushIfString(candidate.id);
+  pushIfString(candidate.cardId);
+  if (candidate.card && typeof candidate.card === 'object') {
+    pushIfString((candidate.card as Record<string, unknown>).id);
+  }
+
+  ['dominant', 'secondary', 'support', 'shadow'].forEach((key) => {
+    const entry = candidate[key];
+    if (entry && typeof entry === 'object') {
+      pushIfString((entry as Record<string, unknown>).id);
+      if ((entry as Record<string, unknown>).card && typeof (entry as Record<string, unknown>).card === 'object') {
+        pushIfString((((entry as Record<string, unknown>).card as Record<string, unknown>).id));
+      }
+    }
+  });
+
+  if (Array.isArray(candidate.cards)) {
+    candidate.cards.forEach((entry) => {
+      if (!entry || typeof entry !== 'object') return;
+      pushIfString((entry as Record<string, unknown>).id);
+      if ((entry as Record<string, unknown>).card && typeof (entry as Record<string, unknown>).card === 'object') {
+        pushIfString((((entry as Record<string, unknown>).card as Record<string, unknown>).id));
+      }
+    });
+  }
+
+  return Array.from(new Set(ids));
+}
+
+const ARCHETYPE_LABELS: Record<string, string> = {
+  guardian: 'Guardian',
+  visionary: 'Visionary',
+  builder: 'Builder',
+  grounded: 'Grounded',
+  nurturer: 'Nurturer',
+  steady: 'Steady',
+  explorer: 'Explorer',
+  caregiver: 'Caregiver',
+  mentor: 'Mentor',
+  peacemaker: 'Peacemaker',
+  dreamer: 'Dreamer',
+  catalyst: 'Catalyst',
+  champion: 'Champion',
+  strategist: 'Strategist',
+  architect: 'Architect',
+  challenger: 'Challenger',
+  creator: 'Creator',
+  oracle: 'Oracle',
+  sage: 'Sage',
+  radiant: 'Radiant',
+  cosmic: 'Cosmic',
+  commander: 'Commander',
+  rebel: 'Rebel',
+};
+
+const WEAKNESS_SUPPORT_LABELS: Record<string, string> = {
+  stress_fragility: 'Supports stress resilience',
+  decision_confusion: 'Supports decision clarity',
+  motivation_drop: 'Supports motivation recovery',
+  focus_drift: 'Supports sustained focus',
+  social_overload: 'Supports calm social recovery',
+  routine_instability: 'Supports routine consistency',
+};
+
+function getArchetypeLabel(archetypeId: string): string {
+  return ARCHETYPE_LABELS[archetypeId] ?? archetypeId;
+}
+
+function getWeaknessSupportLabel(tag: string): string {
+  return WEAKNESS_SUPPORT_LABELS[tag] ?? tag.replace(/_/g, ' ');
+}
+
+function getPerfectCompanionOnboardingHintStorageKey(userId: string): string {
+  return `island-run:perfect-companion-onboarding-hint:${userId}`;
+}
+
+function hashPerfectCompanionSeed(input: string): number {
+  let hash = 0;
+  for (let index = 0; index < input.length; index += 1) {
+    hash = (hash * 31 + input.charCodeAt(index)) >>> 0;
+  }
+  return hash;
 }
 // Egg hatch durations are now random (24–72 h production / 15–30 s dev) via eggService.
 // Egg tier is assigned randomly on set via rollEggTierWeighted() in eggService.
@@ -598,6 +718,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [sanctuaryFilterMode, setSanctuaryFilterMode] = useState<SanctuaryFilterMode>('all');
   const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
   const [creatureTreatInventory, setCreatureTreatInventory] = useState(() => fetchCreatureTreatInventory(session.user.id));
+  const [showPerfectCompanionOnboardingHint, setShowPerfectCompanionOnboardingHint] = useState(false);
+  const [perfectCompanionOnboardingCreatureId, setPerfectCompanionOnboardingCreatureId] = useState<string | null>(null);
+  const [perfectCompanionOnboardingCreatureName, setPerfectCompanionOnboardingCreatureName] = useState<string | null>(null);
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -2424,6 +2547,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
     [selectedSanctuaryCreature],
   );
+  const metadataArchetypeIds = useMemo(() => {
+    const metadata = session.user.user_metadata as Record<string, unknown> | undefined;
+    return extractArchetypeIdsFromMetadata(metadata?.archetype_hand);
+  }, [session.user.user_metadata]);
+  const isUsingStarterProfileForPerfectCompanion = metadataArchetypeIds.length === 0;
   const sanctuaryRewardReadyCount = useMemo(
     () => collectedCreatures.filter((creature) => getUnclaimedBondMilestones(creature).length > 0).length,
     [collectedCreatures],
@@ -2459,6 +2587,100 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return bReady - aReady || b.lastCollectedAtMs - a.lastCollectedAtMs;
     });
   }, [activeCompanionId, collectedCreatures, sanctuaryFilterMode, sanctuarySortMode]);
+  const perfectCompanionIdSet = useMemo(
+    () => new Set(runtimeState.perfectCompanionIds ?? []),
+    [runtimeState.perfectCompanionIds],
+  );
+  const topPerfectCompanionEntries = useMemo(
+    () => {
+      const byCreatureId = new Map(collectedCreatures.map((entry) => [entry.creatureId, entry]));
+      return (runtimeState.perfectCompanionIds ?? [])
+        .slice(0, 3)
+        .map((creatureId) => byCreatureId.get(creatureId))
+        .filter((entry): entry is (typeof collectedCreatures)[number] => Boolean(entry));
+    },
+    [collectedCreatures, runtimeState.perfectCompanionIds],
+  );
+  const selectedPerfectCompanionReason = useMemo(() => {
+    if (!selectedSanctuaryCreature) return null;
+    return runtimeState.perfectCompanionReasons[selectedSanctuaryCreature.creatureId] ?? null;
+  }, [runtimeState.perfectCompanionReasons, selectedSanctuaryCreature]);
+  const [showPerfectCompanionReason, setShowPerfectCompanionReason] = useState(false);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const dominantArchetypeIds = metadataArchetypeIds.slice(0, 2);
+    const secondaryArchetypeIds = metadataArchetypeIds.slice(2, 4);
+    const supportArchetypeIds = metadataArchetypeIds.slice(4, 8);
+    const fallbackArchetypeIds = metadataArchetypeIds.length > 0 ? metadataArchetypeIds : ['guardian', 'visionary'];
+    const preferredShipZones = getDefaultZonePreferencesForArchetypes(fallbackArchetypeIds);
+
+    const context: PlayerHandContext = {
+      dominantArchetypeIds: dominantArchetypeIds.length > 0 ? dominantArchetypeIds : ['guardian'],
+      secondaryArchetypeIds: secondaryArchetypeIds.length > 0 ? secondaryArchetypeIds : ['visionary'],
+      supportArchetypeIds,
+      weaknessTags: ['stress_fragility', 'decision_confusion'],
+      preferredShipZones,
+    };
+
+    const shouldRecompute =
+      runtimeState.perfectCompanionModelVersion !== PERFECT_COMPANION_MODEL_VERSION
+      || runtimeState.perfectCompanionComputedCycleIndex !== cycleIndex
+      || !Array.isArray(runtimeState.perfectCompanionIds)
+      || runtimeState.perfectCompanionIds.length === 0;
+
+    if (!shouldRecompute) return;
+
+    const rankedFits = rankCreatureFitsForPlayer(CREATURE_CATALOG, context);
+    const selectedFits = selectPerfectCompanions(rankedFits, 3, {
+      userId: session.user.id,
+      cycleIndex,
+      islandNumber,
+    });
+    const perfectCompanionIds = selectedFits.map((entry) => entry.creatureId);
+    const perfectCompanionReasons = Object.fromEntries(
+      selectedFits.map((entry) => [
+        entry.creatureId,
+        {
+          strength: entry.matchedArchetypes,
+          weaknessSupport: entry.matchedWeaknessTags,
+          zoneMatch: entry.zoneMatch > 0,
+        },
+      ]),
+    );
+    const computedAtMs = Date.now();
+
+    setRuntimeState((current) => ({
+      ...current,
+      perfectCompanionIds,
+      perfectCompanionReasons,
+      perfectCompanionComputedAtMs: computedAtMs,
+      perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
+      perfectCompanionComputedCycleIndex: cycleIndex,
+    }));
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        perfectCompanionIds,
+        perfectCompanionReasons,
+        perfectCompanionComputedAtMs: computedAtMs,
+        perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
+        perfectCompanionComputedCycleIndex: cycleIndex,
+      },
+    });
+  }, [
+    client,
+    cycleIndex,
+    hasHydratedRuntimeState,
+    islandNumber,
+    metadataArchetypeIds,
+    runtimeState.perfectCompanionComputedCycleIndex,
+    runtimeState.perfectCompanionIds,
+    runtimeState.perfectCompanionModelVersion,
+    session,
+  ]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
@@ -2482,15 +2704,42 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       companionBonusLastVisitKey: visitKey,
     }));
 
+    const isPerfectCompanionActive = perfectCompanionIdSet.has(activeCompanion.creatureId);
+    const perfectCompanionStartupBonus = isPerfectCompanionActive
+      ? PERFECT_COMPANION_STARTUP_BONUS_BY_EFFECT[activeCompanionBonus.effect]
+      : 0;
+    const totalStartupBonus = activeCompanionBonus.amount + perfectCompanionStartupBonus;
+
     if (activeCompanionBonus.effect === 'bonus_heart') {
-      setHearts((current) => Math.min(MAX_HEARTS, current + activeCompanionBonus.amount));
+      setHearts((current) => Math.min(MAX_HEARTS, current + totalStartupBonus));
     } else if (activeCompanionBonus.effect === 'bonus_spin') {
-      setSpinTokens((current) => current + activeCompanionBonus.amount);
+      setSpinTokens((current) => current + totalStartupBonus);
     } else {
-      setDicePool((current) => current + activeCompanionBonus.amount);
+      setDicePool((current) => current + totalStartupBonus);
     }
 
-    setLandingText(`${activeCompanion.creature.name} supported this island: ${activeCompanionBonus.label}.`);
+    if (isPerfectCompanionActive && perfectCompanionStartupBonus > 0) {
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: {
+          stage: 'perfect_companion_effect_triggered',
+          effect_scope: 'island_startup_bonus',
+          island_number: islandNumber,
+          creature_id: activeCompanion.creature.id,
+          creature_name: activeCompanion.creature.name,
+          base_bonus_amount: activeCompanionBonus.amount,
+          perfect_companion_bonus_amount: perfectCompanionStartupBonus,
+          total_bonus_amount: totalStartupBonus,
+          bonus_effect: activeCompanionBonus.effect,
+        },
+      });
+    }
+
+    setLandingText(
+      `${activeCompanion.creature.name} supported this island: ${activeCompanionBonus.label}.`
+      + (perfectCompanionStartupBonus > 0 ? ` Perfect Companion bonus +${perfectCompanionStartupBonus}.` : ''),
+    );
   }, [
     activeCompanion,
     activeCompanionBonus,
@@ -2498,22 +2747,60 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     client,
     hasHydratedRuntimeState,
     islandNumber,
+    perfectCompanionIdSet,
     runtimeState.companionBonusLastVisitKey,
     session,
     session.user.id,
   ]);
 
-  const handleCollectCreature = () => {
-    if (!activeEgg || eggStage < 4) return;
-    const resolvedEgg = activeEgg;
-    const nowTs = Date.now();
-    const creature = selectCreatureForEgg({
+  const resolveHatchedCreatureWithPerfectCompanionBias = (resolvedEgg: ActiveEgg) => {
+    const baselineCreature = selectCreatureForEgg({
       eggTier: resolvedEgg.tier,
       seed: resolvedEgg.setAtMs,
       islandNumber,
     });
+    const perfectCreaturePool = (runtimeState.perfectCompanionIds ?? [])
+      .map((creatureId) => CREATURE_CATALOG.find((entry) => entry.id === creatureId) ?? null)
+      .filter((entry): entry is (typeof CREATURE_CATALOG)[number] => entry !== null && entry.tier === resolvedEgg.tier);
+    if (perfectCreaturePool.length === 0) return baselineCreature;
+
+    const hasCollectedPerfectCompanion = creatureCollection.some((entry) =>
+      (runtimeState.perfectCompanionIds ?? []).includes(entry.creatureId),
+    );
+    const shouldApplyPity =
+      !hasCollectedPerfectCompanion
+      && islandNumber >= PERFECT_COMPANION_PITY_ISLAND_THRESHOLD;
+
+    const seedBase = `${session.user.id}:${cycleIndex}:${islandNumber}:${resolvedEgg.setAtMs}`;
+    const seed = hashPerfectCompanionSeed(seedBase);
+
+    if (shouldApplyPity) {
+      return perfectCreaturePool[seed % perfectCreaturePool.length] ?? baselineCreature;
+    }
+
+    const softBiasRoll = seed % 100;
+    if (softBiasRoll < PERFECT_COMPANION_SOFT_BIAS_PERCENT) {
+      const pickSeed = hashPerfectCompanionSeed(`${seedBase}:soft_bias_pick`);
+      return perfectCreaturePool[pickSeed % perfectCreaturePool.length] ?? baselineCreature;
+    }
+
+    return baselineCreature;
+  };
+
+  const handleCollectCreature = () => {
+    if (!activeEgg || eggStage < 4) return;
+    const resolvedEgg = activeEgg;
+    const nowTs = Date.now();
+    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
     const islandKey = String(islandNumber);
     const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    const hasCollectedPerfectCompanionBeforeCollect = creatureCollection.some((entry) =>
+      (runtimeState.perfectCompanionIds ?? []).includes(entry.creatureId),
+    );
+    const isPerfectCompanionCollected = (runtimeState.perfectCompanionIds ?? []).includes(creature.id);
+    const pityWasEligible =
+      !hasCollectedPerfectCompanionBeforeCollect
+      && islandNumber >= PERFECT_COMPANION_PITY_ISLAND_THRESHOLD;
     const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
     const collectedEntry: PerIslandEggEntry = existingEntry
       ? { ...existingEntry, status: 'collected', openedAt: nowTs, location: 'island' }
@@ -2541,6 +2828,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
+    const isFirstCreatureCollected = collectedCreatures.length === 0;
     setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -2551,9 +2839,33 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creature_id: creature.id,
         creature_name: creature.name,
         source: 'island_hatchery',
+        perfect_companion_collected: isPerfectCompanionCollected,
+        perfect_companion_pity_eligible: pityWasEligible,
       },
     });
     logIslandRunEntryDebug('island_creature_collected', { tier: resolvedEgg.tier, creatureId: creature.id, creatureName: creature.name, source: 'island_hatchery' });
+    if (isFirstCreatureCollected && typeof window !== 'undefined') {
+      const hintSeenStorageKey = getPerfectCompanionOnboardingHintStorageKey(session.user.id);
+      const hasSeenHint = window.localStorage.getItem(hintSeenStorageKey) === '1';
+      if (!hasSeenHint) {
+        window.localStorage.setItem(hintSeenStorageKey, '1');
+        setPerfectCompanionOnboardingCreatureId(creature.id);
+        setPerfectCompanionOnboardingCreatureName(creature.name);
+        setShowPerfectCompanionOnboardingHint(true);
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'onboarding_completed',
+          metadata: {
+            stage: 'perfect_companion_onboarding_hint_seen',
+            island_number: islandNumber,
+            creature_id: creature.id,
+            creature_name: creature.name,
+            has_archetype_profile: !isUsingStarterProfileForPerfectCompanion,
+            onboarding_complete: isOnboardingComplete,
+          },
+        });
+      }
+    }
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -2583,11 +2895,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const handleSellEggForRewards = () => {
     if (!activeEgg || eggStage < 4) return;
     const resolvedEgg = activeEgg;
-    const creature = selectCreatureForEgg({
-      eggTier: resolvedEgg.tier,
-      seed: resolvedEgg.setAtMs,
-      islandNumber,
-    });
+    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
     const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
     const nowTs = Date.now();
     const islandKey = String(islandNumber);
@@ -2695,20 +3003,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const applyEncounterReward = (reward: EncounterReward) => {
     const specialtyEncounterBonusCoins = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
     const specialtyEncounterBonusHearts = activeCompanionSpecialty?.effect === 'encounter_bonus_hearts' ? activeCompanionSpecialty.amount : 0;
+    const isPerfectCompanionActive = Boolean(activeCompanion && perfectCompanionIdSet.has(activeCompanion.creatureId));
+    const perfectCompanionEncounterBonus = isPerfectCompanionActive
+      ? {
+          coins: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.coins, 3),
+          hearts: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.hearts, reward.heart ? 0 : 1),
+          dice: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.dice, reward.dice > 0 ? 1 : 0),
+          spinTokens: Math.min(PERFECT_COMPANION_ENCOUNTER_BONUS_CAPS.spinTokens, reward.spinTokens > 0 ? 0 : 1),
+        }
+      : { coins: 0, hearts: 0, dice: 0, spinTokens: 0 };
     const challengeType = currentEncounterChallenge?.type ?? null;
     const challengeId = currentEncounterChallenge?.id ?? null;
 
-    setCoins((c) => c + reward.coins + specialtyEncounterBonusCoins);
-    void awardGold(session.user.id, reward.coins + specialtyEncounterBonusCoins, 'shooter_blitz', 'island_run_encounter_reward');
-    if (reward.heart || specialtyEncounterBonusHearts > 0) {
-      setHearts((h) => h + (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts);
-      void awardHearts(session.user.id, (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts, 'shooter_blitz', 'Island Run encounter reward');
+    const totalEncounterCoins = reward.coins + specialtyEncounterBonusCoins + perfectCompanionEncounterBonus.coins;
+    const totalEncounterHearts = (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts + perfectCompanionEncounterBonus.hearts;
+    const totalEncounterDice = reward.dice + perfectCompanionEncounterBonus.dice;
+    const totalEncounterSpinTokens = reward.spinTokens + perfectCompanionEncounterBonus.spinTokens;
+
+    setCoins((c) => c + totalEncounterCoins);
+    void awardGold(session.user.id, totalEncounterCoins, 'shooter_blitz', 'island_run_encounter_reward');
+    if (totalEncounterHearts > 0) {
+      setHearts((h) => h + totalEncounterHearts);
+      void awardHearts(session.user.id, totalEncounterHearts, 'shooter_blitz', 'Island Run encounter reward');
     }
-    if (reward.dice > 0) {
-      setDicePool((current) => current + reward.dice);
+    if (totalEncounterDice > 0) {
+      setDicePool((current) => current + totalEncounterDice);
     }
-    if (reward.spinTokens > 0) {
-      setSpinTokens((current) => current + reward.spinTokens);
+    if (totalEncounterSpinTokens > 0) {
+      setSpinTokens((current) => current + totalEncounterSpinTokens);
     }
     if (reward.walletShards) {
       awardWalletShards(1);
@@ -2725,6 +3047,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const specialtySummaryParts: string[] = [];
     if (specialtyEncounterBonusCoins > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusCoins} coins`);
     if (specialtyEncounterBonusHearts > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusHearts} heart${specialtyEncounterBonusHearts === 1 ? '' : 's'}`);
+    if (perfectCompanionEncounterBonus.coins > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.coins} perfect coins`);
+    if (perfectCompanionEncounterBonus.hearts > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.hearts} perfect heart`);
+    if (perfectCompanionEncounterBonus.dice > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.dice} perfect dice`);
+    if (perfectCompanionEncounterBonus.spinTokens > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.spinTokens} perfect spin`);
     const specialtySuffix = specialtySummaryParts.length > 0 && activeCompanion
       ? ` ${activeCompanion.creature.name} specialty added ${specialtySummaryParts.join(', ')}.`
       : '';
@@ -2745,9 +3071,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         reward_spin_tokens: reward.spinTokens,
         specialty_bonus_coins: specialtyEncounterBonusCoins,
         specialty_bonus_hearts: specialtyEncounterBonusHearts,
+        perfect_bonus_coins: perfectCompanionEncounterBonus.coins,
+        perfect_bonus_hearts: perfectCompanionEncounterBonus.hearts,
+        perfect_bonus_dice: perfectCompanionEncounterBonus.dice,
+        perfect_bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         specialty_effect: activeCompanionSpecialty?.effect,
       },
     });
+    if (isPerfectCompanionActive) {
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: {
+          stage: 'perfect_companion_effect_triggered',
+          effect_scope: 'encounter_reward_bonus',
+          island_number: islandNumber,
+          creature_id: activeCompanion?.creature.id ?? null,
+          creature_name: activeCompanion?.creature.name ?? null,
+          bonus_coins: perfectCompanionEncounterBonus.coins,
+          bonus_hearts: perfectCompanionEncounterBonus.hearts,
+          bonus_dice: perfectCompanionEncounterBonus.dice,
+          bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
+        },
+      });
+    }
   };
 
   const openEncounterChallenge = (challenge: EncounterChallenge, tileIndex: number) => {
@@ -3550,6 +3897,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const openSanctuaryPanel = useCallback(() => {
     setShowSanctuaryPanel(true);
     setSelectedSanctuaryCreatureId(null);
+    setShowPerfectCompanionReason(false);
     setSanctuaryFeedback(null);
     setSanctuaryClockMs(Date.now());
     setSanctuaryFilterMode('all');
@@ -3574,6 +3922,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     closePanel: () => {
       setShowSanctuaryPanel(false);
       setSelectedSanctuaryCreatureId(null);
+      setShowPerfectCompanionReason(false);
       setSanctuaryFeedback(null);
     },
     setActiveCompanion: (creatureId: string | null) => {
@@ -3605,8 +3954,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     },
     openCreature: (creatureId: string) => {
       setSelectedSanctuaryCreatureId(creatureId);
+      setShowPerfectCompanionReason(false);
       setSanctuaryFeedback(null);
       setSanctuaryClockMs(Date.now());
+      const selected = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: {
+          stage: 'perfect_companion_chip_selected',
+          island_number: islandNumber,
+          creature_id: selected?.creature.id ?? creatureId,
+          creature_name: selected?.creature.name ?? null,
+          is_perfect_companion: perfectCompanionIdSet.has(creatureId),
+        },
+      });
     },
     feedCreature: (creatureId: string, treatType: CreatureTreatType) => {
       const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
@@ -5223,6 +5585,74 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
+      {showPerfectCompanionOnboardingHint && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section
+            className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Perfect Companion onboarding hint"
+          >
+            <p className="island-stop-modal__eyebrow">Perfect Companion</p>
+            <h3 className="island-stop-modal__title">✨ New creature synergy unlocked</h3>
+            <p className="island-stop-modal__copy">
+              <strong>{perfectCompanionOnboardingCreatureName ?? 'Your new creature'}</strong>{' '}
+              can be one of your best companions for this cycle.
+              {isUsingStarterProfileForPerfectCompanion
+                ? ' We are using a starter profile until your archetype hand is set.'
+                : ' Its fit is based on your archetype hand.'}
+            </p>
+            <div className="island-hatchery-card__actions">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => {
+                  if (perfectCompanionOnboardingCreatureId) {
+                    setActiveCompanionId(perfectCompanionOnboardingCreatureId);
+                    saveActiveCompanionId(session.user.id, perfectCompanionOnboardingCreatureId);
+                  }
+                  setShowPerfectCompanionOnboardingHint(false);
+                  setShowSanctuaryPanel(true);
+                  setSelectedSanctuaryCreatureId(perfectCompanionOnboardingCreatureId);
+                  setShowPerfectCompanionReason(true);
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'onboarding_completed',
+                    metadata: {
+                      stage: 'perfect_companion_onboarding_hint_set_active',
+                      island_number: islandNumber,
+                      creature_id: perfectCompanionOnboardingCreatureId,
+                      creature_name: perfectCompanionOnboardingCreatureName,
+                    },
+                  });
+                }}
+              >
+                Set active + open sanctuary
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => {
+                  setShowPerfectCompanionOnboardingHint(false);
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'onboarding_completed',
+                    metadata: {
+                      stage: 'perfect_companion_onboarding_hint_dismissed',
+                      island_number: islandNumber,
+                      creature_id: perfectCompanionOnboardingCreatureId,
+                      creature_name: perfectCompanionOnboardingCreatureName,
+                    },
+                  });
+                }}
+              >
+                Got it
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {showSanctuaryPanel && (
         <div
           className="island-stop-modal-backdrop"
@@ -5257,9 +5687,52 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-sanctuary-panel__pill">Favorite snacks: <strong>{creatureTreatInventory.favorite}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rare feasts: <strong>{creatureTreatInventory.rare}</strong></span>
             </div>
+            <div className="island-hatchery-card__actions" style={{ marginBottom: '0.75rem' }}>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('openScoreGarageFromSanctuary'));
+                  }
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'economy_earn',
+                    metadata: {
+                      stage: 'sanctuary_open_ship_upgrades_bridge',
+                      island_number: islandNumber,
+                    },
+                  });
+                }}
+              >
+                Open Ship Upgrades (Garage)
+              </button>
+            </div>
+            {isUsingStarterProfileForPerfectCompanion ? (
+              <p className="island-run-sanctuary-panel__starter-note">
+                ⭐ Using starter profile until your archetype hand is set.
+              </p>
+            ) : null}
 
             {!selectedSanctuaryCreature && collectedCreatures.length > 0 ? (
               <div className="island-run-sanctuary-toolbar">
+                {topPerfectCompanionEntries.length > 0 ? (
+                  <div className="island-run-sanctuary-top3" role="group" aria-label="Your best companions">
+                    <p className="island-run-sanctuary-top3__title">Your Best Companions</p>
+                    <div className="island-run-sanctuary-top3__chips">
+                      {topPerfectCompanionEntries.map((entry, index) => (
+                        <button
+                          key={entry.creatureId}
+                          type="button"
+                          className="island-run-sanctuary-top3__chip"
+                          onClick={() => sanctuaryHandlers.openCreature(entry.creatureId)}
+                        >
+                          #{index + 1} {entry.creature.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <div className="island-run-sanctuary-toolbar__filters" role="group" aria-label="Sanctuary filters">
                   {[
                     ['all', 'All'],
@@ -5304,6 +5777,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   <div className="island-run-sanctuary-detail__identity">
                     <p className="island-run-sanctuary-card__eyebrow">Island {selectedSanctuaryCreature.lastCollectedIslandNumber} · {selectedSanctuaryCreature.creature.tier}</p>
                     <h4 className="island-run-sanctuary-detail__title">{selectedSanctuaryCreature.creature.name}</h4>
+                    {perfectCompanionIdSet.has(selectedSanctuaryCreature.creatureId) ? (
+                      <p className="island-run-sanctuary-card__meta"><strong>⭐ Perfect for your hand</strong></p>
+                    ) : null}
                     <p className="island-run-sanctuary-detail__copy">
                       {selectedSanctuaryCreature.creature.name} thrives in {selectedSanctuaryCreature.creature.habitat.toLowerCase()} habitats and resonates with {selectedSanctuaryCreature.creature.affinity.toLowerCase()} energy.
                     </p>
@@ -5332,6 +5808,78 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <p className="island-run-sanctuary-card__meta">
                   Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
                 </p>
+                {perfectCompanionIdSet.has(selectedSanctuaryCreature.creatureId) && selectedPerfectCompanionReason ? (
+                  <div className="island-run-sanctuary-reason">
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                      onClick={() => {
+                        const nextOpen = !showPerfectCompanionReason;
+                        setShowPerfectCompanionReason(nextOpen);
+                        if (nextOpen) {
+                          void recordTelemetryEvent({
+                            userId: session.user.id,
+                            eventType: 'economy_earn',
+                            metadata: {
+                              stage: 'perfect_companion_reason_opened',
+                              island_number: islandNumber,
+                              creature_id: selectedSanctuaryCreature.creature.id,
+                              creature_name: selectedSanctuaryCreature.creature.name,
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      {showPerfectCompanionReason ? 'Hide why this is perfect' : 'Why this is perfect for you'}
+                    </button>
+                    {showPerfectCompanionReason ? (
+                      <div className="island-run-sanctuary-reason__body">
+                        <p className="island-run-sanctuary-reason__label">Strength matches</p>
+                        <ul>
+                          {(selectedPerfectCompanionReason.strength.length > 0
+                            ? selectedPerfectCompanionReason.strength
+                            : ['guardian', 'visionary']
+                          ).map((archetypeId) => (
+                            <li key={archetypeId}>{getArchetypeLabel(archetypeId)}</li>
+                          ))}
+                        </ul>
+                        <p className="island-run-sanctuary-reason__label">Weakness support</p>
+                        <ul>
+                          {(selectedPerfectCompanionReason.weaknessSupport.length > 0
+                            ? selectedPerfectCompanionReason.weaknessSupport
+                            : ['stress_fragility', 'decision_confusion']
+                          ).map((tag) => (
+                            <li key={tag}>{getWeaknessSupportLabel(tag)}</li>
+                          ))}
+                        </ul>
+                        <p className="island-run-sanctuary-reason__label">
+                          Zone match: <strong>{selectedPerfectCompanionReason.zoneMatch ? 'Aligned with your preferred ship zone' : 'Partial match'}</strong>
+                        </p>
+                        {activeCompanionId !== selectedSanctuaryCreature.creatureId ? (
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                            onClick={() => {
+                              sanctuaryHandlers.setActiveCompanion(selectedSanctuaryCreature.creatureId);
+                              void recordTelemetryEvent({
+                                userId: session.user.id,
+                                eventType: 'economy_earn',
+                                metadata: {
+                                  stage: 'perfect_companion_reason_cta_set_active',
+                                  island_number: islandNumber,
+                                  creature_id: selectedSanctuaryCreature.creature.id,
+                                  creature_name: selectedSanctuaryCreature.creature.name,
+                                },
+                              });
+                            }}
+                          >
+                            Set as Active from Perfect Companion
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
                 {selectedSanctuaryCreatureUnclaimedMilestones.length > 0 ? (
                   <div className="island-run-sanctuary-reward">
                     <p className="island-run-sanctuary-reward__title">Reward ready</p>
@@ -5344,7 +5892,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                    onClick={() => setSelectedSanctuaryCreatureId(null)}
+                    onClick={() => {
+                      setSelectedSanctuaryCreatureId(null);
+                      setShowPerfectCompanionReason(false);
+                    }}
                   >
                     ← Back to Roster
                   </button>
@@ -5418,6 +5969,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         Island {creature.lastCollectedIslandNumber} · {creature.creature.tier}
                       </p>
                       <h4 className="island-run-sanctuary-card__title">{creature.creature.name}</h4>
+                      {perfectCompanionIdSet.has(creature.creatureId) ? (
+                        <p className="island-run-sanctuary-card__meta"><strong>⭐ Perfect for your hand</strong></p>
+                      ) : null}
                       <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.creature.habitat}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.creature.affinity}</strong></p>
                       <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
