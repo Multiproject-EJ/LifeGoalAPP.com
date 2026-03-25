@@ -1,6 +1,7 @@
 import { creatureCatalogTests } from './creatureCatalog.test';
 import { creatureCollectionServiceTests } from './creatureCollectionService.test';
 import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryService.test';
+import { creatureFitEngineTests } from './creatureFitEngine.test';
 import { encounterServiceTests } from './encounterService.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
 import { islandRunProgressionTests } from './islandRunProgression.test';
@@ -12,6 +13,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureCatalog', tests: creatureCatalogTests },
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },
   { label: 'creatureTreatInventoryService', tests: creatureTreatInventoryServiceTests },
+  { label: 'creatureFitEngine', tests: creatureFitEngineTests },
   { label: 'encounterService', tests: encounterServiceTests },
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
   { label: 'islandRunProgression', tests: islandRunProgressionTests },
