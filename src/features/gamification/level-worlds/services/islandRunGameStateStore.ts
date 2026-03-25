@@ -638,6 +638,11 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number) {
     market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
     creature_collection: record.creatureCollection,
     active_companion_id: record.activeCompanionId,
+    perfect_companion_ids: record.perfectCompanionIds,
+    perfect_companion_reasons: record.perfectCompanionReasons,
+    perfect_companion_computed_at_ms: record.perfectCompanionComputedAtMs,
+    perfect_companion_model_version: record.perfectCompanionModelVersion,
+    perfect_companion_computed_cycle_index: record.perfectCompanionComputedCycleIndex,
     updated_at: new Date().toISOString(),
   };
 }
@@ -700,7 +705,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -766,11 +771,11 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
       creatureCollection: data.creature_collection ?? [],
       activeCompanionId: data.active_companion_id ?? null,
-      perfectCompanionIds: fallback.perfectCompanionIds,
-      perfectCompanionReasons: fallback.perfectCompanionReasons,
-      perfectCompanionComputedAtMs: fallback.perfectCompanionComputedAtMs,
-      perfectCompanionModelVersion: fallback.perfectCompanionModelVersion,
-      perfectCompanionComputedCycleIndex: fallback.perfectCompanionComputedCycleIndex,
+      perfectCompanionIds: data.perfect_companion_ids ?? fallback.perfectCompanionIds,
+      perfectCompanionReasons: data.perfect_companion_reasons ?? fallback.perfectCompanionReasons,
+      perfectCompanionComputedAtMs: data.perfect_companion_computed_at_ms ?? fallback.perfectCompanionComputedAtMs,
+      perfectCompanionModelVersion: data.perfect_companion_model_version ?? fallback.perfectCompanionModelVersion,
+      perfectCompanionComputedCycleIndex: data.perfect_companion_computed_cycle_index ?? fallback.perfectCompanionComputedCycleIndex,
     },
     fallback,
   );
