@@ -28,6 +28,17 @@ type OfflineSyncEvent = {
   error?: string;
 };
 
+export type OfflineSyncTelemetryEvent = OfflineSyncEvent;
+export type OfflineSyncTelemetrySummary = {
+  feature: OfflineSyncFeature;
+  total: number;
+  failed: number;
+  succeeded: number;
+  queued: number;
+  lastError: string | null;
+  lastAt: string | null;
+};
+
 const STORAGE_KEY = 'lifegoal_offline_sync_telemetry_v1';
 const MAX_EVENTS = 400;
 
@@ -80,6 +91,34 @@ export function recordOfflineSyncEvent(event: Omit<OfflineSyncEvent, 'id' | 'at'
 
 export function getOfflineSyncTelemetry(limit = 100): OfflineSyncEvent[] {
   return readTelemetryEvents().slice(-Math.max(1, limit));
+}
+
+export function getOfflineSyncTelemetrySummary(limit = 400): OfflineSyncTelemetrySummary[] {
+  const events = getOfflineSyncTelemetry(limit);
+  const byFeature = new Map<OfflineSyncFeature, OfflineSyncTelemetrySummary>();
+  for (const event of events) {
+    const current =
+      byFeature.get(event.feature) ??
+      ({
+        feature: event.feature,
+        total: 0,
+        failed: 0,
+        succeeded: 0,
+        queued: 0,
+        lastError: null,
+        lastAt: null,
+      } satisfies OfflineSyncTelemetrySummary);
+    current.total += 1;
+    if (event.event === 'sync_failed') {
+      current.failed += 1;
+      current.lastError = event.error ?? current.lastError;
+    }
+    if (event.event === 'sync_succeeded') current.succeeded += 1;
+    if (event.event === 'queue_enqueued') current.queued += 1;
+    current.lastAt = event.at;
+    byFeature.set(event.feature, current);
+  }
+  return Array.from(byFeature.values()).sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''));
 }
 
 export function clearOfflineSyncTelemetry(): void {
