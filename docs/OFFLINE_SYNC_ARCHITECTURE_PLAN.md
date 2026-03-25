@@ -148,11 +148,12 @@ Before sign-out/reset/clear local data (when queue not empty):
 - Personality tests align fully with shared queue engine
 - Vision board (URL entries first, then file upload staging)
 
-## Phase 5 (done - baseline hardening)
+## Phase 5 (done - polished hardening)
 - Telemetry: offline sync events (queue, retry, success/failure, clear) persisted locally for diagnostics.
 - Recovery tooling: feature-level retry-failed and clear-queue actions for personality tests and vision board.
-- Performance baseline: bounded telemetry ring-buffer and periodic queue polling.
-- Conflict tooling baseline: surfaced failure state + retry path to avoid silent stalls.
+- Performance: bounded telemetry ring-buffer and periodic queue polling.
+- Conflict tooling: surfaced failure state + retry path to avoid silent stalls.
+- Dev observability: in-app Offline Sync Debug Panel (dev-only) for queue snapshots + telemetry stream.
 
 ---
 
