@@ -1489,6 +1489,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       (runtimeHydrationSource === 'fallback_demo_or_no_client' && !isDemoSession(session)));
   const isOwnershipBlocked = hasHydratedRuntimeState && !isActiveSessionOwner;
 
+  const withTimeout = useCallback(async <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> => {
+    let timeoutId: number | null = null;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        reject(new Error(timeoutMessage));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    }
+  }, []);
+
   const claimOwnership = useCallback(async (reason: 'enter' | 'manual_takeover' = 'enter') => {
     if (!client || isDemoSession(session)) {
       setIsActiveSessionOwner(true);
@@ -1521,32 +1538,66 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const retryRuntimeSync = useCallback(async () => {
     setIsRetryingSync(true);
     setActiveSessionStatusMessage(null);
+    logIslandRunEntryDebug('island_run_runtime_retry_sync_started', {
+      userId: session.user.id,
+      deviceSessionId,
+    });
     try {
-      const owned = await claimOwnership('manual_takeover');
+      const owned = await withTimeout(
+        claimOwnership('manual_takeover'),
+        12000,
+        'Timed out while trying to claim Island Run active session.',
+      );
       if (!owned && !isDemoSession(session)) {
         setActiveSessionStatusMessage('Unable to take over Island Run session yet. Please try again.');
+        logIslandRunEntryDebug('island_run_runtime_retry_sync_failed', {
+          userId: session.user.id,
+          deviceSessionId,
+          stage: 'claim_ownership_returned_false',
+        });
         return;
       }
 
-      const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client });
+      const hydrationResult = await withTimeout(
+        hydrateIslandRunRuntimeStateWithSource({ session, client }),
+        12000,
+        'Timed out while trying to hydrate Island Run runtime state.',
+      );
       setRuntimeHydrationSource(hydrationResult.source);
       setRuntimeState(hydrationResult.state);
 
       if (hydrationResult.source === 'table') {
         setLandingText('Island Run synced successfully. You can continue playing.');
         setActiveSessionStatusMessage(null);
+        logIslandRunEntryDebug('island_run_runtime_retry_sync_succeeded', {
+          userId: session.user.id,
+          deviceSessionId,
+          source: hydrationResult.source,
+        });
         return;
       }
 
       setActiveSessionStatusMessage(
-        'Runtime sync is still unavailable. Please verify Supabase credentials/session and rerun latest migrations.',
+        `Runtime sync is still unavailable (source: ${hydrationResult.source}). Please verify Supabase credentials/session and rerun latest migrations.`,
       );
+      logIslandRunEntryDebug('island_run_runtime_retry_sync_failed', {
+        userId: session.user.id,
+        deviceSessionId,
+        stage: 'hydration_not_table',
+        source: hydrationResult.source,
+      });
     } catch (error) {
       setActiveSessionStatusMessage(error instanceof Error ? error.message : 'Unexpected sync retry failure.');
+      logIslandRunEntryDebug('island_run_runtime_retry_sync_failed', {
+        userId: session.user.id,
+        deviceSessionId,
+        stage: 'exception',
+        errorMessage: error instanceof Error ? error.message : 'unknown_error',
+      });
     } finally {
       setIsRetryingSync(false);
     }
-  }, [claimOwnership, client, session]);
+  }, [claimOwnership, client, deviceSessionId, session, withTimeout]);
 
   useEffect(() => {
     let isActive = true;
