@@ -243,6 +243,10 @@ function getArchetypeLabel(archetypeId: string): string {
 function getWeaknessSupportLabel(tag: string): string {
   return WEAKNESS_SUPPORT_LABELS[tag] ?? tag.replace(/_/g, ' ');
 }
+
+function getPerfectCompanionOnboardingHintStorageKey(userId: string): string {
+  return `island-run:perfect-companion-onboarding-hint:${userId}`;
+}
 // Egg hatch durations are now random (24–72 h production / 15–30 s dev) via eggService.
 // Egg tier is assigned randomly on set via rollEggTierWeighted() in eggService.
 const MARKET_DICE_BUNDLE_COST = 30;
@@ -693,6 +697,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [sanctuaryFilterMode, setSanctuaryFilterMode] = useState<SanctuaryFilterMode>('all');
   const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
   const [creatureTreatInventory, setCreatureTreatInventory] = useState(() => fetchCreatureTreatInventory(session.user.id));
+  const [showPerfectCompanionOnboardingHint, setShowPerfectCompanionOnboardingHint] = useState(false);
+  const [perfectCompanionOnboardingCreatureId, setPerfectCompanionOnboardingCreatureId] = useState<string | null>(null);
+  const [perfectCompanionOnboardingCreatureName, setPerfectCompanionOnboardingCreatureName] = useState<string | null>(null);
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
@@ -2735,6 +2742,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
+    const isFirstCreatureCollected = collectedCreatures.length === 0;
     setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -2748,6 +2756,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       },
     });
     logIslandRunEntryDebug('island_creature_collected', { tier: resolvedEgg.tier, creatureId: creature.id, creatureName: creature.name, source: 'island_hatchery' });
+    if (isFirstCreatureCollected && typeof window !== 'undefined') {
+      const hintSeenStorageKey = getPerfectCompanionOnboardingHintStorageKey(session.user.id);
+      const hasSeenHint = window.localStorage.getItem(hintSeenStorageKey) === '1';
+      if (!hasSeenHint) {
+        window.localStorage.setItem(hintSeenStorageKey, '1');
+        setPerfectCompanionOnboardingCreatureId(creature.id);
+        setPerfectCompanionOnboardingCreatureName(creature.name);
+        setShowPerfectCompanionOnboardingHint(true);
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'onboarding_completed',
+          metadata: {
+            stage: 'perfect_companion_onboarding_hint_seen',
+            island_number: islandNumber,
+            creature_id: creature.id,
+            creature_name: creature.name,
+            has_archetype_profile: !isUsingStarterProfileForPerfectCompanion,
+            onboarding_complete: isOnboardingComplete,
+          },
+        });
+      }
+    }
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -5426,6 +5456,74 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 }}
               >
                 ✕ Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {showPerfectCompanionOnboardingHint && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section
+            className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Perfect Companion onboarding hint"
+          >
+            <p className="island-stop-modal__eyebrow">Perfect Companion</p>
+            <h3 className="island-stop-modal__title">✨ New creature synergy unlocked</h3>
+            <p className="island-stop-modal__copy">
+              <strong>{perfectCompanionOnboardingCreatureName ?? 'Your new creature'}</strong>{' '}
+              can be one of your best companions for this cycle.
+              {isUsingStarterProfileForPerfectCompanion
+                ? ' We are using a starter profile until your archetype hand is set.'
+                : ' Its fit is based on your archetype hand.'}
+            </p>
+            <div className="island-hatchery-card__actions">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => {
+                  if (perfectCompanionOnboardingCreatureId) {
+                    setActiveCompanionId(perfectCompanionOnboardingCreatureId);
+                    saveActiveCompanionId(session.user.id, perfectCompanionOnboardingCreatureId);
+                  }
+                  setShowPerfectCompanionOnboardingHint(false);
+                  setShowSanctuaryPanel(true);
+                  setSelectedSanctuaryCreatureId(perfectCompanionOnboardingCreatureId);
+                  setShowPerfectCompanionReason(true);
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'onboarding_completed',
+                    metadata: {
+                      stage: 'perfect_companion_onboarding_hint_set_active',
+                      island_number: islandNumber,
+                      creature_id: perfectCompanionOnboardingCreatureId,
+                      creature_name: perfectCompanionOnboardingCreatureName,
+                    },
+                  });
+                }}
+              >
+                Set active + open sanctuary
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => {
+                  setShowPerfectCompanionOnboardingHint(false);
+                  void recordTelemetryEvent({
+                    userId: session.user.id,
+                    eventType: 'onboarding_completed',
+                    metadata: {
+                      stage: 'perfect_companion_onboarding_hint_dismissed',
+                      island_number: islandNumber,
+                      creature_id: perfectCompanionOnboardingCreatureId,
+                      creature_name: perfectCompanionOnboardingCreatureName,
+                    },
+                  });
+                }}
+              >
+                Got it
               </button>
             </div>
           </section>
