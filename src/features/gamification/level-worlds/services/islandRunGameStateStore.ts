@@ -25,6 +25,13 @@ export interface PerIslandEggEntry {
 /** Key = island number (as string), value = egg entry */
 export type PerIslandEggsLedger = Record<string, PerIslandEggEntry>;
 
+
+export interface PerfectCompanionReason {
+  strength: string[];
+  weaknessSupport: string[];
+  zoneMatch: boolean;
+}
+
 export interface CreatureCollectionRuntimeEntry {
   creatureId: string;
   copies: number;
@@ -79,6 +86,11 @@ export interface IslandRunGameStateRecord {
   }>;
   creatureCollection: CreatureCollectionRuntimeEntry[];
   activeCompanionId: string | null;
+  perfectCompanionIds: string[];
+  perfectCompanionReasons: Record<string, PerfectCompanionReason>;
+  perfectCompanionComputedAtMs: number | null;
+  perfectCompanionModelVersion: string | null;
+  perfectCompanionComputedCycleIndex: number | null;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -234,6 +246,11 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
     activeCompanionId: null,
+    perfectCompanionIds: [],
+    perfectCompanionReasons: {},
+    perfectCompanionComputedAtMs: null,
+    perfectCompanionModelVersion: null,
+    perfectCompanionComputedCycleIndex: null,
   };
 }
 
@@ -445,6 +462,51 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.activeCompanionId === 'string' || value.activeCompanionId === null
         ? value.activeCompanionId
         : fallback.activeCompanionId,
+    perfectCompanionIds:
+      Array.isArray(value.perfectCompanionIds)
+        ? value.perfectCompanionIds.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+        : fallback.perfectCompanionIds,
+    perfectCompanionReasons:
+      value.perfectCompanionReasons !== null && typeof value.perfectCompanionReasons === 'object' && !Array.isArray(value.perfectCompanionReasons)
+        ? Object.fromEntries(
+            Object.entries(value.perfectCompanionReasons).map(([creatureId, reason]) => [
+              creatureId,
+              reason !== null && typeof reason === 'object' && !Array.isArray(reason)
+                ? {
+                    strength: Array.isArray((reason as unknown as Record<string, unknown>).strength)
+                      ? ((reason as unknown as Record<string, unknown>).strength as unknown[])
+                          .filter((item: unknown): item is string => typeof item === 'string' && item.trim().length > 0)
+                      : [],
+                    weaknessSupport: Array.isArray((reason as unknown as Record<string, unknown>).weaknessSupport)
+                      ? ((reason as unknown as Record<string, unknown>).weaknessSupport as unknown[])
+                          .filter((item: unknown): item is string => typeof item === 'string' && item.trim().length > 0)
+                      : [],
+                    zoneMatch: Boolean((reason as unknown as Record<string, unknown>).zoneMatch),
+                  }
+                : {
+                    strength: [],
+                    weaknessSupport: [],
+                    zoneMatch: false,
+                  },
+            ]),
+          )
+        : fallback.perfectCompanionReasons,
+    perfectCompanionComputedAtMs:
+      typeof value.perfectCompanionComputedAtMs === 'number' && Number.isFinite(value.perfectCompanionComputedAtMs)
+        ? value.perfectCompanionComputedAtMs
+        : value.perfectCompanionComputedAtMs === null
+          ? null
+          : fallback.perfectCompanionComputedAtMs,
+    perfectCompanionModelVersion:
+      typeof value.perfectCompanionModelVersion === 'string' || value.perfectCompanionModelVersion === null
+        ? value.perfectCompanionModelVersion
+        : fallback.perfectCompanionModelVersion,
+    perfectCompanionComputedCycleIndex:
+      typeof value.perfectCompanionComputedCycleIndex === 'number' && Number.isFinite(value.perfectCompanionComputedCycleIndex)
+        ? Math.max(0, Math.floor(value.perfectCompanionComputedCycleIndex))
+        : value.perfectCompanionComputedCycleIndex === null
+          ? null
+          : fallback.perfectCompanionComputedCycleIndex,
   };
 }
 
@@ -528,6 +590,15 @@ function mergeRecordForConflict(options: {
     completedStopsByIsland: mergedCompletedStopsByIsland,
     marketOwnedBundlesByIsland: mergedMarketOwnedBundlesByIsland,
     creatureCollection: mergeCreatureCollection(remote.creatureCollection, local.creatureCollection),
+    perfectCompanionIds: local.perfectCompanionIds.length > 0 ? local.perfectCompanionIds : remote.perfectCompanionIds,
+    perfectCompanionReasons:
+      Object.keys(local.perfectCompanionReasons).length > 0
+        ? local.perfectCompanionReasons
+        : remote.perfectCompanionReasons,
+    perfectCompanionComputedAtMs: local.perfectCompanionComputedAtMs ?? remote.perfectCompanionComputedAtMs,
+    perfectCompanionModelVersion: local.perfectCompanionModelVersion ?? remote.perfectCompanionModelVersion,
+    perfectCompanionComputedCycleIndex:
+      local.perfectCompanionComputedCycleIndex ?? remote.perfectCompanionComputedCycleIndex,
   };
 }
 
@@ -695,6 +766,11 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
       creatureCollection: data.creature_collection ?? [],
       activeCompanionId: data.active_companion_id ?? null,
+      perfectCompanionIds: fallback.perfectCompanionIds,
+      perfectCompanionReasons: fallback.perfectCompanionReasons,
+      perfectCompanionComputedAtMs: fallback.perfectCompanionComputedAtMs,
+      perfectCompanionModelVersion: fallback.perfectCompanionModelVersion,
+      perfectCompanionComputedCycleIndex: fallback.perfectCompanionComputedCycleIndex,
     },
     fallback,
   );
