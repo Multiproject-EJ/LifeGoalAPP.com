@@ -58,6 +58,7 @@ import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
 import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
 import { PointsBadge } from './components/PointsBadge';
+import { OfflineSyncDevPanel } from './components/OfflineSyncDevPanel';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
 import { useTheme } from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
@@ -4645,6 +4646,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onBack={() => setShowZenGardenFullScreen(false)}
         />
       )}
+      <OfflineSyncDevPanel userId={activeSession?.user?.id ?? null} />
     </div>
   );
 }
