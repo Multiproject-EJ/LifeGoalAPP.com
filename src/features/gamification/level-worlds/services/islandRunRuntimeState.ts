@@ -1,7 +1,11 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { getIslandRunRuntimeStateBackend } from './islandRunRuntimeStateBackend';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
-import type { CreatureCollectionRuntimeEntry, PerIslandEggsLedger } from './islandRunGameStateStore';
+import type {
+  CreatureCollectionRuntimeEntry,
+  PerIslandEggsLedger,
+  PerfectCompanionReason,
+} from './islandRunGameStateStore';
 
 export interface IslandRunRuntimeState {
   runtimeVersion: number;
@@ -45,6 +49,11 @@ export interface IslandRunRuntimeState {
   }>;
   creatureCollection: CreatureCollectionRuntimeEntry[];
   activeCompanionId: string | null;
+  perfectCompanionIds: string[];
+  perfectCompanionReasons: Record<string, PerfectCompanionReason>;
+  perfectCompanionComputedAtMs: number | null;
+  perfectCompanionModelVersion: string | null;
+  perfectCompanionComputedCycleIndex: number | null;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -140,6 +149,11 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     }>;
     creatureCollection?: CreatureCollectionRuntimeEntry[];
     activeCompanionId?: string | null;
+    perfectCompanionIds?: string[];
+    perfectCompanionReasons?: Record<string, PerfectCompanionReason>;
+    perfectCompanionComputedAtMs?: number | null;
+    perfectCompanionModelVersion?: string | null;
+    perfectCompanionComputedCycleIndex?: number | null;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;
