@@ -21737,6 +21737,27 @@ html.platform-ipad .workspace-shell__menu-edge {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.journal__header-actions > * {
+  min-width: 0;
+}
+
+.journal__back-to-hub {
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.18));
+  background: var(--color-surface-primary, #ffffff);
+  color: var(--color-text-secondary, #334155);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.journal__field--soundscape {
+  min-width: 180px;
 }
 
 .journal-mode-selector {
@@ -21901,7 +21922,18 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .journal__header-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    row-gap: 0.6rem;
+  }
+
+  .journal__field--soundscape {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .journal__back-to-hub {
+    width: 100%;
+    text-align: center;
   }
 
   .journal-mode-selector {
@@ -22956,6 +22988,18 @@ html.platform-ipad .workspace-shell__menu-edge {
     width: 100%;
     max-height: 100vh;
     border-radius: 0;
+  }
+
+  .journal-editor {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .journal-editor__panel {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
