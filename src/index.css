@@ -901,7 +901,11 @@ body {
 
 .workspace-shell {
   position: relative;
-  width: min(1440px, calc(100vw - var(--workspace-shell-gutter)));
+  width: min(
+    460px,
+    calc((100dvh - (var(--workspace-shell-padding) * 2)) * (9 / 19.5)),
+    calc(100vw - 1rem)
+  );
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
@@ -909,10 +913,16 @@ body {
   align-items: start;
   min-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   margin: 0 auto;
-  padding-left: calc(var(--workspace-shell-offset) + clamp(0.5rem, 1vw, 1rem));
-  padding-right: clamp(1rem, 3vw, 1.75rem);
+  padding-left: 0;
+  padding-right: 0;
   box-sizing: border-box;
   transition: padding-left 0.3s ease;
+}
+
+.app--desktop-preview .workspace-shell {
+  width: min(1440px, calc(100vw - var(--workspace-shell-gutter)));
+  padding-left: calc(var(--workspace-shell-offset) + clamp(0.5rem, 1vw, 1rem));
+  padding-right: clamp(1rem, 3vw, 1.75rem);
 }
 
 html.platform-ipad .app--workspace {
@@ -956,7 +966,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding-right: 0;
 }
 
-.workspace-shell--menu-collapsed {
+.app--desktop-preview .workspace-shell--menu-collapsed {
   --workspace-shell-offset: 0px;
   padding-left: clamp(1rem, 3vw, 1.75rem);
 }
