@@ -17,7 +17,17 @@ import { AI_FEATURE_ICON } from '../constants/ai';
 import { splitGoldBalance } from '../constants/economy';
 import { PROGRESS_STATE_EFFECTS, type ProgressState } from '../features/habits/progressGrading';
 
-type JournalType = 'standard' | 'quick' | 'deep' | 'brain_dump' | 'life_wheel' | 'secret' | 'goal' | 'time_capsule' | 'gratitude';
+type JournalType =
+  | 'standard'
+  | 'quick'
+  | 'deep'
+  | 'brain_dump'
+  | 'life_wheel'
+  | 'secret'
+  | 'goal'
+  | 'time_capsule'
+  | 'problem'
+  | 'gratitude';
 
 type QuickActionsFABProps = {
   session: Session;
@@ -40,7 +50,10 @@ const JOURNAL_TYPES: { type: JournalType; icon: string; label: string }[] = [
   { type: 'deep', icon: '🔮', label: 'Deep' },
   { type: 'brain_dump', icon: '🧠', label: 'Brain Dump' },
   { type: 'life_wheel', icon: '🎯', label: 'Life Wheel' },
+  { type: 'secret', icon: '🔐', label: 'Secret' },
   { type: 'goal', icon: '🎪', label: 'Goal' },
+  { type: 'time_capsule', icon: '⏳', label: 'Time Capsule' },
+  { type: 'problem', icon: '🧩', label: 'Problem' },
   { type: 'gratitude', icon: '🌱', label: 'Guided Gratitude' },
 ];
 

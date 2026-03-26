@@ -23,7 +23,7 @@ import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } fr
 import { JournalTypeSelector } from './JournalTypeSelector';
 import type { Database, JournalEntryType, Json } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
-import { isEntryLocked } from './utils';
+import { getModeLabel, isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
@@ -930,6 +930,13 @@ ${thankYouDraft}`,
     onNavigateToHabits?.();
   };
 
+  const handleOpenCoachFromHub = () => {
+    if (!onOpenAiCoach) return;
+    onOpenAiCoach(
+      `Please review my journal patterns and help me identify 3 insights, 2 blind spots, and one practical action for tomorrow. If possible, compare recent entries with older ones.`,
+    );
+  };
+
   const listEmptyState = journalDisabled
     ? 'Connect Supabase or open the demo workspace to unlock your private journal.'
     : entries.length === 0 && !searchQuery && !selectedTag
@@ -942,6 +949,7 @@ ${thankYouDraft}`,
         <div>
           <p className="journal__eyebrow">Daily reflections</p>
           <h1>Journal</h1>
+          <p className="journal__mode-note">Current mode: {getModeLabel(journalType)}</p>
         </div>
         <div className="journal__header-actions">
           <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
@@ -972,6 +980,45 @@ ${thankYouDraft}`,
           ) : null}
         </div>
       </header>
+
+      <section className="journal-hub" aria-label="Journal hub">
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => handleOpenEditor('create', null)}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">✨</span>
+          <span className="journal-hub__title">New journal</span>
+          <span className="journal-hub__description">Start a fresh reflection in {getModeLabel(journalType)} mode.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            if (isCompactLayout) {
+              setShowMobileDetail(false);
+            } else if (filteredEntries.length > 0) {
+              handleSelectEntry(filteredEntries[0].id);
+            }
+          }}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">📚</span>
+          <span className="journal-hub__title">Read old journal</span>
+          <span className="journal-hub__description">Browse history, revisit patterns, and search older entries.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={handleOpenCoachFromHub}
+          disabled={journalDisabled || !onOpenAiCoach}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">🤖</span>
+          <span className="journal-hub__title">AI coach</span>
+          <span className="journal-hub__description">Ask for feedback on one entry or your overall journal trend.</span>
+        </button>
+      </section>
 
       {journalDisabled ? (
         <p className="journal__banner">
