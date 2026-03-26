@@ -22180,6 +22180,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
 }
 
 .journal-list__date-entries {
@@ -23348,6 +23349,9 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .journal-calendar__header {
@@ -23429,6 +23433,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: 100%;
   border-collapse: separate;
   border-spacing: 4px;
+  table-layout: fixed;
 }
 
 .journal-calendar__weekday {
@@ -23613,6 +23618,14 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
+  .journal-calendar {
+    padding: 0.7rem;
+  }
+
+  .journal-calendar__grid {
+    border-spacing: 2px;
+  }
+
   .journal-calendar__day {
     min-height: 38px;
     padding: 3px 1px;
