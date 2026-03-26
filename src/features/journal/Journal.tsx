@@ -1147,12 +1147,6 @@ ${thankYouDraft}`,
         ) : null}
       </header>
 
-      <div className="journal-view-tabs" role="tablist" aria-label="Journal sections">
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'hub' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('hub')}>Hub</button>
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'write' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('write')}>New journal</button>
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'read' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('read')}>Read old</button>
-      </div>
-
       {journalView === 'hub' ? (
       <section className="journal-hub" aria-label="Journal hub">
         <button
