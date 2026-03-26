@@ -1630,6 +1630,24 @@ a,
   --theme-color: #ffffff;
 }
 
+/* Bio Day journal contrast overrides:
+   avoid light-on-light CTA text when primary/accent palette is intentionally pale. */
+[data-theme='bio-day'] .journal__new,
+[data-theme='bio-day'] .journal-list__view-btn--active,
+[data-theme='bio-day'] .journal-view-tabs__tab--active,
+[data-theme='bio-day'] .journal-calendar__today-btn,
+[data-theme='bio-day'] .journal-calendar__day--selected,
+[data-theme='bio-day'] .journal-mode-selector__radio:checked + .journal-mode-selector__label {
+  background: linear-gradient(135deg, #d1d5db, #e5e7eb);
+  color: var(--color-text-primary, #0f172a);
+  border-color: rgba(148, 163, 184, 0.45);
+  box-shadow: 0 2px 8px rgba(148, 163, 184, 0.18);
+}
+
+[data-theme='bio-day'] .journal-calendar__day--selected .journal-calendar__day-number {
+  color: var(--color-text-primary, #0f172a);
+}
+
 /* ============================================
    BIO NIGHT THEME
    ============================================ */
