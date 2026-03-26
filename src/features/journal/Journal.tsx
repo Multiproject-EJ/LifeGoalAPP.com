@@ -35,6 +35,9 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import type { TimerLaunchContext } from '../timer/timerSession';
+import { loadPersonalityTestHistoryWithSupabase } from '../../services/personalityTest';
+import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
+import { recommendGuidedTemplates, recommendTraitBandTemplates, type GuidedJournalTemplate } from './guidedTemplates';
 
 /**
  * Journal mode type representing different journaling experiences.
@@ -216,6 +219,8 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   const [handledLaunchRequestId, setHandledLaunchRequestId] = useState<number | null>(null);
   const [queueStatus, setQueueStatus] = useState<JournalQueueStatus>(EMPTY_QUEUE_STATUS);
   const [journalView, setJournalView] = useState<JournalView>('hub');
+  const [archetypeHand, setArchetypeHand] = useState<ArchetypeHand | null>(null);
+  const [traitGuidance, setTraitGuidance] = useState<GuidedJournalTemplate[]>([]);
 
   // Watch for level-up events
   useEffect(() => {
@@ -255,6 +260,37 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
 
     setHandledLaunchRequestId(launchRequest.requestId);
   }, [launchRequest, handledLaunchRequestId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPersonalityGuidance() {
+      try {
+        const history = await loadPersonalityTestHistoryWithSupabase(session.user.id);
+        if (cancelled || history.length === 0) return;
+
+        const latest = history[0];
+        const parsedHand = latest.archetype_hand as ArchetypeHand | undefined;
+        setArchetypeHand(parsedHand ?? null);
+        setTraitGuidance(recommendTraitBandTemplates(latest.traits, latest.axes, journalType));
+      } catch {
+        if (cancelled) return;
+        setArchetypeHand(null);
+        setTraitGuidance([]);
+      }
+    }
+
+    void loadPersonalityGuidance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session.user.id, journalType]);
+
+  const guidedTemplates = useMemo(() => {
+    const handTemplates = recommendGuidedTemplates(archetypeHand, journalType);
+    return [...handTemplates, ...traitGuidance];
+  }, [archetypeHand, journalType, traitGuidance]);
 
   const loadEntries = useCallback(async () => {
     if (!session || journalDisabled) {
@@ -1296,6 +1332,7 @@ ${thankYouDraft}`,
             saving={editorSaving}
             error={editorError}
             journalType={journalType}
+            guidedTemplates={guidedTemplates}
             onClose={() => setEditorOpen(false)}
             onSave={handleSaveEntry}
           />
@@ -1311,6 +1348,7 @@ ${thankYouDraft}`,
           saving={editorSaving}
           error={editorError}
           journalType={journalType}
+          guidedTemplates={guidedTemplates}
           onClose={() => setEditorOpen(false)}
           onSave={handleSaveEntry}
         />

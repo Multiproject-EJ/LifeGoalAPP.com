@@ -4,6 +4,8 @@ import type { Database, JournalEntryType } from '../../lib/database.types';
 import type { HabitV2Row } from '../../services/habitsV2';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
 import type { JournalType } from './Journal';
+import type { GuidedJournalTemplate } from './guidedTemplates';
+import { renderTemplateAsMarkdown } from './guidedTemplates';
 import {
   moodScoreToMood,
   moodToMoodScore,
@@ -46,6 +48,7 @@ type JournalEntryEditorProps = {
   saving: boolean;
   error: string | null;
   journalType?: JournalType;
+  guidedTemplates?: GuidedJournalTemplate[];
   onClose: () => void;
   onSave: (draft: JournalEntryDraft) => Promise<void> | void;
 };
@@ -207,6 +210,7 @@ export function JournalEntryEditor({
   saving,
   error,
   journalType,
+  guidedTemplates = [],
   onClose,
   onSave,
 }: JournalEntryEditorProps) {
@@ -215,6 +219,7 @@ export function JournalEntryEditor({
   const [tagInput, setTagInput] = useState('');
   const [gratitudeItems, setGratitudeItems] = useState<GratitudeItem[]>([...EMPTY_GRATITUDE_ITEMS]);
   const [isGuidedGratitude, setIsGuidedGratitude] = useState(true);
+  const [selectedGuidedTemplateId, setSelectedGuidedTemplateId] = useState('');
 
   // Brain dump mode state
   const [timeLeft, setTimeLeft] = useState(BRAIN_DUMP_DURATION_SECONDS);
@@ -243,6 +248,7 @@ export function JournalEntryEditor({
     setTagInput('');
     const parsedItems = parseGratitudeContent(entry?.content ?? '');
     setGratitudeItems(parsedItems);
+    setSelectedGuidedTemplateId('');
     const hasStructuredContent = (entry?.content ?? '').toLowerCase().includes('grateful for:');
     setIsGuidedGratitude(hasStructuredContent || !(entry?.content ?? '').trim());
     // Reset brain dump state when opening/changing entries
@@ -448,6 +454,23 @@ export function JournalEntryEditor({
     setDraft((current) => ({
       ...current,
       content: current.content ? `${current.content}\n\n${promptWithNewline}` : promptWithNewline,
+    }));
+  };
+
+  const availableGuidedTemplates = useMemo(
+    () => guidedTemplates.filter((template) => template.defaultMode === draft.type),
+    [guidedTemplates, draft.type],
+  );
+
+  const handleApplyGuidedTemplate = () => {
+    if (!selectedGuidedTemplateId) return;
+    const selected = availableGuidedTemplates.find((template) => template.id === selectedGuidedTemplateId);
+    if (!selected) return;
+
+    setDraft((current) => ({
+      ...current,
+      title: current.title.trim() ? current.title : selected.title,
+      content: renderTemplateAsMarkdown(selected),
     }));
   };
 
@@ -991,6 +1014,33 @@ export function JournalEntryEditor({
           {renderBrainDumpSection()}
 
           {renderDeepModeSection()}
+
+          {!isSecretMode && availableGuidedTemplates.length > 0 && (
+            <div className="journal-editor__field">
+              <span>Guided template</span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <select
+                  value={selectedGuidedTemplateId}
+                  onChange={(event) => setSelectedGuidedTemplateId(event.target.value)}
+                >
+                  <option value="">Choose a guided template…</option>
+                  {availableGuidedTemplates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.title}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleApplyGuidedTemplate}
+                  disabled={!selectedGuidedTemplateId}
+                  className="journal-editor__prompt-button"
+                >
+                  Insert template
+                </button>
+              </div>
+            </div>
+          )}
 
           {!isProblemMode && !isGratitudeMode && (
           <label className="journal-editor__field">
