@@ -354,7 +354,7 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'player-avatar', // Moved to quick actions section
 ] as const;
 
-const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer']);
+const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer', 'journal']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 const ONBOARDING_NUDGE_KEY = 'gol_onboarding_nudge_at';
@@ -926,6 +926,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     (MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
       (mobileActiveNavId === 'actions' && actionsTabView === 'tasks'));
   const shouldAllowFooterCollapse = isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
+  const shouldHideFooterInJournal =
+    isMobileExperience && isMobileMenuImageActive && activeWorkspaceNav === 'journal';
 
   const scheduleMobileFooterCollapse = useCallback(() => {
     if (!shouldAutoCollapseOnIdle) {
@@ -993,6 +995,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileFooterCollapsed(true);
     scheduleMobileFooterCollapse();
   }, [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle]);
+
+  useEffect(() => {
+    if (!shouldHideFooterInJournal) {
+      return;
+    }
+    setIsMobileFooterCollapsed(true);
+    setIsMobileFooterSnapActive(false);
+  }, [shouldHideFooterInJournal]);
 
   useEffect(() => {
     if (!isMobileExperience || !isMobileMenuImageActive || typeof window === 'undefined') {
@@ -4209,10 +4219,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
-          isCollapsed={isMobileFooterCollapsed && !showGameBoardOverlay}
+          isCollapsed={(isMobileFooterCollapsed || shouldHideFooterInJournal) && !showGameBoardOverlay}
           isSnapActive={isMobileFooterSnapActive}
-          onExpand={() => handleMobileFooterExpand(false)}
-          onSnapExpand={() => handleMobileFooterExpand(true)}
+          onExpand={() => {
+            if (shouldHideFooterInJournal) return;
+            handleMobileFooterExpand(false);
+          }}
+          onSnapExpand={() => {
+            if (shouldHideFooterInJournal) return;
+            handleMobileFooterExpand(true);
+          }}
           onCollapse={handleMobileFooterCollapse}
           pointsBalance={goldBalance}
         />
@@ -4485,10 +4501,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
-          isCollapsed={isMobileFooterCollapsed && !showGameBoardOverlay}
+          isCollapsed={(isMobileFooterCollapsed || shouldHideFooterInJournal) && !showGameBoardOverlay}
           isSnapActive={isMobileFooterSnapActive}
-          onExpand={() => handleMobileFooterExpand(false)}
-          onSnapExpand={() => handleMobileFooterExpand(true)}
+          onExpand={() => {
+            if (shouldHideFooterInJournal) return;
+            handleMobileFooterExpand(false);
+          }}
+          onSnapExpand={() => {
+            if (shouldHideFooterInJournal) return;
+            handleMobileFooterExpand(true);
+          }}
           onCollapse={handleMobileFooterCollapse}
           pointsBalance={goldBalance}
         />
