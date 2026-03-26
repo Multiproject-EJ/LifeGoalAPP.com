@@ -21702,6 +21702,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: clamp(1.8rem, 4vw, 2.4rem);
 }
 
+.journal__mode-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted, #64748b);
+}
+
 .journal__new {
   border: none;
   background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
@@ -21735,9 +21741,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 .journal-mode-selector {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
 }
 
 .journal-mode-selector__option {
@@ -21755,14 +21764,21 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-mode-selector__label {
-  display: inline-block;
-  padding: 0.5rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  padding: 0.55rem 0.95rem;
   font-size: 0.85rem;
   font-weight: 500;
-  border-radius: 999px;
-  background: var(--color-surface-raised, #f1f5f9);
-  color: var(--color-text-secondary, #475569);
-  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  border-radius: 14px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--color-surface-raised, #f1f5f9) 88%, transparent),
+    color-mix(in srgb, var(--color-surface-primary, #ffffff) 92%, transparent)
+  );
+  color: var(--color-text-secondary, #334155);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle, #cbd5e1) 85%, transparent);
   transition: all 0.2s ease;
 }
 
@@ -21787,19 +21803,48 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 
-.journal-mode-selector__mobile {
-  width: 100%;
+.journal-hub {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
-.journal-mode-selector__mobile-select {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.12));
-  background: var(--color-surface-primary, #fff);
+.journal-hub__card {
+  border: 1px solid var(--color-border-light, rgba(15, 23, 42, 0.1));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-surface-glass-light, rgba(248, 250, 252, 0.85)) 92%, transparent);
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.journal-hub__card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(14, 165, 233, 0.45);
+  box-shadow: 0 10px 22px rgba(14, 165, 233, 0.12);
+}
+
+.journal-hub__card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.journal-hub__icon {
+  font-size: 1.15rem;
+}
+
+.journal-hub__title {
+  font-weight: 700;
   color: var(--color-text-primary, #0f172a);
-  padding: 0.65rem 0.8rem;
-  font-size: 0.92rem;
-  font-weight: 600;
+}
+
+.journal-hub__description {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #64748b);
 }
 
 @media (max-width: 960px) {
@@ -21832,6 +21877,29 @@ html.platform-ipad .workspace-shell__menu-edge {
   .journal__new {
     width: 100%;
     justify-content: center;
+  }
+
+  .journal {
+    padding: 1rem;
+    border-radius: 24px;
+    gap: 1rem;
+  }
+
+  .journal-hub {
+    grid-template-columns: 1fr;
+  }
+
+  .journal-list,
+  .journal-detail {
+    padding: 0.8rem;
+  }
+
+  .journal-list__body {
+    min-height: 220px;
+  }
+
+  .journal-list__date-items {
+    max-height: 170px;
   }
 
   .journal-list__filters {
@@ -22045,7 +22113,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.12));
   padding: 0.65rem 0.9rem;
   font-size: 0.95rem;
-  background: #fff;
+  background: var(--color-surface-primary, #fff);
+  color: var(--color-text-primary, #0f172a);
 }
 
 .journal-list__body {
@@ -22095,6 +22164,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .journal-list__item strong {
   font-size: 1rem;
+  color: var(--color-text-primary, #0f172a);
 }
 
 .journal-list__item p {
@@ -22522,6 +22592,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .journal-secret__timer-option {
@@ -22591,6 +22662,28 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .journal-secret__textarea--fading {
   animation: fadeOutText var(--secret-fade-duration) ease-out forwards;
+}
+
+.journal-secret__textarea--burning {
+  animation: burnOutText var(--secret-fade-duration) ease-out forwards;
+}
+
+@keyframes burnOutText {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: saturate(1) brightness(1);
+  }
+  60% {
+    opacity: 0.75;
+    transform: scale(1.01);
+    filter: saturate(1.35) brightness(1.35) hue-rotate(-26deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.985);
+    filter: saturate(0.3) brightness(0.45);
+  }
 }
 
 /* Deep Mode Styles */
@@ -25413,6 +25506,39 @@ html.platform-ipad .workspace-shell__menu-edge {
 [data-theme='dark-glass'] .journal-detail__problem-notice {
   background: rgba(14, 165, 233, 0.2);
   border-left-color: rgba(56, 189, 248, 0.75);
+}
+
+[data-theme='dark-glass'] .journal,
+[data-theme='dark-glass'] .journal-list,
+[data-theme='dark-glass'] .journal-detail,
+[data-theme='dark-glass'] .journal-calendar,
+[data-theme='dark-glass'] .journal-list__view-toggle,
+[data-theme='dark-glass'] .journal-list__item,
+[data-theme='dark-glass'] .journal-list__date-empty,
+[data-theme='dark-glass'] .journal-list__filter input,
+[data-theme='dark-glass'] .journal-list__filter select {
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .journal-list__item strong,
+[data-theme='dark-glass'] .journal__mode-note,
+[data-theme='dark-glass'] .journal-hub__title {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark-glass'] .journal-list__item p,
+[data-theme='dark-glass'] .journal-list__item-meta,
+[data-theme='dark-glass'] .journal-hub__description {
+  color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .journal-hub__card,
+[data-theme='dark-glass'] .journal-mode-selector__label {
+  background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
 }
 
 /* Habits tab hardening for dark theme (analysis pass 3) */
