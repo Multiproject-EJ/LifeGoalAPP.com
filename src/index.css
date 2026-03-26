@@ -21983,12 +21983,8 @@ html.platform-ipad .workspace-shell__menu-edge {
     justify-content: center;
   }
 
-  .journal-view-tabs {
-    grid-template-columns: 1fr;
-  }
-
   .journal-mode-selector {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .journal {
@@ -23054,13 +23050,16 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (max-width: 768px) {
   .journal {
-    padding: 1rem;
-    border-radius: 20px;
-    overflow-x: clip;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    overflow-x: visible;
   }
 
   .journal-mode-selector {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .journal-mode-selector__option {
