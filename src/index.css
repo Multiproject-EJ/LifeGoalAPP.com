@@ -22172,8 +22172,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-list__view-btn:disabled {
-  opacity: 0.5;
+  opacity: 1;
   cursor: not-allowed;
+  color: var(--color-text-tertiary, #64748b);
+  background: var(--color-surface-raised, #e2e8f0);
 }
 
 .journal-list__calendar-view {
@@ -23384,8 +23386,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-calendar__nav-btn:disabled {
-  opacity: 0.5;
+  opacity: 1;
   cursor: not-allowed;
+  color: var(--color-text-tertiary, #64748b);
+  background: var(--color-surface-raised, #e2e8f0);
+  border-color: var(--color-border-subtle, #cbd5e1);
 }
 
 .journal-calendar__title {
@@ -23425,8 +23430,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-calendar__today-btn:disabled {
-  opacity: 0.5;
+  opacity: 1;
   cursor: not-allowed;
+  color: var(--color-text-secondary, #475569);
+  background: var(--color-surface-raised, #e2e8f0);
+  border: 1px solid var(--color-border-subtle, #cbd5e1);
 }
 
 .journal-calendar__grid {
@@ -23480,8 +23488,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-calendar__day:disabled {
-  opacity: 0.5;
+  opacity: 1;
   cursor: not-allowed;
+  background: var(--color-surface-raised, #e2e8f0);
+  border-color: var(--color-border-subtle, #cbd5e1);
 }
 
 .journal-calendar__day--today {
