@@ -54,6 +54,8 @@ const MOOD_OPTIONS: JournalMoodOption[] = [
   { value: 'excited', label: 'Excited', icon: '🤩' },
 ];
 
+const SOUNDSCAPE_STORAGE_KEY = 'lifegoal.journal.soundscape';
+
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habits
 type HabitRow = HabitV2Row;
@@ -78,6 +80,22 @@ type JournalProps = {
 type StatusState = { kind: 'success' | 'warning' | 'error'; message: string } | null;
 const EMPTY_QUEUE_STATUS: JournalQueueStatus = { pending: 0, failed: 0 };
 type JournalView = 'hub' | 'write' | 'read' | 'coach';
+type JournalSoundscape = 'off' | 'rain' | 'lofi' | 'nature';
+
+type WeeklyJournalRecap = {
+  weekStart: string;
+  totalEntries: number;
+  daysPracticed: number;
+  topModes: Array<{ mode: JournalEntryType; count: number }>;
+  averageMood: number | null;
+};
+
+type CoachQuest = {
+  id: string;
+  label: string;
+  progress: number;
+  target: number;
+};
 
 type GratitudeAttachmentMeta = {
   coachScore: number;
@@ -170,6 +188,15 @@ function getIsoDateDaysAgo(daysAgo: number): string {
   return `${year}-${month}-${day}`;
 }
 
+function startOfWeekIso(date = new Date()): string {
+  const clone = new Date(date);
+  const day = clone.getDay();
+  const diff = (day + 6) % 7; // Monday start
+  clone.setDate(clone.getDate() - diff);
+  clone.setHours(0, 0, 0, 0);
+  return clone.toISOString().slice(0, 10);
+}
+
 function sortEntries(entries: JournalEntry[]): JournalEntry[] {
   return [...entries].sort((a, b) => {
     const dateCompare = b.entry_date.localeCompare(a.entry_date);
@@ -219,6 +246,8 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   const [handledLaunchRequestId, setHandledLaunchRequestId] = useState<number | null>(null);
   const [queueStatus, setQueueStatus] = useState<JournalQueueStatus>(EMPTY_QUEUE_STATUS);
   const [journalView, setJournalView] = useState<JournalView>('hub');
+  const [soundscape, setSoundscape] = useState<JournalSoundscape>('off');
+  const [seedDraft, setSeedDraft] = useState<Partial<JournalEntryDraft> | null>(null);
   const [archetypeHand, setArchetypeHand] = useState<ArchetypeHand | null>(null);
   const [traitGuidance, setTraitGuidance] = useState<GuidedJournalTemplate[]>([]);
 
@@ -246,6 +275,19 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   }, [status]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = window.localStorage.getItem(SOUNDSCAPE_STORAGE_KEY) as JournalSoundscape | null;
+    if (stored === 'off' || stored === 'rain' || stored === 'lofi' || stored === 'nature') {
+      setSoundscape(stored);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(SOUNDSCAPE_STORAGE_KEY, soundscape);
+  }, [soundscape]);
+
+  useEffect(() => {
     if (!launchRequest) return;
     if (launchRequest.requestId === handledLaunchRequestId) return;
 
@@ -255,6 +297,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
       setEditorMode('create');
       setEditingEntry(null);
       setEditorError(null);
+      setSeedDraft(null);
       setEditorOpen(true);
     }
 
@@ -566,6 +609,51 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     return { totalFlagged, topWarningThemes };
   }, [entries, journalType]);
 
+  const weeklyRecap = useMemo<WeeklyJournalRecap>(() => {
+    const weekStart = startOfWeekIso();
+    const weekEntries = entries.filter((entry) => entry.entry_date >= weekStart);
+    const totalEntries = weekEntries.length;
+    const daysPracticed = new Set(weekEntries.map((entry) => entry.entry_date)).size;
+    const modeCountMap = new Map<JournalEntryType, number>();
+    const moodScores = weekEntries
+      .map((entry) => entry.mood_score)
+      .filter((value): value is number => typeof value === 'number');
+
+    weekEntries.forEach((entry) => {
+      modeCountMap.set(entry.type, (modeCountMap.get(entry.type) ?? 0) + 1);
+    });
+
+    const topModes = [...modeCountMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([mode, count]) => ({ mode, count }));
+
+    const averageMood = moodScores.length
+      ? Number((moodScores.reduce((sum, value) => sum + value, 0) / moodScores.length).toFixed(1))
+      : null;
+
+    return {
+      weekStart,
+      totalEntries,
+      daysPracticed,
+      topModes,
+      averageMood,
+    };
+  }, [entries]);
+
+  const coachQuests = useMemo<CoachQuest[]>(() => {
+    const weekStart = startOfWeekIso();
+    const weekEntries = entries.filter((entry) => entry.entry_date >= weekStart);
+    const gratitudeCount = weekEntries.filter((entry) => entry.type === 'gratitude').length;
+    const deepWorkCount = weekEntries.filter((entry) => entry.type === 'deep' || entry.type === 'problem').length;
+
+    return [
+      { id: 'quest_reflect_twice', label: 'Write 2 journal entries this week', progress: weekEntries.length, target: 2 },
+      { id: 'quest_gratitude_pair', label: 'Log 2 gratitude entries this week', progress: gratitudeCount, target: 2 },
+      { id: 'quest_deep_dive', label: 'Complete 1 deep/problem reflection', progress: deepWorkCount, target: 1 },
+    ];
+  }, [entries]);
+
   const gratitudeReadiness = useMemo(() => {
     if (journalType !== 'gratitude') return null;
 
@@ -624,6 +712,28 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     setEditorMode(mode);
     setEditingEntry(entryToEdit);
     setEditorError(null);
+    if (mode === 'edit') {
+      setSeedDraft(null);
+    }
+    setEditorOpen(true);
+  };
+
+  const handleCloseEditor = () => {
+    setEditorOpen(false);
+    setSeedDraft(null);
+  };
+
+  const handleQuickStartPreset = (type: JournalType, title: string, content: string) => {
+    setJournalType(type);
+    setJournalView('write');
+    setEditorMode('create');
+    setEditingEntry(null);
+    setEditorError(null);
+    setSeedDraft({
+      type,
+      title,
+      content,
+    });
     setEditorOpen(true);
   };
 
@@ -911,6 +1021,7 @@ ${thankYouDraft}`,
           );
         }
         setEditorOpen(false);
+        setSeedDraft(null);
         if (isCompactLayout) {
           setShowMobileDetail(true);
         }
@@ -993,6 +1104,15 @@ ${thankYouDraft}`,
         {journalView !== 'hub' ? (
           <div className="journal__header-actions">
             <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
+            <label className="journal__field" style={{ minWidth: 180 }}>
+              <span style={{ fontSize: '0.75rem' }}>Soundscape</span>
+              <select value={soundscape} onChange={(event) => setSoundscape(event.target.value as JournalSoundscape)}>
+                <option value="off">Off</option>
+                <option value="rain">🌧️ Rain</option>
+                <option value="lofi">🎧 Lo-fi</option>
+                <option value="nature">🌿 Nature</option>
+              </select>
+            </label>
             {onNavigateToTimer ? (
               <button
                 type="button"
@@ -1000,12 +1120,12 @@ ${thankYouDraft}`,
                 onClick={() =>
                   onNavigateToTimer({
                     sourceType: 'journal',
-                    sourceName: 'Journal reflection',
+                    sourceName: soundscape === 'off' ? 'Journal reflection' : `Journal reflection · ${soundscape}`,
                   })
                 }
                 disabled={journalDisabled}
               >
-                ⏱️ Focus timer
+                ⏱️ Focus timer {soundscape !== 'off' ? `(${soundscape})` : ''}
               </button>
             ) : null}
             {!isGoalReflectionMode ? (
@@ -1021,6 +1141,111 @@ ${thankYouDraft}`,
           </div>
         ) : null}
       </header>
+
+      <div className="journal-view-tabs" role="tablist" aria-label="Journal sections">
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'hub' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('hub')}>Hub</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'write' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('write')}>New journal</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'read' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('read')}>Read old</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'coach' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('coach')}>AI coach</button>
+      </div>
+
+      {journalView === 'hub' ? (
+      <section className="journal-hub" aria-label="Journal hub">
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('write');
+            handleOpenEditor('create', null);
+          }}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">✨</span>
+          <span className="journal-hub__title">New journal</span>
+          <span className="journal-hub__description">Start a fresh reflection in {getModeLabel(journalType)} mode.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('read');
+            if (isCompactLayout) {
+              setShowMobileDetail(false);
+            } else if (filteredEntries.length > 0) {
+              handleSelectEntry(filteredEntries[0].id);
+            }
+          }}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">📚</span>
+          <span className="journal-hub__title">Read old journal</span>
+          <span className="journal-hub__description">Browse history, revisit patterns, and search older entries.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('coach');
+            handleOpenCoachFromHub();
+          }}
+          disabled={journalDisabled || !onOpenAiCoach}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">🤖</span>
+          <span className="journal-hub__title">AI coach</span>
+          <span className="journal-hub__description">Ask for feedback on one entry or your overall journal trend.</span>
+        </button>
+      </section>
+      ) : null}
+
+      {journalView === 'hub' ? (
+        <section className="journal-write-stage" aria-label="Two minute starts">
+          <p><strong>2-minute starts</strong> — low-friction journaling sprints.</p>
+          <div className="journal-coach-stage__actions">
+            <button
+              type="button"
+              className="journal__new"
+              onClick={() =>
+                handleQuickStartPreset(
+                  'problem',
+                  '2-minute clear mind',
+                  '1) What is bothering me most right now?\n2) What is true vs story?\n3) One small action in the next 10 minutes.',
+                )
+              }
+              disabled={journalDisabled}
+            >
+              🧠 Clear mind
+            </button>
+            <button
+              type="button"
+              className="journal__new"
+              onClick={() =>
+                handleQuickStartPreset(
+                  'gratitude',
+                  '2-minute gratitude',
+                  '1) One person I appreciate today.\n2) One small moment that felt good.\n3) Why this mattered.',
+                )
+              }
+              disabled={journalDisabled}
+            >
+              🙏 Gratitude
+            </button>
+            <button
+              type="button"
+              className="journal__new"
+              onClick={() =>
+                handleQuickStartPreset(
+                  'goal',
+                  '2-minute tomorrow plan',
+                  '1) Most important task tomorrow.\n2) Biggest likely blocker.\n3) First 10-minute starter action.',
+                )
+              }
+              disabled={journalDisabled}
+            >
+              🚀 Plan tomorrow
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <div className="journal-view-tabs" role="tablist" aria-label="Journal sections">
         <button type="button" className={`journal-view-tabs__tab ${journalView === 'hub' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('hub')}>Hub</button>
@@ -1120,6 +1345,45 @@ ${thankYouDraft}`,
             >
               Review all journals
             </button>
+          </div>
+          <div className="journal-gratitude-weekly__readiness journal-gratitude-weekly__readiness--neutral">
+            <p className="journal-gratitude-weekly__label">Coach quests this week</p>
+            <div className="journal-gratitude-weekly__themes">
+              {coachQuests.map((quest) => {
+                const completed = quest.progress >= quest.target;
+                return (
+                  <span
+                    key={quest.id}
+                    className={`journal-gratitude-weekly__theme ${completed ? '' : 'journal-gratitude-weekly__theme--warning'}`}
+                  >
+                    {completed ? '🏆' : '🎯'} {quest.label} ({Math.min(quest.progress, quest.target)}/{quest.target})
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {journalView === 'read' ? (
+        <section className="journal-gratitude-weekly" aria-live="polite">
+          <div className="journal-gratitude-weekly__head">
+            <p className="journal-gratitude-weekly__eyebrow">Weekly journal recap</p>
+            <h3>{weeklyRecap.totalEntries} entries since {weeklyRecap.weekStart}</h3>
+          </div>
+          <div className="journal-gratitude-weekly__stats">
+            <span className="journal-gratitude-weekly__stat">Days practiced: {weeklyRecap.daysPracticed}</span>
+            <span className="journal-gratitude-weekly__stat">
+              Avg mood score: {weeklyRecap.averageMood === null ? 'N/A' : weeklyRecap.averageMood}
+            </span>
+          </div>
+          <p className="journal-gratitude-weekly__label">Most used modes</p>
+          <div className="journal-gratitude-weekly__themes">
+            {weeklyRecap.topModes.length > 0 ? weeklyRecap.topModes.map((mode) => (
+              <span key={mode.mode} className="journal-gratitude-weekly__theme">
+                {getModeLabel(mode.mode)} ({mode.count})
+              </span>
+            )) : <span className="journal-gratitude-weekly__theme">Write your first entry this week ✍️</span>}
           </div>
         </section>
       ) : null}
@@ -1333,7 +1597,8 @@ ${thankYouDraft}`,
             error={editorError}
             journalType={journalType}
             guidedTemplates={guidedTemplates}
-            onClose={() => setEditorOpen(false)}
+            seedDraft={seedDraft}
+            onClose={handleCloseEditor}
             onSave={handleSaveEntry}
           />
         </>
@@ -1349,7 +1614,8 @@ ${thankYouDraft}`,
           error={editorError}
           journalType={journalType}
           guidedTemplates={guidedTemplates}
-          onClose={() => setEditorOpen(false)}
+          seedDraft={seedDraft}
+          onClose={handleCloseEditor}
           onSave={handleSaveEntry}
         />
       )}

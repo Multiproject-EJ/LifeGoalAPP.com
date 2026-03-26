@@ -49,6 +49,7 @@ type JournalEntryEditorProps = {
   error: string | null;
   journalType?: JournalType;
   guidedTemplates?: GuidedJournalTemplate[];
+  seedDraft?: Partial<JournalEntryDraft> | null;
   onClose: () => void;
   onSave: (draft: JournalEntryDraft) => Promise<void> | void;
 };
@@ -138,8 +139,12 @@ function formatSecretTimeLeft(seconds: number): string {
   return `${seconds}s`;
 }
 
-function createDraft(entry: JournalEntry | null, journalType?: JournalType): JournalEntryDraft {
-  return {
+function createDraft(
+  entry: JournalEntry | null,
+  journalType?: JournalType,
+  seedDraft?: Partial<JournalEntryDraft> | null,
+): JournalEntryDraft {
+  const baseDraft: JournalEntryDraft = {
     id: entry?.id,
     entryDate: entry?.entry_date ?? todayIso(),
     title: entry?.title ?? '',
@@ -157,6 +162,19 @@ function createDraft(entry: JournalEntry | null, journalType?: JournalType): Jou
     trainingSolutions: entry?.training_solutions ?? null,
     concreteSteps: entry?.concrete_steps ?? null,
   };
+
+  if (!entry && seedDraft) {
+    return {
+      ...baseDraft,
+      ...seedDraft,
+      entryDate: seedDraft.entryDate ?? baseDraft.entryDate,
+      tags: seedDraft.tags ?? baseDraft.tags,
+      linkedGoalIds: seedDraft.linkedGoalIds ?? baseDraft.linkedGoalIds,
+      linkedHabitIds: seedDraft.linkedHabitIds ?? baseDraft.linkedHabitIds,
+    };
+  }
+
+  return baseDraft;
 }
 
 function parseGratitudeContent(content: string): GratitudeItem[] {
@@ -211,11 +229,12 @@ export function JournalEntryEditor({
   error,
   journalType,
   guidedTemplates = [],
+  seedDraft = null,
   onClose,
   onSave,
 }: JournalEntryEditorProps) {
   const titleId = useId();
-  const [draft, setDraft] = useState<JournalEntryDraft>(createDraft(entry, journalType));
+  const [draft, setDraft] = useState<JournalEntryDraft>(createDraft(entry, journalType, seedDraft));
   const [tagInput, setTagInput] = useState('');
   const [gratitudeItems, setGratitudeItems] = useState<GratitudeItem[]>([...EMPTY_GRATITUDE_ITEMS]);
   const [isGuidedGratitude, setIsGuidedGratitude] = useState(true);
@@ -244,7 +263,7 @@ export function JournalEntryEditor({
 
   useEffect(() => {
     if (!open) return;
-    setDraft(createDraft(entry, journalType));
+    setDraft(createDraft(entry, journalType, seedDraft));
     setTagInput('');
     const parsedItems = parseGratitudeContent(entry?.content ?? '');
     setGratitudeItems(parsedItems);
@@ -269,7 +288,7 @@ export function JournalEntryEditor({
       setProblemTimeLeft(PROBLEM_BRAIN_DUMP_DURATION_SECONDS);
       setProblemHasFinished(false);
     }
-  }, [entry, open, journalType]);
+  }, [entry, open, journalType, seedDraft]);
 
   // Brain dump countdown timer
   useEffect(() => {
@@ -471,6 +490,18 @@ export function JournalEntryEditor({
       ...current,
       title: current.title.trim() ? current.title : selected.title,
       content: renderTemplateAsMarkdown(selected),
+    }));
+  };
+
+  const handleSurpriseTemplate = () => {
+    if (availableGuidedTemplates.length === 0) return;
+    const randomTemplate =
+      availableGuidedTemplates[Math.floor(Math.random() * availableGuidedTemplates.length)];
+    setSelectedGuidedTemplateId(randomTemplate.id);
+    setDraft((current) => ({
+      ...current,
+      title: current.title.trim() ? current.title : randomTemplate.title,
+      content: renderTemplateAsMarkdown(randomTemplate),
     }));
   };
 
@@ -1037,6 +1068,13 @@ export function JournalEntryEditor({
                   className="journal-editor__prompt-button"
                 >
                   Insert template
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSurpriseTemplate}
+                  className="journal-editor__prompt-button"
+                >
+                  🎲 Surprise me
                 </button>
               </div>
             </div>
