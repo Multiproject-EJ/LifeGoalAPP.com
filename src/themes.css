@@ -1923,40 +1923,147 @@ a,
   }
 }
 
-[data-theme='dark-glass'] .journal,
-[data-theme='dark-glass'] .journal-list,
-[data-theme='dark-glass'] .journal-detail,
-[data-theme='dark-glass'] .journal-editor__panel {
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-list,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-detail,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-editor__panel {
   background: var(--color-surface-primary);
   border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.25));
 }
 
-[data-theme='dark-glass'] .journal__banner {
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal__banner {
   background: rgba(14, 165, 233, 0.18);
   border-color: rgba(14, 165, 233, 0.45);
 }
 
-[data-theme='dark-glass'] .journal-list__filter input,
-[data-theme='dark-glass'] .journal-list__filter select,
-[data-theme='dark-glass'] .journal-editor__field input,
-[data-theme='dark-glass'] .journal-editor__field textarea,
-[data-theme='dark-glass'] .journal-editor__field select {
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-hub__card {
+  border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.28));
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-hub__description,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal__eyebrow,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal__mode-note {
+  color: var(--color-text-secondary, #cbd5e1);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal__new:disabled {
+  background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
+  color: var(--color-text-secondary, #cbd5e1);
+  border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.3));
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-list__filter input,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-list__filter select,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-editor__field input,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-editor__field textarea,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-editor__field select {
   background: rgba(15, 23, 42, 0.35);
   color: var(--color-text-primary);
   border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.3));
 }
 
-[data-theme='dark-glass'] .journal-detail__chips button {
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-detail__chips button {
   background: rgba(14, 165, 233, 0.25);
   border-color: rgba(14, 165, 233, 0.45);
 }
 
-[data-theme='dark-glass'] .journal-detail__tags li {
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-detail__tags li {
   background: rgba(148, 163, 184, 0.2);
   border-color: rgba(148, 163, 184, 0.35);
 }
 
-[data-theme='dark-glass'] .journal-editor__cancel {
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-editor__cancel {
   background: rgba(148, 163, 184, 0.18);
   color: var(--color-text-primary);
 }
