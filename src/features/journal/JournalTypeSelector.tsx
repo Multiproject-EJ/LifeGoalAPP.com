@@ -1,5 +1,4 @@
 import { useId } from 'react';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
 import type { JournalType } from './Journal';
 
 type JournalTypeSelectorProps = {
@@ -10,44 +9,24 @@ type JournalTypeSelectorProps = {
 type JournalModeOption = {
   value: JournalType;
   label: string;
+  icon: string;
 };
 
 const JOURNAL_MODE_OPTIONS: JournalModeOption[] = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'quick', label: 'Quick' },
-  { value: 'deep', label: 'Deep' },
-  { value: 'brain_dump', label: 'Brain Dump' },
-  { value: 'life_wheel', label: 'Life Wheel' },
-  { value: 'secret', label: 'Secret' },
-  { value: 'goal', label: 'Goal' },
-  { value: 'time_capsule', label: 'Time Capsule' },
-  { value: 'problem', label: 'Problem' },
-  { value: 'gratitude', label: 'Guided Gratitude' },
+  { value: 'standard', label: 'Standard', icon: '📝' },
+  { value: 'quick', label: 'Quick', icon: '⚡' },
+  { value: 'deep', label: 'Deep', icon: '🔮' },
+  { value: 'brain_dump', label: 'Brain Dump', icon: '🧠' },
+  { value: 'life_wheel', label: 'Life Wheel', icon: '🎯' },
+  { value: 'secret', label: 'Secret', icon: '🔐' },
+  { value: 'goal', label: 'Goal', icon: '🎪' },
+  { value: 'time_capsule', label: 'Time Capsule', icon: '⏳' },
+  { value: 'problem', label: 'Problem', icon: '🧩' },
+  { value: 'gratitude', label: 'Guided Gratitude', icon: '🌱' },
 ];
 
 export function JournalTypeSelector({ journalType, onChange }: JournalTypeSelectorProps) {
   const groupId = useId();
-  const isMobile = useMediaQuery('(max-width: 640px)');
-
-  if (isMobile) {
-    return (
-      <label className="journal-mode-selector__mobile">
-        <span className="sr-only">Journal mode</span>
-        <select
-          className="journal-mode-selector__mobile-select"
-          value={journalType}
-          onChange={(event) => onChange(event.target.value as JournalType)}
-          aria-label="Journal mode"
-        >
-          {JOURNAL_MODE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-  }
   
   return (
     <div className="journal-mode-selector" role="radiogroup" aria-label="Journal mode">
@@ -65,7 +44,9 @@ export function JournalTypeSelector({ journalType, onChange }: JournalTypeSelect
               className="journal-mode-selector__radio"
               aria-labelledby={inputId}
             />
-            <span id={inputId} className="journal-mode-selector__label">{option.label}</span>
+            <span id={inputId} className="journal-mode-selector__label">
+              <span aria-hidden="true">{option.icon}</span> {option.label}
+            </span>
           </label>
         );
       })}

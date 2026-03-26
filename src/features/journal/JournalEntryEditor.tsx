@@ -58,7 +58,8 @@ const BRAIN_DUMP_ERROR_MESSAGE = 'Sorry, unable to generate reflection at this t
 // Secret mode constants
 const SECRET_DURATION_25_SECONDS = 25;
 const SECRET_DURATION_10_MINUTES = 600; // 10 minutes in seconds
-const DEFAULT_SECRET_DURATION = SECRET_DURATION_25_SECONDS;
+type SecretDestroyMode = 'off' | '25s' | '10m';
+const DEFAULT_SECRET_DESTROY_MODE: SecretDestroyMode = '25s';
 
 // Problem mode constants - for brain dump section with self-destruct
 const PROBLEM_BRAIN_DUMP_DURATION_SECONDS = 60;
@@ -222,9 +223,10 @@ export function JournalEntryEditor({
 
   // Secret mode state
   const [secretText, setSecretText] = useState('');
-  const [secretTimerDuration, setSecretTimerDuration] = useState(DEFAULT_SECRET_DURATION);
-  const [secretTimeLeft, setSecretTimeLeft] = useState(DEFAULT_SECRET_DURATION);
+  const [secretDestroyMode, setSecretDestroyMode] = useState<SecretDestroyMode>(DEFAULT_SECRET_DESTROY_MODE);
+  const [secretTimeLeft, setSecretTimeLeft] = useState(SECRET_DURATION_25_SECONDS);
   const [isFading, setIsFading] = useState(false);
+  const [isBurning, setIsBurning] = useState(false);
   const secretDestroyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Deep mode focus state
@@ -250,9 +252,10 @@ export function JournalEntryEditor({
     // Reset secret mode state when opening/changing entries in secret mode
     if (journalType === 'secret') {
       setSecretText('');
-      setSecretTimerDuration(DEFAULT_SECRET_DURATION);
-      setSecretTimeLeft(DEFAULT_SECRET_DURATION);
+      setSecretDestroyMode(DEFAULT_SECRET_DESTROY_MODE);
+      setSecretTimeLeft(SECRET_DURATION_25_SECONDS);
       setIsFading(false);
+      setIsBurning(false);
     }
     // Reset problem mode state when opening/changing entries in problem mode
     if (journalType === 'problem') {
@@ -281,7 +284,7 @@ export function JournalEntryEditor({
 
   // Secret mode countdown timer
   useEffect(() => {
-    if (!open || draft.type !== 'secret' || secretTimeLeft <= 0) return;
+    if (!open || draft.type !== 'secret' || secretDestroyMode === 'off' || secretTimeLeft <= 0) return;
 
     const timer = setInterval(() => {
       setSecretTimeLeft((prev) => {
@@ -293,21 +296,23 @@ export function JournalEntryEditor({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [open, draft.type, secretTimeLeft]);
+  }, [open, draft.type, secretDestroyMode, secretTimeLeft]);
 
   // Handle auto-destruct when timer reaches 0
   useEffect(() => {
-    if (!open || draft.type !== 'secret' || secretTimeLeft !== 0) return;
+    if (!open || draft.type !== 'secret' || secretDestroyMode === 'off' || secretTimeLeft !== 0) return;
     
     setIsFading(true);
+    setIsBurning(true);
     const destroyTimeout = setTimeout(() => {
       setSecretText('');
       setIsFading(false);
-      setSecretTimeLeft(secretTimerDuration);
+      setIsBurning(false);
+      setSecretTimeLeft(secretDestroyMode === '10m' ? SECRET_DURATION_10_MINUTES : SECRET_DURATION_25_SECONDS);
     }, 500);
 
     return () => clearTimeout(destroyTimeout);
-  }, [open, draft.type, secretTimeLeft, secretTimerDuration]);
+  }, [open, draft.type, secretDestroyMode, secretTimeLeft]);
 
   // Problem mode brain dump countdown timer
   useEffect(() => {
@@ -468,10 +473,14 @@ export function JournalEntryEditor({
     }
     
     setIsFading(true);
+    setIsBurning(true);
     secretDestroyTimeoutRef.current = setTimeout(() => {
       setSecretText('');
       setIsFading(false);
-      setSecretTimeLeft(secretTimerDuration);
+      setIsBurning(false);
+      if (secretDestroyMode !== 'off') {
+        setSecretTimeLeft(secretDestroyMode === '10m' ? SECRET_DURATION_10_MINUTES : SECRET_DURATION_25_SECONDS);
+      }
       secretDestroyTimeoutRef.current = null;
     }, 500); // Match animation duration
   };
@@ -480,9 +489,12 @@ export function JournalEntryEditor({
     setSecretText(event.target.value);
   };
 
-  const handleSecretTimerDurationChange = (duration: number) => {
-    setSecretTimerDuration(duration);
-    setSecretTimeLeft(duration);
+  const handleSecretDestroyModeChange = (mode: SecretDestroyMode) => {
+    setSecretDestroyMode(mode);
+    if (mode === 'off') {
+      return;
+    }
+    setSecretTimeLeft(mode === '10m' ? SECRET_DURATION_10_MINUTES : SECRET_DURATION_25_SECONDS);
   };
 
   const isQuickMode = draft.type === 'quick';
@@ -523,27 +535,43 @@ export function JournalEntryEditor({
             <input
               type="radio"
               name="secret-timer"
-              value={SECRET_DURATION_25_SECONDS}
-              checked={secretTimerDuration === SECRET_DURATION_25_SECONDS}
-              onChange={() => handleSecretTimerDurationChange(SECRET_DURATION_25_SECONDS)}
+              value="off"
+              checked={secretDestroyMode === 'off'}
+              onChange={() => handleSecretDestroyModeChange('off')}
             />
-            <span>25 seconds</span>
+            <span>Manual burn only</span>
+          </label>
+          <label className="journal-secret__timer-option">
+            <input
+              type="radio"
+              name="secret-timer"
+              value={SECRET_DURATION_25_SECONDS}
+              checked={secretDestroyMode === '25s'}
+              onChange={() => handleSecretDestroyModeChange('25s')}
+            />
+            <span>Auto: 25 seconds</span>
           </label>
           <label className="journal-secret__timer-option">
             <input
               type="radio"
               name="secret-timer"
               value={SECRET_DURATION_10_MINUTES}
-              checked={secretTimerDuration === SECRET_DURATION_10_MINUTES}
-              onChange={() => handleSecretTimerDurationChange(SECRET_DURATION_10_MINUTES)}
+              checked={secretDestroyMode === '10m'}
+              onChange={() => handleSecretDestroyModeChange('10m')}
             />
-            <span>10 minutes</span>
+            <span>Auto: 10 minutes</span>
           </label>
         </div>
         <div className="journal-secret__timer-display">
-          <span className="journal-secret__timer-label" aria-live="polite">
-            Self-destruct in: {formatSecretTimeLeft(secretTimeLeft)}
-          </span>
+          {secretDestroyMode === 'off' ? (
+            <span className="journal-secret__timer-label" aria-live="polite">
+              Countdown disabled. Burn when you are ready.
+            </span>
+          ) : (
+            <span className="journal-secret__timer-label" aria-live="polite">
+              Self-destruct in: {formatSecretTimeLeft(secretTimeLeft)}
+            </span>
+          )}
           <button
             type="button"
             className="journal-secret__destroy-button"
@@ -974,7 +1002,7 @@ export function JournalEntryEditor({
               required={!isSecretMode}
               placeholder={getContentPlaceholder(draft.type)}
               readOnly={isBrainDumpMode && hasFinished}
-              className={isSecretMode && isFading ? 'journal-secret__textarea--fading' : undefined}
+              className={isSecretMode ? `${isFading ? 'journal-secret__textarea--fading' : ''} ${isBurning ? 'journal-secret__textarea--burning' : ''}`.trim() : undefined}
               style={isBrainDumpMode ? {
                 filter: `blur(${blurAmount}px)`,
                 transition: 'filter 0.3s'
