@@ -1080,13 +1080,6 @@ ${thankYouDraft}`,
     onNavigateToHabits?.();
   };
 
-  const handleOpenCoachFromHub = () => {
-    if (!onOpenAiCoach) return;
-    onOpenAiCoach(
-      `Please review my journal patterns and help me identify 3 insights, 2 blind spots, and one practical action for tomorrow. If possible, compare recent entries with older ones.`,
-    );
-  };
-
   const listEmptyState = journalDisabled
     ? 'Connect Supabase or open the demo workspace to unlock your private journal.'
     : entries.length === 0 && !searchQuery && !selectedTag
@@ -1103,40 +1096,52 @@ ${thankYouDraft}`,
         </div>
         {journalView !== 'hub' ? (
           <div className="journal__header-actions">
+            <button
+              type="button"
+              className="journal__back-to-hub"
+              onClick={() => setJournalView('hub')}
+              aria-label="Back to journal hub"
+            >
+              ← Back to hub
+            </button>
             <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
-            <label className="journal__field" style={{ minWidth: 180 }}>
-              <span style={{ fontSize: '0.75rem' }}>Soundscape</span>
-              <select value={soundscape} onChange={(event) => setSoundscape(event.target.value as JournalSoundscape)}>
-                <option value="off">Off</option>
-                <option value="rain">🌧️ Rain</option>
-                <option value="lofi">🎧 Lo-fi</option>
-                <option value="nature">🌿 Nature</option>
-              </select>
-            </label>
-            {onNavigateToTimer ? (
-              <button
-                type="button"
-                className="journal__new"
-                onClick={() =>
-                  onNavigateToTimer({
-                    sourceType: 'journal',
-                    sourceName: soundscape === 'off' ? 'Journal reflection' : `Journal reflection · ${soundscape}`,
-                  })
-                }
-                disabled={journalDisabled}
-              >
-                ⏱️ Focus timer {soundscape !== 'off' ? `(${soundscape})` : ''}
-              </button>
-            ) : null}
-            {!isGoalReflectionMode ? (
-              <button
-                type="button"
-                className="journal__new"
-                onClick={() => handleOpenEditor('create', null)}
-                disabled={journalDisabled}
-              >
-                + New entry
-              </button>
+            {journalView === 'write' ? (
+              <>
+                <label className="journal__field journal__field--soundscape">
+                  <span style={{ fontSize: '0.75rem' }}>Soundscape</span>
+                  <select value={soundscape} onChange={(event) => setSoundscape(event.target.value as JournalSoundscape)}>
+                    <option value="off">Off</option>
+                    <option value="rain">🌧️ Rain</option>
+                    <option value="lofi">🎧 Lo-fi</option>
+                    <option value="nature">🌿 Nature</option>
+                  </select>
+                </label>
+                {onNavigateToTimer ? (
+                  <button
+                    type="button"
+                    className="journal__new"
+                    onClick={() =>
+                      onNavigateToTimer({
+                        sourceType: 'journal',
+                        sourceName: soundscape === 'off' ? 'Journal reflection' : `Journal reflection · ${soundscape}`,
+                      })
+                    }
+                    disabled={journalDisabled}
+                  >
+                    ⏱️ Focus timer {soundscape !== 'off' ? `(${soundscape})` : ''}
+                  </button>
+                ) : null}
+                {!isGoalReflectionMode ? (
+                  <button
+                    type="button"
+                    className="journal__new"
+                    onClick={() => handleOpenEditor('create', null)}
+                    disabled={journalDisabled}
+                  >
+                    + New entry
+                  </button>
+                ) : null}
+              </>
             ) : null}
           </div>
         ) : null}
@@ -1155,7 +1160,6 @@ ${thankYouDraft}`,
           className="journal-hub__card"
           onClick={() => {
             setJournalView('write');
-            handleOpenEditor('create', null);
           }}
           disabled={journalDisabled}
         >
@@ -1301,39 +1305,6 @@ ${thankYouDraft}`,
               </span>
             )) : <span className="journal-gratitude-weekly__theme">Write your first entry this week ✍️</span>}
           </div>
-          {onOpenAiCoach ? (
-            <div className="journal-coach-stage__actions">
-              <button
-                type="button"
-                className="journal__new"
-                onClick={() =>
-                  onOpenAiCoach(
-                    `Create a weekly journal summary from my recent entries: highlights, what I improved, gratitude moments, and one focus for next week.`,
-                  )
-                }
-              >
-                🗓️ Weekly AI summary
-              </button>
-              <button
-                type="button"
-                className="journal__new"
-                onClick={() =>
-                  onOpenAiCoach(
-                    `Create a monthly-style memory digest from my journals: valuable memories, recurring themes, wins, and lessons learned.`,
-                  )
-                }
-              >
-                📚 Memory digest
-              </button>
-              <button
-                type="button"
-                className="journal__new"
-                onClick={handleOpenCoachFromHub}
-              >
-                🔎 Pattern review
-              </button>
-            </div>
-          ) : null}
           <div className="journal-gratitude-weekly__readiness journal-gratitude-weekly__readiness--neutral">
             <p className="journal-gratitude-weekly__label">Coach quests this week</p>
             <div className="journal-gratitude-weekly__themes">
