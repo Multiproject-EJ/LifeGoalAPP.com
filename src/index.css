@@ -22106,7 +22106,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-list__view-toggle {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   background: var(--color-surface-primary, #f8fafc);
   border-radius: 12px;
@@ -22115,7 +22116,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-list__view-btn {
-  flex: 1;
+  min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
   border-radius: 8px;
@@ -25214,12 +25216,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-gratitude-weekly__stat {
+  display: inline-flex;
+  align-items: center;
   padding: 0.3rem 0.6rem;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
   background: rgba(15, 23, 42, 0.06);
   color: var(--color-text-secondary, #334155);
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .journal-gratitude-weekly__themes {
@@ -25229,12 +25236,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-gratitude-weekly__theme {
+  display: inline-flex;
+  align-items: center;
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(14, 165, 233, 0.2);
   font-size: 0.8rem;
   font-weight: 600;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .journal-gratitude-weekly__flags {
