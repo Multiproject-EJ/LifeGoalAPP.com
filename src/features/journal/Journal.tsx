@@ -1163,7 +1163,6 @@ ${thankYouDraft}`,
           className="journal-hub__card"
           onClick={() => {
             setJournalView('write');
-            handleOpenEditor('create', null);
           }}
           disabled={journalDisabled}
         >
