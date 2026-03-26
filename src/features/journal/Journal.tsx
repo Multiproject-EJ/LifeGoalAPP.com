@@ -1247,6 +1247,61 @@ ${thankYouDraft}`,
         </section>
       ) : null}
 
+      <div className="journal-view-tabs" role="tablist" aria-label="Journal sections">
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'hub' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('hub')}>Hub</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'write' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('write')}>New journal</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'read' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('read')}>Read old</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'coach' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('coach')}>AI coach</button>
+      </div>
+
+      {journalView === 'hub' ? (
+      <section className="journal-hub" aria-label="Journal hub">
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('write');
+            handleOpenEditor('create', null);
+          }}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">✨</span>
+          <span className="journal-hub__title">New journal</span>
+          <span className="journal-hub__description">Start a fresh reflection in {getModeLabel(journalType)} mode.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('read');
+            if (isCompactLayout) {
+              setShowMobileDetail(false);
+            } else if (filteredEntries.length > 0) {
+              handleSelectEntry(filteredEntries[0].id);
+            }
+          }}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">📚</span>
+          <span className="journal-hub__title">Read old journal</span>
+          <span className="journal-hub__description">Browse history, revisit patterns, and search older entries.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('coach');
+            handleOpenCoachFromHub();
+          }}
+          disabled={journalDisabled || !onOpenAiCoach}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">🤖</span>
+          <span className="journal-hub__title">AI coach</span>
+          <span className="journal-hub__description">Ask for feedback on one entry or your overall journal trend.</span>
+        </button>
+      </section>
+      ) : null}
+
       {journalDisabled ? (
         <p className="journal__banner">
           Add your Supabase credentials or launch the demo workspace to save private journal entries.
