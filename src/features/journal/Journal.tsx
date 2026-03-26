@@ -23,7 +23,7 @@ import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } fr
 import { JournalTypeSelector } from './JournalTypeSelector';
 import type { Database, JournalEntryType, Json } from '../../lib/database.types';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
-import { isEntryLocked } from './utils';
+import { getModeLabel, isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
@@ -74,6 +74,7 @@ type JournalProps = {
 
 type StatusState = { kind: 'success' | 'warning' | 'error'; message: string } | null;
 const EMPTY_QUEUE_STATUS: JournalQueueStatus = { pending: 0, failed: 0 };
+type JournalView = 'hub' | 'write' | 'read' | 'coach';
 
 type GratitudeAttachmentMeta = {
   coachScore: number;
@@ -214,6 +215,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   const [thankYouCopied, setThankYouCopied] = useState(false);
   const [handledLaunchRequestId, setHandledLaunchRequestId] = useState<number | null>(null);
   const [queueStatus, setQueueStatus] = useState<JournalQueueStatus>(EMPTY_QUEUE_STATUS);
+  const [journalView, setJournalView] = useState<JournalView>('hub');
 
   // Watch for level-up events
   useEffect(() => {
@@ -243,6 +245,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     if (launchRequest.requestId === handledLaunchRequestId) return;
 
     setJournalType(launchRequest.type);
+    setJournalView('write');
     if (launchRequest.openComposer) {
       setEditorMode('create');
       setEditingEntry(null);
@@ -930,6 +933,13 @@ ${thankYouDraft}`,
     onNavigateToHabits?.();
   };
 
+  const handleOpenCoachFromHub = () => {
+    if (!onOpenAiCoach) return;
+    onOpenAiCoach(
+      `Please review my journal patterns and help me identify 3 insights, 2 blind spots, and one practical action for tomorrow. If possible, compare recent entries with older ones.`,
+    );
+  };
+
   const listEmptyState = journalDisabled
     ? 'Connect Supabase or open the demo workspace to unlock your private journal.'
     : entries.length === 0 && !searchQuery && !selectedTag
@@ -942,36 +952,94 @@ ${thankYouDraft}`,
         <div>
           <p className="journal__eyebrow">Daily reflections</p>
           <h1>Journal</h1>
+          {journalView !== 'hub' ? <p className="journal__mode-note">Current mode: {getModeLabel(journalType)}</p> : null}
         </div>
-        <div className="journal__header-actions">
-          <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
-          {onNavigateToTimer ? (
-            <button
-              type="button"
-              className="journal__new"
-              onClick={() =>
-                onNavigateToTimer({
-                  sourceType: 'journal',
-                  sourceName: 'Journal reflection',
-                })
-              }
-              disabled={journalDisabled}
-            >
-              ⏱️ Focus timer
-            </button>
-          ) : null}
-          {!isGoalReflectionMode ? (
-            <button
-              type="button"
-              className="journal__new"
-              onClick={() => handleOpenEditor('create', null)}
-              disabled={journalDisabled}
-            >
-              + New entry
-            </button>
-          ) : null}
-        </div>
+        {journalView !== 'hub' ? (
+          <div className="journal__header-actions">
+            <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
+            {onNavigateToTimer ? (
+              <button
+                type="button"
+                className="journal__new"
+                onClick={() =>
+                  onNavigateToTimer({
+                    sourceType: 'journal',
+                    sourceName: 'Journal reflection',
+                  })
+                }
+                disabled={journalDisabled}
+              >
+                ⏱️ Focus timer
+              </button>
+            ) : null}
+            {!isGoalReflectionMode ? (
+              <button
+                type="button"
+                className="journal__new"
+                onClick={() => handleOpenEditor('create', null)}
+                disabled={journalDisabled}
+              >
+                + New entry
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </header>
+
+      <div className="journal-view-tabs" role="tablist" aria-label="Journal sections">
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'hub' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('hub')}>Hub</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'write' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('write')}>New journal</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'read' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('read')}>Read old</button>
+        <button type="button" className={`journal-view-tabs__tab ${journalView === 'coach' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('coach')}>AI coach</button>
+      </div>
+
+      {journalView === 'hub' ? (
+      <section className="journal-hub" aria-label="Journal hub">
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('write');
+            handleOpenEditor('create', null);
+          }}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">✨</span>
+          <span className="journal-hub__title">New journal</span>
+          <span className="journal-hub__description">Start a fresh reflection in {getModeLabel(journalType)} mode.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('read');
+            if (isCompactLayout) {
+              setShowMobileDetail(false);
+            } else if (filteredEntries.length > 0) {
+              handleSelectEntry(filteredEntries[0].id);
+            }
+          }}
+          disabled={journalDisabled}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">📚</span>
+          <span className="journal-hub__title">Read old journal</span>
+          <span className="journal-hub__description">Browse history, revisit patterns, and search older entries.</span>
+        </button>
+        <button
+          type="button"
+          className="journal-hub__card"
+          onClick={() => {
+            setJournalView('coach');
+            handleOpenCoachFromHub();
+          }}
+          disabled={journalDisabled || !onOpenAiCoach}
+        >
+          <span className="journal-hub__icon" aria-hidden="true">🤖</span>
+          <span className="journal-hub__title">AI coach</span>
+          <span className="journal-hub__description">Ask for feedback on one entry or your overall journal trend.</span>
+        </button>
+      </section>
+      ) : null}
 
       {journalDisabled ? (
         <p className="journal__banner">
@@ -979,9 +1047,9 @@ ${thankYouDraft}`,
         </p>
       ) : null}
 
-      {status ? <p className={`journal__status journal__status--${status.kind}`}>{status.message}</p> : null}
-      {error ? <p className="journal__status journal__status--error">{error}</p> : null}
-      {queueStatus.pending > 0 || queueStatus.failed > 0 ? (
+      {journalView !== 'hub' && status ? <p className={`journal__status journal__status--${status.kind}`}>{status.message}</p> : null}
+      {journalView !== 'hub' && error ? <p className="journal__status journal__status--error">{error}</p> : null}
+      {journalView !== 'hub' && (queueStatus.pending > 0 || queueStatus.failed > 0) ? (
         <p className="journal__status journal__status--warning">
           {queueStatus.failed > 0
             ? `${queueStatus.failed} journal change${queueStatus.failed === 1 ? '' : 's'} failed to sync. We will keep retrying when online.`
@@ -989,7 +1057,38 @@ ${thankYouDraft}`,
           Avoid clearing browser/app data until sync completes.
         </p>
       ) : null}
-      {gratitudeCoach ? (
+      {journalView === 'write' && (
+        <section className="journal-write-stage">
+          <p>Pick a mode, then tap <strong>+ New entry</strong> to start writing.</p>
+        </section>
+      )}
+
+      {journalView === 'coach' ? (
+        <section className="journal-coach-stage">
+          <h3>AI Journal Coach</h3>
+          <p>Get feedback on one entry or your overall journaling trend.</p>
+          <div className="journal-coach-stage__actions">
+            <button
+              type="button"
+              className="journal__new"
+              onClick={() => onOpenAiCoach?.('Please review my latest journal entry and give me concise feedback.')}
+              disabled={!onOpenAiCoach}
+            >
+              Review latest entry
+            </button>
+            <button
+              type="button"
+              className="journal__new"
+              onClick={handleOpenCoachFromHub}
+              disabled={!onOpenAiCoach}
+            >
+              Review all journals
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {journalView === 'read' && gratitudeCoach ? (
         <section className="journal-gratitude-coach" aria-live="polite">
           <div>
             <p className="journal-gratitude-coach__eyebrow">Coach check-in</p>
@@ -1017,7 +1116,7 @@ ${thankYouDraft}`,
         </section>
       ) : null}
 
-      {journalType === 'gratitude' && !hasTodayGratitudeEntry ? (
+      {journalView === 'read' && journalType === 'gratitude' && !hasTodayGratitudeEntry ? (
         <section className="journal-gratitude-today" aria-live="polite">
           <p className="journal-gratitude-today__eyebrow">Today’s gratitude</p>
           <h3>Capture one gratitude moment for today</h3>
@@ -1033,7 +1132,7 @@ ${thankYouDraft}`,
         </section>
       ) : null}
 
-      {journalType === 'gratitude' && gratitudeWeeklySummary ? (
+      {journalView === 'read' && journalType === 'gratitude' && gratitudeWeeklySummary ? (
         <section className="journal-gratitude-weekly" aria-live="polite">
           <div className="journal-gratitude-weekly__head">
             <p className="journal-gratitude-weekly__eyebrow">Weekly gratitude review</p>
@@ -1122,7 +1221,7 @@ ${thankYouDraft}`,
         </section>
       ) : null}
 
-      {journalType === 'gratitude' && gratitudeLookbackEntry ? (
+      {journalView === 'read' && journalType === 'gratitude' && gratitudeLookbackEntry ? (
         <section className="journal-gratitude-lookback" aria-live="polite">
           <p className="journal-gratitude-lookback__eyebrow">Look back</p>
           <h3>On this day gratitude memory</h3>
@@ -1138,9 +1237,9 @@ ${thankYouDraft}`,
         </section>
       ) : null}
 
-      {isGoalReflectionMode ? (
+      {journalView === 'read' && isGoalReflectionMode ? (
         <GoalReflectionJournal session={session} />
-      ) : (
+      ) : journalView === 'read' ? (
         <>
           <div className="journal__layout">
             <div className={`journal__column journal__column--list ${
@@ -1201,6 +1300,20 @@ ${thankYouDraft}`,
             onSave={handleSaveEntry}
           />
         </>
+      ) : (
+        <JournalEntryEditor
+          open={editorOpen}
+          mode={editorMode}
+          entry={editorMode === 'edit' ? editingEntry : null}
+          goals={goals}
+          habits={habits}
+          moodOptions={MOOD_OPTIONS}
+          saving={editorSaving}
+          error={editorError}
+          journalType={journalType}
+          onClose={() => setEditorOpen(false)}
+          onSave={handleSaveEntry}
+        />
       )}
 
       {/* Celebration animation for journal completion */}
