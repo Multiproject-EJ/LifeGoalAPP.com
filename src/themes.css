@@ -1966,6 +1966,48 @@ a,
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
+) .journal-hub__card {
+  border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.28));
+  background: color-mix(in srgb, var(--color-surface-primary) 88%, transparent);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal-hub__description,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal__eyebrow,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal__mode-note {
+  color: var(--color-text-secondary, #cbd5e1);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .journal__new:disabled {
+  background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
+  color: var(--color-text-secondary, #cbd5e1);
+  border-color: var(--color-border-secondary, rgba(148, 163, 184, 0.3));
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
 ) .journal-list__filter input,
 :is(
   [data-theme='dark-glass'],

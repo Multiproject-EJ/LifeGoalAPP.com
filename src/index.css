@@ -21721,7 +21721,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-muted, #64748b);
+  color: var(--color-text-tertiary, #475569);
   margin: 0 0 0.25rem;
 }
 
@@ -21733,7 +21733,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .journal__mode-note {
   margin: 0.35rem 0 0;
   font-size: 0.88rem;
-  color: var(--color-text-muted, #64748b);
+  color: var(--color-text-tertiary, #475569);
 }
 
 .journal__new {
@@ -21754,9 +21754,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal__new:disabled {
-  opacity: 0.6;
+  opacity: 1;
   cursor: not-allowed;
   box-shadow: none;
+  background: var(--color-surface-raised, #e2e8f0);
+  color: var(--color-text-secondary, #475569);
+  border: 1px solid var(--color-border-subtle, #cbd5e1);
 }
 
 .journal__new:not(:disabled):hover {
@@ -21786,6 +21789,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-sizing: border-box;
   font-weight: 600;
   cursor: pointer;
+}
+
+.journal__back-to-hub:focus-visible {
+  outline: 2px solid var(--color-primary, #0ea5e9);
+  outline-offset: 2px;
 }
 
 :is(
@@ -21859,6 +21867,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: var(--color-surface-hover, #e2e8f0);
 }
 
+.journal-mode-selector__option:focus-within .journal-mode-selector__label {
+  border-color: var(--color-primary, #0ea5e9);
+}
+
 .journal-mode-selector__radio:checked + .journal-mode-selector__label:hover {
   background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
 }
@@ -21906,6 +21918,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.journal-hub__card:focus-visible {
+  outline: 2px solid var(--color-primary, #0ea5e9);
+  outline-offset: 2px;
+}
+
 .journal-hub__card:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: rgba(14, 165, 233, 0.45);
@@ -21928,7 +21945,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .journal-hub__description {
   font-size: 0.82rem;
-  color: var(--color-text-muted, #64748b);
+  color: var(--color-text-tertiary, #475569);
 }
 
 .journal-write-stage,
