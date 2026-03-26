@@ -585,6 +585,33 @@ body {
   }
 }
 
+@media (pointer: coarse) and (max-height: 960px) {
+  .journal-editor {
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .journal-editor__panel {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .journal-editor__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--color-bg-main, #fff);
+    padding-top: 0.65rem;
+    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .auth-overlay__dialog--habits {
   max-width: 1400px;
   width: 95%;
@@ -21710,12 +21737,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal__new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
   color: #fff;
   font-weight: 600;
-  border-radius: 999px;
-  padding: 0.85rem 1.5rem;
+  border-radius: 12px;
+  padding: 0.72rem 1rem;
+  line-height: 1.2;
+  box-sizing: border-box;
   cursor: pointer;
   box-shadow: 0 12px 24px rgba(14, 165, 233, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -21733,28 +21765,44 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal__header-actions {
-  display: flex;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.journal__header-actions > * {
+  min-width: 0;
+}
+
+.journal__back-to-hub {
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  border: 1px solid var(--color-border-primary, rgba(15, 23, 42, 0.18));
+  background: var(--color-surface-primary, #ffffff);
+  color: var(--color-text-secondary, #334155);
+  border-radius: 12px;
+  padding: 0.55rem 0.9rem;
+  box-sizing: border-box;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.journal__field--soundscape {
+  min-width: 180px;
 }
 
 .journal-mode-selector {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 0.5rem;
-  flex-wrap: nowrap;
-  align-items: center;
-  max-width: 100%;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-  scrollbar-width: thin;
+  align-items: stretch;
+  width: 100%;
 }
 
 .journal-mode-selector__option {
-  display: inline-flex;
-  align-items: center;
+  display: block;
   cursor: pointer;
-  user-select: none;
 }
 
 .journal-mode-selector__radio {
@@ -21765,14 +21813,15 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-mode-selector__label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.35rem;
-  white-space: nowrap;
+  width: 100%;
   padding: 0.55rem 0.95rem;
   font-size: 0.85rem;
   font-weight: 500;
-  border-radius: 14px;
+  border-radius: 12px;
   background: linear-gradient(
     160deg,
     color-mix(in srgb, var(--color-surface-raised, #f1f5f9) 88%, transparent),
@@ -21805,10 +21854,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 
 .journal-view-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
 }
 
 .journal-view-tabs__tab {
@@ -21901,18 +21949,28 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .journal__header-actions {
     width: 100%;
-    justify-content: space-between;
+    row-gap: 0.6rem;
+  }
+
+  .journal__field--soundscape {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .journal__back-to-hub {
+    width: 100%;
+    text-align: center;
   }
 
   .journal-mode-selector {
     order: 2;
-    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
   .journal-mode-selector__label {
-    padding: 0.4rem 0.65rem;
+    padding: 0.5rem 0.65rem;
     font-size: 0.8rem;
   }
 
@@ -21923,6 +21981,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   .journal__new {
     width: 100%;
     justify-content: center;
+  }
+
+  .journal-mode-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .journal {
@@ -22044,7 +22106,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-list__view-toggle {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   background: var(--color-surface-primary, #f8fafc);
   border-radius: 12px;
@@ -22053,7 +22116,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-list__view-btn {
-  flex: 1;
+  min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
   border-radius: 8px;
@@ -22957,26 +23021,51 @@ html.platform-ipad .workspace-shell__menu-edge {
     max-height: 100vh;
     border-radius: 0;
   }
+
+  .journal-editor {
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .journal-editor__panel {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .journal-editor__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--color-bg-main, #fff);
+    padding-top: 0.65rem;
+    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 
 
 @media (max-width: 768px) {
   .journal {
-    padding: 1rem;
-    border-radius: 20px;
-    overflow-x: clip;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    overflow-x: visible;
   }
 
   .journal-mode-selector {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-    -webkit-overflow-scrolling: touch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .journal-mode-selector__option {
-    flex: 0 0 auto;
+    width: 100%;
   }
 
   .journal-list,
@@ -25075,17 +25164,6 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 @media (max-width: 720px) {
-  .journal-mode-selector {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 0.25rem;
-    scrollbar-width: thin;
-  }
-
-  .journal-mode-selector__option {
-    flex: 0 0 auto;
-  }
-
   .journal-gratitude-coach {
     flex-direction: column;
   }
@@ -25138,12 +25216,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-gratitude-weekly__stat {
+  display: inline-flex;
+  align-items: center;
   padding: 0.3rem 0.6rem;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
   background: rgba(15, 23, 42, 0.06);
   color: var(--color-text-secondary, #334155);
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .journal-gratitude-weekly__themes {
@@ -25153,12 +25236,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-gratitude-weekly__theme {
+  display: inline-flex;
+  align-items: center;
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(14, 165, 233, 0.2);
   font-size: 0.8rem;
   font-weight: 600;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .journal-gratitude-weekly__flags {
