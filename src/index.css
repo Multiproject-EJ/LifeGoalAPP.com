@@ -585,6 +585,33 @@ body {
   }
 }
 
+@media (pointer: coarse) and (max-height: 960px) {
+  .journal-editor {
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .journal-editor__panel {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .journal-editor__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--color-bg-main, #fff);
+    padding-top: 0.65rem;
+    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .auth-overlay__dialog--habits {
   max-width: 1400px;
   width: 95%;
@@ -22993,13 +23020,26 @@ html.platform-ipad .workspace-shell__menu-edge {
   .journal-editor {
     align-items: stretch;
     justify-content: flex-start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .journal-editor__panel {
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .journal-editor__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--color-bg-main, #fff);
+    padding-top: 0.65rem;
+    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
