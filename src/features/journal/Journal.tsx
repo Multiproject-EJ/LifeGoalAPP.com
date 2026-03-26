@@ -79,7 +79,7 @@ type JournalProps = {
 
 type StatusState = { kind: 'success' | 'warning' | 'error'; message: string } | null;
 const EMPTY_QUEUE_STATUS: JournalQueueStatus = { pending: 0, failed: 0 };
-type JournalView = 'hub' | 'write' | 'read' | 'coach';
+type JournalView = 'hub' | 'write' | 'read';
 type JournalSoundscape = 'off' | 'rain' | 'lofi' | 'nature';
 
 type WeeklyJournalRecap = {
@@ -1146,7 +1146,6 @@ ${thankYouDraft}`,
         <button type="button" className={`journal-view-tabs__tab ${journalView === 'hub' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('hub')}>Hub</button>
         <button type="button" className={`journal-view-tabs__tab ${journalView === 'write' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('write')}>New journal</button>
         <button type="button" className={`journal-view-tabs__tab ${journalView === 'read' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('read')}>Read old</button>
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'coach' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('coach')}>AI coach</button>
       </div>
 
       {journalView === 'hub' ? (
@@ -1180,19 +1179,6 @@ ${thankYouDraft}`,
           <span className="journal-hub__icon" aria-hidden="true">📚</span>
           <span className="journal-hub__title">Read old journal</span>
           <span className="journal-hub__description">Browse history, revisit patterns, and search older entries.</span>
-        </button>
-        <button
-          type="button"
-          className="journal-hub__card"
-          onClick={() => {
-            setJournalView('coach');
-            handleOpenCoachFromHub();
-          }}
-          disabled={journalDisabled || !onOpenAiCoach}
-        >
-          <span className="journal-hub__icon" aria-hidden="true">🤖</span>
-          <span className="journal-hub__title">AI coach</span>
-          <span className="journal-hub__description">Ask for feedback on one entry or your overall journal trend.</span>
         </button>
       </section>
       ) : null}
@@ -1247,61 +1233,6 @@ ${thankYouDraft}`,
         </section>
       ) : null}
 
-      <div className="journal-view-tabs" role="tablist" aria-label="Journal sections">
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'hub' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('hub')}>Hub</button>
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'write' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('write')}>New journal</button>
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'read' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('read')}>Read old</button>
-        <button type="button" className={`journal-view-tabs__tab ${journalView === 'coach' ? 'journal-view-tabs__tab--active' : ''}`} onClick={() => setJournalView('coach')}>AI coach</button>
-      </div>
-
-      {journalView === 'hub' ? (
-      <section className="journal-hub" aria-label="Journal hub">
-        <button
-          type="button"
-          className="journal-hub__card"
-          onClick={() => {
-            setJournalView('write');
-            handleOpenEditor('create', null);
-          }}
-          disabled={journalDisabled}
-        >
-          <span className="journal-hub__icon" aria-hidden="true">✨</span>
-          <span className="journal-hub__title">New journal</span>
-          <span className="journal-hub__description">Start a fresh reflection in {getModeLabel(journalType)} mode.</span>
-        </button>
-        <button
-          type="button"
-          className="journal-hub__card"
-          onClick={() => {
-            setJournalView('read');
-            if (isCompactLayout) {
-              setShowMobileDetail(false);
-            } else if (filteredEntries.length > 0) {
-              handleSelectEntry(filteredEntries[0].id);
-            }
-          }}
-          disabled={journalDisabled}
-        >
-          <span className="journal-hub__icon" aria-hidden="true">📚</span>
-          <span className="journal-hub__title">Read old journal</span>
-          <span className="journal-hub__description">Browse history, revisit patterns, and search older entries.</span>
-        </button>
-        <button
-          type="button"
-          className="journal-hub__card"
-          onClick={() => {
-            setJournalView('coach');
-            handleOpenCoachFromHub();
-          }}
-          disabled={journalDisabled || !onOpenAiCoach}
-        >
-          <span className="journal-hub__icon" aria-hidden="true">🤖</span>
-          <span className="journal-hub__title">AI coach</span>
-          <span className="journal-hub__description">Ask for feedback on one entry or your overall journal trend.</span>
-        </button>
-      </section>
-      ) : null}
-
       {journalDisabled ? (
         <p className="journal__banner">
           Add your Supabase credentials or launch the demo workspace to save private journal entries.
@@ -1321,49 +1252,34 @@ ${thankYouDraft}`,
       {journalView === 'write' && (
         <section className="journal-write-stage">
           <p>Pick a mode, then tap <strong>+ New entry</strong> to start writing.</p>
+          {onOpenAiCoach ? (
+            <div className="journal-coach-stage__actions">
+              <button
+                type="button"
+                className="journal__new"
+                onClick={() =>
+                  onOpenAiCoach(
+                    `I'm about to journal in ${getModeLabel(journalType)} mode. Give me one concise framing question and one action-oriented prompt before I write.`,
+                  )
+                }
+              >
+                ✨ Coach prep prompt
+              </button>
+              <button
+                type="button"
+                className="journal__new"
+                onClick={() =>
+                  onOpenAiCoach(
+                    'Help me choose the best journal mode right now (quick, deep, gratitude, problem, goal) and explain why in 3 bullets.',
+                  )
+                }
+              >
+                🧭 Help me pick a mode
+              </button>
+            </div>
+          ) : null}
         </section>
       )}
-
-      {journalView === 'coach' ? (
-        <section className="journal-coach-stage">
-          <h3>AI Journal Coach</h3>
-          <p>Get feedback on one entry or your overall journaling trend.</p>
-          <div className="journal-coach-stage__actions">
-            <button
-              type="button"
-              className="journal__new"
-              onClick={() => onOpenAiCoach?.('Please review my latest journal entry and give me concise feedback.')}
-              disabled={!onOpenAiCoach}
-            >
-              Review latest entry
-            </button>
-            <button
-              type="button"
-              className="journal__new"
-              onClick={handleOpenCoachFromHub}
-              disabled={!onOpenAiCoach}
-            >
-              Review all journals
-            </button>
-          </div>
-          <div className="journal-gratitude-weekly__readiness journal-gratitude-weekly__readiness--neutral">
-            <p className="journal-gratitude-weekly__label">Coach quests this week</p>
-            <div className="journal-gratitude-weekly__themes">
-              {coachQuests.map((quest) => {
-                const completed = quest.progress >= quest.target;
-                return (
-                  <span
-                    key={quest.id}
-                    className={`journal-gratitude-weekly__theme ${completed ? '' : 'journal-gratitude-weekly__theme--warning'}`}
-                  >
-                    {completed ? '🏆' : '🎯'} {quest.label} ({Math.min(quest.progress, quest.target)}/{quest.target})
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       {journalView === 'read' ? (
         <section className="journal-gratitude-weekly" aria-live="polite">
@@ -1384,6 +1300,55 @@ ${thankYouDraft}`,
                 {getModeLabel(mode.mode)} ({mode.count})
               </span>
             )) : <span className="journal-gratitude-weekly__theme">Write your first entry this week ✍️</span>}
+          </div>
+          {onOpenAiCoach ? (
+            <div className="journal-coach-stage__actions">
+              <button
+                type="button"
+                className="journal__new"
+                onClick={() =>
+                  onOpenAiCoach(
+                    `Create a weekly journal summary from my recent entries: highlights, what I improved, gratitude moments, and one focus for next week.`,
+                  )
+                }
+              >
+                🗓️ Weekly AI summary
+              </button>
+              <button
+                type="button"
+                className="journal__new"
+                onClick={() =>
+                  onOpenAiCoach(
+                    `Create a monthly-style memory digest from my journals: valuable memories, recurring themes, wins, and lessons learned.`,
+                  )
+                }
+              >
+                📚 Memory digest
+              </button>
+              <button
+                type="button"
+                className="journal__new"
+                onClick={handleOpenCoachFromHub}
+              >
+                🔎 Pattern review
+              </button>
+            </div>
+          ) : null}
+          <div className="journal-gratitude-weekly__readiness journal-gratitude-weekly__readiness--neutral">
+            <p className="journal-gratitude-weekly__label">Coach quests this week</p>
+            <div className="journal-gratitude-weekly__themes">
+              {coachQuests.map((quest) => {
+                const completed = quest.progress >= quest.target;
+                return (
+                  <span
+                    key={quest.id}
+                    className={`journal-gratitude-weekly__theme ${completed ? '' : 'journal-gratitude-weekly__theme--warning'}`}
+                  >
+                    {completed ? '🏆' : '🎯'} {quest.label} ({Math.min(quest.progress, quest.target)}/{quest.target})
+                  </span>
+                );
+              })}
+            </div>
           </div>
         </section>
       ) : null}
