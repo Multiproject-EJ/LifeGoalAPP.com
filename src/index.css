@@ -21680,6 +21680,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow-x: clip;
 }
 
 .journal__header {
@@ -21803,6 +21804,30 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 
+.journal-view-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.journal-view-tabs__tab {
+  border: 1px solid var(--color-border-subtle, #dbe3ee);
+  background: var(--color-surface-raised, #f8fafc);
+  color: var(--color-text-secondary, #475569);
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.journal-view-tabs__tab--active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--color-primary, #0ea5e9), var(--color-accent-purple, #a855f7));
+}
+
 .journal-hub {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -21847,6 +21872,27 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: var(--color-text-muted, #64748b);
 }
 
+.journal-write-stage,
+.journal-coach-stage {
+  background: var(--color-surface-glass-light, rgba(248, 250, 252, 0.82));
+  border: 1px solid var(--color-border-light, rgba(15, 23, 42, 0.1));
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.journal-write-stage p,
+.journal-coach-stage p {
+  margin: 0;
+  color: var(--color-text-secondary, #475569);
+}
+
+.journal-coach-stage__actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 960px) {
   .journal__header {
     flex-direction: column;
@@ -21887,6 +21933,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .journal-hub {
     grid-template-columns: 1fr;
+  }
+
+  .journal-view-tabs__tab {
+    padding: 0.45rem 0.72rem;
+    font-size: 0.83rem;
   }
 
   .journal-list,
@@ -25535,7 +25586,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 [data-theme='dark-glass'] .journal-hub__card,
-[data-theme='dark-glass'] .journal-mode-selector__label {
+[data-theme='dark-glass'] .journal-mode-selector__label,
+[data-theme='dark-glass'] .journal-write-stage,
+[data-theme='dark-glass'] .journal-coach-stage,
+[data-theme='dark-glass'] .journal-view-tabs__tab {
   background: color-mix(in srgb, var(--color-surface-secondary) 84%, transparent);
   border-color: var(--color-border-secondary);
   color: var(--color-text-primary);
