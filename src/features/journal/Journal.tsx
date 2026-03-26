@@ -1092,7 +1092,7 @@ ${thankYouDraft}`,
         <div>
           <p className="journal__eyebrow">Daily reflections</p>
           <h1>Journal</h1>
-          {journalView !== 'hub' ? <p className="journal__mode-note">Current mode: {getModeLabel(journalType)}</p> : null}
+          {journalView === 'write' ? <p className="journal__mode-note">Current mode: {getModeLabel(journalType)}</p> : null}
         </div>
         {journalView !== 'hub' ? (
           <div className="journal__header-actions">
@@ -1104,9 +1104,9 @@ ${thankYouDraft}`,
             >
               ← Back to hub
             </button>
-            <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
             {journalView === 'write' ? (
               <>
+                <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
                 <label className="journal__field journal__field--soundscape">
                   <span style={{ fontSize: '0.75rem' }}>Soundscape</span>
                   <select value={soundscape} onChange={(event) => setSoundscape(event.target.value as JournalSoundscape)}>
