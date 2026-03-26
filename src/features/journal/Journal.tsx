@@ -1103,8 +1103,16 @@ ${thankYouDraft}`,
         </div>
         {journalView !== 'hub' ? (
           <div className="journal__header-actions">
+            <button
+              type="button"
+              className="journal__back-to-hub"
+              onClick={() => setJournalView('hub')}
+              aria-label="Back to journal hub"
+            >
+              ← Back to hub
+            </button>
             <JournalTypeSelector journalType={journalType} onChange={setJournalType} />
-            <label className="journal__field" style={{ minWidth: 180 }}>
+            <label className="journal__field journal__field--soundscape">
               <span style={{ fontSize: '0.75rem' }}>Soundscape</span>
               <select value={soundscape} onChange={(event) => setSoundscape(event.target.value as JournalSoundscape)}>
                 <option value="off">Off</option>
@@ -1155,7 +1163,6 @@ ${thankYouDraft}`,
           className="journal-hub__card"
           onClick={() => {
             setJournalView('write');
-            handleOpenEditor('create', null);
           }}
           disabled={journalDisabled}
         >
