@@ -1648,6 +1648,29 @@ a,
   color: var(--color-text-primary, #0f172a);
 }
 
+/* Journal CTA/readability guard for non-dark themes:
+   avoid bright text on pastel/bright gradients in hub/write/read controls. */
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .journal__new,
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .journal-list__view-btn--active,
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .journal-view-tabs__tab--active,
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .journal-calendar__today-btn,
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .journal-mode-selector__radio:checked + .journal-mode-selector__label,
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .journal-calendar__day--selected .journal-calendar__day-number {
+  color: var(--color-text-primary, #0f172a);
+}
+
 /* ============================================
    BIO NIGHT THEME
    ============================================ */
