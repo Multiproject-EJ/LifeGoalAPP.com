@@ -902,7 +902,7 @@ body {
 .workspace-shell {
   position: relative;
   width: min(
-    500px,
+    540px,
     calc((100dvh - (var(--workspace-shell-padding) * 2)) * (9 / 19.5)),
     calc(100vw - 1rem)
   );
@@ -934,7 +934,7 @@ html.platform-ipad .app--workspace {
 
 html.platform-ipad .workspace-shell {
   width: min(
-    500px,
+    540px,
     calc(var(--ipad-phone-frame-height) * var(--ipad-phone-aspect-ratio)),
     calc(100vw - 1rem)
   );
@@ -954,7 +954,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   --mobile-frame-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   --mobile-frame-height: calc(100dvh - (var(--workspace-shell-padding) * 2));
   --mobile-frame-width: min(
-    500px,
+    540px,
     calc(var(--mobile-frame-height) * var(--mobile-frame-aspect-ratio)),
     calc(100vw - 1rem)
   );
@@ -975,6 +975,24 @@ html.platform-ipad .workspace-shell__menu-edge {
 .app--mobile-frame .mobile-footer-nav {
   left: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
   right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+}
+
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
+  .app--mobile-home-frame {
+    padding: 0;
+  }
+
+  .app--mobile-home-frame .workspace-shell {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .app--mobile-home-frame .mobile-footer-nav {
+    left: 0;
+    right: 0;
+  }
 }
 
 .workspace-shell__menu-edge {

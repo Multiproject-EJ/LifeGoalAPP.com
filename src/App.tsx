@@ -4176,7 +4176,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   );
 
   if (isMobileExperience && showMobileHome) {
-    const mobileHomeAppClassName = `app app--workspace app--mobile-frame${
+    const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
     }`;
     return (
