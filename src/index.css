@@ -960,6 +960,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   );
 }
 
+@media (min-width: 1024px) and (pointer: fine) {
+  .app--mobile-frame {
+    --mobile-frame-width: clamp(420px, 34vw, 620px);
+  }
+}
+
 .app--mobile-frame .workspace-shell {
   width: var(--mobile-frame-width);
   min-height: var(--mobile-frame-height);
