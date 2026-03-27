@@ -1037,6 +1037,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     left: 0;
     right: 0;
   }
+
 }
 
 .workspace-shell__menu-edge {
@@ -14708,6 +14709,19 @@ html.platform-ipad .workspace-shell__menu-edge {
 [data-theme='flow-night'] .mobile-habit-home {
   background: linear-gradient(180deg, rgba(2, 6, 23, 0.6) 0%, rgba(15, 23, 42, 0.7) 55%, rgba(2, 6, 23, 0.88) 100%);
   color: #e2e8f0;
+}
+
+@media (max-width: 720px) {
+  .mobile-habit-home {
+    background: linear-gradient(180deg, #0f172a 0%, #0f172a 100%);
+    padding-top: clamp(0.75rem, 4vw, 1.25rem);
+    padding-right: max(var(--safe-area-right), 0.5rem);
+    padding-left: max(var(--safe-area-left), 0.5rem);
+  }
+
+  .mobile-habit-home .habit-checklist-card__board-body {
+    padding-inline: clamp(0.85rem, 3vw, 1rem);
+  }
 }
 
 .mobile-habit-home__header {
