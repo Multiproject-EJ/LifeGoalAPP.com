@@ -59,6 +59,24 @@
   pointer-events: auto;
 }
 
+.app--mobile-frame .game-board-overlay,
+.app--mobile-frame .game-board-overlay__backdrop,
+.app--mobile-frame .game-board-overlay__content {
+  left: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+  right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+  width: auto;
+}
+
+@media (max-width: 720px) {
+  .app--mobile-frame .game-board-overlay,
+  .app--mobile-frame .game-board-overlay__backdrop,
+  .app--mobile-frame .game-board-overlay__content {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+}
+
 /* Top Bar Section (New Position - Previously Match Bar) */
 .game-board-overlay__topbar {
   position: relative;

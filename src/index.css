@@ -901,7 +901,11 @@ body {
 
 .workspace-shell {
   position: relative;
-  width: min(1440px, calc(100vw - var(--workspace-shell-gutter)));
+  width: min(
+    540px,
+    calc((100dvh - (var(--workspace-shell-padding) * 2)) * (9 / 19.5)),
+    calc(100vw - 1rem)
+  );
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
@@ -909,10 +913,16 @@ body {
   align-items: start;
   min-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   margin: 0 auto;
-  padding-left: calc(var(--workspace-shell-offset) + clamp(0.5rem, 1vw, 1rem));
-  padding-right: clamp(1rem, 3vw, 1.75rem);
+  padding-left: 0;
+  padding-right: 0;
   box-sizing: border-box;
   transition: padding-left 0.3s ease;
+}
+
+.app--desktop-preview .workspace-shell {
+  width: min(1440px, calc(100vw - var(--workspace-shell-gutter)));
+  padding-left: calc(var(--workspace-shell-offset) + clamp(0.5rem, 1vw, 1rem));
+  padding-right: clamp(1rem, 3vw, 1.75rem);
 }
 
 html.platform-ipad .app--workspace {
@@ -924,7 +934,7 @@ html.platform-ipad .app--workspace {
 
 html.platform-ipad .workspace-shell {
   width: min(
-    460px,
+    540px,
     calc(var(--ipad-phone-frame-height) * var(--ipad-phone-aspect-ratio)),
     calc(100vw - 1rem)
   );
@@ -943,22 +953,91 @@ html.platform-ipad .workspace-shell__menu-edge {
   --mobile-frame-aspect-ratio: 9 / 19.5;
   --mobile-frame-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   --mobile-frame-height: calc(100dvh - (var(--workspace-shell-padding) * 2));
-}
-
-.app--mobile-frame .workspace-shell {
-  width: min(
-    460px,
+  --mobile-frame-width: min(
+    540px,
     calc(var(--mobile-frame-height) * var(--mobile-frame-aspect-ratio)),
     calc(100vw - 1rem)
   );
+}
+
+@media (min-width: 1024px) and (pointer: fine) {
+  .app--mobile-frame {
+    --mobile-frame-width: clamp(400px, 31vw, 580px);
+  }
+}
+
+.app--mobile-frame .workspace-shell {
+  width: var(--mobile-frame-width);
   min-height: var(--mobile-frame-height);
   padding-left: 0;
   padding-right: 0;
 }
 
-.workspace-shell--menu-collapsed {
+.app--desktop-preview .workspace-shell--menu-collapsed {
   --workspace-shell-offset: 0px;
   padding-left: clamp(1rem, 3vw, 1.75rem);
+}
+
+.app--mobile-frame .mobile-footer-nav {
+  left: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+  right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+}
+
+.level-worlds-entry-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  background: #0a0f1e;
+}
+
+.app--mobile-frame .level-worlds-entry-modal {
+  left: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+  right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+}
+
+@media (max-width: 720px) {
+  .app--mobile-frame {
+    padding: 0;
+    --mobile-frame-width: 100vw;
+    --mobile-frame-height: 100dvh;
+  }
+
+  .app--mobile-frame .workspace-shell {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .app--mobile-frame .mobile-footer-nav {
+    left: 0;
+    right: 0;
+  }
+
+  .app--mobile-home-frame {
+    padding: 0;
+  }
+
+  .app--mobile-home-frame .workspace-shell {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .app--mobile-home-frame .mobile-footer-nav {
+    left: 0;
+    right: 0;
+  }
+
+  .app--mobile-frame .level-worlds-entry-modal {
+    left: 0;
+    right: 0;
+  }
+
 }
 
 .workspace-shell__menu-edge {
@@ -14630,6 +14709,19 @@ html.platform-ipad .workspace-shell__menu-edge {
 [data-theme='flow-night'] .mobile-habit-home {
   background: linear-gradient(180deg, rgba(2, 6, 23, 0.6) 0%, rgba(15, 23, 42, 0.7) 55%, rgba(2, 6, 23, 0.88) 100%);
   color: #e2e8f0;
+}
+
+@media (max-width: 720px) {
+  .mobile-habit-home {
+    background: linear-gradient(180deg, #0f172a 0%, #0f172a 100%);
+    padding-top: clamp(0.75rem, 4vw, 1.25rem);
+    padding-right: max(var(--safe-area-right), 0.5rem);
+    padding-left: max(var(--safe-area-left), 0.5rem);
+  }
+
+  .mobile-habit-home .habit-checklist-card__board-body {
+    padding-inline: clamp(0.85rem, 3vw, 1rem);
+  }
 }
 
 .mobile-habit-home__header {
